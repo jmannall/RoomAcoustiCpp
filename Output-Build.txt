@@ -1,0 +1,754 @@
+﻿Build started...
+1>------ Skipped Build: Project: Windows, Configuration: Debug Win32 ------
+1>Project not selected to build for this solution configuration 
+2>------ Build started: Project: Android, Configuration: Debug ARM64 ------
+2>ANDROID_HOME=C:\\Microsoft\AndroidSDK\25
+2>ANT_HOME=D:\software\Microsoft Visual Studio\2019\Community\Apps\apache-ant-1.9.3
+2>JAVA_HOME=C:\Program Files\Eclipse Foundation\jdk-8.0.302.8-hotspot
+2>NDK_ROOT=C:\\Microsoft\AndroidNDK64\android-ndk-r16b
+2>pch.h
+2>elementwiseOperationInPlace.cpp
+2>myBestNN.cpp
+2>myNN_data.cpp
+2>myNN_initialize.cpp
+2>myNN_terminate.cpp
+2>mySmallNN.cpp
+2>predict.cpp
+2>AudioManager.cpp
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\AudioManager.cpp:2:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include\AudioManager.h:3:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/UnityGAPlugin.h:3:
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Definitions.h(5,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region import/export
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Definitions.h(30,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Definitions.h(86,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region constants
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Definitions.h(97,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\AudioManager.cpp:2:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include\AudioManager.h:3:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/UnityGAPlugin.h:4:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Types.h:4:
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/vec3.h(6,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region vec3
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/vec3.h(98,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\AudioManager.cpp:2:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h:3:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/UnityGAPlugin.h:4:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Types.h:5:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/DiffractionGeometry.h:3:
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/SourceManager.h(6,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region SourceManager
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/SourceManager.h(30,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\AudioManager.cpp:2:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h:3:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/UnityGAPlugin.h:4:
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Types.h(17,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region structs
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Types.h(30,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\AudioManager.cpp:2:
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h(5,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region Buffer
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h(23,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h(25,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region Source
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h(39,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h(41,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region IIRFilter
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h(140,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\AudioManager.cpp(4,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region Buffer
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\AudioManager.cpp(42,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\AudioManager.cpp(44,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region IIRFilter
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\AudioManager.cpp(71,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\AudioManager.cpp(73,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region HighShelf
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\AudioManager.cpp(95,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\AudioManager.cpp(97,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region LowPass
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\AudioManager.cpp(116,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\AudioManager.cpp(118,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region TransDF2
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\AudioManager.cpp(168,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\AudioManager.cpp(170,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region LinkwitzRiley
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\AudioManager.cpp(252,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>28 warnings generated.
+2>DiffractionGeometry.cpp
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\DiffractionGeometry.cpp:2:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include\DiffractionGeometry.h:3:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/SourceManager.h:3:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/UnityGAPlugin.h:3:
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Definitions.h(5,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region import/export
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Definitions.h(30,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Definitions.h(86,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region constants
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Definitions.h(97,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\DiffractionGeometry.cpp:2:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include\DiffractionGeometry.h:3:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/SourceManager.h:3:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/UnityGAPlugin.h:4:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Types.h:4:
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/vec3.h(6,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region vec3
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/vec3.h(98,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\DiffractionGeometry.cpp:2:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/DiffractionGeometry.h:3:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/SourceManager.h:3:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/UnityGAPlugin.h:4:
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Types.h(17,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region structs
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Types.h(30,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\DiffractionGeometry.cpp:2:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/DiffractionGeometry.h:3:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/SourceManager.h:4:
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h(5,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region Buffer
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h(23,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h(25,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region Source
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h(39,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h(41,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region IIRFilter
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h(140,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\DiffractionGeometry.cpp:2:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/DiffractionGeometry.h:3:
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/SourceManager.h(6,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region SourceManager
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/SourceManager.h(30,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>16 warnings generated.
+2>DiffractionModels.cpp
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\DiffractionModels.cpp:2:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include\DiffractionModel.h:4:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/UnityGAPlugin.h:3:
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Definitions.h(5,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region import/export
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Definitions.h(30,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Definitions.h(86,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region constants
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Definitions.h(97,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\DiffractionModels.cpp:2:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include\DiffractionModel.h:4:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/UnityGAPlugin.h:4:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Types.h:4:
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/vec3.h(6,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region vec3
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/vec3.h(98,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\DiffractionModels.cpp:2:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include\DiffractionModel.h:4:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/UnityGAPlugin.h:4:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Types.h:5:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/DiffractionGeometry.h:3:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/SourceManager.h:4:
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h(5,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region Buffer
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h(23,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h(25,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region Source
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h(39,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h(41,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region IIRFilter
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h(140,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\DiffractionModels.cpp:2:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include\DiffractionModel.h:4:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/UnityGAPlugin.h:4:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Types.h:5:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/DiffractionGeometry.h:3:
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/SourceManager.h(6,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region SourceManager
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/SourceManager.h(30,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\DiffractionModels.cpp:2:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include\DiffractionModel.h:4:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/UnityGAPlugin.h:4:
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Types.h(17,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region structs
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Types.h(30,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>16 warnings generated.
+2>EmissionManager.cpp
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\EmissionManager.cpp:2:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include\EmissionManager.h:3:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/UnityGAPlugin.h:3:
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Definitions.h(5,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region import/export
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Definitions.h(30,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Definitions.h(86,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region constants
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Definitions.h(97,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\EmissionManager.cpp:2:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include\EmissionManager.h:3:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/UnityGAPlugin.h:4:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Types.h:4:
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/vec3.h(6,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region vec3
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/vec3.h(98,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\EmissionManager.cpp:2:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include\EmissionManager.h:3:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/UnityGAPlugin.h:4:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Types.h:5:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/DiffractionGeometry.h:3:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/SourceManager.h:4:
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h(5,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region Buffer
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h(23,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h(25,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region Source
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h(39,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h(41,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region IIRFilter
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h(140,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\EmissionManager.cpp:2:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include\EmissionManager.h:3:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/UnityGAPlugin.h:4:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Types.h:5:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/DiffractionGeometry.h:3:
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/SourceManager.h(6,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region SourceManager
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/SourceManager.h(30,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\EmissionManager.cpp:2:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include\EmissionManager.h:3:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/UnityGAPlugin.h:4:
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Types.h(17,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region structs
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Types.h(30,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\EmissionManager.cpp:2:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include\EmissionManager.h:7:
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/WedgeManager.h(6,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region WedgeManager
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/WedgeManager.h(24,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\EmissionManager.cpp:2:
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include\EmissionManager.h(18,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region PathManager
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include\EmissionManager.h(92,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include\EmissionManager.h(94,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region EmissionManager
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include\EmissionManager.h(163,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>22 warnings generated.
+2>GeometryManager.cpp
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\GeometryManager.cpp:2:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include\GeometryManager.h:3:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h:3:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/UnityGAPlugin.h:3:
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Definitions.h(5,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region import/export
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Definitions.h(30,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Definitions.h(86,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region constants
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Definitions.h(97,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\GeometryManager.cpp:2:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include\GeometryManager.h:3:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h:3:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/UnityGAPlugin.h:4:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Types.h:4:
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/vec3.h(6,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region vec3
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/vec3.h(98,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\GeometryManager.cpp:2:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include\GeometryManager.h:3:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h:3:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/UnityGAPlugin.h:4:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Types.h:5:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/DiffractionGeometry.h:3:
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/SourceManager.h(6,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region SourceManager
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/SourceManager.h(30,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\GeometryManager.cpp:2:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include\GeometryManager.h:3:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h:3:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/UnityGAPlugin.h:4:
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Types.h(17,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region structs
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Types.h(30,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\GeometryManager.cpp:2:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include\GeometryManager.h:3:
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h(5,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region Buffer
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h(23,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h(25,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region Source
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h(39,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h(41,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region IIRFilter
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h(140,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\GeometryManager.cpp:2:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include\GeometryManager.h:4:
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/WedgeManager.h(6,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region WedgeManager
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/WedgeManager.h(24,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\GeometryManager.cpp:2:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include\GeometryManager.h:6:
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/EmissionManager.h(18,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region PathManager
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/EmissionManager.h(92,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/EmissionManager.h(94,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region EmissionManager
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/EmissionManager.h(163,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\GeometryManager.cpp(13,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region ClientInterface
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\GeometryManager.cpp(16,10): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>        #pragma region Global Geometry
+2>                ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\GeometryManager.cpp(48,10): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>        #pragma endregion
+2>                ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\GeometryManager.cpp(59,10): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>        #pragma region Sources
+2>                ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\GeometryManager.cpp(81,10): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>        #pragma endregion
+2>                ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\GeometryManager.cpp(83,10): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>        #pragma region Wedges
+2>                ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\GeometryManager.cpp(139,10): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>        #pragma endregion
+2>                ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\GeometryManager.cpp(141,10): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>        #pragma region Audio
+2>                ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\GeometryManager.cpp(157,10): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>        #pragma endregion
+2>                ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\GeometryManager.cpp(159,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\GeometryManager.cpp(187,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region GeometryClass
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\GeometryManager.cpp(166,17): warning : unused variable 'sources' [-Wunused-variable]
+2>        SourceManager* sources = geometry->GetSourceManager();
+2>                       ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\GeometryManager.cpp(167,19): warning : unused variable 'emissions' [-Wunused-variable]
+2>        EmissionManager* emissions = geometry->GetEmissionManager();
+2>                         ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\GeometryManager.cpp(165,16): warning : unused variable 'wedges' [-Wunused-variable]
+2>        WedgeManager* wedges = geometry->GetWedgeManager();
+2>                      ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\GeometryManager.cpp(250,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region Audio
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\GeometryManager.cpp(364,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\GeometryManager.cpp(366,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region Sources
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\GeometryManager.cpp(372,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\GeometryManager.cpp(374,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region Wedges
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\GeometryManager.cpp(385,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\GeometryManager.cpp(402,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>43 warnings generated.
+2>SourceManager.cpp
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\SourceManager.cpp:2:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include\SourceManager.h:3:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/UnityGAPlugin.h:3:
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Definitions.h(5,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region import/export
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Definitions.h(30,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Definitions.h(86,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region constants
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Definitions.h(97,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\SourceManager.cpp:2:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include\SourceManager.h:3:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/UnityGAPlugin.h:4:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Types.h:4:
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/vec3.h(6,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region vec3
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/vec3.h(98,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\SourceManager.cpp:2:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/SourceManager.h:3:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/UnityGAPlugin.h:4:
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Types.h(17,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region structs
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Types.h(30,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\SourceManager.cpp:2:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/SourceManager.h:4:
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h(5,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region Buffer
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h(23,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h(25,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region Source
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h(39,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h(41,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region IIRFilter
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h(140,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\SourceManager.cpp:2:
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/SourceManager.h(6,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region SourceManager
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/SourceManager.h(30,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>16 warnings generated.
+2>UnityGAPlugin.cpp
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\UnityGAPlugin.cpp:3:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include\UnityGAPlugin.h:3:
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Definitions.h(5,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region import/export
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Definitions.h(30,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Definitions.h(86,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region constants
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Definitions.h(97,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\UnityGAPlugin.cpp:3:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include\UnityGAPlugin.h:4:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Types.h:4:
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/vec3.h(6,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region vec3
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/vec3.h(98,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\UnityGAPlugin.cpp:3:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/UnityGAPlugin.h:4:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Types.h:5:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/DiffractionGeometry.h:3:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/SourceManager.h:4:
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h(5,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region Buffer
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h(23,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h(25,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region Source
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h(39,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h(41,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region IIRFilter
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h(140,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\UnityGAPlugin.cpp:3:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/UnityGAPlugin.h:4:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Types.h:5:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/DiffractionGeometry.h:3:
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/SourceManager.h(6,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region SourceManager
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/SourceManager.h(30,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\UnityGAPlugin.cpp:3:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/UnityGAPlugin.h:4:
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Types.h(17,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region structs
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Types.h(30,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\UnityGAPlugin.cpp(15,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region UnityPluginInterface
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\UnityGAPlugin.cpp(27,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\UnityGAPlugin.cpp(29,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region Geometry Functions
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\UnityGAPlugin.cpp(79,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\UnityGAPlugin.cpp(81,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region Source Functions
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\UnityGAPlugin.cpp(96,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\UnityGAPlugin.cpp(98,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region Wedge Functions
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\UnityGAPlugin.cpp(134,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\UnityGAPlugin.cpp(136,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region Audio Functions
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\UnityGAPlugin.cpp(155,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>26 warnings generated.
+2>WedgeManager.cpp
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\WedgeManager.cpp:2:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include\WedgeManager.h:3:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/UnityGAPlugin.h:3:
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Definitions.h(5,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region import/export
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Definitions.h(30,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Definitions.h(86,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region constants
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Definitions.h(97,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\WedgeManager.cpp:2:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include\WedgeManager.h:3:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/UnityGAPlugin.h:4:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Types.h:4:
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/vec3.h(6,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region vec3
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/vec3.h(98,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\WedgeManager.cpp:2:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include\WedgeManager.h:3:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/UnityGAPlugin.h:4:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Types.h:5:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/DiffractionGeometry.h:3:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/SourceManager.h:4:
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h(5,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region Buffer
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h(23,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h(25,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region Source
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h(39,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h(41,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region IIRFilter
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/AudioManager.h(140,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\WedgeManager.cpp:2:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include\WedgeManager.h:3:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/UnityGAPlugin.h:4:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Types.h:5:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/DiffractionGeometry.h:3:
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/SourceManager.h(6,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region SourceManager
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/SourceManager.h(30,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\WedgeManager.cpp:2:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include\WedgeManager.h:3:
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/UnityGAPlugin.h:4:
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Types.h(17,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region structs
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include/Types.h(30,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>In file included from D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\source\WedgeManager.cpp:2:
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include\WedgeManager.h(6,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma region WedgeManager
+2>        ^
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include\WedgeManager.h(24,9): warning : unknown pragma ignored [-Wunknown-pragmas]
+2>#pragma endregion
+2>        ^
+2>18 warnings generated.
+2>C:\\Microsoft\AndroidNDK64\android-ndk-r16b\sources\cxx-stl\llvm-libc++\libs\arm64-v8a\libc++_static.a(locale.o): In function `float std::__ndk1::__do_strtod<float>(char const*, char**)':
+2>/usr/local/google/buildbot/src/android/ndk-release-r16/external/libcxx/include/locale:807: undefined reference to `strtof_l'
+2>C:\\Microsoft\AndroidNDK64\android-ndk-r16b\sources\cxx-stl\llvm-libc++\libs\arm64-v8a\libc++_static.a(locale.o): In function `double std::__ndk1::__do_strtod<double>(char const*, char**)':
+2>/usr/local/google/buildbot/src/android/ndk-release-r16/external/libcxx/include/locale:813: undefined reference to `strtod_l'
+2>ARM64\Debug\myNN_initialize.o: In function `myNN_initialize()':
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\codegen\lib\myNN\source/myNN_initialize.cpp:21: undefined reference to `omp_init_nest_lock'
+2>ARM64\Debug\myNN_terminate.o: In function `myNN_terminate()':
+2>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\codegen\lib\myNN\source/myNN_terminate.cpp:23: undefined reference to `omp_destroy_nest_lock'
+2>clang.exe: error: linker command failed with exit code 1 (use -v to see invocation)
+2>D:\software\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VC\v160\Application Type\Android\3.0\Android.Common.targets(119,5): error MSB6006: "clang.exe" exited with code 1.
+2>Done building project "Android.vcxproj" -- FAILED.
+========== Build: 0 succeeded, 1 failed, 0 up-to-date, 1 skipped ==========

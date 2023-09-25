@@ -1,0 +1,69 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.33927.289
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DiffractionPlugin", "DiffractionPlugin\DiffractionPlugin.vcxitems", "{BC8AA037-56AB-4F29-BF45-D410AFF883C6}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Windows", "Windows\Windows.vcxproj", "{2F98D92A-D2E5-460B-A1D1-12E9052DEB64}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Android", "Android\Android.vcxproj", "{C4FBD30D-63BA-4B40-BAA1-6C5F91065427}"
+EndProject
+Global
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		DiffractionPlugin\DiffractionPlugin.vcxitems*{2f98d92a-d2e5-460b-a1d1-12e9052deb64}*SharedItemsImports = 4
+		DiffractionPlugin\DiffractionPlugin.vcxitems*{bc8aa037-56ab-4f29-bf45-d410aff883c6}*SharedItemsImports = 9
+		DiffractionPlugin\DiffractionPlugin.vcxitems*{c4fbd30d-63ba-4b40-baa1-6c5f91065427}*SharedItemsImports = 4
+	EndGlobalSection
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|ARM = Debug|ARM
+		Debug|ARM64 = Debug|ARM64
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|ARM = Release|ARM
+		Release|ARM64 = Release|ARM64
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+		ReleaseTest|ARM = ReleaseTest|ARM
+		ReleaseTest|ARM64 = ReleaseTest|ARM64
+		ReleaseTest|x64 = ReleaseTest|x64
+		ReleaseTest|x86 = ReleaseTest|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2F98D92A-D2E5-460B-A1D1-12E9052DEB64}.Debug|ARM.ActiveCfg = Debug|x64
+		{2F98D92A-D2E5-460B-A1D1-12E9052DEB64}.Debug|ARM64.ActiveCfg = Debug|Win32
+		{2F98D92A-D2E5-460B-A1D1-12E9052DEB64}.Debug|x64.ActiveCfg = Debug|x64
+		{2F98D92A-D2E5-460B-A1D1-12E9052DEB64}.Debug|x64.Build.0 = Debug|x64
+		{2F98D92A-D2E5-460B-A1D1-12E9052DEB64}.Debug|x86.ActiveCfg = Debug|Win32
+		{2F98D92A-D2E5-460B-A1D1-12E9052DEB64}.Release|ARM.ActiveCfg = Release|x64
+		{2F98D92A-D2E5-460B-A1D1-12E9052DEB64}.Release|ARM64.ActiveCfg = Release|Win32
+		{2F98D92A-D2E5-460B-A1D1-12E9052DEB64}.Release|x64.ActiveCfg = Release|x64
+		{2F98D92A-D2E5-460B-A1D1-12E9052DEB64}.Release|x64.Build.0 = Release|x64
+		{2F98D92A-D2E5-460B-A1D1-12E9052DEB64}.Release|x86.ActiveCfg = Release|Win32
+		{2F98D92A-D2E5-460B-A1D1-12E9052DEB64}.ReleaseTest|ARM.ActiveCfg = ReleaseTest|x64
+		{2F98D92A-D2E5-460B-A1D1-12E9052DEB64}.ReleaseTest|ARM64.ActiveCfg = ReleaseTest|Win32
+		{2F98D92A-D2E5-460B-A1D1-12E9052DEB64}.ReleaseTest|x64.ActiveCfg = ReleaseTest|x64
+		{2F98D92A-D2E5-460B-A1D1-12E9052DEB64}.ReleaseTest|x64.Build.0 = ReleaseTest|x64
+		{2F98D92A-D2E5-460B-A1D1-12E9052DEB64}.ReleaseTest|x86.ActiveCfg = ReleaseTest|Win32
+		{C4FBD30D-63BA-4B40-BAA1-6C5F91065427}.Debug|ARM.ActiveCfg = Debug|ARM
+		{C4FBD30D-63BA-4B40-BAA1-6C5F91065427}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{C4FBD30D-63BA-4B40-BAA1-6C5F91065427}.Debug|ARM64.Build.0 = Debug|ARM64
+		{C4FBD30D-63BA-4B40-BAA1-6C5F91065427}.Debug|x64.ActiveCfg = Debug|ARM64
+		{C4FBD30D-63BA-4B40-BAA1-6C5F91065427}.Debug|x86.ActiveCfg = Debug|x86
+		{C4FBD30D-63BA-4B40-BAA1-6C5F91065427}.Release|ARM.ActiveCfg = Release|ARM
+		{C4FBD30D-63BA-4B40-BAA1-6C5F91065427}.Release|ARM64.ActiveCfg = Release|ARM64
+		{C4FBD30D-63BA-4B40-BAA1-6C5F91065427}.Release|ARM64.Build.0 = Release|ARM64
+		{C4FBD30D-63BA-4B40-BAA1-6C5F91065427}.Release|x64.ActiveCfg = Release|ARM64
+		{C4FBD30D-63BA-4B40-BAA1-6C5F91065427}.Release|x86.ActiveCfg = Release|x86
+		{C4FBD30D-63BA-4B40-BAA1-6C5F91065427}.ReleaseTest|ARM.ActiveCfg = Release|ARM
+		{C4FBD30D-63BA-4B40-BAA1-6C5F91065427}.ReleaseTest|ARM64.ActiveCfg = Release|ARM64
+		{C4FBD30D-63BA-4B40-BAA1-6C5F91065427}.ReleaseTest|x64.ActiveCfg = Release|x64
+		{C4FBD30D-63BA-4B40-BAA1-6C5F91065427}.ReleaseTest|x86.ActiveCfg = Release|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {3767F943-9E3A-48A7-A55D-07DBE2E3C85D}
+	EndGlobalSection
+EndGlobal
