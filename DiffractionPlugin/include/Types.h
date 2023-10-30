@@ -1,18 +1,27 @@
 #pragma once
 
+#ifndef TYPES_H_
+#define TYPES_H_
+
 #include <cmath>
 #include <stdlib.h>
 #include "vec3.h"
+#include "quaternion.h"
 #include "DiffractionGeometry.h"
 
 class Wedge;	// Forward declaration
 
 float inline Sign(float x)
 {
-	if (signbit(x))
-		return -1.0f;
+	if (x == 0)
+		return 0.0f;
 	else
-		return 1.0f;
+	{
+		if (signbit(x))
+			return -1.0f;
+		else
+			return 1.0f;
+	}
 }
 
 #pragma region structs
@@ -47,3 +56,5 @@ inline float cot(float x)
 {
 	return cosf(x) / sinf(x);
 }
+
+#endif TYPES_H_

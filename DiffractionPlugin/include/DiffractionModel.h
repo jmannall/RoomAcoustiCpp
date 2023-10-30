@@ -3,35 +3,37 @@
 #include <complex>
 #include "UnityGAPlugin.h"
 #include "DiffractionGeometry.h"
-#include "firfilter.h"
+//#include "firfilter.h"
 #include <mutex>
 
-using complex = std::complex<float>;
-const complex imUnit(0.0f, 1.0f);
+namespace JM {
+	using complex = std::complex<float>;
+}
+const JM::complex imUnit(0.0f, 1.0f);
 
-inline complex operator*(const complex& a, const float& b)
+inline JM::complex operator*(const JM::complex& a, const float& b)
 {
-	return complex(a.real() * b, a.imag() * b);
+	return JM::complex(a.real() * b, a.imag() * b);
 }
 
-inline complex operator*(const float& b, const complex& a)
+inline JM::complex operator*(const float& b, const JM::complex& a)
 {
 	return a * b;
 }
 
-inline complex operator+(const complex& a, const float& b)
+inline JM::complex operator+(const JM::complex& a, const float& b)
 {
-	return complex(a.real() + b, a.imag());
+	return JM::complex(a.real() + b, a.imag());
 }
 
-inline complex operator+(const float& b, const complex& a)
+inline JM::complex operator+(const float& b, const JM::complex& a)
 {
 	return a + b;
 }
 
-inline complex operator/(const complex& a, const float& b)
+inline JM::complex operator/(const JM::complex& a, const float& b)
 {
-	return complex(a.real() / b, a.imag() / b);
+	return JM::complex(a.real() / b, a.imag() / b);
 }
 
 class Attenuate
@@ -91,10 +93,10 @@ protected:
 	void CalcFI();
 	void CalcGT();
 	float CalcG(float f);
-	complex CalcHpm(float z, float f);
-	virtual complex CalcH(float z, float t, float f);
+	JM::complex CalcHpm(float z, float f);
+	virtual JM::complex CalcH(float z, float t, float f);
 	float CalcNv(float t);
-	complex CalcUDFA(float f, float fc, float g);
+	JM::complex CalcUDFA(float f, float fc, float g);
 	virtual void UpdateConstants();
 	void UpdateFilterParameters();
 
@@ -124,7 +126,7 @@ public:
 	void UpdateParameters() override;
 private:
 	void UpdateConstants() override;
-	complex CalcH(float z, float t, float f) override;
+	JM::complex CalcH(float z, float t, float f) override;
 };
 
 
@@ -193,15 +195,15 @@ public:
 
 private:
 	void CalcUTD();
-	complex EqHalf(float t, const int i);
-	complex EqQuarter(float t, bool plus, const int i);
+	JM::complex EqHalf(float t, const int i);
+	JM::complex EqQuarter(float t, bool plus, const int i);
 	float PM(float t, bool plus);
 	float CalcTArg(float t, bool plus);
 	float Apm(float t, bool plus);
-	complex FuncF(float x);
+	JM::complex FuncF(float x);
 
 	float k[4];
-	complex E[4];
+	JM::complex E[4];
 	float n;
 	float L;
 	LinkwitzRiley lrFilter;

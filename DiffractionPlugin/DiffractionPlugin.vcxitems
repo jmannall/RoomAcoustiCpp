@@ -14,20 +14,6 @@
     <ProjectCapability Include="SourceItemsFromImports" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\mcl-main\src\basicop.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\mcl-main\src\comparisonop.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\mcl-main\src\dataop.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\mcl-main\src\elementaryop.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\mcl-main\src\firfilter.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\mcl-main\src\iirfilter.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\mcl-main\src\matrixop.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\mcl-main\src\point.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\mcl-main\src\pointwiseop.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\mcl-main\src\quaternion.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\mcl-main\src\randomop.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\mcl-main\src\statisticsop.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\mcl-main\src\transformop.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\mcl-main\src\vectorop.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\elementwiseOperationInPlace.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\myBestNN.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\myNN_data.cpp" />
@@ -36,33 +22,28 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\mySmallNN.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\predict.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\AudioManager.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Debug.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\DiffractionGeometry.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\DiffractionModels.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\EmissionManager.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\GeometryManager.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\matrix.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\SourceManager.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Context.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Edge.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\FDN.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Interface.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Main.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\HRTFManager.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Reverb.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Room.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\VirtualSource.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Wall.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\UnityGAPlugin.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\vec.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\WedgeManager.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\mcl-main\include\basicop.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\mcl-main\include\comparisonop.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\mcl-main\include\constants.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\mcl-main\include\dataop.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\mcl-main\include\digitalfilter.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\mcl-main\include\elementaryop.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\mcl-main\include\firfilter.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\mcl-main\include\iirfilter.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\mcl-main\include\matrixop.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\mcl-main\include\maxgradientfilter.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\mcl-main\include\mcltypes.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\mcl-main\include\point.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\mcl-main\include\pointwiseop.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\mcl-main\include\quaternion.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\mcl-main\include\randomop.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\mcl-main\include\statisticsop.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\mcl-main\include\transformop.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\mcl-main\include\vectorop.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\anonymous_function.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\elementwiseOperationInPlace.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\myBestNN.h" />
@@ -76,6 +57,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\rtwtypes.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\tmwtypes.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\AudioManager.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Debug.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Definitions.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DiffractionGeometry.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DiffractionModel.h" />
@@ -83,11 +65,25 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\GeometryManager.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\HelloWorld.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\IUnityInterface.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\matrix.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\quaternion.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\ScopedTimer.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\SourceManager.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Context.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Edge.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\FDN.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Interface.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Main.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\HRTFManager.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Reverb.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Room.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Types.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\VirtualSource.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Wall.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Types.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\UnityGAPlugin.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\vec3.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\vec.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\WedgeManager.h" />
   </ItemGroup>
 </Project>

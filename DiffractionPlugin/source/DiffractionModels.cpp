@@ -122,7 +122,7 @@ void UDFA::UpdateParameters()
 void UDFA::UpdateConstants()
 {
 	float d = 2 * mPath->sData.d * mPath->rData.d / (mPath->sData.d + mPath->rData.d);
-	v = PI / mPath->wData.t;
+	v = PI_1 / mPath->wData.t;
 	t0 = (mPath->sData.d + mPath->rData.d) / SPEED_OF_SOUND;
 	front = 2 * SPEED_OF_SOUND / (PI_SQ * d * powf(sinf(mPath->phi), 2));
 }
@@ -137,26 +137,26 @@ void UDFA::CalcGT()
 
 float UDFA::CalcG(float f)
 {
-	return abs((CalcHpm(0.0f, f) + CalcHpm(mPath->wData.z, f)) / complex(4.0f, 0.0f));
+	return abs((CalcHpm(0.0f, f) + CalcHpm(mPath->wData.z, f)) / JM::complex(4.0f, 0.0f));
 }
 
-complex UDFA::CalcHpm(float z, float f)
+JM::complex UDFA::CalcHpm(float z, float f)
 {
 	return CalcH(z, mPath->sData.t + mPath->rData.t, f) + CalcH(z, mPath->rData.t - mPath->sData.t, f);
 }
 
-complex UDFA::CalcH(float z, float t, float f)
+JM::complex UDFA::CalcH(float z, float t, float f)
 {
 	float fc = front * powf(CalcNv(t), 2);
 
 	float t1 = mPath->GetD(z) / SPEED_OF_SOUND;
 
-	float g = (2 / PI) * atanf(PI * sqrtf(2 * fc * (t1 - t0)));
+	float g = (2 / PI_1) * atanf(PI_1 * sqrtf(2 * fc * (t1 - t0)));
 	fc *= (1 / powf(g, 2));
 	return g * CalcUDFA(f, fc, g);
 }
 
-complex UDFA::CalcUDFA(float f, float fc, float g)
+JM::complex UDFA::CalcUDFA(float f, float fc, float g)
 {
 	float alpha = 0.5f;
 	float b = 1.44f;
@@ -168,12 +168,12 @@ complex UDFA::CalcUDFA(float f, float fc, float g)
 	b = 1 + (b - 1) * gSq;
 	Q = 0.5f + (Q - 0.5f) * gSq;
 
-	return pow(pow(imUnit * f / fc, 2 / b) + pow(imUnit * f / (Q * fc), 1 / (powf(b, r))) + complex(1.0f, 0.0f), -alpha * b / 2);
+	return pow(pow(imUnit * f / fc, 2 / b) + pow(imUnit * f / (Q * fc), 1 / (powf(b, r))) + JM::complex(1.0f, 0.0f), -alpha * b / 2);
 }
 
 float UDFA::CalcNv(float t)
 {
-	return (v * sqrtf(1 - cosf(v * PI) * cosf(v * t))) / (cosf(v * PI) - cosf(v * t));
+	return (v * sqrtf(1 - cosf(v * PI_1) * cosf(v * t))) / (cosf(v * PI_1) - cosf(v * t));
 }
 
 void UDFA::UpdateFilterParameters()
@@ -240,7 +240,7 @@ void UDFAI::UpdateParameters()
 void UDFAI::UpdateConstants()
 {
 	float d = 2 * mPath->sData.d * mPath->rData.d / (mPath->sData.d + mPath->rData.d);
-	v = PI / mPath->wData.t;
+	v = PI_1 / mPath->wData.t;
 	t0 = (mPath->sData.d + mPath->rData.d) / SPEED_OF_SOUND;
 	front = SPEED_OF_SOUND / (PI_SQ * d * powf(sinf(mPath->phi), 2));
 
@@ -248,18 +248,18 @@ void UDFAI::UpdateConstants()
 	float theta[2] = { mPath->sData.t + mPath->rData.t, mPath->rData.t - mPath->sData.t };
 	for (int i = 0; i < 2; i++)
 	{
-		scale += Sign(theta[i] - PI) / fabs(cosf(v * PI) - cosf(v * theta[i]));
+		scale += Sign(theta[i] - PI_1) / fabs(cosf(v * PI_1) - cosf(v * theta[i]));
 	}
 	scale = powf(scale, 2);
-	front = scale * front * powf(v * sinf(v * PI), 2) / 2;
+	front = scale * front * powf(v * sinf(v * PI_1), 2) / 2;
 }
 
-complex UDFAI::CalcH(float z, float t, float f)
+JM::complex UDFAI::CalcH(float z, float t, float f)
 {
 	float fc = front;
 	float t1 = mPath->GetD(z) / SPEED_OF_SOUND;
 
-	float g = (2 / PI) * atanf(PI * sqrtf(2 * fc * (t1 - t0)));
+	float g = (2 / PI_1) * atanf(PI_1 * sqrtf(2 * fc * (t1 - t0)));
 	fc *= (1 / powf(g, 2));
 	return g * CalcUDFA(f, fc, g);
 }
@@ -363,7 +363,7 @@ UTD::UTD(DiffractionPath* path, int fs) : lrFilter(fs), target(), current(), par
 	for (int i = 0; i < 4; i++)
 	{
 		k[i] = PI_2 * lrFilter.fm[i] / SPEED_OF_SOUND;
-		E[i] = exp(-1.0f * imUnit * PI / 4.0f) / (2.0f * sqrtf(PI_2 * k[i]));
+		E[i] = exp(-1.0f * imUnit * PI_1 / 4.0f) / (2.0f * sqrtf(PI_2 * k[i]));
 	}
 	UpdateParameters();
 };
@@ -386,38 +386,38 @@ void UTD::UpdateParameters()
 
 void UTD::CalcUTD()
 {
-	n = mPath->wData.t / PI;
+	n = mPath->wData.t / PI_1;
 	float B0 = sinf(mPath->phi);
 	float dSR = mPath->sData.d + mPath->rData.d;
 	float temp = sqrtf(mPath->sData.d * mPath->rData.d * dSR) * n * B0;
 	L = mPath->sData.d * mPath->rData.d * powf(B0, 2) / (dSR);
 
-	float idx = (mPath->bA - PI) / ((float)mPath->wData.t - (float)mPath->sData.t - PI);
+	float idx = (mPath->bA - PI_1) / ((float)mPath->wData.t - (float)mPath->sData.t - PI_1);
 	for (int i = 0; i < 4; i++)
 	{
-		complex A = -exp(-imUnit * k[i] * dSR) * E[i] / temp;
+		JM::complex A = -exp(-imUnit * k[i] * dSR) * E[i] / temp;
 		g[i] = abs(A * (EqHalf(mPath->rData.t - mPath->sData.t, i) + EqHalf(mPath->rData.t + mPath->sData.t, i)));
 		gSB[i] = abs(A * (EqHalf(PI_EPS, i) + EqHalf(2 * mPath->sData.t + PI_EPS, i)));
 		params.g[i] = (1 - idx) * g[i] / gSB[i] + idx * g[i] * dSR;
 	}
 }
 
-complex UTD::EqHalf(float t, const int i)
+JM::complex UTD::EqHalf(float t, const int i)
 {
 	return EqQuarter(t, true, i) + EqQuarter(t, false, i);
 }
 
-complex UTD::EqQuarter(float t, bool plus, const int i)
+JM::complex UTD::EqQuarter(float t, bool plus, const int i)
 {
-	float cotArg = (PI + PM(t, plus)) / (2 * n);
+	float cotArg = (PI_1 + PM(t, plus)) / (2 * n);
 if (fabs(cotArg) < 0.001f)
 {
 	float tArg = PM(-CalcTArg(t, plus), plus);
-	float eps = PI + tArg;
+	float eps = PI_1 + tArg;
 	if (eps == 0)
 		eps = 0.001f;
 	float kL2 = 2 * k[i] * L;
-	return n * exp(imUnit * PI / 4.0f) * (sqrtf(PI * kL2) * Sign(eps) - kL2 * eps * exp(imUnit * PI / 4.0f));
+	return n * exp(imUnit * PI_1 / 4.0f) * (sqrtf(PI_1 * kL2) * Sign(eps) - kL2 * eps * exp(imUnit * PI_1 / 4.0f));
 }
 return cot(cotArg) * FuncF(k[i] * L * Apm(t, plus));
 }
@@ -441,23 +441,23 @@ float UTD::CalcTArg(float t, bool plus)
 	float N;
 	float PI_2n = PI_2 * n;
 	if (plus)
-		N = roundf((PI + t) / PI_2n);
+		N = roundf((PI_1 + t) / PI_2n);
 	else
-		N = roundf((-PI + t) / PI_2n);
+		N = roundf((-PI_1 + t) / PI_2n);
 	return PI_2n * N - t;
 }
 
-complex UTD::FuncF(float x)
+JM::complex UTD::FuncF(float x)
 {
 	float temp;
 	float sqrtX = sqrtf(x);
 	if (x < 0.8)
 	{
-		temp = sqrtf(PI * x) * (1.0f - (sqrtX / (0.7f * sqrtX + 1.2f)));
+		temp = sqrtf(PI_1 * x) * (1.0f - (sqrtX / (0.7f * sqrtX + 1.2f)));
 	}
 	else
 		temp = 1 - 0.8f / powf(x + 1.25f, 2);
-	return temp * exp(imUnit * PI / 4.0f * (1.0f - sqrtX / (x + 1.4f)));
+	return temp * exp(imUnit * PI_1 / 4.0f * (1.0f - sqrtX / (x + 1.4f)));
 }
 
 void UTD::ProcessAudio(float* inBuffer, float* outBuffer, int numFrames, float lerpFactor)
@@ -516,17 +516,17 @@ void BTM::CalcBTM()
 	zRRel = mPath->rData.z - mPath->zA;
 	dz = zSRel - zRRel;
 	dzSq = powf(dz, 2);
-	v = PI / mPath->wData.t;
+	v = PI_1 / mPath->wData.t;
 
 	edgeHi = mPath->wData.z - mPath->zA;
 	edgeLo = -mPath->zA;
 
 	float plus = mPath->sData.t + mPath->rData.t;
 	float minus = mPath->rData.t - mPath->sData.t;
-	vTheta[0] = v * (PI + plus);
-	vTheta[1] = v * (PI + minus);
-	vTheta[2] = v * (PI - plus);
-	vTheta[3] = v * (PI - minus);
+	vTheta[0] = v * (PI_1 + plus);
+	vTheta[1] = v * (PI_1 + minus);
+	vTheta[2] = v * (PI_1 - plus);
+	vTheta[3] = v * (PI_1 - minus);
 
 	for (int i = 0; i < 4; i++)
 	{

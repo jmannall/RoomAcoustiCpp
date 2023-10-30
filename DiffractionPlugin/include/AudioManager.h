@@ -1,5 +1,8 @@
 #pragma once
 
+#ifndef AUDIOMANAGER_H_
+#define AUDIOMANAGER_H_
+
 #include "UnityGAPlugin.h"
 
 #pragma region Buffer
@@ -89,6 +92,14 @@ protected:
 	Buffer y;
 };
 
+enum class FilterShape
+{
+	lpf,
+	hpf,
+	lbf,
+	hbf
+};
+
 class HighShelf : public IIRFilter
 {
 public:
@@ -120,12 +131,6 @@ struct TransDF2Parameters
 	TransDF2Parameters(float _z, float _p, float _k) : z{ _z, _z }, p{ _p, _p }, k(_k) {};
 };
 
-enum class FilterShape
-{
-	lpf,
-	hpf
-};
-
 class TransDF2 : public IIRFilter
 {
 public:
@@ -133,12 +138,16 @@ public:
 	TransDF2(int fs) : IIRFilter(2, fs) { a[0] = 1.0f; };
 	TransDF2(TransDF2Parameters zpk, int fs) : IIRFilter(2, fs) { a[0] = 1.0f; UpdateParameters(zpk); };
 	TransDF2(float fc, FilterShape shape, int fs) : IIRFilter(2, fs) { a[0] = 1.0f; UpdateParameters(fc, shape); };
+	TransDF2(float fb, float g, int m, int M, FilterShape shape, int fs) : IIRFilter(2, fs) { a[0] = 1.0f; UpdateParameters(fb, g, m, M, shape); };
 	void UpdateParameters(TransDF2Parameters zpk);
 	void UpdateParameters(float fc, FilterShape shape);
+	void UpdateParameters(float fb, float g, int m, int M, FilterShape shape);
 
 private:
 	void UpdateLPF(float fc);
 	void UpdateHPF(float fc);
+	void UpdateLBF(float fb, float g, int m, int M);
+	void UpdateHBF(float fb, float g, int m, int M);
 };
 
 class LinkwitzRiley
@@ -148,7 +157,7 @@ public:
 	LinkwitzRiley(float fc0, float fc1, float fc2, int fs);
 	~LinkwitzRiley() {};
 
-	float GetOutput(float input);
+	float GetOutput(const float input);
 	void UpdateParameters(float gain[]);
 
 	float fm[4];
@@ -162,4 +171,47 @@ private:
 
 	TransDF2 filters[20];
 };
+
+class BandPass
+{
+public:
+	BandPass();
+	BandPass(size_t order);
+	BandPass(size_t order, int fs);
+	BandPass(size_t order, FilterShape shape, float fb, float g, int fs);
+
+	void InitFilters(int order, int fs);
+	void UpdateParameters(float fb, float g, FilterShape shape);
+	float GetOutput(const float input);
+
+private:
+	int M;
+	size_t numFilters;
+	std::vector<TransDF2> filters;
+};
+
+class ParametricEQ
+{
+public:
+	ParametricEQ(size_t order);
+	ParametricEQ(size_t order, int fs);
+	ParametricEQ(size_t order, float fc[], float gain[], int fs);
+
+	void UpdateParameters(const float fc[], float gain[]);
+	float GetOutput(const float input);
+private:
+	void InitBands(int fs);
+
+	size_t mOrder;
+	size_t numFilters;
+	BandPass bands[4];
+	float mGain;
+	float fb[4];
+	float g[4];
+};
 #pragma endregion
+
+#endif AUDIOMANAGER_H_
+
+
+

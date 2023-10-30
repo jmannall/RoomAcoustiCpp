@@ -1,7 +1,8 @@
 #pragma once
 
 #include <iostream>
-#include<vector>
+#include <vector>
+#include <math.h>
 
 #pragma region vec3
 class vec3
@@ -33,6 +34,13 @@ inline bool operator==(const vec3& a, const vec3& b)
 	if ((a.x == b.x) & (a.y == b.y) & (a.z == b.z))
 		return true;
 	return false;
+}
+
+inline bool operator!=(const vec3& a, const vec3& b)
+{
+	if (a == b)
+		return false;
+	return true;
 }
 
 // add two vectors together like vec3 c = a + b;
@@ -81,7 +89,12 @@ inline std::ostream& operator<<(std::ostream& os, const vec3& v)
 
 inline vec3 UnitVector(vec3 v)
 {
-	return v / (v.Length());
+	float len = v.Length();
+	if (len == 0)
+	{
+		return vec3(0.0f, 0.0f, 0.0f);
+	}
+	return v / len;
 }
 
 inline float Dot(vec3 v, vec3 u)
@@ -92,7 +105,7 @@ inline float Dot(vec3 v, vec3 u)
 inline vec3 Cross(vec3 v, vec3 u)
 {
 	return vec3(v.y * u.z - v.z * u.y,
-		v.x * u.z - v.z * u.x,
+		v.z * u.x - v.x * u.z,
 		v.x * u.y - v.y * u.x);
 }
 #pragma endregion

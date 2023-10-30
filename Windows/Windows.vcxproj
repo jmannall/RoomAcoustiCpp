@@ -90,6 +90,7 @@
   </ImportGroup>
   <ImportGroup Label="Shared">
     <Import Project="..\DiffractionPlugin\DiffractionPlugin.vcxitems" Label="Shared" />
+    <Import Project="..\3DTI\3DTI.vcxitems" Label="Shared" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -192,17 +193,19 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_TEST;_DEBUG;WINDOWS_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_TEST;_DEBUG;WINDOWS_EXPORTS;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>D:\Joshua Mannall\VisualStudio\mcl-main\include;$(ProjectDir)include;D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\codegen\lib\myNN\include;D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include;D:\Joshua Mannall\VisualStudio\mcl-main\butter\include;D:\Joshua Mannall\VisualStudio\mcl-main\kissfft\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_Toolkit;D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_ResourceManager;D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\boost_circular_buffer;D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\cereal\include;D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include;D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src;D:\Joshua Mannall\VisualStudio\mcl-main\include;$(ProjectDir)include;D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\codegen\lib\myNN\include;D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include;D:\Joshua Mannall\VisualStudio\mcl-main\butter\include;D:\Joshua Mannall\VisualStudio\mcl-main\kissfft\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>Default</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
+      <AdditionalLibraryDirectories>D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\lib\win;D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>netcdf_x64.lib;libsofa_debug_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -215,8 +218,8 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>D:\Joshua Mannall\VisualStudio\mcl-main\include;$(ProjectDir)include;D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\codegen\lib\myNN\include;D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include;D:\Joshua Mannall\VisualStudio\mcl-main\butter\include;D:\Joshua Mannall\VisualStudio\mcl-main\kissfft\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_Toolkit;D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_ResourceManager;D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\boost_circular_buffer;D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\cereal\include;D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include;D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src;D:\Joshua Mannall\VisualStudio\mcl-main\include;$(ProjectDir)include;D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\codegen\lib\myNN\include;D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include;D:\Joshua Mannall\VisualStudio\mcl-main\butter\include;D:\Joshua Mannall\VisualStudio\mcl-main\kissfft\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>Default</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -224,6 +227,8 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
+      <AdditionalLibraryDirectories>D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\lib\win;D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>netcdf_x64.lib;libsofa_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseTest|x64'">
@@ -236,7 +241,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>D:\Joshua Mannall\VisualStudio\mcl-main\include;$(ProjectDir)\include;D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\codegen\lib\myNN\include;D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include;D:\Joshua Mannall\VisualStudio\mcl-main\butter\include;D:\Joshua Mannall\VisualStudio\mcl-main\kissfft\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_Toolkit;D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_ResourceManager;D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\boost_circular_buffer;D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\cereal\include;D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include;D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src;D:\Joshua Mannall\VisualStudio\mcl-main\include;$(ProjectDir)\include;D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\codegen\lib\myNN\include;D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include;D:\Joshua Mannall\VisualStudio\mcl-main\butter\include;D:\Joshua Mannall\VisualStudio\mcl-main\kissfft\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -244,6 +249,8 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
+      <AdditionalLibraryDirectories>D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\lib\win;D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>netcdf_x64.lib;libsofa_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

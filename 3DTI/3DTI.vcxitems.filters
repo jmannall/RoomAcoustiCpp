@@ -1,0 +1,270 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{62b70dae-e386-451f-8c8f-74c9340cf80c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{55cfe632-583b-4512-a198-af5e192f540e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Toolkit">
+      <UniqueIdentifier>{e6a9f3cd-1722-4612-804b-8a8b5bf1fed2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Toolkit\Binaural">
+      <UniqueIdentifier>{d917a339-ff3a-4611-8b02-8c4c237f9771}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Toolkit\Common">
+      <UniqueIdentifier>{00af2976-b80d-4967-a294-2a15e4c517cd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Toolkit">
+      <UniqueIdentifier>{9c4bbadd-d186-4ef1-9222-ecd4e91ae0a1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Toolkit\Binaural">
+      <UniqueIdentifier>{cf3cfcdf-d737-4af8-9ba7-2ade45d1301d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Toolkit\Common">
+      <UniqueIdentifier>{c204c509-9200-4c17-9af1-78bbde7e6d2e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ResourceManager">
+      <UniqueIdentifier>{47fb2a51-8950-417a-ab24-211130c9660d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ResourceManager">
+      <UniqueIdentifier>{3c16b0e4-bb25-478a-908f-9aa73d72f0ff}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\BinauralSpatializer\3DTI_BinauralSpatializer.h">
+      <Filter>Header Files\Toolkit\Binaural</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\BinauralSpatializer\BRIR.h">
+      <Filter>Header Files\Toolkit\Binaural</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\BinauralSpatializer\Core.h">
+      <Filter>Header Files\Toolkit\Binaural</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\BinauralSpatializer\Environment.h">
+      <Filter>Header Files\Toolkit\Binaural</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\BinauralSpatializer\HRTF.h">
+      <Filter>Header Files\Toolkit\Binaural</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\BinauralSpatializer\ILD.h">
+      <Filter>Header Files\Toolkit\Binaural</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\BinauralSpatializer\Listener.h">
+      <Filter>Header Files\Toolkit\Binaural</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\BinauralSpatializer\SingleSourceDSP.h">
+      <Filter>Header Files\Toolkit\Binaural</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\BinauralSpatializer\UPCAnechoic.h">
+      <Filter>Header Files\Toolkit\Binaural</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\AIR.h">
+      <Filter>Header Files\Toolkit\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\AudioState.h">
+      <Filter>Header Files\Toolkit\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\BiquadFilter.h">
+      <Filter>Header Files\Toolkit\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\Buffer.h">
+      <Filter>Header Files\Toolkit\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\CommonDefinitions.h">
+      <Filter>Header Files\Toolkit\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\Conventions.h">
+      <Filter>Header Files\Toolkit\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\Delay.h">
+      <Filter>Header Files\Toolkit\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\DistanceAttenuator.h">
+      <Filter>Header Files\Toolkit\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\DynamicCompressorMono.h">
+      <Filter>Header Files\Toolkit\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\DynamicCompressorStereo.h">
+      <Filter>Header Files\Toolkit\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\DynamicExpanderMono.h">
+      <Filter>Header Files\Toolkit\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\DynamicProcessor.h">
+      <Filter>Header Files\Toolkit\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\EnvelopeDetector.h">
+      <Filter>Header Files\Toolkit\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\ErrorHandler.h">
+      <Filter>Header Files\Toolkit\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\FarDistanceEffects.h">
+      <Filter>Header Files\Toolkit\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\fftsg.h">
+      <Filter>Header Files\Toolkit\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\FiltersBank.h">
+      <Filter>Header Files\Toolkit\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\FiltersChain.h">
+      <Filter>Header Files\Toolkit\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\Fprocessor.h">
+      <Filter>Header Files\Toolkit\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\GammatoneFilter.h">
+      <Filter>Header Files\Toolkit\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\GammatoneFilterBank.h">
+      <Filter>Header Files\Toolkit\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\GraphicEqualizer.h">
+      <Filter>Header Files\Toolkit\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\Magnitudes.h">
+      <Filter>Header Files\Toolkit\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\NoiseGenerator.h">
+      <Filter>Header Files\Toolkit\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\Profiler.h">
+      <Filter>Header Files\Toolkit\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\Quaternion.h">
+      <Filter>Header Files\Toolkit\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\Transform.h">
+      <Filter>Header Files\Toolkit\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\UPCEnvironment.h">
+      <Filter>Header Files\Toolkit\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\Vector3.h">
+      <Filter>Header Files\Toolkit\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\Waveguide.h">
+      <Filter>Header Files\Toolkit\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\HRTF\HRTFCereal.h">
+      <Filter>Header Files\ResourceManager</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\HRTF\HRTFFactory.h">
+      <Filter>Header Files\ResourceManager</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\ILD\ILDCereal.h">
+      <Filter>Header Files\ResourceManager</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\BinauralSpatializer\BRIR.cpp">
+      <Filter>Source Files\Toolkit\Binaural</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\BinauralSpatializer\Core.cpp">
+      <Filter>Source Files\Toolkit\Binaural</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\BinauralSpatializer\Environment.cpp">
+      <Filter>Source Files\Toolkit\Binaural</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\BinauralSpatializer\HRTF.cpp">
+      <Filter>Source Files\Toolkit\Binaural</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\BinauralSpatializer\ILD.cpp">
+      <Filter>Source Files\Toolkit\Binaural</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\BinauralSpatializer\Listener.cpp">
+      <Filter>Source Files\Toolkit\Binaural</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\BinauralSpatializer\SingleSourceDSP.cpp">
+      <Filter>Source Files\Toolkit\Binaural</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\BinauralSpatializer\UPCAnechoic.cpp">
+      <Filter>Source Files\Toolkit\Binaural</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\BiquadFilter.cpp">
+      <Filter>Source Files\Toolkit\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\Delay.cpp">
+      <Filter>Source Files\Toolkit\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\DistanceAttenuator.cpp">
+      <Filter>Source Files\Toolkit\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\DynamicCompressorMono.cpp">
+      <Filter>Source Files\Toolkit\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\DynamicCompressorStereo.cpp">
+      <Filter>Source Files\Toolkit\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\DynamicExpanderMono.cpp">
+      <Filter>Source Files\Toolkit\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\EnvelopeDetector.cpp">
+      <Filter>Source Files\Toolkit\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\ErrorHandler.cpp">
+      <Filter>Source Files\Toolkit\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\FarDistanceEffects.cpp">
+      <Filter>Source Files\Toolkit\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\fftsg.cpp">
+      <Filter>Source Files\Toolkit\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\FiltersBank.cpp">
+      <Filter>Source Files\Toolkit\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\FiltersChain.cpp">
+      <Filter>Source Files\Toolkit\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\Fprocessor.cpp">
+      <Filter>Source Files\Toolkit\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\GammatoneFilter.cpp">
+      <Filter>Source Files\Toolkit\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\GammatoneFilterBank.cpp">
+      <Filter>Source Files\Toolkit\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\GraphicEqualizer.cpp">
+      <Filter>Source Files\Toolkit\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\Magnitudes.cpp">
+      <Filter>Source Files\Toolkit\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\NoiseGenerator.cpp">
+      <Filter>Source Files\Toolkit\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\Profiler.cpp">
+      <Filter>Source Files\Toolkit\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\Quaternion.cpp">
+      <Filter>Source Files\Toolkit\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\Transform.cpp">
+      <Filter>Source Files\Toolkit\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\UPCEnvironment.cpp">
+      <Filter>Source Files\Toolkit\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\Vector3.cpp">
+      <Filter>Source Files\Toolkit\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\Waveguide.cpp">
+      <Filter>Source Files\Toolkit\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\HRTF\HRTFCereal.cpp">
+      <Filter>Source Files\ResourceManager</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\HRTF\HRTFFactory.cpp">
+      <Filter>Source Files\ResourceManager</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\ILD\ILDCereal.cpp">
+      <Filter>Source Files\ResourceManager</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

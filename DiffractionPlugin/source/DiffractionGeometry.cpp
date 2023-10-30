@@ -20,9 +20,9 @@ void Wedge::InitWedge()
 	mEdgeNormal = UnitVector(mFaceNormals[0] + mFaceNormals[1]);
 
 	if (Cross(mFaceNormals[0], mFaceNormals[1]) == mEdgeVector)
-		t = 2 * PI - acosf(Dot(mFaceNormals[0], mFaceNormals[1]));
-	else
 		t = acosf(Dot(mFaceNormals[0], mFaceNormals[1]));
+	else
+		t = PI_2 - acosf(Dot(mFaceNormals[0], mFaceNormals[1]));
 
 	UpdateEdgeLength();
 }
@@ -81,7 +81,7 @@ void DiffractionPath::UpdateBaMa()
 {
 	bA = fabs(rData.t - sData.t);
 	mA = fmin(sData.t, rData.t);
-	if (bA > PI)
+	if (bA > PI_1)
 		inShadow = true;
 	else
 		inShadow = false;

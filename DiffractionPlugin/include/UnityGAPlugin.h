@@ -12,6 +12,11 @@
 #include "myNN_terminate.h"
 #include "mySmallNN.h"
 
+#include "BinauralSpatializer/3DTI_BinauralSpatializer.h"
+#include "HRTF/HRTFFactory.h"
+#include "HRTF/HRTFCereal.h"
+#include "ILD/ILDCereal.h"
+
 namespace GA
 {
 	// GA_API

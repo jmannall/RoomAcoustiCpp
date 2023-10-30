@@ -4,7 +4,7 @@
 #pragma region Buffer
 Buffer::Buffer()
 {
-	InitialiseBuffer(DEFAULT_BUFFER_SIZE);
+	InitialiseBuffer(512);
 }
 
 Buffer::Buffer(int n)
@@ -20,12 +20,9 @@ void Buffer::ResizeBuffer(size_t numSamples)
 		mBuffer.reserve(numSamples);
 		std::fill_n(std::back_inserter(mBuffer), numSamples - capacity, 0.0f);
 	}
-	else if (capacity > DEFAULT_BUFFER_SIZE)
+	else
 	{
-		if (capacity > numSamples)
-		{
-			mBuffer.shrink_to_fit();
-		}
+		mBuffer.resize(numSamples);
 	}
 }
 
@@ -139,6 +136,103 @@ void IIRFilter::SetT(int fs)
 }
 #pragma endregion
 
+#pragma region ParametricEQ
+ParametricEQ::ParametricEQ(size_t order) : mOrder(order), numFilters(4), mGain(0.0f)
+{
+	InitBands(48000);
+}
+
+ParametricEQ::ParametricEQ(size_t order, int fs) : mOrder(order), numFilters(4), mGain(0.0f)
+{
+	InitBands(fs);
+}
+
+ParametricEQ::ParametricEQ(size_t order, float fc[], float gain[], int fs) : mOrder(order), numFilters(4)
+{
+	InitBands(fs);
+	UpdateParameters(fc, gain);
+}
+
+void ParametricEQ::UpdateParameters(const float fc[], float gain[])
+{
+	mGain = gain[numFilters];
+	for (int i = 0; i < numFilters + 1; i++)
+	{
+		gain[i] = std::max(EPS, gain[i]); // Prevent division by zero
+	}
+	for (int i = 0; i < numFilters; i++)
+	{
+		fb[i] = fc[i] * sqrtf(fc[i + 1] / fc[i]);
+		g[i] = gain[i] / gain[i + 1];
+		bands[i].UpdateParameters(fb[i], g[i], FilterShape(FilterShape::lbf));
+	}
+}
+
+float ParametricEQ::GetOutput(const float input)
+{
+	float out = input;
+	for (int i = 0; i < numFilters; i++)
+	{
+		out = bands[i].GetOutput(out);
+	}
+	return mGain * out;
+}
+
+void ParametricEQ::InitBands(int fs)
+{
+	for (int i = 0; i < numFilters; i++)
+	{
+		bands[i].InitFilters(mOrder, fs);
+	}
+}
+#pragma endregion
+
+#pragma region BandPass
+BandPass::BandPass() : numFilters(0), M(0) {};
+
+BandPass::BandPass(size_t order)
+{
+	InitFilters(order, 48000);
+};
+
+BandPass::BandPass(size_t order, int fs)
+{
+	InitFilters(order, fs);
+};
+
+BandPass::BandPass(size_t order, FilterShape shape, float fb, float g, int fs)
+{
+	InitFilters(order, fs);
+	UpdateParameters(fb, g, shape);
+};
+
+void BandPass::InitFilters(int order, int fs)
+{
+	M = order;
+	numFilters = order / 2.0f;
+	filters.reserve(numFilters);
+	std::fill_n(std::back_inserter(filters), numFilters, TransDF2(fs));
+}
+
+void BandPass::UpdateParameters(float fb, float g, FilterShape shape)
+{
+	for (int i = 0; i < numFilters; i++)
+	{
+		filters[i].UpdateParameters(fb, g, i + 1, M, shape);
+	}
+}
+
+float BandPass::GetOutput(const float input)
+{
+	float out = input;
+	for (int i = 0; i < numFilters; i++)
+	{
+		out = filters[i].GetOutput(out);
+	}
+	return out;
+}
+#pragma endregion
+
 #pragma region HighShelf
 void HighShelf::UpdateParameters(float fc, float g)
 {
@@ -197,7 +291,8 @@ void TransDF2::UpdateParameters(TransDF2Parameters zpk)
 
 void TransDF2::UpdateParameters(float fc, FilterShape shape)
 {
-	switch (shape) {
+	switch (shape)
+	{
 	case FilterShape::lpf:
 		UpdateLPF(fc);
 		break;
@@ -206,33 +301,95 @@ void TransDF2::UpdateParameters(float fc, FilterShape shape)
 		break;
 	}
 }
+void TransDF2::UpdateParameters(float fb, float g, int m, int M, FilterShape shape)
+{
+	switch (shape)
+	{
+	case FilterShape::lbf:
+		UpdateLBF(fb, g, m, M);
+		break;
+	case FilterShape::hbf:
+		UpdateHBF(fb, g, m, M);
+		break;
+	}
+}
 
 void TransDF2::UpdateLPF(float fc)
 {
-	float omega = cot(PI_2 * fc * T / 2);
+	//float omega = cot(PI_2 * fc * T / 2.0f);
+	float omega = cot(PI_1 * fc * T);
 	float omega_sq = powf(omega, 2);
 
-	float a0 = 1.0f / (1 + SQRT_2 * omega + omega_sq);
+	float a0 = 1.0f / (1.0f + SQRT_2 * omega + omega_sq);
 	b[0] = a0;
 	b[1] = 2.0f * a0;
 	b[2] = a0;
 
-	a[1] = (2 - 2 * omega_sq) * a0;
-	a[2] = (1 - SQRT_2 * omega + omega_sq) * a0;
+	a[1] = (2.0f - 2.0f * omega_sq) * a0;
+	a[2] = (1.0f - SQRT_2 * omega + omega_sq) * a0;
 }
 
 void TransDF2::UpdateHPF(float fc)
 {
-	float omega = cot(PI_2 * fc * T / 2);
+	//float omega = cot(PI_2 * fc * T / 2.0f);
+	float omega = cot(PI_1 * fc * T);
 	float omega_sq = powf(omega, 2);
 
-	float a0 = 1.0f / (1 + SQRT_2 * omega + omega_sq);
+	float a0 = 1.0f / (1.0f + SQRT_2 * omega + omega_sq);
 	b[0] = omega_sq * a0;
 	b[1] = -2.0f * omega_sq * a0;
 	b[2] = omega_sq * a0;
 
-	a[1] = (2 - 2 * omega_sq) * a0;
-	a[2] = (1 - SQRT_2 * omega + omega_sq) * a0;
+	a[1] = (2.0f - 2.0f * omega_sq) * a0;
+	a[2] = (1.0f - SQRT_2 * omega + omega_sq) * a0;
+}
+
+void TransDF2::UpdateLBF(float fb, float g, int m, int M)
+{
+	float K = tanf(PI_1 * fb * T);
+	float K_2 = 2 * K;
+	float K_sq = powf(K, 2);
+	float K_sq_2 = 2 * K_sq;
+	float M_2 = 2 * M;
+	float V = powf(g, 1.0f / M) - 1;
+	float VK = V * K;
+	float VK_2 = 2 * VK;
+	float VK_sq = powf(VK, 2);
+
+	float alpha = (0.5f - (2.0f * m - 1.0f) / (M_2)) * PI_1;
+	float cm = cosf(alpha);
+	float K2cm = K_2 * cm;
+	float a0 = 1.0f / (1.0f + K2cm + K_sq);
+	a[1] = (K_sq_2 - 2.0f) * a0;
+	a[2] = (1.0f - K2cm + K_sq) * a0;
+
+	b[0] = a[0] + (VK_2 * (K + cm) + VK_sq) * a0;
+	b[1] = a[1] + (VK_2 * K_2 + VK_sq * 2.0f) * a0;
+	b[2] = a[2] + (VK_2 * (K - cm) + VK_sq) * a0;
+}
+
+void TransDF2::UpdateHBF(float fb, float g, int m, int M)
+{
+	float K = tanf(PI_1 * fb * T);
+	float K_2 = 2 * K;
+	float K_sq = powf(K, 2);
+	float K_sq_2 = 2 * K_sq;
+	float M_2 = 2 * M;
+	float V = powf(g, 1.0f / M) - 1;
+	float VK = V * K;
+	float VK_2 = 2 * VK;
+	float VK_sq = powf(VK, 2);
+
+	float alpha = (0.5f - (2.0f * m - 1.0f) / (M_2)) * PI_1;
+	float cm = cosf(alpha);
+	float K2cm = K_2 * cm;
+	float a0 = 1.0f / (1.0f + K2cm + K_sq);
+	a[1] = (2.0f - K_sq_2) * a0;
+	a[2] = (1.0f - K2cm + K_sq) * a0;
+
+	b[0] = a[0] + (VK_2 * (K + cm) + VK_sq) * a0;
+	b[1] = a[1] - (VK_2 * K_2 + VK_sq * 2.0f) * a0;
+	b[2] = a[2] + (VK_2 * (K - cm) + VK_sq) * a0;
 }
 #pragma endregion
 
@@ -301,7 +458,7 @@ void LinkwitzRiley::UpdateParameters(float gain[])
 		g[i] = *gain++;
 }
 
-float LinkwitzRiley::GetOutput(float input)
+float LinkwitzRiley::GetOutput(const float input)
 {
 	float mid[2];
 	mid[0] = filters[1].GetOutput(filters[0].GetOutput(input));

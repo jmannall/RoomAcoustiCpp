@@ -8,9 +8,9 @@ using Receiver = Source;
 
 float Test();
 
-inline float Deg2Rad(const float degrees) { return degrees * (PI / 180); }
+inline float Deg2Rad(const float degrees) { return degrees * (PI_1 / 180); }
 
-inline float Rad2Deg(const float radians) { return radians * (180 / PI); }
+inline float Rad2Deg(const float radians) { return radians * (180 / PI_1); }
 
 struct WedgeData
 {

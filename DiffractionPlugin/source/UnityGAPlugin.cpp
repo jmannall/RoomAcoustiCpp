@@ -14,7 +14,7 @@ extern "C"
 {
 #pragma region UnityPluginInterface
 
-	GA_EXPORT void GA_CC UnityPluginLoad(IUnityInterfaces* unityInterfaces)
+	/*GA_EXPORT void GA_CC UnityPluginLoad(IUnityInterfaces* unityInterfaces)
 	{
 		(void)unityInterfaces;
 	}
@@ -22,7 +22,7 @@ extern "C"
 	GA_EXPORT void GA_CC UnityPluginUnload()
 	{
 
-	}
+	}*/
 
 #pragma endregion
 
@@ -154,6 +154,48 @@ extern "C"
 	GA_EXPORT void GA_CC GAGetOutputBuffer(float** buf)
 	{
 		*buf = buffer;
+	}
+#pragma endregion
+
+#pragma region Spatialiser
+	GA_EXPORT void GA_CC InitSpatialiser()
+	{
+		Binaural::CCore myCore;
+
+		// Audio settings
+		int sampleRate = 48000;
+		int bufferSize = 1024;
+		myCore.SetAudioState({ sampleRate, bufferSize });
+
+		// HRT resampling
+		int HRTF_resamplingStep = 45;
+		myCore.SetHRTFResamplingStep(HRTF_resamplingStep);
+
+		// Listener
+		shared_ptr<Binaural::CListener> listener = myCore.CreateListener();
+
+		// Sources //
+		shared_ptr<Binaural::CSingleSourceDSP> mySource;
+		mySource = myCore.CreateSingleSourceDSP();
+
+		// Spatialisation mode
+		mySource->SetSpatializationMode(Binaural::TSpatializationMode::HighQuality);
+
+		string resourcePath = "D:\Joshua Mannall\GitHub\3dti_AudioToolkit\resources";
+		string hrtfPath = "\HRTF\3DTI\3DTI_HRTF_IRC1008_128s_48000Hz.3dti-hrtf";
+		string sofaPath = "\HRTF\SOFA\3DTI_HRTF_IRC1008_128s_48000Hz.sofa";
+		bool specifiedDelays;
+		bool result = HRTF::CreateFromSofa(hrtfPath + sofaPath, listener, specifiedDelays);
+		//bool result = HRTF::CreateFrom3dti(resourcePath + hrtfPath, listener);
+		if (result) { cout << "HRTF has been loaded successfully"; }
+
+		string ildPath = "\ILD\NearFieldCompensation_ILD_48000";
+		result = ILD::CreateFrom3dti_ILDNearFieldEffectTable(resourcePath + ildPath, listener);
+
+		// If high performance mode
+		// string ildPath = "\ILD\HRTF_ILD_48000";
+		// result = ILD::CreateFrom3dti_ILDSpatializationTable(resourcePath + ildPath, listener);
+		if (result) { cout << "ILD Near Field Effect simulation file has been loaded successfully"; }
 	}
 #pragma endregion
 }
