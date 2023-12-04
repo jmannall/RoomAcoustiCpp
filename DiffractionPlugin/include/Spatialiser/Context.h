@@ -22,6 +22,9 @@ namespace Spatialiser
 		~Context();
 
 		bool IsRunning() const { return mIsRunning; }
+		ISMConfig GetISMConfig() const{ return mISMConfig; }
+		void UpdateISMConfig(const ISMConfig& config) { mISMConfig = config; }
+
 		void StopRunning() { mIsRunning = false; }
 		bool FilesLoaded();
 
@@ -76,6 +79,7 @@ namespace Spatialiser
 
 		std::thread mBackgroundProcessor;	// background thread handle
 		bool mIsRunning;
+		ISMConfig mISMConfig;
 		int count;
 
 		Room* mRoom;

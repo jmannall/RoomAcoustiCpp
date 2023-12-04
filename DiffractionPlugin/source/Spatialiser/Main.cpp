@@ -61,6 +61,37 @@ extern "C"
 		Exit();
 	}
 
+	GA_EXPORT void GA_CC HRTFUpdateConfig(int diffractionDepth, bool shadowOnly)
+	{
+		ISMConfig config;
+		config.shadowOnly = shadowOnly;
+		switch (diffractionDepth)
+		{
+			case 0:
+			{
+				config.diffraction = DiffractionDepth::none;
+				break;
+			}
+			case 1:
+			{
+				config.diffraction = DiffractionDepth::edgeOnly;
+				break;
+			}
+			case 2:
+			{
+				config.diffraction = DiffractionDepth::edSp;
+				break;
+			}
+			default:
+			{
+				config.diffraction = DiffractionDepth::none;
+				break;
+			}
+		}
+		UpdateISMConfig(config);
+	}
+
+
 	GA_EXPORT int GA_CC HRTFInitWall(float nX, float nY, float nZ, const float* vData, int numVertices, float aL, float aML, float aM, float aMH, float aH, int reverbWallId)
 	{
 		Absorption absorption = Absorption(aL, aML, aM, aMH, aH);

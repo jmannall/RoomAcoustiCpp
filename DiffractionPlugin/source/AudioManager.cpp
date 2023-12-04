@@ -79,7 +79,7 @@ float FIRFilter::GetOutput(float input)
 		Buffer store = x;
 		for (int i = 0; i < xLen; i++)
 		{
-			x[i] = store[count + i % xLen];
+			x[i] = store[(count + i) % xLen];
 		}
 		x.ResizeBuffer(irLen);
 		count = 0;
@@ -117,6 +117,7 @@ float IIRFilter::GetOutput(float input)
 	for (int i = 0; i < order; i++)
 	{
 		y[0] += b[i] * x[i] - a[i + 1] * y[i + 1];
+		//y[0] += b[i] * x[i] + a[i + 1] * y[i + 1];
 	}
 	y[0] += b[order] * x[order];
 
@@ -164,6 +165,7 @@ void ParametricEQ::UpdateParameters(const float fc[], float gain[])
 	{
 		fb[i] = fc[i] * sqrtf(fc[i + 1] / fc[i]);
 		g[i] = gain[i] / gain[i + 1];
+		// g[i] = gain[i + 1] / gain[i];
 		bands[i].UpdateParameters(fb[i], g[i], FilterShape(FilterShape::lbf));
 	}
 }

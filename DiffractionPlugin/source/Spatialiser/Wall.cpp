@@ -54,13 +54,13 @@ float Wall::AreaOfTriangle(const vec3& v, const vec3& u, const vec3& w)
 
 #pragma region Geometry Checks
 
-bool Wall::LineWallIntersection(const vec3& start, const vec3& end)
+bool Wall::LineWallIntersection(const vec3& start, const vec3& end) const
 {
 	vec3 intersection;
 	return LineWallIntersection(intersection, start, end);
 }
 
-bool Wall::LineWallIntersection(vec3& intersection, const vec3& start, const vec3& end)
+bool Wall::LineWallIntersection(vec3& intersection, const vec3& start, const vec3& end) const
 {
 	vec3 grad = start - end;
 	float scale = Dot(mNormal, grad);
@@ -79,31 +79,38 @@ bool Wall::LineWallIntersection(vec3& intersection, const vec3& start, const vec
 		return false;
 
 	// Check intersection lies within plane
-	float angleRot = 0.0f;
+	double angleRot = 0.0f;
+	float angleRotF = 0.0f;
 	for (int i = 0; i < mNumVertices; i++)
 	{
 		int idx = (i + 1) % mNumVertices;
 		vec3 one = intersection - mVertices[i];
 		vec3 two = intersection - mVertices[idx];
 		float dotProduct = Dot(mNormal, Cross(one, two));
-		angleRot += Sign(dotProduct) * acosf(Dot(one, two) / (one.Length() * two.Length()));
+		angleRot += (double)Sign(dotProduct) * acos((double)Dot(one, two) / ((double)one.Length() * (double)two.Length()));
+		angleRotF += Sign(dotProduct) * acosf(Dot(one, two) / (one.Length() * two.Length()));
 	}
-	float eps = 0.001f;
-	if (angleRot > PI_2 + eps)
+	//if (angleRotF == PI_2)
+	//	return true;
+	//return false;
+	float eps = 0.00001f;
+	if (angleRotF > PI_2 + eps)
 		return false;
-	else if (angleRot < PI_2 - eps)
+	else if (angleRotF < PI_2 - eps)
 		return false;
 	else
 		return true;
 }
 
-bool Wall::ReflectPointInWall(const vec3& point)
+bool Wall::ReflectPointInWall(const vec3& point) const
 {
-	vec3 dest;
-	return ReflectPointInWall(dest, point);
+	float k = PointWallPosition(point);
+	if (k > 0) // Check source in front of plane
+		return true;
+	return false;
 }
 
-bool Wall ::ReflectPointInWall(vec3& dest, const vec3& point)
+bool Wall ::ReflectPointInWall(vec3& dest, const vec3& point) const
 {
 	float k = PointWallPosition(point);
 	if (k > 0) // Check source in front of plane
@@ -112,6 +119,14 @@ bool Wall ::ReflectPointInWall(vec3& dest, const vec3& point)
 		return true;
 	}
 	return false;
+}
+
+bool Wall::ReflectEdgeInWall(const Edge& edge) const
+{
+	bool valid = ReflectPointInWall(edge.GetEdgeCoord(EPS)); // Prevents false in case edge base is coplanar
+	if (valid)
+		valid = ReflectPointInWall(edge.GetEdgeCoord(edge.zW - EPS));
+	return valid;
 }
 
 #pragma endregion

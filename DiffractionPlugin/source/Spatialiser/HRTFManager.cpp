@@ -70,6 +70,7 @@ namespace Spatialiser
 		}
 		}
 		mSource->EnablePropagationDelay();
+		mSource->DisableFarDistanceEffect();
 
 		ResetFDNSlots();
 	}
@@ -96,6 +97,10 @@ namespace Spatialiser
 		for (int i = 0; i < mVirtualSources.size(); i++)
 		{
 			mVirtualSources[i].ProcessAudio(data, numFrames, reverbInput, outputBuffer);
+		}
+		for (int i = 0; i < mVirtualEdgeSources.size(); i++)
+		{
+			mVirtualEdgeSources[i].ProcessAudio(data, numFrames, reverbInput, outputBuffer);
 		}
 
 		if (isVisible)
@@ -141,7 +146,7 @@ namespace Spatialiser
 		}
 	}
 
-	void SourceNew::RemoveVirtualSources()
+	void SourceNew::RemoveVirtualSources() // Add remove edge sources
 	{
 		if (!removedWalls.empty())
 		{
@@ -159,11 +164,17 @@ namespace Spatialiser
 
 	void SourceNew::UpdateVirtualSource(const VirtualSourceData& data)
 	{
-		VirtualSourceMap* tempStore = &mVirtualSources;
-		int reflectionIdx = data.GetReflectionOrder() - 1;
-		for (int i = 0; i < reflectionIdx; i++)
+		int orderIdx = data.GetOrder() - 1;
+
+		VirtualSourceMap* tempStore;
+		if (data.IsReflection(0))
+			tempStore = &mVirtualSources;
+		else
+			tempStore = &mVirtualEdgeSources;
+
+		for (int i = 0; i < orderIdx; i++)
 		{
-			auto it = tempStore->find(data.GetWallID(i));
+			auto it = tempStore->find(data.GetID(i));
 			if (it == tempStore->end())		// case: source does not exist
 			{
 				// Source higher in the tree does not exist
@@ -171,10 +182,13 @@ namespace Spatialiser
 			}
 			else
 			{
-				tempStore = &it->second.mChildren;
+				if (data.IsReflection(i + 1))
+					tempStore = &it->second.mVirtualSources;
+				else
+					tempStore = &it->second.mVirtualEdgeSources;
 			}
 		}
-		auto it = tempStore->find(data.GetWallID(reflectionIdx));
+		auto it = tempStore->find(data.GetID(orderIdx));
 		if (it == tempStore->end())		// case: source does not exist
 		{
 			// Virtual source does not exist in tree
@@ -183,14 +197,10 @@ namespace Spatialiser
 
 			VirtualSource virtualSource = VirtualSource(mCore, mHRTFMode, sampleRate, data, freeFDNChannels.back() % mNumFDNChannels);
 			if (freeFDNChannels.size() > 1)
-			{
 				freeFDNChannels.pop_back();
-			}
 			else
-			{
 				freeFDNChannels[0]++;
-			}
-			tempStore->insert_or_assign(data.GetWallID(reflectionIdx), virtualSource);
+			tempStore->insert_or_assign(data.GetID(orderIdx), virtualSource);
 			virtualSource.Deactivate();
 			return;
 		}

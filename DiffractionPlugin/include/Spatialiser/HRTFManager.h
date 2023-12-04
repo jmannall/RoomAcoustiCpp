@@ -51,6 +51,7 @@ namespace Spatialiser
 
 		shared_ptr<Binaural::CSingleSourceDSP> mSource;
 		VirtualSourceMap mVirtualSources;
+		VirtualSourceMap mVirtualEdgeSources;
 		size_t mNumFDNChannels;
 		std::vector<int> freeFDNChannels;
 		bool isVisible;

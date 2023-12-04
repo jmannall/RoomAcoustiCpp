@@ -1,6 +1,7 @@
 #pragma once
 
 #include "vec3.h"
+#include "Spatialiser/Edge.h"
 #include "UnityGAPlugin.h"
 #include "Debug.h"
 
@@ -74,6 +75,16 @@ namespace Spatialiser
 			return *this;
 		}
 
+		inline FrequencyDependence Log()
+		{
+			low = log(low);
+			midLow = log(midLow);
+			mid = log(mid);
+			midHigh = log(midHigh);
+			high = log(high);
+			return *this;
+		}
+
 	protected:
 		float low, midLow, mid, midHigh, high;
 
@@ -130,6 +141,13 @@ namespace Spatialiser
 		return FrequencyDependence(a / g[0], a / g[1], a / g[2], a / g[3], a / g[4]);
 	}
 
+	inline FrequencyDependence operator/(const FrequencyDependence& f, const float& a)
+	{
+		float g[5];
+		f.GetValues(g);
+		return FrequencyDependence(g[0] / a, g[1] / a, g[2] / a, g[3] / a, g[4] / a);
+	}
+
 	inline bool operator<(const FrequencyDependence& f, const float& a)
 	{
 		float g[5];
@@ -158,12 +176,12 @@ namespace Spatialiser
 		return valid;
 	}
 
-	class Absorption : public FrequencyDependence // Stores 1 - R. Where R is the absortion property of the material
-	{
+	class Absorption : public FrequencyDependence // Stores sqrt(1 - R). Where R is the absortion property of the material in the pressure domain
+	{												// Processing done in the energy domain
 	public:
 		Absorption() : FrequencyDependence(1.0f, 1.0f, 1.0f, 1.0f, 1.0f), area(0.0f) {}
-		Absorption(float l, float mL, float m, float mH, float h) : FrequencyDependence(1.0f - l, 1.0f - mL, 1.0f - m, 1.0f - mH, 1.0f - h), area(0.0f) {}
-		Absorption(float l, float mL, float m, float mH, float h, float _area) : FrequencyDependence(l, mL, m, mH, h), area(_area) {}
+		Absorption(float l, float mL, float m, float mH, float h) : FrequencyDependence(sqrtf(1.0f - l), sqrtf(1.0f - mL), sqrtf(1.0f - m), sqrtf(1.0f - mH), sqrtf(1.0f - h)), area(0.0f) {}
+		Absorption(float l, float mL, float m, float mH, float h, float _area) : FrequencyDependence(l, mL, m, mH, h), area(_area) {} // Is this correct. Is this used?
 		~Absorption() {}
 
 		inline Absorption operator=(const FrequencyDependence& v)
@@ -245,10 +263,11 @@ namespace Spatialiser
 		inline void SetRValid(const bool& valid) { rValid = valid; }
 
 		float PointWallPosition(const vec3& point) const { return Dot(point, mNormal) - d; }
-		bool LineWallIntersection(const vec3& start, const vec3& end);
-		bool LineWallIntersection(vec3& dest, const vec3& start, const vec3& end);
-		bool ReflectPointInWall(const vec3& point);
-		bool ReflectPointInWall(vec3& dest, const vec3& point);
+		bool LineWallIntersection(const vec3& start, const vec3& end) const;
+		bool LineWallIntersection(vec3& intersection, const vec3& start, const vec3& end) const;
+		bool ReflectPointInWall(const vec3& point) const;
+		bool ReflectPointInWall(vec3& dest, const vec3& point) const;
+		bool ReflectEdgeInWall(const Edge& edge) const;
 
 		Absorption Update(const vec3& normal, const float* vData, size_t numVertices, Absorption& absorption);
 

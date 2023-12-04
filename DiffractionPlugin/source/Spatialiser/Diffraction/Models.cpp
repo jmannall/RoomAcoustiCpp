@@ -1,5 +1,10 @@
 
-#include "DiffractionModel.h"
+#include "Spatialiser/Diffraction/Models.h"
+
+using namespace Spatialiser;
+using namespace Spatialiser::Diffraction;
+
+#pragma region Attenuate
 
 void Attenuate::UpdateParameters()
 {
@@ -22,7 +27,11 @@ void Attenuate::ProcessAudio(float* inBuffer, float* outBuffer, int numFrames, f
 	}
 }
 
-LPF::LPF(DiffractionPath* path, int fs) : fc(1000.0f), targetGain(0.0f), currentGain(0.0f), mPath(path)
+#pragma endregion
+
+#pragma region LPF
+
+LPF::LPF(Path* path, int fs) : fc(1000.0f), targetGain(0.0f), currentGain(0.0f), mPath(path)
 {
 	m = new std::mutex();
 	filter.SetT(fs);
@@ -51,7 +60,11 @@ void LPF::ProcessAudio(float* inBuffer, float* outBuffer, int numFrames, float l
 	}
 }
 
-UDFA::UDFA(DiffractionPath* path, int fs) : numFilters(4), target(), current(), params(), mPath(path)
+#pragma endregion
+
+#pragma region UDFA
+
+UDFA::UDFA(Path* path, int fs) : numFilters(4), target(), current(), params(), mPath(path)
 {
 	m = new std::mutex();
 	for (int i = 0; i < numFilters; i++)
@@ -207,6 +220,10 @@ void UDFA::ProcessAudio(float* inBuffer, float* outBuffer, int numFrames, float 
 	}
 }
 
+#pragma endregion
+
+#pragma region UDFA-I
+
 void UDFAI::UpdateParameters()
 {
 	if (mPath->valid && mPath->inShadow)
@@ -264,7 +281,11 @@ complexF UDFAI::CalcH(float z, float t, float f)
 	return g * CalcUDFA(f, fc, g);
 }
 
-NN::NN(DiffractionPath* path) : mInput{ 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f }, target(), current(), filter(48000), mPath(path)
+#pragma endregion
+
+#pragma region NN
+
+NN::NN(Path* path) : mInput{ 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f }, target(), current(), filter(48000), mPath(path)
 {
 	m = new std::mutex();
 	UpdateParameters();
@@ -357,7 +378,11 @@ void NN::ProcessAudio(float* inBuffer, float* outBuffer, int numFrames, float le
 	}
 }
 
-UTD::UTD(DiffractionPath* path, int fs) : lrFilter(fs), target(), current(), params(), mPath(path)
+#pragma endregion
+
+#pragma region UTD
+
+UTD::UTD(Path* path, int fs) : lrFilter(fs), target(), current(), params(), mPath(path)
 {
 	m = new std::mutex();
 	for (int i = 0; i < 4; i++)
@@ -410,16 +435,16 @@ complexF UTD::EqHalf(float t, const int i)
 complexF UTD::EqQuarter(float t, bool plus, const int i)
 {
 	float cotArg = (PI_1 + PM(t, plus)) / (2 * n);
-if (fabs(cotArg) < 0.001f)
-{
-	float tArg = PM(-CalcTArg(t, plus), plus);
-	float eps = PI_1 + tArg;
-	if (eps == 0)
-		eps = 0.001f;
-	float kL2 = 2 * k[i] * L;
-	return n * exp(imUnit * PI_1 / 4.0f) * (sqrtf(PI_1 * kL2) * Sign(eps) - kL2 * eps * exp(imUnit * PI_1 / 4.0f));
-}
-return cot(cotArg) * FuncF(k[i] * L * Apm(t, plus));
+	if (fabs(cotArg) < 0.001f)
+	{
+		float tArg = PM(-CalcTArg(t, plus), plus);
+		float eps = PI_1 + tArg;
+		if (eps == 0)
+			eps = 0.001f;
+		float kL2 = 2 * k[i] * L;
+		return n * exp(imUnit * PI_1 / 4.0f) * (sqrtf(PI_1 * kL2) * Sign(eps) - kL2 * eps * exp(imUnit * PI_1 / 4.0f));
+	}
+	return cot(cotArg) * FuncF(k[i] * L * Apm(t, plus));
 }
 
 float UTD::PM(float t, bool plus)
@@ -476,7 +501,11 @@ void UTD::ProcessAudio(float* inBuffer, float* outBuffer, int numFrames, float l
 	}
 }
 
-BTM::BTM(DiffractionPath* path, int fs) : mPath(path), firFilter(currentIr)
+#pragma endregion
+
+#pragma region BTM
+
+BTM::BTM(Path* path, int fs) : mPath(path), firFilter(currentIr)
 {
 	m = new std::mutex();
 	samplesPerMetre = fs / SPEED_OF_SOUND;
@@ -635,17 +664,7 @@ float BTM::CalcB(int i, float coshvtheta)
 	return sinTheta[i] / (coshvtheta - cosTheta[i]);
 }
 
-//void BTM::ProcessAudio(float* inBuffer, float* outBuffer, int numFrames, float lerpFactor)
-//{
-//	// Apply filter
-//	for (int i = 0; i < numFrames; i++)
-//	{
-//		outBuffer[i] = firFilter.Filter(inBuffer[i]);
-//		firFilter.SetImpulseResponse(ir.GetBuffer(), lerpFactor);
-//	}
-//}
-
-void BTM::ProcessAudio(float* inBuffer, float* outBuffer, int numFrames, float lerpFactor)
+void BTM::ProcessAudio(const float* inBuffer, float* outBuffer, int numFrames, float lerpFactor)
 {
 	// Apply filter
 	for (int i = 0; i < numFrames; i++)
@@ -665,3 +684,5 @@ void BTM::ProcessAudio(float* inBuffer, float* outBuffer, int numFrames, float l
 		}
 	}
 }
+
+#pragma endregion

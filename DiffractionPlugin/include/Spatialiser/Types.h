@@ -31,6 +31,19 @@ namespace Spatialiser
 		none
 	};
 
+	enum class DiffractionDepth
+	{
+		none,
+		edgeOnly,
+		edSp
+	};
+
+	struct ISMConfig
+	{
+		DiffractionDepth diffraction;
+		bool shadowOnly;
+	};
+
 	struct Config
 	{
 		// DSP parameters

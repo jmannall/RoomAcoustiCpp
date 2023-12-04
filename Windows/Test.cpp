@@ -999,14 +999,23 @@ namespace DSPTests
 
 		TEST_METHOD(ParaEQ)
 		{
-			int fs = 48000;
+			int fs = 44100;
 			size_t order = 4;
 
 			float fc[] = { 250, 500, 1000, 2000, 4000 };
-			float g[] = { 1- 0.02, 1 - 0.06, 1 - 0.15, 1 - 0.25, 1 - 0.45 };
+
+			float delay = 385;
+			float rt[] = { 0.4, 0.5, 0.4, 0.3, 0.35 };
+			float h[5];
+			for (int i = 0; i < 5; i++)
+			{
+				h[i] = powf(10, -3.0f / fs / rt[i] * delay);
+			}
+
+			// float g[] = { 1- 0.02, 1 - 0.06, 1 - 0.15, 1 - 0.25, 1 - 0.45 };
 
 
-			ParametricEQ eq = ParametricEQ(order, fc, g, fs);
+			ParametricEQ eq = ParametricEQ(order, fc, h, fs);
 
 			const int numSamples = 10;
 			float in[numSamples];
@@ -1019,6 +1028,7 @@ namespace DSPTests
 				out[i] = eq.GetOutput(in[i]);
 			}
 
+			// Wrong checks
 			Assert::AreEqual(0.578350827f, out[0], 0.0001f, L"Incorrect Sample 1");
 			Assert::AreEqual(0.056732276f, out[1], 0.0001f, L"Incorrect Sample 2");
 			Assert::AreEqual(0.055465145f, out[2], 0.0001f, L"Incorrect Sample 3");
@@ -1253,166 +1263,606 @@ namespace ImageSource
 	TEST_CLASS(ImageSource)
 	{
 	public:
-		TEST_METHOD(Run)
+		TEST_METHOD(RunShoebox)
 		{
-			//int maxRefOrder = 3;
+			int maxRefOrder = 3;
 
-			//Spatialiser::Config config;
+			Spatialiser::Config config;
 
-			//config.sampleRate = 44100;
-			//const int numFrames = 4096;
-			//config.bufferSize = numFrames;
-			//config.hrtfResamplingStep = 30;
-			//config.maxRefOrder = maxRefOrder;
-			//config.hrtfMode = Spatialiser::HRTFMode::quality;
-			//Spatialiser::Init(&config);
-			//int numVert = 4;
-			//Spatialiser::Absorption absorbtion = Spatialiser::Absorption(0.02f, 0.04f, 0.06f, 0.08f, 0.1f); // Concrete
-			////Spatialiser::Absorption absorbtion = Spatialiser::Absorption(0.04f, 0.07f, 0.06f, 0.06f, 0.07f); // Wood
-			////Spatialiser::Absorption absorbtion = Spatialiser::Absorption(0.02f, 0.06f, 0.15f, 0.35f, 0.45f); // Carpet
+			config.sampleRate = 44100;
+			const int numFrames = 4096 * 8;
+			config.bufferSize = numFrames;
+			config.hrtfResamplingStep = 30;
+			config.maxRefOrder = maxRefOrder;
+			config.hrtfMode = Spatialiser::HRTFMode::none;
+			Spatialiser::Init(&config);
+			int numVert = 4;
 
-			//Spatialiser::Absorption carpetOnConcrete = Spatialiser::Absorption(0.06f, 0.15f, 0.4f, 0.6f, 0.6f); // Concrete
-			//Spatialiser::Absorption concrete = Spatialiser::Absorption(0.01f, 0.02f, 0.02f, 0.02f, 0.03f); // Concrete
-			//Spatialiser::Absorption windowGlass = Spatialiser::Absorption(0.2f, 0.2f, 0.1f, 0.07f, 0.04f); // Concrete
-			//Spatialiser::Absorption gypsum = Spatialiser::Absorption(0.1f, 0.05f, 0.04f, 0.07f, 0.1f); // Concrete
-			//Spatialiser::Absorption plywood = Spatialiser::Absorption(0.3f, 0.1f, 0.1f, 0.1f, 0.1f); // Concrete
-			//Spatialiser::Absorption plasterSprayed = Spatialiser::Absorption(0.7f, 0.6f, 0.7f, 0.7f, 0.5f); // Concrete
+			Spatialiser::ISMConfig ismConfig;
+			ismConfig.shadowOnly = false;
+			ismConfig.diffraction = Spatialiser::DiffractionDepth::none;
 
-			//vec3 pos = vec3(4.97f, 4.12f, 3.0f);
-			//vec3 source = vec3(1.4f, 3.02f, 1.36);
-			//vec3 receiver = vec3(2.77, 1.3, 1.51);
-			////vec3 pos = vec3(3.0f, 2.0f, 5.0f);
-			////vec3 source = vec3(1.0f, 1.0f, 1.5f);
-			////vec3 receiver = vec3(2.0f, 1.0f, 1.5f);
-			//float vert1[] = { 0.0f, 0.0f, pos.z,
-			//				0.0f, pos.y, pos.z,
-			//				pos.x, pos.y, pos.z,
-			//				pos.x, 0.0f, pos.z };
-			//vec3 normal1 = vec3(0.0f, 0.0f, -1.0f);
-			//size_t wID1 = Spatialiser::InitWall(normal1, &vert1[0], (size_t)numVert, concrete, Spatialiser::ReverbWall::posZ);
+			Spatialiser::UpdateISMConfig(ismConfig);
 
-			//float vert2[] = { pos.x, 0.0f, 0.0f,
-			//				pos.x, pos.y, 0.0f,
-			//				0.0f, pos.y, 0.0f,
-			//				0.0f, 0.0f, 0.0f };
-			//vec3 normal2 = vec3(0.0f, 0.0f, 1.0f);
-			//size_t wID2 = Spatialiser::InitWall(normal2, &vert2[0], (size_t)numVert, carpetOnConcrete, Spatialiser::ReverbWall::negZ);
+			Spatialiser::Absorption absorbtion = Spatialiser::Absorption(0.3f, 0.3f, 0.3f, 0.3f, 0.3f);
 
-			//float vert3[] = { pos.x, 0.0f, pos.z,
-			//				pos.x, pos.y, pos.z,
-			//				pos.x, pos.y, 0.0f,
-			//				pos.x, 0.0f, 0.0f };
-			//vec3 normal3 = vec3(-1.0f, 0.0f, 0.0f);
-			//size_t wID3 = Spatialiser::InitWall(normal3, &vert3[0], (size_t)numVert, windowGlass, Spatialiser::ReverbWall::posX);
+			Spatialiser::Absorption carpetOnConcrete = Spatialiser::Absorption(0.06f, 0.15f, 0.4f, 0.6f, 0.6f);
+			//carpetOnConcrete = Spatialiser::Absorption(0.06f, 0.15f, 0.4f, 0.3f, 0.3f);
+			Spatialiser::Absorption concrete = Spatialiser::Absorption(0.01f, 0.02f, 0.02f, 0.02f, 0.03f);
+			Spatialiser::Absorption windowGlass = Spatialiser::Absorption(0.2f, 0.2f, 0.1f, 0.07f, 0.04f);
+			Spatialiser::Absorption gypsum = Spatialiser::Absorption(0.1f, 0.05f, 0.04f, 0.07f, 0.1f);
+			Spatialiser::Absorption plywood = Spatialiser::Absorption(0.3f, 0.1f, 0.1f, 0.1f, 0.1f);
+			Spatialiser::Absorption plasterSprayed = Spatialiser::Absorption(0.7f, 0.6f, 0.7f, 0.7f, 0.5f);
+			//plasterSprayed = Spatialiser::Absorption(0.6f, 0.6f, 0.6f, 0.6f, 0.5f);
 
-			//float vert4[] = { 0.0f, 0.0f, 0.0f,
-			//				0.0f, pos.y, 0.0f,
-			//				0.0f, pos.y, pos.z,
-			//				0.0f, 0.0f, pos.z };
-			//vec3 normal4 = vec3(1.0f, 0.0f, 0.0f);
-			//size_t wID4 = Spatialiser::InitWall(normal4, &vert4[0], (size_t)numVert, plywood, Spatialiser::ReverbWall::negX);
+			vec3 pos = vec3(4.97f, 3.0f, 4.12f);
+			vec3 source = vec3(1.4f, 1.36, 3.02f);
+			vec3 receiver = vec3(2.77, 1.51, 1.3);
+			//vec3 pos = vec3(5.0f, 3.0f, 4.0f);
+			//vec3 source = vec3(2.0f, 1.3f, 3.0f);
+			//vec3 receiver = vec3(2.1f, 1.2f, 2.0f);
+			float vert1[] = { 0.0f, pos.y, 0.0f,
+							pos.x, pos.y, 0.0f,
+							pos.x, pos.y, pos.z,
+							0.0f, pos.y, pos.z };
+			vec3 normal1 = vec3(0.0f, -1.0f, 0.0f);// concrete
+			size_t wID1 = Spatialiser::InitWall(normal1, &vert1[0], (size_t)numVert, concrete, Spatialiser::ReverbWall::posZ);
+
+			float vert2[] = { pos.x, 0.0f, 0.0f,
+							0.0f, 0.0f, 0.0f,
+							0.0f, 0.0f, pos.z,
+							pos.x, 0.0f, pos.z };
+			vec3 normal2 = vec3(0.0f, 1.0f, 0.0f);//carpet
+			size_t wID2 = Spatialiser::InitWall(normal2, &vert2[0], (size_t)numVert, carpetOnConcrete, Spatialiser::ReverbWall::negZ);
+
+			float vert3[] = { pos.x, 0.0f, pos.z,
+							pos.x, pos.y, pos.z,
+							pos.x, pos.y, 0.0f,
+							pos.x, 0.0f, 0.0f };
+			vec3 normal3 = vec3(-1.0f, 0.0f, 0.0f);//window glass
+			size_t wID3 = Spatialiser::InitWall(normal3, &vert3[0], (size_t)numVert, windowGlass, Spatialiser::ReverbWall::posX);
+
+			float vert4[] = { 0.0f, 0.0f, 0.0f,
+							0.0f, pos.y, 0.0f,
+							0.0f, pos.y, pos.z,
+							0.0f, 0.0f, pos.z };
+			vec3 normal4 = vec3(1.0f, 0.0f, 0.0f);//plywood
+			size_t wID4 = Spatialiser::InitWall(normal4, &vert4[0], (size_t)numVert, plywood, Spatialiser::ReverbWall::negX);
+
+			float vert5[] = { 0.0f, 0.0f, 0.0f,
+							pos.x, 0.0f, 0.0f,
+							pos.x, pos.y, 0.0f,
+							0.0f, pos.y, 0.0f };
+			vec3 normal5 = vec3(0.0f, 0.0f, 1.0f);//gypsum
+			size_t wID5 = Spatialiser::InitWall(normal5, &vert5[0], (size_t)numVert, gypsum, Spatialiser::ReverbWall::negY);
+
+			float vert6[] = { 0.0f, pos.y, pos.z,
+							pos.x, pos.y, pos.z,
+							pos.x, 0.0f, pos.z,
+							0.0f, 0.0f, pos.z };
+			vec3 normal6 = vec3(0.0f, 0.0f, -1.0f);//plaster
+			size_t wID6 = Spatialiser::InitWall(normal6, &vert6[0], (size_t)numVert, plasterSprayed, Spatialiser::ReverbWall::posY);
+
+			float volume = pos.x * pos.y * pos.z;
+			float dim[] = { pos.x, pos.y, pos.z };
+			vec dimensions = vec(&dim[0], 3);
+			//Spatialiser::SetFDNParameters(volume, dimensions);
+			bool result = Spatialiser::FilesLoaded();
+
+			Sleep(500);
+
+			Spatialiser::UpdateListener(receiver, quaternion(0.0f, 0.0f, 0.0f, 1.0f));
+			size_t sID1 = Spatialiser::InitSource();
+			//Spatialiser::UpdateSource(sID1, vec3(2.5f, 1.0f, 4.4f), quaternion(0.0f, 1.0f, 0.0f, 0.0f));
+			Spatialiser::UpdateSource(sID1, source, quaternion(0.0f, 1.0f, 0.0f, 0.0f));
+			//Spatialiser::UpdateSource(sID1, vec3(2.5f, -1.0f, 4.0f), quaternion(0.0f, 1.0f, 0.0f, 0.0f));
+
+			static float* buffer = nullptr;
+			float in[numFrames];
+			std::fill_n(in, numFrames, 0.0f);
+
+			Sleep(500);
+
+			Spatialiser::UpdateListener(receiver, quaternion(0.0f, 0.0f, 0.0f, 1.0f));
+			Spatialiser::UpdateSource(sID1, source, quaternion(0.0f, 1.0f, 0.0f, 0.0f));
+
+			for (int i = 0; i < 10; i++)
+			{
+				Spatialiser::SubmitAudio(sID1, in, (size_t)numFrames);
+				Spatialiser::GetOutput(&buffer);
+				Spatialiser::UpdateListener(receiver, quaternion(0.0f, 0.0f, 0.0f, 1.0f));
+				Spatialiser::UpdateSource(sID1, source, quaternion(0.0f, 1.0f, 0.0f, 0.0f));
+			}
+
+			in[0] = 1.0f;
+			Spatialiser::SubmitAudio(sID1, in, (size_t)numFrames);
+
+			Spatialiser::GetOutput(&buffer);
+
+			float outL[numFrames];
+			float outR[numFrames];
+			std::fill_n(outL, config.bufferSize, 0.0f);
+			std::fill_n(outR, config.bufferSize, 0.0f);
+			for (int i = 0; i < numFrames; i++)
+			{
+				outL[i] = *buffer++;
+				outR[i] = *buffer++;
+			}
+
+			Spatialiser::Exit();
+
+			std::ofstream out("ShoeboxRoomIR_L.txt");
+			std::streambuf* coutbuf = std::cout.rdbuf(); //save old buf
+			std::cout.rdbuf(out.rdbuf()); //redirect std::cout to out.txt!
+
+			std::cout << source << "\n";
+			std::cout << receiver << "\n";
+
+			std::cout << pos << "\n";
+
+			for (int i = 0; i < numFrames; i++)
+			{
+				std::cout << outL[i] << ", " << outR[i] << "\n";
+			}
+
+			std::cout.rdbuf(coutbuf); //reset to standard output again
+		}
+
+		TEST_METHOD(FDN)
+		{
+			const size_t numChannels = 12;
+			int fs = 44100;
+			const size_t numFrames = 4096 * 8;
+
+			float dim[3] = { 2.0f, 3.0f, 1.5f };
+			//float dim[3] = { 0.0f, 0.0f, 0.0f };
+			vec dimensions = vec(&dim[0], 3);
+			Spatialiser::FrequencyDependence t60 = Spatialiser::FrequencyDependence(0.2f, 0.2f, 0.2f, 0.2f, 0.2f);
+			//Spatialiser::FrequencyDependence t60 = Spatialiser::FrequencyDependence(0.4f, 0.5f, 0.4f, 0.3f, 0.35f);
+			Spatialiser::FDN mFDN = Spatialiser::FDN(t60, dimensions, numChannels, fs);
+
+			matrix data = matrix(numFrames, numChannels);
+			float in[numChannels] = { 1.0f / 12.0f, 1.0f / 12.0f, 1.0f / 12.0f, 1.0f / 12.0f, 1.0f / 12.0f, 1.0f / 12.0f, 1.0f / 12.0f, 1.0f / 12.0f, 1.0f / 12.0f, 1.0f / 12.0f, 1.0f / 12.0f, 1.0f / 12.0f };
+			data.AddRow(vec(&in[0], numChannels), 0);
+
+			matrix output = matrix(numFrames, numChannels);
+			for (int i = 0; i < numFrames; i++)
+			{
+				rowvec out = mFDN.GetOutput(data.GetRow(i));
+				for (int j = 0; j < numChannels; j++)
+				{
+					float test = out[j];
+					output.AddEntry(out[j], i, j);
+				}
+			}
+
+			output.AddRow(vec(&in[0], numChannels), 0);
+
+			std::ofstream out("FDN_Const.txt");
+			std::streambuf* coutbuf = std::cout.rdbuf(); //save old buf
+			std::cout.rdbuf(out.rdbuf()); //redirect std::cout to out.txt!
+
+			for (int i = 0; i < numFrames; i++)
+			{
+				for (int j = 0; j < numChannels - 1; j++)
+				{
+					std::cout << output.GetEntry(i, j) << ", ";
+				}
+				std::cout << output.GetEntry(i, numChannels - 1) << "\n";
+			}
+
+			std::cout.rdbuf(coutbuf); //reset to standard output again
+		}
+
+		TEST_METHOD(RunLRoom)
+		{
+			int maxRefOrder = 3;
+
+			Spatialiser::Config config;
+
+			config.sampleRate = 44100;
+			const int numFrames = 4096 * 4;
+			config.bufferSize = numFrames;
+			config.hrtfResamplingStep = 30;
+			config.maxRefOrder = maxRefOrder;
+			config.hrtfMode = Spatialiser::HRTFMode::none;
+			Spatialiser::Init(&config);
+			int numVert = 4;
+
+			Spatialiser::ISMConfig ismConfig;
+			ismConfig.shadowOnly = false;
+			ismConfig.diffraction = Spatialiser::DiffractionDepth::edSp;
+
+			Spatialiser::UpdateISMConfig(ismConfig);
+
+			Spatialiser::Absorption absorbtion = Spatialiser::Absorption(0.7f, 0.7f, 0.7f, 0.7f, 0.7f); // Concrete
+
+			Spatialiser::Absorption carpetOnConcrete = Spatialiser::Absorption(0.06f, 0.15f, 0.4f, 0.6f, 0.6f); // Concrete
+			Spatialiser::Absorption concrete = Spatialiser::Absorption(0.01f, 0.02f, 0.02f, 0.02f, 0.03f); // Concrete
+			Spatialiser::Absorption windowGlass = Spatialiser::Absorption(0.2f, 0.2f, 0.1f, 0.07f, 0.04f); // Concrete
+			Spatialiser::Absorption gypsum = Spatialiser::Absorption(0.1f, 0.05f, 0.04f, 0.07f, 0.1f); // Concrete
+			Spatialiser::Absorption plywood = Spatialiser::Absorption(0.3f, 0.1f, 0.1f, 0.1f, 0.1f); // Concrete
+			Spatialiser::Absorption plasterSprayed = Spatialiser::Absorption(0.7f, 0.6f, 0.7f, 0.7f, 0.5f); // Concrete
+
+			vec3 source = vec3(1.5f, 1.1f, 2.02f);
+			vec3 receiver = vec3(4.95f, 1.0f, 4.47f);
+			//vec3 source = vec3(1.5f, 1.0f, 4.0f); // Return invalid edge
+			//vec3 receiver = vec3(3.0f, 1.0f, 4.5f);
+
+			vec3 pos = vec3(7.0f, 3.0f, 5.0f);
+			vec3 corner = vec3(4.0f, 3.0f, 3.0f);
+
+			float vert7[] = { 0.0f, 0.0f, corner.z,
+							0.0f, pos.y, corner.z,
+							corner.x, pos.y, corner.z,
+							corner.x, 0.0f, corner.z };
+			vec3 normal7 = vec3(0.0f, 0.0f, -1.0f); // plywood
+			size_t wID7 = Spatialiser::InitWall(normal7, &vert7[0], (size_t)numVert, absorbtion, Spatialiser::ReverbWall::posZ);
+
+			float vert8[] = { corner.x, 0.0f, pos.z,
+							corner.x, 0.0f, corner.z,
+							corner.x, pos.y, corner.z,
+							corner.x, pos.y, pos.z };
+			vec3 normal8 = vec3(1.0f, 0.0f, 0.0f); // plywood
+			size_t wID8 = Spatialiser::InitWall(normal8, &vert8[0], (size_t)numVert, absorbtion, Spatialiser::ReverbWall::negX);
+
+			float vert1[] = { pos.x, 0.0f, pos.z,
+							corner.x, 0.0f, pos.z,
+							corner.x, pos.y, pos.z,
+							pos.x, pos.y, pos.z };
+			vec3 normal1 = vec3(0.0f, 0.0f, -1.0f); // gypsum
+			size_t wID1 = Spatialiser::InitWall(normal1, &vert1[0], (size_t)numVert, absorbtion, Spatialiser::ReverbWall::posZ);
+
+			float vert2[] = { pos.x, 0.0f, 0.0f,
+							pos.x, pos.y, 0.0f,
+							0.0f, pos.y, 0.0f,
+							0.0f, 0.0f, 0.0f };
+			vec3 normal2 = vec3(0.0f, 0.0f, 1.0f); // gypsum
+			size_t wID2 = Spatialiser::InitWall(normal2, &vert2[0], (size_t)numVert, absorbtion, Spatialiser::ReverbWall::negZ);
+
+			float vert3[] = { pos.x, 0.0f, pos.z,
+							pos.x, pos.y, pos.z,
+							pos.x, pos.y, 0.0f,
+							pos.x, 0.0f, 0.0f };
+			vec3 normal3 = vec3(-1.0f, 0.0f, 0.0f); // plasterSprayed
+			size_t wID3 = Spatialiser::InitWall(normal3, &vert3[0], (size_t)numVert, absorbtion, Spatialiser::ReverbWall::posX);
+
+			float vert4[] = { 0.0f, 0.0f, 0.0f,
+							0.0f, pos.y, 0.0f,
+							0.0f, pos.y, corner.z,
+							0.0f, 0.0f, corner.z };
+			vec3 normal4 = vec3(1.0f, 0.0f, 0.0f); // windowGlass
+			size_t wID4 = Spatialiser::InitWall(normal4, &vert4[0], (size_t)numVert, absorbtion, Spatialiser::ReverbWall::negX);
 
 			//float vert5[] = { 0.0f, 0.0f, 0.0f,
 			//				0.0f, 0.0f, pos.z,
 			//				pos.x, 0.0f, pos.z,
 			//				pos.x, 0.0f, 0.0f };
-			//vec3 normal5 = vec3(0.0f, 1.0f, 0.0f);
-			//size_t wID5 = Spatialiser::InitWall(normal5, &vert5[0], (size_t)numVert, gypsum, Spatialiser::ReverbWall::negY);
+			//vec3 normal5 = vec3(0.0f, 1.0f, 0.0f); // carpetOnConcrete
+			//size_t wID5 = Spatialiser::InitWall(normal5, &vert5[0], (size_t)numVert, absorbtion, Spatialiser::ReverbWall::negY);
 
 			//float vert6[] = { 0.0f, pos.y, pos.z,
 			//				0.0f, pos.y, 0.0f,
 			//				pos.x, pos.y, 0.0f,
 			//				pos.x, pos.y, pos.z };
-			//vec3 normal6 = vec3(0.0f, -1.0f, 0.0f);
-			//size_t wID6 = Spatialiser::InitWall(normal6, &vert6[0], (size_t)numVert, plasterSprayed, Spatialiser::ReverbWall::posY);
+			//vec3 normal6 = vec3(0.0f, -1.0f, 0.0f); // concrete
+			//size_t wID6 = Spatialiser::InitWall(normal6, &vert6[0], (size_t)numVert, absorbtion, Spatialiser::ReverbWall::posY);
 
-			//float volume = pos.x * pos.y * pos.z;
-			//float dim[] = { pos.x, pos.y, pos.z };
-			//vec dimensions = vec(&dim[0], 3);
+			float vert5[] = { 0.0f, 0.0f, 0.0f,
+							0.0f, 0.0f, corner.z,
+							corner.x, 0.0f, corner.z,
+							corner.x, 0.0f, pos.z,
+							pos.x, 0.0f, pos.z,
+							pos.x, 0.0f, 0.0f };
+			vec3 normal5 = vec3(0.0f, 1.0f, 0.0f); // carpetOnConcrete
+			numVert = 6;
+			size_t wID5 = Spatialiser::InitWall(normal5, &vert5[0], (size_t)numVert, absorbtion, Spatialiser::ReverbWall::negY);
+
+			float vert6[] = { 0.0f, pos.y, corner.z,
+							0.0f, pos.y, 0.0f,
+							pos.x, pos.y, 0.0f,
+							pos.x, pos.y, pos.z,
+							corner.x, pos.y, pos.z,
+							corner.x, pos.y, corner.z };
+			vec3 normal6 = vec3(0.0f, -1.0f, 0.0f); // concrete
+			size_t wID6 = Spatialiser::InitWall(normal6, &vert6[0], (size_t)numVert, absorbtion, Spatialiser::ReverbWall::posY);
+
+			float volume = pos.x * pos.y * pos.z - corner.x * corner.y * corner.z;
+			//float dim[] = { pos.x - corner.x, pos.y, corner.z, pos.x, pos.y, pos.z };
+			float dim[] = { corner.x, pos.y, corner.z };
+			vec dimensions = vec(&dim[0], 6);
+			Spatialiser::SetFDNParameters(volume, dimensions);
+
+			bool result = Spatialiser::FilesLoaded();
+
+			Spatialiser::UpdateListener(receiver, quaternion(0.0f, 0.0f, 0.0f, 1.0f));
+			size_t sID1 = Spatialiser::InitSource();
+			Spatialiser::UpdateSource(sID1, source, quaternion(0.0f, 1.0f, 0.0f, 0.0f));
+
+			Sleep(500);
+
+			Spatialiser::UpdateListener(receiver, quaternion(0.0f, 0.0f, 0.0f, 1.0f));
+
+			Spatialiser::UpdateSource(sID1, source, quaternion(0.0f, 1.0f, 0.0f, 0.0f));
+
+
+			static float* buffer = nullptr;
+			float in[numFrames];
+			std::fill_n(in, numFrames, 0.0f);
+
+			Sleep(500);
+
+			Spatialiser::UpdateListener(receiver, quaternion(0.0f, 0.0f, 0.0f, 1.0f));
+			Spatialiser::UpdateSource(sID1, source, quaternion(0.0f, 1.0f, 0.0f, 0.0f));
+
+			for (int i = 0; i < 10; i++)
+			{
+				Spatialiser::SubmitAudio(sID1, in, (size_t)numFrames);
+				Spatialiser::GetOutput(&buffer);
+			}
+
+			Spatialiser::UpdateListener(receiver, quaternion(0.0f, 0.0f, 0.0f, 1.0f));
+			Spatialiser::UpdateSource(sID1, source, quaternion(0.0f, 1.0f, 0.0f, 0.0f));
+
+			in[0] = 1.0f;
+			Spatialiser::SubmitAudio(sID1, in, (size_t)numFrames);
+
+			Spatialiser::GetOutput(&buffer);
+
+			float outL[numFrames];
+			float outR[numFrames];
+			std::fill_n(outL, config.bufferSize, 0.0f);
+			std::fill_n(outR, config.bufferSize, 0.0f);
+			for (int i = 0; i < numFrames; i++)
+			{
+				outL[i] = *buffer++;
+				outR[i] = *buffer++;
+			}
+
+			Spatialiser::Exit();
+
+			std::ofstream out("LRoomIR_edsp.txt");
+			std::streambuf* coutbuf = std::cout.rdbuf(); //save old buf
+			std::cout.rdbuf(out.rdbuf()); //redirect std::cout to out.txt!
+
+			std::cout << source << "\n";
+			std::cout << receiver << "\n";
+
+			std::cout << pos << "\n";
+			std::cout << corner << "\n";
+
+			for (int i = 0; i < numFrames; i++)
+			{
+				std::cout << outL[i] << ", " << outR[i] << "\n";
+			}
+
+			std::cout.rdbuf(coutbuf); //reset to standard output again
+		}
+
+		TEST_METHOD(TestSpEd)
+		{
+			int maxRefOrder = 2;
+
+			Spatialiser::Config config;
+
+			config.sampleRate = 44100;
+			const int numFrames = 4096;
+			config.bufferSize = numFrames;
+			config.hrtfResamplingStep = 30;
+			config.maxRefOrder = maxRefOrder;
+			config.hrtfMode = Spatialiser::HRTFMode::none;
+			Spatialiser::Init(&config);
+			int numVert = 4;
+			Spatialiser::Absorption absorbtion = Spatialiser::Absorption(0.02f, 0.04f, 0.06f, 0.08f, 0.1f); // Concrete
+
+			Spatialiser::Absorption carpetOnConcrete = Spatialiser::Absorption(0.06f, 0.15f, 0.4f, 0.6f, 0.6f); // Concrete
+			Spatialiser::Absorption concrete = Spatialiser::Absorption(0.01f, 0.02f, 0.02f, 0.02f, 0.03f); // Concrete
+			Spatialiser::Absorption windowGlass = Spatialiser::Absorption(0.2f, 0.2f, 0.1f, 0.07f, 0.04f); // Concrete
+			Spatialiser::Absorption gypsum = Spatialiser::Absorption(0.1f, 0.05f, 0.04f, 0.07f, 0.1f); // Concrete
+			Spatialiser::Absorption plywood = Spatialiser::Absorption(0.3f, 0.1f, 0.1f, 0.1f, 0.1f); // Concrete
+			Spatialiser::Absorption plasterSprayed = Spatialiser::Absorption(0.7f, 0.6f, 0.7f, 0.7f, 0.5f); // Concrete
+
+			vec3 source = vec3(1.5f, 1.0f, 2.0f);
+			vec3 receiver = vec3(5.0f, 1.0f, 4.5f);
+			//vec3 source = vec3(1.5f, 1.0f, 4.0f); // Return invalid edge
+			//vec3 receiver = vec3(3.0f, 1.0f, 4.5f);
+
+			float vert7[] = { 0.0f, 0.0f, 3.0f,
+							0.0f, 3.0f, 3.0f,
+							4.0f, 3.0f, 3.0f,
+							4.0f, 0.0f, 3.0f };
+			vec3 normal7 = vec3(0.0f, 0.0f, -1.0f);
+			int numVert7 = 4;
+
+			size_t wID7 = Spatialiser::InitWall(normal7, &vert7[0], (size_t)numVert7, plywood, Spatialiser::ReverbWall::posZ);
+
+			float vert8[] = { 4.0f, 0.0f, 5.0f,
+							4.0f, 0.0f, 3.0f,
+							4.0f, 3.0f, 3.0f,
+							4.0f, 3.0f, 5.0f };
+			vec3 normal8 = vec3(1.0f, 0.0f, 0.0f);
+			int numVert8 = 4;
+
+			size_t wID8 = Spatialiser::InitWall(normal8, &vert8[0], (size_t)numVert8, plywood, Spatialiser::ReverbWall::negX);
+
+			vec3 pos = vec3(7.0f, 3.0f, 5.0f);
+			vec3 corner = vec3(4.0f, 3.0f, 3.0f);
+
+			/*float vert1[] = { pos.x, 0.0f, pos.z,
+							corner.x, 0.0f, pos.z,
+							corner.x, pos.y, pos.z,
+							pos.x, pos.y, pos.z };
+			vec3 normal1 = vec3(0.0f, 0.0f, -1.0f);
+			size_t wID1 = Spatialiser::InitWall(normal1, &vert1[0], (size_t)numVert, concrete, Spatialiser::ReverbWall::posZ);
+
+			float vert2[] = { pos.x, 0.0f, 0.0f,
+							pos.x, pos.y, 0.0f,
+							0.0f, pos.y, 0.0f,
+							0.0f, 0.0f, 0.0f };
+			vec3 normal2 = vec3(0.0f, 0.0f, 1.0f);
+			size_t wID2 = Spatialiser::InitWall(normal2, &vert2[0], (size_t)numVert, carpetOnConcrete, Spatialiser::ReverbWall::negZ);*/
+
+			float vert3[] = { pos.x, 0.0f, corner.z,
+							pos.x, pos.y, corner.z,
+							pos.x, pos.y, 0.0f,
+							pos.x, 0.0f, 0.0f };
+			vec3 normal3 = vec3(-1.0f, 0.0f, 0.0f);
+			size_t wID3 = Spatialiser::InitWall(normal3, &vert3[0], (size_t)numVert, windowGlass, Spatialiser::ReverbWall::posX);
+
+			/*float vert4[] = { 0.0f, 0.0f, 0.0f,
+							0.0f, pos.y, 0.0f,
+							0.0f, pos.y, corner.z,
+							0.0f, 0.0f, corner.z };
+			vec3 normal4 = vec3(1.0f, 0.0f, 0.0f);
+			size_t wID4 = Spatialiser::InitWall(normal4, &vert4[0], (size_t)numVert, plywood, Spatialiser::ReverbWall::negX);
+
+			float vert5[] = { 0.0f, 0.0f, 0.0f,
+							0.0f, 0.0f, pos.z,
+							pos.x, 0.0f, pos.z,
+							pos.x, 0.0f, 0.0f };
+			vec3 normal5 = vec3(0.0f, 1.0f, 0.0f);
+			size_t wID5 = Spatialiser::InitWall(normal5, &vert5[0], (size_t)numVert, gypsum, Spatialiser::ReverbWall::negY);
+
+			float vert6[] = { 0.0f, pos.y, pos.z,
+							0.0f, pos.y, 0.0f,
+							pos.x, pos.y, 0.0f,
+							pos.x, pos.y, pos.z };
+			vec3 normal6 = vec3(0.0f, -1.0f, 0.0f);
+			size_t wID6 = Spatialiser::InitWall(normal6, &vert6[0], (size_t)numVert, plasterSprayed, Spatialiser::ReverbWall::posY);*/
+
+			float volume = pos.x * pos.y * pos.z - corner.x * corner.y * corner.z;
+			float dim[] = { pos.x - corner.x, pos.y, corner.z, pos.x, pos.y, pos.z };
+			vec dimensions = vec(&dim[0], 6);
 			//Spatialiser::SetFDNParameters(volume, dimensions);
-			//bool result = Spatialiser::FilesLoaded();
 
-			///*Spatialiser::UpdateListener(vec3(2.5f, 1.0f, 2.1f), quaternion(1.0f, 0.0f, 1.0f, 0.0f));
+			bool result = Spatialiser::FilesLoaded();
 
-			//size_t sID1 = Spatialiser::InitSource();
-			//Spatialiser::UpdateSource(sID1, vec3(2.8f, 1.0f, 2.5f), quaternion(1.0f, 0.0f, 1.0f, 0.0f));*/
+			Sleep(500);
 
-			//Spatialiser::UpdateListener(receiver, quaternion(0.0f, 0.0f, 0.0f, 1.0f));
-			//size_t sID1 = Spatialiser::InitSource();
-			////Spatialiser::UpdateSource(sID1, vec3(2.5f, 1.0f, 4.4f), quaternion(0.0f, 1.0f, 0.0f, 0.0f));
-			//Spatialiser::UpdateSource(sID1, source, quaternion(0.0f, 1.0f, 0.0f, 0.0f));
-			////Spatialiser::UpdateSource(sID1, vec3(2.5f, -1.0f, 4.0f), quaternion(0.0f, 1.0f, 0.0f, 0.0f));
+			Spatialiser::UpdateListener(receiver, quaternion(0.0f, 0.0f, 0.0f, 1.0f));
+			size_t sID1 = Spatialiser::InitSource();
+			Spatialiser::UpdateSource(sID1, source, quaternion(0.0f, 1.0f, 0.0f, 0.0f));
 
-			//static float* buffer = nullptr;
-			//float in[numFrames];
-			//std::fill_n(in, numFrames, 0.0f);
+			static float* buffer = nullptr;
+			float in[numFrames];
+			std::fill_n(in, numFrames, 0.0f);
 
-			//Sleep(500);
-			//Spatialiser::UpdateListener(receiver, quaternion(0.0f, 0.0f, 0.0f, 1.0f));
-			//Spatialiser::UpdateSource(sID1, source, quaternion(0.0f, 1.0f, 0.0f, 0.0f));
+			Sleep(500);
 
-			//for (int i = 0; i < 10; i++)
-			//{
-			//	Spatialiser::SubmitAudio(sID1, in, (size_t)numFrames);
-			//	Spatialiser::GetOutput(&buffer);
-			//	Spatialiser::UpdateListener(receiver, quaternion(0.0f, 0.0f, 0.0f, 1.0f));
-			//	Spatialiser::UpdateSource(sID1, source, quaternion(0.0f, 1.0f, 0.0f, 0.0f));
-			//}
+			Spatialiser::UpdateListener(receiver, quaternion(0.0f, 0.0f, 0.0f, 1.0f));
+			Spatialiser::UpdateSource(sID1, source, quaternion(0.0f, 1.0f, 0.0f, 0.0f));
 
-			//in[0] = 1.0f;
-			//Spatialiser::SubmitAudio(sID1, in, (size_t)numFrames);
+			for (int i = 0; i < 10; i++)
+			{
+				Spatialiser::SubmitAudio(sID1, in, (size_t)numFrames);
+				Spatialiser::GetOutput(&buffer);
+				Spatialiser::UpdateListener(receiver, quaternion(0.0f, 0.0f, 0.0f, 1.0f));
+				Spatialiser::UpdateSource(sID1, source, quaternion(0.0f, 1.0f, 0.0f, 0.0f));
+			}
 
-			//Spatialiser::GetOutput(&buffer);
+			in[0] = 1.0f;
+			Spatialiser::SubmitAudio(sID1, in, (size_t)numFrames);
 
-			//float outL[numFrames]; // Work this out
-			//float outR[numFrames];
-			//std::fill_n(outL, config.bufferSize, 0.0f);
-			//std::fill_n(outR, config.bufferSize, 0.0f);
-			//for (int i = 0; i < numFrames; i++)
-			//{
-			//	outL[i] = *buffer++;
-			//	outR[i] = *buffer++;
-			//}
+			Spatialiser::GetOutput(&buffer);
 
-			//in[0] = 0.0f;
-			//for (int i = 0; i < 20; i++)
-			//{
-			//	Spatialiser::SubmitAudio(sID1, in, (size_t)numFrames);
-			//	Spatialiser::GetOutput(&buffer);
-			//	Spatialiser::UpdateListener(receiver, quaternion(0.0f, 0.0f, 0.0f, 1.0f));
-			//	Spatialiser::UpdateSource(sID1, source, quaternion(0.0f, 1.0f, 0.0f, 0.0f));
-			//}
+			float outL[numFrames]; // Work this out
+			float outR[numFrames];
+			std::fill_n(outL, config.bufferSize, 0.0f);
+			std::fill_n(outR, config.bufferSize, 0.0f);
+			for (int i = 0; i < numFrames; i++)
+			{
+				outL[i] = *buffer++;
+				outR[i] = *buffer++;
+			}
 
-			//in[0] = 1.0f;
-			//Spatialiser::SubmitAudio(sID1, in, (size_t)numFrames);
+			Spatialiser::Exit();
+		}
 
-			//Spatialiser::GetOutput(&buffer);
+		TEST_METHOD(RunWedge)
+		{
+			int maxRefOrder = 3;
 
-			//std::fill_n(outL, config.bufferSize, 0.0f);
-			//std::fill_n(outR, config.bufferSize, 0.0f);
-			//for (int i = 0; i < numFrames; i++)
-			//{
-			//	outL[i] = *buffer++;
-			//	outR[i] = *buffer++;
-			//}
+			Spatialiser::Config config;
 
-			//Spatialiser::UpdateListener(vec3(1.0f, 1.0f, 2.0f), quaternion(0.0f, 0.0f, 0.0f, 1.0f));
+			config.sampleRate = 44100;
+			const int numFrames = 4096;
+			config.bufferSize = numFrames;
+			config.hrtfResamplingStep = 30;
+			config.maxRefOrder = maxRefOrder;
+			config.hrtfMode = Spatialiser::HRTFMode::none;
+			Spatialiser::Init(&config);
+			int numVert = 4;
+			Spatialiser::Absorption absorbtion = Spatialiser::Absorption(0.02f, 0.04f, 0.06f, 0.08f, 0.1f); // Concrete
 
-			//Sleep(1000);
+			Spatialiser::Absorption carpetOnConcrete = Spatialiser::Absorption(0.06f, 0.15f, 0.4f, 0.6f, 0.6f); // Concrete
+			Spatialiser::Absorption concrete = Spatialiser::Absorption(0.01f, 0.02f, 0.02f, 0.02f, 0.03f); // Concrete
+			Spatialiser::Absorption windowGlass = Spatialiser::Absorption(0.2f, 0.2f, 0.1f, 0.07f, 0.04f); // Concrete
+			Spatialiser::Absorption gypsum = Spatialiser::Absorption(0.1f, 0.05f, 0.04f, 0.07f, 0.1f); // Concrete
+			Spatialiser::Absorption plywood = Spatialiser::Absorption(0.3f, 0.1f, 0.1f, 0.1f, 0.1f); // Concrete
+			Spatialiser::Absorption plasterSprayed = Spatialiser::Absorption(0.7f, 0.6f, 0.7f, 0.7f, 0.5f); // Concrete
 
-			//Spatialiser::RemoveWall(wID2);
+			vec3 source = vec3(1.5f, 1.0f, 2.0f);
+			vec3 receiver = vec3(5.0f, 1.0f, 4.5f);
 
-			//Sleep(500);
+			float vert1[] = { 0.0f, 0.0f, 3.0f,
+							0.0f, 2.0f, 3.0f,
+							4.0f, 2.0f, 3.0f,
+							4.0f, 0.0f, 3.0f };
+			vec3 normal1 = vec3(0.0f, 0.0f, -1.0f);
+			int numVert1 = 4;
 
-			//Spatialiser::UpdateSource(sID1, vec3(1.0f, 1.0f, 1.5f), quaternion(0.0f, 1.0f, 0.0f, 0.0f));
+			size_t wID1 = Spatialiser::InitWall(normal1, &vert1[0], (size_t)numVert1, concrete, Spatialiser::ReverbWall::negZ);
 
-			//Sleep(500);
+			float vert2[] = { 4.0f, 0.0f, 5.0f,
+							4.0f, 0.0f, 3.0f,
+							4.0f, 2.0f, 3.0f,
+							4.0f, 2.0f, 1.0f, };
+			vec3 normal2 = vec3(1.0f, 0.0f, 0.0f);
+			int numVert2 = 4;
 
-			//Spatialiser::RemoveSource(sID1);
+			size_t wID2 = Spatialiser::InitWall(normal2, &vert2[0], (size_t)numVert2, concrete, Spatialiser::ReverbWall::negZ);
 
-			//Sleep(1000);
+			bool result = Spatialiser::FilesLoaded();
 
-			//Spatialiser::Exit();
+			Sleep(500);
+
+			Spatialiser::UpdateListener(receiver, quaternion(0.0f, 0.0f, 0.0f, 1.0f));
+			size_t sID1 = Spatialiser::InitSource();
+			Spatialiser::UpdateSource(sID1, source, quaternion(0.0f, 1.0f, 0.0f, 0.0f));
+
+			static float* buffer = nullptr;
+			float in[numFrames];
+			std::fill_n(in, numFrames, 0.0f);
+
+			Sleep(500);
+
+			Spatialiser::UpdateListener(receiver, quaternion(0.0f, 0.0f, 0.0f, 1.0f));
+			Spatialiser::UpdateSource(sID1, source, quaternion(0.0f, 1.0f, 0.0f, 0.0f));
+
+			for (int i = 0; i < 10; i++)
+			{
+				Spatialiser::SubmitAudio(sID1, in, (size_t)numFrames);
+				Spatialiser::GetOutput(&buffer);
+				Spatialiser::UpdateListener(receiver, quaternion(0.0f, 0.0f, 0.0f, 1.0f));
+				Spatialiser::UpdateSource(sID1, source, quaternion(0.0f, 1.0f, 0.0f, 0.0f));
+			}
+
+			in[0] = 1.0f;
+			Spatialiser::SubmitAudio(sID1, in, (size_t)numFrames);
+
+			Spatialiser::GetOutput(&buffer);
+
+			float outL[numFrames]; // Work this out
+			float outR[numFrames];
+			std::fill_n(outL, config.bufferSize, 0.0f);
+			std::fill_n(outR, config.bufferSize, 0.0f);
+			for (int i = 0; i < numFrames; i++)
+			{
+				outL[i] = *buffer++;
+				outR[i] = *buffer++;
+			}
+
+			Spatialiser::Exit();
 		}
 
 		TEST_METHOD(InitWall)

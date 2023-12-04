@@ -25,6 +25,12 @@
     <Filter Include="Source Files\Spatialiser">
       <UniqueIdentifier>{a8acf9c8-96c3-4f50-b04c-b5c4f6817dea}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Spatialiser\Diffraction">
+      <UniqueIdentifier>{62b025b6-b69f-457c-829a-3a6c64119e55}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Spatialiser\Diffraction">
+      <UniqueIdentifier>{834593a7-5170-4a18-b2a1-192d9efe6294}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\elementwiseOperationInPlace.cpp">
@@ -110,6 +116,12 @@
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Edge.cpp">
       <Filter>Source Files\Spatialiser</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Diffraction\Path.cpp">
+      <Filter>Source Files\Spatialiser\Diffraction</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Diffraction\Models.cpp">
+      <Filter>Source Files\Spatialiser\Diffraction</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -235,6 +247,15 @@
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Edge.h">
       <Filter>Header Files\Spatialiser</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Diffraction\Path.h">
+      <Filter>Header Files\Spatialiser\Diffraction</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Diffraction\Models.h">
+      <Filter>Header Files\Spatialiser\Diffraction</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\complex.h">
+      <Filter>Header Files\JM</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

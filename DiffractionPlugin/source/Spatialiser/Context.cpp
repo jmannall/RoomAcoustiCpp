@@ -26,6 +26,9 @@ void BackgroundProcessor(Context* context)
 		//	},
 		//	"Time for Background Thread to Process");
 
+		// Update ISM Config
+		room->UpdateISMConfig(context->GetISMConfig());
+
 		// Update ISM
 		room->UpdateISM();
 
@@ -246,6 +249,9 @@ void Context::SubmitAudio(size_t id, const float* data, size_t numFrames)
 
 void Context::GetOutput(float** bufferPtr)
 {
+	//mReverbInput = matrix(mOutputBuffer.Length() / 2, mReverb->NumChannels());
+	//float in[12] = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f };
+	//mReverbInput.AddRow(vec(&in[0], 12), 0);
 	mReverb->ProcessAudio(mReverbInput, mOutputBuffer);
 	mSendBuffer = mOutputBuffer;	// Streamline this, Audio system needs over haul to process at the source to apply absorption.
 	*bufferPtr = &mSendBuffer[0];	// Add mutex to prevent outputBuffer readwrite issues? Change in unity to happen every source?

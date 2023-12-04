@@ -17,6 +17,8 @@ namespace Spatialiser
 		void UpdateEdgeLength() { zW = (mTop - mBase).Length(); }
 		vec3 GetAP(vec3 point) const { return point - mBase; }
 		vec3 GetEdgeCoord(float z) const { return mBase + z * mEdgeVector; }
+		vec3 GetBase() const { return mBase; }
+		vec3 GetTop() const { return mTop; }
 		vec3 GetMidPoint() const { return midPoint; }
 		size_t GetWallID(const size_t& id) const
 		{
@@ -25,8 +27,19 @@ namespace Spatialiser
 			else
 				return mPlaneIDs[0];
 		}
+		bool AttachedToPlane(size_t id) const
+		{
+			if (id == mPlaneIDs[0] || id == mPlaneIDs[1])
+				return true;
+			return false;
+		}
 		inline bool GetRValid() const { return rValid; }
-		inline void SetRValid(const bool& valid) { rValid = valid; }
+		inline void SetRValid(const vec3& receiver)
+		{ 
+			// Check receiver in front of either plane (in front of both defo not in shadow zone)
+			// Be easy if save wall to edge - currently check path is valid in ISM anyway which performs similar checks
+			// This way maybe quicker? as avoids initialising a path if unnessesary?
+		}
 
 		float t;
 		float zW;

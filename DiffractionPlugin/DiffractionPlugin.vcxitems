@@ -30,6 +30,8 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)source\matrix.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\SourceManager.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Context.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Diffraction\Models.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Diffraction\Path.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Edge.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\FDN.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Interface.cpp" />
@@ -57,6 +59,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\rtwtypes.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\tmwtypes.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\AudioManager.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\complex.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Debug.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Definitions.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DiffractionGeometry.h" />
@@ -70,6 +73,8 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\ScopedTimer.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\SourceManager.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Context.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Diffraction\Models.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Diffraction\Path.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Edge.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\FDN.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Interface.h" />

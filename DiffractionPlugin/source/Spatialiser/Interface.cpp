@@ -34,6 +34,13 @@ namespace Spatialiser
 		}
 	}
 
+	void UpdateISMConfig(const ISMConfig& config)
+	{
+		auto* context = GetContext();
+		if (context)
+			context->UpdateISMConfig(config);
+	}
+
 	size_t InitWall(const vec3& normal, const float* vData, size_t numVertices, Absorption& absorption, const ReverbWall& reverbWall)
 	{
 		auto* context = GetContext();

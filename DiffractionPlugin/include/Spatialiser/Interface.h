@@ -7,6 +7,8 @@ namespace Spatialiser
 	void Init(const Config* config);
 
 	void Exit();
+
+	void UpdateISMConfig(const ISMConfig& config);
 	
 	size_t InitWall(const vec3& normal, const float* vData, size_t numVertices, Absorption& absorption, const ReverbWall& reverbWall);
 

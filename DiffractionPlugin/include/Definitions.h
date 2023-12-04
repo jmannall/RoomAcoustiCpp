@@ -88,7 +88,8 @@
 
 #pragma region constants
 const constexpr unsigned short CHANNEL_COUNT = 2;
-const constexpr float SPEED_OF_SOUND = 344;
+const constexpr float T_CELCIUS= 20;
+const constexpr float SPEED_OF_SOUND = 331.5 + 0.6 * T_CELCIUS;
 const constexpr float INV_SPEED_OF_SOUND = 1.0f / SPEED_OF_SOUND;
 
 const constexpr float EPS = 0.000001f;
