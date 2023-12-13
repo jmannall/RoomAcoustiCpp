@@ -14,6 +14,8 @@ public:
 	matrix(const float** mat, const int r, const int c);
 	matrix(const float* in, const int r, const int c);
 
+	void Reset();
+
 	void Init(const float* in);
 	void Init(const float** mat);
 	float* GetColumn(int idx) const;

@@ -1,31 +1,25 @@
+/*
+*
+*  \Spatialiser context
+*
+*/
 
 #include "Spatialiser/Context.h"
-#include "Definitions.h";
 
 using namespace Spatialiser;
 using namespace Common;
 
-#pragma region Background Thread
+//////////////////// Background Thread ////////////////////
 
 void BackgroundProcessor(Context* context)
 {
-	bool isRunning = context->IsRunning();
+	Debug::Log("Begin background thread", Color::Green);
 
-	HRTFManager* sources = context->GetHRTFManager();
+	bool isRunning = context->IsRunning();
 	Room* room = context->GetRoom();
 
-	Debug::Log("Begin background thread", Color::Green);
 	while (isRunning)
 	{
-		//UPDATE_PROFILE_SECTION(
-		//	{
-		//		// Update ISM
-		//		context->UpdateISM();
-
-		//		isRunning = context->IsRunning();
-		//	},
-		//	"Time for Background Thread to Process");
-
 		// Update ISM Config
 		room->UpdateISMConfig(context->GetISMConfig());
 
@@ -33,56 +27,68 @@ void BackgroundProcessor(Context* context)
 		room->UpdateISM();
 
 		isRunning = context->IsRunning();
-		//Debug::Log("Running background thread", Color::Blue);
 	}
 	Debug::Log("End background thread", Color::Red);
 }
 
-#pragma endregion
+//////////////////// Context ////////////////////
 
-#pragma region Context Init and Exit
+// Load and Destroy
 
-Context::Context(const Config* config) : mIsRunning(true), mBackgroundProcessor(), count(0)
+Context::Context(const Config* config) : mIsRunning(true), ISMThread()
 {
 	Debug::Log("Init Context", Color::Green);
+
 	// Copy config
 	std::memcpy(&mConfig, config, sizeof(Config));
 
 	// Set dsp settings
-	mCore.SetAudioState({ mConfig.sampleRate, mConfig.bufferSize });
+	mCore.SetAudioState({ mConfig.fs, mConfig.numFrames });
 	mCore.SetHRTFResamplingStep(mConfig.hrtfResamplingStep);
 
 	// Create listener
 	mListener = mCore.CreateListener();
 
+	// Load HRTF files
+	// TO DO: Move file locations to config
 	string resourcePath = "D:\\Joshua Mannall\\GitHub\\3dti_AudioToolkit\\resources";
-	string hrtfPath = "\\HRTF\\3DTI\\3DTI_HRTF_IRC1008_128s_48000Hz.3dti-hrtf";
-
-	// Load binaural resources
-	//hrtfLoaded = HRTF::CreateFrom3dti(mConfig.resourcePath + mConfig.hrtfPath, mListener);
-	//ildLoaded = ILD::CreateFrom3dti_ILDNearFieldEffectTable(mConfig.resourcePath + mConfig.ildPath, mListener);
-
-	hrtfLoaded = HRTF::CreateFrom3dti(resourcePath + hrtfPath, mListener);
-	switch (mConfig.hrtfMode)
+	hrtfLoaded = HRTF::CreateFrom3dti(resourcePath + "\\HRTF\\3DTI\\3DTI_HRTF_IRC1008_128s_48000Hz.3dti-hrtf", mListener);
+	
+	string mode;
+	if (hrtfLoaded)
 	{
+		switch (mConfig.hrtfMode)
+		{
 		case HRTFMode::quality:
-		{
-			string ildPath = "\\ILD\\HRTF_ILD_48000.3dti-ild";
-			ildLoaded = ILD::CreateFrom3dti_ILDSpatializationTable(resourcePath + ildPath, mListener);
-			break;
-		}
+		{ ildLoaded = ILD::CreateFrom3dti_ILDSpatializationTable(resourcePath + "\\ILD\\HRTF_ILD_48000.3dti-ild", mListener);
+			mode = "quality"; break; }
 		case HRTFMode::performance:
-		{
-			string ildNearFieldPath = "\\ILD\\NearFieldCompensation_ILD_48000.3dti-ild";
-			ildLoaded = ILD::CreateFrom3dti_ILDNearFieldEffectTable(resourcePath + ildNearFieldPath, mListener);
-			break;
-		}
+		{ ildLoaded = ILD::CreateFrom3dti_ILDNearFieldEffectTable(resourcePath + "\\ILD\\NearFieldCompensation_ILD_48000.3dti-ild", mListener);
+			mode = "performance"; break; }
 		case HRTFMode::none:
 			break;
+		default:
+		{ mConfig.hrtfMode = HRTFMode::none; break; }
+		}
 	}
 
-	// Add reverb to the init process then test tge audio processing and FDN all working
-	// allocate memory all at once
+	if (mConfig.hrtfMode == HRTFMode::none)
+		Debug::Log("Spatialisation set to none", Color::Green);
+	else if (ildLoaded)
+	{
+		Debug::Log("HRTF files loaded successfully", Color::Green);
+		Debug::Log("Spatialisation set to " + mode, Color::Green);
+	}
+	else
+	{
+		Debug::Log("Failed to load HRTF files", Color::Red);
+		mConfig.hrtfMode = HRTFMode::none;
+		Debug::Log("Spatialisation set to none", Color::Green);
+	}
+
+	// TO DO: Add reverb to the init process then test the audio processing and FDN all working
+	
+	// Allocate memory all at once
 	unsigned size =
 		sizeof(Room) +			// room
 		sizeof(Reverb) +		// reverb
@@ -95,23 +101,21 @@ Context::Context(const Config* config) : mIsRunning(true), mBackgroundProcessor(
 	}
 	std::memset(mMem, 0, size);
 
-	// place memory locations
+	// Place memory locations
 	char* temp = mMem;
 	mRoom = reinterpret_cast<Room*>(temp); temp += sizeof(Room);
 	mReverb = reinterpret_cast<Reverb*>(temp); temp += sizeof(Reverb);
 	mSources = reinterpret_cast<HRTFManager*>(temp); temp += sizeof(HRTFManager);
 
-	vec dimensions = vec(12);		// Change to be determined by room dimensions.
-	for (int i = 0; i < 12; i++)
-	{
-		dimensions[i] = 0.5f * (i + 1);
-	}
-	mRoom = new Room(config->maxRefOrder);
-	mReverb = new Reverb(&mCore, mConfig.hrtfMode, dimensions, mConfig.sampleRate);
-	mSources = new HRTFManager(&mCore, mReverb->NumChannels(), mConfig.hrtfMode, mConfig.sampleRate);
+	mRoom = new Room();
+	mReverb = new Reverb(&mCore, mConfig.hrtfMode, vec(mConfig.numFDNChannels), mConfig.fs);
+	mSources = new HRTFManager(&mCore, mConfig.numFDNChannels, mConfig.hrtfMode, mConfig.fs);
 
-	// start background thread after all systems are initialized
-	mBackgroundProcessor = std::thread(BackgroundProcessor, this);
+	// Start background thread after all systems are initialized
+	ISMThread = std::thread(BackgroundProcessor, this);
+
+	mReverbInput = matrix(mConfig.numFrames, mConfig.numFDNChannels);	// Move these to initialise based on unity settings at context init();
+	mOutputBuffer = Buffer(mConfig.numFrames * mConfig.numChannels);
 }
 
 Context::~Context()
@@ -119,18 +123,16 @@ Context::~Context()
 	Debug::Log("Exit Context", Color::Red);
 
 	StopRunning();
-	mBackgroundProcessor.join();
+	ISMThread.join();
 
 	mSources->~HRTFManager();
 	mReverb->~Reverb();
 	mRoom->~Room();
 	mCore.RemoveListener();
 
-	// deallocate buffers
+	// Deallocate buffers
 	DSP_SAFE_ARRAY_DELETE(mMem);
 }
-
-#pragma endregion
 
 bool Context::FilesLoaded()
 {
@@ -139,57 +141,25 @@ bool Context::FilesLoaded()
 	return false;
 }
 
-#pragma region Walls
-
-size_t Context::InitWall(const vec3& normal, const float* vData, size_t numVertices, Absorption& absorption, const ReverbWall& reverbWall)
-{
-	Debug::Log("Init Wall and Edges", Color::Green);
-	Wall wall = Wall(normal, vData, numVertices, absorption);
-	mReverb->UpdateReflectionFilters(reverbWall, absorption);
-	return mRoom->AddWall(wall);
-}
-
-// assumes reverbWall never changes
-void Context::UpdateWall(size_t id, const vec3& normal, const float* vData, size_t numVertices, Absorption& absorption, const ReverbWall& reverbWall)
-{
-	Absorption oldAbsorption = mRoom->UpdateWall(id, normal, vData, numVertices, absorption);
-	mReverb->UpdateReflectionFilters(reverbWall, absorption, oldAbsorption);
-	// Update edges?
-}
-
-// assumes reverbWall never changes
-void Context::RemoveWall(size_t id, const ReverbWall& reverbWall)
-{
-	Debug::Log("Remove Wall and Edges", Color::Red);
-	Absorption absorption = mRoom->RemoveWall(id);
-	absorption.area = -absorption.area;
-	mReverb->UpdateReflectionFilters(reverbWall, absorption);
-	// mSources->LogEdgeRemoval(ids);
-	mSources->LogWallRemoval(id); // To remove virtual sources later - Include relative edges?
-}
+// Reverb
 
 void Context::SetFDNParameters(const float& volume, const vec& dimensions)
 {
-	Debug::Log("Set FDN Reverb Time", Color::Green);
 	FrequencyDependence T60 = mRoom->GetReverbTime(volume);
-	float temp[5];
-	T60.GetValues(&temp[0]);
-	for (int i = 0; i < 5; i++)
-	{
-		Debug::Log("FDN T60: " + FloatToStr(temp[i]) + " I: " + IntToStr(i), Color::White);
-	}
 	mReverb->SetFDNParameters(T60, dimensions);
+
+	float t60[5]; T60.GetValues(&t60[0]);
+	Debug::Log("Reverb T60: [" + FloatToStr(t60[0]) + ", " + FloatToStr(t60[1]) + ", " +
+		FloatToStr(t60[2]) + ", " + FloatToStr(t60[3]) + ", " + FloatToStr(t60[4]) + "]", Color::Green);
 }
 
-#pragma endregion
-
-#pragma region Listener
+// Listener
 
 void Context::UpdateListener(const vec3& position, const quaternion& orientation)
 {
 	mRoom->UpdateListenerPosition(position);
 
-	// Set the listener position and orientation
+	// Set listener position and orientation
 	CTransform transform;
 	transform.SetOrientation(CQuaternion(orientation.w, orientation.x, orientation.y, orientation.z));
 	transform.SetPosition(CVector3(position.x, position.y, position.z));
@@ -198,65 +168,89 @@ void Context::UpdateListener(const vec3& position, const quaternion& orientation
 		mListener->SetListenerTransform(transform);
 	}
 	mReverb->UpdateReverbSources(position);
-	// Debug::Log("Listener position: " + VecToStr(position), Color::Yellow);
+
+	Debug::Log("Listener position: " + VecToStr(position), Color::Yellow);
 }
 
-#pragma endregion
-
-#pragma region Sources
+// Source
 
 size_t Context::InitSource()
 {
 	Debug::Log("Init Source", Color::Green);
+
 	return mSources->Init();
 }
 
 void Context::UpdateSource(size_t id, const vec3& position, const quaternion& orientation)
 {
+	// Update source position in background thread and
+	// return a copy of all virtual sources
+	SourceData data = mRoom->UpdateSourcePosition(id, position);
+
+	// Update source position, orientation and virtual sources
 	CTransform transform;
 	transform.SetOrientation(CQuaternion(orientation.w, orientation.x, orientation.y, orientation.z));
 	transform.SetPosition(CVector3(position.x, position.y, position.z));
-
-	SourceData& data = mRoom->UpdateSourcePosition(id, position); // Also returns latest data
 	mSources->Update(id, transform, data);
-	// Debug::Log("Source position: " + VecToStr(position), Color::Yellow);
+
+	Debug::Log("Source position: " + VecToStr(position), Color::Yellow);
 }
 
 void Context::RemoveSource(size_t id)
 {
 	Debug::Log("Remove Source", Color::Red);
+
 	mRoom->RemoveSourcePosition(id);
 	mSources->Remove(id);
 }
 
-#pragma endregion
+// Wall
 
-#pragma region Audio Proccessing
+size_t Context::InitWall(const vec3& normal, const float* vData, size_t numVertices, Absorption& absorption, const ReverbWall& reverbWall)
+{
+	Debug::Log("Init Wall and Edges", Color::Green);
+
+	Wall wall = Wall(normal, vData, numVertices, absorption);
+	mReverb->UpdateReflectionFilters(reverbWall, absorption);
+	return mRoom->AddWall(wall);
+}
+
+// Assumes reverbWall never changes
+void Context::UpdateWall(size_t id, const vec3& normal, const float* vData, size_t numVertices, Absorption& absorption, const ReverbWall& reverbWall)
+{
+	Absorption oldAbsorption = mRoom->UpdateWall(id, normal, vData, numVertices, absorption);
+	mReverb->UpdateReflectionFilters(reverbWall, absorption, oldAbsorption);
+	// TO DO: Update edges?
+}
+
+// Assumes reverbWall never changes
+void Context::RemoveWall(size_t id, const ReverbWall& reverbWall)
+{
+	Debug::Log("Remove Wall and Edges", Color::Red);
+
+	Absorption absorption = mRoom->RemoveWall(id);
+	if (absorption.area != 0)
+		mReverb->UpdateReflectionFilters(reverbWall, absorption);
+}
+
+// Audio
 
 void Context::SubmitAudio(size_t id, const float* data, size_t numFrames)
 {
-	//mNumChannels = (int)CHANNEL_COUNT;
-	mNumChannels = 2;
-	size_t numSamples = numFrames * mNumChannels;
-																// Currently reverbInput gets overwritten for each source.
-	mReverbInput = matrix(numFrames, mReverb->NumChannels());	// Move these to initialise based on unity settings at context init();
-	mOutputBuffer.ResizeBuffer(numSamples);
-
-	// don't do anything if input is invalid
-		
-	mSources->ProcessAudio(id, data, numFrames, mReverbInput, mOutputBuffer);
+	mSources->ProcessAudio(id, data, mConfig.numFrames, mReverbInput, mOutputBuffer, mConfig.lerpFactor);
 }
 
 void Context::GetOutput(float** bufferPtr)
 {
-	//mReverbInput = matrix(mOutputBuffer.Length() / 2, mReverb->NumChannels());
-	//float in[12] = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f };
-	//mReverbInput.AddRow(vec(&in[0], 12), 0);
+	// Process reverb
 	mReverb->ProcessAudio(mReverbInput, mOutputBuffer);
-	mSendBuffer = mOutputBuffer;	// Streamline this, Audio system needs over haul to process at the source to apply absorption.
-	*bufferPtr = &mSendBuffer[0];	// Add mutex to prevent outputBuffer readwrite issues? Change in unity to happen every source?
 
+	// Copy output to send and set pointer
+	// TO DO: Chek unity can't call ProcessAudio and GetOutput at the same time
+	mSendBuffer = mOutputBuffer;
+	*bufferPtr = &mSendBuffer[0];
+
+	// Reset output and reverb buffers
 	mOutputBuffer.ResetBuffer();
+	mReverbInput.Reset();
 }
-
-#pragma endregion

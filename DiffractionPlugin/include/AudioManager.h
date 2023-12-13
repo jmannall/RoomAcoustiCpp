@@ -1,11 +1,15 @@
 #pragma once
 
-#ifndef AUDIOMANAGER_H_
-#define AUDIOMANAGER_H_
+#ifndef AudioManager_h
+#define AudioManager_h
 
-#include "UnityGAPlugin.h"
+#include <vector>
+#include <stdlib.h>
+#include "Definitions.h"
+#include "Types.h"
 
-#pragma region Buffer
+//////////////////// Buffer ////////////////////
+
 class Buffer
 {
 public:
@@ -30,25 +34,23 @@ private:
 
 bool BuffersEqual(Buffer x, Buffer y);
 
-#pragma endregion
+//class Source
+//{
+//public:
+//	Source() : position(vec3(0, 0, 0)) {};
+//	Source(float x, float y, float z) : position(vec3(x, y, z)) {};
+//	Source(vec3 position_) : position(position_) {};
+//	~Source() {};
+//
+//	vec3 position;
+//private:
+//};
+//
+//using Listener = Source;
 
-#pragma region Source
-class Source
-{
-public:
-	Source() : position(vec3(0, 0, 0)) {};
-	Source(float x, float y, float z) : position(vec3(x, y, z)) {};
-	Source(vec3 position_) : position(position_) {};
-	~Source() {};
 
-	vec3 position;
-private:
-};
+//////////////////// FIR Filter ////////////////////
 
-using Listener = Source;
-#pragma endregion
-
-#pragma region FIRFilter
 class FIRFilter
 {
 public:
@@ -64,15 +66,16 @@ private:
 	int count;
 	size_t irLen;
 };
-#pragma endregion
 
-#pragma region IIRFilter
-struct FilterCoefficients
-{
-	Buffer a;
-	Buffer b;
-	FilterCoefficients(int n) : a(n), b(n + 1) {};
-};
+
+//struct FilterCoefficients
+//{
+//	Buffer a;
+//	Buffer b;
+//	FilterCoefficients(int n) : a(n), b(n + 1) {};
+//};
+
+//////////////////// IIR Filter ////////////////////
 
 class IIRFilter
 {
@@ -150,6 +153,8 @@ private:
 	void UpdateHBF(float fb, float g, int m, int M);
 };
 
+//////////////////// Filterbanks ////////////////////
+
 class LinkwitzRiley
 {
 public:
@@ -209,9 +214,8 @@ private:
 	float fb[4];
 	float g[4];
 };
-#pragma endregion
 
-#endif AUDIOMANAGER_H_
+#endif
 
 
 

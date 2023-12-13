@@ -5,16 +5,17 @@ using namespace Spatialiser;
 
 Wall::Wall(const vec3& normal, const float* vData, size_t numVertices, Absorption& absorption) : mNormal(normal), rValid(false), mNumVertices(numVertices), mAbsorption(absorption)
 {
-	Debug::Log("Vertecies: " + VecArrayToStr(mVertices), Color::Orange);
-	Debug::Log("Normal: " + VecToStr(mNormal), Color::Orange);
 	Update(vData);
 	absorption.area = mAbsorption.area;
+	Debug::Log("Vertecies: " + VecArrayToStr(mVertices), Color::Orange);
+	Debug::Log("Normal: " + VecToStr(mNormal), Color::Orange);
 }
 
 Absorption Wall::Update(const vec3& normal, const float* vData, size_t numVertices, Absorption& absorption)
 {
 	Absorption oldAbsorption = mAbsorption;
-	mNormal = normal;
+
+	mNormal = vec3(Round(normal.x, 4), Round(normal.y, 4), Round(normal.z, 4));
 	mNumVertices = numVertices;
 	mAbsorption = absorption;
 	Update(vData);
@@ -28,9 +29,10 @@ void Wall::Update(const float* vData)
 	std::fill_n(std::back_inserter(mVertices), mNumVertices, vec3());
 	for (int i = 0; i < (int)mNumVertices; i++)
 	{
-		float x = vData[j++];
-		float y = vData[j++];
-		float z = vData[j++];
+		// Round as otherwise comparing identical vertices from unity still returns false
+		float x = Round(vData[j++], 4);
+		float y = Round(vData[j++], 4);
+		float z = Round(vData[j++], 4);
 		mVertices[i] = vec3(x, y, z);
 	}
 
@@ -119,6 +121,12 @@ bool Wall ::ReflectPointInWall(vec3& dest, const vec3& point) const
 		return true;
 	}
 	return false;
+}
+
+void Wall::ReflectPointInWallNoCheck(vec3& point) const
+{
+	float k = PointWallPosition(point);
+	point += -2 * mNormal * k;
 }
 
 bool Wall::ReflectEdgeInWall(const Edge& edge) const

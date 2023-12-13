@@ -670,7 +670,6 @@ namespace RuntimeTests
 			const int numFrames = 4096;
 			config.bufferSize = numFrames;
 			config.hrtfResamplingStep = 30;
-			config.maxRefOrder = 3;
 			Spatialiser::Init(&config);
 
 			float vert[] = { 0.0f, 0.0f, 0.0f,
@@ -710,7 +709,6 @@ namespace RuntimeTests
 			const int numFrames = 2048;
 			config.bufferSize = numFrames;
 			config.hrtfResamplingStep = 30;
-			config.maxRefOrder = 0;
 			Spatialiser::Init(&config);
 			float vert[] = { 0.0f, 0.0f, 0.0f,
 							4.0f, 0.0f, 0.0f,
@@ -1263,149 +1261,241 @@ namespace ImageSource
 	TEST_CLASS(ImageSource)
 	{
 	public:
-		TEST_METHOD(RunShoebox)
+
+		void CreateShoebox()
 		{
-			int maxRefOrder = 3;
+			Spatialiser::Absorption absorbtion = Spatialiser::Absorption(0.7f, 0.7f, 0.7f, 0.7f, 0.7f);
+			vec3 pos = vec3(7.0f, 3.0f, 5.0f);
 
-			Spatialiser::Config config;
+			CreateShoebox(pos, absorbtion);
+		}
 
-			config.sampleRate = 44100;
-			const int numFrames = 4096 * 8;
-			config.bufferSize = numFrames;
-			config.hrtfResamplingStep = 30;
-			config.maxRefOrder = maxRefOrder;
-			config.hrtfMode = Spatialiser::HRTFMode::none;
-			Spatialiser::Init(&config);
+		void CreateShoebox(const vec3& pos, Spatialiser::Absorption absorbtion)
+		{
 			int numVert = 4;
 
-			Spatialiser::ISMConfig ismConfig;
-			ismConfig.shadowOnly = false;
-			ismConfig.diffraction = Spatialiser::DiffractionDepth::none;
+			float vert1[] = { 0.0f, pos.y, 0.0f,
+							pos.x, pos.y, 0.0f,
+							pos.x, pos.y, pos.z,
+							0.0f, pos.y, pos.z };
+			vec3 normal1 = vec3(0.0f, -1.0f, 0.0f);
+			size_t wID1 = Spatialiser::InitWall(normal1, &vert1[0], (size_t)numVert, absorbtion, Spatialiser::ReverbWall::posZ);
 
-			Spatialiser::UpdateISMConfig(ismConfig);
+			float vert2[] = { pos.x, 0.0f, 0.0f,
+							0.0f, 0.0f, 0.0f,
+							0.0f, 0.0f, pos.z,
+							pos.x, 0.0f, pos.z };
+			vec3 normal2 = vec3(0.0f, 1.0f, 0.0f);
+			size_t wID2 = Spatialiser::InitWall(normal2, &vert2[0], (size_t)numVert, absorbtion, Spatialiser::ReverbWall::negZ);
 
-			Spatialiser::Absorption absorbtion = Spatialiser::Absorption(0.3f, 0.3f, 0.3f, 0.3f, 0.3f);
+			float vert3[] = { pos.x, 0.0f, pos.z,
+							pos.x, pos.y, pos.z,
+							pos.x, pos.y, 0.0f,
+							pos.x, 0.0f, 0.0f };
+			vec3 normal3 = vec3(-1.0f, 0.0f, 0.0f);
+			size_t wID3 = Spatialiser::InitWall(normal3, &vert3[0], (size_t)numVert, absorbtion, Spatialiser::ReverbWall::posX);
+
+			float vert4[] = { 0.0f, 0.0f, 0.0f,
+							0.0f, pos.y, 0.0f,
+							0.0f, pos.y, pos.z,
+							0.0f, 0.0f, pos.z };
+			vec3 normal4 = vec3(1.0f, 0.0f, 0.0f);
+			size_t wID4 = Spatialiser::InitWall(normal4, &vert4[0], (size_t)numVert, absorbtion, Spatialiser::ReverbWall::negX);
+
+			float vert5[] = { 0.0f, 0.0f, 0.0f,
+							pos.x, 0.0f, 0.0f,
+							pos.x, pos.y, 0.0f,
+							0.0f, pos.y, 0.0f };
+			vec3 normal5 = vec3(0.0f, 0.0f, 1.0f);
+			size_t wID5 = Spatialiser::InitWall(normal5, &vert5[0], (size_t)numVert, absorbtion, Spatialiser::ReverbWall::negY);
+
+			float vert6[] = { 0.0f, pos.y, pos.z,
+							pos.x, pos.y, pos.z,
+							pos.x, 0.0f, pos.z,
+							0.0f, 0.0f, pos.z };
+			vec3 normal6 = vec3(0.0f, 0.0f, -1.0f);
+			size_t wID6 = Spatialiser::InitWall(normal6, &vert6[0], (size_t)numVert, absorbtion, Spatialiser::ReverbWall::posY);
+		}
+
+		void CreateLaboratory()
+		{
+			int numVert = 4;
 
 			Spatialiser::Absorption carpetOnConcrete = Spatialiser::Absorption(0.06f, 0.15f, 0.4f, 0.6f, 0.6f);
-			//carpetOnConcrete = Spatialiser::Absorption(0.06f, 0.15f, 0.4f, 0.3f, 0.3f);
 			Spatialiser::Absorption concrete = Spatialiser::Absorption(0.01f, 0.02f, 0.02f, 0.02f, 0.03f);
 			Spatialiser::Absorption windowGlass = Spatialiser::Absorption(0.2f, 0.2f, 0.1f, 0.07f, 0.04f);
 			Spatialiser::Absorption gypsum = Spatialiser::Absorption(0.1f, 0.05f, 0.04f, 0.07f, 0.1f);
 			Spatialiser::Absorption plywood = Spatialiser::Absorption(0.3f, 0.1f, 0.1f, 0.1f, 0.1f);
 			Spatialiser::Absorption plasterSprayed = Spatialiser::Absorption(0.7f, 0.6f, 0.7f, 0.7f, 0.5f);
-			//plasterSprayed = Spatialiser::Absorption(0.6f, 0.6f, 0.6f, 0.6f, 0.5f);
 
 			vec3 pos = vec3(4.97f, 3.0f, 4.12f);
-			vec3 source = vec3(1.4f, 1.36, 3.02f);
-			vec3 receiver = vec3(2.77, 1.51, 1.3);
-			//vec3 pos = vec3(5.0f, 3.0f, 4.0f);
-			//vec3 source = vec3(2.0f, 1.3f, 3.0f);
-			//vec3 receiver = vec3(2.1f, 1.2f, 2.0f);
+
 			float vert1[] = { 0.0f, pos.y, 0.0f,
 							pos.x, pos.y, 0.0f,
 							pos.x, pos.y, pos.z,
 							0.0f, pos.y, pos.z };
-			vec3 normal1 = vec3(0.0f, -1.0f, 0.0f);// concrete
+			vec3 normal1 = vec3(0.0f, -1.0f, 0.0f); // concrete
 			size_t wID1 = Spatialiser::InitWall(normal1, &vert1[0], (size_t)numVert, concrete, Spatialiser::ReverbWall::posZ);
 
 			float vert2[] = { pos.x, 0.0f, 0.0f,
 							0.0f, 0.0f, 0.0f,
 							0.0f, 0.0f, pos.z,
 							pos.x, 0.0f, pos.z };
-			vec3 normal2 = vec3(0.0f, 1.0f, 0.0f);//carpet
+			vec3 normal2 = vec3(0.0f, 1.0f, 0.0f); //carpet
 			size_t wID2 = Spatialiser::InitWall(normal2, &vert2[0], (size_t)numVert, carpetOnConcrete, Spatialiser::ReverbWall::negZ);
 
 			float vert3[] = { pos.x, 0.0f, pos.z,
 							pos.x, pos.y, pos.z,
 							pos.x, pos.y, 0.0f,
 							pos.x, 0.0f, 0.0f };
-			vec3 normal3 = vec3(-1.0f, 0.0f, 0.0f);//window glass
+			vec3 normal3 = vec3(-1.0f, 0.0f, 0.0f); //window glass
 			size_t wID3 = Spatialiser::InitWall(normal3, &vert3[0], (size_t)numVert, windowGlass, Spatialiser::ReverbWall::posX);
 
 			float vert4[] = { 0.0f, 0.0f, 0.0f,
 							0.0f, pos.y, 0.0f,
 							0.0f, pos.y, pos.z,
 							0.0f, 0.0f, pos.z };
-			vec3 normal4 = vec3(1.0f, 0.0f, 0.0f);//plywood
+			vec3 normal4 = vec3(1.0f, 0.0f, 0.0f); //plywood
 			size_t wID4 = Spatialiser::InitWall(normal4, &vert4[0], (size_t)numVert, plywood, Spatialiser::ReverbWall::negX);
 
 			float vert5[] = { 0.0f, 0.0f, 0.0f,
 							pos.x, 0.0f, 0.0f,
 							pos.x, pos.y, 0.0f,
 							0.0f, pos.y, 0.0f };
-			vec3 normal5 = vec3(0.0f, 0.0f, 1.0f);//gypsum
+			vec3 normal5 = vec3(0.0f, 0.0f, 1.0f); //gypsum
 			size_t wID5 = Spatialiser::InitWall(normal5, &vert5[0], (size_t)numVert, gypsum, Spatialiser::ReverbWall::negY);
 
 			float vert6[] = { 0.0f, pos.y, pos.z,
 							pos.x, pos.y, pos.z,
 							pos.x, 0.0f, pos.z,
 							0.0f, 0.0f, pos.z };
-			vec3 normal6 = vec3(0.0f, 0.0f, -1.0f);//plaster
+			vec3 normal6 = vec3(0.0f, 0.0f, -1.0f); //plaster
 			size_t wID6 = Spatialiser::InitWall(normal6, &vert6[0], (size_t)numVert, plasterSprayed, Spatialiser::ReverbWall::posY);
+		}
+		TEST_METHOD(RunShoebox)
+		{
+			Spatialiser::Config config;
+
+			config.sampleRate = 44100;
+			const int numFrames = 4096 * 8;
+
+			config.bufferSize = numFrames;
+			config.hrtfResamplingStep = 30;
+			config.hrtfMode = Spatialiser::HRTFMode::none;
+
+			Spatialiser::Absorption absorbtion = Spatialiser::Absorption(0.7f, 0.7f, 0.7f, 0.7f, 0.7f); // Concrete
+
+			vec3 pos = vec3(4.97f, 3.0f, 4.12f);
 
 			float volume = pos.x * pos.y * pos.z;
+			//float dim[] = { pos.x - corner.x, pos.y, corner.z, pos.x, pos.y, pos.z };
 			float dim[] = { pos.x, pos.y, pos.z };
 			vec dimensions = vec(&dim[0], 3);
-			//Spatialiser::SetFDNParameters(volume, dimensions);
-			bool result = Spatialiser::FilesLoaded();
 
-			Sleep(500);
+			std::string name;
 
-			Spatialiser::UpdateListener(receiver, quaternion(0.0f, 0.0f, 0.0f, 1.0f));
-			size_t sID1 = Spatialiser::InitSource();
-			//Spatialiser::UpdateSource(sID1, vec3(2.5f, 1.0f, 4.4f), quaternion(0.0f, 1.0f, 0.0f, 0.0f));
-			Spatialiser::UpdateSource(sID1, source, quaternion(0.0f, 1.0f, 0.0f, 0.0f));
-			//Spatialiser::UpdateSource(sID1, vec3(2.5f, -1.0f, 4.0f), quaternion(0.0f, 1.0f, 0.0f, 0.0f));
-
-			static float* buffer = nullptr;
-			float in[numFrames];
-			std::fill_n(in, numFrames, 0.0f);
-
-			Sleep(500);
-
-			Spatialiser::UpdateListener(receiver, quaternion(0.0f, 0.0f, 0.0f, 1.0f));
-			Spatialiser::UpdateSource(sID1, source, quaternion(0.0f, 1.0f, 0.0f, 0.0f));
-
-			for (int i = 0; i < 10; i++)
+			for (int i = 0; i < 3; i++)
 			{
-				Spatialiser::SubmitAudio(sID1, in, (size_t)numFrames);
-				Spatialiser::GetOutput(&buffer);
+				Spatialiser::ISMConfig ismConfig;
+				ismConfig.order = 3;
+				ismConfig.specularDiffraction = false;
+				ismConfig.direct = false;
+				ismConfig.reflection = false;
+				ismConfig.diffraction = false;
+				ismConfig.reflectionDiffraction = false;
+
+				Spatialiser::Init(&config);
+				CreateLaboratory();
+
+				switch (i)
+				{
+				case 0:
+				{
+					name = "ir";
+
+					ismConfig.specularDiffraction = true;
+					ismConfig.direct = true;
+					ismConfig.reflection = true;
+					ismConfig.diffraction = false;
+					ismConfig.reflectionDiffraction = false;
+					Spatialiser::SetFDNParameters(volume, dimensions);
+					break;
+				}
+				case 1:
+				{
+					name = "ir_Dir";
+
+					ismConfig.direct = true;
+					break;
+				}
+				case 2:
+				{
+					name = "ir_Ref";
+
+					ismConfig.reflection = true;
+					break;
+				}
+				}
+
+				Spatialiser::UpdateISMConfig(ismConfig);
+				bool result = Spatialiser::FilesLoaded();
+
+				vec3 source = vec3(1.4f, 1.36, 3.02f);
+				vec3 receiver = vec3(2.77, 1.51, 1.3);
+
+				Spatialiser::UpdateListener(receiver, quaternion(0.0f, 0.0f, 0.0f, 1.0f));
+				size_t sID1 = Spatialiser::InitSource();
+				Spatialiser::UpdateSource(sID1, source, quaternion(0.0f, 1.0f, 0.0f, 0.0f));
+
+				Sleep(1000);
+
 				Spatialiser::UpdateListener(receiver, quaternion(0.0f, 0.0f, 0.0f, 1.0f));
 				Spatialiser::UpdateSource(sID1, source, quaternion(0.0f, 1.0f, 0.0f, 0.0f));
+
+				static float* buffer = nullptr;
+				float in[numFrames];
+				std::fill_n(in, numFrames, 0.0f);
+
+				for (int i = 0; i < 10; i++)
+				{
+					Spatialiser::SubmitAudio(sID1, in, (size_t)numFrames);
+					Spatialiser::GetOutput(&buffer);
+				}
+
+				in[0] = 1.0f;
+				Spatialiser::SubmitAudio(sID1, in, (size_t)numFrames);
+
+				Spatialiser::GetOutput(&buffer);
+
+				float outL[numFrames];
+				float outR[numFrames];
+				std::fill_n(outL, config.bufferSize, 0.0f);
+				std::fill_n(outR, config.bufferSize, 0.0f);
+				for (int i = 0; i < numFrames; i++)
+				{
+					outL[i] = *buffer++;
+					outR[i] = *buffer++;
+				}
+
+				Spatialiser::Exit();
+
+				std::string fileName = "Shoebox_" + name + ".txt";
+				std::ofstream out(fileName);
+				std::streambuf* coutbuf = std::cout.rdbuf(); //save old buf
+				std::cout.rdbuf(out.rdbuf()); //redirect std::cout to out.txt!
+
+				std::cout << source << "\n";
+				std::cout << receiver << "\n";
+
+				std::cout << pos << "\n";
+
+				for (int i = 0; i < numFrames; i++)
+				{
+					std::cout << outL[i] << ", " << outR[i] << "\n";
+				}
+
+				std::cout.rdbuf(coutbuf); //reset to standard output again
 			}
-
-			in[0] = 1.0f;
-			Spatialiser::SubmitAudio(sID1, in, (size_t)numFrames);
-
-			Spatialiser::GetOutput(&buffer);
-
-			float outL[numFrames];
-			float outR[numFrames];
-			std::fill_n(outL, config.bufferSize, 0.0f);
-			std::fill_n(outR, config.bufferSize, 0.0f);
-			for (int i = 0; i < numFrames; i++)
-			{
-				outL[i] = *buffer++;
-				outR[i] = *buffer++;
-			}
-
-			Spatialiser::Exit();
-
-			std::ofstream out("ShoeboxRoomIR_L.txt");
-			std::streambuf* coutbuf = std::cout.rdbuf(); //save old buf
-			std::cout.rdbuf(out.rdbuf()); //redirect std::cout to out.txt!
-
-			std::cout << source << "\n";
-			std::cout << receiver << "\n";
-
-			std::cout << pos << "\n";
-
-			for (int i = 0; i < numFrames; i++)
-			{
-				std::cout << outL[i] << ", " << outR[i] << "\n";
-			}
-
-			std::cout.rdbuf(coutbuf); //reset to standard output again
 		}
 
 		TEST_METHOD(FDN)
@@ -1454,43 +1544,32 @@ namespace ImageSource
 			std::cout.rdbuf(coutbuf); //reset to standard output again
 		}
 
-		TEST_METHOD(RunLRoom)
+		void CreateLRoom()
 		{
-			int maxRefOrder = 3;
-
-			Spatialiser::Config config;
-
-			config.sampleRate = 44100;
-			const int numFrames = 4096 * 4;
-			config.bufferSize = numFrames;
-			config.hrtfResamplingStep = 30;
-			config.maxRefOrder = maxRefOrder;
-			config.hrtfMode = Spatialiser::HRTFMode::none;
-			Spatialiser::Init(&config);
-			int numVert = 4;
-
-			Spatialiser::ISMConfig ismConfig;
-			ismConfig.shadowOnly = false;
-			ismConfig.diffraction = Spatialiser::DiffractionDepth::edSp;
-
-			Spatialiser::UpdateISMConfig(ismConfig);
-
 			Spatialiser::Absorption absorbtion = Spatialiser::Absorption(0.7f, 0.7f, 0.7f, 0.7f, 0.7f); // Concrete
-
-			Spatialiser::Absorption carpetOnConcrete = Spatialiser::Absorption(0.06f, 0.15f, 0.4f, 0.6f, 0.6f); // Concrete
-			Spatialiser::Absorption concrete = Spatialiser::Absorption(0.01f, 0.02f, 0.02f, 0.02f, 0.03f); // Concrete
-			Spatialiser::Absorption windowGlass = Spatialiser::Absorption(0.2f, 0.2f, 0.1f, 0.07f, 0.04f); // Concrete
-			Spatialiser::Absorption gypsum = Spatialiser::Absorption(0.1f, 0.05f, 0.04f, 0.07f, 0.1f); // Concrete
-			Spatialiser::Absorption plywood = Spatialiser::Absorption(0.3f, 0.1f, 0.1f, 0.1f, 0.1f); // Concrete
-			Spatialiser::Absorption plasterSprayed = Spatialiser::Absorption(0.7f, 0.6f, 0.7f, 0.7f, 0.5f); // Concrete
-
-			vec3 source = vec3(1.5f, 1.1f, 2.02f);
-			vec3 receiver = vec3(4.95f, 1.0f, 4.47f);
-			//vec3 source = vec3(1.5f, 1.0f, 4.0f); // Return invalid edge
-			//vec3 receiver = vec3(3.0f, 1.0f, 4.5f);
 
 			vec3 pos = vec3(7.0f, 3.0f, 5.0f);
 			vec3 corner = vec3(4.0f, 3.0f, 3.0f);
+			CreateLRoom(pos, corner, absorbtion);
+		}
+
+		void CreateLRoom(const vec3& pos, const vec3& corner, Spatialiser::Absorption absorbtion)
+		{
+			int numVert = 4;
+
+			/*float vert9[] = { 5.0f, 0.0f, 3.0f,
+							5.0f, 2.0f, 3.0f,
+							3.0f, 2.0f, 3.0f,
+							3.0f, 0.0f, 3.0f };
+			vec3 normal9 = vec3(0.0f, 0.0f, 1.0f);
+			size_t wID9 = Spatialiser::InitWall(normal9, &vert9[0], (size_t)numVert, absorbtion, Spatialiser::ReverbWall::posZ);
+
+			float vert10[] = { 3.0f, 0.0f, 3.0f,
+							3.0f, 2.0f, 3.0f,
+							3.0f, 2.0f, 0.0f,
+							3.0f, 0.0f, 0.0f };
+			vec3 normal10 = vec3(-1.0f, 0.0f, 0.0f);
+			size_t wID10 = Spatialiser::InitWall(normal10, &vert10[0], (size_t)numVert, absorbtion, Spatialiser::ReverbWall::negX);*/
 
 			float vert7[] = { 0.0f, 0.0f, corner.z,
 							0.0f, pos.y, corner.z,
@@ -1534,109 +1613,198 @@ namespace ImageSource
 			vec3 normal4 = vec3(1.0f, 0.0f, 0.0f); // windowGlass
 			size_t wID4 = Spatialiser::InitWall(normal4, &vert4[0], (size_t)numVert, absorbtion, Spatialiser::ReverbWall::negX);
 
-			//float vert5[] = { 0.0f, 0.0f, 0.0f,
-			//				0.0f, 0.0f, pos.z,
-			//				pos.x, 0.0f, pos.z,
-			//				pos.x, 0.0f, 0.0f };
-			//vec3 normal5 = vec3(0.0f, 1.0f, 0.0f); // carpetOnConcrete
-			//size_t wID5 = Spatialiser::InitWall(normal5, &vert5[0], (size_t)numVert, absorbtion, Spatialiser::ReverbWall::negY);
-
-			//float vert6[] = { 0.0f, pos.y, pos.z,
-			//				0.0f, pos.y, 0.0f,
-			//				pos.x, pos.y, 0.0f,
-			//				pos.x, pos.y, pos.z };
-			//vec3 normal6 = vec3(0.0f, -1.0f, 0.0f); // concrete
-			//size_t wID6 = Spatialiser::InitWall(normal6, &vert6[0], (size_t)numVert, absorbtion, Spatialiser::ReverbWall::posY);
-
 			float vert5[] = { 0.0f, 0.0f, 0.0f,
-							0.0f, 0.0f, corner.z,
-							corner.x, 0.0f, corner.z,
-							corner.x, 0.0f, pos.z,
+							0.0f, 0.0f, pos.z,
 							pos.x, 0.0f, pos.z,
 							pos.x, 0.0f, 0.0f };
 			vec3 normal5 = vec3(0.0f, 1.0f, 0.0f); // carpetOnConcrete
-			numVert = 6;
 			size_t wID5 = Spatialiser::InitWall(normal5, &vert5[0], (size_t)numVert, absorbtion, Spatialiser::ReverbWall::negY);
 
-			float vert6[] = { 0.0f, pos.y, corner.z,
-							0.0f, pos.y, 0.0f,
+			float vert6[] = { 0.0f, pos.y, 0.0f,
 							pos.x, pos.y, 0.0f,
 							pos.x, pos.y, pos.z,
-							corner.x, pos.y, pos.z,
-							corner.x, pos.y, corner.z };
+							0.0f, pos.y, pos.z };
 			vec3 normal6 = vec3(0.0f, -1.0f, 0.0f); // concrete
 			size_t wID6 = Spatialiser::InitWall(normal6, &vert6[0], (size_t)numVert, absorbtion, Spatialiser::ReverbWall::posY);
+		}
+
+		TEST_METHOD(RunLRoom)
+		{
+			Spatialiser::Config config;
+
+			config.sampleRate = 44100;
+			const int numFrames = 4096 * 8;
+
+			config.bufferSize = numFrames;
+			config.hrtfResamplingStep = 30;
+			config.hrtfMode = Spatialiser::HRTFMode::none;
+
+			Spatialiser::Absorption absorbtion = Spatialiser::Absorption(0.3f, 0.3f, 0.3f, 0.3f, 0.3f); // Concrete
+
+			vec3 pos = vec3(7.0f, 3.0f, 5.0f);
+			vec3 corner = vec3(4.0f, 3.0f, 3.0f);
 
 			float volume = pos.x * pos.y * pos.z - corner.x * corner.y * corner.z;
 			//float dim[] = { pos.x - corner.x, pos.y, corner.z, pos.x, pos.y, pos.z };
 			float dim[] = { corner.x, pos.y, corner.z };
-			vec dimensions = vec(&dim[0], 6);
-			Spatialiser::SetFDNParameters(volume, dimensions);
+			vec dimensions = vec(&dim[0], 3);
 
-			bool result = Spatialiser::FilesLoaded();
+			std::string name;
 
-			Spatialiser::UpdateListener(receiver, quaternion(0.0f, 0.0f, 0.0f, 1.0f));
-			size_t sID1 = Spatialiser::InitSource();
-			Spatialiser::UpdateSource(sID1, source, quaternion(0.0f, 1.0f, 0.0f, 0.0f));
-
-			Sleep(500);
-
-			Spatialiser::UpdateListener(receiver, quaternion(0.0f, 0.0f, 0.0f, 1.0f));
-
-			Spatialiser::UpdateSource(sID1, source, quaternion(0.0f, 1.0f, 0.0f, 0.0f));
-
-
-			static float* buffer = nullptr;
-			float in[numFrames];
-			std::fill_n(in, numFrames, 0.0f);
-
-			Sleep(500);
-
-			Spatialiser::UpdateListener(receiver, quaternion(0.0f, 0.0f, 0.0f, 1.0f));
-			Spatialiser::UpdateSource(sID1, source, quaternion(0.0f, 1.0f, 0.0f, 0.0f));
-
-			for (int i = 0; i < 10; i++)
+			for (int i = 0; i < 7; i++)
 			{
+				Spatialiser::ISMConfig ismConfig;
+				ismConfig.order = 3;
+				ismConfig.specularDiffraction = false;
+				ismConfig.direct = false;
+				ismConfig.reflection = false;
+				ismConfig.diffraction = false;
+				ismConfig.reflectionDiffraction = false;
+
+				Spatialiser::Init(&config);
+				CreateLRoom(pos, corner, absorbtion);
+
+				switch (i)
+				{
+				case 0:
+				{
+					name = "ir";
+
+					ismConfig.specularDiffraction = true;
+					ismConfig.direct = true;
+					ismConfig.reflection = true;
+					ismConfig.diffraction = true;
+					ismConfig.reflectionDiffraction = true;
+					Spatialiser::SetFDNParameters(volume, dimensions);
+					break;
+				}
+				case 1:
+				{
+					name = "ir_Dir";
+
+					ismConfig.direct = true;
+					break;
+				}
+				case 2:
+				{
+					name = "ir_Ref";
+
+					ismConfig.reflection = true;
+					break;
+				}
+				case 3:
+				{
+					name = "ir_DiffShadow";
+
+					ismConfig.diffraction = true;
+					break;
+				}
+				case 4:
+				{
+					name = "ir_RefDiffShadow";
+
+					ismConfig.reflectionDiffraction = true;
+					break;
+				}
+				case 5:
+				{
+					name = "ir_Diff";
+
+					ismConfig.specularDiffraction = true;
+					ismConfig.diffraction = true;
+					break;
+				}
+				case 6:
+				{
+					name = "ir_RefDiff";
+
+					ismConfig.specularDiffraction = true;
+					ismConfig.reflectionDiffraction = true;
+					break;
+				}
+				}
+
+				ismConfig.specularDiffraction = false;
+				ismConfig.direct = true;
+				ismConfig.reflection = true;
+				ismConfig.diffraction = false;
+				ismConfig.reflectionDiffraction = false;
+
+				Spatialiser::UpdateISMConfig(ismConfig);
+				bool result = Spatialiser::FilesLoaded();
+
+				vec3 source = vec3(1.53f, 1.1f, 2.07f);
+				vec3 receiver = vec3(4.71f, 1.04f, 4.42f);
+
+				Spatialiser::UpdateListener(receiver, quaternion(0.0f, 0.0f, 0.0f, 1.0f));
+				size_t sID1 = Spatialiser::InitSource();
+				Spatialiser::UpdateSource(sID1, source, quaternion(0.0f, 1.0f, 0.0f, 0.0f));
+
+				Sleep(2000);
+
+				Spatialiser::UpdateListener(receiver, quaternion(0.0f, 0.0f, 0.0f, 1.0f));
+				Spatialiser::UpdateSource(sID1, source, quaternion(0.0f, 1.0f, 0.0f, 0.0f));
+
+				static float* buffer = nullptr;
+				float in[numFrames];
+				std::fill_n(in, numFrames, 0.0f);
+
+				for (int i = 0; i < 10; i++)
+				{
+					Spatialiser::SubmitAudio(sID1, in, (size_t)numFrames);
+					Spatialiser::GetOutput(&buffer);
+				}
+
+				ismConfig.reflection = false;
+				Spatialiser::UpdateISMConfig(ismConfig);
+
+				Sleep(2000);
+				Spatialiser::UpdateSource(sID1, source, quaternion(0.0f, 1.0f, 0.0f, 0.0f));
+
+				for (int i = 0; i < 10; i++)
+				{
+					Spatialiser::SubmitAudio(sID1, in, (size_t)numFrames);
+					Spatialiser::GetOutput(&buffer);
+				}
+
+				Spatialiser::UpdateSource(sID1, source, quaternion(0.0f, 1.0f, 0.0f, 0.0f));
+
+
+				in[0] = 1.0f;
 				Spatialiser::SubmitAudio(sID1, in, (size_t)numFrames);
+
 				Spatialiser::GetOutput(&buffer);
+
+				float outL[numFrames];
+				float outR[numFrames];
+				std::fill_n(outL, config.bufferSize, 0.0f);
+				std::fill_n(outR, config.bufferSize, 0.0f);
+				for (int i = 0; i < numFrames; i++)
+				{
+					outL[i] = *buffer++;
+					outR[i] = *buffer++;
+				}
+
+				Spatialiser::Exit();
+
+				std::string fileName = "LRoom_" + name + ".txt";
+				std::ofstream out(fileName);
+				std::streambuf* coutbuf = std::cout.rdbuf(); //save old buf
+				std::cout.rdbuf(out.rdbuf()); //redirect std::cout to out.txt!
+
+				std::cout << source << "\n";
+				std::cout << receiver << "\n";
+
+				std::cout << pos << "\n";
+				std::cout << corner << "\n";
+
+				for (int i = 0; i < numFrames; i++)
+				{
+					std::cout << outL[i] << ", " << outR[i] << "\n";
+				}
+
+				std::cout.rdbuf(coutbuf); //reset to standard output again
 			}
-
-			Spatialiser::UpdateListener(receiver, quaternion(0.0f, 0.0f, 0.0f, 1.0f));
-			Spatialiser::UpdateSource(sID1, source, quaternion(0.0f, 1.0f, 0.0f, 0.0f));
-
-			in[0] = 1.0f;
-			Spatialiser::SubmitAudio(sID1, in, (size_t)numFrames);
-
-			Spatialiser::GetOutput(&buffer);
-
-			float outL[numFrames];
-			float outR[numFrames];
-			std::fill_n(outL, config.bufferSize, 0.0f);
-			std::fill_n(outR, config.bufferSize, 0.0f);
-			for (int i = 0; i < numFrames; i++)
-			{
-				outL[i] = *buffer++;
-				outR[i] = *buffer++;
-			}
-
-			Spatialiser::Exit();
-
-			std::ofstream out("LRoomIR_edsp.txt");
-			std::streambuf* coutbuf = std::cout.rdbuf(); //save old buf
-			std::cout.rdbuf(out.rdbuf()); //redirect std::cout to out.txt!
-
-			std::cout << source << "\n";
-			std::cout << receiver << "\n";
-
-			std::cout << pos << "\n";
-			std::cout << corner << "\n";
-
-			for (int i = 0; i < numFrames; i++)
-			{
-				std::cout << outL[i] << ", " << outR[i] << "\n";
-			}
-
-			std::cout.rdbuf(coutbuf); //reset to standard output again
 		}
 
 		TEST_METHOD(TestSpEd)
@@ -1649,7 +1817,6 @@ namespace ImageSource
 			const int numFrames = 4096;
 			config.bufferSize = numFrames;
 			config.hrtfResamplingStep = 30;
-			config.maxRefOrder = maxRefOrder;
 			config.hrtfMode = Spatialiser::HRTFMode::none;
 			Spatialiser::Init(&config);
 			int numVert = 4;
@@ -1788,7 +1955,6 @@ namespace ImageSource
 			const int numFrames = 4096;
 			config.bufferSize = numFrames;
 			config.hrtfResamplingStep = 30;
-			config.maxRefOrder = maxRefOrder;
 			config.hrtfMode = Spatialiser::HRTFMode::none;
 			Spatialiser::Init(&config);
 			int numVert = 4;

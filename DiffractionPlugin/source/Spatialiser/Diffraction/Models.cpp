@@ -645,8 +645,8 @@ float BTM::CalcIntegrand(float z)
 	float dS = sqrt(powf(dzS, 2) + rSSq);
 	float dR = sqrt(powf(dzR, 2) + rRSq);
 
-	float dSdR = dS * dR;
-	float y = (dSdR + dzS * dzR) / rr;
+	float ml = sqrt(powf(dzS, 2) + rSSq) * sqrt(powf(dzR, 2) + rRSq);
+	float y = std::max(1.0f, (ml + dzS * dzR) / rr); // limit to 1 - real(sqrt(y ^ 2)) returns 0 if y <= 1
 	float A = y + sqrt(powf(y, 2) - 1.0f);
 	float Apow = powf(A, v);
 	float coshvtheta = (Apow + (1.0f / Apow)) / 2.0f;
@@ -656,7 +656,7 @@ float BTM::CalcIntegrand(float z)
 	{
 		Btotal += CalcB(i, coshvtheta);
 	}
-	return Btotal / dSdR;
+	return Btotal / ml;
 }
 
 float BTM::CalcB(int i, float coshvtheta)

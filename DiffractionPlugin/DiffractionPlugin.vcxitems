@@ -23,12 +23,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\predict.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\AudioManager.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Debug.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\DiffractionGeometry.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\DiffractionModels.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\EmissionManager.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\GeometryManager.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\matrix.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\SourceManager.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Context.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Diffraction\Models.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Diffraction\Path.cpp" />
@@ -39,11 +34,10 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\HRTFManager.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Reverb.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Room.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Source.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\VirtualSource.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Wall.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\UnityGAPlugin.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\vec.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\WedgeManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\anonymous_function.h" />
@@ -62,16 +56,11 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\complex.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Debug.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Definitions.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\DiffractionGeometry.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\DiffractionModel.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\EmissionManager.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\GeometryManager.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\HelloWorld.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\IUnityInterface.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\matrix.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\quaternion.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\ScopedTimer.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\SourceManager.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Context.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Diffraction\Models.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Diffraction\Path.h" />
@@ -82,13 +71,12 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\HRTFManager.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Reverb.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Room.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Source.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Types.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\VirtualSource.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Wall.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Types.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\UnityGAPlugin.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\vec3.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\vec.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\WedgeManager.h" />
   </ItemGroup>
 </Project>

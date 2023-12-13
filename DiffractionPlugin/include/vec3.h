@@ -22,6 +22,19 @@ public:
 		return *this;
 	}
 
+	/*inline bool operator==(const vec3& v)
+	{
+		if (this->x == v.x);
+		{
+			if (this->y == v.y);
+			{
+				if (this->z == v.z);
+					return true;
+			}
+		}
+		return false;
+	}*/
+
 	float x;
 	float y;
 	float z;
@@ -31,8 +44,14 @@ private:
 
 inline bool operator==(const vec3& a, const vec3& b)
 {
-	if ((a.x == b.x) & (a.y == b.y) & (a.z == b.z))
-		return true;
+	if (a.x == b.x)
+	{
+		if (a.y == b.y)
+		{
+			if (a.z == b.z)
+				return true;
+		}
+	}
 	return false;
 }
 

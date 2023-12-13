@@ -142,6 +142,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\codegen\lib\myNN\include;D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp14</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -160,6 +161,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\codegen\lib\myNN\include;D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp14</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -180,6 +182,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\codegen\lib\myNN\include;D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp14</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -198,7 +201,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_Toolkit;D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_ResourceManager;D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\boost_circular_buffer;D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\cereal\include;D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include;D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src;D:\Joshua Mannall\VisualStudio\mcl-main\include;$(ProjectDir)include;D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\codegen\lib\myNN\include;D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include;D:\Joshua Mannall\VisualStudio\mcl-main\butter\include;D:\Joshua Mannall\VisualStudio\mcl-main\kissfft\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <LanguageStandard>Default</LanguageStandard>
+      <LanguageStandard>stdcpp14</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -219,7 +222,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_Toolkit;D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_ResourceManager;D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\boost_circular_buffer;D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\cereal\include;D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include;D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src;D:\Joshua Mannall\VisualStudio\mcl-main\include;$(ProjectDir)include;D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\codegen\lib\myNN\include;D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include;D:\Joshua Mannall\VisualStudio\mcl-main\butter\include;D:\Joshua Mannall\VisualStudio\mcl-main\kissfft\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <LanguageStandard>Default</LanguageStandard>
+      <LanguageStandard>stdcpp14</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -242,6 +245,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_Toolkit;D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_ResourceManager;D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\boost_circular_buffer;D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\cereal\include;D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include;D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src;D:\Joshua Mannall\VisualStudio\mcl-main\include;$(ProjectDir)\include;D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\codegen\lib\myNN\include;D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include;D:\Joshua Mannall\VisualStudio\mcl-main\butter\include;D:\Joshua Mannall\VisualStudio\mcl-main\kissfft\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp14</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

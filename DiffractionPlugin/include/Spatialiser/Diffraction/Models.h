@@ -5,7 +5,13 @@
 #include "AudioManager.h"
 #include "Spatialiser/Diffraction/Path.h"
 
-
+#include "rtwtypes.h"
+#include <cstddef>
+#include <cstdlib>
+#include "myBestNN.h"
+#include "myNN_initialize.h"
+#include "myNN_terminate.h"
+#include "mySmallNN.h"
 
 namespace Spatialiser
 {

@@ -196,13 +196,9 @@ void ReverbSource::Update(const vec3& position)
 
 void ReverbSource::UpdateReflectionFilter()
 {
-	float g[5];
+	float g[NUM_ABSORPTION_FREQ];
 	mAbsorption.GetValues(&g[0]);
-	for( int i = 0; i < 5; i++)
-	{
-		Debug::Log("Reflection filter absorption values: " + FloatToStr(g[i]), Color::White);
-	}
-	mReflectionFilter.UpdateParameters(ABSORPTION_FREQUENCIES, g);
+	mReflectionFilter.UpdateParameters(ABSORPTION_FREQ, g);
 }
 
 void ReverbSource::UpdateReflectionFilter(const Absorption& absorption)

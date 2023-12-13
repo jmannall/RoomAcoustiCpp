@@ -3,17 +3,6 @@
 
 using namespace Spatialiser;
 
-VirtualSource::~VirtualSource()
-{
-	if (mSource)
-	{
-		Debug::Log("Remove virtual source", Color::Red);
-	}
-	Debug::Log("Virtual source destructor", Color::White);
-	mCore->RemoveSingleSourceDSP(mSource);
-	Reset();
-};
-
 std::vector<size_t> VirtualSourceData::GetWallIDs() const
 {
 	std::vector<size_t> ret;
@@ -51,6 +40,12 @@ void VirtualSourceData::SetTransform(const vec3& vSourcePosition, const vec3& vE
 	mPositions.push_back(vSourcePosition);
 }
 
+void VirtualSourceData::UpdateTransform(const vec3& vEdgeSourcePosition)
+{
+	transform.SetPosition(Common::CVector3(vEdgeSourcePosition.x, vEdgeSourcePosition.y, vEdgeSourcePosition.z));
+}
+
+
 vec3 VirtualSourceData::GetRPosition(int i) const
 {
 	assert(i < order);
@@ -80,33 +75,224 @@ bool VirtualSourceData::AppendVSource(VirtualSourceData& data, const vec3& liste
 		data.GetAbsorption(absorption);
 		AddWallIDs(data.GetWallIDs(), absorption);
 	}
-	order += data.GetOrder();
 	mRPositions = data.mRPositions;
 	if (!reflection)
 		reflection = data.reflection;
 
 	Edge edge = mDiffractionPath.GetEdge();
-	Diffraction::Path path = Diffraction::Path(GetPosition(), data.GetRPosition(), edge);
+	Diffraction::Path oldPath = mDiffractionPath;
+	mDiffractionPath = Diffraction::Path(GetPosition(), data.GetRPosition(), edge);
 
-	vec3 vPosition = listenerPosition + (path.sData.d + path.rData.d) * UnitVector(data.GetTransformPosition() - listenerPosition);
-	transform.SetPosition(Common::CVector3(vPosition.x, vPosition.y, vPosition.z));
-
-	if (path.valid) // Should be valid as previous paths were valid (unless apex has moved)
+	if (mDiffractionPath.valid) // Should be valid as previous paths were valid (unless apex has moved)
 	{
 		valid = true;
-		if (path.GetApex() == mDiffractionPath.GetApex() && path.GetApex() == data.mDiffractionPath.GetApex())
+		if (mDiffractionPath.GetApex() == oldPath.GetApex() && mDiffractionPath.GetApex() == data.mDiffractionPath.GetApex())
 		{
-			if (visible)
-				visible = data.visible;
-			return false;
+			vec3 vPosition = listenerPosition + (mDiffractionPath.sData.d + mDiffractionPath.rData.d) * UnitVector(data.GetTransformPosition() - listenerPosition);
+			transform.SetPosition(Common::CVector3(vPosition.x, vPosition.y, vPosition.z));
+			if (visible && data.visible)
+				return false;
 		}
-		return true;
+		else
+		{
+			vec3 vPosition = listenerPosition + (mDiffractionPath.sData.d + mDiffractionPath.rData.d) * UnitVector(data.GetTransformPosition() - listenerPosition);
+			transform.SetPosition(Common::CVector3(vPosition.x, vPosition.y, vPosition.z));
+		}
+	}
+	else
+		valid = false;
+	return true;
+}
+
+VirtualSourceData VirtualSourceData::Trim(const int i)
+{
+	order = i + 1;
+
+	if (!mPositions.empty())
+		mPositions.erase(mPositions.begin() + order, mPositions.end());
+	if (!mRPositions.empty())
+		mRPositions.erase(mRPositions.begin() + order, mRPositions.end());
+	if (!isReflection.empty())
+		isReflection.erase(isReflection.begin() + order, isReflection.end());
+	if (!IDs.empty())
+		IDs.erase(IDs.begin() + order, IDs.end());
+
+	feedsFDN = false;
+	mFDNChannel = -1;
+
+	Reset();
+
+	reflection = false;
+	diffraction = false;
+	for (int i = 0; i < order; i++)
+	{
+		if (isReflection[i])
+			reflection = true;
+		else
+			diffraction = true;
+	}
+
+	key = key.substr(0, 2 * order);
+
+	return *this;
+}
+
+
+VirtualSource::VirtualSource(Binaural::CCore* core, HRTFMode hrtfMode, int fs, const VirtualSourceData& data, const int& fdnChannel) : mCore(core), mSource(NULL), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(4, fs), isInitialised(false), mHRTFMode(hrtfMode), feedsFDN(false), mFDNChannel(fdnChannel), mDiffractionPath(data.mDiffractionPath), btm(&mDiffractionPath, fs), reflection(false), diffraction(false)
+{
+	UpdateVirtualSource(data);
+	// Set local bool for use at audio processing?
+}
+
+VirtualSource::VirtualSource(const VirtualSource& vS) : mCore(vS.mCore), mSource(vS.mSource), mPosition(vS.mPosition), mFilter(vS.mFilter), isInitialised(vS.isInitialised), mHRTFMode(vS.mHRTFMode), feedsFDN(vS.feedsFDN), mFDNChannel(vS.mFDNChannel), mDiffractionPath(vS.mDiffractionPath), btm(vS.btm), mTargetGain(vS.mTargetGain), mCurrentGain(vS.mCurrentGain), reflection(vS.reflection), diffraction(vS.diffraction), mVirtualSources(vS.mVirtualSources), mVirtualEdgeSources(vS.mVirtualEdgeSources)
+{
+	btm.UpdatePath(&mDiffractionPath);
+}
+
+VirtualSource::~VirtualSource()
+{
+	if (mSource)
+	{
+		Debug::Log("Remove virtual source", Color::Red);
+	}
+	Debug::Log("Virtual source destructor", Color::White);
+
+	mCore->RemoveSingleSourceDSP(mSource);
+	Reset();
+};
+
+bool VirtualSource::UpdateVirtualSource(const VirtualSourceData& data)
+{
+	if (data.visible) // Process virtual source - Init if doesn't exist
+	{
+		lock_guard<mutex> lock(audioMutex);
+		mTargetGain = 1.0f;
+		if (!isInitialised)
+			Init(data);
+		Update(data);
+	}
+	else
+	{
+		Debug::Log("vSource invisible, gain: " + FloatToStr(mCurrentGain), Color::Yellow);
+		//lock_guard<mutex> lock(audioMutex);
+		std::unique_lock<mutex> lock(audioMutex);
+		mTargetGain = 0.0f;
+		if (mCurrentGain < 0.0001)
+		{
+			if (isInitialised)
+				Remove();
+			lock.unlock();
+			return true;
+		}
+	}
+	return false;
+}
+
+// Obselete? now sources removed automatically
+void VirtualSource::RemoveVirtualSources(const size_t& id)
+{
+	if (!mVirtualSources.empty())
+	{
+		mVirtualSources.erase(id);
+		for (auto it = mVirtualSources.begin(); it != mVirtualSources.end(); it++)
+		{
+			it->second.RemoveVirtualSources(id);
+		}
 	}
 }
 
-VirtualSource::VirtualSource(Binaural::CCore* core, HRTFMode hrtfMode, int fs, const VirtualSourceData& data, const int& fdnChannel) : mCore(core), mSource(NULL), mFilter(4, fs), mHPF(20.0f, FilterShape::hpf, fs), isInitialised(false), mHRTFMode(hrtfMode), feedsFDN(false), mFDNChannel(fdnChannel), mDiffractionPath(data.mDiffractionPath), btm(&mDiffractionPath, fs), reflection(false), diffraction(false)
+int VirtualSource::ProcessAudio(const float* data, const size_t& numFrames, matrix& reverbInput, Buffer& outputBuffer, const float lerpFactor)
 {
-	if (data.reflection)
+	int ret = 0;
+	{
+		lock_guard<mutex> lock(vWallMutex);
+		// for (auto it : mVirtualSources)
+		for (auto it = mVirtualSources.begin(); it != mVirtualSources.end(); it++)
+		{
+			ret += it->second.ProcessAudio(data, numFrames, reverbInput, outputBuffer, lerpFactor);
+		}
+	}
+	{
+		lock_guard<mutex> lock(vEdgeMutex);
+		for (auto it = mVirtualEdgeSources.begin(); it != mVirtualEdgeSources.end(); it++)
+		{
+			ret += it->second.ProcessAudio(data, numFrames, reverbInput, outputBuffer, lerpFactor);
+		}
+	}
+
+	ret++;
+	if (isInitialised)
+	{
+		// Copy input into internal storage and apply wall absorption
+		CMonoBuffer<float> bInput(numFrames);
+		const float* inputPtr = data;
+
+		if (diffraction)
+		{
+			{
+				lock_guard<mutex> lock(audioMutex);
+				btm.ProcessAudio(inputPtr, &bInput[0], numFrames, lerpFactor);
+
+				if (reflection)
+				{
+					for (int i = 0; i < numFrames; i++)
+					{
+						bInput[i] = mFilter.GetOutput(bInput[i]);
+					}
+				}
+			}
+		}
+		else if (reflection)
+		{
+			lock_guard<mutex> lock(audioMutex);
+			for (int i = 0; i < numFrames; i++)
+			{
+				bInput[i] = mFilter.GetOutput(*inputPtr++);
+			}
+		}
+
+		for (int i = 0; i < numFrames; i++)
+		{
+			bInput[i] *= mCurrentGain;
+			if (mCurrentGain != mTargetGain)
+				mCurrentGain = LERP_FLOAT(mCurrentGain, mTargetGain, lerpFactor);
+		}
+		
+		mSource->SetBuffer(bInput);
+
+		Common::CEarPair<CMonoBuffer<float>> bOutput;
+		if (feedsFDN)
+		{
+			Debug::Log("Feeds FDN", Color::Yellow);
+
+			CMonoBuffer<float> bMonoOutput;
+			{
+				lock_guard<mutex> lock(audioMutex);
+				mSource->ProcessAnechoic(bMonoOutput, bOutput.left, bOutput.right);
+			}
+			for (int i = 0; i < numFrames; i++)
+			{
+				reverbInput.IncreaseEntry(bMonoOutput[i], i, mFDNChannel);
+			}
+		}
+		else
+		{
+			lock_guard<mutex> lock(audioMutex);
+			mSource->ProcessAnechoic(bOutput.left, bOutput.right);
+		}
+		int j = 0;
+		for (int i = 0; i < numFrames; i++)
+		{
+			outputBuffer[j++] += bOutput.left[i];
+			outputBuffer[j++] += bOutput.right[i];
+		}
+	}
+	return ret;
+}
+
+void VirtualSource::Init(const VirtualSourceData& data)
+{
+	if (data.reflection) // Init reflection filter
 	{
 		float fc[] = { 250, 500, 1000, 2000, 4000 };
 		float g[5];
@@ -120,134 +306,7 @@ VirtualSource::VirtualSource(Binaural::CCore* core, HRTFMode hrtfMode, int fs, c
 		diffraction = true;
 	}
 	feedsFDN = data.feedsFDN;
-	UpdateVirtualSource(data);
-	// Set local bool for use at audio processing?
-}
 
-VirtualSource::VirtualSource(const VirtualSource& vS) : mCore(vS.mCore), mSource(vS.mSource), mPosition(vS.mPosition), mFilter(vS.mFilter), mHPF(vS.mHPF), isInitialised(vS.isInitialised), mHRTFMode(vS.mHRTFMode), feedsFDN(vS.feedsFDN), mFDNChannel(vS.mFDNChannel), mDiffractionPath(vS.mDiffractionPath), btm(vS.btm), reflection(vS.reflection), diffraction(vS.diffraction), mVirtualSources(vS.mVirtualSources), mVirtualEdgeSources(vS.mVirtualEdgeSources)
-{
-	btm.UpdatePath(&mDiffractionPath);
-}
-
-void VirtualSource::UpdateVirtualSource(const VirtualSourceData& data)
-{
-	//if (data.valid)
-	//{
-	//	if (data.visible) // Process virtual source - Init if doesn't exist
-	//	{
-	//		if (!isInitialised)
-	//			Init();
-	//		Update(data);
-	//	}
-	//	else // Check if in core - remove if is
-	//	{
-	//		if (isInitialised)
-	//			Remove();
-	//	}
-	//}
-	//else // Check if init - remove if is
-	//{
-	//	if (isInitialised)
-	//		Remove();
-	//	if (!mVirtualSources.empty()) // Delete any children
-	//		Reset();
-	//	if (!mVirtualEdgeSources.empty()) // Delete any children
-	//		Reset();
-	//}
-
-	if (data.visible) // Process virtual source - Init if doesn't exist
-	{
-		if (!isInitialised)
-			Init();
-		Update(data);
-	}
-	else // Check if in core - remove if is
-	{
-		if (isInitialised)
-			Remove();
-		if (!data.valid)
-			Reset();	// Delete any child virtual sources
-	}
-}
-
-void VirtualSource::RemoveVirtualSources(const size_t& id)
-{
-	if (!mVirtualSources.empty())
-	{
-		mVirtualSources.erase(id);
-		for (auto it = mVirtualSources.begin(); it != mVirtualSources.end(); it++)
-		{
-			it->second.RemoveVirtualSources(id);
-		}
-	}
-}
-
-void VirtualSource::ProcessAudio(const float* data, const size_t& numFrames, matrix& reverbInput, Buffer& outputBuffer)
-{
-	for (int i = 0; i < mVirtualSources.size(); i++)
-	{
-		mVirtualSources[i].ProcessAudio(data, numFrames, reverbInput, outputBuffer);
-	}
-	for (int i = 0; i < mVirtualEdgeSources.size(); i++)
-	{
-		mVirtualEdgeSources[i].ProcessAudio(data, numFrames, reverbInput, outputBuffer);
-	}
-
-	if (isInitialised)
-	{
-		// Copy input into internal storage and apply wall absorption
-		CMonoBuffer<float> bInput(numFrames);
-		const float* inputPtr = data;
-		if (diffraction)
-		{
-			btm.ProcessAudio(inputPtr, &bInput[0], numFrames, 1.0f / (numFrames * 2.0f));
-			if (reflection)
-			{
-				for (int i = 0; i < numFrames; i++)
-				{
-					bInput[i] = mFilter.GetOutput(bInput[i]);
-				}
-			}
-		}
-		else if (reflection)
-		{
-			for (int i = 0; i < numFrames; i++)
-			{
-				bInput[i] = mFilter.GetOutput(*inputPtr++);
-			}
-		}
-		
-		/*for (int i = 0; i < numFrames; i++)
-		{
-			bInput[i] = mHPF.GetOutput(bInput[i]);
-		}*/
-		mSource->SetBuffer(bInput);
-
-		Common::CEarPair<CMonoBuffer<float>> bOutput;
-		if (feedsFDN)
-		{
-			CMonoBuffer<float> bMonoOutput;
-			mSource->ProcessAnechoic(bMonoOutput, bOutput.left, bOutput.right);
-			for (int i = 0; i < numFrames; i++)
-			{
-				reverbInput.IncreaseEntry(bMonoOutput[i], i, mFDNChannel);
-			}
-		}
-		else
-		{
-			mSource->ProcessAnechoic(bOutput.left, bOutput.right);
-		}
-		int j = 0;
-		for (int i = 0; i < numFrames; i++)
-		{
-			outputBuffer[j++] += bOutput.left[i];
-			outputBuffer[j++] += bOutput.right[i];
-		}
-	}
-}
-
-void VirtualSource::Init()
-{
 	Debug::Log("Init virtual source", Color::Green);
 
 	// Initialise source to core
@@ -280,6 +339,9 @@ void VirtualSource::Init()
 
 void VirtualSource::Update(const VirtualSourceData& data)
 {
+	reflection = data.reflection;
+	diffraction = data.diffraction;
+
 	if (diffraction)
 	{
 		mDiffractionPath = data.mDiffractionPath;

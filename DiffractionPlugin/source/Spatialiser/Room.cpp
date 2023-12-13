@@ -58,12 +58,18 @@ void Room::InitEdges(const size_t& id)
 				{
 					if (normalA == -normalB)
 					{
+						Debug::Log("Find parallel edges", Color::Yellow);
 						ParallelFindEdges(itA->second, itB->second, itA->first, itB->first);
 					}
 					else
 					{
+						Debug::Log("Find edges", Color::Yellow);
 						FindEdges(itA->second, itB->second, itA->first, itB->first);
 					}
+				}
+				else
+				{
+					Debug::Log("Matching normals", Color::Yellow);
 				}
 			}
 		}
@@ -138,11 +144,34 @@ void Room::FindEdges(Wall& a, Wall& b, const size_t IDa, const size_t IDb)
 		int j = 0;
 		while (!match && j < numB)
 		{
-			match = verticesA[i] == verticesB[j];
+			/*verticesA[i].x = roundf(verticesA[i].x);
+			verticesA[i].y = roundf(verticesA[i].y);
+			verticesA[i].z = roundf(verticesA[i].z);
+
+			verticesB[j].x = roundf(verticesB[j].x);
+			verticesB[j].y = roundf(verticesB[j].y);
+			verticesB[j].z = roundf(verticesB[j].z);*/
+
+			bool test = verticesA[i] == verticesB[j];
+			Debug::Log("Test: " + BoolToStr(test));
+
+			if (verticesA[i].x == verticesB[j].x)
+			{
+				if (verticesA[i].y == verticesB[j].y)
+				{
+					if (verticesA[i].z == verticesB[j].z)
+						match = true;
+				}
+			}
+
+			Debug::Log("vA: " + VecToStr(verticesA[i]));
+			Debug::Log("vB: " + VecToStr(verticesB[j]));
+
 			j++;
 		}
 		if (match)
 		{
+			Debug::Log("Match", Color::Yellow);
 			j--;
 			int idxA = (i + 1) % numA;
 			bool validEdge = verticesA[idxA] == verticesB[(j - 1) % numB]; // Must be this way to ensure normals not twisted. (right hand rule) therefore one rotated up the edge one rotates down
@@ -154,17 +183,21 @@ void Room::FindEdges(Wall& a, Wall& b, const size_t IDa, const size_t IDb)
 			}
 			if (validEdge)
 			{
+				Debug::Log("Not twisted", Color::Yellow);
 				int check = 0;
 				while (check == i || check == idxA)
 				{
 					check++;
 				}
-				float k = b.PointWallPosition(verticesA[check]);
+				float k = b.PointWallPosition(verticesA[check]);	// Only valid for convex shapes
+
+				Debug::Log("K: " + FloatToStr(k) , Color::Yellow);
 
 				if (k < 0) // Check angle greater than 180
 				{
 					// K won't equal zero as then planes would be parallel
 					bool reflexAngle = UnitVector(Cross(a.GetNormal(), b.GetNormal())) == UnitVector(verticesA[idxA] - verticesA[i]);
+					Debug::Log("Reflex angle: " + BoolToStr(reflexAngle), Color::Yellow);
 					if (reflexAngle) // Check returns correct angle type
 					{
 						Edge edge = Edge(verticesA[i], verticesA[idxA], a.GetNormal(), b.GetNormal(), IDa, IDb);
@@ -174,13 +207,21 @@ void Room::FindEdges(Wall& a, Wall& b, const size_t IDa, const size_t IDb)
 					}
 					else
 					{
-						Edge edge = Edge(verticesA[i], verticesA[idxA], b.GetNormal(), a.GetNormal(), IDa, IDb);
+						Edge edge = Edge(verticesA[i], verticesA[idxA], b.GetNormal(), a.GetNormal(), IDb, IDa);
 						size_t id = AddEdge(edge);
 						a.AddEdge(id);
 						b.AddEdge(id);
 					}
 				}
 			}
+			else
+			{
+				Debug::Log("Twisted", Color::Yellow);
+			}
+		}
+		else
+		{
+			Debug::Log("No match", Color::Yellow);
 		}
 	}
 }
@@ -306,17 +347,17 @@ void Room::UpdateISM()
 		{
 			lock_guard <mutex> lLock(mLowPrioMutex);
 			unique_lock <mutex> nLock(mNextMutex);
-			lock_guard <mutex> rLock(mRemoveMutex);
+			lock_guard <mutex> rLock(mRemoveMutex); // Prevents current source being removed
 			nLock.unlock();
 			endPtr = mSources.size();
 
-			if (endPtr != oldEndPtr)
+			if (endPtr != oldEndPtr) // Check the number of sources hasn't changed during this iteration
 			{
 				return;
 			}
 			oldEndPtr = endPtr;
 
-			std::vector<VirtualSourceData> vSources;
+			VirtualSourceStore vSources;
 			vec3 position(it->second.position);
 
 			bool visible = ReflectPointInRoom(position, vSources);
@@ -325,26 +366,21 @@ void Room::UpdateISM()
 				lock_guard <mutex> iLock(it->second.mMutex);
 				it->second.visible = visible;
 				it->second.vSources = vSources;
-			}
-
-			// For debugging
-			int count = 0;
-			for (int i = 0; i < vSources.size(); i++)
-			{
-				if (vSources[i].visible)
-					count++;
-			}
-			Debug::Log("Source " + IntToStr((int)it->first) + " has " + IntToStr(count) + " visible virtual sources", Color::Blue);
+			}		
+			Debug::Log("Source " + IntToStr((int)it->first) + " has " + IntToStr(vSources.size()) + " visible virtual sources", Color::Blue);
 		}
 	}
 }
 
-bool Room::ReflectPointInRoom(const vec3& point, std::vector<VirtualSourceData>& vSources)
+bool Room::ReflectPointInRoom(const vec3& point, VirtualSourceStore& vSources)
 {
-	// Direct sound
-	bool lineOfSight = !LineRoomIntersection(point, mListenerPosition);
+	bool lineOfSight = false;
 
-	if (mMaxOrder < 1)
+	// Direct sound
+	if (mISMConfig.direct)
+		lineOfSight = !LineRoomIntersection(point, mListenerPosition);
+
+	if (mISMConfig.order < 1)
 		return lineOfSight;
 
 	VirtualSourceMap sp;
@@ -352,19 +388,29 @@ bool Room::ReflectPointInRoom(const vec3& point, std::vector<VirtualSourceData>&
 	VirtualSourceMap spEd;
 	VirtualSourceMap ed;
 
-	FirstOrderDiffraction(point, ed, vSources);
+	if (mISMConfig.diffraction)
+		FirstOrderDiffraction(point, ed, vSources);
 
 	// Reflections
-	FirstOrderReflections(point, sp, vSources);
+	if (mISMConfig.reflection || mISMConfig.reflectionDiffraction)
+	{
+		FirstOrderReflections(point, sp, vSources);
 
-	if (mMaxOrder < 2)
-		return lineOfSight;
+		if (mISMConfig.order < 2)
+			return lineOfSight;
 
-	HigherOrderReflections(point, sp, vSources);
+		HigherOrderReflections(point, sp, vSources);
 
-	// SpecularDiffraction(point, sp, edSp, spEd, vSources);
+		if (mISMConfig.reflectionDiffraction)
+			HigherOrderSpecularDiffraction(point, sp, edSp, spEd, vSources);
+	}
 
-	HigherOrderSpecularDiffraction(point, sp, edSp, spEd, vSources);
+	Debug::Log("Config:: R: " + BoolToStr(mISMConfig.reflection) + " D: " + BoolToStr(mISMConfig.diffraction) + " RD: " + BoolToStr(mISMConfig.reflectionDiffraction), Color::White);
+
+	Debug::Log("Reflections: " + IntToStr((int)sp.size()), Color::Blue);
+	Debug::Log("Diffraction: " + IntToStr((int)ed.size()), Color::Blue);
+	Debug::Log("RefDiff: " + IntToStr((int)spEd.size()), Color::Blue);
+	Debug::Log("DiffRef: " + IntToStr((int)edSp.size()), Color::Blue);
 
 	return lineOfSight;
 }
@@ -373,13 +419,13 @@ bool Room::ReflectPointInRoom(const vec3& point, std::vector<VirtualSourceData>&
 
 #pragma region Diffraction
 
-void Room::HigherOrderSpecularDiffraction(const vec3& point, VirtualSourceMap& sp, VirtualSourceMap& edSp, VirtualSourceMap& spEd, VirtualSourceVec& vSources)
+void Room::HigherOrderSpecularDiffraction(const vec3& point, VirtualSourceMap& sp, VirtualSourceMap& edSp, VirtualSourceMap& spEd, VirtualSourceStore& vSources)
 {
-	for (int j = 1; j < mMaxOrder; j++) // only handle up to 1st order diffraction
+	for (int j = 1; j < mISMConfig.order; j++) // only handle up to 1st order diffraction
 	{
 		int order = j + 1;
 		int refIdx = j - 1;
-		bool feedsFDN = mMaxOrder == order;
+		bool feedsFDN = mISMConfig.order == order;
 		std::vector<vec3> intersections;
 		size_t capacity = intersections.capacity();
 		intersections.reserve(j);
@@ -390,10 +436,9 @@ void Room::HigherOrderSpecularDiffraction(const vec3& point, VirtualSourceMap& s
 		auto vs = sp.begin(bIdx);
 		for (int i = 0; i < numReflectionPaths; i++, vs++)
 		{
-			VirtualSourceData vSource = vs->second;
-			VirtualSourceData vSourceB = vs->second;
+			VirtualSourceData vSourceStore = vs->second;
 
-			auto itW = mWalls.find(vSource.GetID());
+			auto itW = mWalls.find(vSourceStore.GetID());
 
 			size_t idW = itW->first;
 			Wall wall = itW->second;
@@ -410,8 +455,9 @@ void Room::HigherOrderSpecularDiffraction(const vec3& point, VirtualSourceMap& s
 					if (valid)
 					{
 						// sped
-						if (vSource.valid) // valid source route
+						if (vSourceStore.valid) // valid source route
 						{
+							VirtualSourceData vSource = vSourceStore;
 							vSource.Reset();
 							// Check for sp - ed
 							vec3 position = vSource.GetPosition();
@@ -422,9 +468,10 @@ void Room::HigherOrderSpecularDiffraction(const vec3& point, VirtualSourceMap& s
 							{
 								vSource.Valid();
 
-								if (mISMConfig.diffraction == DiffractionDepth::edSp && (path.inShadow || !mISMConfig.shadowOnly))
+								if (path.inShadow || mISMConfig.specularDiffraction)
 								{
-									vSource.SetTransform(position, path.CalculateVirtualPostion());
+									vec3 vPosition = path.CalculateVirtualPostion();
+									vSource.SetTransform(position, vPosition);
 
 									intersections[j] = path.GetApex();
 
@@ -434,7 +481,7 @@ void Room::HigherOrderSpecularDiffraction(const vec3& point, VirtualSourceMap& s
 									{
 										int idx = j - (n + 1); // Current bounce (j - n is previous bounce in code and next bounce in path)
 										Wall previousWall = mWalls.find(vSource.GetID(idx))->second;
-										valid = previousWall.LineWallIntersection(intersections[idx], intersections[j - n], vSource.GetPosition(idx));
+										valid = previousWall.LineWallIntersection(intersections[idx], intersections[idx + 1], vSource.GetPosition(idx));
 										n++;
 									}
 									if (valid)
@@ -449,55 +496,56 @@ void Room::HigherOrderSpecularDiffraction(const vec3& point, VirtualSourceMap& s
 											if (vSource.IsReflection(p))
 											{
 												if (vSource.IsReflection(p + 1))
-													obstruction = LineRoomIntersection(intersections[p], intersections[p + 1], vSourceB.GetID(p), vSourceB.GetID(p + 1));
+													obstruction = LineRoomIntersection(intersections[p], intersections[p + 1], vSource.GetID(p), vSource.GetID(p + 1));
 												else
-													obstruction = LineRoomIntersection(intersections[p], intersections[p + 1], vSourceB.GetID(p));
+													obstruction = LineRoomIntersection(intersections[p], intersections[p + 1], vSource.GetID(p));
 											}
 											else
-												obstruction = LineRoomIntersection(intersections[p], intersections[p + 1], vSourceB.GetID(p + 1));
+												obstruction = LineRoomIntersection(intersections[p], intersections[p + 1], vSource.GetID(p + 1));
 											p++;
 										}
 										if (!obstruction)
 										{
 											vSource.Visible(feedsFDN);
+											vSources.insert_or_assign(vSource.GetKey(), vSource);
 										}
 									}
 								}
 							}
-							if (path.rValid) // If !rValid, can't be any later paths and 1st order diffraction would already be invalid
-								vSources.push_back(vSource);
 
 							spEd.emplace(j, vSource);
 						}
 
 						// edsp
-						if (vSourceB.rValid) // valid receiver route
+						if (vSourceStore.rValid) // valid receiver route
 						{
-							vSourceB.Reset();
+							VirtualSourceData vSource = vSourceStore;
+							vSource.Reset();
 							// Check for ed - sp
-							vec3 position = vSourceB.GetRPosition();
+							vec3 position = vSource.GetRPosition();
 							Diffraction::Path path = Diffraction::Path(point, position, edge);
-							vSourceB.AddEdgeIDToStart(idE, path);
+							vSource.AddEdgeIDToStart(idE, path);
 
+							vec3 vPosition = path.CalculateVirtualPostion();
+							for (int k = 1; k < order; k++)
+							{
+								auto temp = mWalls.find(vSource.GetID(k));
+								if (temp != mWalls.end())
+								{
+									temp->second.ReflectPointInWallNoCheck(vPosition); // Need to reflect regardless of whether vPosition behind wall...
+								}
+								else
+								{
+									// Wall does not exist
+								}
+							}
+							vSource.SetRTransform(position, vPosition);
 							if (path.valid) // Would be more effcient to save sValid and rValid for each edge
 							{
-								vSourceB.RValid();
-								if (mISMConfig.diffraction == DiffractionDepth::edSp && (path.inShadow || !mISMConfig.shadowOnly))
+								vSource.RValid();
+								if (path.inShadow || mISMConfig.specularDiffraction)
 								{
-									vec3 vPosition = path.CalculateVirtualPostion();
-									for (int k = 1; k < order; k++)
-									{
-										auto temp = mWalls.find(vSourceB.GetID(k));
-										if (temp != mWalls.end())
-										{
-											temp->second.ReflectPointInWall(vPosition, vPosition); // Won't reflect as vPosition behind wall...
-										}
-										else
-										{
-											// Wall does not exist
-										}
-									}
-									vSourceB.SetRTransform(position, vPosition);
+									
 
 									intersections[j] = path.GetApex();
 
@@ -505,9 +553,9 @@ void Room::HigherOrderSpecularDiffraction(const vec3& point, VirtualSourceMap& s
 									valid = true; // In case changed in previous if statement
 									while (valid && n < j)
 									{
-										int idx = j - (n + 1); // Current bounce (j - n is previous bounce in code and next bounce in path)
-										Wall previousWall = mWalls.find(vSourceB.GetID(idx))->second;
-										valid = previousWall.LineWallIntersection(intersections[idx], intersections[j - n], vSourceB.GetRPosition(idx));
+										int idx = j - n; // Current bounce (j - n is previous bounce in code and next bounce in path)
+										Wall previousWall = mWalls.find(vSource.GetID(idx))->second;
+										valid = previousWall.LineWallIntersection(intersections[idx - 1], intersections[idx], vSource.GetRPosition(idx));
 										n++;
 									}
 									if (valid)
@@ -522,25 +570,24 @@ void Room::HigherOrderSpecularDiffraction(const vec3& point, VirtualSourceMap& s
 											if (vSource.IsReflection(p))
 											{
 												if (vSource.IsReflection(p + 1))
-													obstruction = LineRoomIntersection(intersections[p], intersections[p + 1], vSourceB.GetID(p), vSourceB.GetID(p + 1));
+													obstruction = LineRoomIntersection(intersections[p], intersections[p + 1], vSource.GetID(p), vSource.GetID(p + 1));
 												else
-													obstruction = LineRoomIntersection(intersections[p], intersections[p + 1], vSourceB.GetID(p));
+													obstruction = LineRoomIntersection(intersections[p], intersections[p + 1], vSource.GetID(p));
 											}
 											else
-												obstruction = LineRoomIntersection(intersections[p], intersections[p + 1], vSourceB.GetID(p + 1));
+												obstruction = LineRoomIntersection(intersections[p], intersections[p + 1], vSource.GetID(p + 1));
 											p++;
 										}
 										if (!obstruction)
 										{
-											vSourceB.Visible(feedsFDN);
+											vSource.Visible(feedsFDN);
+											vSources.insert_or_assign(vSource.GetKey(), vSource);
 										}
 									}
 								}
 							}
-							if (path.sValid) // If !sValid, can't be any later paths and 1st order diffraction would already be invalid
-								vSources.push_back(vSourceB);
 
-							edSp.emplace(j, vSourceB);
+							edSp.emplace(j, vSource);
 						}
 					}
 				}
@@ -557,7 +604,7 @@ void Room::HigherOrderSpecularDiffraction(const vec3& point, VirtualSourceMap& s
 			{
 				VirtualSourceData start = vsSpEd->second;
 
-				if (start.mDiffractionPath.sValid)
+				if (start.GetSValid())
 				{
 					auto idxEdSp = edSp.bucket(j - i);
 					auto vsEdSp = edSp.begin(idxEdSp);
@@ -567,74 +614,110 @@ void Room::HigherOrderSpecularDiffraction(const vec3& point, VirtualSourceMap& s
 					{
 						VirtualSourceData end = vsEdSp->second;
 
-						if (end.mDiffractionPath.rValid)
+						if (end.GetRValid())
 						{
 							if (start.GetID() == end.GetID(0))
 							{
 								VirtualSourceData vSource = start;
-								bool recheckVisibility = vSource.AppendVSource(end, mListenerPosition);
+								vSource.Reset();
 
-								if (mISMConfig.diffraction == DiffractionDepth::edSp && (vSource.mDiffractionPath.inShadow || !mISMConfig.shadowOnly))
+								// bool recheckVisibility = vSource.AppendVSource(end, mListenerPosition);
+
+								Absorption absorption;
+								end.GetAbsorption(absorption);
+								vSource.AddWallIDs(end.GetWallIDs(), absorption);
+
+								vSource.SetRPositions(end.GetRPositions());
+
+								Edge edge = vSource.GetEdge();
+								Diffraction::Path path = Diffraction::Path(vSource.GetPosition(), end.GetRPosition(), edge);
+								vSource.UpdateDiffractionPath(path);
+
+								if (path.valid) // Should be valid as previous paths were valid (unless apex has moved)
 								{
-									if (recheckVisibility)
+									vSource.Valid();
+									vSource.RValid();
+
+									if (path.inShadow || mISMConfig.specularDiffraction)
 									{
-										Diffraction::Path path = vSource.mDiffractionPath;
-										intersections[i] = path.GetApex();
-
-										int n = 0;
-										bool valid = true;
-										while (valid && n < i)
+										if (path.GetApex() == start.GetApex() && path.GetApex() == end.GetApex())
 										{
-											int idx = i - (n + 1); // Current bounce (i - n is previous bounce in code and next bounce in path)
-											Wall previousWall = mWalls.find(vSource.GetID(idx))->second;
-											valid = previousWall.LineWallIntersection(intersections[idx], intersections[i - n], vSource.GetPosition(idx));
-											n++;
-										}
-
-										n = 0;
-										while (valid && n < j - i)
-										{
-											int idx = i + n + 1; // Current bounce (j - n is previous bounce in code and next bounce in path)
-											Wall previousWall = mWalls.find(vSource.GetID(idx))->second;
-											valid = previousWall.LineWallIntersection(intersections[idx], intersections[i + n], vSource.GetRPosition(j - idx));
-											n++;
-										}
-
-										if (valid)
-										{
-											// Check for obstruction
-											bool obstruction = LineRoomIntersection(point, intersections[0], vSource.GetID(0));
-											LineRoomIntersection(mListenerPosition, intersections[j], vSource.GetID(j), obstruction);
-
-											int p = 0;
-											while (!obstruction && p < j)
+											vec3 vPosition = mListenerPosition + (path.sData.d + path.rData.d) * UnitVector(end.GetTransformPosition() - mListenerPosition);
+											vSource.UpdateTransform(vPosition);
+											if (start.visible && end.visible)
 											{
-												if (vSource.IsReflection(p))
-												{
-													if (vSource.IsReflection(p + 1))
-														obstruction = LineRoomIntersection(intersections[p], intersections[p + 1], vSource.GetID(p), vSource.GetID(p + 1));
-													else
-														obstruction = LineRoomIntersection(intersections[p], intersections[p + 1], vSource.GetID(p));
-												}
-												else // assume p + 1 is reflection
-													obstruction = LineRoomIntersection(intersections[p], intersections[p + 1], vSource.GetID(p + 1));
-												p++;
-											}
-											if (!obstruction)
 												vSource.Visible(feedsFDN);
+												vSources.insert_or_assign(vSource.GetKey(), vSource);
+											}
+
 										}
-									}
-									else
-									{
-										if (vSource.visible)
-											vSource.Visible(feedsFDN);
+										else
+										{
+											vec3 vPosition = path.CalculateVirtualPostion();
+											for (int k = 1; k < end.GetOrder(); k++)
+											{
+												auto temp = mWalls.find(end.GetID(k));
+												if (temp != mWalls.end())
+												{
+													temp->second.ReflectPointInWallNoCheck(vPosition); // Need to reflect regardless of whether vPosition behind wall...
+												}
+												else
+												{
+													// Wall does not exist
+												}
+											}
+											vSource.UpdateTransform(vPosition);
+
+											intersections[i] = path.GetApex();
+
+											int n = 0;
+											bool valid = true;
+											while (valid && n < i)
+											{
+												int idx = i - (n + 1); // Current bounce (i - n is previous bounce in code and next bounce in path)
+												Wall previousWall = mWalls.find(vSource.GetID(idx))->second;
+												valid = previousWall.LineWallIntersection(intersections[idx], intersections[i - n], vSource.GetPosition(idx));
+												n++;
+											}
+
+											n = 0;
+											while (valid && n < j - i)
+											{
+												int idx = i + n + 1; // Current bounce (j - n is previous bounce in code and next bounce in path)
+												Wall previousWall = mWalls.find(vSource.GetID(idx))->second;
+												valid = previousWall.LineWallIntersection(intersections[idx], intersections[i + n], vSource.GetRPosition(j - idx));
+												n++;
+											}
+
+											if (valid)
+											{
+												// Check for obstruction
+												bool obstruction = LineRoomIntersection(point, intersections[0], vSource.GetID(0));
+												LineRoomIntersection(mListenerPosition, intersections[j], vSource.GetID(j), obstruction);
+
+												int p = 0;
+												while (!obstruction && p < j)
+												{
+													if (vSource.IsReflection(p))
+													{
+														if (vSource.IsReflection(p + 1))
+															obstruction = LineRoomIntersection(intersections[p], intersections[p + 1], vSource.GetID(p), vSource.GetID(p + 1));
+														else
+															obstruction = LineRoomIntersection(intersections[p], intersections[p + 1], vSource.GetID(p));
+													}
+													else // assume p + 1 is reflection
+														obstruction = LineRoomIntersection(intersections[p], intersections[p + 1], vSource.GetID(p + 1));
+													p++;
+												}
+												if (!obstruction)
+												{
+													vSource.Visible(feedsFDN);
+													vSources.insert_or_assign(vSource.GetKey(), vSource);
+												}
+											}
+										}
 									}
 								}
-								else
-									vSource.Invisible();
-
-								if (start.mDiffractionPath.sValid) // No future paths if !sValid and already set in sped section
-									vSources.push_back(vSource);
 							}
 						}
 					}
@@ -644,9 +727,11 @@ void Room::HigherOrderSpecularDiffraction(const vec3& point, VirtualSourceMap& s
 	}
 }
 
-void Room::FirstOrderDiffraction(const vec3& point, VirtualSourceMap& ed, std::vector<VirtualSourceData>& vSources)
+void Room::FirstOrderDiffraction(const vec3& point, VirtualSourceMap& ed, VirtualSourceStore& vSources)
 {
-	bool feedsFDN = mMaxOrder == 1;
+	Debug::Log("Edges: " + IntToStr(mEdges.size()), Color::White);
+
+	bool feedsFDN = mISMConfig.order == 1;
 	for (auto it : mEdges)
 	{
 		size_t id = it.first;
@@ -657,14 +742,14 @@ void Room::FirstOrderDiffraction(const vec3& point, VirtualSourceMap& ed, std::v
 
 		VirtualSourceData vSource;
 		vSource.AddEdgeID(id, path);
-		vSource.SetTransform(position);
+		vSource.SetTransform(point, position);
 
 		if (path.valid)
 		{
 			// Valid diffraction path
 			vSource.Valid();
 
-			if (mISMConfig.diffraction != DiffractionDepth::none && (path.inShadow || !mISMConfig.shadowOnly))
+			if (path.inShadow || mISMConfig.specularDiffraction)
 			{
 				bool obstruction = LineRoomIntersection(point, path.GetApex());
 				LineRoomIntersection(path.GetApex(), mListenerPosition, obstruction);
@@ -673,11 +758,11 @@ void Room::FirstOrderDiffraction(const vec3& point, VirtualSourceMap& ed, std::v
 				{
 					// Visible diffraction path
 					vSource.Visible(feedsFDN);
+					vSources.insert_or_assign(vSource.GetKey(), vSource);
 				}
 			}
 		}
 		ed.emplace(1, vSource);
-		vSources.push_back(vSource);
 	}
 }
 
@@ -685,9 +770,9 @@ void Room::FirstOrderDiffraction(const vec3& point, VirtualSourceMap& ed, std::v
 
 #pragma region Reflection
 
-void Room::FirstOrderReflections(const vec3& point, VirtualSourceMap& sp, VirtualSourceVec& vSources)
+void Room::FirstOrderReflections(const vec3& point, VirtualSourceMap& sp, VirtualSourceStore& vSources)
 {
-	bool feedsFDN = mMaxOrder == 1;
+	bool feedsFDN = mISMConfig.order == 1;
 	for (auto it : mWalls)
 	{
 		size_t id = it.first;
@@ -713,30 +798,33 @@ void Room::FirstOrderReflections(const vec3& point, VirtualSourceMap& sp, Virtua
 			vSource.Valid();
 			vSource.SetTransform(position);
 
-			vec3 intersection;
-			valid = wall.LineWallIntersection(intersection, mListenerPosition, position);
-
-			if (valid)
+			if (mISMConfig.reflection)
 			{
-				bool obstruction = LineRoomIntersection(point, intersection, id);
-				LineRoomIntersection(intersection, mListenerPosition, id, obstruction);
-				if (!obstruction)
+				vec3 intersection;
+				valid = wall.LineWallIntersection(intersection, mListenerPosition, position);
+
+				if (valid)
 				{
-					vSource.Visible(feedsFDN);
+					bool obstruction = LineRoomIntersection(point, intersection, id);
+					LineRoomIntersection(intersection, mListenerPosition, id, obstruction);
+					if (!obstruction)
+					{
+						vSource.Visible(feedsFDN);
+						vSources.insert_or_assign(vSource.GetKey(), vSource);
+					}
 				}
 			}
 		}
-		vSources.push_back(vSource); // Only care if valid (not if rValid)
 		sp.emplace(1, vSource); // In theory only need to do this if either valid or rValid. Could then remove later checks for next vSource
 	}
 }
 
-void Room::HigherOrderReflections(const vec3& point, VirtualSourceMap& sp, VirtualSourceVec& vSources)
+void Room::HigherOrderReflections(const vec3& point, VirtualSourceMap& sp, VirtualSourceStore& vSources)
 {
-	for (int j = 1; j < mMaxOrder; j++)
+	for (int j = 1; j < mISMConfig.order; j++)
 	{
 		int refOrder = j + 1;
-		bool feedsFDN = mMaxOrder == refOrder;
+		bool feedsFDN = mISMConfig.order == refOrder;
 		std::vector<vec3> intersections;
 		size_t capacity = intersections.capacity();
 		intersections.reserve(refOrder);
@@ -783,39 +871,42 @@ void Room::HigherOrderReflections(const vec3& point, VirtualSourceMap& sp, Virtu
 							vSource.Valid();
 							vSource.SetTransform(position);
 
-							if (wall.GetRValid()) // wall.GetRValid() returns if mListenerPosition in front of current wall
+							if (mISMConfig.reflection)
 							{
-								// Check valid intersections
-								valid = wall.LineWallIntersection(intersections[j], mListenerPosition, position);
-
-								int n = 0;
-								while (valid && n < j)
+								if (wall.GetRValid()) // wall.GetRValid() returns if mListenerPosition in front of current wall
 								{
-									int idx = j - (n + 1); // Current bounce (j - n is previous bounce in code and next bounce in path)
-									Wall previousWall = mWalls.find(vSource.GetID(idx))->second;
-									valid = previousWall.LineWallIntersection(intersections[idx], intersections[j - n], vSource.GetPosition(idx));
-									n++;
-								}
-								if (valid)
-								{
-									// Check for obstruction
-									bool obstruction = LineRoomIntersection(intersections[j], mListenerPosition, id);
-									LineRoomIntersection(intersections[0], point, vSource.GetID(0), obstruction);
+									// Check valid intersections
+									valid = wall.LineWallIntersection(intersections[j], mListenerPosition, position);
 
-									int p = 0;
-									while (!obstruction && p < j)
+									int n = 0;
+									while (valid && n < j)
 									{
-										obstruction = LineRoomIntersection(intersections[p], intersections[p + 1], vSource.GetID(p), vSource.GetID(p + 1));
-										p++;
+										int idx = j - (n + 1); // Current bounce (j - n is previous bounce in code and next bounce in path)
+										Wall previousWall = mWalls.find(vSource.GetID(idx))->second;
+										valid = previousWall.LineWallIntersection(intersections[idx], intersections[j - n], vSource.GetPosition(idx));
+										n++;
 									}
-									if (!obstruction)
+									if (valid)
 									{
-										vSource.Visible(feedsFDN);
+										// Check for obstruction
+										bool obstruction = LineRoomIntersection(intersections[j], mListenerPosition, id);
+										LineRoomIntersection(intersections[0], point, vSource.GetID(0), obstruction);
+
+										int p = 0;
+										while (!obstruction && p < j)
+										{
+											obstruction = LineRoomIntersection(intersections[p], intersections[p + 1], vSource.GetID(p), vSource.GetID(p + 1));
+											p++;
+										}
+										if (!obstruction)
+										{
+											vSource.Visible(feedsFDN);
+											vSources.insert_or_assign(vSource.GetKey(), vSource);
+										}
 									}
 								}
 							}
 						}
-						vSources.push_back(vSource); // Only added if previous source was valid (not if rValid)
 					}
 					if (s || r) // In theory this only needs to be if current source valid or rValid? - could then remove checks when finding next vSource
 					{

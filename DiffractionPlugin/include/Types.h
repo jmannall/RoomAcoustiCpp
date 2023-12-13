@@ -7,9 +7,6 @@
 #include <stdlib.h>
 #include "vec3.h"
 #include "quaternion.h"
-#include "DiffractionGeometry.h"
-
-class Wedge;	// Forward declaration
 
 float inline Sign(float x)
 {
@@ -22,6 +19,12 @@ float inline Sign(float x)
 		else
 			return 1.0f;
 	}
+}
+
+float inline Round(float x, size_t dp)
+{
+	float factor = powf(10, (float)dp);
+	return round(x * factor) / factor;
 }
 
 #pragma region structs

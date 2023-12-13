@@ -41,6 +41,10 @@ inline string IntToStr(int x) {
     return ss.str();
 }
 
+inline string IntToStr(size_t x) {
+    IntToStr((int)x);
+}
+
 inline string FloatToStr(float x) {
     stringstream ss;
     ss << x;

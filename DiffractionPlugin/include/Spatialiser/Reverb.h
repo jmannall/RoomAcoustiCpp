@@ -46,7 +46,7 @@ namespace Spatialiser
 		void UpdateReflectionFilters(const ReverbWall& id, const Absorption& absorption, const Absorption& oldAbsorption);
 		void ProcessAudio(const matrix& data, Buffer& outputBuffer);
 		void SetFDNParameters(const FrequencyDependence& T60, const vec& dimensions);
-		size_t NumChannels() const { return mNumChannels; }
+		// size_t NumChannels() const { return mNumChannels; }
 	private:
 		void InitSources(int fs);
 

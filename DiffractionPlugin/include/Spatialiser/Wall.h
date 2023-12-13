@@ -1,8 +1,9 @@
 #pragma once
 
+#include <Types.h>
 #include "vec3.h"
 #include "Spatialiser/Edge.h"
-#include "UnityGAPlugin.h"
+// #include "UnityGAPlugin.h"
 #include "Debug.h"
 
 namespace Spatialiser
@@ -267,6 +268,7 @@ namespace Spatialiser
 		bool LineWallIntersection(vec3& intersection, const vec3& start, const vec3& end) const;
 		bool ReflectPointInWall(const vec3& point) const;
 		bool ReflectPointInWall(vec3& dest, const vec3& point) const;
+		void ReflectPointInWallNoCheck(vec3& point) const;
 		bool ReflectEdgeInWall(const Edge& edge) const;
 
 		Absorption Update(const vec3& normal, const float* vData, size_t numVertices, Absorption& absorption);

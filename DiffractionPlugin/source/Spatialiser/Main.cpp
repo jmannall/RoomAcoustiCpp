@@ -1,288 +1,178 @@
+/*
+*
+*  \Defines linakage between the C# unity code and C++ code
+* 
+*/
 
-//#include "pch.h"
-#include "Spatialiser/Main.h"
 #include "IUnityInterface.h"
-#include <utility>
+#include "Spatialiser/Main.h"
 
-#define GA_CC UNITY_INTERFACE_API
-#define GA_EXPORT UNITY_INTERFACE_EXPORT
+#define UI_API UNITY_INTERFACE_API
+#define UI_EXPORT UNITY_INTERFACE_EXPORT
 
 using namespace Spatialiser;
 
+// Pointer to return buffer
 static float* buffer = nullptr;
 
 extern "C"
 {
-#pragma region UnityPluginInterface
+	//////////////////// Unity Plugin Interface ////////////////////
 
-	GA_EXPORT void GA_CC UnityPluginLoad(IUnityInterfaces* unityInterfaces)
+	UI_EXPORT void UI_API UnityPluginLoad(IUnityInterfaces* unityInterfaces)
 	{
 		(void)unityInterfaces;
 	}
 
-	GA_EXPORT void GA_CC UnityPluginUnload()
+	UI_EXPORT void UI_API UnityPluginUnload()
 	{
 
 	}
 
-#pragma endregion
+	//////////////////// Spatialiser ////////////////////
 
+	// Load and Destroy
 
-	GA_EXPORT void GA_CC HRTFInitContext(int sampleRate, int bufferSize, int hrtfResamplingStep, int maxRefOrder, int hrtfMode)
+	UI_EXPORT void UI_API SPATInit(int fs, int numFrames, int numChannels, int numFDNChannels, float lerpFactor, int hrtfResamplingStep, int hrtfMode)
 	{
-		Config config;
-		config.sampleRate = sampleRate;
-		config.bufferSize = bufferSize;
-		config.hrtfResamplingStep = hrtfResamplingStep;
-		config.maxRefOrder = maxRefOrder;
+		HRTFMode mode;
 		switch (hrtfMode)
 		{
 			case 0:
-			{
-				config.hrtfMode = HRTFMode::quality;
-				break;
-			}
+			{ mode = HRTFMode::quality; break; }
 			case 1:
-			{
-				config.hrtfMode = HRTFMode::performance;
-				break;
-			}
+			{ mode = HRTFMode::performance; break; }
 			case 2:
-			{
-				config.hrtfMode = HRTFMode::none;
-				break;
-			}
+			{ mode = HRTFMode::none; break; }
+			default:
+			{ mode = HRTFMode::performance; break; }
 		}
+		Config config = Config(fs, numFrames, numChannels, numFDNChannels, lerpFactor, hrtfResamplingStep, mode);
 		Init(&config);
 	}
 
-	GA_EXPORT void GA_CC HRTFExitContext()
+	UI_EXPORT void UI_API SPATExit()
 	{
 		Exit();
 	}
 
-	GA_EXPORT void GA_CC HRTFUpdateConfig(int diffractionDepth, bool shadowOnly)
-	{
-		ISMConfig config;
-		config.shadowOnly = shadowOnly;
-		switch (diffractionDepth)
-		{
-			case 0:
-			{
-				config.diffraction = DiffractionDepth::none;
-				break;
-			}
-			case 1:
-			{
-				config.diffraction = DiffractionDepth::edgeOnly;
-				break;
-			}
-			case 2:
-			{
-				config.diffraction = DiffractionDepth::edSp;
-				break;
-			}
-			default:
-			{
-				config.diffraction = DiffractionDepth::none;
-				break;
-			}
-		}
-		UpdateISMConfig(config);
-	}
-
-
-	GA_EXPORT int GA_CC HRTFInitWall(float nX, float nY, float nZ, const float* vData, int numVertices, float aL, float aML, float aM, float aMH, float aH, int reverbWallId)
-	{
-		Absorption absorption = Absorption(aL, aML, aM, aMH, aH);
-		vec3 normal = vec3(nX, nY, nZ);
-		ReverbWall reverbWall;
-		switch (reverbWallId)
-		{
-			case 0:
-			{
-				reverbWall = ReverbWall::posZ;
-				break;
-			}
-			case 1:
-			{
-				reverbWall = ReverbWall::negZ;
-				break;
-			}
-			case 2:
-			{
-				reverbWall = ReverbWall::posX;
-				break;
-			}
-			case 3:
-			{
-				reverbWall = ReverbWall::negX;
-				break;
-			}
-			case 4:
-			{
-				reverbWall = ReverbWall::posY;
-				break;
-			}
-			case 5:
-			{
-				reverbWall = ReverbWall::negY;
-				break;
-			}
-			default:
-			{
-				reverbWall = ReverbWall::none;
-				break;
-			}
-		}
-		return (int)InitWall(normal, vData, (size_t)numVertices, absorption, reverbWall);
-	}
-
-	GA_EXPORT void GA_CC HRTFUpdateWall(int id, float nX, float nY, float nZ, const float* vData, int numVertices, float aL, float aML, float aM, float aMH, float aH, int reverbWallId)
-	{
-		Absorption absorption = Absorption(aL, aML, aM, aMH, aH);
-		vec3 normal = vec3(nX, nY, nZ);
-		ReverbWall reverbWall;
-		switch (reverbWallId)
-		{
-		case 0:
-		{
-			reverbWall = ReverbWall::posZ;
-			break;
-		}
-		case 1:
-		{
-			reverbWall = ReverbWall::negZ;
-			break;
-		}
-		case 2:
-		{
-			reverbWall = ReverbWall::posX;
-			break;
-		}
-		case 3:
-		{
-			reverbWall = ReverbWall::negX;
-			break;
-		}
-		case 4:
-		{
-			reverbWall = ReverbWall::posY;
-			break;
-		}
-		case 5:
-		{
-			reverbWall = ReverbWall::negY;
-			break;
-		}
-		default:
-		{
-			reverbWall = ReverbWall::none;
-			break;
-		}
-		}		
-		UpdateWall((size_t)id, normal, vData, (size_t)numVertices, absorption, reverbWall);
-	}
-
-	GA_EXPORT void GA_CC HRTFRemoveWall(int id, int reverbWallId)
-	{
-		ReverbWall reverbWall;
-		switch (reverbWallId)
-		{
-		case 0:
-		{
-			reverbWall = ReverbWall::posZ;
-			break;
-		}
-		case 1:
-		{
-			reverbWall = ReverbWall::negZ;
-			break;
-		}
-		case 2:
-		{
-			reverbWall = ReverbWall::posX;
-			break;
-		}
-		case 3:
-		{
-			reverbWall = ReverbWall::negX;
-			break;
-		}
-		case 4:
-		{
-			reverbWall = ReverbWall::posY;
-			break;
-		}
-		case 5:
-		{
-			reverbWall = ReverbWall::negY;
-			break;
-		}
-		default:
-		{
-			reverbWall = ReverbWall::none;
-			break;
-		}
-		}
-		RemoveWall((size_t)id, reverbWall);
-	}
-
-	GA_EXPORT void GA_CC HRTFSetFDNParameters(float volume, const float* dim, int numDimensions)
-	{
-		vec dimensions = vec(dim, numDimensions);
-		SetFDNParameters(volume, dimensions);
-	}
-
-	GA_EXPORT bool GA_CC HRTFFilesLoaded()
+	UI_EXPORT bool UI_API SPATFilesLoaded()
 	{
 		return FilesLoaded();
 	}
 
-	GA_EXPORT void GA_CC HRTFUpdateListener(float posX, float posY, float posZ, float oriW, float oriX, float oriY, float oriZ)
+	// Image Source Model
+
+	UI_EXPORT void UI_API SPATUpdateISMConfig(int order, bool dir, bool ref, bool diff, bool refDiff, bool spDiff)
+	{
+		UpdateISMConfig(ISMConfig(order, dir, ref, diff, refDiff, spDiff));
+	}
+
+	// Reverb
+
+	UI_EXPORT void UI_API SPATSetFDNParameters(float volume, const float* dim, int numDimensions)
+	{
+		SetFDNParameters(volume, vec(dim, numDimensions));
+	}
+
+	// Listener
+
+	UI_EXPORT void UI_API SPATUpdateListener(float posX, float posY, float posZ, float oriW, float oriX, float oriY, float oriZ)
 	{
 		UpdateListener(vec3(posX, posY, posZ), quaternion(oriW, oriX, oriY, oriZ));
 	}
 
-	GA_EXPORT int GA_CC HRTFInitSource()
+	// Source
+
+	UI_EXPORT int UI_API SPATInitSource()
 	{
 		return (int)InitSource();
 	}
 
-	GA_EXPORT void GA_CC HRTFUpdateSource(int id, float posX, float posY, float posZ, float oriW, float oriX, float oriY, float oriZ)
+	UI_EXPORT void UI_API SPATUpdateSource(int id, float posX, float posY, float posZ, float oriW, float oriX, float oriY, float oriZ)
 	{
 		UpdateSource((size_t)id, vec3(posX, posY, posZ), quaternion(oriW, oriX, oriY, oriZ));
 	}
 
-	GA_EXPORT void GA_CC HRTFRemoveSource(int id)
+	UI_EXPORT void UI_API SPATRemoveSource(int id)
 	{
 		RemoveSource((size_t)id);
 	}
 
-	GA_EXPORT void GA_CC HRTFSubmitAudio(int id, const float* data, int numFrames)
+	// Walls
+
+	ReverbWall ReturnReverbWall(int id)
+	{
+		switch (id)
+		{
+		case 0:
+		{ return ReverbWall::posZ; break; }
+		case 1:
+		{ return ReverbWall::negZ; break; }
+		case 2:
+		{ return ReverbWall::posX; break; }
+		case 3:
+		{ return ReverbWall::negX; break; }
+		case 4:
+		{ return ReverbWall::posY; break; }
+		case 5:
+		{ return ReverbWall::negY; break; }
+		default:
+		{ return ReverbWall::none; break; }
+		}
+	}
+
+	UI_EXPORT int UI_API SPATInitWall(float nX, float nY, float nZ, const float* vData, int numVertices, float aL, float aML, float aM, float aMH, float aH, int reverbWallId)
+	{
+		ReverbWall reverbWall = ReturnReverbWall(reverbWallId);
+		Absorption absorption = Absorption(aL, aML, aM, aMH, aH);
+
+		return (int)InitWall(vec3(nX, nY, nZ), vData, (size_t)numVertices, absorption, reverbWall);
+	}
+
+	UI_EXPORT void UI_API SPATUpdateWall(int id, float nX, float nY, float nZ, const float* vData, int numVertices, float aL, float aML, float aM, float aMH, float aH, int reverbWallId)
+	{
+		ReverbWall reverbWall = ReturnReverbWall(reverbWallId);
+		Absorption absorption = Absorption(aL, aML, aM, aMH, aH);
+
+		UpdateWall((size_t)id, vec3(nX, nY, nZ), vData, (size_t)numVertices, absorption, reverbWall);
+	}
+
+	UI_EXPORT void UI_API SPATRemoveWall(int id, int reverbWallId)
+	{
+		ReverbWall reverbWall = ReturnReverbWall(reverbWallId);
+
+		RemoveWall((size_t)id, reverbWall);
+	}
+
+	// Audio
+
+	UI_EXPORT void UI_API SPATSubmitAudio(int id, const float* data, int numFrames)
 	{
 		SubmitAudio((size_t)id, data, (size_t)numFrames);
 	}
 
-	GA_EXPORT bool GA_CC HRTFProcessOutput()
+	UI_EXPORT bool UI_API SPATProcessOutput()
 	{
 		GetOutput(&buffer);
 		if (!buffer)
 		{
-			Debug::Log("Process Output False1", Color::Orange);
+			Debug::Log("Process Output Failed", Color::Orange);
 			return false;
 		}
 		else if (std::isnan(*buffer))
 		{
-			Debug::Log("Process Output False2", Color::Orange);
+			Debug::Log("Process Output is NaN", Color::Orange);
 			return false;
 		}
-		Debug::Log("Process Output True", Color::Orange);
+		Debug::Log("Process Output Success", Color::Orange);
 		return true;
 	}
 
-	GA_EXPORT void GA_CC HRTFGetOutputBuffer(float** buf)
+	UI_EXPORT void UI_API SPATGetOutputBuffer(float** buf)
 	{
 		*buf = buffer;
 	}
+
+#pragma endregion
 }

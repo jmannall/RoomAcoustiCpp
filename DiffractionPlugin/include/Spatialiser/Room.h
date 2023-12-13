@@ -7,23 +7,35 @@
 #include "Spatialiser/VirtualSource.h"
 #include "Spatialiser/Types.h"
 #include "Spatialiser/VirtualSource.h"
-#include "UnityGAPlugin.h"
+// #include "UnityGAPlugin.h"
 #include <vector>
 #include <thread>
 
 namespace Spatialiser
 {
+	using VirtualSourceStore = std::unordered_map<std::string, VirtualSourceData>;
+
 	struct SourceData
 	{
 		vec3 position;
 		bool visible;
 		std::mutex mMutex;
-		std::vector<VirtualSourceData> vSources;
+		VirtualSourceStore vSources;
+
+		inline SourceData operator=(const SourceData& data)
+		{
+			position = data.position;
+			visible = data.visible;
+			vSources = data.vSources;
+			return *this;
+		}
 
 		SourceData() : position(vec3()), visible(false), vSources() {}
 		SourceData(vec3 _position) : position(_position), visible(false), vSources() {}
-		//SourceData(const SourceData &data) : position(data.position), visible(data.visible), vSources(data.vSources) {}
+		SourceData(const SourceData &data) : position(data.position), visible(data.visible), vSources(data.vSources) {}
 	};
+
+
 
 	class Room
 	{
@@ -31,10 +43,9 @@ namespace Spatialiser
 		using EdgeMap = std::unordered_map<size_t, Edge>;
 		using SourceMap = std::unordered_map<size_t, SourceData>;
 		using VirtualSourceMap = std::unordered_multimap<size_t, VirtualSourceData>;
-		using VirtualSourceVec = std::vector<VirtualSourceData>;
 	public:
-		Room() : mMaxOrder(0), mListenerPosition() {};
-		Room(int maxOrder) : mMaxOrder(maxOrder), mListenerPosition() {};
+		Room() : mISMConfig(), mListenerPosition() {};
+		Room(int order) : mISMConfig(), mListenerPosition() { mISMConfig.order = order; };
 		~Room() {};
 
 		void UpdateISMConfig(const ISMConfig& config) { mISMConfig = config; }
@@ -72,6 +83,7 @@ namespace Spatialiser
 			{
 				// Get absorption to return
 				absorption = it->second.GetAbsorption();
+				absorption.area = -absorption.area;
 				RemoveEdges(id, it->second);
 			}
 			mWalls.erase(id);
@@ -86,7 +98,7 @@ namespace Spatialiser
 			for (int i = 0; i < edgeIDs.size(); i++)
 			{
 				auto itE = mEdges.find(edgeIDs[i]);
-				if (itE == mEdges.end())		// case: wall does not exist
+				if (itE == mEdges.end())		// case: edge does not exist
 				{
 					// Edge does not exist
 				}
@@ -110,27 +122,31 @@ namespace Spatialiser
 
 		FrequencyDependence GetReverbTime(const float& volume);
 
-		inline SourceData& UpdateSourcePosition(const size_t& id, const vec3& position)
+		inline SourceData UpdateSourcePosition(const size_t& id, const vec3& position)
 		{
 			lock_guard <mutex> lock(mSourceMutex);
 			auto it = mSources.find(id);
 			if (it == mSources.end())		// case: source does not exist
 			{
 				// Create entry if doesn't exist
+				SourceData ret;
 				SourceData& newData = mSources.try_emplace(id).first->second;
 				{
 					lock_guard <mutex> iLock(newData.mMutex);
 					newData.position = position;
+					ret = newData;
 				}
-				return newData;
+				return ret;
 			}
 			else
 			{
+				SourceData ret;
 				{
 					lock_guard <mutex> iLock(it->second.mMutex);
 					it->second.position = position;
+					ret = it->second;
 				}
-				return it->second;
+				return ret;
 			}
 		}
 		inline void RemoveSourcePosition(const size_t& id)
@@ -148,20 +164,20 @@ namespace Spatialiser
 		bool LineRoomIntersection(const vec3& start, const vec3& end, size_t currentWallID1, size_t currentWallID2);
 
 		void UpdateISM();
-		bool ReflectPointInRoom(const vec3& point, std::vector<VirtualSourceData>& vSources);
+		bool ReflectPointInRoom(const vec3& point, VirtualSourceStore& vSources);
 
 
-		void SetMaxRefOrder(const int& maxOrder) { mMaxOrder = maxOrder; }
+		void SetMaxRefOrder(const int& order) { mISMConfig.order = order; }
 
 	private:
 		void ParallelFindEdges(Wall& a, Wall& b, const size_t IDa, const size_t IDb);
 		void FindEdges(Wall& a, Wall& b, const size_t IDa, const size_t IDb);
 
 		// void SpecularDiffraction(const vec3& point, VirtualSourceMap& sp, VirtualSourceMap& edSp, VirtualSourceMap& spEd, VirtualSourceVec& vSources);
-		void HigherOrderSpecularDiffraction(const vec3& point, VirtualSourceMap& sp, VirtualSourceMap& edSp, VirtualSourceMap& spEd, VirtualSourceVec& vSources);
-		void FirstOrderDiffraction(const vec3& point, VirtualSourceMap& ed, VirtualSourceVec& vSources);
-		void FirstOrderReflections(const vec3& point, VirtualSourceMap& sp, VirtualSourceVec& vSources);
-		void HigherOrderReflections(const vec3& point, VirtualSourceMap& sp, VirtualSourceVec& vSources);
+		void HigherOrderSpecularDiffraction(const vec3& point, VirtualSourceMap& sp, VirtualSourceMap& edSp, VirtualSourceMap& spEd, VirtualSourceStore& vSources);
+		void FirstOrderDiffraction(const vec3& point, VirtualSourceMap& ed, VirtualSourceStore& vSources);
+		void FirstOrderReflections(const vec3& point, VirtualSourceMap& sp, VirtualSourceStore& vSources);
+		void HigherOrderReflections(const vec3& point, VirtualSourceMap& sp, VirtualSourceStore& vSources);
 
 		size_t AddEdge(const Edge& edge);
 
@@ -172,7 +188,6 @@ namespace Spatialiser
 
 		vec3 mListenerPosition;
 		SourceMap mSources;
-		int mMaxOrder;
 		ISMConfig mISMConfig;
 
 		std::mutex mWallMutex;

@@ -31,16 +31,21 @@ void matrix::AllocateSpace()
 	}
 }
 
-void matrix::Init()
+void matrix::Reset()
 {
-	AllocateSpace();
 	for (int i = 0; i < rows; i++)
 	{
 		for (int j = 0; j < cols; j++)
 		{
-			e[i][j] = 0;
+			e[i][j] = 0.0f;
 		}
 	}
+}
+
+void matrix::Init()
+{
+	AllocateSpace();
+	Reset();
 }
 
 void matrix::Init(const float* in)

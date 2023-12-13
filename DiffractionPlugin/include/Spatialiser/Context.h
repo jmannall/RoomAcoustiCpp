@@ -1,122 +1,110 @@
-#pragma once
+/*
+*
+*  \Spatialiser context
+*
+*/
 
-#ifndef SPATIALISER_CONTEXT_H_
-#define SPATIALISER_CONTEXT_H_
+#ifndef Spatialiser_Context_h
+#define Spatialiser_Context_h
 
+// C++ headers
 #include <thread>
 
+// Misc headers
 #include "AudioManager.h"
+#include "Debug.h"
+
+// Spatialiser headers
 #include "Spatialiser/Types.h"
 #include "Spatialiser/HRTFManager.h"
 #include "Spatialiser/Reverb.h"
 
+// 3DTI Headers
 #include "Common/Transform.h"
-#include "Debug.h"
+#include "BinauralSpatializer/3DTI_BinauralSpatializer.h"
+#include "HRTF/HRTFFactory.h"
+#include "HRTF/HRTFCereal.h"
+#include "ILD/ILDCereal.h"
 
 namespace Spatialiser
 {
+	//////////////////// Context ////////////////////
+
 	class Context
 	{
 	public:
+
+		// Load and Destroy
 		Context(const Config* config);
 		~Context();
 
-		bool IsRunning() const { return mIsRunning; }
-		ISMConfig GetISMConfig() const{ return mISMConfig; }
-		void UpdateISMConfig(const ISMConfig& config) { mISMConfig = config; }
-
-		void StopRunning() { mIsRunning = false; }
 		bool FilesLoaded();
 
+		// Image Source Model
+		void StopRunning() { mIsRunning = false; }
+		bool IsRunning() const { return mIsRunning; }
+
+		void UpdateISMConfig(const ISMConfig& config) { mISMConfig = config; }
+		ISMConfig GetISMConfig() const { return mISMConfig; }
+
+		HRTFManager* GetHRTFManager() { return mSources; }
+		Room* GetRoom() { return mRoom; }
+
+		//Reverb
+		void SetFDNParameters(const float& volume, const vec& dimensions);
+
+		// Listener
 		void UpdateListener(const vec3& position, const quaternion& orientation);
 
+		// Source
 		size_t InitSource();
 		void UpdateSource(size_t id, const vec3& position, const quaternion& orientation);
 		void RemoveSource(size_t id);
 
-		// int InitRoom(const Room& room);
+		// Wall
 		size_t InitWall(const vec3& normal, const float* vData, size_t numVertices, Absorption& absorption, const ReverbWall& reverbWall);
 		void UpdateWall(size_t id, const vec3& normal, const float* vData, size_t numVertices, Absorption& absorption, const ReverbWall& reverbWall);
 		void RemoveWall(size_t id, const ReverbWall& reverbWall);
 
-		void SetFDNParameters(const float& volume , const vec& dimensions);
-
+		// Audio
 		void SubmitAudio(size_t id, const float* data, size_t numFrames);
 		void GetOutput(float** bufferPtr);
 
-		//void UpdateISM();
-
-		// Getters
-		HRTFManager* GetHRTFManager() { return mSources; }
-		Room* GetRoom() { return mRoom; }
-		//WedgeManager* GetWedgeManager() { return mWedges; }
-		//SourceManager* GetSourceManager() { return mSources; }
-		//PathManager* GetPathManager() { return mPaths; }
-		//EmissionManager* GetEmissionManager() { return mEmissions; }
-
 	private:
+
+		// Configs
 		Config mConfig;
+		ISMConfig mISMConfig;
+
+		// 3DTI components
 		Binaural::CCore mCore;
 		shared_ptr<Binaural::CListener> mListener;
 
+		// Bools TO DO: remove file loaded function
 		bool hrtfLoaded;
 		bool ildLoaded;
 
-		int mNumChannels;
-		Buffer mInputBuffer;
+		// Buffers
 		Buffer mOutputBuffer;
 		matrix mReverbInput;
 		Buffer mSendBuffer;
 
+		// Handles
 		char* mMem = nullptr;
 		HRTFManager* mSources;
 		Reverb* mReverb;
+		Room* mRoom;
 
+		// Mutexes
 		std::mutex audioMutex;
 		std::mutex roomMutex;
 		std::mutex highPriority;
 		std::mutex lowPriority;
 
-		std::thread mBackgroundProcessor;	// background thread handle
+		// Image Source Model
+		std::thread ISMThread;
 		bool mIsRunning;
-		ISMConfig mISMConfig;
-		int count;
-
-		Room* mRoom;
-		//void SetOutputBuffer(float* buffer);
-		//DSPConfig mConfig;				// copy of the user configuration
-		//Model mModel;
-
-		//int mNumFrames = 0;				// number of frames of audio data sent in this audio callback
-		//int mNumChannels = 2;
-
-		//// memory for all buffers allocated at once
-		//	// stored in m_mem
-		//char* mMem = nullptr;
-		//unsigned mBufferSize;					// size in bytes of each buffer
-
-		//Buffer mInputBuffer;
-		//Buffer mOutputBuffer;
-		//Buffer mAttenuateBuffer;
-		//Buffer mOffBuffer;
-		//Buffer mLpfBuffer;
-		//Buffer mUdfaBuffer;
-		//Buffer mUdfaiBuffer;
-		//Buffer mNNBestBuffer;
-		//Buffer mNNSmallBuffer;
-		//Buffer mUtdBuffer;
-		//Buffer mBtmBuffer;
-		//Buffer mSendBuffer;
-
-		//bool mIsRunning;
-		//Receiver mListener;
-
-		//std::thread mBackgroundProcessor;	// background thread handle
-		//WedgeManager* mWedges;				// wedge handle
-		//SourceManager* mSources;			// source handle
-		//PathManager* mPaths;				// path handle
-		//EmissionManager* mEmissions;		// emissions handle
 	};
 }
 
-#endif  SPATIALISER_CONTEXT_H_
+#endif

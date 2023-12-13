@@ -57,27 +57,6 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)source\AudioManager.cpp">
       <Filter>Source Files\JM</Filter>
     </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\DiffractionGeometry.cpp">
-      <Filter>Source Files\JM</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\DiffractionModels.cpp">
-      <Filter>Source Files\JM</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\EmissionManager.cpp">
-      <Filter>Source Files\JM</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\GeometryManager.cpp">
-      <Filter>Source Files\JM</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\SourceManager.cpp">
-      <Filter>Source Files\JM</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\UnityGAPlugin.cpp">
-      <Filter>Source Files\JM</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\WedgeManager.cpp">
-      <Filter>Source Files\JM</Filter>
-    </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Context.cpp">
       <Filter>Source Files\Spatialiser</Filter>
     </ClCompile>
@@ -123,6 +102,9 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Diffraction\Models.cpp">
       <Filter>Source Files\Spatialiser\Diffraction</Filter>
     </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Source.cpp">
+      <Filter>Source Files\Spatialiser</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\anonymous_function.h">
@@ -167,18 +149,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Definitions.h">
       <Filter>Header Files\JM</Filter>
     </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\DiffractionGeometry.h">
-      <Filter>Header Files\JM</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\DiffractionModel.h">
-      <Filter>Header Files\JM</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\EmissionManager.h">
-      <Filter>Header Files\JM</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\GeometryManager.h">
-      <Filter>Header Files\JM</Filter>
-    </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\HelloWorld.h">
       <Filter>Header Files\JM</Filter>
     </ClInclude>
@@ -188,19 +158,10 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\ScopedTimer.h">
       <Filter>Header Files\JM</Filter>
     </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\SourceManager.h">
-      <Filter>Header Files\JM</Filter>
-    </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Types.h">
       <Filter>Header Files\JM</Filter>
     </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\UnityGAPlugin.h">
-      <Filter>Header Files\JM</Filter>
-    </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\vec3.h">
-      <Filter>Header Files\JM</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\WedgeManager.h">
       <Filter>Header Files\JM</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Types.h">
@@ -256,6 +217,9 @@
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\complex.h">
       <Filter>Header Files\JM</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Source.h">
+      <Filter>Header Files\Spatialiser</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

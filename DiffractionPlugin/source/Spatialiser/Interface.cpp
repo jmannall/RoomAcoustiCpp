@@ -1,20 +1,22 @@
-#pragma once
+/*
+*
+* \Spatialiser API
+*
+*/
 
 #include "Spatialiser/Interface.h"
 
-// Context singleton ptr
-static Spatialiser::Context* context = nullptr;
-
-
-#pragma region Context
 namespace Spatialiser
 {
-	Context* GetContext()
-	{
-		return context;
-	}
+	// Context Singleton
 
-	void Init(const Config* config) // Initialise new context
+	static Context* context = nullptr;
+
+	Context* GetContext() { return context; }
+
+	// Load and Destroy
+
+	void Init(const Config* config)
 	{
 		if (context) // Delete any existing context
 		{
@@ -25,50 +27,13 @@ namespace Spatialiser
 		context = new Context(config);
 	}
 
-	void Exit() // Delete existing context
+	void Exit()
 	{
 		if (context)
 		{
 			delete context;
 			context = nullptr;
 		}
-	}
-
-	void UpdateISMConfig(const ISMConfig& config)
-	{
-		auto* context = GetContext();
-		if (context)
-			context->UpdateISMConfig(config);
-	}
-
-	size_t InitWall(const vec3& normal, const float* vData, size_t numVertices, Absorption& absorption, const ReverbWall& reverbWall)
-	{
-		auto* context = GetContext();
-		if (context)
-			return context->InitWall(normal, vData, numVertices, absorption, reverbWall);
-		else
-			return -1;
-	}
-
-	void UpdateWall(size_t id, const vec3& normal, const float* vData, size_t numVertices, Absorption& absorption, const ReverbWall& reverbWall)
-	{
-		auto* context = GetContext();
-		if (context)
-			context->UpdateWall(id, normal, vData, numVertices , absorption, reverbWall);
-	}
-
-	void RemoveWall(size_t id, const ReverbWall& reverbWall)
-	{
-		auto* context = GetContext();
-		if (context)
-			context->RemoveWall(id, reverbWall);
-	}
-
-	void SetFDNParameters(const float& volume, const vec& dimensions)
-	{
-		auto* context = GetContext();
-		if (context)
-			context->SetFDNParameters(volume, dimensions);
 	}
 
 	bool FilesLoaded()
@@ -80,12 +45,34 @@ namespace Spatialiser
 			return false;
 	}
 
+	// Image Source Model
+
+	void UpdateISMConfig(const ISMConfig& config)
+	{
+		auto* context = GetContext();
+		if (context)
+			context->UpdateISMConfig(config);
+	}
+
+	// Reverb
+
+	void SetFDNParameters(const float& volume, const vec& dimensions)
+	{
+		auto* context = GetContext();
+		if (context)
+			context->SetFDNParameters(volume, dimensions);
+	}
+
+	// Listener
+
 	void UpdateListener(const vec3& position, const quaternion& orientation)
 	{
 		auto* context = GetContext();
 		if (context)
 			context->UpdateListener(position, orientation);
 	}
+
+	// Source
 
 	size_t InitSource()
 	{
@@ -110,6 +97,33 @@ namespace Spatialiser
 			context->RemoveSource(id);
 	}
 
+	// Wall
+
+	size_t InitWall(const vec3& normal, const float* vData, size_t numVertices, Absorption& absorption, const ReverbWall& reverbWall)
+	{
+		auto* context = GetContext();
+		if (context)
+			return context->InitWall(normal, vData, numVertices, absorption, reverbWall);
+		else
+			return (size_t)(-1);
+	}
+
+	void UpdateWall(size_t id, const vec3& normal, const float* vData, size_t numVertices, Absorption& absorption, const ReverbWall& reverbWall)
+	{
+		auto* context = GetContext();
+		if (context)
+			context->UpdateWall(id, normal, vData, numVertices , absorption, reverbWall);
+	}
+
+	void RemoveWall(size_t id, const ReverbWall& reverbWall)
+	{
+		auto* context = GetContext();
+		if (context)
+			context->RemoveWall(id, reverbWall);
+	}
+
+	// Audio
+
 	void SubmitAudio(size_t id, const float* data, size_t numFrames)
 	{
 		auto* context = GetContext();
@@ -121,16 +135,8 @@ namespace Spatialiser
 	{
 		auto* context = GetContext();
 		if (context)
-		{
-			Debug::Log("GetOutput Context Exists", Color::Orange);
-
 			context->GetOutput(bufferPtr);
-		}
 		else
-		{
-			Debug::Log("GetOutput Context Does Not Exist", Color::Orange);
 			*bufferPtr = nullptr;
-		}
 	}
 }
-#pragma endregion
