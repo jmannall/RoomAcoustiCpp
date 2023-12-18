@@ -162,16 +162,15 @@ inline matrix operator*(const matrix& u, const matrix& v)
 {
 	assert(u.Cols() == v.Rows());
 	matrix out = matrix(u.Rows(), v.Cols());
-	for (int i = 0; i < u.Rows(); i++)
+
+	for (int i = 0; i < u.Rows(); ++i)
 	{
-		for (int j = 0; j < v.Cols(); j++)
+		for (int j = 0; j < v.Cols(); ++j)
 		{
-			float entry = 0.0f;
-			for (int k = 0; k < u.Cols(); k++)
+			for (int k = 0; k < u.Cols(); ++k)
 			{
-				entry += u.GetEntry(i, k) * v.GetEntry(k, j);
+				out.IncreaseEntry(u.GetEntry(i, k) * v.GetEntry(k, j), i, j);		
 			}
-			out.AddEntry(entry, i, j);
 		}
 	}
 	return out;

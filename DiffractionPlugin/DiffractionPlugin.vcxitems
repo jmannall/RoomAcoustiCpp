@@ -31,7 +31,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\FDN.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Interface.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Main.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\HRTFManager.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\SourceManager.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Reverb.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Room.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Source.cpp" />
@@ -68,7 +68,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\FDN.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Interface.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Main.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\HRTFManager.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\SourceManager.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Reverb.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Room.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Source.h" />

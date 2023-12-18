@@ -1,32 +1,47 @@
-#pragma once
+/*
+*
+*  \Complex variable
+*
+*/
+
+#ifndef Spatialiser_Complex_h
+#define Spatialiser_Complex_h
 
 #include <complex>
 
-using complexF = std::complex<float>;
+#include "Spatialiser/Types.h"
 
-const complexF imUnit(0.0f, 1.0f);
-
-inline complexF operator*(const complexF& a, const float& b)
+namespace Spatialiser
 {
-	return complexF(a.real() * b, a.imag() * b);
+	// Complex Type
+	typedef std::complex<Real> Complex;
+
+	static const Complex imUnit(0.0f, 1.0);
+
+	inline Complex operator*(const Complex& a, const Real& b)
+	{
+		return Complex(a.real() * b, a.imag() * b);
+	}
+
+	inline Complex operator*(const Real& b, const Complex& a)
+	{
+		return a * b;
+	}
+
+	inline Complex operator+(const Complex& a, const Real& b)
+	{
+		return Complex(a.real() + b, a.imag());
+	}
+
+	inline Complex operator+(const Real& b, const Complex& a)
+	{
+		return a + b;
+	}
+
+	inline Complex operator/(const Complex& a, const Real& b)
+	{
+		return Complex(a.real() / b, a.imag() / b);
+	}
 }
 
-inline complexF operator*(const float& b, const complexF& a)
-{
-	return a * b;
-}
-
-inline complexF operator+(const complexF& a, const float& b)
-{
-	return complexF(a.real() + b, a.imag());
-}
-
-inline complexF operator+(const float& b, const complexF& a)
-{
-	return a + b;
-}
-
-inline complexF operator/(const complexF& a, const float& b)
-{
-	return complexF(a.real() / b, a.imag() / b);
-}
+#endif

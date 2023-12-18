@@ -60,7 +60,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Context.cpp">
       <Filter>Source Files\Spatialiser</Filter>
     </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\HRTFManager.cpp">
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\SourceManager.cpp">
       <Filter>Source Files\Spatialiser</Filter>
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Interface.cpp">
@@ -173,7 +173,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\quaternion.h">
       <Filter>Header Files\JM</Filter>
     </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\HRTFManager.h">
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\SourceManager.h">
       <Filter>Header Files\Spatialiser</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Main.h">

@@ -1,9 +1,9 @@
 
-#include "Spatialiser/HRTFManager.h"
+#include "Spatialiser/SourceManager.h"
 
 using namespace Spatialiser;
 
-size_t HRTFManager::Init()
+size_t SourceManager::Init()
 {
 	lock_guard <mutex> lock(updateMutex);
 	Source source = Source(mCore, mNumFDNChannels, mHRTFMode, sampleRate);
@@ -24,14 +24,14 @@ size_t HRTFManager::Init()
 	}
 }
 
-/*vec3 HRTFManager::GetSourcePosition(shared_ptr<Binaural::CSingleSourceDSP> source)
+/*vec3 SourceManager::GetSourcePosition(shared_ptr<Binaural::CSingleSourceDSP> source)
 {
 	Common::CTransform transform = source->GetCurrentSourceTransform();
 	Common::CVector3 position = transform.GetPosition();
 	return vec3(position.x, position.y, position.z);
 }*/
 
-void HRTFManager::ProcessAudio(const size_t& id, const float* data, const size_t& numFrames, matrix& reverbInput, Buffer& outputBuffer, const float lerpFactor)
+void SourceManager::ProcessAudio(const size_t& id, const float* data, const size_t& numFrames, matrix& reverbInput, Buffer& outputBuffer, const float lerpFactor)
 {
 	lock_guard<mutex> lock(processAudioMutex);
 	auto it = mSources.find(id);

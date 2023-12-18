@@ -138,15 +138,16 @@ VirtualSourceData VirtualSourceData::Trim(const int i)
 }
 
 
-VirtualSource::VirtualSource(Binaural::CCore* core, HRTFMode hrtfMode, int fs, const VirtualSourceData& data, const int& fdnChannel) : mCore(core), mSource(NULL), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(4, fs), isInitialised(false), mHRTFMode(hrtfMode), feedsFDN(false), mFDNChannel(fdnChannel), mDiffractionPath(data.mDiffractionPath), btm(&mDiffractionPath, fs), reflection(false), diffraction(false)
+VirtualSource::VirtualSource(Binaural::CCore* core, HRTFMode hrtfMode, int fs, const VirtualSourceData& data, const int& fdnChannel) : mCore(core), mSource(NULL), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(4, fs), isInitialised(false), mHRTFMode(hrtfMode), feedsFDN(false), mFDNChannel(fdnChannel), mDiffractionPath(data.mDiffractionPath), btm(&mDiffractionPath, fs), udfa(&mDiffractionPath, fs), reflection(false), diffraction(false)
 {
 	UpdateVirtualSource(data);
 	// Set local bool for use at audio processing?
 }
 
-VirtualSource::VirtualSource(const VirtualSource& vS) : mCore(vS.mCore), mSource(vS.mSource), mPosition(vS.mPosition), mFilter(vS.mFilter), isInitialised(vS.isInitialised), mHRTFMode(vS.mHRTFMode), feedsFDN(vS.feedsFDN), mFDNChannel(vS.mFDNChannel), mDiffractionPath(vS.mDiffractionPath), btm(vS.btm), mTargetGain(vS.mTargetGain), mCurrentGain(vS.mCurrentGain), reflection(vS.reflection), diffraction(vS.diffraction), mVirtualSources(vS.mVirtualSources), mVirtualEdgeSources(vS.mVirtualEdgeSources)
+VirtualSource::VirtualSource(const VirtualSource& vS) : mCore(vS.mCore), mSource(vS.mSource), mPosition(vS.mPosition), mFilter(vS.mFilter), isInitialised(vS.isInitialised), mHRTFMode(vS.mHRTFMode), feedsFDN(vS.feedsFDN), mFDNChannel(vS.mFDNChannel), mDiffractionPath(vS.mDiffractionPath), btm(vS.btm), udfa(vS.udfa), mTargetGain(vS.mTargetGain), mCurrentGain(vS.mCurrentGain), reflection(vS.reflection), diffraction(vS.diffraction), mVirtualSources(vS.mVirtualSources), mVirtualEdgeSources(vS.mVirtualEdgeSources)
 {
 	btm.UpdatePath(&mDiffractionPath);
+	udfa.UpdatePath(&mDiffractionPath);
 }
 
 VirtualSource::~VirtualSource()
@@ -232,7 +233,7 @@ int VirtualSource::ProcessAudio(const float* data, const size_t& numFrames, matr
 			{
 				lock_guard<mutex> lock(audioMutex);
 				btm.ProcessAudio(inputPtr, &bInput[0], numFrames, lerpFactor);
-
+				// udfa.ProcessAudio(inputPtr, &bInput[0], numFrames, lerpFactor);
 				if (reflection)
 				{
 					for (int i = 0; i < numFrames; i++)
@@ -332,7 +333,6 @@ void VirtualSource::Init(const VirtualSourceData& data)
 	}
 	}
 	mSource->EnablePropagationDelay();
-	mSource->DisableFarDistanceEffect();
 
 	isInitialised = true;
 }
@@ -346,6 +346,7 @@ void VirtualSource::Update(const VirtualSourceData& data)
 	{
 		mDiffractionPath = data.mDiffractionPath;
 		btm.UpdateParameters();
+		udfa.UpdateParameters();
 	}
 	mPosition = data.GetPosition();
 	mSource->SetSourceTransform(data.transform);

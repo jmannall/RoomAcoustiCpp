@@ -9,6 +9,18 @@
 
 namespace Spatialiser
 {
+#ifndef PI
+	#define PI 3.141592653589793238462643383279502884197169399375105820974944
+#endif
+
+#define SPATIALISER_DATA_TYPE_DOUBLE 1
+
+#if SPATIALISER_DATA_TYPE_DOUBLE
+	typedef double Real; /**< Real type */
+#else
+	typedef float Real; /**< Real type */
+#endif
+
 	static const int NUM_ABSORPTION_FREQ = 5;
 	static const float ABSORPTION_FREQ[] = { 250.0f, 500.0f, 1000.0f, 2000.0f, 4000.0f };
 
@@ -25,10 +37,10 @@ namespace Spatialiser
 	struct ISMConfig
 	{
 		int order;
-		bool direct, reflection, diffraction, reflectionDiffraction, specularDiffraction;
+		bool direct, reflection, diffraction, reflectionDiffraction, lateReverb, specularDiffraction;
 
-		ISMConfig() : order(0), direct(true), reflection(false), diffraction(false), reflectionDiffraction(false), specularDiffraction(false) {};
-		ISMConfig(int _order, bool dir, bool ref, bool diff, bool refDif, bool spDiff) : order(_order), direct(dir), reflection(ref), diffraction(diff), reflectionDiffraction(refDif), specularDiffraction(spDiff) {};
+		ISMConfig() : order(0), direct(true), reflection(false), diffraction(false), reflectionDiffraction(false), lateReverb(false), specularDiffraction(false) {};
+		ISMConfig(int _order, bool dir, bool ref, bool diff, bool refDif, bool rev, bool spDiff) : order(_order), direct(dir), reflection(ref), diffraction(diff), reflectionDiffraction(refDif), lateReverb(rev), specularDiffraction(spDiff) {};
 	};
 
 

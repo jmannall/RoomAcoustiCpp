@@ -12,9 +12,8 @@
 namespace Spatialiser
 {
 	// Load and Destroy
-	void Init(const Config* config);
+	bool Init(const Config* config);
 	void Exit();
-	bool FilesLoaded();
 
 	// Image Source Model
 	void UpdateISMConfig(const ISMConfig& config);
@@ -26,17 +25,17 @@ namespace Spatialiser
 	void UpdateListener(const vec3& position, const quaternion& orientation);
 
 	// Source
-	size_t InitSource();
+	int InitSource();
 	void UpdateSource(size_t id, const vec3& position, const quaternion& orientation);
 	void RemoveSource(size_t id);
 
 	// Wall
-	size_t InitWall(const vec3& normal, const float* vData, size_t numVertices, Absorption& absorption, const ReverbWall& reverbWall);
+	int InitWall(const vec3& normal, const float* vData, size_t numVertices, Absorption& absorption, const ReverbWall& reverbWall);
 	void UpdateWall(size_t id, const vec3& normal, const float* vData, size_t numVertices, Absorption& absorption, const ReverbWall& reverbWall);
 	void RemoveWall(size_t id, const ReverbWall& reverbWall);
 
 	// Audio
-	void SubmitAudio(size_t id, const float* data, size_t numFrames);
+	void SubmitAudio(size_t id, const float* data);
 	void GetOutput(float** bufferPtr);
 }
 

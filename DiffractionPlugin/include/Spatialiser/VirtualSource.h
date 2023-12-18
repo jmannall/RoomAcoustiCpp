@@ -68,7 +68,7 @@ namespace Spatialiser
 		inline bool IsReflection(int i) const { return isReflection[i]; }
 		inline void GetAbsorption(float* g) const { mAbsorption.GetValues(g); }
 		inline void GetAbsorption(Absorption& a) const { a = mAbsorption; }
-		inline int GetOrder() const { return order; }
+		inline size_t GetOrder() const { return order; }
 		inline vec3 GetPosition() const { return mPositions.back(); }
 		vec3 GetPosition(int i) const;
 		vec3 GetTransformPosition();
@@ -126,15 +126,15 @@ namespace Spatialiser
 	{
 		using VirtualSourceMap = std::unordered_map<size_t, VirtualSource>;
 	public:
-		VirtualSource() : mCore(NULL), mSource(NULL), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(4), isInitialised(false), mHRTFMode(HRTFMode::performance), feedsFDN(false), mFDNChannel(-1), btm(&mDiffractionPath, 48000), reflection(false), diffraction(false) {};
-		VirtualSource(Binaural::CCore* core, HRTFMode hrtfMode, int fs) : mCore(core), mSource(NULL), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(4, fs), isInitialised(false), mHRTFMode(hrtfMode), feedsFDN(false), mFDNChannel(-1), btm(&mDiffractionPath, fs), reflection(false), diffraction(false) {};
+		VirtualSource() : mCore(NULL), mSource(NULL), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(4), isInitialised(false), mHRTFMode(HRTFMode::performance), feedsFDN(false), mFDNChannel(-1), btm(&mDiffractionPath, 48000), udfa(&mDiffractionPath, 48000), reflection(false), diffraction(false) {};
+		VirtualSource(Binaural::CCore* core, HRTFMode hrtfMode, int fs) : mCore(core), mSource(NULL), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(4, fs), isInitialised(false), mHRTFMode(hrtfMode), feedsFDN(false), mFDNChannel(-1), btm(&mDiffractionPath, fs), udfa(&mDiffractionPath, fs), reflection(false), diffraction(false) {};
 		VirtualSource(Binaural::CCore* core, HRTFMode hrtfMode, int fs, const VirtualSourceData& data, const int& fdnChannel);
 		VirtualSource(const VirtualSource& vS);
 
 		~VirtualSource();
 
 		inline VirtualSource operator=(const VirtualSource& vS) {
-			mCore = vS.mCore; mSource = vS.mSource; mPosition = vS.mPosition; mFilter = vS.mFilter; isInitialised = vS.isInitialised; mHRTFMode = vS.mHRTFMode; feedsFDN = vS.feedsFDN; mFDNChannel = vS.mFDNChannel; mDiffractionPath = vS.mDiffractionPath; btm = vS.btm; mTargetGain = vS.mTargetGain; mCurrentGain = vS.mCurrentGain; reflection = vS.reflection; diffraction = vS.diffraction; mVirtualSources = vS.mVirtualSources; mVirtualEdgeSources = vS.mVirtualEdgeSources;
+			mCore = vS.mCore; mSource = vS.mSource; mPosition = vS.mPosition; mFilter = vS.mFilter; isInitialised = vS.isInitialised; mHRTFMode = vS.mHRTFMode; feedsFDN = vS.feedsFDN; mFDNChannel = vS.mFDNChannel; mDiffractionPath = vS.mDiffractionPath; btm = vS.btm; udfa = vS.udfa, mTargetGain = vS.mTargetGain; mCurrentGain = vS.mCurrentGain; reflection = vS.reflection; diffraction = vS.diffraction; mVirtualSources = vS.mVirtualSources; mVirtualEdgeSources = vS.mVirtualEdgeSources;
 			return *this;
 		}
 
@@ -177,6 +177,7 @@ namespace Spatialiser
 		float mTargetGain;
 		ParametricEQ mFilter;
 		Diffraction::Path mDiffractionPath;
+		Diffraction::UDFA udfa;
 		Diffraction::BTM btm;
 
 		bool isInitialised;

@@ -31,6 +31,7 @@ namespace Spatialiser
 		size_t mDelay;
 		Buffer mBuffer;
 		ParametricEQ mAbsorptionFilter;
+		LowPass mAirAbsorption;
 
 		int idx;
 	};
@@ -43,7 +44,7 @@ namespace Spatialiser
 		~FDN() {}
 
 		void SetParameters(const FrequencyDependence& T60, const vec& dimensions);
-		rowvec GetOutput(const float* data);
+		rowvec GetOutput(const float* data, bool valid);
 
 	private:
 		void CalculateTimeDelay(const vec& dimensions, vec& t);

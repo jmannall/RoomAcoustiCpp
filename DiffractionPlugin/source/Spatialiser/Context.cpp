@@ -52,8 +52,9 @@ Context::Context(const Config* config) : mIsRunning(true), ISMThread()
 	// Load HRTF files
 	// TO DO: Move file locations to config
 	string resourcePath = "D:\\Joshua Mannall\\GitHub\\3dti_AudioToolkit\\resources";
-	hrtfLoaded = HRTF::CreateFrom3dti(resourcePath + "\\HRTF\\3DTI\\3DTI_HRTF_IRC1008_128s_48000Hz.3dti-hrtf", mListener);
-	
+	bool hrtfLoaded = HRTF::CreateFrom3dti(resourcePath + "\\HRTF\\3DTI\\3DTI_HRTF_IRC1008_128s_48000Hz.3dti-hrtf", mListener);
+	bool ildLoaded = false; 
+
 	string mode;
 	if (hrtfLoaded)
 	{
@@ -92,7 +93,7 @@ Context::Context(const Config* config) : mIsRunning(true), ISMThread()
 	unsigned size =
 		sizeof(Room) +			// room
 		sizeof(Reverb) +		// reverb
-		sizeof(HRTFManager);	// hrtf manager
+		sizeof(SourceManager);	// hrtf manager
 
 	mMem = new char[size];
 	if (!mMem)
@@ -105,11 +106,11 @@ Context::Context(const Config* config) : mIsRunning(true), ISMThread()
 	char* temp = mMem;
 	mRoom = reinterpret_cast<Room*>(temp); temp += sizeof(Room);
 	mReverb = reinterpret_cast<Reverb*>(temp); temp += sizeof(Reverb);
-	mSources = reinterpret_cast<HRTFManager*>(temp); temp += sizeof(HRTFManager);
+	mSources = reinterpret_cast<SourceManager*>(temp); temp += sizeof(SourceManager);
 
 	mRoom = new Room();
 	mReverb = new Reverb(&mCore, mConfig.hrtfMode, vec(mConfig.numFDNChannels), mConfig.fs);
-	mSources = new HRTFManager(&mCore, mConfig.numFDNChannels, mConfig.hrtfMode, mConfig.fs);
+	mSources = new SourceManager(&mCore, mConfig.numFDNChannels, mConfig.hrtfMode, mConfig.fs);
 
 	// Start background thread after all systems are initialized
 	ISMThread = std::thread(BackgroundProcessor, this);
@@ -125,7 +126,7 @@ Context::~Context()
 	StopRunning();
 	ISMThread.join();
 
-	mSources->~HRTFManager();
+	mSources->~SourceManager();
 	mReverb->~Reverb();
 	mRoom->~Room();
 	mCore.RemoveListener();
@@ -134,23 +135,12 @@ Context::~Context()
 	DSP_SAFE_ARRAY_DELETE(mMem);
 }
 
-bool Context::FilesLoaded()
-{
-	if (hrtfLoaded && ildLoaded)
-		return true;
-	return false;
-}
-
 // Reverb
 
 void Context::SetFDNParameters(const float& volume, const vec& dimensions)
 {
 	FrequencyDependence T60 = mRoom->GetReverbTime(volume);
 	mReverb->SetFDNParameters(T60, dimensions);
-
-	float t60[5]; T60.GetValues(&t60[0]);
-	Debug::Log("Reverb T60: [" + FloatToStr(t60[0]) + ", " + FloatToStr(t60[1]) + ", " +
-		FloatToStr(t60[2]) + ", " + FloatToStr(t60[3]) + ", " + FloatToStr(t60[4]) + "]", Color::Green);
 }
 
 // Listener
@@ -192,6 +182,8 @@ void Context::UpdateSource(size_t id, const vec3& position, const quaternion& or
 	transform.SetOrientation(CQuaternion(orientation.w, orientation.x, orientation.y, orientation.z));
 	transform.SetPosition(CVector3(position.x, position.y, position.z));
 	mSources->Update(id, transform, data);
+
+	mReverb->UpdateValid(mISMConfig.lateReverb);
 
 	Debug::Log("Source position: " + VecToStr(position), Color::Yellow);
 }
@@ -235,7 +227,7 @@ void Context::RemoveWall(size_t id, const ReverbWall& reverbWall)
 
 // Audio
 
-void Context::SubmitAudio(size_t id, const float* data, size_t numFrames)
+void Context::SubmitAudio(size_t id, const float* data)
 {
 	mSources->ProcessAudio(id, data, mConfig.numFrames, mReverbInput, mOutputBuffer, mConfig.lerpFactor);
 }
@@ -245,6 +237,7 @@ void Context::GetOutput(float** bufferPtr)
 	// Process reverb
 	mReverb->ProcessAudio(mReverbInput, mOutputBuffer);
 
+	// Debug::Log("Output: " + FloatToStr(mOutputBuffer[0]));
 	// Copy output to send and set pointer
 	// TO DO: Chek unity can't call ProcessAudio and GetOutput at the same time
 	mSendBuffer = mOutputBuffer;

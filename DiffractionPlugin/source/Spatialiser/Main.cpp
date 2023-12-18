@@ -33,7 +33,7 @@ extern "C"
 
 	// Load and Destroy
 
-	UI_EXPORT void UI_API SPATInit(int fs, int numFrames, int numChannels, int numFDNChannels, float lerpFactor, int hrtfResamplingStep, int hrtfMode)
+	UI_EXPORT bool UI_API SPATInit(int fs, int numFrames, int numChannels, int numFDNChannels, float lerpFactor, int hrtfResamplingStep, int hrtfMode)
 	{
 		HRTFMode mode;
 		switch (hrtfMode)
@@ -48,7 +48,7 @@ extern "C"
 			{ mode = HRTFMode::performance; break; }
 		}
 		Config config = Config(fs, numFrames, numChannels, numFDNChannels, lerpFactor, hrtfResamplingStep, mode);
-		Init(&config);
+		return Init(&config);
 	}
 
 	UI_EXPORT void UI_API SPATExit()
@@ -56,16 +56,11 @@ extern "C"
 		Exit();
 	}
 
-	UI_EXPORT bool UI_API SPATFilesLoaded()
-	{
-		return FilesLoaded();
-	}
-
 	// Image Source Model
 
-	UI_EXPORT void UI_API SPATUpdateISMConfig(int order, bool dir, bool ref, bool diff, bool refDiff, bool spDiff)
+	UI_EXPORT void UI_API SPATUpdateISMConfig(int order, bool dir, bool ref, bool diff, bool refDiff, bool rev, bool spDiff)
 	{
-		UpdateISMConfig(ISMConfig(order, dir, ref, diff, refDiff, spDiff));
+		UpdateISMConfig(ISMConfig(order, dir, ref, diff, refDiff, rev, spDiff));
 	}
 
 	// Reverb
@@ -86,7 +81,7 @@ extern "C"
 
 	UI_EXPORT int UI_API SPATInitSource()
 	{
-		return (int)InitSource();
+		return InitSource();
 	}
 
 	UI_EXPORT void UI_API SPATUpdateSource(int id, float posX, float posY, float posZ, float oriW, float oriX, float oriY, float oriZ)
@@ -127,7 +122,7 @@ extern "C"
 		ReverbWall reverbWall = ReturnReverbWall(reverbWallId);
 		Absorption absorption = Absorption(aL, aML, aM, aMH, aH);
 
-		return (int)InitWall(vec3(nX, nY, nZ), vData, (size_t)numVertices, absorption, reverbWall);
+		return InitWall(vec3(nX, nY, nZ), vData, (size_t)numVertices, absorption, reverbWall);
 	}
 
 	UI_EXPORT void UI_API SPATUpdateWall(int id, float nX, float nY, float nZ, const float* vData, int numVertices, float aL, float aML, float aM, float aMH, float aH, int reverbWallId)
@@ -147,9 +142,9 @@ extern "C"
 
 	// Audio
 
-	UI_EXPORT void UI_API SPATSubmitAudio(int id, const float* data, int numFrames)
+	UI_EXPORT void UI_API SPATSubmitAudio(int id, const float* data)
 	{
-		SubmitAudio((size_t)id, data, (size_t)numFrames);
+		SubmitAudio((size_t)id, data);
 	}
 
 	UI_EXPORT bool UI_API SPATProcessOutput()

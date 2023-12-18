@@ -1,15 +1,16 @@
 
 #include "Spatialiser/FDN.h"
+#include <xmmintrin.h>
 
 using namespace Spatialiser;
 
-Channel::Channel(int fs) : mT(0.0f), sampleRate(fs), mAbsorptionFilter(4, fs), idx(0)
+Channel::Channel(int fs) : mT(1.0f / fs), sampleRate(fs), mAbsorptionFilter(4, fs), mAirAbsorption(14000, fs), idx(0)
 {
 	SetDelay();
 	SetAbsorption({ 0.0f, 0.0f, 0.0f, 0.0f, 0.0f });
 }
 
-Channel::Channel(float t, const FrequencyDependence& T60, int fs) : mT(t), sampleRate(fs), mAbsorptionFilter(4, fs), idx(0)
+Channel::Channel(float t, const FrequencyDependence& T60, int fs) : mT(t), sampleRate(fs), mAbsorptionFilter(4, fs), mAirAbsorption(14000, fs), idx(0)
 {
 	SetDelay();
 	SetAbsorption(T60);
@@ -46,14 +47,13 @@ void Channel::SetAbsorption(float g[])
 
 void Channel::SetDelay()
 {
-	mDelay = std::max(round(mT * sampleRate), 1.0f);
-	Debug::Log("FDN Delay: " + IntToStr(mDelay), Color::White);
+	mDelay = round(mT * sampleRate);
 	mBuffer.ResizeBuffer(mDelay);
 }
 
 float Channel::GetOutput(const float input)
 {
-	float out = mAbsorptionFilter.GetOutput(mBuffer[idx]);
+	float out = mAirAbsorption.GetOutput(mAbsorptionFilter.GetOutput(mBuffer[idx]));
 	mBuffer[idx] = input;
 	idx++;
 	idx = idx % mDelay;
@@ -83,29 +83,6 @@ void FDN::SetParameters(const FrequencyDependence& T60, const vec& dimensions)
 {
 	vec t = vec(mNumChannels);
 	CalculateTimeDelay(dimensions, t);
-	
-	/*vec sDelay = vec(mNumChannels);
-	sDelay[0] = 385;
-	sDelay[1] = 500;
-	sDelay[2] = 607;
-	sDelay[3] = 625;
-	sDelay[4] = 516;
-	sDelay[5] = 423;
-	sDelay[6] = 642;
-	sDelay[7] = 827;
-	sDelay[8] = 962;
-	sDelay[9] = 879;
-	sDelay[10] = 760;
-	sDelay[11] = 635;
-
-	t = sDelay / 44100;*/
-
-	float temp[5];
-	T60.GetValues(&temp[0]);
-	for (int i = 0; i < 5; i++)
-	{
-		Debug::Log("FDN T60: " + FloatToStr(temp[i]) + " I: " + IntToStr(i), Color::White);
-	}
 	for (int i = 0; i < mNumChannels; i++)
 	{
 		mChannels[i].SetParameters(T60, t[i]);
@@ -198,8 +175,10 @@ void FDN::InitMatrix()
 	}*/
 }
 
-rowvec FDN::GetOutput(const float* data)
+rowvec FDN::GetOutput(const float* data, bool valid)
 {
+	_MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
+
 	float output = 0;
 	for (int i = 0; i < mNumChannels; i++)
 	{

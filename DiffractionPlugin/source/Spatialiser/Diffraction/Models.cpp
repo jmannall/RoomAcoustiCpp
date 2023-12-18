@@ -197,7 +197,7 @@ void UDFA::UpdateFilterParameters()
 	}
 }
 
-void UDFA::ProcessAudio(float* inBuffer, float* outBuffer, int numFrames, float lerpFactor)
+void UDFA::ProcessAudio(const float* inBuffer, float* outBuffer, int numFrames, float lerpFactor)
 {
 	// Apply gain
 	for (int i = 0; i < numFrames; i++)

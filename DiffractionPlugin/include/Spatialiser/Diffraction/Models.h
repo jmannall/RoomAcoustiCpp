@@ -67,7 +67,8 @@ namespace Spatialiser
 			~UDFA() {};
 
 			virtual void UpdateParameters();
-			void ProcessAudio(float* inBuffer, float* outBuffer, int numFrames, float lerpFactor);
+			void ProcessAudio(const float* inBuffer, float* outBuffer, int numFrames, float lerpFactor);
+			void UpdatePath(Path* path) { mPath = path; }
 		protected:
 			void CalcF(int fs);
 			void CalcFT(int fs);

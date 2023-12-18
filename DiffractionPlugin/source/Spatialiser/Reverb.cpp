@@ -106,14 +106,13 @@ void Reverb::ProcessAudio(const matrix& data, Buffer& outputBuffer)
 	if (valid)
 	{
 		// Process FDN and save to buffer
-		size_t numFrames = data.Rows();
-		matrix input = matrix(numFrames, mNumChannels);
-		for (int i = 0; i < numFrames; i++)
+		matrix input = matrix(data.Rows(), mNumChannels);
+
+		for (int i = 0; i < data.Rows(); i++)
 		{
-			rowvec out = mFDN.GetOutput(data.GetRow(i));
+			rowvec out = mFDN.GetOutput(data.GetRow(i), valid);
 			for (int j = 0; j < mNumChannels; j++)
 			{
-				float test = out[j];
 				input.AddEntry(out[j], i, j);
 			}
 		}
@@ -122,7 +121,7 @@ void Reverb::ProcessAudio(const matrix& data, Buffer& outputBuffer)
 		{
 			lock_guard<mutex> lock(mCoreMutex);
 
-			mReverbSources[j].ProcessAudio(input.GetColumn(j), numFrames, outputBuffer);
+			mReverbSources[j].ProcessAudio(input.GetColumn(j), data.Rows(), outputBuffer);
 		}
 	}
 }
@@ -133,8 +132,14 @@ void Reverb::SetFDNParameters(const FrequencyDependence& T60, const vec& dimensi
 	if (T60 < 20)
 	{
 		valid = true;
+		float t60[5]; T60.GetValues(&t60[0]);
+
+		Debug::Log("FDN reverb initialised", Color::Green);
+		Debug::Log("Reverb T60: [" + FloatToStr(t60[0]) + ", " + FloatToStr(t60[1]) + ", " +
+			FloatToStr(t60[2]) + ", " + FloatToStr(t60[3]) + ", " + FloatToStr(t60[4]) + "]", Color::Green);
 	}
-	Debug::Log("Reverb: " + BoolToStr(valid), Color::Yellow);
+	else
+		Debug::Log("FDN reverb failed to initialise. Excessively long T60.", Color::Red);
 }
 
 
@@ -217,28 +222,32 @@ void ReverbSource::UpdateReflectionFilter(const Absorption& absorption)
 		mAbsorption = absorption;
 	}
 	UpdateReflectionFilter();
+	valid = mAbsorption > EPS;
 }
 
 void ReverbSource::ProcessAudio(const float* data, const size_t& numFrames, Buffer& outputBuffer)
 {
-	// Copy input into internal storage and apply wall absorption
-	CMonoBuffer<float> bInput(numFrames);
-	const float* inputPtr = data;
-	for (int i = 0; i < numFrames; i++)
+	if (valid)
 	{
-		bInput[i] = mReflectionFilter.GetOutput(*inputPtr++);
-	}
+		// Copy input into internal storage and apply wall absorption
+		CMonoBuffer<float> bInput(numFrames);
+		const float* inputPtr = data;
+		for (int i = 0; i < numFrames; i++)
+		{
+			bInput[i] = mReflectionFilter.GetOutput(*inputPtr++);
+		}
 
-	Common::CEarPair<CMonoBuffer<float>> bOutput;
+		Common::CEarPair<CMonoBuffer<float>> bOutput;
 
-	mSource->SetBuffer(bInput);
+		mSource->SetBuffer(bInput);
 
-	mSource->ProcessAnechoic(bOutput.left, bOutput.right);
+		mSource->ProcessAnechoic(bOutput.left, bOutput.right);
 
-	int j = 0;
-	for (int i = 0; i < numFrames; i++)
-	{
-		outputBuffer[j++] += bOutput.left[i];
-		outputBuffer[j++] += bOutput.right[i];
+		int j = 0;
+		for (int i = 0; i < numFrames; i++)
+		{
+			outputBuffer[j++] += bOutput.left[i];
+			outputBuffer[j++] += bOutput.right[i];
+		}
 	}
 }

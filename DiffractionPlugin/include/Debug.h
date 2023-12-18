@@ -42,7 +42,7 @@ inline string IntToStr(int x) {
 }
 
 inline string IntToStr(size_t x) {
-    IntToStr((int)x);
+    return IntToStr((int)x);
 }
 
 inline string FloatToStr(float x) {

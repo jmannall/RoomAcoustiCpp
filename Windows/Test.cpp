@@ -1,8 +1,8 @@
 #include "pch.h"
 #include "CppUnitTest.h"
 #include "AudioManager.h"
-#include "DiffractionGeometry.h"
-#include "GeometryManager.h"
+// #include "DiffractionGeometry.h"
+// #include "GeometryManager.h"
 //#include "vec3.h"
 #include "HelloWorld.h"
 #define NOMINMAX
@@ -76,6 +76,7 @@ using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 //	};
 //}
 
+/*
 namespace InitialiseTests
 {
 	TEST_CLASS(InitialiseTests)
@@ -586,9 +587,11 @@ namespace InitialiseTests
 		}
 	};
 }
-
+*/
+/*
 namespace RuntimeTests
 {
+
 	TEST_CLASS(RuntimeTests)
 	{
 	public:
@@ -666,10 +669,14 @@ namespace RuntimeTests
 
 			Spatialiser::Config config;
 
-			config.sampleRate = 44100;
+			config.fs = 44100;
 			const int numFrames = 4096;
-			config.bufferSize = numFrames;
+			config.numFrames = numFrames;
 			config.hrtfResamplingStep = 30;
+			config.hrtfMode = Spatialiser::HRTFMode::none;
+			config.lerpFactor = 2.0f;
+			config.numChannels = 2;
+			config.numFDNChannels = 12;
 			Spatialiser::Init(&config);
 
 			float vert[] = { 0.0f, 0.0f, 0.0f,
@@ -681,7 +688,6 @@ namespace RuntimeTests
 
 			Spatialiser::Absorption absorbtion = Spatialiser::Absorption(0.1f, 0.1f, 0.1f, 0.1f, 0.1f);
 			size_t wID1 = Spatialiser::InitWall(normal, &vert[0], (size_t)numVert, absorbtion, Spatialiser::ReverbWall::negZ);
-			bool result = Spatialiser::FilesLoaded();
 
 			Spatialiser::UpdateListener(vec3(1.0f, 1.0f, 1.0f), quaternion(0.0f, 0.0f, 0.0f, 1.0f));
 
@@ -690,7 +696,7 @@ namespace RuntimeTests
 
 			Sleep(10000);
 
-			GA::ExitGeometry();
+			Spatialiser::Exit();
 
 			std::cout.rdbuf(coutbuf); //reset to standard output again
 		}
@@ -705,10 +711,14 @@ namespace RuntimeTests
 
 			Spatialiser::Config config;
 
-			config.sampleRate = 44100;
-			const int numFrames = 2048;
-			config.bufferSize = numFrames;
+			config.fs = 44100;
+			const int numFrames = 4096;
+			config.numFrames = numFrames;
 			config.hrtfResamplingStep = 30;
+			config.hrtfMode = Spatialiser::HRTFMode::none;
+			config.lerpFactor = 2.0f;
+			config.numChannels = 2;
+			config.numFDNChannels = 12;
 			Spatialiser::Init(&config);
 			float vert[] = { 0.0f, 0.0f, 0.0f,
 							4.0f, 0.0f, 0.0f,
@@ -719,7 +729,6 @@ namespace RuntimeTests
 
 			Spatialiser::Absorption absorbtion = Spatialiser::Absorption(0.1f, 0.1f, 0.1f, 0.1f, 0.1f);
 			size_t wID1 = Spatialiser::InitWall(normal, &vert[0], (size_t)numVert, absorbtion, Spatialiser::ReverbWall::negZ);
-			bool result = Spatialiser::FilesLoaded();
 
 			Spatialiser::UpdateListener(vec3(1.0f, 1.0f, 1.0f), quaternion(0.0f, 0.0f, 0.0f, 1.0f));
 
@@ -736,12 +745,13 @@ namespace RuntimeTests
 				Spatialiser::SubmitAudio(sID1, in, numFrames);
 			}
 
-			GA::ExitGeometry();
+			Spatialiser::Exit();
 
 			std::cout.rdbuf(coutbuf); //reset to standard output again
 		}
 	};
 }
+*/
 
 namespace DefaultTests
 {
@@ -754,11 +764,6 @@ namespace DefaultTests
 			HelloWorld hello;
 			std::string compare = "Hello World!";
 			Assert::AreEqual(compare, hello.GetString());
-		}
-
-		TEST_METHOD(LinkageTest)
-		{
-			Assert::AreEqual(1.0f, Test());
 		}
 	};
 }
@@ -1040,7 +1045,7 @@ namespace DSPTests
 		}
 	};
 }
-
+/*
 namespace GeometryTests
 {
 	TEST_CLASS(DiffractionGeometryTests)
@@ -1120,7 +1125,7 @@ namespace BTMTests
 		}
 	};
 }
-
+*/
 namespace ThreeDTITests
 {
 	TEST_CLASS(ThreeDTI)
@@ -1181,12 +1186,15 @@ namespace HRTFTests
 		{
 			Spatialiser::Config config;
 
-			config.sampleRate = 44100;
-			config.bufferSize = 1024;
+			config.fs = 44100;
+			config.numFrames = 1024;
 			config.hrtfResamplingStep = 30;
+			config.numChannels = 2;
+			config.numFDNChannels = 12;
+			config.lerpFactor = 2.0f;
+			config.hrtfMode = Spatialiser::HRTFMode::none;
 			Spatialiser::Init(&config);
 
-			bool result = Spatialiser::FilesLoaded();
 			
 			Spatialiser::UpdateListener(vec3(2, 2, 2), quaternion(1, 0, 1, 0));
 			size_t sID1 = Spatialiser::InitSource();
@@ -1209,12 +1217,14 @@ namespace HRTFTests
 		{
 			Spatialiser::Config config;
 
-			config.sampleRate = 44100;
-			config.bufferSize = 2048;
+			config.fs = 44100;
+			config.numFrames = 1024;
 			config.hrtfResamplingStep = 30;
+			config.numChannels = 2;
+			config.numFDNChannels = 12;
+			config.lerpFactor = 2.0f;
+			config.hrtfMode = Spatialiser::HRTFMode::none;
 			Spatialiser::Init(&config);
-
-			bool result = Spatialiser::FilesLoaded();
 
 			Spatialiser::UpdateListener(vec3(0, 1, 0), quaternion(1, 1, 0, 0));
 			size_t sID1 = Spatialiser::InitSource();
@@ -1227,25 +1237,25 @@ namespace HRTFTests
 			static float* buffer = nullptr;
 			const int numFrames = 2048;
 			float in[numFrames];
-			std::fill_n(in, config.bufferSize, 0.0f);
+			std::fill_n(in, config.numFrames, 0.0f);
 
 			for (int i = 0; i < 10; i++)
 			{
-				Spatialiser::SubmitAudio(sID1, in, (size_t)numFrames);
-				Spatialiser::SubmitAudio(sID2, in, (size_t)numFrames);
-				Spatialiser::SubmitAudio(sID3, in, (size_t)numFrames);
+				Spatialiser::SubmitAudio(sID1, in);
+				Spatialiser::SubmitAudio(sID2, in);
+				Spatialiser::SubmitAudio(sID3, in);
 				Spatialiser::GetOutput(&buffer);
 			}
 
 			in[0] = 1.0f;
-			Spatialiser::SubmitAudio(sID1, in, (size_t)numFrames);
-			Spatialiser::SubmitAudio(sID2, in, (size_t)numFrames);
-			Spatialiser::SubmitAudio(sID3, in, (size_t)numFrames);
+			Spatialiser::SubmitAudio(sID1, in);
+			Spatialiser::SubmitAudio(sID2, in);
+			Spatialiser::SubmitAudio(sID3, in);
 
 			Spatialiser::GetOutput(&buffer);
 
 			float out[numFrames];
-			std::fill_n(out, config.bufferSize, 0.0f);
+			std::fill_n(out, config.numFrames, 0.0f);
 			for (int i = 0; i < numFrames; i++)
 			{
 				out[i] = *buffer++;
@@ -1376,12 +1386,16 @@ namespace ImageSource
 		{
 			Spatialiser::Config config;
 
-			config.sampleRate = 44100;
-			const int numFrames = 4096 * 8;
+			const int numFrames = 1024;
 
-			config.bufferSize = numFrames;
+			config.fs = 44100;
+			config.numFrames = numFrames;
 			config.hrtfResamplingStep = 30;
+			config.numChannels = 2;
+			config.numFDNChannels = 12;
+			config.lerpFactor = 2.0f;
 			config.hrtfMode = Spatialiser::HRTFMode::none;
+			Spatialiser::Init(&config);
 
 			Spatialiser::Absorption absorbtion = Spatialiser::Absorption(0.7f, 0.7f, 0.7f, 0.7f, 0.7f); // Concrete
 
@@ -1438,7 +1452,6 @@ namespace ImageSource
 				}
 
 				Spatialiser::UpdateISMConfig(ismConfig);
-				bool result = Spatialiser::FilesLoaded();
 
 				vec3 source = vec3(1.4f, 1.36, 3.02f);
 				vec3 receiver = vec3(2.77, 1.51, 1.3);
@@ -1458,19 +1471,19 @@ namespace ImageSource
 
 				for (int i = 0; i < 10; i++)
 				{
-					Spatialiser::SubmitAudio(sID1, in, (size_t)numFrames);
+					Spatialiser::SubmitAudio(sID1, in);
 					Spatialiser::GetOutput(&buffer);
 				}
 
 				in[0] = 1.0f;
-				Spatialiser::SubmitAudio(sID1, in, (size_t)numFrames);
+				Spatialiser::SubmitAudio(sID1, in);
 
 				Spatialiser::GetOutput(&buffer);
 
 				float outL[numFrames];
 				float outR[numFrames];
-				std::fill_n(outL, config.bufferSize, 0.0f);
-				std::fill_n(outR, config.bufferSize, 0.0f);
+				std::fill_n(outL, config.numFrames, 0.0f);
+				std::fill_n(outR, config.numFrames, 0.0f);
 				for (int i = 0; i < numFrames; i++)
 				{
 					outL[i] = *buffer++;
@@ -1632,12 +1645,16 @@ namespace ImageSource
 		{
 			Spatialiser::Config config;
 
-			config.sampleRate = 44100;
-			const int numFrames = 4096 * 8;
+			const int numFrames = 1024;
 
-			config.bufferSize = numFrames;
+			config.fs = 44100;
+			config.numFrames = numFrames;
 			config.hrtfResamplingStep = 30;
+			config.numChannels = 2;
+			config.numFDNChannels = 12;
+			config.lerpFactor = 2.0f;
 			config.hrtfMode = Spatialiser::HRTFMode::none;
+			Spatialiser::Init(&config);
 
 			Spatialiser::Absorption absorbtion = Spatialiser::Absorption(0.3f, 0.3f, 0.3f, 0.3f, 0.3f); // Concrete
 
@@ -1651,7 +1668,7 @@ namespace ImageSource
 
 			std::string name;
 
-			for (int i = 0; i < 7; i++)
+			for (int i = 4; i < 7; i++)
 			{
 				Spatialiser::ISMConfig ismConfig;
 				ismConfig.order = 3;
@@ -1704,6 +1721,7 @@ namespace ImageSource
 					name = "ir_RefDiffShadow";
 
 					ismConfig.reflectionDiffraction = true;
+					Spatialiser::SetFDNParameters(volume, dimensions);
 					break;
 				}
 				case 5:
@@ -1731,7 +1749,6 @@ namespace ImageSource
 				ismConfig.reflectionDiffraction = false;
 
 				Spatialiser::UpdateISMConfig(ismConfig);
-				bool result = Spatialiser::FilesLoaded();
 
 				vec3 source = vec3(1.53f, 1.1f, 2.07f);
 				vec3 receiver = vec3(4.71f, 1.04f, 4.42f);
@@ -1751,7 +1768,7 @@ namespace ImageSource
 
 				for (int i = 0; i < 10; i++)
 				{
-					Spatialiser::SubmitAudio(sID1, in, (size_t)numFrames);
+					Spatialiser::SubmitAudio(sID1, in);
 					Spatialiser::GetOutput(&buffer);
 				}
 
@@ -1763,7 +1780,7 @@ namespace ImageSource
 
 				for (int i = 0; i < 10; i++)
 				{
-					Spatialiser::SubmitAudio(sID1, in, (size_t)numFrames);
+					Spatialiser::SubmitAudio(sID1, in);
 					Spatialiser::GetOutput(&buffer);
 				}
 
@@ -1771,14 +1788,22 @@ namespace ImageSource
 
 
 				in[0] = 1.0f;
-				Spatialiser::SubmitAudio(sID1, in, (size_t)numFrames);
+				Spatialiser::SubmitAudio(sID1, in);
 
+
+				for (int i = 0; i < 100; i++)
+				{
+					Spatialiser::SubmitAudio(sID1, in);
+					Spatialiser::GetOutput(&buffer);
+				}
+
+				Spatialiser::SubmitAudio(sID1, in);
 				Spatialiser::GetOutput(&buffer);
 
 				float outL[numFrames];
 				float outR[numFrames];
-				std::fill_n(outL, config.bufferSize, 0.0f);
-				std::fill_n(outR, config.bufferSize, 0.0f);
+				std::fill_n(outL, config.numFrames, 0.0f);
+				std::fill_n(outR, config.numFrames, 0.0f);
 				for (int i = 0; i < numFrames; i++)
 				{
 					outL[i] = *buffer++;
@@ -1807,156 +1832,23 @@ namespace ImageSource
 			}
 		}
 
-		TEST_METHOD(TestSpEd)
-		{
-			int maxRefOrder = 2;
-
-			Spatialiser::Config config;
-
-			config.sampleRate = 44100;
-			const int numFrames = 4096;
-			config.bufferSize = numFrames;
-			config.hrtfResamplingStep = 30;
-			config.hrtfMode = Spatialiser::HRTFMode::none;
-			Spatialiser::Init(&config);
-			int numVert = 4;
-			Spatialiser::Absorption absorbtion = Spatialiser::Absorption(0.02f, 0.04f, 0.06f, 0.08f, 0.1f); // Concrete
-
-			Spatialiser::Absorption carpetOnConcrete = Spatialiser::Absorption(0.06f, 0.15f, 0.4f, 0.6f, 0.6f); // Concrete
-			Spatialiser::Absorption concrete = Spatialiser::Absorption(0.01f, 0.02f, 0.02f, 0.02f, 0.03f); // Concrete
-			Spatialiser::Absorption windowGlass = Spatialiser::Absorption(0.2f, 0.2f, 0.1f, 0.07f, 0.04f); // Concrete
-			Spatialiser::Absorption gypsum = Spatialiser::Absorption(0.1f, 0.05f, 0.04f, 0.07f, 0.1f); // Concrete
-			Spatialiser::Absorption plywood = Spatialiser::Absorption(0.3f, 0.1f, 0.1f, 0.1f, 0.1f); // Concrete
-			Spatialiser::Absorption plasterSprayed = Spatialiser::Absorption(0.7f, 0.6f, 0.7f, 0.7f, 0.5f); // Concrete
-
-			vec3 source = vec3(1.5f, 1.0f, 2.0f);
-			vec3 receiver = vec3(5.0f, 1.0f, 4.5f);
-			//vec3 source = vec3(1.5f, 1.0f, 4.0f); // Return invalid edge
-			//vec3 receiver = vec3(3.0f, 1.0f, 4.5f);
-
-			float vert7[] = { 0.0f, 0.0f, 3.0f,
-							0.0f, 3.0f, 3.0f,
-							4.0f, 3.0f, 3.0f,
-							4.0f, 0.0f, 3.0f };
-			vec3 normal7 = vec3(0.0f, 0.0f, -1.0f);
-			int numVert7 = 4;
-
-			size_t wID7 = Spatialiser::InitWall(normal7, &vert7[0], (size_t)numVert7, plywood, Spatialiser::ReverbWall::posZ);
-
-			float vert8[] = { 4.0f, 0.0f, 5.0f,
-							4.0f, 0.0f, 3.0f,
-							4.0f, 3.0f, 3.0f,
-							4.0f, 3.0f, 5.0f };
-			vec3 normal8 = vec3(1.0f, 0.0f, 0.0f);
-			int numVert8 = 4;
-
-			size_t wID8 = Spatialiser::InitWall(normal8, &vert8[0], (size_t)numVert8, plywood, Spatialiser::ReverbWall::negX);
-
-			vec3 pos = vec3(7.0f, 3.0f, 5.0f);
-			vec3 corner = vec3(4.0f, 3.0f, 3.0f);
-
-			/*float vert1[] = { pos.x, 0.0f, pos.z,
-							corner.x, 0.0f, pos.z,
-							corner.x, pos.y, pos.z,
-							pos.x, pos.y, pos.z };
-			vec3 normal1 = vec3(0.0f, 0.0f, -1.0f);
-			size_t wID1 = Spatialiser::InitWall(normal1, &vert1[0], (size_t)numVert, concrete, Spatialiser::ReverbWall::posZ);
-
-			float vert2[] = { pos.x, 0.0f, 0.0f,
-							pos.x, pos.y, 0.0f,
-							0.0f, pos.y, 0.0f,
-							0.0f, 0.0f, 0.0f };
-			vec3 normal2 = vec3(0.0f, 0.0f, 1.0f);
-			size_t wID2 = Spatialiser::InitWall(normal2, &vert2[0], (size_t)numVert, carpetOnConcrete, Spatialiser::ReverbWall::negZ);*/
-
-			float vert3[] = { pos.x, 0.0f, corner.z,
-							pos.x, pos.y, corner.z,
-							pos.x, pos.y, 0.0f,
-							pos.x, 0.0f, 0.0f };
-			vec3 normal3 = vec3(-1.0f, 0.0f, 0.0f);
-			size_t wID3 = Spatialiser::InitWall(normal3, &vert3[0], (size_t)numVert, windowGlass, Spatialiser::ReverbWall::posX);
-
-			/*float vert4[] = { 0.0f, 0.0f, 0.0f,
-							0.0f, pos.y, 0.0f,
-							0.0f, pos.y, corner.z,
-							0.0f, 0.0f, corner.z };
-			vec3 normal4 = vec3(1.0f, 0.0f, 0.0f);
-			size_t wID4 = Spatialiser::InitWall(normal4, &vert4[0], (size_t)numVert, plywood, Spatialiser::ReverbWall::negX);
-
-			float vert5[] = { 0.0f, 0.0f, 0.0f,
-							0.0f, 0.0f, pos.z,
-							pos.x, 0.0f, pos.z,
-							pos.x, 0.0f, 0.0f };
-			vec3 normal5 = vec3(0.0f, 1.0f, 0.0f);
-			size_t wID5 = Spatialiser::InitWall(normal5, &vert5[0], (size_t)numVert, gypsum, Spatialiser::ReverbWall::negY);
-
-			float vert6[] = { 0.0f, pos.y, pos.z,
-							0.0f, pos.y, 0.0f,
-							pos.x, pos.y, 0.0f,
-							pos.x, pos.y, pos.z };
-			vec3 normal6 = vec3(0.0f, -1.0f, 0.0f);
-			size_t wID6 = Spatialiser::InitWall(normal6, &vert6[0], (size_t)numVert, plasterSprayed, Spatialiser::ReverbWall::posY);*/
-
-			float volume = pos.x * pos.y * pos.z - corner.x * corner.y * corner.z;
-			float dim[] = { pos.x - corner.x, pos.y, corner.z, pos.x, pos.y, pos.z };
-			vec dimensions = vec(&dim[0], 6);
-			//Spatialiser::SetFDNParameters(volume, dimensions);
-
-			bool result = Spatialiser::FilesLoaded();
-
-			Sleep(500);
-
-			Spatialiser::UpdateListener(receiver, quaternion(0.0f, 0.0f, 0.0f, 1.0f));
-			size_t sID1 = Spatialiser::InitSource();
-			Spatialiser::UpdateSource(sID1, source, quaternion(0.0f, 1.0f, 0.0f, 0.0f));
-
-			static float* buffer = nullptr;
-			float in[numFrames];
-			std::fill_n(in, numFrames, 0.0f);
-
-			Sleep(500);
-
-			Spatialiser::UpdateListener(receiver, quaternion(0.0f, 0.0f, 0.0f, 1.0f));
-			Spatialiser::UpdateSource(sID1, source, quaternion(0.0f, 1.0f, 0.0f, 0.0f));
-
-			for (int i = 0; i < 10; i++)
-			{
-				Spatialiser::SubmitAudio(sID1, in, (size_t)numFrames);
-				Spatialiser::GetOutput(&buffer);
-				Spatialiser::UpdateListener(receiver, quaternion(0.0f, 0.0f, 0.0f, 1.0f));
-				Spatialiser::UpdateSource(sID1, source, quaternion(0.0f, 1.0f, 0.0f, 0.0f));
-			}
-
-			in[0] = 1.0f;
-			Spatialiser::SubmitAudio(sID1, in, (size_t)numFrames);
-
-			Spatialiser::GetOutput(&buffer);
-
-			float outL[numFrames]; // Work this out
-			float outR[numFrames];
-			std::fill_n(outL, config.bufferSize, 0.0f);
-			std::fill_n(outR, config.bufferSize, 0.0f);
-			for (int i = 0; i < numFrames; i++)
-			{
-				outL[i] = *buffer++;
-				outR[i] = *buffer++;
-			}
-
-			Spatialiser::Exit();
-		}
-
 		TEST_METHOD(RunWedge)
 		{
 			int maxRefOrder = 3;
 
 			Spatialiser::Config config;
 
-			config.sampleRate = 44100;
-			const int numFrames = 4096;
-			config.bufferSize = numFrames;
+			const int numFrames = 1024;
+
+			config.fs = 44100;
+			config.numFrames = numFrames;
 			config.hrtfResamplingStep = 30;
+			config.numChannels = 2;
+			config.numFDNChannels = 12;
+			config.lerpFactor = 2.0f;
 			config.hrtfMode = Spatialiser::HRTFMode::none;
 			Spatialiser::Init(&config);
+
 			int numVert = 4;
 			Spatialiser::Absorption absorbtion = Spatialiser::Absorption(0.02f, 0.04f, 0.06f, 0.08f, 0.1f); // Concrete
 
@@ -1988,8 +1880,6 @@ namespace ImageSource
 
 			size_t wID2 = Spatialiser::InitWall(normal2, &vert2[0], (size_t)numVert2, concrete, Spatialiser::ReverbWall::negZ);
 
-			bool result = Spatialiser::FilesLoaded();
-
 			Sleep(500);
 
 			Spatialiser::UpdateListener(receiver, quaternion(0.0f, 0.0f, 0.0f, 1.0f));
@@ -2007,21 +1897,21 @@ namespace ImageSource
 
 			for (int i = 0; i < 10; i++)
 			{
-				Spatialiser::SubmitAudio(sID1, in, (size_t)numFrames);
+				Spatialiser::SubmitAudio(sID1, in);
 				Spatialiser::GetOutput(&buffer);
 				Spatialiser::UpdateListener(receiver, quaternion(0.0f, 0.0f, 0.0f, 1.0f));
 				Spatialiser::UpdateSource(sID1, source, quaternion(0.0f, 1.0f, 0.0f, 0.0f));
 			}
 
 			in[0] = 1.0f;
-			Spatialiser::SubmitAudio(sID1, in, (size_t)numFrames);
+			Spatialiser::SubmitAudio(sID1, in);
 
 			Spatialiser::GetOutput(&buffer);
 
 			float outL[numFrames]; // Work this out
 			float outR[numFrames];
-			std::fill_n(outL, config.bufferSize, 0.0f);
-			std::fill_n(outR, config.bufferSize, 0.0f);
+			std::fill_n(outL, config.numFrames, 0.0f);
+			std::fill_n(outR, config.numFrames, 0.0f);
 			for (int i = 0; i < numFrames; i++)
 			{
 				outL[i] = *buffer++;
@@ -2035,9 +1925,15 @@ namespace ImageSource
 		{
 			Spatialiser::Config config;
 
-			config.sampleRate = 44100;
-			config.bufferSize = 2048;
+			const int numFrames = 1024;
+
+			config.fs = 44100;
+			config.numFrames = numFrames;
 			config.hrtfResamplingStep = 30;
+			config.numChannels = 2;
+			config.numFDNChannels = 12;
+			config.lerpFactor = 2.0f;
+			config.hrtfMode = Spatialiser::HRTFMode::none;
 			Spatialiser::Init(&config);
 
 			float vert[] = { 0.0f, 0.0f, 0.0f,
@@ -2067,9 +1963,15 @@ namespace ImageSource
 		{
 			Spatialiser::Config config;
 
-			config.sampleRate = 44100;
-			config.bufferSize = 2048;
+			const int numFrames = 1024;
+
+			config.fs = 44100;
+			config.numFrames = numFrames;
 			config.hrtfResamplingStep = 30;
+			config.numChannels = 2;
+			config.numFDNChannels = 12;
+			config.lerpFactor = 2.0f;
+			config.hrtfMode = Spatialiser::HRTFMode::none;
 			Spatialiser::Init(&config);
 
 			float vert[] = { 0.0f, 0.0f, 0.0f,

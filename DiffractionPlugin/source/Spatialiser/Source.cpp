@@ -42,7 +42,6 @@ Source::Source(Binaural::CCore* core, const size_t& numFDNChannels, HRTFMode hrt
 	}
 	}
 	mSource->EnablePropagationDelay();
-	mSource->DisableFarDistanceEffect();
 
 	ResetFDNSlots();
 }
@@ -246,7 +245,7 @@ bool Source::UpdateVirtualSource(const VirtualSourceData& data, std::vector<Virt
 		Debug::Log("Is visible: " + BoolToStr(data.visible), Color::Orange);
 		Debug::Log("Is valid: " + BoolToStr(data.valid), Color::Orange);
 
-		VirtualSource virtualSource = VirtualSource(mCore, mHRTFMode, sampleRate, data, freeFDNChannels.back() % mNumFDNChannels);
+		VirtualSource virtualSource = VirtualSource(mCore, mHRTFMode, sampleRate, data, (int)(freeFDNChannels.back() % mNumFDNChannels));
 		if (freeFDNChannels.size() > 1)
 			freeFDNChannels.pop_back();
 		else

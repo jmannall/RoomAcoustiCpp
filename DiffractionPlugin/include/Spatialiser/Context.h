@@ -16,7 +16,7 @@
 
 // Spatialiser headers
 #include "Spatialiser/Types.h"
-#include "Spatialiser/HRTFManager.h"
+#include "Spatialiser/SourceManager.h"
 #include "Spatialiser/Reverb.h"
 
 // 3DTI Headers
@@ -38,8 +38,6 @@ namespace Spatialiser
 		Context(const Config* config);
 		~Context();
 
-		bool FilesLoaded();
-
 		// Image Source Model
 		void StopRunning() { mIsRunning = false; }
 		bool IsRunning() const { return mIsRunning; }
@@ -47,7 +45,7 @@ namespace Spatialiser
 		void UpdateISMConfig(const ISMConfig& config) { mISMConfig = config; }
 		ISMConfig GetISMConfig() const { return mISMConfig; }
 
-		HRTFManager* GetHRTFManager() { return mSources; }
+		SourceManager* GetHRTFManager() { return mSources; }
 		Room* GetRoom() { return mRoom; }
 
 		//Reverb
@@ -67,7 +65,7 @@ namespace Spatialiser
 		void RemoveWall(size_t id, const ReverbWall& reverbWall);
 
 		// Audio
-		void SubmitAudio(size_t id, const float* data, size_t numFrames);
+		void SubmitAudio(size_t id, const float* data);
 		void GetOutput(float** bufferPtr);
 
 	private:
@@ -80,10 +78,6 @@ namespace Spatialiser
 		Binaural::CCore mCore;
 		shared_ptr<Binaural::CListener> mListener;
 
-		// Bools TO DO: remove file loaded function
-		bool hrtfLoaded;
-		bool ildLoaded;
-
 		// Buffers
 		Buffer mOutputBuffer;
 		matrix mReverbInput;
@@ -91,7 +85,7 @@ namespace Spatialiser
 
 		// Handles
 		char* mMem = nullptr;
-		HRTFManager* mSources;
+		SourceManager* mSources;
 		Reverb* mReverb;
 		Room* mRoom;
 

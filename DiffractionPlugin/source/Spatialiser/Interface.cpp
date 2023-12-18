@@ -16,7 +16,7 @@ namespace Spatialiser
 
 	// Load and Destroy
 
-	void Init(const Config* config)
+	bool Init(const Config* config)
 	{
 		if (context) // Delete any existing context
 		{
@@ -25,6 +25,7 @@ namespace Spatialiser
 		}
 		Debug::Log("Create New Context", Color::Green);
 		context = new Context(config);
+		return context->IsRunning();
 	}
 
 	void Exit()
@@ -34,15 +35,6 @@ namespace Spatialiser
 			delete context;
 			context = nullptr;
 		}
-	}
-
-	bool FilesLoaded()
-	{
-		auto* context = GetContext();
-		if (context)
-			return context->FilesLoaded();
-		else
-			return false;
 	}
 
 	// Image Source Model
@@ -74,13 +66,13 @@ namespace Spatialiser
 
 	// Source
 
-	size_t InitSource()
+	int InitSource()
 	{
 		auto* context = GetContext();
 		if (context)
-			return context->InitSource();
+			return (int)context->InitSource();
 		else
-			return (size_t)(-1);
+			return -1;
 	}
 
 	void UpdateSource(size_t id, const vec3& position, const quaternion& orientation)
@@ -99,13 +91,13 @@ namespace Spatialiser
 
 	// Wall
 
-	size_t InitWall(const vec3& normal, const float* vData, size_t numVertices, Absorption& absorption, const ReverbWall& reverbWall)
+	int InitWall(const vec3& normal, const float* vData, size_t numVertices, Absorption& absorption, const ReverbWall& reverbWall)
 	{
 		auto* context = GetContext();
 		if (context)
-			return context->InitWall(normal, vData, numVertices, absorption, reverbWall);
+			return (int)context->InitWall(normal, vData, numVertices, absorption, reverbWall);
 		else
-			return (size_t)(-1);
+			return -1;
 	}
 
 	void UpdateWall(size_t id, const vec3& normal, const float* vData, size_t numVertices, Absorption& absorption, const ReverbWall& reverbWall)
@@ -124,11 +116,11 @@ namespace Spatialiser
 
 	// Audio
 
-	void SubmitAudio(size_t id, const float* data, size_t numFrames)
+	void SubmitAudio(size_t id, const float* data)
 	{
 		auto* context = GetContext();
 		if (context)
-			context->SubmitAudio(id, data, numFrames);
+			context->SubmitAudio(id, data);
 	}
 
 	void GetOutput(float** bufferPtr)

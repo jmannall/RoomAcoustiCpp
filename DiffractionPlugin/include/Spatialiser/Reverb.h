@@ -24,6 +24,7 @@ namespace Spatialiser
 	private:
 		void Init();
 
+		bool valid;
 		vec3 mShift;
 		Absorption mAbsorption;
 		ParametricEQ mReflectionFilter;
@@ -47,6 +48,8 @@ namespace Spatialiser
 		void ProcessAudio(const matrix& data, Buffer& outputBuffer);
 		void SetFDNParameters(const FrequencyDependence& T60, const vec& dimensions);
 		// size_t NumChannels() const { return mNumChannels; }
+
+		inline void UpdateValid(bool v) { valid = v; }
 	private:
 		void InitSources(int fs);
 
