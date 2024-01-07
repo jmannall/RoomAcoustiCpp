@@ -7,77 +7,125 @@
 #ifndef Spatialiser_Source_h
 #define Spatialiser_Source_h
 
+// C++ headers
+#include <unordered_map>
+
+// Common headers
+#include "Common/AudioManager.h"
+#include "Common/Matrix.h"
+#include "Common/Types.h" 
+
+// Spatialiser headers
 #include "Spatialiser/VirtualSource.h"
 #include "Spatialiser/Room.h"
 #include "Spatialiser/Types.h"
+
+// 3DTI headers
 #include "BinauralSpatializer/SingleSourceDSP.h"
 #include "Common/Transform.h"
-#include <unordered_map>
-#include "Debug.h"
 
-namespace Spatialiser
+// Unity headers
+#include "Unity/Debug.h"
+
+using namespace Common;
+namespace UIE
 {
-	using VirtualSourceMap = std::unordered_map<size_t, VirtualSource>;
-
-	class Source
+	using namespace Common;
+	namespace Spatialiser
 	{
-	public:
-		Source(Binaural::CCore* core, const size_t& numFDNChannels, HRTFMode hrtfMode, int fs);
-		Source(const Source& s) : mCore(s.mCore), mNumFDNChannels(s.mNumFDNChannels), mHRTFMode(s.mHRTFMode), sampleRate(s.sampleRate), mSource(s.mSource),
-			targetGain(s.targetGain), currentGain(s.currentGain), isVisible(s.isVisible), mVirtualSources(s.mVirtualSources), mVirtualEdgeSources(s.mVirtualEdgeSources),
-			oldData(s.oldData), freeFDNChannels(s.freeFDNChannels), removedWalls(s.removedWalls), removedEdges(s.removedEdges) {};
-		~Source();
 
-		inline Source operator=(const Source& s) {
-			mCore = s.mCore; mNumFDNChannels = s.mNumFDNChannels; mHRTFMode = s.mHRTFMode; sampleRate = s.sampleRate; mSource = s.mSource;
-			targetGain = s.targetGain; currentGain = s.currentGain; isVisible = s.isVisible; mVirtualSources = s.mVirtualSources; mVirtualEdgeSources = s.mVirtualEdgeSources;
-			oldData = s.oldData; freeFDNChannels = s.freeFDNChannels; removedWalls = s.removedWalls; removedEdges = s.removedEdges;
-			return *this;
-		}
+		//////////////////// SourceData struct ////////////////////
 
-		inline shared_ptr<Binaural::CSingleSourceDSP>& GetSource() { return mSource; }
+		struct SourceData
+		{
+			vec3 position;
+			bool visible;
+			std::mutex mMutex;
+			VirtualSourceStore vSources;
 
-		void Update(const Common::CTransform& transform, const SourceData& data);
-		void UpdateVirtualSources(const VirtualSourceStore& data);
-		bool UpdateVirtualSource(const VirtualSourceData& data, std::vector<VirtualSourceData>& newVSources);
+			inline SourceData operator=(const SourceData& data)
+			{
+				position = data.position;
+				visible = data.visible;
+				vSources = data.vSources;
+				return *this;
+			}
 
-		void ResetFDNSlots();
-		inline void LogWallRemoval(const size_t& id) { removedWalls.push_back(id); }
-		inline void LogEdgeRemoval(const size_t& id) { removedEdges.push_back(id); }
+			SourceData() : position(vec3()), visible(false), vSources() {}
+			SourceData(vec3 _position) : position(_position), visible(false), vSources() {}
+			SourceData(const SourceData& data) : position(data.position), visible(data.visible), vSources(data.vSources) {}
+		};
 
-		void ProcessAudio(const float* data, const size_t& numFrames, matrix& reverbInput, Buffer& outputBuffer, const float lerpFactor);
+		//////////////////// Source class ////////////////////
 
-		inline void Deactivate() { mSource = NULL; }
-		inline void Reset() { mVirtualSources.clear(); }
+		class Source
+		{
+		public:
 
-	private:
-		void RemoveVirtualSources();
+			// Destroy and Load
+			Source(Binaural::CCore* core, const size_t& numFDNChannels, HRTFMode hrtfMode, int fs);
+			Source(const Source& s) : mCore(s.mCore), mNumFDNChannels(s.mNumFDNChannels), mHRTFMode(s.mHRTFMode), sampleRate(s.sampleRate), mSource(s.mSource),
+				targetGain(s.targetGain), currentGain(s.currentGain), isVisible(s.isVisible), mVirtualSources(s.mVirtualSources), mVirtualEdgeSources(s.mVirtualEdgeSources),
+				oldData(s.oldData), freeFDNChannels(s.freeFDNChannels), removedWalls(s.removedWalls), removedEdges(s.removedEdges) {};
+			~Source();
 
-		// Constants
-		Binaural::CCore* mCore;
-		size_t mNumFDNChannels;
-		HRTFMode mHRTFMode;
-		int sampleRate;
+			// Operators
+			inline Source operator=(const Source& s) {
+				mCore = s.mCore; mNumFDNChannels = s.mNumFDNChannels; mHRTFMode = s.mHRTFMode; sampleRate = s.sampleRate; mSource = s.mSource;
+				targetGain = s.targetGain; currentGain = s.currentGain; isVisible = s.isVisible; mVirtualSources = s.mVirtualSources; mVirtualEdgeSources = s.mVirtualEdgeSources;
+				oldData = s.oldData; freeFDNChannels = s.freeFDNChannels; removedWalls = s.removedWalls; removedEdges = s.removedEdges;
+				return *this;
+			}
 
-		// Audio data
-		shared_ptr<Binaural::CSingleSourceDSP> mSource;
-		float targetGain;
-		float currentGain;
-		bool isVisible;
+			// Getters
+			inline shared_ptr<Binaural::CSingleSourceDSP>& GetSource() { return mSource; }
 
-		// ISM tree structure
-		VirtualSourceMap mVirtualSources;
-		VirtualSourceMap mVirtualEdgeSources;
-		VirtualSourceStore oldData;
+			// Updates
+			void Update(const CTransform& transform, const SourceData& data);
+			void UpdateVirtualSources(const VirtualSourceStore& data);
+			bool UpdateVirtualSource(const VirtualSourceData& data, std::vector<VirtualSourceData>& newVSources);
 
-		std::vector<size_t> freeFDNChannels;
-		std::vector<size_t> removedWalls;
-		std::vector<size_t> removedEdges;
+			//inline void LogWallRemoval(const size_t& id) { removedWalls.push_back(id); }
+			//inline void LogEdgeRemoval(const size_t& id) { removedEdges.push_back(id); }
 
-		std::mutex vWallMutex; // Protects mVirtualSources
-		std::mutex vEdgeMutex; // Protects mVirtualEdgeSources
-		std::mutex audioMutex; // Protects audio data
-	};
+			// Audio
+			void ProcessAudio(const Real* data, const size_t& numFrames, matrix& reverbInput, Buffer& outputBuffer, const Real lerpFactor);
+
+			// Reset
+			inline void Deactivate() { mSource = NULL; }
+			inline void Reset() { mVirtualSources.clear(); }
+			void ResetFDNSlots();
+
+		private:
+			void RemoveVirtualSources();
+
+			// Constants
+			Binaural::CCore* mCore;
+			size_t mNumFDNChannels;
+			HRTFMode mHRTFMode;
+			int sampleRate;
+
+			// Audio data
+			shared_ptr<Binaural::CSingleSourceDSP> mSource;
+			Real targetGain;
+			Real currentGain;
+			bool isVisible;
+			VirtualSourceStore oldData;
+
+			// ISM tree structure
+			VirtualSourceMap mVirtualSources;
+			VirtualSourceMap mVirtualEdgeSources;
+
+			std::vector<size_t> freeFDNChannels;
+			//std::vector<size_t> removedWalls;
+			//std::vector<size_t> removedEdges;
+
+			// Mutexes
+			std::mutex vWallMutex; // Protects mVirtualSources
+			std::mutex vEdgeMutex; // Protects mVirtualEdgeSources
+			std::mutex audioMutex; // Protects audio data
+		};
+	}
 }
 
 #endif

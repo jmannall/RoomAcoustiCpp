@@ -1,130 +1,139 @@
-#pragma once
+/*
+*
+*  \vec3 class
+*
+*/
+
+#ifndef Common_Vec3_h
+#define Common_Vec3_h
 
 #include <iostream>
-#include <vector>
-#include <math.h>
+#include <cmath>;
 
-#pragma region vec3
-class vec3
+#include "Common/Types.h"
+
+namespace UIE
 {
-public:
-	vec3(const float x_ = 0, const float y_ = 0, const float z_ = 0) : x(x_), y(y_), z(z_) {}
-	~vec3() {}
-
-	float Length() { return sqrtf(x * x + y * y + z * z); }
-
-	// add another vector to a vector like a += v;
-	inline vec3 operator+=(const vec3& v)
+	namespace Common
 	{
-		this->x += v.x;
-		this->y += v.y;
-		this->z += v.z;
-		return *this;
-	}
 
-	/*inline bool operator==(const vec3& v)
-	{
-		if (this->x == v.x);
+		//////////////////// vec3 class ////////////////////
+
+		class vec3
 		{
-			if (this->y == v.y);
+		public:
+
+			// Load and Destroy
+			vec3() : x(0.0), y(0.0), z(0.0) {}
+			vec3(const Real x_, const Real y_, const Real z_) : x(x_), y(y_), z(z_) {}
+			~vec3() {}
+
+			Real Length() { return sqrt(x * x + y * y + z * z); }
+
+			// Operators
+			inline vec3 operator+=(const vec3& v)
 			{
-				if (this->z == v.z);
-					return true;
+				this->x += v.x;
+				this->y += v.y;
+				this->z += v.z;
+				return *this;
 			}
-		}
-		return false;
-	}*/
 
-	float x;
-	float y;
-	float z;
+			// Member variables
+			Real x;
+			Real y;
+			Real z;
 
-private:
-};
+		private:
+		};
 
-inline bool operator==(const vec3& a, const vec3& b)
-{
-	if (a.x == b.x)
-	{
-		if (a.y == b.y)
+		//////////////////// Operators ////////////////////
+
+		inline bool operator==(const vec3& u, const vec3& v)
 		{
-			if (a.z == b.z)
-				return true;
+			if (u.x == v.x)
+			{
+				if (u.y == v.y)
+				{
+					if (u.z == v.z)
+						return true;
+				}
+			}
+			return false;
+		}
+
+		inline bool operator!=(const vec3& u, const vec3& v)
+		{
+			if (u == v)
+				return false;
+			return true;
+		}
+
+		inline vec3 operator+(const vec3& u, const vec3& v)
+		{
+			return vec3(u.x + v.x, u.y + v.y, u.z + v.z);
+		}
+
+		inline vec3 operator-(const vec3& v)
+		{
+			return vec3(-v.x, -v.y, -v.z);
+		}
+
+		inline vec3 operator-(const vec3& u, const vec3& v)
+		{
+			return -v + u;
+		}
+
+		inline vec3 operator*(const Real a, const vec3& v)
+		{
+			return vec3(a * v.x, a * v.y, a * v.z);
+		}
+
+		inline vec3 operator*(const vec3& v, const Real a)
+		{
+			return a * v;
+		}
+
+		inline vec3 operator/(const vec3& v, const Real a)
+		{
+			return (1.0 / a) * v;
+		}
+
+		inline vec3 operator/(const Real a, const vec3& v)
+		{
+			return vec3(a / v.x, a / v.y, a / v.z);
+		}
+
+		// print the vec3 directly using std::cout << vec3 << std::endl;
+		inline std::ostream& operator<<(std::ostream& os, const vec3& v)
+		{
+			os << "[ " << v.x << " , " << v.y << " , " << v.z << " ]";
+			return os;
+		}
+
+		//////////////////// Functions ////////////////////
+
+		inline vec3 UnitVector(vec3 v)
+		{
+			Real len = v.Length();
+			if (len == 0.0)
+			{
+				return vec3(0.0, 0.0, 0.0);
+			}
+			return v / len;
+		}
+
+		inline Real Dot(vec3 v, vec3 u)
+		{
+			return v.x * u.x + v.y * u.y + v.z * u.z;
+		}
+
+		inline vec3 Cross(vec3 v, vec3 u)
+		{
+			return vec3(v.y * u.z - v.z * u.y,
+				v.z * u.x - v.x * u.z,
+				v.x * u.y - v.y * u.x);
 		}
 	}
-	return false;
 }
-
-inline bool operator!=(const vec3& a, const vec3& b)
-{
-	if (a == b)
-		return false;
-	return true;
-}
-
-// add two vectors together like vec3 c = a + b;
-inline vec3 operator+(const vec3& a, const vec3& b)
-{
-	return vec3(a.x + b.x, a.y + b.y, a.z + b.z);
-}
-
-inline vec3 operator-(const vec3& a)
-{
-	return vec3(-a.x, -a.y, -a.z);
-}
-
-inline vec3 operator-(const vec3& a, const vec3& b)
-{
-	return -b + a;
-}
-
-// multiply a vector with a scalar like vec3 a = 3.5f * v; // this would need a second overload with the other order so vec3 a = v * 3.5f; would work as well, e.g. operator*( vec3 , float )
-inline vec3 operator*(const float f, const vec3& v)
-{
-	return vec3(f * v.x, f * v.y, f * v.z);
-}
-
-inline vec3 operator*(const vec3& v, const float f)
-{
-	return f * v;
-}
-
-inline vec3 operator/(const vec3& v, const float f)
-{
-	return vec3(v.x / f, v.y / f, v.z / f);
-}
-
-inline vec3 operator/(const float f, const vec3& v)
-{
-	return v / (1 / f);
-}
-
-// print the vec3 directly using std::cout << vec3 << std::endl;
-inline std::ostream& operator<<(std::ostream& os, const vec3& v)
-{
-	os << "[ " << v.x << " , " << v.y << " , " << v.z << " ]";
-	return os;
-}
-
-inline vec3 UnitVector(vec3 v)
-{
-	float len = v.Length();
-	if (len == 0)
-	{
-		return vec3(0.0f, 0.0f, 0.0f);
-	}
-	return v / len;
-}
-
-inline float Dot(vec3 v, vec3 u)
-{
-	return v.x * u.x + v.y * u.y + v.z * u.z;
-}
-
-inline vec3 Cross(vec3 v, vec3 u)
-{
-	return vec3(v.y * u.z - v.z * u.y,
-		v.z * u.x - v.x * u.z,
-		v.x * u.y - v.y * u.x);
-}
-#pragma endregion
+#endif

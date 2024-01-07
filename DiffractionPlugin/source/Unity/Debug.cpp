@@ -1,65 +1,88 @@
-#include "Debug.h"
+/*
+*
+*  \Unity interface Debug class
+*
+*/
 
 #include<stdio.h>
 #include <string>
 #include <stdio.h>
 #include <sstream>
 
-//-------------------------------------------------------------------
-void  Debug::Log(const char* message, Color color) {
-    if (callbackInstance != nullptr)
-        callbackInstance(message, (int)color, (int)strlen(message));
-}
+#include "Unity/Debug.h"
 
-void  Debug::Log(const std::string message, Color color) {
-    const char* tmsg = message.c_str();
-    if (callbackInstance != nullptr)
-        callbackInstance(tmsg, (int)color, (int)strlen(tmsg));
-}
+namespace UIE
+{
+    namespace Unity
+    {
+        //////////////////// Debug class ////////////////////
 
-void  Debug::Log(const int message, Color color) {
-    std::stringstream ss;
-    ss << message;
-    send_log(ss, color);
-}
+        void  Debug::Log(const char* message, Colour colour)
+        {
+            if (callbackInstance != nullptr)
+                callbackInstance(message, (int)colour, (int)strlen(message));
+        }
 
-void  Debug::Log(const char message, Color color) {
-    std::stringstream ss;
-    ss << message;
-    send_log(ss, color);
-}
+        void  Debug::Log(const std::string message, Colour colour)
+        {
+            const char* tmsg = message.c_str();
+            if (callbackInstance != nullptr)
+                callbackInstance(tmsg, (int)colour, (int)strlen(tmsg));
+        }
 
-void  Debug::Log(const float message, Color color) {
-    std::stringstream ss;
-    ss << message;
-    send_log(ss, color);
-}
+        void  Debug::Log(const int message, Colour colour)
+        {
+            std::stringstream ss;
+            ss << message;
+            send_log(ss, colour);
+        }
 
-void  Debug::Log(const double message, Color color) {
-    std::stringstream ss;
-    ss << message;
-    send_log(ss, color);
-}
+        void  Debug::Log(const char message, Colour colour)
+        {
+            std::stringstream ss;
+            ss << message;
+            send_log(ss, colour);
+        }
 
-void Debug::Log(const bool message, Color color) {
-    std::stringstream ss;
-    if (message)
-        ss << "true";
-    else
-        ss << "false";
+        void  Debug::Log(const float message, Colour colour)
+        {
+            std::stringstream ss;
+            ss << message;
+            send_log(ss, colour);
+        }
 
-    send_log(ss, color);
-}
+        void  Debug::Log(const double message, Colour colour)
+        {
+            std::stringstream ss;
+            ss << message;
+            send_log(ss, colour);
+        }
 
-void Debug::send_log(const std::stringstream& ss, const Color& color) {
-    const std::string tmp = ss.str();
-    const char* tmsg = tmp.c_str();
-    if (callbackInstance != nullptr)
-        callbackInstance(tmsg, (int)color, (int)strlen(tmsg));
-}
-//-------------------------------------------------------------------
+        void Debug::Log(const bool message, Colour colour)
+        {
+            std::stringstream ss;
+            if (message)
+                ss << "true";
+            else
+                ss << "false";
 
-//Create a callback delegate
-void RegisterDebugCallback(FuncCallBack cb) {
-    callbackInstance = cb;
+            send_log(ss, colour);
+        }
+
+        void Debug::send_log(const std::stringstream& ss, const Colour& colour)
+        {
+            const std::string tmp = ss.str();
+            const char* tmsg = tmp.c_str();
+            if (callbackInstance != nullptr)
+                callbackInstance(tmsg, (int)colour, (int)strlen(tmsg));
+        }
+
+        //////////////////// Functions ////////////////////
+
+        // Create a callback delegate
+        void RegisterDebugCallback(FuncCallBack cb)
+        {
+            callbackInstance = cb;
+        }
+    }
 }

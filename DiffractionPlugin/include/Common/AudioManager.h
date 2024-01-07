@@ -1,219 +1,207 @@
-#pragma once
+/*
+*
+*  \General audio components
+*
+*/
 
-#ifndef AudioManager_h
-#define AudioManager_h
+#ifndef Common_AudioManager_h
+#define Common_AudioManager_h
 
 #include <vector>
-#include <stdlib.h>
-#include "Definitions.h"
-#include "Types.h"
 
-//////////////////// Buffer ////////////////////
+#include "Common/Definitions.h"
+#include "Common/Types.h"
 
-class Buffer
+namespace UIE
 {
-public:
-	Buffer();
-	Buffer(int n);
-	~Buffer() {};
+	namespace Common
+	{
 
-	inline float& operator[](const int& i) { return mBuffer[i]; };
+		//////////////////// Buffer ////////////////////
 
-	void ResetBuffer();
-	void ResizeBuffer(size_t numSamples);
-	size_t Length() { return mBuffer.size(); }
-	bool Valid();
+		class Buffer
+		{
+		public:
+			Buffer();
+			Buffer(int n);
+			~Buffer() {};
 
-	std::vector<double> GetBuffer() { std::vector<double> dBuffer(mBuffer.begin(), mBuffer.end()); return dBuffer; }
+			inline Real& operator[](const int& i) { return mBuffer[i]; };
 
-private:
-	void InitialiseBuffer(int n);
+			void ResetBuffer();
+			void ResizeBuffer(size_t numSamples);
+			size_t Length() { return mBuffer.size(); }
+			bool Valid();
 
-	std::vector<float> mBuffer;
-};
+			std::vector<double> GetBuffer() { std::vector<double> dBuffer(mBuffer.begin(), mBuffer.end()); return dBuffer; }
 
-bool BuffersEqual(Buffer x, Buffer y);
+		private:
+			void InitialiseBuffer(int n);
 
-//class Source
-//{
-//public:
-//	Source() : position(vec3(0, 0, 0)) {};
-//	Source(float x, float y, float z) : position(vec3(x, y, z)) {};
-//	Source(vec3 position_) : position(position_) {};
-//	~Source() {};
-//
-//	vec3 position;
-//private:
-//};
-//
-//using Listener = Source;
+			std::vector<Real> mBuffer;
+		};
 
+		bool BuffersEqual(Buffer x, Buffer y);
 
-//////////////////// FIR Filter ////////////////////
+		//////////////////// FIR Filter ////////////////////
 
-class FIRFilter
-{
-public:
-	FIRFilter(Buffer ir) : count(0), x() { SetImpulseResponse(ir); };
-	~FIRFilter() {};
+		class FIRFilter
+		{
+		public:
+			FIRFilter(Buffer ir) : count(0), x() { SetImpulseResponse(ir); };
+			~FIRFilter() {};
 
-	float GetOutput(float input);
-	void SetImpulseResponse(Buffer& ir) { mIr = ir; irLen = mIr.Length(); }
+			Real GetOutput(Real input);
+			void SetImpulseResponse(Buffer& ir) { mIr = ir; irLen = mIr.Length(); }
 
-private:
-	Buffer mIr;
-	Buffer x;
-	int count;
-	size_t irLen;
-};
+		private:
+			Buffer mIr;
+			Buffer x;
+			int count;
+			size_t irLen;
+		};
 
+		//////////////////// IIR Filter ////////////////////
 
-//struct FilterCoefficients
-//{
-//	Buffer a;
-//	Buffer b;
-//	FilterCoefficients(int n) : a(n), b(n + 1) {};
-//};
+		class IIRFilter
+		{
+		public:
+			IIRFilter(int _order, int fs) : order(_order), T(1.0 / static_cast<Real>(fs)), b(order + 1), a(order + 1), x(order + 1), y(order + 1) {};
+			~IIRFilter() {};
 
-//////////////////// IIR Filter ////////////////////
+			Real GetOutput(Real input);
+			void SetT(int fs);
 
-class IIRFilter
-{
-public:
-	IIRFilter(int _order, int fs) : order(_order), T(1.0f / (float)fs), b(order + 1), a(order + 1), x(order + 1), y(order + 1) {};
-	~IIRFilter() {};
+		protected:
+			int order;
+			Real T;
+			Buffer b;
+			Buffer a;
+			Buffer x;
+			Buffer y;
+		};
 
-	float GetOutput(float input);
-	void SetT(int fs);
+		enum class FilterShape
+		{
+			lpf,
+			hpf,
+			lbf,
+			hbf
+		};
 
-protected:
-	int order;
-	float T;
-	Buffer b;
-	Buffer a;
-	Buffer x;
-	Buffer y;
-};
+		class HighShelf : public IIRFilter
+		{
+		public:
+			HighShelf() : IIRFilter(1, 48000) {};
+			HighShelf(int fs) : IIRFilter(1, fs) {};
+			HighShelf(Real fc, Real g, int fs) : IIRFilter(1, fs) { UpdateParameters(fc, g); };
+			void UpdateParameters(Real fc, Real g);
 
-enum class FilterShape
-{
-	lpf,
-	hpf,
-	lbf,
-	hbf
-};
+		private:
+		};
 
-class HighShelf : public IIRFilter
-{
-public:
-	HighShelf() : IIRFilter(1, 48000) {};
-	HighShelf(int fs) : IIRFilter(1, fs) {};
-	HighShelf(float fc, float g, int fs) : IIRFilter(1, fs) { UpdateParameters(fc, g); };
-	void UpdateParameters(float fc, float g);
+		class LowPass : public IIRFilter
+		{
+		public:
+			LowPass() : IIRFilter(1, 48000) {};
+			LowPass(int fs) : IIRFilter(1, fs) {};
+			LowPass(Real fc, int fs) : IIRFilter(1, fs) { UpdateParameters(fc); };
+			void UpdateParameters(Real fc);
 
-private:
-};
+		private:
+		};
 
-class LowPass : public IIRFilter
-{
-public:
-	LowPass() : IIRFilter(1, 48000) {};
-	LowPass(int fs) : IIRFilter(1, fs) {};
-	LowPass(float fc, int fs) : IIRFilter(1, fs) { UpdateParameters(fc); };
-	void UpdateParameters(float fc);
+		struct TransDF2Parameters
+		{
+			Real z[2];
+			Real p[2];
+			Real k;
+			TransDF2Parameters() : z{ 0.25, -0.99 }, p{ 0.99, -0.25 }, k(0.0) {};
+			TransDF2Parameters(Real _z, Real _p, Real _k) : z{ _z, _z }, p{ _p, _p }, k(_k) {};
+		};
 
-private:
-};
+		class TransDF2 : public IIRFilter
+		{
+		public:
+			TransDF2() : IIRFilter(2, 48000) { a[0] = 1.0; };
+			TransDF2(int fs) : IIRFilter(2, fs) { a[0] = 1.0; };
+			TransDF2(TransDF2Parameters zpk, int fs) : IIRFilter(2, fs) { a[0] = 1.0; UpdateParameters(zpk); };
+			TransDF2(Real fc, FilterShape shape, int fs) : IIRFilter(2, fs) { a[0] = 1.0; UpdateParameters(fc, shape); };
+			TransDF2(Real fb, Real g, int m, int M, FilterShape shape, int fs) : IIRFilter(2, fs) { a[0] = 1.0; UpdateParameters(fb, g, m, M, shape); };
+			void UpdateParameters(TransDF2Parameters zpk);
+			void UpdateParameters(Real fc, FilterShape shape);
+			void UpdateParameters(Real fb, Real g, int m, int M, FilterShape shape);
 
-struct TransDF2Parameters
-{
-	float z[2];
-	float p[2];
-	float k;
-	TransDF2Parameters() : z{ 0.25f, -0.99f }, p{ 0.99f, -0.25f }, k(0.0f) {};
-	TransDF2Parameters(float _z, float _p, float _k) : z{ _z, _z }, p{ _p, _p }, k(_k) {};
-};
+		private:
+			void UpdateLPF(Real fc);
+			void UpdateHPF(Real fc);
+			void UpdateLBF(Real fb, Real g, int m, int M);
+			void UpdateHBF(Real fb, Real g, int m, int M);
+		};
 
-class TransDF2 : public IIRFilter
-{
-public:
-	TransDF2() : IIRFilter(2, 48000) { a[0] = 1.0f; };
-	TransDF2(int fs) : IIRFilter(2, fs) { a[0] = 1.0f; };
-	TransDF2(TransDF2Parameters zpk, int fs) : IIRFilter(2, fs) { a[0] = 1.0f; UpdateParameters(zpk); };
-	TransDF2(float fc, FilterShape shape, int fs) : IIRFilter(2, fs) { a[0] = 1.0f; UpdateParameters(fc, shape); };
-	TransDF2(float fb, float g, int m, int M, FilterShape shape, int fs) : IIRFilter(2, fs) { a[0] = 1.0f; UpdateParameters(fb, g, m, M, shape); };
-	void UpdateParameters(TransDF2Parameters zpk);
-	void UpdateParameters(float fc, FilterShape shape);
-	void UpdateParameters(float fb, float g, int m, int M, FilterShape shape);
+		//////////////////// Filterbanks ////////////////////
 
-private:
-	void UpdateLPF(float fc);
-	void UpdateHPF(float fc);
-	void UpdateLBF(float fb, float g, int m, int M);
-	void UpdateHBF(float fb, float g, int m, int M);
-};
+		class LinkwitzRiley
+		{
+		public:
+			LinkwitzRiley(int fs);
+			LinkwitzRiley(Real fc0, Real fc1, Real fc2, int fs);
+			~LinkwitzRiley() {};
 
-//////////////////// Filterbanks ////////////////////
+			Real GetOutput(const Real input);
+			void UpdateParameters(Real gain[]);
 
-class LinkwitzRiley
-{
-public:
-	LinkwitzRiley(int fs);
-	LinkwitzRiley(float fc0, float fc1, float fc2, int fs);
-	~LinkwitzRiley() {};
+			Real fm[4];
 
-	float GetOutput(const float input);
-	void UpdateParameters(float gain[]);
+		private:
+			void InitFilters(int fs);
+			void CalcFM();
 
-	float fm[4];
+			Real fc[3];
+			Real g[4];
 
-private:
-	void InitFilters(int fs);
-	void CalcFM();
+			TransDF2 filters[20];
+		};
 
-	float fc[3];
-	float g[4];
+		class BandPass
+		{
+		public:
+			BandPass();
+			BandPass(size_t order);
+			BandPass(size_t order, int fs);
+			BandPass(size_t order, FilterShape shape, Real fb, Real g, int fs);
 
-	TransDF2 filters[20];
-};
+			void InitFilters(int order, int fs);
+			void UpdateParameters(Real fb, Real g, FilterShape shape);
+			Real GetOutput(const Real input);
 
-class BandPass
-{
-public:
-	BandPass();
-	BandPass(size_t order);
-	BandPass(size_t order, int fs);
-	BandPass(size_t order, FilterShape shape, float fb, float g, int fs);
+		private:
+			int M;
+			size_t numFilters;
+			std::vector<TransDF2> filters;
+		};
 
-	void InitFilters(int order, int fs);
-	void UpdateParameters(float fb, float g, FilterShape shape);
-	float GetOutput(const float input);
+		class ParametricEQ
+		{
+		public:
+			ParametricEQ(size_t order);
+			ParametricEQ(size_t order, int fs);
+			ParametricEQ(size_t order, Real fc[], Real gain[], int fs);
 
-private:
-	int M;
-	size_t numFilters;
-	std::vector<TransDF2> filters;
-};
+			void UpdateParameters(const Real fc[], Real gain[]);
+			Real GetOutput(const Real input);
+		private:
+			void InitBands(int fs);
 
-class ParametricEQ
-{
-public:
-	ParametricEQ(size_t order);
-	ParametricEQ(size_t order, int fs);
-	ParametricEQ(size_t order, float fc[], float gain[], int fs);
-
-	void UpdateParameters(const float fc[], float gain[]);
-	float GetOutput(const float input);
-private:
-	void InitBands(int fs);
-
-	size_t mOrder;
-	size_t numFilters;
-	BandPass bands[4];
-	float mGain;
-	float fb[4];
-	float g[4];
-};
+			size_t mOrder;
+			size_t numFilters;
+			BandPass bands[4];
+			Real mGain;
+			Real fb[4];
+			Real g[4];
+		};
+	}
+}
 
 #endif
 

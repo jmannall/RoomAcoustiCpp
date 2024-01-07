@@ -1,36 +1,67 @@
-#pragma once
+/*
+*
+*  \Common definitions
+*
+*/
 
-#ifndef DEFINITIONS_H_
-#define DEFINITIONS_H_
+#ifndef Common_Definitions_h
+#define Common_Definitions_h
 
-#include <ScopedTimer.h>
+#include <Common/ScopedTimer.h>
 
-#pragma region import/export
-// Enforce OS requirement
-//#if !defined(_WIN32)
-// #error "Only supports Windows!"
-//#endif
+#include "Common/Types.h"
 
- // API export/import
-#ifdef UNITYGAPLUGIN_EXPORTS
- // For Windows
- #define GA_API __declspec(dllexport)
+//////////////////// Constants ////////////////////
+
+namespace UIE
+{
+	namespace Common
+	{
+
+		// Double
+#if DATA_TYPE_DOUBLE
+
+		const constexpr Real T_CELCIUS = 20.0;
+		const constexpr Real SPEED_OF_SOUND = 331.5 + 0.6 * T_CELCIUS;
+		const constexpr Real INV_SPEED_OF_SOUND = 1.0 / SPEED_OF_SOUND;
+
+		const constexpr Real EPS = 0.000001;
+		const constexpr Real PI_1 = 3.141592653589793238462643383279502884197169399375105820974944;
+		const constexpr Real PI_2 = 2.0 * PI_1;
+		const constexpr Real PI_4 = 4.0 * PI_1;
+		const constexpr Real SQRT_2 = 1.414213562373095048801688724209698078569671875376948073176680;
+		const constexpr Real INV_SQRT_2 = 1.0 / SQRT_2;
+
+		// Float
 #else
- // For Windows
- #define GA_API __declspec(dllimport)
+
+		const constexpr Real T_CELCIUS = 20.0f;
+		const constexpr Real SPEED_OF_SOUND = 331.5f + 0.6f * T_CELCIUS;
+		const constexpr Real INV_SPEED_OF_SOUND = 1.0f / SPEED_OF_SOUND;
+
+		const constexpr Real EPS = 0.000001f;
+		const constexpr Real PI_1 = 3.141592653589793238462643383279502884197169399375105820974944f;
+		const constexpr Real PI_2 = 2.0f * PI_1;
+		const constexpr Real PI_4 = 4.0f * PI_1;
+		const constexpr Real SQRT_2 = 1.414213562373095048801688724209698078569671875376948073176680f;
+		const constexpr Real INV_SQRT_2 = 1.0f / SQRT_2;
 #endif
 
-#ifdef _TEST
- #ifdef _MAKEDLL
-  #define GA_TEST __declspec(dllexport)
- #else
-  #define GA_TEST __declspec(dllimport)
- #endif
-#else
- #define GA_TEST
-#endif
+		const constexpr Real PI_EPS = PI_1 + EPS;
+		const constexpr Real PI_SQ = PI_1 * PI_1;
+	}
+}
 
-#pragma endregion
+//////////////////// Macros ////////////////////
+
+#define DSP_SAFE_ARRAY_DELETE(ptr)	\
+if((ptr))	\
+{	\
+	delete[] (ptr);	\
+	(ptr) = nullptr;	\
+}
+
+//////////////////// Debug print macros ////////////////////
 
 // Redefine these to true to enable debug print information to stdout
 #define PRINT_AUDIO_PROFILE false
@@ -86,29 +117,4 @@
 #define UPDATE_PROFILE_SECTION(section, tag) section
 #endif
 
-#pragma region constants
-const constexpr unsigned short CHANNEL_COUNT = 2;
-const constexpr float T_CELCIUS= 20;
-const constexpr float SPEED_OF_SOUND = 331.5 + 0.6 * T_CELCIUS;
-const constexpr float INV_SPEED_OF_SOUND = 1.0f / SPEED_OF_SOUND;
-
-const constexpr float EPS = 0.000001f;
-const constexpr float PI_1 = 3.141593f;
-const constexpr float PI_EPS = 3.141594f;
-const constexpr float PI_SQ = 9.869604f;
-const constexpr float PI_2 = 6.283185f;
-const constexpr float PI_4 = 12.566371f;
-const constexpr float SQRT_2 = 1.414214f;
-const constexpr float INV_SQRT_2 = 1.0f / SQRT_2;
-#pragma endregion
-
-#define LERP_FLOAT(start, end, factor) (((start * (1.f - factor)) + (end * factor)))
-
-#define DSP_SAFE_ARRAY_DELETE(ptr)	\
-if((ptr))	\
-{	\
-	delete[] (ptr);	\
-	(ptr) = nullptr;	\
-}
-
-#endif DEFINITIONS_H_
+#endif

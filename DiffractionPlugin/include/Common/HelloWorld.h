@@ -1,4 +1,11 @@
-#pragma once
+/*
+*
+*  \HelloWorld Class
+*
+*/
+
+#ifndef HelloWorld_h
+#define HelloWorld_h
 
 #include <string>
 
@@ -11,3 +18,5 @@ public:
 	std::string GetString() { return mString; }
 	std::string mString;
 };
+
+#endif

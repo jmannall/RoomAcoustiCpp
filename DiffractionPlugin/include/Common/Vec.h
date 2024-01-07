@@ -1,78 +1,110 @@
-#pragma once
+/*
+*
+*  \vec class
+*
+*/
 
-#include <iostream>
-#include <math.h>
+#ifndef Common_Vec_h
+#define Common_Vec_h
+
 #include <cassert>
 #include <random>
-#include <chrono>
-#include "matrix.h"
 
+#include "Common/Types.h"
+#include "Common/Matrix.h"
 
 static std::default_random_engine generator (100);
 
-class vec : public matrix
+namespace UIE
 {
-public:
-	vec() : matrix(), length(1)	{ Init(); }
-	vec(const int& len) : matrix(len, 1), length(len) { Init(); }
-	vec(const float* vec, const int& len) : matrix(len, 1), length(len) { Init(vec); }
-	vec(const matrix& mat);
-
-	void Normalise();
-	float CalculateNormal();
-	void RandomNormalDistribution();
-	void RandomUniformDistribution();
-	void RandomUniformDistribution(float a, float b);
-	float Mean() const;
-
-	inline float& operator[] (const int& i) const { return e[i][0]; }
-
-	inline vec operator=(const matrix& mat)
+	namespace Common
 	{
-		assert(mat.Cols() == 1);
 
-		rows = mat.Rows();
-		cols = mat.Cols();
-		Init();
-		for (int i = 0; i < rows; i++)
+		//////////////////// vec class ////////////////////
+
+		class vec : public matrix
 		{
-			for (int j = 0; j < cols; j++)
+		public:
+
+			// Load and Destroy
+			vec() : matrix(), length(1)	{ Init(); }
+			vec(const int& len) : matrix(len, 1), length(len) { Init(); }
+			vec(const Real* vec, const int& len) : matrix(len, 1), length(len) { Init(vec); }
+			vec(const matrix& mat);
+			~vec() {};
+
+			// Distributions
+			void RandomNormalDistribution();
+			void RandomUniformDistribution();
+			void RandomUniformDistribution(Real a, Real b);
+
+			void Normalise();
+
+			// Getters
+			Real CalculateNormal() const;
+			Real Mean() const;
+
+			// Operators
+			inline Real& operator[] (const int& i) const { return e[i][0]; }
+
+			inline vec operator=(const matrix& mat)
 			{
-				e[i][j] = mat.GetEntry(i, j);
+				assert(mat.Cols() == 1);
+
+				rows = mat.Rows();
+				cols = mat.Cols();
+				Init();
+				for (int i = 0; i < rows; i++)
+				{
+					for (int j = 0; j < cols; j++)
+					{
+						e[i][j] = mat.GetEntry(i, j);
+					}
+				}
+				return *this;
 			}
-		}
-		return *this;
-	}
 
-private:
-	int length;
-};
+		private:
 
-class rowvec : public matrix
-{
-public:
-	rowvec() : matrix() { Init(); }
-	rowvec(const int& c) : matrix(1, c) { Init(); }
-	rowvec(const float* vec, const int& c) : matrix(1, c) { Init(vec); }
-	rowvec(const matrix& mat);
-	~rowvec() {}
+			// Member Variables
+			int length;
+		};
 
-	inline float& operator[] (const int& i) const { return e[0][i]; }
+		//////////////////// rowvec class ////////////////////
 
-	inline rowvec operator=(const matrix& mat)
-	{
-		assert(mat.Rows() == 1);
-
-		rows = mat.Rows();
-		cols = mat.Cols();
-		Init();
-		for (int i = 0; i < rows; i++)
+		class rowvec : public matrix
 		{
-			for (int j = 0; j < cols; j++)
+		public:
+
+			// Load and Destroy
+			rowvec() : matrix() { Init(); }
+			rowvec(const int& c) : matrix(1, c) { Init(); }
+			rowvec(const Real* vec, const int& c) : matrix(1, c) { Init(vec); }
+			rowvec(const matrix& mat);
+			~rowvec() {}
+
+			// Operators
+			inline Real& operator[] (const int& i) const { return e[0][i]; }
+
+			inline rowvec operator=(const matrix& mat)
 			{
-				e[i][j] = mat.GetEntry(i, j);
+				assert(mat.Rows() == 1);
+
+				rows = mat.Rows();
+				cols = mat.Cols();
+				Init();
+				for (int i = 0; i < rows; i++)
+				{
+					for (int j = 0; j < cols; j++)
+					{
+						e[i][j] = mat.GetEntry(i, j);
+					}
+				}
+				return *this;
 			}
-		}
-		return *this;
+		};
+
 	}
-};
+}
+
+#endif

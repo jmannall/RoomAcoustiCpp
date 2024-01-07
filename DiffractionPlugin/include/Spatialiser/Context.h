@@ -10,9 +10,15 @@
 // C++ headers
 #include <thread>
 
-// Misc headers
-#include "AudioManager.h"
-#include "Debug.h"
+// Common headers
+#include "Common/AudioManager.h"
+#include "Common/Matrix.h"
+#include "Common/Vec.h"
+#include "Common/Vec3.h"
+#include "Common/Quaternion.h"
+
+// Unity headers
+#include "Unity/Debug.h"
 
 // Spatialiser headers
 #include "Spatialiser/Types.h"
@@ -26,79 +32,84 @@
 #include "HRTF/HRTFCereal.h"
 #include "ILD/ILDCereal.h"
 
-namespace Spatialiser
+namespace UIE
 {
-	//////////////////// Context ////////////////////
-
-	class Context
+	using namespace Common;
+	namespace Spatialiser
 	{
-	public:
 
-		// Load and Destroy
-		Context(const Config* config);
-		~Context();
+		//////////////////// Context ////////////////////
 
-		// Image Source Model
-		void StopRunning() { mIsRunning = false; }
-		bool IsRunning() const { return mIsRunning; }
+		class Context
+		{
+		public:
 
-		void UpdateISMConfig(const ISMConfig& config) { mISMConfig = config; }
-		ISMConfig GetISMConfig() const { return mISMConfig; }
+			// Load and Destroy
+			Context(const Config* config);
+			~Context();
 
-		SourceManager* GetHRTFManager() { return mSources; }
-		Room* GetRoom() { return mRoom; }
+			// Image Source Model
+			void StopRunning() { mIsRunning = false; }
+			bool IsRunning() const { return mIsRunning; }
 
-		//Reverb
-		void SetFDNParameters(const float& volume, const vec& dimensions);
+			void UpdateISMConfig(const ISMConfig& config) { mISMConfig = config; }
+			ISMConfig GetISMConfig() const { return mISMConfig; }
 
-		// Listener
-		void UpdateListener(const vec3& position, const quaternion& orientation);
+			SourceManager* GetHRTFManager() { return mSources; }
+			Room* GetRoom() { return mRoom; }
 
-		// Source
-		size_t InitSource();
-		void UpdateSource(size_t id, const vec3& position, const quaternion& orientation);
-		void RemoveSource(size_t id);
+			//Reverb
+			void SetFDNParameters(const float& volume, const vec& dimensions);
 
-		// Wall
-		size_t InitWall(const vec3& normal, const float* vData, size_t numVertices, Absorption& absorption, const ReverbWall& reverbWall);
-		void UpdateWall(size_t id, const vec3& normal, const float* vData, size_t numVertices, Absorption& absorption, const ReverbWall& reverbWall);
-		void RemoveWall(size_t id, const ReverbWall& reverbWall);
+			// Listener
+			void UpdateListener(const vec3& position, const quaternion& orientation);
 
-		// Audio
-		void SubmitAudio(size_t id, const float* data);
-		void GetOutput(float** bufferPtr);
+			// Source
+			size_t InitSource();
+			void UpdateSource(size_t id, const vec3& position, const quaternion& orientation);
+			void RemoveSource(size_t id);
 
-	private:
+			// Wall
+			size_t InitWall(const vec3& normal, const float* vData, size_t numVertices, Absorption& absorption, const ReverbWall& reverbWall);
+			void UpdateWall(size_t id, const vec3& normal, const float* vData, size_t numVertices, Absorption& absorption, const ReverbWall& reverbWall);
+			void RemoveWall(size_t id, const ReverbWall& reverbWall);
 
-		// Configs
-		Config mConfig;
-		ISMConfig mISMConfig;
+			// Audio
+			void SubmitAudio(size_t id, const float* data);
+			void GetOutput(float** bufferPtr);
 
-		// 3DTI components
-		Binaural::CCore mCore;
-		shared_ptr<Binaural::CListener> mListener;
+		private:
 
-		// Buffers
-		Buffer mOutputBuffer;
-		matrix mReverbInput;
-		Buffer mSendBuffer;
+			// Configs
+			Config mConfig;
+			ISMConfig mISMConfig;
 
-		// Handles
-		char* mMem = nullptr;
-		SourceManager* mSources;
-		Reverb* mReverb;
-		Room* mRoom;
+			// 3DTI components
+			Binaural::CCore mCore;
+			shared_ptr<Binaural::CListener> mListener;
 
-		// Mutexes
-		std::mutex audioMutex;
-		std::mutex roomMutex;
-		std::mutex highPriority;
-		std::mutex lowPriority;
+			// Buffers
+			Buffer mOutputBuffer;
+			matrix mReverbInput;
+			Buffer mSendBuffer;
 
-		// Image Source Model
-		std::thread ISMThread;
-		bool mIsRunning;
-	};
+			// Handles
+			char* mMem = nullptr;
+			SourceManager* mSources;
+			Reverb* mReverb;
+			Room* mRoom;
+
+			// Mutexes
+			std::mutex audioMutex;
+			std::mutex roomMutex;
+			std::mutex highPriority;
+			std::mutex lowPriority;
+
+			// Image Source Model
+			std::thread ISMThread;
+			bool mIsRunning;
+		};
+	}
 }
 
 #endif

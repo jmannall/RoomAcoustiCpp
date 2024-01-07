@@ -4,7 +4,7 @@
 * 
 */
 
-#include "IUnityInterface.h"
+#include "Unity/IUnityInterface.h"
 #include "Spatialiser/Main.h"
 
 #define UI_API UNITY_INTERFACE_API
