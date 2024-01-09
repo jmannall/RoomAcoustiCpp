@@ -1,61 +1,99 @@
-#pragma once
+/*
+*
+*  \FDN class
+*
+*/
 
+#ifndef Spatialiser_FDN_h
+#define Spatialiser_FDN_h
+
+// C++ headers
 #include <vector>
+
+// Spatialiser headers
 #include "Spatialiser/Types.h"
 #include "Spatialiser/Wall.h"
-#include "AudioManager.h"
-#include "matrix.h"
-#include "vec.h"
-#include "Debug.h"
 
-namespace Spatialiser
+// Common headers
+#include "Common/AudioManager.h"
+#include "Common/matrix.h"
+#include "Common/vec.h"
+
+// Unity headers
+#include "Unity/Debug.h"
+
+namespace UIE
 {
-	class Channel
+	using namespace Common;
+	namespace Spatialiser
 	{
-	public:
-		Channel(int fs);
-		Channel(float t, const FrequencyDependence& T60, int fs);
-		~Channel() {};
 
-		void SetParameters(const FrequencyDependence& T60, const float& t);
-		void SetAbsorption(const FrequencyDependence& T60);
-		void SetDelay(const float& t) { mT = t; SetDelay(); }
-		float GetOutput(const float input);
+		//////////////////// FDN Channel class ////////////////////
 
-	private:
-		void SetAbsorption(float g[]);
-		void SetDelay();
+		class Channel
+		{
+		public:
+			// Load and Destroy
+			Channel(int fs);
+			Channel(Real t, const FrequencyDependence& T60, int fs);
+			~Channel() {};
 
-		float mT;
-		int sampleRate;
-		size_t mDelay;
-		Buffer mBuffer;
-		ParametricEQ mAbsorptionFilter;
-		LowPass mAirAbsorption;
+			// Setters
+			void SetParameters(const FrequencyDependence& T60, const Real& t);
+			void SetAbsorption(const FrequencyDependence& T60);
+			void SetDelay(const Real& t) { mT = t; SetDelay(); }
 
-		int idx;
-	};
+			// Getters
+			Real GetOutput(const Real input);
 
-	class FDN
-	{
-	public:
-		FDN(size_t numChannels, int fs);
-		FDN(const FrequencyDependence& T60, const vec& dimensions, size_t numChannels, int fs);
-		~FDN() {}
+		private:
+			// Setters
+			void SetAbsorption(Real g[]);
+			void SetDelay();
 
-		void SetParameters(const FrequencyDependence& T60, const vec& dimensions);
-		rowvec GetOutput(const float* data, bool valid);
+			// Member variables
+			Real mT;
+			int sampleRate;
+			size_t mDelay;
+			Buffer mBuffer;
+			ParametricEQ mAbsorptionFilter;
+			LowPass mAirAbsorption;
+			
+			int idx;	// Read index
+		};
 
-	private:
-		void CalculateTimeDelay(const vec& dimensions, vec& t);
-		void InitMatrix();
-		void ProcessMatrix() { x = y * mat; }
+		//////////////////// FDN class ////////////////////
 
-		size_t mNumChannels;
-		std::vector<Channel> mChannels;
-		rowvec x;
-		rowvec y;
-		matrix mat;
-	};
+		class FDN
+		{
+		public:
+			// Load and Destroy
+			FDN(size_t numChannels, int fs);
+			FDN(const FrequencyDependence& T60, const vec& dimensions, size_t numChannels, int fs);
+			~FDN() {}
 
+			// Getters
+			rowvec GetOutput(const Real* data, bool valid);
+
+			// Setters
+			void SetParameters(const FrequencyDependence& T60, const vec& dimensions);
+
+		private:
+			// Init
+			void InitMatrix();
+			void CalculateTimeDelay(const vec& dimensions, vec& t);
+
+			// Process
+			void ProcessMatrix() { x = y * mat; }
+
+			// Member variables
+			size_t mNumChannels;
+			std::vector<Channel> mChannels;
+			rowvec x;
+			rowvec y;
+			matrix mat;
+		};
+	}
 }
+
+#endif

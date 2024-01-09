@@ -7,9 +7,11 @@
 #ifndef Common_Vec3_h
 #define Common_Vec3_h
 
+// C++ headers
 #include <iostream>
-#include <cmath>;
+#include <cmath>
 
+// Common headers
 #include "Common/Types.h"
 
 namespace UIE

@@ -1,10 +1,16 @@
-#pragma once
+/*
+*
+*  \Diffraction models
+*
+*/
 
-#include "complex.h"
+#ifndef Spatialiser_Diffraction_Models_h
+#define Spatialiser_Diffraction_Models_h
+
+// C++ headers
 #include <mutex>
-#include "AudioManager.h"
-#include "Spatialiser/Diffraction/Path.h"
 
+// NN headers
 #include "rtwtypes.h"
 #include <cstddef>
 #include <cstdlib>
@@ -13,242 +19,288 @@
 #include "myNN_terminate.h"
 #include "mySmallNN.h"
 
-namespace Spatialiser
+// Common headers
+#include "Common/Types.h"
+#include "Common/complex.h"
+#include "Common/AudioManager.h"
+
+// Spatialiser headers
+#include "Spatialiser/Diffraction/Path.h"
+
+namespace UIE
 {
-	namespace Diffraction
+	using namespace Common;
+	namespace Spatialiser
 	{
-		class Attenuate
+		namespace Diffraction
 		{
-		public:
-			Attenuate(Path* path) : targetGain(0.0f), currentGain(0.0f), mPath(path) { m = new std::mutex(); UpdateParameters(); };
-			~Attenuate() {};
 
-			void UpdateParameters();
-			void ProcessAudio(float* inBuffer, float* outBuffer, int numFrames, float lerpFactor);
-		private:
-			float targetGain;
-			float currentGain;
+			//////////////////// Attenuate class ////////////////////
 
-			Path* mPath;
-			std::mutex* m;
-		};
+			class Attenuate
+			{
+			public:
+				Attenuate(Path* path) : targetGain(0.0), currentGain(0.0), mPath(path) { m = new std::mutex(); UpdateParameters(); };
+				~Attenuate() {};
 
-		class LPF
-		{
-		public:
-			LPF(Path* path, int fs);
-			~LPF() {};
+				void UpdateParameters();
+				void ProcessAudio(Real* inBuffer, Real* outBuffer, int numFrames, Real lerpFactor);
+			private:
+				Real targetGain;
+				Real currentGain;
 
-			void UpdateParameters();
-			void ProcessAudio(float* inBuffer, float* outBuffer, int numFrames, float lerpFactor);
-		private:
-			float fc;
-			float targetGain;
-			float currentGain;
-			LowPass filter;
+				Path* mPath;
+				std::mutex* m;
+			};
 
-			Path* mPath;
-			std::mutex* m;
-		};
+			//////////////////// LPF class ////////////////////
 
-		struct UDFAParameters
-		{
-			float gain;
-			float fc[4];
-			float g[4];
-			UDFAParameters() : gain(0.0f), fc{ 1000.0f, 1000.0f, 1000.0f, 1000.0f }, g{ 1.0f, 1.0f, 1.0f, 1.0f } {};
-			UDFAParameters(float _fc, float _g) : gain(0.0f), fc{ _fc, _fc, _fc, _fc }, g{ _g, _g, _g, _g } {};
-		};
+			class LPF
+			{
+			public:
+				LPF(Path* path, int fs);
+				~LPF() {};
 
-		class UDFA
-		{
-		public:
-			UDFA(Path* path, int fs);
-			~UDFA() {};
+				void UpdateParameters();
+				void ProcessAudio(Real* inBuffer, Real* outBuffer, int numFrames, Real lerpFactor);
+			private:
+				Real fc;
+				Real targetGain;
+				Real currentGain;
+				LowPass filter;
 
-			virtual void UpdateParameters();
-			void ProcessAudio(const float* inBuffer, float* outBuffer, int numFrames, float lerpFactor);
-			void UpdatePath(Path* path) { mPath = path; }
-		protected:
-			void CalcF(int fs);
-			void CalcFT(int fs);
-			void CalcFI();
-			void CalcGT();
-			float CalcG(float f);
-			complexF CalcHpm(float z, float f);
-			virtual complexF CalcH(float z, float t, float f);
-			float CalcNv(float t);
-			complexF CalcUDFA(float f, float fc, float g);
-			virtual void UpdateConstants();
-			void UpdateFilterParameters();
+				Path* mPath;
+				std::mutex* m;
+			};
 
-			int numFilters;
-			HighShelf filters[4];
-			float ft[5];
-			float gt[5];
-			float fi[4];
-			float gi[4];
-			float t0;
-			float front;
-			float v;
+			//////////////////// UDFA class ////////////////////
 
-			UDFAParameters params;
-			UDFAParameters target;
-			UDFAParameters current;
+			struct UDFAParameters
+			{
+				Real gain;
+				Real fc[4];
+				Real g[4];
+				UDFAParameters() : gain(0.0), fc{ 1000.0, 1000.0, 1000.0, 1000.0 }, g{ 1.0, 1.0, 1.0, 1.0 } {};
+				UDFAParameters(Real _fc, Real _g) : gain(0.0), fc{ _fc, _fc, _fc, _fc }, g{ _g, _g, _g, _g } {};
+			};
 
-			Path* mPath;
-			std::mutex* m;
-		};
+			class UDFA
+			{
+			public:
+				UDFA(Path* path, int fs);
+				~UDFA() {};
 
-		class UDFAI : public UDFA
-		{
-		public:
-			UDFAI(Path* path, int fs) : UDFA(path, fs) { UpdateParameters(); };
+				virtual void UpdateParameters();
+				void ProcessAudio(const Real* inBuffer, Real* outBuffer, int numFrames, Real lerpFactor);
+				void UpdatePath(Path* path) { mPath = path; }
+			protected:
+				void CalcF(int fs);
+				void CalcFT(int fs);
+				void CalcFI();
+				void CalcGT();
+				Real CalcG(Real f);
+				Complex CalcHpm(Real z, Real f);
+				virtual Complex CalcH(Real z, Real t, Real f);
+				Real CalcNv(Real t);
+				Complex CalcUDFA(Real f, Real fc, Real g);
+				virtual void UpdateConstants();
+				void UpdateFilterParameters();
 
-			void UpdateParameters() override;
-		private:
-			void UpdateConstants() override;
-			complexF CalcH(float z, float t, float f) override;
-		};
+				int numFilters;
+				HighShelf filters[4];
+				Real ft[5];
+				Real gt[5];
+				Real fi[4];
+				Real gi[4];
+				Real t0;
+				Real front;
+				Real v;
 
+				UDFAParameters params;
+				UDFAParameters target;
+				UDFAParameters current;
 
-		class NN	// Only accurate at 48kHz
-		{
-			using NNParameters = TransDF2Parameters;
-		public:
-			NN(Path* path);
-			~NN() {};
+				Path* mPath;
+				std::mutex* m;
+			};
 
-			void UpdateParameters();
-			void ProcessAudio(float* inBuffer, float* outBuffer, int numFrames, float lerpFactor);
+			//////////////////// UDFA-I class ////////////////////
 
-		protected:
-			float mInput[8];
-			NNParameters params;
-			NNParameters target;
+			class UDFAI : public UDFA
+			{
+			public:
+				UDFAI(Path* path, int fs) : UDFA(path, fs) { UpdateParameters(); };
 
-		private:
-			virtual void RunNN() {};
-			void OrderZP();
-			void CalcInput();
-			void AssignInputRZ(SRData* one, SRData* two);
+				void UpdateParameters() override;
+			private:
+				void UpdateConstants() override;
+				Complex CalcH(Real z, Real t, Real f) override;
+			};
 
-			NNParameters current;
-			TransDF2 filter;
+			//////////////////// NN class ////////////////////
 
-			Path* mPath;
-			std::mutex* m;
-		};
+			class NN	// Only accurate at 48kHz
+			{
+				using NNParameters = TransDF2Parameters;
+			public:
+				NN(Path* path);
+				~NN() {};
 
-		class NNBest : public NN
-		{
-		public:
-			NNBest(Path* path) : NN(path) {};
-			~NNBest() {};
+				void UpdateParameters();
+				void ProcessAudio(Real* inBuffer, Real* outBuffer, int numFrames, Real lerpFactor);
 
-		private:
-			void RunNN() override { myBestNN(mInput, params.z, params.p, &params.k); }
-		};
+			protected:
+				float mInput[8];
+				NNParameters params;
+				NNParameters target;
 
-		class NNSmall : public NN
-		{
-		public:
-			NNSmall(Path* path) : NN(path) {};
-			~NNSmall() {};
+			private:
+				virtual inline void RunNN() {};
+				void OrderZP();
+				void CalcInput();
+				void AssignInputRZ(SRData* one, SRData* two);
 
-		private:
-			void RunNN() override { mySmallNN(mInput, params.z, params.p, &params.k); }
-		};
+				NNParameters current;
+				TransDF2 filter;
 
-		struct UTDParameters
-		{
-			float g[4];
-			UTDParameters() : g{ 0.0f, 0.0f, 0.0f, 0.0f } {}
-		};
+				Path* mPath;
+				std::mutex* m;
+			};
 
-		class UTD
-		{
-		public:
-			UTD(Path* path, int fs);
-			~UTD() {};
+			class NNBest : public NN
+			{
+			public:
+				NNBest(Path* path) : NN(path) {};
+				~NNBest() {};
 
-			void UpdateParameters();
-			void ProcessAudio(float* inBuffer, float* outBuffer, int numFrames, float lerpFactor);
+			private:
+				inline void RunNN() override
+				{
+					float z[2], p[2], k;
+					myBestNN(mInput, z, p, &k);
+					params.z[0] = static_cast<Real>(z[0]);
+					params.z[1] = static_cast<Real>(z[1]);
+					params.p[0] = static_cast<Real>(z[0]);
+					params.p[1] = static_cast<Real>(z[1]);
+					params.k = static_cast<Real>(k);
+				}
+			};
 
-		private:
-			void CalcUTD();
-			complexF EqHalf(float t, const int i);
-			complexF EqQuarter(float t, bool plus, const int i);
-			float PM(float t, bool plus);
-			float CalcTArg(float t, bool plus);
-			float Apm(float t, bool plus);
-			complexF FuncF(float x);
+			class NNSmall : public NN
+			{
+			public:
+				NNSmall(Path* path) : NN(path) {};
+				~NNSmall() {};
 
-			float k[4];
-			complexF E[4];
-			float n;
-			float L;
-			LinkwitzRiley lrFilter;
+			private:
+				inline void RunNN() override
+				{
+					float z[2], p[2], k;
+					mySmallNN(mInput, z, p, &k);
+					params.z[0] = static_cast<Real>(z[0]);
+					params.z[1] = static_cast<Real>(z[1]);
+					params.p[0] = static_cast<Real>(z[0]);
+					params.p[1] = static_cast<Real>(z[1]);
+					params.k = static_cast<Real>(k);
+				}
+			};
 
-			float g[4];
-			float gSB[4];
-			UTDParameters params;
-			UTDParameters target;
-			UTDParameters current;
+			//////////////////// UTD class ////////////////////
 
-			Path* mPath;
-			std::mutex* m;
-		};
+			struct UTDParameters
+			{
+				Real g[4];
+				UTDParameters() : g{ 0.0, 0.0, 0.0, 0.0 } {}
+			};
 
-		struct IntegralLimits
-		{
-			float p, m;
-			IntegralLimits() : p(0.0f), m(0.0f) {}
-			IntegralLimits(float _p, float _m) : p(_p), m(_m) {}
-		};
+			class UTD
+			{
+			public:
+				UTD(Path* path, int fs);
+				~UTD() {};
 
-		class BTM
-		{
-		public:
-			BTM(Path* path, int fs);
-			~BTM() {};
+				void UpdateParameters();
+				void ProcessAudio(Real* inBuffer, Real* outBuffer, int numFrames, Real lerpFactor);
 
-			void UpdateParameters();
-			void ProcessAudio(const float* inBuffer, float* outBuffer, int numFrames, float lerpFactor);
-			void UpdatePath(Path* path) { mPath = path; }
-		private:
-			void CalcBTM();
-			float CalcSample(int n);
-			IntegralLimits CalcLimits(float delta);
-			float CalcIntegral(float zn1, float zn2);
-			float CalcIntegrand(float z);
-			float CalcB(int i, float coshvtheta);
+			private:
+				void CalcUTD();
+				Complex EqHalf(Real t, const int i);
+				Complex EqQuarter(Real t, bool plus, const int i);
+				Real PM(Real t, bool plus);
+				Real CalcTArg(Real t, bool plus);
+				Real Apm(Real t, bool plus);
+				Complex FuncF(Real x);
 
-			float samplesPerMetre;
-			Buffer ir;
-			Buffer targetIr;
-			Buffer currentIr;
-			FIRFilter firFilter;
-			float dSSq;
-			float dRSq;
-			float rr;
-			float zSRel;
-			float zRRel;
-			float dz;
-			float dzSq;
-			float v;
-			float rSSq;
-			float rRSq;
+				Real k[4];
+				Complex E[4];
+				Real n;
+				Real L;
+				LinkwitzRiley lrFilter;
 
-			float edgeHi;
-			float edgeLo;
+				Real g[4];
+				Real gSB[4];
+				UTDParameters params;
+				UTDParameters target;
+				UTDParameters current;
 
-			float vTheta[4];
-			float sinTheta[4];
-			float cosTheta[4];
+				Path* mPath;
+				std::mutex* m;
+			};
 
-			Path* mPath;
-			std::mutex* m;
-		};
+			//////////////////// BTM class ////////////////////
+
+			struct IntegralLimits
+			{
+				Real p, m;
+				IntegralLimits() : p(0.0), m(0.0) {}
+				IntegralLimits(Real _p, Real _m) : p(_p), m(_m) {}
+			};
+
+			class BTM
+			{
+			public:
+				BTM(Path* path, int fs);
+				~BTM() {};
+
+				void UpdateParameters();
+				void ProcessAudio(const Real* inBuffer, Real* outBuffer, int numFrames, Real lerpFactor);
+				void UpdatePath(Path* path) { mPath = path; }
+			private:
+				void CalcBTM();
+				Real CalcSample(int n);
+				IntegralLimits CalcLimits(Real delta);
+				Real CalcIntegral(Real zn1, Real zn2);
+				Real CalcIntegrand(Real z);
+				Real CalcB(int i, Real coshvtheta);
+
+				Real samplesPerMetre;
+				Buffer ir;
+				Buffer targetIr;
+				Buffer currentIr;
+				FIRFilter firFilter;
+				Real dSSq;
+				Real dRSq;
+				Real rr;
+				Real zSRel;
+				Real zRRel;
+				Real dz;
+				Real dzSq;
+				Real v;
+				Real rSSq;
+				Real rRSq;
+
+				Real edgeHi;
+				Real edgeLo;
+
+				Real vTheta[4];
+				Real sinTheta[4];
+				Real cosTheta[4];
+
+				Path* mPath;
+				std::mutex* m;
+			};
+		}
 	}
 }
+
+#endif

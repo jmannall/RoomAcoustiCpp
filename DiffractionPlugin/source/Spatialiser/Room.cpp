@@ -1,13 +1,26 @@
+/*
+*
+*  \Room class
+*
+*/
 
-#include "Spatialiser/Room.h"
-
-//Unity headers
+// Unity headers
 #include "Unity/Debug.h"
+
+// Common headers
+#include "Common/Types.h"
+#include "Common/Vec3.h"
+
+// Spatialiser headers
+#include "Spatialiser/Room.h"
 
 namespace UIE
 {
+	using namespace Unity;
 	namespace Spatialiser
 	{
+
+		//////////////////// Room class ////////////////////
 
 		void Room::UpdateListenerPosition(const vec3& position)
 		{
@@ -43,8 +56,7 @@ namespace UIE
 			}
 		}
 
-		#pragma region Edges
-
+		// Edges
 		void Room::InitEdges(const size_t& id)
 		{
 			auto itA = mWalls.find(id);
@@ -64,18 +76,18 @@ namespace UIE
 						{
 							if (normalA == -normalB)
 							{
-								Debug::Log("Find parallel edges", Color::Yellow);
+								Debug::Log("Find parallel edges", Colour::Yellow);
 								ParallelFindEdges(itA->second, itB->second, itA->first, itB->first);
 							}
 							else
 							{
-								Debug::Log("Find edges", Color::Yellow);
+								Debug::Log("Find edges", Colour::Yellow);
 								FindEdges(itA->second, itB->second, itA->first, itB->first);
 							}
 						}
 						else
 						{
-							Debug::Log("Matching normals", Color::Yellow);
+							Debug::Log("Matching normals", Colour::Yellow);
 						}
 					}
 				}
@@ -150,17 +162,6 @@ namespace UIE
 				int j = 0;
 				while (!match && j < numB)
 				{
-					/*verticesA[i].x = roundf(verticesA[i].x);
-					verticesA[i].y = roundf(verticesA[i].y);
-					verticesA[i].z = roundf(verticesA[i].z);
-
-					verticesB[j].x = roundf(verticesB[j].x);
-					verticesB[j].y = roundf(verticesB[j].y);
-					verticesB[j].z = roundf(verticesB[j].z);*/
-
-					bool test = verticesA[i] == verticesB[j];
-					Debug::Log("Test: " + BoolToStr(test));
-
 					if (verticesA[i].x == verticesB[j].x)
 					{
 						if (verticesA[i].y == verticesB[j].y)
@@ -177,7 +178,7 @@ namespace UIE
 				}
 				if (match)
 				{
-					Debug::Log("Match", Color::Yellow);
+					Debug::Log("Match", Colour::Yellow);
 					j--;
 					int idxA = (i + 1) % numA;
 					bool validEdge = verticesA[idxA] == verticesB[(j - 1) % numB]; // Must be this way to ensure normals not twisted. (right hand rule) therefore one rotated up the edge one rotates down
@@ -189,21 +190,21 @@ namespace UIE
 					}
 					if (validEdge)
 					{
-						Debug::Log("Not twisted", Color::Yellow);
+						Debug::Log("Not twisted", Colour::Yellow);
 						int check = 0;
 						while (check == i || check == idxA)
 						{
 							check++;
 						}
-						float k = b.PointWallPosition(verticesA[check]);	// Only valid for convex shapes
+						Real k = b.PointWallPosition(verticesA[check]);	// Only valid for convex shapes
 
-						Debug::Log("K: " + FloatToStr(k) , Color::Yellow);
+						Debug::Log("K: " + RealToStr(k) , Colour::Yellow);
 
 						if (k < 0) // Check angle greater than 180
 						{
 							// K won't equal zero as then planes would be parallel
 							bool reflexAngle = UnitVector(Cross(a.GetNormal(), b.GetNormal())) == UnitVector(verticesA[idxA] - verticesA[i]);
-							Debug::Log("Reflex angle: " + BoolToStr(reflexAngle), Color::Yellow);
+							Debug::Log("Reflex angle: " + BoolToStr(reflexAngle), Colour::Yellow);
 							if (reflexAngle) // Check returns correct angle type
 							{
 								Edge edge = Edge(verticesA[i], verticesA[idxA], a.GetNormal(), b.GetNormal(), IDa, IDb);
@@ -222,12 +223,12 @@ namespace UIE
 					}
 					else
 					{
-						Debug::Log("Twisted", Color::Yellow);
+						Debug::Log("Twisted", Colour::Yellow);
 					}
 				}
 				else
 				{
-					Debug::Log("No match", Color::Yellow);
+					Debug::Log("No match", Colour::Yellow);
 				}
 			}
 		}
@@ -249,27 +250,26 @@ namespace UIE
 			}
 		}
 
-		#pragma endregion
-
-		FrequencyDependence Room::GetReverbTime(const float& volume)
+		// Reverb
+		FrequencyDependence Room::GetReverbTime(const Real& volume)
 		{
-			FrequencyDependence absorption = FrequencyDependence(0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
-			float surfaceArea = 0.0f;
+			FrequencyDependence absorption = FrequencyDependence(0.0, 0.0, 0.0, 0.0, 0.0);
+			Real surfaceArea = 0.0;
 
 			lock_guard <mutex> wLock(mWallMutex);
 			for (auto wall : mWalls)
 			{
-				absorption += (1.0f - wall.second.GetAbsorption() * wall.second.GetAbsorption()) * wall.second.GetArea();
+				absorption += (1.0 - wall.second.GetAbsorption() * wall.second.GetAbsorption()) * wall.second.GetArea();
 				surfaceArea += wall.second.GetArea();
 			}
-			float temp[5];
+			Real temp[5];
 			absorption.GetValues(&temp[0]);
 			for (int i = 0; i < 5; i++)
 			{
-				Debug::Log("Absorption: " + FloatToStr(temp[i]) + " I: " + IntToStr(i), Color::White);
+				Debug::Log("Absorption: " + RealToStr(temp[i]) + " I: " + IntToStr(i), Colour::White);
 			}
 
-			float factor = 24.0f * log(10) / SPEED_OF_SOUND;
+			Real factor = 24.0 * log(10.0) / SPEED_OF_SOUND;
 			// Sabine
 			// FrequencyDependence sabine = factor * volume / absorption;
 
@@ -278,8 +278,7 @@ namespace UIE
 			return eyring;
 		}
 
-		#pragma region Geometry Checks
-
+		// Geometry checks
 		bool Room::LineRoomIntersection(const vec3& start, const vec3& end)
 		{
 			return LineRoomIntersection(start, end, -1);
@@ -306,8 +305,8 @@ namespace UIE
 				Wall wall = it->second;
 				if (id != currentWallID)
 				{
-					float kS = wall.PointWallPosition(start);
-					float kE = wall.PointWallPosition(end);
+					Real kS = wall.PointWallPosition(start);
+					Real kE = wall.PointWallPosition(end);
 					if (kS * kE < 0)	// point lies on plane when kS || kE == 0. Therefore not obstructed
 					{
 						obstruction = wall.LineWallIntersection(start, end);
@@ -328,8 +327,8 @@ namespace UIE
 				if (id != currentWallID1 && id != currentWallID2)
 				// if (true)
 				{
-					float kS = wall.PointWallPosition(start);
-					float kE = wall.PointWallPosition(end);
+					Real kS = wall.PointWallPosition(start);
+					Real kE = wall.PointWallPosition(end);
 					if (kS * kE < 0)
 					{
 						obstruction = wall.LineWallIntersection(start, end);
@@ -340,10 +339,7 @@ namespace UIE
 			return obstruction;
 		}
 
-		#pragma endregion
-
-		#pragma region Image Source Method
-
+		// Image Source Model
 		void Room::UpdateISM()
 		{
 			size_t oldEndPtr = mSources.size();
@@ -367,13 +363,13 @@ namespace UIE
 					vec3 position(it->second.position);
 
 					bool visible = ReflectPointInRoom(position, vSources);
-					Debug::Log("Source visible: " + BoolToStr(visible), Color::Blue);
+					Debug::Log("Source visible: " + BoolToStr(visible), Colour::Blue);
 					{
 						lock_guard <mutex> iLock(it->second.mMutex);
 						it->second.visible = visible;
 						it->second.vSources = vSources;
 					}		
-					Debug::Log("Source " + IntToStr((int)it->first) + " has " + IntToStr(vSources.size()) + " visible virtual sources", Color::Blue);
+					Debug::Log("Source " + IntToStr((int)it->first) + " has " + IntToStr(vSources.size()) + " visible virtual sources", Colour::Blue);
 				}
 			}
 		}
@@ -411,21 +407,18 @@ namespace UIE
 					HigherOrderSpecularDiffraction(point, sp, edSp, spEd, vSources);
 			}
 
-			Debug::Log("Config:: R: " + BoolToStr(mISMConfig.reflection) + " D: " + BoolToStr(mISMConfig.diffraction) + " RD: " + BoolToStr(mISMConfig.reflectionDiffraction), Color::White);
+			Debug::Log("Config:: R: " + BoolToStr(mISMConfig.reflection) + " D: " + BoolToStr(mISMConfig.diffraction) + " RD: " + BoolToStr(mISMConfig.reflectionDiffraction), Colour::White);
 
-			Debug::Log("Reflections: " + IntToStr((int)sp.size()), Color::Blue);
-			Debug::Log("Diffraction: " + IntToStr((int)ed.size()), Color::Blue);
-			Debug::Log("RefDiff: " + IntToStr((int)spEd.size()), Color::Blue);
-			Debug::Log("DiffRef: " + IntToStr((int)edSp.size()), Color::Blue);
+			Debug::Log("Reflections: " + IntToStr((int)sp.size()), Colour::Blue);
+			Debug::Log("Diffraction: " + IntToStr((int)ed.size()), Colour::Blue);
+			Debug::Log("RefDiff: " + IntToStr((int)spEd.size()), Colour::Blue);
+			Debug::Log("DiffRef: " + IntToStr((int)edSp.size()), Colour::Blue);
 
 			return lineOfSight;
 		}
 
-		#pragma endregion
-
-		#pragma region Diffraction
-
-		void Room::HigherOrderSpecularDiffraction(const vec3& point, VirtualSourceMap& sp, VirtualSourceMap& edSp, VirtualSourceMap& spEd, VirtualSourceStore& vSources)
+		// Diffraction
+		void Room::HigherOrderSpecularDiffraction(const vec3& point, VirtualSourceDataStore& sp, VirtualSourceDataStore& edSp, VirtualSourceDataStore& spEd, VirtualSourceDataMap& vSources)
 		{
 			for (int j = 1; j < mISMConfig.order; j++) // only handle up to 1st order diffraction
 			{
@@ -733,9 +726,9 @@ namespace UIE
 			}
 		}
 
-		void Room::FirstOrderDiffraction(const vec3& point, VirtualSourceMap& ed, VirtualSourceStore& vSources)
+		void Room::FirstOrderDiffraction(const vec3& point, VirtualSourceDataStore& ed, VirtualSourceDataMap& vSources)
 		{
-			Debug::Log("Edges: " + IntToStr(mEdges.size()), Color::White);
+			Debug::Log("Edges: " + IntToStr(mEdges.size()), Colour::White);
 
 			bool feedsFDN = mISMConfig.order == 1;
 			for (auto it : mEdges)
@@ -772,11 +765,8 @@ namespace UIE
 			}
 		}
 
-		#pragma endregion
-
-		#pragma region Reflection
-
-		void Room::FirstOrderReflections(const vec3& point, VirtualSourceMap& sp, VirtualSourceStore& vSources)
+		// Reflection
+		void Room::FirstOrderReflections(const vec3& point, VirtualSourceDataStore& sp, VirtualSourceDataMap& vSources)
 		{
 			bool feedsFDN = mISMConfig.order == 1;
 			for (auto it : mWalls)
@@ -825,7 +815,7 @@ namespace UIE
 			}
 		}
 
-		void Room::HigherOrderReflections(const vec3& point, VirtualSourceMap& sp, VirtualSourceStore& vSources)
+		void Room::HigherOrderReflections(const vec3& point, VirtualSourceDataStore& sp, VirtualSourceDataMap& vSources)
 		{
 			for (int j = 1; j < mISMConfig.order; j++)
 			{
@@ -925,5 +915,3 @@ namespace UIE
 		}
 	}
 }
-
-#pragma endregion

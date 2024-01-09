@@ -207,7 +207,9 @@
     <Import Project="..\3DTI\3DTI.vcxitems" Label="Shared" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" />
-  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Label="UserMacros">
+    <PathTo3DTI>C:\Documents\GitHub\3dti_AudioToolkit\</PathTo3DTI>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -260,7 +262,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <PreprocessorDefinitions>_ANDROID;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <CppLanguageStandard>c++1z</CppLanguageStandard>
-      <AdditionalIncludeDirectories>D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_Toolkit;D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_ResourceManager;D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src;D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include;D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\cereal\include;D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\boost_circular_buffer;D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include;D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\codegen\lib\myNN\include;D:\Joshua Mannall\VisualStudio\mcl-main\include;D:\Joshua Mannall\VisualStudio\mcl-main\butter\include;D:\Joshua Mannall\VisualStudio\mcl-main\kissfft\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(PathTo3DTI)3dti_Toolkit;$(PathTo3DTI)3dti_ResourceManager;$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src;$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include;$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\cereal\include;$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\boost_circular_buffer;$(SolutionDir)DiffractionPlugin\include;$(SolutionDir)DiffractionPlugin\codegen\lib\myNN\include;$(SolutionDir)DiffractionPlugin\include\Spatialiser;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ExceptionHandling>Enabled</ExceptionHandling>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <AdditionalOptions>-fdeclspec %(AdditionalOptions)</AdditionalOptions>
@@ -268,7 +270,7 @@
     <Link>
       <AdditionalDependencies>netcdf_x64.lib;libsofa_debug_x64.lib</AdditionalDependencies>
       <AdditionalOptions>-lm -v -fopenmp %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalLibraryDirectories>D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\lib;D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\lib\win;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\lib;$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\lib\win;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
@@ -276,7 +278,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <PreprocessorDefinitions>_ANDROID;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_Toolkit;D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_ResourceManager;D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src;D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include;D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\cereal\include;D:\Joshua Mannall\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\boost_circular_buffer;D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include;D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\codegen\lib\myNN\include;D:\Joshua Mannall\VisualStudio\mcl-main\include;D:\Joshua Mannall\VisualStudio\mcl-main\butter\include;D:\Joshua Mannall\VisualStudio\mcl-main\kissfft\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(PathTo3DTI)3dti_Toolkit;$(PathTo3DTI)3dti_ResourceManager;$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src;$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include;$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\cereal\include;$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\boost_circular_buffer;$(SolutionDir)DiffractionPlugin\include;$(SolutionDir)DiffractionPlugin\codegen\lib\myNN\include;$(SolutionDir)DiffractionPlugin\include\Spatialiser;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>c++1z</CppLanguageStandard>
       <ExceptionHandling>Enabled</ExceptionHandling>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>

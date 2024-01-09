@@ -1,6 +1,6 @@
 /*
 *
-*  \Spatialiser source manager
+*  \Source manager class
 *
 */
 
@@ -13,6 +13,7 @@
 
 // Spatialiser headers
 #include "Spatialiser/Types.h"
+#include "Spatialiser/Source.h"
 
 // 3DTI headers
 #include "BinauralSpatializer/Core.h"

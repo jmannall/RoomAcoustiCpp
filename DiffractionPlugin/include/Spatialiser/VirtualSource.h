@@ -20,8 +20,8 @@
 // Spatialiser headers
 #include "Spatialiser/Wall.h"
 #include "Spatialiser/Types.h"
-#include "Spatialiser/Diffraction/Path.h"
-#include "Spatialiser/Diffraction/Models.h"
+#include "Diffraction/Path.h"
+#include "Diffraction/Models.h"
 
 // 3DTI headers
 #include "BinauralSpatializer/SingleSourceDSP.h"
@@ -33,6 +33,7 @@
 using namespace Common;
 namespace UIE
 {
+	using namespace Common;
 	using namespace Unity;
 	namespace Spatialiser
 	{
@@ -95,7 +96,7 @@ namespace UIE
 			std::string GetKey() const { return key; }
 			std::vector<size_t> GetWallIDs() const;
 			inline bool IsReflection(int i) const { return isReflection[i]; }
-			inline void GetAbsorption(float* g) const { mAbsorption.GetValues(g); }
+			inline void GetAbsorption(Real* g) const { mAbsorption.GetValues(g); }
 			inline void GetAbsorption(Absorption& a) const { a = mAbsorption; }
 			inline size_t GetOrder() const { return order; }
 
@@ -170,8 +171,8 @@ namespace UIE
 		public:
 
 			// Load and Destroy
-			VirtualSource() : mCore(NULL), mSource(NULL), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(4), isInitialised(false), mHRTFMode(HRTFMode::performance), feedsFDN(false), mFDNChannel(-1), btm(&mDiffractionPath, 48000), udfa(&mDiffractionPath, 48000), reflection(false), diffraction(false) {};
-			VirtualSource(Binaural::CCore* core, HRTFMode hrtfMode, int fs) : mCore(core), mSource(NULL), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(4, fs), isInitialised(false), mHRTFMode(hrtfMode), feedsFDN(false), mFDNChannel(-1), btm(&mDiffractionPath, fs), udfa(&mDiffractionPath, fs), reflection(false), diffraction(false) {};
+			VirtualSource() : mCore(NULL), mSource(NULL), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(4), isInitialised(false), mHRTFMode(HRTFMode::performance), feedsFDN(false), mFDNChannel(-1), btm(&mDiffractionPath, 48000), reflection(false), diffraction(false) {};
+			VirtualSource(Binaural::CCore* core, HRTFMode hrtfMode, int fs) : mCore(core), mSource(NULL), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(4, fs), isInitialised(false), mHRTFMode(hrtfMode), feedsFDN(false), mFDNChannel(-1), btm(&mDiffractionPath, fs), reflection(false), diffraction(false) {};
 			VirtualSource(Binaural::CCore* core, HRTFMode hrtfMode, int fs, const VirtualSourceData& data, const int& fdnChannel);
 			VirtualSource(const VirtualSource& vS);
 			~VirtualSource();
@@ -179,7 +180,7 @@ namespace UIE
 			// Operators
 			inline VirtualSource operator=(const VirtualSource& vS)
 			{
-				mCore = vS.mCore; mSource = vS.mSource; mPosition = vS.mPosition; mFilter = vS.mFilter; isInitialised = vS.isInitialised; mHRTFMode = vS.mHRTFMode; feedsFDN = vS.feedsFDN; mFDNChannel = vS.mFDNChannel; mDiffractionPath = vS.mDiffractionPath; btm = vS.btm; udfa = vS.udfa, mTargetGain = vS.mTargetGain; mCurrentGain = vS.mCurrentGain; reflection = vS.reflection; diffraction = vS.diffraction; mVirtualSources = vS.mVirtualSources; mVirtualEdgeSources = vS.mVirtualEdgeSources;
+				mCore = vS.mCore; mSource = vS.mSource; mPosition = vS.mPosition; mFilter = vS.mFilter; isInitialised = vS.isInitialised; mHRTFMode = vS.mHRTFMode; feedsFDN = vS.feedsFDN; mFDNChannel = vS.mFDNChannel; mDiffractionPath = vS.mDiffractionPath; btm = vS.btm; mTargetGain = vS.mTargetGain; mCurrentGain = vS.mCurrentGain; reflection = vS.reflection; diffraction = vS.diffraction; mVirtualSources = vS.mVirtualSources; mVirtualEdgeSources = vS.mVirtualEdgeSources;
 				return *this;
 			}
 
@@ -194,10 +195,10 @@ namespace UIE
 
 			// Updates
 			bool UpdateVirtualSource(const VirtualSourceData& data);
-			void RemoveVirtualSources(const size_t& id);
+			// void RemoveVirtualSources(const size_t& id);
 
 			// Audio
-			int ProcessAudio(const float* data, const size_t& numFrames, matrix& reverbInput, Buffer& outputBuffer, const float lerpFactor);
+			int ProcessAudio(const Real* data, const size_t& numFrames, matrix& reverbInput, Buffer& outputBuffer, const Real lerpFactor);
 
 			// Deactivate
 			inline void Deactivate() { mSource = NULL; }
@@ -224,8 +225,8 @@ namespace UIE
 			shared_ptr<Binaural::CSingleSourceDSP> mSource;
 			vec3 mPosition;
 
-			float mCurrentGain;
-			float mTargetGain;
+			Real mCurrentGain;
+			Real mTargetGain;
 			ParametricEQ mFilter;
 			Diffraction::Path mDiffractionPath;
 			Diffraction::BTM btm;

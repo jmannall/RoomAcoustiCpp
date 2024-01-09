@@ -12,20 +12,21 @@
 #include <mutex>
 
 // Common headers
+#include "Common/Types.h"
 #include "Common/Vec3.h"
 
 // Spatialiser headers
+#include "Spatialiser/Source.h"
 #include "Spatialiser/Types.h"
 #include "Spatialiser/Wall.h"
 #include "Spatialiser/Edge.h"
-#include "Spatialiser/Source.h"
-
 #include "Spatialiser/Diffraction/Path.h"
 #include "Spatialiser/VirtualSource.h"
 #include "Spatialiser/VirtualSource.h"
 
 namespace UIE
 {
+	using namespace Common;
 	namespace Spatialiser
 	{
 
@@ -48,7 +49,7 @@ namespace UIE
 
 			// Wall
 			size_t AddWall(const Wall& wall);
-			inline Absorption UpdateWall(const size_t& id, const vec3& normal, const float* vData, size_t numVertices, Absorption& absorption)
+			inline Absorption UpdateWall(const size_t& id, const vec3& normal, const Real* vData, size_t numVertices, Absorption& absorption)
 			{
 				lock_guard <mutex> rLock(mWallMutex);
 				auto it = mWalls.find(id);
@@ -116,7 +117,7 @@ namespace UIE
 				}
 			}
 
-			FrequencyDependence GetReverbTime(const float& volume);
+			FrequencyDependence GetReverbTime(const Real& volume);
 
 			// Source
 			inline SourceData UpdateSourcePosition(const size_t& id, const vec3& position)
@@ -170,10 +171,10 @@ namespace UIE
 			void FindEdges(Wall& a, Wall& b, const size_t IDa, const size_t IDb);
 
 			// void SpecularDiffraction(const vec3& point, VirtualSourceMap& sp, VirtualSourceMap& edSp, VirtualSourceMap& spEd, VirtualSourceVec& vSources);
-			void HigherOrderSpecularDiffraction(const vec3& point, VirtualSourceMap& sp, VirtualSourceMap& edSp, VirtualSourceMap& spEd, VirtualSourceStore& vSources);
-			void FirstOrderDiffraction(const vec3& point, VirtualSourceMap& ed, VirtualSourceStore& vSources);
-			void FirstOrderReflections(const vec3& point, VirtualSourceMap& sp, VirtualSourceStore& vSources);
-			void HigherOrderReflections(const vec3& point, VirtualSourceMap& sp, VirtualSourceStore& vSources);
+			void HigherOrderSpecularDiffraction(const vec3& point, VirtualSourceDataStore& sp, VirtualSourceDataStore& edSp, VirtualSourceDataStore& spEd, VirtualSourceDataMap& vSources);
+			void FirstOrderDiffraction(const vec3& point, VirtualSourceDataStore& ed, VirtualSourceDataMap& vSources);
+			void FirstOrderReflections(const vec3& point, VirtualSourceDataStore& sp, VirtualSourceDataMap& vSources);
+			void HigherOrderReflections(const vec3& point, VirtualSourceDataStore& sp, VirtualSourceDataMap& vSources);
 
 			size_t AddEdge(const Edge& edge);
 

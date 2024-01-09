@@ -14,8 +14,12 @@
 #include "Common/Types.h"
 #include "Common/Vec3.h"
 
+// Spatialiser headers
+#include "Spatialiser/Edge.h"
+
 namespace UIE
 {
+	using namespace Common;
 	namespace Spatialiser
 	{
 
@@ -220,7 +224,7 @@ namespace UIE
 
 			// Load and Destroy
 			Absorption() : FrequencyDependence(1.0, 1.0, 1.0, 1.0, 1.0), area(0.0) {}
-			Absorption(Real l, Real mL, Real m, Real mH, Real h) : FrequencyDependence(sqrtf(1.0 - l), sqrtf(1.0 - mL), sqrtf(1.0 - m), sqrtf(1.0 - mH), sqrtf(1.0 - h)), area(0.0) {}
+			Absorption(Real l, Real mL, Real m, Real mH, Real h) : FrequencyDependence(sqrt(1.0 - l), sqrt(1.0 - mL), sqrt(1.0 - m), sqrt(1.0 - mH), sqrt(1.0 - h)), area(0.0) {}
 			Absorption(Real l, Real mL, Real m, Real mH, Real h, Real _area) : FrequencyDependence(l, mL, m, mH, h), area(_area) {} // Is this correct. Is this used?
 			~Absorption() {}
 
@@ -349,5 +353,4 @@ namespace UIE
 		};
 	}
 }
-
 #endif

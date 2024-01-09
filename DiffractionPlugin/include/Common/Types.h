@@ -28,7 +28,7 @@ namespace UIE
 
 // Double
 #if DATA_TYPE_DOUBLE
-		
+
 		inline Real Sign(const Real x)
 		{
 			if (x == 0)
@@ -94,4 +94,5 @@ namespace UIE
 
 	}
 }
+
 #endif

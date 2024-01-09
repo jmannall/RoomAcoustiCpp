@@ -29,6 +29,7 @@ extern "C"
 
 namespace UIE
 {
+    using namespace Common;
     namespace Unity
     {
         //////////////////// Colour enum ////////////////////
@@ -53,7 +54,6 @@ namespace UIE
         };
 
         using namespace std;
-        using namespace Common;
 
         //////////////////// Functions ////////////////////
 
@@ -69,7 +69,7 @@ namespace UIE
             return IntToStr((int)x);
         }
 
-        inline string FloatToStr(float x)
+        inline string RealToStr(Real x)
         {
             stringstream ss;
             ss << x;

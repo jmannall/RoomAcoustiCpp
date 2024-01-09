@@ -1,6 +1,6 @@
 /*
 *
-*  \Spatialiser source
+*  \Source class
 *
 */
 
@@ -17,7 +17,7 @@
 
 // Spatialiser headers
 #include "Spatialiser/VirtualSource.h"
-#include "Spatialiser/Room.h"
+// #include "Spatialiser/Room.h"
 #include "Spatialiser/Types.h"
 
 // 3DTI headers
@@ -34,15 +34,18 @@ namespace UIE
 	namespace Spatialiser
 	{
 
-		//////////////////// SourceData struct ////////////////////
+		//////////////////// SourceData class ////////////////////
 
-		struct SourceData
+		class SourceData
 		{
-			vec3 position;
-			bool visible;
-			std::mutex mMutex;
-			VirtualSourceStore vSources;
+		public:
 
+			// Load and Destroy
+			SourceData() : position(vec3()), visible(false), vSources() {}
+			SourceData(vec3 _position) : position(_position), visible(false), vSources() {}
+			SourceData(const SourceData& data) : position(data.position), visible(data.visible), vSources(data.vSources) {}
+
+			// Operators
 			inline SourceData operator=(const SourceData& data)
 			{
 				position = data.position;
@@ -51,9 +54,13 @@ namespace UIE
 				return *this;
 			}
 
-			SourceData() : position(vec3()), visible(false), vSources() {}
-			SourceData(vec3 _position) : position(_position), visible(false), vSources() {}
-			SourceData(const SourceData& data) : position(data.position), visible(data.visible), vSources(data.vSources) {}
+			// Member variables
+			vec3 position;
+			bool visible;
+			std::mutex mMutex;
+			VirtualSourceDataMap vSources;
+
+		private:
 		};
 
 		//////////////////// Source class ////////////////////
@@ -62,18 +69,18 @@ namespace UIE
 		{
 		public:
 
-			// Destroy and Load
+			// Load and Destroy
 			Source(Binaural::CCore* core, const size_t& numFDNChannels, HRTFMode hrtfMode, int fs);
 			Source(const Source& s) : mCore(s.mCore), mNumFDNChannels(s.mNumFDNChannels), mHRTFMode(s.mHRTFMode), sampleRate(s.sampleRate), mSource(s.mSource),
 				targetGain(s.targetGain), currentGain(s.currentGain), isVisible(s.isVisible), mVirtualSources(s.mVirtualSources), mVirtualEdgeSources(s.mVirtualEdgeSources),
-				oldData(s.oldData), freeFDNChannels(s.freeFDNChannels), removedWalls(s.removedWalls), removedEdges(s.removedEdges) {};
+				oldData(s.oldData), freeFDNChannels(s.freeFDNChannels) {};
 			~Source();
 
 			// Operators
 			inline Source operator=(const Source& s) {
 				mCore = s.mCore; mNumFDNChannels = s.mNumFDNChannels; mHRTFMode = s.mHRTFMode; sampleRate = s.sampleRate; mSource = s.mSource;
 				targetGain = s.targetGain; currentGain = s.currentGain; isVisible = s.isVisible; mVirtualSources = s.mVirtualSources; mVirtualEdgeSources = s.mVirtualEdgeSources;
-				oldData = s.oldData; freeFDNChannels = s.freeFDNChannels; removedWalls = s.removedWalls; removedEdges = s.removedEdges;
+				oldData = s.oldData; freeFDNChannels = s.freeFDNChannels;
 				return *this;
 			}
 
@@ -82,7 +89,7 @@ namespace UIE
 
 			// Updates
 			void Update(const CTransform& transform, const SourceData& data);
-			void UpdateVirtualSources(const VirtualSourceStore& data);
+			void UpdateVirtualSources(const VirtualSourceDataMap& data);
 			bool UpdateVirtualSource(const VirtualSourceData& data, std::vector<VirtualSourceData>& newVSources);
 
 			//inline void LogWallRemoval(const size_t& id) { removedWalls.push_back(id); }
@@ -97,7 +104,7 @@ namespace UIE
 			void ResetFDNSlots();
 
 		private:
-			void RemoveVirtualSources();
+			// void RemoveVirtualSources();
 
 			// Constants
 			Binaural::CCore* mCore;
@@ -110,7 +117,7 @@ namespace UIE
 			Real targetGain;
 			Real currentGain;
 			bool isVisible;
-			VirtualSourceStore oldData;
+			VirtualSourceDataMap oldData;
 
 			// ISM tree structure
 			VirtualSourceMap mVirtualSources;

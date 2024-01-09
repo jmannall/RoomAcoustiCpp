@@ -1,10 +1,10 @@
-#include "pch.h"
+// #include "pch.h"
 #include "CppUnitTest.h"
-#include "AudioManager.h"
+#include "Common/AudioManager.h"
 // #include "DiffractionGeometry.h"
 // #include "GeometryManager.h"
 //#include "vec3.h"
-#include "HelloWorld.h"
+#include "Common/HelloWorld.h"
 #define NOMINMAX
 #include <Windows.h>
 #include <fstream>

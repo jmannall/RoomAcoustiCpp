@@ -10,10 +10,12 @@
 #define UI_API UNITY_INTERFACE_API
 #define UI_EXPORT UNITY_INTERFACE_EXPORT
 
-using namespace Spatialiser;
+using namespace UIE::Spatialiser;
+using namespace UIE::Common;
+using namespace UIE::Unity;
 
 // Pointer to return buffer
-static float* buffer = nullptr;
+static Real* buffer = nullptr;
 
 extern "C"
 {
@@ -33,7 +35,7 @@ extern "C"
 
 	// Load and Destroy
 
-	UI_EXPORT bool UI_API SPATInit(int fs, int numFrames, int numChannels, int numFDNChannels, float lerpFactor, int hrtfResamplingStep, int hrtfMode)
+	UI_EXPORT bool UI_API SPATInit(int fs, int numFrames, int numChannels, int numFDNChannels, Real lerpFactor, int hrtfResamplingStep, int hrtfMode)
 	{
 		HRTFMode mode;
 		switch (hrtfMode)
@@ -65,16 +67,16 @@ extern "C"
 
 	// Reverb
 
-	UI_EXPORT void UI_API SPATSetFDNParameters(float volume, const float* dim, int numDimensions)
+	UI_EXPORT void UI_API SPATSetFDNParameters(Real volume, const Real* dim, int numDimensions)
 	{
 		SetFDNParameters(volume, vec(dim, numDimensions));
 	}
 
 	// Listener
 
-	UI_EXPORT void UI_API SPATUpdateListener(float posX, float posY, float posZ, float oriW, float oriX, float oriY, float oriZ)
+	UI_EXPORT void UI_API SPATUpdateListener(Real posX, Real posY, Real posZ, Real oriW, Real oriX, Real oriY, Real oriZ)
 	{
-		UpdateListener(vec3(posX, posY, posZ), quaternion(oriW, oriX, oriY, oriZ));
+		UpdateListener(vec3(posX, posY, posZ), vec4(oriW, oriX, oriY, oriZ));
 	}
 
 	// Source
@@ -84,9 +86,9 @@ extern "C"
 		return InitSource();
 	}
 
-	UI_EXPORT void UI_API SPATUpdateSource(int id, float posX, float posY, float posZ, float oriW, float oriX, float oriY, float oriZ)
+	UI_EXPORT void UI_API SPATUpdateSource(int id, Real posX, Real posY, Real posZ, Real oriW, Real oriX, Real oriY, Real oriZ)
 	{
-		UpdateSource((size_t)id, vec3(posX, posY, posZ), quaternion(oriW, oriX, oriY, oriZ));
+		UpdateSource((size_t)id, vec3(posX, posY, posZ), vec4(oriW, oriX, oriY, oriZ));
 	}
 
 	UI_EXPORT void UI_API SPATRemoveSource(int id)
@@ -117,7 +119,7 @@ extern "C"
 		}
 	}
 
-	UI_EXPORT int UI_API SPATInitWall(float nX, float nY, float nZ, const float* vData, int numVertices, float aL, float aML, float aM, float aMH, float aH, int reverbWallId)
+	UI_EXPORT int UI_API SPATInitWall(Real nX, Real nY, Real nZ, const Real* vData, int numVertices, Real aL, Real aML, Real aM, Real aMH, Real aH, int reverbWallId)
 	{
 		ReverbWall reverbWall = ReturnReverbWall(reverbWallId);
 		Absorption absorption = Absorption(aL, aML, aM, aMH, aH);
@@ -125,7 +127,7 @@ extern "C"
 		return InitWall(vec3(nX, nY, nZ), vData, (size_t)numVertices, absorption, reverbWall);
 	}
 
-	UI_EXPORT void UI_API SPATUpdateWall(int id, float nX, float nY, float nZ, const float* vData, int numVertices, float aL, float aML, float aM, float aMH, float aH, int reverbWallId)
+	UI_EXPORT void UI_API SPATUpdateWall(int id, Real nX, Real nY, Real nZ, const Real* vData, int numVertices, Real aL, Real aML, Real aM, Real aMH, Real aH, int reverbWallId)
 	{
 		ReverbWall reverbWall = ReturnReverbWall(reverbWallId);
 		Absorption absorption = Absorption(aL, aML, aM, aMH, aH);
@@ -142,7 +144,7 @@ extern "C"
 
 	// Audio
 
-	UI_EXPORT void UI_API SPATSubmitAudio(int id, const float* data)
+	UI_EXPORT void UI_API SPATSubmitAudio(int id, const Real* data)
 	{
 		SubmitAudio((size_t)id, data);
 	}
@@ -152,19 +154,19 @@ extern "C"
 		GetOutput(&buffer);
 		if (!buffer)
 		{
-			Debug::Log("Process Output Failed", Color::Orange);
+			Debug::Log("Process Output Failed", Colour::Orange);
 			return false;
 		}
 		else if (std::isnan(*buffer))
 		{
-			Debug::Log("Process Output is NaN", Color::Orange);
+			Debug::Log("Process Output is NaN", Colour::Orange);
 			return false;
 		}
-		Debug::Log("Process Output Success", Color::Orange);
+		Debug::Log("Process Output Success", Colour::Orange);
 		return true;
 	}
 
-	UI_EXPORT void UI_API SPATGetOutputBuffer(float** buf)
+	UI_EXPORT void UI_API SPATGetOutputBuffer(Real** buf)
 	{
 		*buf = buffer;
 	}

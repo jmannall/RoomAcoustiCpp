@@ -1,6 +1,6 @@
 /*
 *
-*  \Spatialiser source manager
+*  \Source manager class
 *
 */
 
@@ -19,6 +19,9 @@ namespace UIE
 {
 	namespace Spatialiser
 	{
+
+		//////////////////// SourceManager class ////////////////////
+
 		size_t SourceManager::Init()
 		{
 			lock_guard <mutex> lock(updateMutex);

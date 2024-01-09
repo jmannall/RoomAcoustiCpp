@@ -1,6 +1,6 @@
 /*
 *
-*  \Spatialiser source
+*  \Source class
 *
 */
 
@@ -16,8 +16,6 @@
 
 // 3DTI headers
 #include "BinauralSpatializer/Core.h"
-
-using namespace Spatialiser;
 
 namespace UIE
 {
@@ -106,19 +104,19 @@ namespace UIE
 
 			if (isVisible || currentGain != 0.0f)
 			{
-				Common::CEarPair<CMonoBuffer<Real>> bOutput;
+				CEarPair<CMonoBuffer<float>> bOutput;
 
 				// Copy input into internal storage
-				CMonoBuffer<Real> bInput(numFrames);
+				CMonoBuffer<float> bInput(numFrames);
 				const Real* inputPtr = data;
 
 				{
 					lock_guard<mutex> lock(audioMutex);
 					for (int i = 0; i < numFrames; i++)
 					{
-						bInput[i] = *inputPtr++ * currentGain;
+						bInput[i] = static_cast<float>(*inputPtr++ * currentGain);
 						if (currentGain != targetGain)
-							currentGain = LERP_FLOAT(currentGain, targetGain, lerpFactor);
+							currentGain = Lerp(currentGain, targetGain, lerpFactor);
 					}
 					mSource->SetBuffer(bInput);
 					mSource->ProcessAnechoic(bOutput.left, bOutput.right);
@@ -133,7 +131,7 @@ namespace UIE
 			}
 		}
 
-		void Source::Update(const Common::CTransform& transform, const SourceData& data)
+		void Source::Update(const CTransform& transform, const SourceData& data)
 		{
 			{
 				lock_guard<mutex> lock(audioMutex);
@@ -151,7 +149,7 @@ namespace UIE
 			UpdateVirtualSources(data.vSources);
 		}
 
-		void Source::UpdateVirtualSources(const VirtualSourceStore& data)
+		void Source::UpdateVirtualSources(const VirtualSourceDataMap& data)
 		{
 			Debug::Log("Old data: " + IntToStr(oldData.size()));
 			Debug::Log("Data: " + IntToStr(data.size()));
@@ -201,21 +199,21 @@ namespace UIE
 		}
 
 		// obselete? as vSources removed automatically is no longer exist.
-		void Source::RemoveVirtualSources() // Add remove edge sources
-		{
-			if (!removedWalls.empty())
-			{
-				for (int i = 0; i < removedWalls.size(); i++)
-				{
-					mVirtualSources.erase(removedWalls[i]);
-					for (auto it = mVirtualSources.begin(); it != mVirtualSources.end(); it++)
-					{
-						it->second.RemoveVirtualSources(removedWalls[i]);
-					}
-				}
-				removedWalls.clear();
-			}
-		}
+		//void Source::RemoveVirtualSources() // Add remove edge sources
+		//{
+		//	if (!removedWalls.empty())
+		//	{
+		//		for (int i = 0; i < removedWalls.size(); i++)
+		//		{
+		//			mVirtualSources.erase(removedWalls[i]);
+		//			for (auto it = mVirtualSources.begin(); it != mVirtualSources.end(); it++)
+		//			{
+		//				it->second.RemoveVirtualSources(removedWalls[i]);
+		//			}
+		//		}
+		//		removedWalls.clear();
+		//	}
+		//}
 
 		bool Source::UpdateVirtualSource(const VirtualSourceData& data, std::vector<VirtualSourceData>& newVSources)
 		{

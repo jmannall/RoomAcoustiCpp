@@ -212,7 +212,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Matrix.h">
       <Filter>Header Files\Common</Filter>
     </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Quaternion.h">
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\vec4.h">
       <Filter>Header Files\Common</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\ScopedTimer.h">
