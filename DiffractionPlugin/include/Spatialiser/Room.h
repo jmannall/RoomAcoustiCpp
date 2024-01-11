@@ -155,6 +155,11 @@ namespace UIE
 				mSources.erase(id);
 			}
 
+			bool LineRoomIntersectionDiff(const vec3& start, const vec3& end);
+			bool LineRoomIntersectionDiff(const vec3& start, const vec3& end, bool& obstruction);
+			void LineRoomIntersectionDiff(const vec3& start, const vec3& end, size_t currentWallID, bool& obstruction);
+
+
 			bool LineRoomIntersection(const vec3& start, const vec3& end);
 			void LineRoomIntersection(const vec3& start, const vec3& end, bool& obstruction);
 			bool LineRoomIntersection(const vec3& start, const vec3& end, size_t currentWallID);

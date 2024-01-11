@@ -76,13 +76,13 @@ namespace UIE
             if (callbackInstance != nullptr)
                 callbackInstance(tmsg, (int)colour, (int)strlen(tmsg));
         }
-
-        //////////////////// Functions ////////////////////
-
-        // Create a callback delegate
-        void RegisterDebugCallback(FuncCallBack cb)
-        {
-            callbackInstance = cb;
-        }
     }
+}
+
+//////////////////// Functions ////////////////////
+
+// Create a callback delegate
+void RegisterDebugCallback(FuncCallBack cb)
+{
+    callbackInstance = cb;
 }

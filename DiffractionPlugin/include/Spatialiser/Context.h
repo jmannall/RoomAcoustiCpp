@@ -17,9 +17,6 @@
 #include "Common/Vec3.h"
 #include "Common/vec4.h"
 
-// Unity headers
-#include "Unity/Debug.h"
-
 // Spatialiser headers
 #include "Spatialiser/Types.h"
 #include "Spatialiser/SourceManager.h"
@@ -76,8 +73,8 @@ namespace UIE
 			void RemoveWall(size_t id, const ReverbWall& reverbWall);
 
 			// Audio
-			void SubmitAudio(size_t id, const Real* data);
-			void GetOutput(Real** bufferPtr);
+			void SubmitAudio(size_t id, const float* data);
+			void GetOutput(float** bufferPtr);
 
 		private:
 
@@ -92,7 +89,7 @@ namespace UIE
 			// Buffers
 			Buffer mOutputBuffer;
 			matrix mReverbInput;
-			Buffer mSendBuffer;
+			BufferF mSendBuffer;
 
 			// Handles
 			char* mMem = nullptr;

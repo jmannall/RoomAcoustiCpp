@@ -111,7 +111,7 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros">
-    <PathTo3DTI>C:\Documents\GitHub\3dti_AudioToolkit\</PathTo3DTI>
+    <PathTo3DTI>D:\Joshua Mannall\GitHub\3dti_AudioToolkit\</PathTo3DTI>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>

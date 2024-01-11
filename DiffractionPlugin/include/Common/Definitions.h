@@ -45,7 +45,9 @@ namespace UIE
 		const constexpr Real PI_4 = 4.0f * PI_1;
 		const constexpr Real SQRT_2 = 1.414213562373095048801688724209698078569671875376948073176680f;
 		const constexpr Real INV_SQRT_2 = 1.0f / SQRT_2;
+
 #endif
+		const constexpr size_t NUM_PRECISION = 4;
 
 		const constexpr Real PI_EPS = PI_1 + EPS;
 		const constexpr Real PI_SQ = PI_1 * PI_1;

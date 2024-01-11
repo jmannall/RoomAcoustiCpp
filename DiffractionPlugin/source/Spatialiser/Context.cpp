@@ -4,7 +4,11 @@
 *
 */
 
+// Spatialiser headers
 #include "Spatialiser/Context.h"
+
+// Unity headers
+#include "Unity/Debug.h"
 
 namespace UIE
 {
@@ -230,17 +234,20 @@ namespace UIE
 
 		// Audio
 
-		void Context::SubmitAudio(size_t id, const Real* data)
+		void Context::SubmitAudio(size_t id, const float* data)
 		{
-			mSources->ProcessAudio(id, data, mConfig.numFrames, mReverbInput, mOutputBuffer, mConfig.lerpFactor);
+			Buffer in = Buffer(mConfig.numFrames);
+			for (int i = 0; i < mConfig.numFrames; i++)
+				in[i] = static_cast<Real>(data[i]);
+
+			mSources->ProcessAudio(id, &in[0], mConfig.numFrames, mReverbInput, mOutputBuffer, mConfig.lerpFactor);
 		}
 
-		void Context::GetOutput(Real** bufferPtr)
+		void Context::GetOutput(float** bufferPtr)
 		{
 			// Process reverb
 			mReverb->ProcessAudio(mReverbInput, mOutputBuffer);
 
-			// Debug::Log("Output: " + RealToStr(mOutputBuffer[0]));
 			// Copy output to send and set pointer
 			// TO DO: Chek unity can't call ProcessAudio and GetOutput at the same time
 			mSendBuffer = mOutputBuffer;

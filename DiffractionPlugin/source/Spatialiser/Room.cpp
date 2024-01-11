@@ -148,6 +148,10 @@ namespace UIE
 			}
 		}
 
+		// Coordinates defined using right hand rule.
+		// Vertices are defined using a right hand curl around the direction of the normal
+		// Edge face normals are defined using right hand curl rule around the direction of the edge (from base to top) that rotates from plane A to plane B through the exterior of the wedge.
+		
 		void Room::FindEdges(Wall& a, Wall& b, const size_t IDa, const size_t IDb)
 		{
 			std::vector<vec3> verticesA = a.GetVertices();
@@ -171,14 +175,12 @@ namespace UIE
 						}
 					}
 
-					Debug::Log("vA: " + VecToStr(verticesA[i]));
-					Debug::Log("vB: " + VecToStr(verticesB[j]));
-
 					j++;
 				}
 				if (match)
 				{
 					Debug::Log("Match", Colour::Yellow);
+
 					j--;
 					int idxA = (i + 1) % numA;
 					bool validEdge = verticesA[idxA] == verticesB[(j - 1) % numB]; // Must be this way to ensure normals not twisted. (right hand rule) therefore one rotated up the edge one rotates down
@@ -193,20 +195,26 @@ namespace UIE
 						Debug::Log("Not twisted", Colour::Yellow);
 						int check = 0;
 						while (check == i || check == idxA)
-						{
 							check++;
-						}
+
+						// K won't equal zero as then planes would be parallel
 						Real k = b.PointWallPosition(verticesA[check]);	// Only valid for convex shapes
-
-						Debug::Log("K: " + RealToStr(k) , Colour::Yellow);
-
 						if (k < 0) // Check angle greater than 180
 						{
-							// K won't equal zero as then planes would be parallel
+							Debug::Log("Init Edge", Colour::Green);
+
+							// Cross(a.GetNormal(), b.GetNormal()) gives vector in direction of the edge
+							// verticesA[idxA] - verticesA[i] give vector from base to top of edge
 							bool reflexAngle = UnitVector(Cross(a.GetNormal(), b.GetNormal())) == UnitVector(verticesA[idxA] - verticesA[i]);
 							Debug::Log("Reflex angle: " + BoolToStr(reflexAngle), Colour::Yellow);
+							Debug::Log("Base: " + VecToStr(verticesA[i]), Colour::Yellow);
+							Debug::Log("Top: " + VecToStr(verticesA[idxA]), Colour::Yellow);
+
 							if (reflexAngle) // Check returns correct angle type
 							{
+								Debug::Log("Normal 1: " + VecToStr(a.GetNormal()), Colour::Yellow);
+								Debug::Log("Normal 2: " + VecToStr(b.GetNormal()), Colour::Yellow);
+								
 								Edge edge = Edge(verticesA[i], verticesA[idxA], a.GetNormal(), b.GetNormal(), IDa, IDb);
 								size_t id = AddEdge(edge);
 								a.AddEdge(id);
@@ -214,6 +222,9 @@ namespace UIE
 							}
 							else
 							{
+								Debug::Log("Normal 1: " + VecToStr(b.GetNormal()), Colour::Yellow);
+								Debug::Log("Normal 2: " + VecToStr(a.GetNormal()), Colour::Yellow);
+								
 								Edge edge = Edge(verticesA[i], verticesA[idxA], b.GetNormal(), a.GetNormal(), IDb, IDa);
 								size_t id = AddEdge(edge);
 								a.AddEdge(id);
@@ -222,14 +233,10 @@ namespace UIE
 						}
 					}
 					else
-					{
 						Debug::Log("Twisted", Colour::Yellow);
-					}
 				}
 				else
-				{
 					Debug::Log("No match", Colour::Yellow);
-				}
 			}
 		}
 
@@ -279,6 +286,44 @@ namespace UIE
 		}
 
 		// Geometry checks
+		bool Room::LineRoomIntersectionDiff(const vec3& start, const vec3& end)
+		{
+			bool obstruction = false;
+			LineRoomIntersectionDiff(start, end, -1, obstruction);
+			return obstruction;
+		}
+
+		bool Room::LineRoomIntersectionDiff(const vec3& start, const vec3& end, bool& obstruction)
+		{
+			LineRoomIntersectionDiff(start, end, -1, obstruction);
+			return obstruction;
+		}
+
+		void Room::LineRoomIntersectionDiff(const vec3& start, const vec3& end, size_t currentWallID, bool& obstruction)
+		{
+			auto it = mWalls.begin();
+			while (!obstruction && it != mWalls.end())
+			{
+				size_t id = it->first;
+				Wall wall = it->second;
+				if (id != currentWallID)
+				{
+					Real kS = wall.PointWallPosition(start);
+					Real kE = wall.PointWallPosition(end);
+					Debug::Log("kS: " + RealToStr(kS) + ", " + VecToStr(start), Colour::Yellow);
+					Debug::Log("kE: " + RealToStr(kE) + ", " + VecToStr(end), Colour::Yellow);
+					if (kS * kE < 0)	// point lies on plane when kS || kE == 0. Therefore not obstructed
+					{
+						obstruction = wall.LineWallIntersection(start, end);
+					}
+				}
+				it++;
+			}
+		}
+
+
+
+
 		bool Room::LineRoomIntersection(const vec3& start, const vec3& end)
 		{
 			return LineRoomIntersection(start, end, -1);
@@ -743,18 +788,39 @@ namespace UIE
 				vSource.AddEdgeID(id, path);
 				vSource.SetTransform(point, position);
 
+				Debug::Log("dpf Edge " + IntToStr(id), Colour::Yellow);
+
+				Debug::Log("dpf sValid: " + BoolToStr(path.sValid), Colour::Yellow);
+				Debug::Log("dpf rValid: " + BoolToStr(path.rValid), Colour::Yellow);
+				Debug::Log("dpf zValid: " + BoolToStr(path.zValid), Colour::Yellow);
+
 				if (path.valid)
 				{
 					// Valid diffraction path
 					vSource.Valid();
+					Debug::Log("dpf Path valid", Colour::Yellow);
 
 					if (path.inShadow || mISMConfig.specularDiffraction)
 					{
-						bool obstruction = LineRoomIntersection(point, path.GetApex());
-						LineRoomIntersection(path.GetApex(), mListenerPosition, obstruction);
+						Debug::Log("dpf In shadow or spec diff", Colour::Yellow);
+						 
+						Debug::Log("dpf Point: " + VecToStr(point), Colour::Yellow);
+						Debug::Log("dpf Apex: " + VecToStr(path.GetApex()), Colour::Yellow);
+						Debug::Log("dpf Listener: " + VecToStr(mListenerPosition), Colour::Yellow);
+						// bool obstruction = LineRoomIntersection(point, path.GetApex());
+						// Debug::Log("dpf Obstruction 1: " + BoolToStr(obstruction), Colour::Yellow);
+						// LineRoomIntersection(path.GetApex(), mListenerPosition, obstruction);
+						// Debug::Log("dpf Obstruction 2: " + BoolToStr(obstruction), Colour::Yellow);
+
+						bool obstruction = LineRoomIntersectionDiff(point, path.GetApex());
+						Debug::Log("dpf Obstruction 1: " + BoolToStr(obstruction), Colour::Yellow);
+						LineRoomIntersectionDiff(path.GetApex(), mListenerPosition, obstruction);
+						Debug::Log("dpf Obstruction 2: " + BoolToStr(obstruction), Colour::Yellow);
 
 						if (!obstruction) // source and receiver can see edge
 						{
+							Debug::Log("dpf Visible diffraction path", Colour::Yellow);
+
 							// Visible diffraction path
 							vSource.Visible(feedsFDN);
 							vSources.insert_or_assign(vSource.GetKey(), vSource);

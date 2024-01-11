@@ -19,9 +19,6 @@
 #include "Common/matrix.h"
 #include "Common/vec.h"
 
-// Unity headers
-#include "Unity/Debug.h"
-
 namespace UIE
 {
 	using namespace Common;

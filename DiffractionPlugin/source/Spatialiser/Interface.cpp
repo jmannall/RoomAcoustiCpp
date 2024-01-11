@@ -4,7 +4,9 @@
 *
 */
 
+// Spatialiser headers
 #include "Spatialiser/Interface.h"
+#include "Spatialiser/Context.h"
 
 namespace UIE
 {
@@ -118,14 +120,14 @@ namespace UIE
 
 		// Audio
 
-		void SubmitAudio(size_t id, const Real* data)
+		void SubmitAudio(size_t id, const float* data)
 		{
 			auto* context = GetContext();
 			if (context)
 				context->SubmitAudio(id, data);
 		}
 
-		void GetOutput(Real** bufferPtr)
+		void GetOutput(float** bufferPtr)
 		{
 			auto* context = GetContext();
 			if (context)

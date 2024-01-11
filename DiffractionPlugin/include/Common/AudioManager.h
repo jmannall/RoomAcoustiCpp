@@ -17,7 +17,7 @@ namespace UIE
 	namespace Common
 	{
 
-		//////////////////// Buffer ////////////////////
+		//////////////////// Buffer class ////////////////////
 
 		class Buffer
 		{
@@ -30,10 +30,10 @@ namespace UIE
 
 			void ResetBuffer();
 			void ResizeBuffer(size_t numSamples);
-			size_t Length() { return mBuffer.size(); }
+			size_t Length() const { return mBuffer.size(); }
 			bool Valid();
 
-			std::vector<double> GetBuffer() { std::vector<double> dBuffer(mBuffer.begin(), mBuffer.end()); return dBuffer; }
+			std::vector<Real> GetBuffer() { std::vector<Real> buffer(mBuffer.begin(), mBuffer.end()); return buffer; }
 
 		private:
 			void InitialiseBuffer(int n);
@@ -42,6 +42,27 @@ namespace UIE
 		};
 
 		bool BuffersEqual(Buffer x, Buffer y);
+
+		class BufferF
+		{
+		public:
+			BufferF() {};
+			~BufferF() {};
+
+			inline float& operator[](const int& i) { return mBuffer[i]; };
+
+			inline void operator=(Buffer& b)
+			{
+				ResizeBuffer(b.Length());
+				for (int i = 0; i < b.Length(); i++)
+					mBuffer[i] = static_cast<float>(b[i]);
+			}
+
+		private:
+			void ResizeBuffer(size_t numSamples);
+
+			std::vector<float> mBuffer;
+		};
 
 		//////////////////// FIR Filter ////////////////////
 

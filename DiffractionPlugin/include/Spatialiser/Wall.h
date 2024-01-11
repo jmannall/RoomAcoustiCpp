@@ -225,6 +225,7 @@ namespace UIE
 			// Load and Destroy
 			Absorption() : FrequencyDependence(1.0, 1.0, 1.0, 1.0, 1.0), area(0.0) {}
 			Absorption(Real l, Real mL, Real m, Real mH, Real h) : FrequencyDependence(sqrt(1.0 - l), sqrt(1.0 - mL), sqrt(1.0 - m), sqrt(1.0 - mH), sqrt(1.0 - h)), area(0.0) {}
+			Absorption(float l, float mL, float m, float mH, float h) : FrequencyDependence(sqrt(1.0 - static_cast<Real>(l)), sqrt(1.0 - static_cast<Real>(mL)), sqrt(1.0 - static_cast<Real>(m)), sqrt(1.0 - static_cast<Real>(mH)), sqrt(1.0 - static_cast<Real>(h))), area(0.0) {}
 			Absorption(Real l, Real mL, Real m, Real mH, Real h, Real _area) : FrequencyDependence(l, mL, m, mH, h), area(_area) {} // Is this correct. Is this used?
 			~Absorption() {}
 

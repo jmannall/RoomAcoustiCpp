@@ -7,7 +7,15 @@
 #ifndef Spatialiser_Interface_h
 #define Spatialiser_Interface_h
 
-#include "Spatialiser/Context.h"
+// Common headers
+#include "Common/Vec.h"
+#include "Common/Vec3.h"
+#include "Common/Vec4.h"
+#include "Common/Types.h"
+
+// Spatialiser headers
+#include "Spatialiser/Types.h"
+#include "Spatialiser/Wall.h"
 
 namespace UIE
 {
@@ -38,8 +46,8 @@ namespace UIE
 		void RemoveWall(size_t id, const ReverbWall& reverbWall);
 
 		// Audio
-		void SubmitAudio(size_t id, const Real* data);
-		void GetOutput(Real** bufferPtr);
+		void SubmitAudio(size_t id, const float* data);
+		void GetOutput(float** bufferPtr);
 	}
 }
 #endif

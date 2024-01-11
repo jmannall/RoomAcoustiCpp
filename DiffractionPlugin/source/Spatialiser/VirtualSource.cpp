@@ -236,21 +236,19 @@ namespace UIE
 			if (isInitialised)
 			{
 				// Copy input into internal storage and apply wall absorption
+				CMonoBuffer<Real> bStore(numFrames);
 				CMonoBuffer<float> bInput(numFrames);
 				const Real* inputPtr = data;
 
 				if (diffraction)
 				{
-					CMonoBuffer<Real> bStore(numFrames);
 					{
 						lock_guard<mutex> lock(audioMutex);
 						btm.ProcessAudio(inputPtr, &bStore[0], numFrames, lerpFactor);
 						if (reflection)
 						{
 							for (int i = 0; i < numFrames; i++)
-							{
-								bInput[i] = static_cast<float>(mFilter.GetOutput(bStore[i]));
-							}
+								bStore[i] = mFilter.GetOutput(bStore[i]);
 						}
 					}
 				}
@@ -258,14 +256,12 @@ namespace UIE
 				{
 					lock_guard<mutex> lock(audioMutex);
 					for (int i = 0; i < numFrames; i++)
-					{
-						bInput[i] = static_cast<float>(mFilter.GetOutput(*inputPtr++));
-					}
+						bStore[i] = mFilter.GetOutput(*inputPtr++);
 				}
 
 				for (int i = 0; i < numFrames; i++)
 				{
-					bInput[i] *= static_cast<float>(mCurrentGain);
+					bInput[i] = static_cast<float>(bStore[i] * mCurrentGain);
 					if (mCurrentGain != mTargetGain)
 						mCurrentGain = Lerp(mCurrentGain, mTargetGain, lerpFactor);
 				}

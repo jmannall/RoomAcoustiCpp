@@ -7,7 +7,7 @@
 #ifndef Spatialiser_Main_h
 #define Spatialiser_Main_h
 
-#include "Spatialiser/Types.h"
-#include "Spatialiser/Interface.h"
+// #include "Spatialiser/Types.h"
+// #include "Spatialiser/Interface.h"
 
 #endif

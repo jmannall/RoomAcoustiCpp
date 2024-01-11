@@ -28,6 +28,11 @@ namespace UIE
 			// Load and Destroy
 			vec3() : x(0.0), y(0.0), z(0.0) {}
 			vec3(const Real x_, const Real y_, const Real z_) : x(x_), y(y_), z(z_) {}
+#if DATA_TYPE_DOUBLE
+			vec3(const float x_, const float y_, const float z_) : x(static_cast<Real>(x_)), y(static_cast<Real>(y_)), z(static_cast<Real>(z_)) {}
+#else
+			vec3(const double x_, const double y_, const double z_) : x(static_cast<Real>(x_)), y(static_cast<Real>(y_)), z(static_cast<Real>(z_)) {}
+#endif
 			~vec3() {}
 
 			Real Length() { return sqrt(x * x + y * y + z * z); }

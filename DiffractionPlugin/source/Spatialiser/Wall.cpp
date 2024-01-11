@@ -27,6 +27,7 @@ namespace UIE
 
 		Wall::Wall(const vec3& normal, const Real* vData, size_t numVertices, Absorption& absorption) : mNormal(normal), rValid(false), mNumVertices(numVertices), mAbsorption(absorption)
 		{
+			mNormal = UnitVector(vec3(Round(normal.x, NUM_PRECISION), Round(normal.y, NUM_PRECISION), Round(normal.z, NUM_PRECISION)));
 			Update(vData);
 			absorption.area = mAbsorption.area;
 			Debug::Log("Vertecies: " + VecArrayToStr(mVertices), Colour::Orange);
@@ -38,7 +39,7 @@ namespace UIE
 		{
 			Absorption oldAbsorption = mAbsorption;
 
-			mNormal = vec3(Round(normal.x, 4), Round(normal.y, 4), Round(normal.z, 4));
+			mNormal = UnitVector(vec3(Round(normal.x, NUM_PRECISION), Round(normal.y, NUM_PRECISION), Round(normal.z, NUM_PRECISION)));
 			mNumVertices = numVertices;
 			mAbsorption = absorption;
 			Update(vData);
@@ -54,9 +55,9 @@ namespace UIE
 			for (int i = 0; i < (int)mNumVertices; i++)
 			{
 				// Round as otherwise comparing identical vertices from unity still returns false
-				Real x = Round(vData[j++], 4);
-				Real y = Round(vData[j++], 4);
-				Real z = Round(vData[j++], 4);
+				Real x = Round(vData[j++], NUM_PRECISION);
+				Real y = Round(vData[j++], NUM_PRECISION);
+				Real z = Round(vData[j++], NUM_PRECISION);
 				mVertices[i] = vec3(x, y, z);
 			}
 
@@ -76,7 +77,7 @@ namespace UIE
 
 		Real Wall::AreaOfTriangle(const vec3& v, const vec3& u, const vec3& w)
 		{
-			return 0.5f * (Cross(v - u, v - w).Length());
+			return 0.5 * (Cross(v - u, v - w).Length());
 		}
 
 		// Geometry

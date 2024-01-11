@@ -4,8 +4,17 @@
 * 
 */
 
+// Unity headers
 #include "Unity/IUnityInterface.h"
-#include "Spatialiser/Main.h"
+#include "Unity/Debug.h"
+
+// Common headers
+#include "Common/AudioManager.h" 
+
+// Spatialiser headers
+// #include "Spatialiser/Main.h"
+#include "Spatialiser/Types.h"
+#include "Spatialiser/Interface.h"
 
 #define UI_API UNITY_INTERFACE_API
 #define UI_EXPORT UNITY_INTERFACE_EXPORT
@@ -15,7 +24,7 @@ using namespace UIE::Common;
 using namespace UIE::Unity;
 
 // Pointer to return buffer
-static Real* buffer = nullptr;
+static float* buffer = nullptr;
 
 extern "C"
 {
@@ -35,7 +44,7 @@ extern "C"
 
 	// Load and Destroy
 
-	UI_EXPORT bool UI_API SPATInit(int fs, int numFrames, int numChannels, int numFDNChannels, Real lerpFactor, int hrtfResamplingStep, int hrtfMode)
+	UI_EXPORT bool UI_API SPATInit(int fs, int numFrames, int numChannels, int numFDNChannels, float lerpFactor, int hrtfResamplingStep, int hrtfMode)
 	{
 		HRTFMode mode;
 		switch (hrtfMode)
@@ -49,7 +58,7 @@ extern "C"
 			default:
 			{ mode = HRTFMode::performance; break; }
 		}
-		Config config = Config(fs, numFrames, numChannels, numFDNChannels, lerpFactor, hrtfResamplingStep, mode);
+		Config config = Config(fs, numFrames, numChannels, numFDNChannels, static_cast<Real>(lerpFactor), hrtfResamplingStep, mode);
 		return Init(&config);
 	}
 
@@ -67,14 +76,18 @@ extern "C"
 
 	// Reverb
 
-	UI_EXPORT void UI_API SPATSetFDNParameters(Real volume, const Real* dim, int numDimensions)
+	UI_EXPORT void UI_API SPATSetFDNParameters(float volume, const float* dim, int numDimensions)
 	{
-		SetFDNParameters(volume, vec(dim, numDimensions));
+		Buffer in = Buffer(numDimensions);
+		for (int i = 0; i < numDimensions; i++)
+			in[i] = static_cast<Real>(dim[i]);
+
+		SetFDNParameters(static_cast<Real>(volume), vec(&in[0], numDimensions));
 	}
 
 	// Listener
 
-	UI_EXPORT void UI_API SPATUpdateListener(Real posX, Real posY, Real posZ, Real oriW, Real oriX, Real oriY, Real oriZ)
+	UI_EXPORT void UI_API SPATUpdateListener(float posX, float posY, float posZ, float oriW, float oriX, float oriY, float oriZ)
 	{
 		UpdateListener(vec3(posX, posY, posZ), vec4(oriW, oriX, oriY, oriZ));
 	}
@@ -86,14 +99,14 @@ extern "C"
 		return InitSource();
 	}
 
-	UI_EXPORT void UI_API SPATUpdateSource(int id, Real posX, Real posY, Real posZ, Real oriW, Real oriX, Real oriY, Real oriZ)
+	UI_EXPORT void UI_API SPATUpdateSource(int id, float posX, float posY, float posZ, float oriW, float oriX, float oriY, float oriZ)
 	{
-		UpdateSource((size_t)id, vec3(posX, posY, posZ), vec4(oriW, oriX, oriY, oriZ));
+		UpdateSource(static_cast<size_t>(id), vec3(posX, posY, posZ), vec4(oriW, oriX, oriY, oriZ));
 	}
 
 	UI_EXPORT void UI_API SPATRemoveSource(int id)
 	{
-		RemoveSource((size_t)id);
+		RemoveSource(static_cast<size_t>(id));
 	}
 
 	// Walls
@@ -119,34 +132,44 @@ extern "C"
 		}
 	}
 
-	UI_EXPORT int UI_API SPATInitWall(Real nX, Real nY, Real nZ, const Real* vData, int numVertices, Real aL, Real aML, Real aM, Real aMH, Real aH, int reverbWallId)
+	UI_EXPORT int UI_API SPATInitWall(float nX, float nY, float nZ, const float* vData, int numVertices, float aL, float aML, float aM, float aMH, float aH, int reverbWallId)
 	{
 		ReverbWall reverbWall = ReturnReverbWall(reverbWallId);
 		Absorption absorption = Absorption(aL, aML, aM, aMH, aH);
 
-		return InitWall(vec3(nX, nY, nZ), vData, (size_t)numVertices, absorption, reverbWall);
+		int numCoords = 3 * numVertices;
+		Buffer in = Buffer(numCoords);
+		for (int i = 0; i < numCoords; i++)
+			in[i] = static_cast<Real>(vData[i]);
+
+		return InitWall(vec3(nX, nY, nZ), &in[0], static_cast<size_t>(numVertices), absorption, reverbWall);
 	}
 
-	UI_EXPORT void UI_API SPATUpdateWall(int id, Real nX, Real nY, Real nZ, const Real* vData, int numVertices, Real aL, Real aML, Real aM, Real aMH, Real aH, int reverbWallId)
+	UI_EXPORT void UI_API SPATUpdateWall(int id, float nX, float nY, float nZ, const float* vData, int numVertices, float aL, float aML, float aM, float aMH, float aH, int reverbWallId)
 	{
 		ReverbWall reverbWall = ReturnReverbWall(reverbWallId);
 		Absorption absorption = Absorption(aL, aML, aM, aMH, aH);
 
-		UpdateWall((size_t)id, vec3(nX, nY, nZ), vData, (size_t)numVertices, absorption, reverbWall);
+		int numCoords = 3 * numVertices;
+		Buffer in = Buffer(numCoords);
+		for (int i = 0; i < numCoords; i++)
+			in[i] = static_cast<Real>(vData[i]);
+
+		UpdateWall(static_cast<size_t>(id), vec3(nX, nY, nZ), &in[0], static_cast<size_t>(numVertices), absorption, reverbWall);
 	}
 
 	UI_EXPORT void UI_API SPATRemoveWall(int id, int reverbWallId)
 	{
 		ReverbWall reverbWall = ReturnReverbWall(reverbWallId);
 
-		RemoveWall((size_t)id, reverbWall);
+		RemoveWall(static_cast<size_t>(id), reverbWall);
 	}
 
 	// Audio
 
-	UI_EXPORT void UI_API SPATSubmitAudio(int id, const Real* data)
+	UI_EXPORT void UI_API SPATSubmitAudio(int id, const float* data)
 	{
-		SubmitAudio((size_t)id, data);
+		SubmitAudio(static_cast<size_t>(id), data);
 	}
 
 	UI_EXPORT bool UI_API SPATProcessOutput()
@@ -166,10 +189,8 @@ extern "C"
 		return true;
 	}
 
-	UI_EXPORT void UI_API SPATGetOutputBuffer(Real** buf)
+	UI_EXPORT void UI_API SPATGetOutputBuffer(float** buf)
 	{
 		*buf = buffer;
 	}
-
-#pragma endregion
 }

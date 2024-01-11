@@ -78,6 +78,20 @@ namespace UIE
 			return true;
 		}
 
+		void BufferF::ResizeBuffer(size_t numSamples)
+		{
+			size_t capacity = mBuffer.capacity();
+			if (capacity < numSamples)
+			{
+				mBuffer.reserve(numSamples);
+				std::fill_n(std::back_inserter(mBuffer), numSamples - capacity, 0.0);
+			}
+			else
+			{
+				mBuffer.resize(numSamples);
+			}
+		}
+
 		//////////////////// FIR Filter ////////////////////
 
 		Real FIRFilter::GetOutput(Real input)

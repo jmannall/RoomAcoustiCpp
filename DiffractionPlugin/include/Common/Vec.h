@@ -21,7 +21,7 @@ namespace UIE
 	{
 
 		//////////////////// vec class ////////////////////
-
+		
 		class vec : public matrix
 		{
 		public:
