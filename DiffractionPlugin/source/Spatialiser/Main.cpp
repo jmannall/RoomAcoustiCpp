@@ -44,8 +44,9 @@ extern "C"
 
 	// Load and Destroy
 
-	UI_EXPORT bool UI_API SPATInit(int fs, int numFrames, int numChannels, int numFDNChannels, float lerpFactor, int hrtfResamplingStep, int hrtfMode)
+	UI_EXPORT bool UI_API SPATInit(int fs, int numFrames, int numChannels, int numFDNChannels, float lerpFactor, int hrtfResamplingStep, int hrtfMode, const char** paths)
 	{
+		std::vector<std::string> filePaths = { string(*(paths)), string(*(paths + 1)), string(*(paths + 2)) };
 		HRTFMode mode;
 		switch (hrtfMode)
 		{
@@ -59,7 +60,7 @@ extern "C"
 			{ mode = HRTFMode::performance; break; }
 		}
 		Config config = Config(fs, numFrames, numChannels, numFDNChannels, static_cast<Real>(lerpFactor), hrtfResamplingStep, mode);
-		return Init(&config);
+		return Init(&config, filePaths);
 	}
 
 	UI_EXPORT void UI_API SPATExit()

@@ -23,7 +23,7 @@ namespace UIE
 	namespace Spatialiser
 	{
 		// Load and Destroy
-		bool Init(const Config* config);
+		bool Init(const Config* config, const std::vector<std::string>& filePaths);
 		void Exit();
 
 		// Image Source Model

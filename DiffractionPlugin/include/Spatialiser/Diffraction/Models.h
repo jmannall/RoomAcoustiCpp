@@ -21,7 +21,7 @@
 
 // Common headers
 #include "Common/Types.h"
-#include "Common/complex.h"
+#include "Common/Complex.h"
 #include "Common/AudioManager.h"
 
 // Spatialiser headers

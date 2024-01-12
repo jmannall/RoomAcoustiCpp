@@ -16,8 +16,8 @@
 
 // Common headers
 #include "Common/AudioManager.h"
-#include "Common/matrix.h"
-#include "Common/vec.h"
+#include "Common/Matrix.h"
+#include "Common/Vec.h"
 
 namespace UIE
 {
@@ -90,6 +90,20 @@ namespace UIE
 			rowvec y;
 			matrix mat;
 		};
+
+#if(_ANDROID)
+		inline int getStatusWord()
+		{
+			int result;
+			asm volatile("mrs %[result], FPCR" : [result] "=r" (result));
+			return result;
+		}
+
+		inline void setStatusWord(int a)
+		{
+			asm volatile("msr FPCR, %[src]" : : [src] "r" (a));
+		}
+#endif
 	}
 }
 

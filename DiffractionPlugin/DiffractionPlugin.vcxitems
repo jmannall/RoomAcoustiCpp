@@ -57,7 +57,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Definitions.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\HelloWorld.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Matrix.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\vec4.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Vec4.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\ScopedTimer.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Types.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Vec.h" />

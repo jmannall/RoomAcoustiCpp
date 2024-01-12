@@ -76,20 +76,14 @@ namespace UIE
 		{
 			// DSP parameters
 			int fs, numFrames, numChannels, numFDNChannels, hrtfResamplingStep;
-			HRTFMode hrtfMode;
-
 			// 1 means DSP parameters are lerped over only 1 audio callback
 			// 5 means lerped over 5 separate audio callbacks
 			// must be greater than 0
 			Real lerpFactor;
+			HRTFMode hrtfMode;
 
-			// Binaural resource file paths
-			//string resourcePath = "D:\\Joshua Mannall\\GitHub\\3dti_AudioToolkit\\resources";
-			//string hrtfPath = "\\HRTF\\3DTI\\3DTI_HRTF_IRC1008_128s_48000Hz.3dti-hrtf";
-			//string ildPath = "\\ILD\\NearFieldCompensation_ILD_48000.3dti-ild";
-
-			Config() : fs(44100), numFrames(512), numChannels(2), numFDNChannels(12), lerpFactor(1.0 / ((Real)numFrames * 2.0)), hrtfResamplingStep(0), hrtfMode(HRTFMode::performance) {};
-			Config(int _fs, int _numFrames, int _numChannels, int _numFDNChannels, Real _lerpFactor, int hrtfStep, HRTFMode mode) : fs(_fs), numFrames(_numFrames), numChannels(_numChannels), numFDNChannels(_numFDNChannels), lerpFactor(1.0 / ((Real)numFrames * _lerpFactor)), hrtfResamplingStep(hrtfStep), hrtfMode(mode) {};
+			Config() : fs(44100), numFrames(512), numChannels(2), numFDNChannels(12), hrtfResamplingStep(0), lerpFactor(1.0 / ((Real)numFrames * 2.0)), hrtfMode(HRTFMode::performance) {};
+			Config(int _fs, int _numFrames, int _numChannels, int _numFDNChannels, Real _lerpFactor, int hrtfStep, HRTFMode mode) : fs(_fs), numFrames(_numFrames), numChannels(_numChannels), numFDNChannels(_numFDNChannels), hrtfResamplingStep(hrtfStep), lerpFactor(1.0 / ((Real)numFrames * _lerpFactor)), hrtfMode(mode) {};
 		};
 	}
 }

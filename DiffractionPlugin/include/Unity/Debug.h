@@ -18,11 +18,15 @@
 #include "Unity/IUnityInterface.h"
 
 // Common headers
-#include "Common/vec3.h"
+#include "Common/Vec3.h"
 
+#ifdef _ANDROID
+#define DLLExport __attribute__ ((visibility ("default")))
+#elif _WINDOWS
 #define DLLExport __declspec(dllexport)
-#define UI_API UNITY_INTERFACE_API
-#define UI_EXPORT UNITY_INTERFACE_EXPORT
+#else
+#define DLLExport
+#endif
 
 extern "C"
 {

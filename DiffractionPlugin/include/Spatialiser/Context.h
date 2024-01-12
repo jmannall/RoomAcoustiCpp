@@ -15,7 +15,7 @@
 #include "Common/Matrix.h"
 #include "Common/Vec.h"
 #include "Common/Vec3.h"
-#include "Common/vec4.h"
+#include "Common/Vec4.h"
 
 // Spatialiser headers
 #include "Spatialiser/Types.h"
@@ -43,7 +43,7 @@ namespace UIE
 		public:
 
 			// Load and Destroy
-			Context(const Config* config);
+			Context(const Config* config, const std::vector<std::string>& filePaths);
 			~Context();
 
 			// Image Source Model

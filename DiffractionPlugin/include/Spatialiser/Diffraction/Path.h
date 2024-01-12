@@ -7,7 +7,7 @@
 #ifndef Spatialiser_Diffraction_Path_h
 #define Spatialiser_Diffraction_Path_h
 
-#include "Common/vec3.h"
+#include "Common/Vec3.h"
 #include "Spatialiser/Edge.h"
 
 namespace UIE
@@ -71,6 +71,13 @@ namespace UIE
 				inline vec3 CalculateVirtualPostion() const { return rData.point + (sData.d + rData.d) * (mEdge.GetEdgeCoord(zA) - rData.point) / rData.d; }
 				inline vec3 CalculateVirtualRPostion() const { return sData.point + (sData.d + rData.d) * (mEdge.GetEdgeCoord(zA) - sData.point) / sData.d; }
 
+				// Booleans
+				bool zValid;
+				bool sValid;
+				bool rValid;
+				bool valid;
+				bool inShadow;
+
 				// Variables
 				SRData sData;
 				SRData rData;
@@ -79,13 +86,6 @@ namespace UIE
 				Real mA;
 				Real zA;
 				Real phi;
-
-				// Booleans
-				bool zValid;
-				bool sValid;
-				bool rValid;
-				bool valid;
-				bool inShadow;
 
 			private:
 

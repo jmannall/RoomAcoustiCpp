@@ -44,7 +44,7 @@ namespace UIE
 		public:
 
 			// Load and Destroy
-			VirtualSourceData() : key(""), valid(false), rValid(false), visible(false), feedsFDN(false), mFDNChannel(-1), order(0), reflection(false), diffraction(false) {};
+			VirtualSourceData() : valid(false), rValid(false), visible(false), feedsFDN(false), mFDNChannel(-1), order(0), reflection(false), diffraction(false), key("") {};
 			~VirtualSourceData() { Clear(); };
 
 			// Wall

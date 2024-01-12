@@ -5,7 +5,11 @@
 */
 
 // C++ headers
-#include <xmmintrin.h>
+#if defined(_WINDOWS)
+	 /* Microsoft C/C++-compatible compiler */
+#include <intrin.h>
+#endif
+//#include <xmmintrin.h>
 
 // Spatialiser headers
 #include "Spatialiser/FDN.h"
@@ -193,14 +197,28 @@ namespace UIE
 
 		rowvec FDN::GetOutput(const Real* data, bool valid)
 		{
+#if(_WINDOWS)
 			_MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
+#elif(_ANDROID)
 
+			unsigned m_savedCSR = getStatusWord();
+			// Bit 24 is the flush-to-zero mode control bit. Setting it to 1 flushes denormals to 0.
+			setStatusWord(m_savedCSR | (1 << 24));
+#endif
 			Real output = 0;
 			for (int i = 0; i < mNumChannels; i++)
 			{
 				y[i] = mChannels[i].GetOutput(x[i] + data[i]);
 			}
 			ProcessMatrix();
+#if(_WINDOWS)
+			_MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_OFF);
+#elif(_ANDROID)
+
+			m_savedCSR = getStatusWord();
+			// Bit 24 is the flush-to-zero mode control bit. Setting it to 1 flushes denormals to 0.
+			setStatusWord(m_savedCSR | (0 << 24));
+#endif
 			return y;
 		}
 	}

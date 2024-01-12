@@ -42,7 +42,7 @@ namespace UIE
 
 		// Load and Destroy
 
-		Context::Context(const Config* config) : mIsRunning(true), ISMThread()
+		Context::Context(const Config* config, const std::vector<std::string>& filePaths) : mIsRunning(true), ISMThread()
 		{
 			Debug::Log("Init Context", Colour::Green);
 
@@ -57,9 +57,13 @@ namespace UIE
 			mListener = mCore.CreateListener();
 
 			// Load HRTF files
+			Debug::Log("HRTF file path: " + filePaths[0] + filePaths[1]);
+			Debug::Log("ILD file path: " + filePaths[0] + filePaths[2]);
+
 			// TO DO: Move file locations to config
-			string resourcePath = "D:\\Joshua Mannall\\GitHub\\3dti_AudioToolkit\\resources";
-			bool hrtfLoaded = HRTF::CreateFrom3dti(resourcePath + "\\HRTF\\3DTI\\3DTI_HRTF_IRC1008_128s_48000Hz.3dti-hrtf", mListener);
+			//string resourcePath = "D:\\Joshua Mannall\\GitHub\\3dti_AudioToolkit\\resources";
+			//bool hrtfLoaded = HRTF::CreateFrom3dti(resourcePath + "\\HRTF\\3DTI\\3DTI_HRTF_IRC1008_128s_48000Hz.3dti-hrtf", mListener);
+			bool hrtfLoaded = HRTF::CreateFrom3dti(filePaths[0] + filePaths[1], mListener);
 			bool ildLoaded = false;
 
 			string mode;
@@ -68,15 +72,21 @@ namespace UIE
 				switch (mConfig.hrtfMode)
 				{
 				case HRTFMode::quality:
-				{ ildLoaded = ILD::CreateFrom3dti_ILDSpatializationTable(resourcePath + "\\ILD\\HRTF_ILD_48000.3dti-ild", mListener);
-				mode = "quality"; break; }
+				{ 
+					ildLoaded = ILD::CreateFrom3dti_ILDSpatializationTable(filePaths[0] + filePaths[2], mListener);
+					mode = "quality"; break;
+				}
 				case HRTFMode::performance:
-				{ ildLoaded = ILD::CreateFrom3dti_ILDNearFieldEffectTable(resourcePath + "\\ILD\\NearFieldCompensation_ILD_48000.3dti-ild", mListener);
-				mode = "performance"; break; }
+				{
+					ildLoaded = ILD::CreateFrom3dti_ILDNearFieldEffectTable(filePaths[0] + filePaths[2], mListener);
+					mode = "performance"; break;
+				}
 				case HRTFMode::none:
 					break;
 				default:
-				{ mConfig.hrtfMode = HRTFMode::none; break; }
+				{ 
+					mConfig.hrtfMode = HRTFMode::none; break;
+				}
 				}
 			}
 

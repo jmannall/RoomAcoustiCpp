@@ -103,8 +103,8 @@ namespace UIE
 			{
 				std::vector<vec3> verticesB = b.GetVertices();
 
-				size_t numA = verticesA.size();
-				size_t numB = verticesB.size();
+				int numA = static_cast<int>(verticesA.size());
+				int numB = static_cast<int>(verticesB.size());
 
 				bool evenNum = numA % 2 == 0;
 				for (int i = 0; i < numA; i += 2)

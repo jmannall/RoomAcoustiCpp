@@ -20,7 +20,7 @@ namespace UIE
 
 		// Load and Destroy
 
-		bool Init(const Config* config)
+		bool Init(const Config* config, const std::vector<std::string>& filePaths)
 		{
 			if (context) // Delete any existing context
 			{
@@ -28,7 +28,7 @@ namespace UIE
 				Exit();
 			}
 			Debug::Log("Create New Context", Colour::Green);
-			context = new Context(config);
+			context = new Context(config, filePaths);
 			return context->IsRunning();
 		}
 

@@ -1,113 +1,26 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="NETCDF">
-      <UniqueIdentifier>{6330c1c9-ca0e-4a25-8096-1584a665c9c5}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="NETCDF\Header Files">
-      <UniqueIdentifier>{766942dd-4587-4580-b0d4-3d252294757d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="NETCDF\Source Files">
-      <UniqueIdentifier>{2dff7536-70db-4c28-8f1a-faae0c661834}</UniqueIdentifier>
-    </Filter>
     <Filter Include="SOFA">
-      <UniqueIdentifier>{96727534-a009-412a-b662-98751bcd2347}</UniqueIdentifier>
+      <UniqueIdentifier>{177cf8a0-2880-48ca-8424-12d35e1dd095}</UniqueIdentifier>
     </Filter>
     <Filter Include="SOFA\Header Files">
-      <UniqueIdentifier>{02452291-1ec3-42ca-8b46-85152d9e50fd}</UniqueIdentifier>
+      <UniqueIdentifier>{e9afd941-347e-4114-845c-f039b83aee55}</UniqueIdentifier>
     </Filter>
     <Filter Include="SOFA\Source Files">
-      <UniqueIdentifier>{aee31a4e-13a5-4d8b-8e6d-14ed708446cd}</UniqueIdentifier>
+      <UniqueIdentifier>{885801da-0901-4109-83df-7036bcf2c93f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="NETCDF Files">
+      <UniqueIdentifier>{f157a530-d293-48a3-ab4c-4325df9866eb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="NETCDF Files\Header Files">
+      <UniqueIdentifier>{ab4d17d6-de44-4e5f-966c-c39bf28ea51a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="NETCDF Files\Source Files">
+      <UniqueIdentifier>{99d95f8f-b602-4954-9ab2-12d665a80b20}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncAtt.h">
-      <Filter>NETCDF\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncByte.h">
-      <Filter>NETCDF\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncChar.h">
-      <Filter>NETCDF\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncCheck.h">
-      <Filter>NETCDF\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncCompoundType.h">
-      <Filter>NETCDF\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncDim.h">
-      <Filter>NETCDF\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncDouble.h">
-      <Filter>NETCDF\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncEnumType.h">
-      <Filter>NETCDF\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncException.h">
-      <Filter>NETCDF\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncFile.h">
-      <Filter>NETCDF\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncFloat.h">
-      <Filter>NETCDF\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncGroup.h">
-      <Filter>NETCDF\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncGroupAtt.h">
-      <Filter>NETCDF\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncInt.h">
-      <Filter>NETCDF\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncInt64.h">
-      <Filter>NETCDF\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncOpaqueType.h">
-      <Filter>NETCDF\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncShort.h">
-      <Filter>NETCDF\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncString.h">
-      <Filter>NETCDF\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncType.h">
-      <Filter>NETCDF\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncUbyte.h">
-      <Filter>NETCDF\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncUint.h">
-      <Filter>NETCDF\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncUint64.h">
-      <Filter>NETCDF\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncUshort.h">
-      <Filter>NETCDF\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncVar.h">
-      <Filter>NETCDF\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncVarAtt.h">
-      <Filter>NETCDF\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncVlenType.h">
-      <Filter>NETCDF\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\netcdf.h">
-      <Filter>NETCDF\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\netcdf_mem.h">
-      <Filter>NETCDF\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\netcdf_meta.h">
-      <Filter>NETCDF\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFA.h">
       <Filter>SOFA\Header Files</Filter>
     </ClInclude>
@@ -198,86 +111,95 @@
     <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFAVersion.h">
       <Filter>SOFA\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncAtt.h">
+      <Filter>NETCDF Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncByte.h">
+      <Filter>NETCDF Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncChar.h">
+      <Filter>NETCDF Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncCheck.h">
+      <Filter>NETCDF Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncCompoundType.h">
+      <Filter>NETCDF Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncDim.h">
+      <Filter>NETCDF Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncDouble.h">
+      <Filter>NETCDF Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncEnumType.h">
+      <Filter>NETCDF Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncException.h">
+      <Filter>NETCDF Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncFile.h">
+      <Filter>NETCDF Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncFloat.h">
+      <Filter>NETCDF Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncGroup.h">
+      <Filter>NETCDF Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncGroupAtt.h">
+      <Filter>NETCDF Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncInt.h">
+      <Filter>NETCDF Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncInt64.h">
+      <Filter>NETCDF Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncOpaqueType.h">
+      <Filter>NETCDF Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncShort.h">
+      <Filter>NETCDF Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncString.h">
+      <Filter>NETCDF Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncType.h">
+      <Filter>NETCDF Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncUbyte.h">
+      <Filter>NETCDF Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncUint.h">
+      <Filter>NETCDF Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncUint64.h">
+      <Filter>NETCDF Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncUshort.h">
+      <Filter>NETCDF Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncVar.h">
+      <Filter>NETCDF Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncVarAtt.h">
+      <Filter>NETCDF Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncVlenType.h">
+      <Filter>NETCDF Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\netcdf.h">
+      <Filter>NETCDF Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\netcdf_mem.h">
+      <Filter>NETCDF Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\netcdf_meta.h">
+      <Filter>NETCDF Files\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncAtt.cpp">
-      <Filter>NETCDF\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncByte.cpp">
-      <Filter>NETCDF\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncChar.cpp">
-      <Filter>NETCDF\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncCheck.cpp">
-      <Filter>NETCDF\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncCompoundType.cpp">
-      <Filter>NETCDF\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncDim.cpp">
-      <Filter>NETCDF\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncDouble.cpp">
-      <Filter>NETCDF\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncEnumType.cpp">
-      <Filter>NETCDF\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncException.cpp">
-      <Filter>NETCDF\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncFile.cpp">
-      <Filter>NETCDF\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncFloat.cpp">
-      <Filter>NETCDF\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncGroup.cpp">
-      <Filter>NETCDF\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncGroupAtt.cpp">
-      <Filter>NETCDF\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncInt.cpp">
-      <Filter>NETCDF\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncInt64.cpp">
-      <Filter>NETCDF\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncOpaqueType.cpp">
-      <Filter>NETCDF\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncShort.cpp">
-      <Filter>NETCDF\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncString.cpp">
-      <Filter>NETCDF\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncType.cpp">
-      <Filter>NETCDF\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncUbyte.cpp">
-      <Filter>NETCDF\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncUint.cpp">
-      <Filter>NETCDF\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncUint64.cpp">
-      <Filter>NETCDF\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncUshort.cpp">
-      <Filter>NETCDF\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncVar.cpp">
-      <Filter>NETCDF\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncVarAtt.cpp">
-      <Filter>NETCDF\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncVlenType.cpp">
-      <Filter>NETCDF\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFAAPI.cpp">
       <Filter>SOFA\Source Files</Filter>
     </ClCompile>
@@ -349,6 +271,84 @@
     </ClCompile>
     <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFAUnits.cpp">
       <Filter>SOFA\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncAtt.cpp">
+      <Filter>NETCDF Files\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncByte.cpp">
+      <Filter>NETCDF Files\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncChar.cpp">
+      <Filter>NETCDF Files\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncCheck.cpp">
+      <Filter>NETCDF Files\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncCompoundType.cpp">
+      <Filter>NETCDF Files\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncDim.cpp">
+      <Filter>NETCDF Files\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncDouble.cpp">
+      <Filter>NETCDF Files\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncEnumType.cpp">
+      <Filter>NETCDF Files\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncException.cpp">
+      <Filter>NETCDF Files\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncFile.cpp">
+      <Filter>NETCDF Files\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncFloat.cpp">
+      <Filter>NETCDF Files\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncGroup.cpp">
+      <Filter>NETCDF Files\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncGroupAtt.cpp">
+      <Filter>NETCDF Files\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncInt.cpp">
+      <Filter>NETCDF Files\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncInt64.cpp">
+      <Filter>NETCDF Files\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncOpaqueType.cpp">
+      <Filter>NETCDF Files\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncShort.cpp">
+      <Filter>NETCDF Files\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncString.cpp">
+      <Filter>NETCDF Files\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncType.cpp">
+      <Filter>NETCDF Files\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncUbyte.cpp">
+      <Filter>NETCDF Files\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncUint.cpp">
+      <Filter>NETCDF Files\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncUint64.cpp">
+      <Filter>NETCDF Files\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncUshort.cpp">
+      <Filter>NETCDF Files\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncVar.cpp">
+      <Filter>NETCDF Files\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncVarAtt.cpp">
+      <Filter>NETCDF Files\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncVlenType.cpp">
+      <Filter>NETCDF Files\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
