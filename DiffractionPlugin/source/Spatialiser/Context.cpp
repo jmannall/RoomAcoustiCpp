@@ -6,6 +6,7 @@
 
 // Spatialiser headers
 #include "Spatialiser/Context.h"
+#include "Spatialiser/Types.h"
 
 // Unity headers
 #include "Unity/Debug.h"
@@ -16,11 +17,19 @@ namespace UIE
 	namespace Spatialiser
 	{
 
+#ifndef DISABLE_SOFA_SUPPORT
+#if defined(UNITY_WIN) || (defined(TARGET_OS_OSX) && !defined(TARGET_OS_IOS))
+#define ENABLE_SOFA_SUPPORT
+#endif
+#endif
+
 		//////////////////// Background Thread ////////////////////
 
 		void BackgroundProcessor(Context* context)
 		{
-			Debug::Log("Begin background thread", Colour::Green);
+#ifdef DEBUG_ISM_THREAD
+	Debug::Log("Begin background thread", Colour::Green);
+#endif
 
 			bool isRunning = context->IsRunning();
 			Room* room = context->GetRoom();
@@ -35,7 +44,10 @@ namespace UIE
 
 				isRunning = context->IsRunning();
 			}
-			Debug::Log("End background thread", Colour::Red);
+
+#ifdef DEBUG_ISM_THREAD
+	Debug::Log("End background thread", Colour::Red);
+#endif
 		}
 
 		//////////////////// Context ////////////////////
@@ -44,7 +56,9 @@ namespace UIE
 
 		Context::Context(const Config* config, const std::vector<std::string>& filePaths) : mIsRunning(true), ISMThread()
 		{
-			Debug::Log("Init Context", Colour::Green);
+#if DEBUG_INIT
+	Debug::Log("Init Context", Colour::Green);
+#endif
 
 			// Copy config
 			std::memcpy(&mConfig, config, sizeof(Config));
@@ -56,13 +70,12 @@ namespace UIE
 			// Create listener
 			mListener = mCore.CreateListener();
 
-			// Load HRTF files
-			Debug::Log("HRTF file path: " + filePaths[0] + filePaths[1]);
-			Debug::Log("ILD file path: " + filePaths[0] + filePaths[2]);
+#ifdef DEBUG_HRTF
+	Debug::Log("HRTF file path: " + filePaths[0] + filePaths[1]);
+	Debug::Log("ILD file path: " + filePaths[0] + filePaths[2]);
+#endif
 
-			// TO DO: Move file locations to config
-			//string resourcePath = "D:\\Joshua Mannall\\GitHub\\3dti_AudioToolkit\\resources";
-			//bool hrtfLoaded = HRTF::CreateFrom3dti(resourcePath + "\\HRTF\\3DTI\\3DTI_HRTF_IRC1008_128s_48000Hz.3dti-hrtf", mListener);
+			// Load HRTF files
 			bool hrtfLoaded = HRTF::CreateFrom3dti(filePaths[0] + filePaths[1], mListener);
 			bool ildLoaded = false;
 
@@ -89,20 +102,23 @@ namespace UIE
 				}
 				}
 			}
-
-			if (mConfig.hrtfMode == HRTFMode::none)
-				Debug::Log("Spatialisation set to none", Colour::Green);
-			else if (ildLoaded)
-			{
-				Debug::Log("HRTF files loaded successfully", Colour::Green);
-				Debug::Log("Spatialisation set to " + mode, Colour::Green);
-			}
 			else
-			{
-				Debug::Log("Failed to load HRTF files", Colour::Red);
 				mConfig.hrtfMode = HRTFMode::none;
-				Debug::Log("Spatialisation set to none", Colour::Green);
-			}
+
+#ifdef DEBUG_HRTF
+	if (mConfig.hrtfMode == HRTFMode::none)
+		Debug::Log("Spatialisation set to none", Colour::Green);
+	else if (ildLoaded)
+	{
+		Debug::Log("HRTF files loaded successfully", Colour::Green);
+		Debug::Log("Spatialisation set to " + mode, Colour::Green);
+	}
+	else
+	{
+		Debug::Log("Failed to load HRTF files", Colour::Red);
+		Debug::Log("Spatialisation set to none", Colour::Green);
+	}
+#endif
 
 			// TO DO: Add reverb to the init process then test the audio processing and FDN all working
 
@@ -138,7 +154,9 @@ namespace UIE
 
 		Context::~Context()
 		{
-			Debug::Log("Exit Context", Colour::Red);
+#if DEBUG_REMOVE
+	Debug::Log("Exit Context", Colour::Red);
+#endif
 
 			StopRunning();
 			ISMThread.join();
@@ -164,6 +182,10 @@ namespace UIE
 
 		void Context::UpdateListener(const vec3& position, const vec4& orientation)
 		{
+#if DEBUG_UPDATE
+	Debug::Log("Update Listener", Colour::Yellow);
+#endif
+
 			mRoom->UpdateListenerPosition(position);
 
 			// Set listener position and orientation
@@ -175,21 +197,25 @@ namespace UIE
 				mListener->SetListenerTransform(transform);
 			}
 			mReverb->UpdateReverbSources(position);
-
-			Debug::Log("Listener position: " + VecToStr(position), Colour::Yellow);
 		}
 
 		// Source
 
 		size_t Context::InitSource()
 		{
-			Debug::Log("Init Source", Colour::Green);
+#if DEBUG_INIT
+	Debug::Log("Init Source", Colour::Green);
+#endif
 
 			return mSources->Init();
 		}
 
 		void Context::UpdateSource(size_t id, const vec3& position, const vec4& orientation)
 		{
+#if DEBUG_UPDATE
+	Debug::Log("Update Source", Colour::Yellow);
+#endif
+
 			// Update source position in background thread and
 			// return a copy of all virtual sources
 			SourceData data = mRoom->UpdateSourcePosition(id, position);
@@ -201,13 +227,14 @@ namespace UIE
 			mSources->Update(id, transform, data);
 
 			mReverb->UpdateValid(mISMConfig.lateReverb);
-
-			Debug::Log("Source position: " + VecToStr(position), Colour::Yellow);
 		}
 
 		void Context::RemoveSource(size_t id)
 		{
-			Debug::Log("Remove Source", Colour::Red);
+
+#if DEBUG_REMOVE
+	Debug::Log("Remove Source", Colour::Red);
+#endif
 
 			mRoom->RemoveSourcePosition(id);
 			mSources->Remove(id);
@@ -217,7 +244,9 @@ namespace UIE
 
 		size_t Context::InitWall(const vec3& normal, const Real* vData, size_t numVertices, Absorption& absorption, const ReverbWall& reverbWall)
 		{
-			Debug::Log("Init Wall and Edges", Colour::Green);
+#if DEBUG_INIT
+	Debug::Log("Init Wall and Edges", Colour::Green);
+#endif
 
 			Wall wall = Wall(normal, vData, numVertices, absorption);
 			mReverb->UpdateReflectionFilters(reverbWall, absorption);
@@ -235,7 +264,9 @@ namespace UIE
 		// Assumes reverbWall never changes
 		void Context::RemoveWall(size_t id, const ReverbWall& reverbWall)
 		{
-			Debug::Log("Remove Wall and Edges", Colour::Red);
+#if DEBUG_REMOVE
+	Debug::Log("Remove Wall and Edges", Colour::Red);
+#endif
 
 			Absorption absorption = mRoom->RemoveWall(id);
 			if (absorption.area != 0)
@@ -249,6 +280,8 @@ namespace UIE
 			Buffer in = Buffer(mConfig.numFrames);
 			for (int i = 0; i < mConfig.numFrames; i++)
 				in[i] = static_cast<Real>(data[i]);
+
+			//memcpy(&in[0], data, mConfig.numFrames);
 
 			mSources->ProcessAudio(id, &in[0], mConfig.numFrames, mReverbInput, mOutputBuffer, mConfig.lerpFactor);
 		}

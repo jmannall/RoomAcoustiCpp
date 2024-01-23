@@ -27,6 +27,13 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\DiffractionPlugin\codegen\lib\myNN\source\elementwiseOperationInPlace.cpp" />
+    <ClCompile Include="..\DiffractionPlugin\codegen\lib\myNN\source\myBestNN.cpp" />
+    <ClCompile Include="..\DiffractionPlugin\codegen\lib\myNN\source\myNN_data.cpp" />
+    <ClCompile Include="..\DiffractionPlugin\codegen\lib\myNN\source\myNN_initialize.cpp" />
+    <ClCompile Include="..\DiffractionPlugin\codegen\lib\myNN\source\myNN_terminate.cpp" />
+    <ClCompile Include="..\DiffractionPlugin\codegen\lib\myNN\source\mySmallNN.cpp" />
+    <ClCompile Include="..\DiffractionPlugin\codegen\lib\myNN\source\predict.cpp" />
     <ClCompile Include="source\dllmain.cpp" />
     <ClCompile Include="source\FirstDLL.cpp" />
     <ClCompile Include="Test.cpp">
@@ -34,6 +41,18 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\DiffractionPlugin\codegen\lib\myNN\include\anonymous_function.h" />
+    <ClInclude Include="..\DiffractionPlugin\codegen\lib\myNN\include\elementwiseOperationInPlace.h" />
+    <ClInclude Include="..\DiffractionPlugin\codegen\lib\myNN\include\myBestNN.h" />
+    <ClInclude Include="..\DiffractionPlugin\codegen\lib\myNN\include\myNN_data.h" />
+    <ClInclude Include="..\DiffractionPlugin\codegen\lib\myNN\include\myNN_initialize.h" />
+    <ClInclude Include="..\DiffractionPlugin\codegen\lib\myNN\include\myNN_internal_types.h" />
+    <ClInclude Include="..\DiffractionPlugin\codegen\lib\myNN\include\myNN_terminate.h" />
+    <ClInclude Include="..\DiffractionPlugin\codegen\lib\myNN\include\myNN_types.h" />
+    <ClInclude Include="..\DiffractionPlugin\codegen\lib\myNN\include\mySmallNN.h" />
+    <ClInclude Include="..\DiffractionPlugin\codegen\lib\myNN\include\predict.h" />
+    <ClInclude Include="..\DiffractionPlugin\codegen\lib\myNN\include\rtwtypes.h" />
+    <ClInclude Include="..\DiffractionPlugin\codegen\lib\myNN\include\tmwtypes.h" />
     <ClInclude Include="include\FirstDLL.h" />
     <ClInclude Include="include\framework.h" />
   </ItemGroup>
@@ -111,7 +130,7 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros">
-    <PathTo3DTI>D:\Joshua Mannall\GitHub\3dti_AudioToolkit\</PathTo3DTI>
+    <PathTo3DTI>C:\Documents\GitHub\3dti_AudioToolkit\</PathTo3DTI>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
@@ -235,6 +254,7 @@
       <EnableUAC>false</EnableUAC>
       <AdditionalLibraryDirectories>$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\lib\win;$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>netcdf_x64.lib;libsofa_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AssemblyDebug>true</AssemblyDebug>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseTest|x64'">

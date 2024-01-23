@@ -7,9 +7,6 @@
     <Filter Include="Header Files">
       <UniqueIdentifier>{99419ef0-ef8f-46cf-ab10-52f48c2b3a04}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\NN">
-      <UniqueIdentifier>{b01ea716-3936-4af7-b873-d4425602bc85}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\Spatialiser">
       <UniqueIdentifier>{5f549b9f-a86d-4246-98bb-dc19592f70f7}</UniqueIdentifier>
     </Filter>
@@ -34,32 +31,8 @@
     <Filter Include="Source Files\Common">
       <UniqueIdentifier>{d00b4eae-0a1d-4174-a196-68e8896c0c72}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Spatialiser\Diffraction\NN">
-      <UniqueIdentifier>{f04484fb-170e-475c-9c78-144b8c9a5a9e}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\elementwiseOperationInPlace.cpp">
-      <Filter>Source Files\Spatialiser\Diffraction\NN</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\myBestNN.cpp">
-      <Filter>Source Files\Spatialiser\Diffraction\NN</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\myNN_data.cpp">
-      <Filter>Source Files\Spatialiser\Diffraction\NN</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\myNN_initialize.cpp">
-      <Filter>Source Files\Spatialiser\Diffraction\NN</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\myNN_terminate.cpp">
-      <Filter>Source Files\Spatialiser\Diffraction\NN</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\mySmallNN.cpp">
-      <Filter>Source Files\Spatialiser\Diffraction\NN</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\predict.cpp">
-      <Filter>Source Files\Spatialiser\Diffraction\NN</Filter>
-    </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Context.cpp">
       <Filter>Source Files\Spatialiser</Filter>
     </ClCompile>
@@ -113,42 +86,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\anonymous_function.h">
-      <Filter>Header Files\NN</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\elementwiseOperationInPlace.h">
-      <Filter>Header Files\NN</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\myBestNN.h">
-      <Filter>Header Files\NN</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\myNN_data.h">
-      <Filter>Header Files\NN</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\myNN_initialize.h">
-      <Filter>Header Files\NN</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\myNN_internal_types.h">
-      <Filter>Header Files\NN</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\myNN_terminate.h">
-      <Filter>Header Files\NN</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\myNN_types.h">
-      <Filter>Header Files\NN</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\mySmallNN.h">
-      <Filter>Header Files\NN</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\predict.h">
-      <Filter>Header Files\NN</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\rtwtypes.h">
-      <Filter>Header Files\NN</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\tmwtypes.h">
-      <Filter>Header Files\NN</Filter>
-    </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Types.h">
       <Filter>Header Files\Spatialiser</Filter>
     </ClInclude>

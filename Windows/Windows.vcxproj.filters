@@ -12,6 +12,12 @@
     <Filter Include="UnitTest">
       <UniqueIdentifier>{85d1f192-6e16-4a7f-990a-fd1c02bf4d8f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\NN">
+      <UniqueIdentifier>{1177e7c3-aa8e-4126-9d7b-53509a56854a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\NN">
+      <UniqueIdentifier>{f3bf857b-c45f-4bff-988d-1e09ab85f8c7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\dllmain.cpp">
@@ -23,6 +29,27 @@
     <ClCompile Include="source\FirstDLL.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\DiffractionPlugin\codegen\lib\myNN\source\elementwiseOperationInPlace.cpp">
+      <Filter>Source Files\NN</Filter>
+    </ClCompile>
+    <ClCompile Include="..\DiffractionPlugin\codegen\lib\myNN\source\myBestNN.cpp">
+      <Filter>Source Files\NN</Filter>
+    </ClCompile>
+    <ClCompile Include="..\DiffractionPlugin\codegen\lib\myNN\source\myNN_data.cpp">
+      <Filter>Source Files\NN</Filter>
+    </ClCompile>
+    <ClCompile Include="..\DiffractionPlugin\codegen\lib\myNN\source\myNN_initialize.cpp">
+      <Filter>Source Files\NN</Filter>
+    </ClCompile>
+    <ClCompile Include="..\DiffractionPlugin\codegen\lib\myNN\source\myNN_terminate.cpp">
+      <Filter>Source Files\NN</Filter>
+    </ClCompile>
+    <ClCompile Include="..\DiffractionPlugin\codegen\lib\myNN\source\mySmallNN.cpp">
+      <Filter>Source Files\NN</Filter>
+    </ClCompile>
+    <ClCompile Include="..\DiffractionPlugin\codegen\lib\myNN\source\predict.cpp">
+      <Filter>Source Files\NN</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\framework.h">
@@ -30,6 +57,42 @@
     </ClInclude>
     <ClInclude Include="include\FirstDLL.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DiffractionPlugin\codegen\lib\myNN\include\anonymous_function.h">
+      <Filter>Header Files\NN</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DiffractionPlugin\codegen\lib\myNN\include\elementwiseOperationInPlace.h">
+      <Filter>Header Files\NN</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DiffractionPlugin\codegen\lib\myNN\include\myBestNN.h">
+      <Filter>Header Files\NN</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DiffractionPlugin\codegen\lib\myNN\include\myNN_data.h">
+      <Filter>Header Files\NN</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DiffractionPlugin\codegen\lib\myNN\include\myNN_initialize.h">
+      <Filter>Header Files\NN</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DiffractionPlugin\codegen\lib\myNN\include\myNN_internal_types.h">
+      <Filter>Header Files\NN</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DiffractionPlugin\codegen\lib\myNN\include\myNN_terminate.h">
+      <Filter>Header Files\NN</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DiffractionPlugin\codegen\lib\myNN\include\myNN_types.h">
+      <Filter>Header Files\NN</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DiffractionPlugin\codegen\lib\myNN\include\mySmallNN.h">
+      <Filter>Header Files\NN</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DiffractionPlugin\codegen\lib\myNN\include\predict.h">
+      <Filter>Header Files\NN</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DiffractionPlugin\codegen\lib\myNN\include\rtwtypes.h">
+      <Filter>Header Files\NN</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DiffractionPlugin\codegen\lib\myNN\include\tmwtypes.h">
+      <Filter>Header Files\NN</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

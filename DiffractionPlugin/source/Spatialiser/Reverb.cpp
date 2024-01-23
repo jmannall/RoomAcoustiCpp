@@ -21,17 +21,18 @@ namespace UIE
 
 		ReverbSource::~ReverbSource()
 		{
-			if (mSource)
-			{
-				Debug::Log("Remove reverb source", Colour::Red);
-				mCore->RemoveSingleSourceDSP(mSource);
-			}
-			Debug::Log("Reverb source destructor", Colour::White);
+#if DEBUG_REMOVE
+	Debug::Log("Remove reverb source", Colour::Red);
+#endif
+
+		mCore->RemoveSingleSourceDSP(mSource);
 		}
 
 		void ReverbSource::Init()
 		{
-			Debug::Log("Init reverb source", Colour::Green);
+#if DEBUG_INIT
+	Debug::Log("Init reverb source", Colour::Green);
+#endif
 
 			// Initialise source to core
 			mSource = mCore->CreateSingleSourceDSP();
@@ -252,15 +253,19 @@ namespace UIE
 			mFDN.SetParameters(T60, dimensions);
 			if (T60 < 20)
 			{
+#if DEBUG_INIT
+	Debug::Log("Init FDN", Colour::Green);
+	Debug::Log("Reverb T60: [" + RealToStr(t60[0]) + ", " + RealToStr(t60[1]) + ", " +
+		RealToStr(t60[2]) + ", " + RealToStr(t60[3]) + ", " + RealToStr(t60[4]) + "]", Colour::Orange);
+#endif
+
 				valid = true;
 				Real t60[5]; T60.GetValues(&t60[0]);
-
-				Debug::Log("FDN reverb initialised", Colour::Green);
-				Debug::Log("Reverb T60: [" + RealToStr(t60[0]) + ", " + RealToStr(t60[1]) + ", " +
-					RealToStr(t60[2]) + ", " + RealToStr(t60[3]) + ", " + RealToStr(t60[4]) + "]", Colour::Green);
 			}
-			else
-				Debug::Log("FDN reverb failed to initialise. Excessively long T60.", Colour::Red);
+#if DEBUG_INIT
+	else
+		Debug::Log("FDN reverb failed to initialise. Excessively long T60.", Colour::Red);
+#endif
 		}
 	}
 }

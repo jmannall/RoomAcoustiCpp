@@ -10,17 +10,11 @@
     <Filter Include="Header Files\Toolkit">
       <UniqueIdentifier>{e6a9f3cd-1722-4612-804b-8a8b5bf1fed2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\Toolkit\Binaural">
-      <UniqueIdentifier>{d917a339-ff3a-4611-8b02-8c4c237f9771}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\Toolkit\Common">
       <UniqueIdentifier>{00af2976-b80d-4967-a294-2a15e4c517cd}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Toolkit">
       <UniqueIdentifier>{9c4bbadd-d186-4ef1-9222-ecd4e91ae0a1}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Toolkit\Binaural">
-      <UniqueIdentifier>{cf3cfcdf-d737-4af8-9ba7-2ade45d1301d}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Toolkit\Common">
       <UniqueIdentifier>{c204c509-9200-4c17-9af1-78bbde7e6d2e}</UniqueIdentifier>
@@ -31,34 +25,40 @@
     <Filter Include="Header Files\ResourceManager">
       <UniqueIdentifier>{3c16b0e4-bb25-478a-908f-9aa73d72f0ff}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Toolkit\BinauralSpatialiser">
+      <UniqueIdentifier>{cf3cfcdf-d737-4af8-9ba7-2ade45d1301d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Toolkit\BinauralSpatialiser">
+      <UniqueIdentifier>{d917a339-ff3a-4611-8b02-8c4c237f9771}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\BinauralSpatializer\3DTI_BinauralSpatializer.h">
-      <Filter>Header Files\Toolkit\Binaural</Filter>
+      <Filter>Header Files\Toolkit\BinauralSpatialiser</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\BinauralSpatializer\BRIR.h">
-      <Filter>Header Files\Toolkit\Binaural</Filter>
+      <Filter>Header Files\Toolkit\BinauralSpatialiser</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\BinauralSpatializer\Core.h">
-      <Filter>Header Files\Toolkit\Binaural</Filter>
+      <Filter>Header Files\Toolkit\BinauralSpatialiser</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\BinauralSpatializer\Environment.h">
-      <Filter>Header Files\Toolkit\Binaural</Filter>
+      <Filter>Header Files\Toolkit\BinauralSpatialiser</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\BinauralSpatializer\HRTF.h">
-      <Filter>Header Files\Toolkit\Binaural</Filter>
+      <Filter>Header Files\Toolkit\BinauralSpatialiser</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\BinauralSpatializer\ILD.h">
-      <Filter>Header Files\Toolkit\Binaural</Filter>
+      <Filter>Header Files\Toolkit\BinauralSpatialiser</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\BinauralSpatializer\Listener.h">
-      <Filter>Header Files\Toolkit\Binaural</Filter>
+      <Filter>Header Files\Toolkit\BinauralSpatialiser</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\BinauralSpatializer\SingleSourceDSP.h">
-      <Filter>Header Files\Toolkit\Binaural</Filter>
+      <Filter>Header Files\Toolkit\BinauralSpatialiser</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\BinauralSpatializer\UPCAnechoic.h">
-      <Filter>Header Files\Toolkit\Binaural</Filter>
+      <Filter>Header Files\Toolkit\BinauralSpatialiser</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\AIR.h">
       <Filter>Header Files\Toolkit\Common</Filter>
@@ -162,28 +162,28 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\BinauralSpatializer\BRIR.cpp">
-      <Filter>Source Files\Toolkit\Binaural</Filter>
+      <Filter>Source Files\Toolkit\BinauralSpatialiser</Filter>
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\BinauralSpatializer\Core.cpp">
-      <Filter>Source Files\Toolkit\Binaural</Filter>
+      <Filter>Source Files\Toolkit\BinauralSpatialiser</Filter>
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\BinauralSpatializer\Environment.cpp">
-      <Filter>Source Files\Toolkit\Binaural</Filter>
+      <Filter>Source Files\Toolkit\BinauralSpatialiser</Filter>
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\BinauralSpatializer\HRTF.cpp">
-      <Filter>Source Files\Toolkit\Binaural</Filter>
+      <Filter>Source Files\Toolkit\BinauralSpatialiser</Filter>
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\BinauralSpatializer\ILD.cpp">
-      <Filter>Source Files\Toolkit\Binaural</Filter>
+      <Filter>Source Files\Toolkit\BinauralSpatialiser</Filter>
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\BinauralSpatializer\Listener.cpp">
-      <Filter>Source Files\Toolkit\Binaural</Filter>
+      <Filter>Source Files\Toolkit\BinauralSpatialiser</Filter>
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\BinauralSpatializer\SingleSourceDSP.cpp">
-      <Filter>Source Files\Toolkit\Binaural</Filter>
+      <Filter>Source Files\Toolkit\BinauralSpatialiser</Filter>
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\BinauralSpatializer\UPCAnechoic.cpp">
-      <Filter>Source Files\Toolkit\Binaural</Filter>
+      <Filter>Source Files\Toolkit\BinauralSpatialiser</Filter>
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\GitHub\3dti_AudioToolkit\3dti_Toolkit\Common\BiquadFilter.cpp">
       <Filter>Source Files\Toolkit\Common</Filter>

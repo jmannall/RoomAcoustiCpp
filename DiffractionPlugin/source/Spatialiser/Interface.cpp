@@ -24,10 +24,16 @@ namespace UIE
 		{
 			if (context) // Delete any existing context
 			{
-				Debug::Log("Delete Existing Context", Colour::Red);
+#if DEBUG_INIT
+	Debug::Log("Delete Existing Context", Colour::Red);
+#endif
+
 				Exit();
 			}
-			Debug::Log("Create New Context", Colour::Green);
+#if DEBUG_INIT
+	Debug::Log("Create New Context", Colour::Green);
+#endif
+
 			context = new Context(config, filePaths);
 			return context->IsRunning();
 		}

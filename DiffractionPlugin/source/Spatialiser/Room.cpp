@@ -75,19 +75,9 @@ namespace UIE
 						if (normalA != normalB)
 						{
 							if (normalA == -normalB)
-							{
-								Debug::Log("Find parallel edges", Colour::Yellow);
 								ParallelFindEdges(itA->second, itB->second, itA->first, itB->first);
-							}
 							else
-							{
-								Debug::Log("Find edges", Colour::Yellow);
 								FindEdges(itA->second, itB->second, itA->first, itB->first);
-							}
-						}
-						else
-						{
-							Debug::Log("Matching normals", Colour::Yellow);
 						}
 					}
 				}
@@ -179,8 +169,6 @@ namespace UIE
 				}
 				if (match)
 				{
-					Debug::Log("Match", Colour::Yellow);
-
 					j--;
 					int idxA = (i + 1) % numA;
 					bool validEdge = verticesA[idxA] == verticesB[(j - 1) % numB]; // Must be this way to ensure normals not twisted. (right hand rule) therefore one rotated up the edge one rotates down
@@ -190,9 +178,8 @@ namespace UIE
 						idxA = (i - 1) % numA;
 						validEdge = verticesA[idxA] == verticesB[(j + 1) % numB];
 					}
-					if (validEdge)
+					if (validEdge) // Planes not twisted
 					{
-						Debug::Log("Not twisted", Colour::Yellow);
 						int check = 0;
 						while (check == i || check == idxA)
 							check++;
@@ -201,20 +188,16 @@ namespace UIE
 						Real k = b.PointWallPosition(verticesA[check]);	// Only valid for convex shapes
 						if (k < 0) // Check angle greater than 180
 						{
-							Debug::Log("Init Edge", Colour::Green);
+#if DEBUG_INIT
+	Debug::Log("Init Edge", Colour::Green);
+#endif
 
 							// Cross(a.GetNormal(), b.GetNormal()) gives vector in direction of the edge
 							// verticesA[idxA] - verticesA[i] give vector from base to top of edge
 							bool reflexAngle = UnitVector(Cross(a.GetNormal(), b.GetNormal())) == UnitVector(verticesA[idxA] - verticesA[i]);
-							Debug::Log("Reflex angle: " + BoolToStr(reflexAngle), Colour::Yellow);
-							Debug::Log("Base: " + VecToStr(verticesA[i]), Colour::Yellow);
-							Debug::Log("Top: " + VecToStr(verticesA[idxA]), Colour::Yellow);
 
 							if (reflexAngle) // Check returns correct angle type
 							{
-								Debug::Log("Normal 1: " + VecToStr(a.GetNormal()), Colour::Yellow);
-								Debug::Log("Normal 2: " + VecToStr(b.GetNormal()), Colour::Yellow);
-								
 								Edge edge = Edge(verticesA[i], verticesA[idxA], a.GetNormal(), b.GetNormal(), IDa, IDb);
 								size_t id = AddEdge(edge);
 								a.AddEdge(id);
@@ -222,9 +205,6 @@ namespace UIE
 							}
 							else
 							{
-								Debug::Log("Normal 1: " + VecToStr(b.GetNormal()), Colour::Yellow);
-								Debug::Log("Normal 2: " + VecToStr(a.GetNormal()), Colour::Yellow);
-								
 								Edge edge = Edge(verticesA[i], verticesA[idxA], b.GetNormal(), a.GetNormal(), IDb, IDa);
 								size_t id = AddEdge(edge);
 								a.AddEdge(id);
@@ -232,11 +212,7 @@ namespace UIE
 							}
 						}
 					}
-					else
-						Debug::Log("Twisted", Colour::Yellow);
 				}
-				else
-					Debug::Log("No match", Colour::Yellow);
 			}
 		}
 
@@ -271,10 +247,6 @@ namespace UIE
 			}
 			Real temp[5];
 			absorption.GetValues(&temp[0]);
-			for (int i = 0; i < 5; i++)
-			{
-				Debug::Log("Absorption: " + RealToStr(temp[i]) + " I: " + IntToStr(i), Colour::White);
-			}
 
 			Real factor = 24.0 * log(10.0) / SPEED_OF_SOUND;
 			// Sabine
@@ -310,8 +282,6 @@ namespace UIE
 				{
 					Real kS = wall.PointWallPosition(start);
 					Real kE = wall.PointWallPosition(end);
-					Debug::Log("kS: " + RealToStr(kS) + ", " + VecToStr(start), Colour::Yellow);
-					Debug::Log("kE: " + RealToStr(kE) + ", " + VecToStr(end), Colour::Yellow);
 					if (kS * kE < 0)	// point lies on plane when kS || kE == 0. Therefore not obstructed
 					{
 						obstruction = wall.LineWallIntersection(start, end);
@@ -408,13 +378,15 @@ namespace UIE
 					vec3 position(it->second.position);
 
 					bool visible = ReflectPointInRoom(position, vSources);
-					Debug::Log("Source visible: " + BoolToStr(visible), Colour::Blue);
 					{
 						lock_guard <mutex> iLock(it->second.mMutex);
 						it->second.visible = visible;
 						it->second.vSources = vSources;
 					}		
-					Debug::Log("Source " + IntToStr((int)it->first) + " has " + IntToStr(vSources.size()) + " visible virtual sources", Colour::Blue);
+#if DEBUG_ISM_THREAD
+	Debug::Log("Source visible: " + BoolToStr(visible), Colour::White);
+	Debug::Log("Source " + IntToStr((int)it->first) + " has " + IntToStr(vSources.size()) + " visible virtual sources", Colour::White);
+#endif
 				}
 			}
 		}
@@ -435,11 +407,11 @@ namespace UIE
 			VirtualSourceDataStore spEd;
 			VirtualSourceDataStore ed;
 
-			if (mISMConfig.diffraction)
+			if (mISMConfig.diffraction && mEdges.size() > 0)
 				FirstOrderDiffraction(point, ed, vSources);
 
 			// Reflections
-			if (mISMConfig.reflection || mISMConfig.reflectionDiffraction)
+			if ((mISMConfig.reflection || mISMConfig.reflectionDiffraction) && mWalls.size() > 0)
 			{
 				FirstOrderReflections(point, sp, vSources);
 
@@ -448,16 +420,16 @@ namespace UIE
 
 				HigherOrderReflections(point, sp, vSources);
 
-				if (mISMConfig.reflectionDiffraction)
+				if (mISMConfig.reflectionDiffraction && mEdges.size() > 0)
 					HigherOrderSpecularDiffraction(point, sp, edSp, spEd, vSources);
 			}
 
-			Debug::Log("Config:: R: " + BoolToStr(mISMConfig.reflection) + " D: " + BoolToStr(mISMConfig.diffraction) + " RD: " + BoolToStr(mISMConfig.reflectionDiffraction), Colour::White);
-
-			Debug::Log("Reflections: " + IntToStr((int)sp.size()), Colour::Blue);
-			Debug::Log("Diffraction: " + IntToStr((int)ed.size()), Colour::Blue);
-			Debug::Log("RefDiff: " + IntToStr((int)spEd.size()), Colour::Blue);
-			Debug::Log("DiffRef: " + IntToStr((int)edSp.size()), Colour::Blue);
+#if DEBUG_ISM_THREAD
+	Debug::Log("Reflections: " + IntToStr((int)sp.size()), Colour::White);
+	Debug::Log("Diffraction: " + IntToStr((int)ed.size()), Colour::White);
+	Debug::Log("RefDiff: " + IntToStr((int)spEd.size()), Colour::White);
+	Debug::Log("DiffRef: " + IntToStr((int)edSp.size()), Colour::White);
+#endif
 
 			return lineOfSight;
 		}
@@ -465,6 +437,10 @@ namespace UIE
 		// Diffraction
 		void Room::HigherOrderSpecularDiffraction(const vec3& point, VirtualSourceDataStore& sp, VirtualSourceDataStore& edSp, VirtualSourceDataStore& spEd, VirtualSourceDataMap& vSources)
 		{
+			// Check for reflections in sp
+			if (sp.size() == 0)
+				return;
+
 			for (int j = 1; j < mISMConfig.order; j++) // only handle up to 1st order diffraction
 			{
 				int order = j + 1;
@@ -475,6 +451,11 @@ namespace UIE
 				intersections.reserve(j);
 				std::fill_n(std::back_inserter(intersections), order - capacity, vec3());
 				auto bIdx = sp.bucket(j);
+
+				// Check bIdx is not null
+				if (bIdx == NULL)
+					continue;
+
 				auto numReflectionPaths = sp.bucket_size(bIdx);
 
 				auto vs = sp.begin(bIdx);
@@ -641,7 +622,11 @@ namespace UIE
 				for (int i = 1; i < j; i++)
 				{
 					auto idxSpEd = spEd.bucket(i);
+					if (idxSpEd == NULL)
+						continue;
+
 					auto vsSpEd = spEd.begin(idxSpEd);
+
 					auto numSpEd = spEd.bucket_size(idxSpEd);
 
 					for (int x = 0; x < numSpEd; x++, vsSpEd++)
@@ -651,6 +636,9 @@ namespace UIE
 						if (start.GetSValid())
 						{
 							auto idxEdSp = edSp.bucket(j - i);
+							if (idxEdSp == NULL)
+								continue;
+
 							auto vsEdSp = edSp.begin(idxEdSp);
 							auto numEdSp = edSp.bucket_size(idxEdSp);
 
@@ -773,7 +761,9 @@ namespace UIE
 
 		void Room::FirstOrderDiffraction(const vec3& point, VirtualSourceDataStore& ed, VirtualSourceDataMap& vSources)
 		{
-			Debug::Log("Edges: " + IntToStr(mEdges.size()), Colour::White);
+#if DEBUG_ISM_THREAD
+	Debug::Log("Find 1st order diffraction", Colour::White);
+#endif
 
 			bool feedsFDN = mISMConfig.order == 1;
 			for (auto it : mEdges)
@@ -788,40 +778,21 @@ namespace UIE
 				vSource.AddEdgeID(id, path);
 				vSource.SetTransform(point, position);
 
-				Debug::Log("dpf Edge " + IntToStr(id), Colour::Yellow);
-
-				Debug::Log("dpf sValid: " + BoolToStr(path.sValid), Colour::Yellow);
-				Debug::Log("dpf rValid: " + BoolToStr(path.rValid), Colour::Yellow);
-				Debug::Log("dpf zValid: " + BoolToStr(path.zValid), Colour::Yellow);
-
 				if (path.valid)
 				{
 					// Valid diffraction path
 					vSource.Valid();
-					Debug::Log("dpf Path valid", Colour::Yellow);
 
 					if (path.inShadow || mISMConfig.specularDiffraction)
 					{
-						Debug::Log("dpf In shadow or spec diff", Colour::Yellow);
-						 
-						Debug::Log("dpf Point: " + VecToStr(point), Colour::Yellow);
-						Debug::Log("dpf Apex: " + VecToStr(path.GetApex()), Colour::Yellow);
-						Debug::Log("dpf Listener: " + VecToStr(mListenerPosition), Colour::Yellow);
-						// bool obstruction = LineRoomIntersection(point, path.GetApex());
-						// Debug::Log("dpf Obstruction 1: " + BoolToStr(obstruction), Colour::Yellow);
-						// LineRoomIntersection(path.GetApex(), mListenerPosition, obstruction);
-						// Debug::Log("dpf Obstruction 2: " + BoolToStr(obstruction), Colour::Yellow);
+						bool obstruction = LineRoomIntersection(point, path.GetApex());
+						LineRoomIntersection(path.GetApex(), mListenerPosition, obstruction);
 
-						bool obstruction = LineRoomIntersectionDiff(point, path.GetApex());
-						Debug::Log("dpf Obstruction 1: " + BoolToStr(obstruction), Colour::Yellow);
-						LineRoomIntersectionDiff(path.GetApex(), mListenerPosition, obstruction);
-						Debug::Log("dpf Obstruction 2: " + BoolToStr(obstruction), Colour::Yellow);
+						//bool obstruction = LineRoomIntersectionDiff(point, path.GetApex());
+						//LineRoomIntersectionDiff(path.GetApex(), mListenerPosition, obstruction);
 
-						if (!obstruction) // source and receiver can see edge
+						if (!obstruction) // Visible diffraction path
 						{
-							Debug::Log("dpf Visible diffraction path", Colour::Yellow);
-
-							// Visible diffraction path
 							vSource.Visible(feedsFDN);
 							vSources.insert_or_assign(vSource.GetKey(), vSource);
 						}
@@ -883,6 +854,10 @@ namespace UIE
 
 		void Room::HigherOrderReflections(const vec3& point, VirtualSourceDataStore& sp, VirtualSourceDataMap& vSources)
 		{
+			// Check for first order reflections in sp
+			if (sp.size() == 0)
+				return;
+
 			for (int j = 1; j < mISMConfig.order; j++)
 			{
 				int refOrder = j + 1;
@@ -892,7 +867,13 @@ namespace UIE
 				intersections.reserve(refOrder);
 				std::fill_n(std::back_inserter(intersections), refOrder - capacity, vec3());
 				auto n = sp.bucket(j);
+
+				// Check n is not null
+				if (n == NULL)
+					continue;
+
 				auto m = sp.bucket_size(n);
+
 				for (auto it : mWalls)
 				{
 					size_t id = it.first;
@@ -903,7 +884,6 @@ namespace UIE
 					for (int i = 0; i < m; i++, vs++)
 					{
 						VirtualSourceData vSource = vs->second;
-
 						if (id != vSource.GetID(j - 1) && (vSource.valid || vSource.rValid))
 						{
 							vSource.AddWallID(id, wall.GetAbsorption());

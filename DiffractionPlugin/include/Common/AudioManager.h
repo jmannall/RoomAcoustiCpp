@@ -41,7 +41,7 @@ namespace UIE
 			std::vector<Real> mBuffer;
 		};
 
-		bool BuffersEqual(Buffer x, Buffer y);
+		bool BuffersEqual(Buffer& x, Buffer& y);
 
 		class BufferF
 		{

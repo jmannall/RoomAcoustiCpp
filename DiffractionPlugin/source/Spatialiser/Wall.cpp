@@ -15,6 +15,7 @@
 // Spatialiser headers
 #include "Spatialiser/Wall.h"
 #include "Spatialiser/Edge.h"
+#include "Spatialiser/Types.h"
 
 namespace UIE
 {
@@ -30,8 +31,11 @@ namespace UIE
 			mNormal = UnitVector(vec3(Round(normal.x, NUM_PRECISION), Round(normal.y, NUM_PRECISION), Round(normal.z, NUM_PRECISION)));
 			Update(vData);
 			absorption.area = mAbsorption.area;
-			Debug::Log("Vertecies: " + VecArrayToStr(mVertices), Colour::Orange);
-			Debug::Log("Normal: " + VecToStr(mNormal), Colour::Orange);
+
+#if DEBUG_INIT
+	Debug::Log("Vertecies: " + VecArrayToStr(mVertices), Colour::Orange);
+	Debug::Log("Normal: " + VecToStr(mNormal), Colour::Orange);
+#endif
 		}
 
 		// Update

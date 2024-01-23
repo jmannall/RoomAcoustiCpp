@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.33927.289
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34511.84
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DiffractionPlugin", "DiffractionPlugin\DiffractionPlugin.vcxitems", "{BC8AA037-56AB-4F29-BF45-D410AFF883C6}"
 EndProject
@@ -13,16 +13,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MCL", "MCL\MCL.vcxitems", "
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "3DTI", "3DTI\3DTI.vcxitems", "{C5D65379-224B-4080-91DB-FB443C9D3C9E}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "3DTI_NoSofa", "3DTI_NoSofa\3DTI_NoSofa.vcxitems", "{D2696B6B-7DE2-4A2B-B2A6-434C41F4117B}"
+EndProject
 Global
-	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		3DTI\3DTI.vcxitems*{2f98d92a-d2e5-460b-a1d1-12e9052deb64}*SharedItemsImports = 4
-		DiffractionPlugin\DiffractionPlugin.vcxitems*{2f98d92a-d2e5-460b-a1d1-12e9052deb64}*SharedItemsImports = 4
-		MCL\MCL.vcxitems*{817a8095-f2f7-423f-bd15-d9320bafcef2}*SharedItemsImports = 9
-		DiffractionPlugin\DiffractionPlugin.vcxitems*{bc8aa037-56ab-4f29-bf45-d410aff883c6}*SharedItemsImports = 9
-		3DTI\3DTI.vcxitems*{c4fbd30d-63ba-4b40-baa1-6c5f91065427}*SharedItemsImports = 4
-		DiffractionPlugin\DiffractionPlugin.vcxitems*{c4fbd30d-63ba-4b40-baa1-6c5f91065427}*SharedItemsImports = 4
-		3DTI\3DTI.vcxitems*{c5d65379-224b-4080-91db-fb443c9d3c9e}*SharedItemsImports = 9
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM = Debug|ARM
 		Debug|ARM64 = Debug|ARM64
@@ -73,5 +66,15 @@ Global
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {3767F943-9E3A-48A7-A55D-07DBE2E3C85D}
+	EndGlobalSection
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		3DTI\3DTI.vcxitems*{2f98d92a-d2e5-460b-a1d1-12e9052deb64}*SharedItemsImports = 4
+		DiffractionPlugin\DiffractionPlugin.vcxitems*{2f98d92a-d2e5-460b-a1d1-12e9052deb64}*SharedItemsImports = 4
+		MCL\MCL.vcxitems*{817a8095-f2f7-423f-bd15-d9320bafcef2}*SharedItemsImports = 9
+		DiffractionPlugin\DiffractionPlugin.vcxitems*{bc8aa037-56ab-4f29-bf45-d410aff883c6}*SharedItemsImports = 9
+		3DTI_NoSofa\3DTI_NoSofa.vcxitems*{c4fbd30d-63ba-4b40-baa1-6c5f91065427}*SharedItemsImports = 4
+		DiffractionPlugin\DiffractionPlugin.vcxitems*{c4fbd30d-63ba-4b40-baa1-6c5f91065427}*SharedItemsImports = 4
+		3DTI\3DTI.vcxitems*{c5d65379-224b-4080-91db-fb443c9d3c9e}*SharedItemsImports = 9
+		3DTI_NoSofa\3DTI_NoSofa.vcxitems*{d2696b6b-7de2-4a2b-b2a6-434c41f4117b}*SharedItemsImports = 9
 	EndGlobalSection
 EndGlobal

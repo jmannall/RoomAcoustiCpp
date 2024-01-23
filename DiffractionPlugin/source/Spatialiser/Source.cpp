@@ -36,25 +36,21 @@ namespace UIE
 			{
 			case HRTFMode::quality:
 			{
-				Debug::Log("High quality mode", Colour::Green);
 				mSource->SetSpatializationMode(Binaural::TSpatializationMode::HighQuality);
 				break;
 			}
 			case HRTFMode::performance:
 			{
-				Debug::Log("High performance mode", Colour::Green);
 				mSource->SetSpatializationMode(Binaural::TSpatializationMode::HighPerformance);
 				break;
 			}
 			case HRTFMode::none:
 			{
-				Debug::Log("No spatialisation mode", Colour::Green);
 				mSource->SetSpatializationMode(Binaural::TSpatializationMode::NoSpatialization);
 				break;
 			}
 			default:
 			{
-				Debug::Log("High performance mode (default)", Colour::Green);
 				mSource->SetSpatializationMode(Binaural::TSpatializationMode::HighPerformance);
 				break;
 			}
@@ -66,11 +62,6 @@ namespace UIE
 
 		Source::~Source()
 		{
-			if (mSource)
-			{
-				Debug::Log("Remove source", Colour::Red);
-			}
-			Debug::Log("Source destructor", Colour::White);
 			mCore->RemoveSingleSourceDSP(mSource);
 			Reset();
 		}
@@ -100,7 +91,9 @@ namespace UIE
 				}
 			}
 
-			Debug::Log("Total audio vSources: " + IntToStr(counter), Colour::Yellow);
+#if DEBUG_AUDIO_THREAD
+	Debug::Log("Total audio vSources: " + IntToStr(counter), Colour::Orange);
+#endif
 
 			if (isVisible || currentGain != 0.0f)
 			{
@@ -112,11 +105,18 @@ namespace UIE
 
 				{
 					lock_guard<mutex> lock(audioMutex);
-					for (int i = 0; i < numFrames; i++)
+					if (currentGain == targetGain)
 					{
-						bInput[i] = static_cast<float>(*inputPtr++ * currentGain);
-						if (currentGain != targetGain)
+						for (int i = 0; i < numFrames; i++)
+							bInput[i] = static_cast<float>(*inputPtr++ * currentGain);
+					}
+					else
+					{
+						for (int i = 0; i < numFrames; i++)
+						{
+							bInput[i] = static_cast<float>(*inputPtr++ * currentGain);
 							currentGain = Lerp(currentGain, targetGain, lerpFactor);
+						}
 					}
 					mSource->SetBuffer(bInput);
 					mSource->ProcessAnechoic(bOutput.left, bOutput.right);
@@ -143,17 +143,11 @@ namespace UIE
 					targetGain = 0.0f;
 			}
 
-			Debug::Log("Source visible: " + BoolToStr(data.visible), Colour::Yellow);
-
-			// RemoveVirtualSources();
 			UpdateVirtualSources(data.vSources);
 		}
 
 		void Source::UpdateVirtualSources(const VirtualSourceDataMap& data)
 		{
-			Debug::Log("Old data: " + IntToStr(oldData.size()));
-			Debug::Log("Data: " + IntToStr(data.size()));
-
 			std::vector<std::string> keys;
 			std::vector<VirtualSourceData> newVSources;
 
@@ -170,7 +164,6 @@ namespace UIE
 					{
 						keys.push_back(it->first);
 					}
-					Debug::Log("Remove " + it->first + ": " + BoolToStr(remove), Colour::White);
 				}
 			}
 
@@ -179,41 +172,24 @@ namespace UIE
 				oldData.erase(key);
 			}
 
-			Debug::Log("Erased old data: " + IntToStr(oldData.size()));
-
 			// new or existing vSources
 			for (auto it = data.begin(); it != data.end(); it++)
 			{
-				UpdateVirtualSource(it->second, newVSources);
+				UpdateVirtualSource(it->second, newVSources);	// newVSources are new placeholders in the ISM tree
 				oldData.insert_or_assign(it->first, it->second);
-				Debug::Log("Visible: " + it->first, Colour::Blue);
+
+#if DEBUG_VIRTUAL_SOURCE
+	Debug::Log("vSource: " + it->first, Colour::Yellow);
+#endif
 			}
 
 			for (auto vSource : newVSources)
-			{
 				oldData.insert({ vSource.GetKey(), vSource });
-				Debug::Log("Extra: " + vSource.GetKey(), Colour::Orange);
-			}
 
-			Debug::Log("Total vSources: " + IntToStr(oldData.size()));
+#if DEBUG_VIRTUAL_SOURCE
+	Debug::Log("Total vSources: " + IntToStr(oldData.size()), Colour::Yellow);
+#endif
 		}
-
-		// obselete? as vSources removed automatically is no longer exist.
-		//void Source::RemoveVirtualSources() // Add remove edge sources
-		//{
-		//	if (!removedWalls.empty())
-		//	{
-		//		for (int i = 0; i < removedWalls.size(); i++)
-		//		{
-		//			mVirtualSources.erase(removedWalls[i]);
-		//			for (auto it = mVirtualSources.begin(); it != mVirtualSources.end(); it++)
-		//			{
-		//				it->second.RemoveVirtualSources(removedWalls[i]);
-		//			}
-		//		}
-		//		removedWalls.clear();
-		//	}
-		//}
 
 		bool Source::UpdateVirtualSource(const VirtualSourceData& data, std::vector<VirtualSourceData>& newVSources)
 		{
@@ -236,7 +212,7 @@ namespace UIE
 			for (int i = 0; i < orderIdx; i++)
 			{
 				auto it = tempStore->find(data.GetID(i));
-				if (it == tempStore->end())		// case: source higher in the tree does not exist
+				if (it == tempStore->end())		// case: virtual source lower in the tree does not exist
 				{
 					lock_guard<mutex> lock(*m);
 					auto newIt = tempStore->insert_or_assign(data.GetID(i), VirtualSource(mCore, mHRTFMode, sampleRate)); // feedsFDN always the highest order ism
@@ -256,18 +232,20 @@ namespace UIE
 					m = &it->second.vEdgeMutex;
 				}
 			}
-			auto it = tempStore->find(data.GetID(orderIdx));
-			if (it == tempStore->end())		// case: source does not exist
-			{
-				// Virtual source does not exist in tree
-				Debug::Log("Is visible: " + BoolToStr(data.visible), Colour::Orange);
-				Debug::Log("Is valid: " + BoolToStr(data.valid), Colour::Orange);
 
-				VirtualSource virtualSource = VirtualSource(mCore, mHRTFMode, sampleRate, data, (int)(freeFDNChannels.back() % mNumFDNChannels));
-				if (freeFDNChannels.size() > 1)
-					freeFDNChannels.pop_back();
-				else
-					freeFDNChannels[0]++;
+			auto it = tempStore->find(data.GetID(orderIdx));
+			if (it == tempStore->end())		// case: virtual source does not exist
+			{
+				int fdnChannel = -1;
+				if (data.feedsFDN)
+				{
+					fdnChannel = (int)(freeFDNChannels.back() % mNumFDNChannels);
+					if (freeFDNChannels.size() > 1)
+						freeFDNChannels.pop_back();
+					else
+						freeFDNChannels[0]++;
+				}
+				VirtualSource virtualSource = VirtualSource(mCore, mHRTFMode, sampleRate, data, fdnChannel);
 				{
 					lock_guard<mutex> lock(*m);
 					tempStore->insert_or_assign(data.GetID(orderIdx), virtualSource);
@@ -276,46 +254,46 @@ namespace UIE
 			}
 			else
 			{
-				//Debug::Log("Update virtual source", Colour::Orange);
-				//Debug::Log("Is visible: " + BoolToStr(data.visible), Colour::Orange);
-				bool remove = it->second.UpdateVirtualSource(data);
+				int fdnChannel = -1;
+				if (data.feedsFDN && it->second.GetFDNChannel() < 0)
+				{
+					fdnChannel = (int)(freeFDNChannels.back() % mNumFDNChannels);
+					if (freeFDNChannels.size() > 1)
+						freeFDNChannels.pop_back();
+					else
+						freeFDNChannels[0]++;
+				}
 
-				Debug::Log("To be removed : " + BoolToStr(remove), Colour::Yellow);
+				bool remove = it->second.UpdateVirtualSource(data, fdnChannel);
+
+				if (fdnChannel >= 0) // Add vSource old fdnChannel to freeFDNChannels (Also prevents leaking FDN channels if !data.visible and the channel is not assigned to vSource)
+					freeFDNChannels.push_back(it->second.GetFDNChannel());
+
 				if (remove)
 				{
 					if (it->second.GetFDNChannel() >= 0)
 					{
-						Debug::Log("FDN Channel : " + IntToStr(it->second.GetFDNChannel()), Colour::Yellow);
-
 						freeFDNChannels.push_back(it->second.GetFDNChannel());
 						int n = 0;
 						{
 							lock_guard<mutex> lock(*m);
-							Debug::Log("Get mutex", Colour::White);
 							n = tempStore->erase(data.GetID(orderIdx));
 						}
-						Debug::Log("Release mutex", Colour::White);
 
-						if (n == 1)
+						if (n == 1) // Check vSource has been successfully erased
 							return true;
 					}
 					else if (!(it->second.mVirtualSources.size() > 0 || it->second.mVirtualEdgeSources.size() > 0))
 					{
-						Debug::Log("No vSources", Colour::Yellow);
-
 						int n = 0;
 						{
 							lock_guard<mutex> lock(*m);
-							Debug::Log("Get mutex", Colour::White);
 							n = tempStore->erase(data.GetID(orderIdx));
 						}
-						Debug::Log("Release mutex", Colour::White);
 
-						if (n == 1)
+						if (n == 1) // Check vSource has been successfully erased
 							return true;
 					}
-					else
-						Debug::Log("Not removed: " + IntToStr(it->second.mVirtualSources.size() + it->second.mVirtualEdgeSources.size()) + " children", Colour::Yellow);
 				}
 			}
 			return false;

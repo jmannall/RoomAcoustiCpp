@@ -14,6 +14,7 @@
 
 // Spatialiser headers
 #include "Spatialiser/Edge.h"
+#include "Spatialiser/Types.h"
 
 namespace UIE
 {
@@ -37,24 +38,22 @@ namespace UIE
 
 		void Edge::InitEdge()
 		{
+#if DEBUG_INIT
+	Debug::Log("Edge init", Colour::Green);
+#endif
+
 			midPoint = (mTop + mBase) / 2;
 			mEdgeVector = UnitVector(mTop - mBase);
 			mEdgeNormal = UnitVector(mFaceNormals[0] + mFaceNormals[1]);
 
-			Debug::Log("Edge vector: " + VecToStr(mEdgeVector), Colour::Yellow);
-			Debug::Log("Cross product vector: " + VecToStr(UnitVector(Cross(mFaceNormals[0], mFaceNormals[1]))), Colour::Yellow);
 			if (UnitVector(Cross(mFaceNormals[0], mFaceNormals[1])) == mEdgeVector) // case true: angle is reflex
-			{
-				Debug::Log("Edge init as reflex", Colour::Yellow);
 				t = PI_1 + acos(Dot(mFaceNormals[0], mFaceNormals[1]));
-			}
 			else
-			{
-				Debug::Log("Edge init as non reflex", Colour::Yellow);
 				t = PI_1 - acos(Dot(mFaceNormals[0], mFaceNormals[1]));
-			}
 
-			Debug::Log("Theta W: " + RealToStr(t), Colour::Yellow);
+#if DEBUG_INIT
+	Debug::Log("Edge angle: " + RealToStr(t), Colour::Orange);
+#endif
 			UpdateEdgeLength();
 		}
 	}

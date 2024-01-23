@@ -54,28 +54,30 @@ namespace UIE
 
 		bool Buffer::Valid()
 		{
-			for (int i = 0; i < mBuffer.size(); i++)
+			bool ret = true;
+			int i = 0;
+			while (ret && i < mBuffer.size())
 			{
-				if (std::isnan(mBuffer[i]))
-					return false;
+				ret = !std::isnan(mBuffer[i]);
+				i++;
 			}
-			return true;
+			return ret;
 		}
 
-		bool BuffersEqual(Buffer x, Buffer y)
+		bool BuffersEqual(Buffer& x, Buffer& y)
 		{
 			if (x.Length() != y.Length())
 			{
 				return false;
 			}
-			for (int i = 0; i < x.Length(); i++)
+			bool ret = true;
+			int i = 0;
+			while (ret && i < x.Length())
 			{
-				if (x[i] != y[i])
-				{
-					return false;
-				}
+				ret = x[i] == y[i];
+				i++;
 			}
-			return true;
+			return ret;
 		}
 
 		void BufferF::ResizeBuffer(size_t numSamples)

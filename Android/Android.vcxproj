@@ -34,119 +34,6 @@
       <Platform>x86</Platform>
     </ProjectConfiguration>
   </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncAtt.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncByte.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncChar.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncCheck.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncCompoundType.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncDim.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncDouble.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncEnumType.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncException.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncFile.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncFloat.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncGroup.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncGroupAtt.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncInt.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncInt64.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncOpaqueType.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncShort.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncString.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncType.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncUbyte.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncUint.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncUint64.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncUshort.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncVar.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncVarAtt.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncVlenType.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\netcdf.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\netcdf_mem.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\netcdf_meta.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFA.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFAAPI.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFAAttributes.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFACoordinates.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFADate.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFAEmitter.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFAExceptions.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFAFile.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFAGeneralFIR.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFAGeneralFIRE.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFAGeneralTF.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFAHelper.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFAHostArchitecture.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFAListener.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFAMultiSpeakerBRIR.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFANcFile.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFANcUtils.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFAPlatform.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFAPoint3.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFAPosition.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFAReceiver.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFASimpleFreeFieldHRIR.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFASimpleFreeFieldSOS.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFASimpleHeadphoneIR.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFASingleRoomDRIR.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFASource.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFAString.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFAUnits.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFAUtils.h" />
-    <ClInclude Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFAVersion.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncAtt.cpp" />
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncByte.cpp" />
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncChar.cpp" />
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncCheck.cpp" />
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncCompoundType.cpp" />
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncDim.cpp" />
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncDouble.cpp" />
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncEnumType.cpp" />
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncException.cpp" />
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncFile.cpp" />
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncFloat.cpp" />
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncGroup.cpp" />
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncGroupAtt.cpp" />
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncInt.cpp" />
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncInt64.cpp" />
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncOpaqueType.cpp" />
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncShort.cpp" />
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncString.cpp" />
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncType.cpp" />
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncUbyte.cpp" />
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncUint.cpp" />
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncUint64.cpp" />
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncUshort.cpp" />
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncVar.cpp" />
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncVarAtt.cpp" />
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include\ncVlenType.cpp" />
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFAAPI.cpp" />
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFAAttributes.cpp" />
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFACoordinates.cpp" />
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFADate.cpp" />
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFAEmitter.cpp" />
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFAExceptions.cpp" />
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFAFile.cpp" />
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFAGeneralFIR.cpp" />
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFAGeneralFIRE.cpp" />
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFAGeneralTF.cpp" />
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFAHelper.cpp" />
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFAListener.cpp" />
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFAMultiSpeakerBRIR.cpp" />
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFANcFile.cpp" />
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFAPoint3.cpp" />
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFAPosition.cpp" />
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFAReceiver.cpp" />
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFASimpleFreeFieldHRIR.cpp" />
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFASimpleFreeFieldSOS.cpp" />
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFASimpleHeadphoneIR.cpp" />
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFASingleRoomDRIR.cpp" />
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFASource.cpp" />
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFAString.cpp" />
-    <ClCompile Include="..\..\..\GitHub\3dti_AudioToolkit\3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src\SOFAUnits.cpp" />
-  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{c4fbd30d-63ba-4b40-baa1-6c5f91065427}</ProjectGuid>
     <Keyword>Android</Keyword>
@@ -204,11 +91,11 @@
   <ImportGroup Label="ExtensionSettings" />
   <ImportGroup Label="Shared">
     <Import Project="..\DiffractionPlugin\DiffractionPlugin.vcxitems" Label="Shared" />
-    <Import Project="..\3DTI\3DTI.vcxitems" Label="Shared" />
+    <Import Project="..\3DTI_NoSofa\3DTI_NoSofa.vcxitems" Label="Shared" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros">
-    <PathTo3DTI>D:\Joshua Mannall\GitHub\3dti_AudioToolkit\</PathTo3DTI>
+    <PathTo3DTI>C:\Documents\GitHub\3dti_AudioToolkit\</PathTo3DTI>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
   </PropertyGroup>
@@ -285,8 +172,8 @@
       <AdditionalOptions>-fdeclspec %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
-      <AdditionalOptions>-lm -v -fopenmp %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>libnetcdf.so;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalOptions>-lm -v %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <LibraryDependencies>%(LibraryDependencies)</LibraryDependencies>

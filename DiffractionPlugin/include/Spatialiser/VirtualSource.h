@@ -173,7 +173,7 @@ namespace UIE
 			// Load and Destroy
 			VirtualSource() : mCore(NULL), mSource(NULL), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(4), isInitialised(false), mHRTFMode(HRTFMode::performance), feedsFDN(false), mFDNChannel(-1), btm(&mDiffractionPath, 48000), reflection(false), diffraction(false) {};
 			VirtualSource(Binaural::CCore* core, HRTFMode hrtfMode, int fs) : mCore(core), mSource(NULL), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(4, fs), isInitialised(false), mHRTFMode(hrtfMode), feedsFDN(false), mFDNChannel(-1), btm(&mDiffractionPath, fs), reflection(false), diffraction(false) {};
-			VirtualSource(Binaural::CCore* core, HRTFMode hrtfMode, int fs, const VirtualSourceData& data, const int& fdnChannel);
+			VirtualSource(Binaural::CCore* core, HRTFMode hrtfMode, int fs, const VirtualSourceData& data, const int fdnChannel);
 			VirtualSource(const VirtualSource& vS);
 			~VirtualSource();
 
@@ -194,7 +194,7 @@ namespace UIE
 			inline int GetFDNChannel() const { return mFDNChannel; }
 
 			// Updates
-			bool UpdateVirtualSource(const VirtualSourceData& data);
+			bool UpdateVirtualSource(const VirtualSourceData& data, int& fdnChannel);
 			// void RemoveVirtualSources(const size_t& id);
 
 			// Audio
@@ -212,7 +212,7 @@ namespace UIE
 		private:
 			void Init(const VirtualSourceData& data);
 			void Remove();
-			void Update(const VirtualSourceData& data);
+			void Update(const VirtualSourceData& data, int& fdnChannel);
 
 			void Reset() { mVirtualSources.clear(); mVirtualEdgeSources.clear(); } // mWallIDs.clear(); }
 

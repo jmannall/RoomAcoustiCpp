@@ -285,6 +285,8 @@ namespace UIE
 				return g * CalcUDFA(f, fc, g);
 			}
 
+#ifndef _ANDROID
+
 			//////////////////// NN class ////////////////////
 
 			NN::NN(Path* path) : mInput{ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }, target(), current(), filter(48000), mPath(path)
@@ -379,6 +381,8 @@ namespace UIE
 					}
 				}
 			}
+
+#endif
 
 			//////////////////// UTD class ////////////////////
 
@@ -519,10 +523,17 @@ namespace UIE
 					if (ir.Valid())
 						targetIr = ir;
 				}
-				else
+				// else do nothing
+			}
+
+			void BTM::InitParameters()
+			{
+				if (mPath->valid)
 				{
+					CalcBTM();
 					std::lock_guard<std::mutex> lock(*m);
-					targetIr.ResetBuffer();
+					if (ir.Valid())
+						currentIr = ir;
 				}
 			}
 
@@ -664,20 +675,21 @@ namespace UIE
 
 			void BTM::ProcessAudio(const Real* inBuffer, Real* outBuffer, int numFrames, Real lerpFactor)
 			{
-				// Apply filter
-				for (int i = 0; i < numFrames; i++)
+				if (BuffersEqual(currentIr, targetIr))
 				{
-					outBuffer[i] = firFilter.GetOutput(inBuffer[i]);
+					for (int i = 0; i < numFrames; i++)
+						outBuffer[i] = firFilter.GetOutput(inBuffer[i]);
+				}
+				else
+				{
 					std::lock_guard<std::mutex> lock(*m);
-					if (!BuffersEqual(currentIr, targetIr))
+					if (currentIr.Length() != targetIr.Length())
+						currentIr.ResizeBuffer(targetIr.Length());
+					for (int i = 0; i < numFrames; i++)
 					{
-						if (currentIr.Length() != targetIr.Length())
-							currentIr.ResizeBuffer(targetIr.Length());
+						outBuffer[i] = firFilter.GetOutput(inBuffer[i]);
 						for (int j = 0; j < currentIr.Length(); j++)
-						{
-							if (!std::isnan(targetIr[j]))
-								currentIr[j] = Lerp(currentIr[j], targetIr[j], lerpFactor);
-						}
+							currentIr[j] = Lerp(currentIr[j], targetIr[j], lerpFactor);
 						firFilter.SetImpulseResponse(currentIr);
 					}
 				}

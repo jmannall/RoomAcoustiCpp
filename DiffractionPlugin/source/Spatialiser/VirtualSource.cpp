@@ -152,10 +152,9 @@ namespace UIE
 
 		//////////////////// VirtualSource class ////////////////////
 
-		VirtualSource::VirtualSource(Binaural::CCore* core, HRTFMode hrtfMode, int fs, const VirtualSourceData& data, const int& fdnChannel) : mCore(core), mSource(NULL), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(4, fs), isInitialised(false), mHRTFMode(hrtfMode), feedsFDN(false), mFDNChannel(fdnChannel), mDiffractionPath(data.mDiffractionPath), btm(&mDiffractionPath, fs), reflection(false), diffraction(false)
+		VirtualSource::VirtualSource(Binaural::CCore* core, HRTFMode hrtfMode, int fs, const VirtualSourceData& data, int fdnChannel) : mCore(core), mSource(NULL), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(4, fs), isInitialised(false), mHRTFMode(hrtfMode), feedsFDN(data.feedsFDN), mFDNChannel(fdnChannel), mDiffractionPath(data.mDiffractionPath), btm(&mDiffractionPath, fs), reflection(data.reflection), diffraction(data.diffraction)
 		{
-			UpdateVirtualSource(data);
-			// Set local bool for use at audio processing?
+			UpdateVirtualSource(data, fdnChannel);
 		}
 
 		VirtualSource::VirtualSource(const VirtualSource& vS) : mCore(vS.mCore), mSource(vS.mSource), mPosition(vS.mPosition), mFilter(vS.mFilter), isInitialised(vS.isInitialised), mHRTFMode(vS.mHRTFMode), feedsFDN(vS.feedsFDN), mFDNChannel(vS.mFDNChannel), mDiffractionPath(vS.mDiffractionPath), btm(vS.btm), mTargetGain(vS.mTargetGain), mCurrentGain(vS.mCurrentGain), reflection(vS.reflection), diffraction(vS.diffraction), mVirtualSources(vS.mVirtualSources), mVirtualEdgeSources(vS.mVirtualEdgeSources)
@@ -165,17 +164,11 @@ namespace UIE
 
 		VirtualSource::~VirtualSource()
 		{
-			if (mSource)
-			{
-				Debug::Log("Remove virtual source", Colour::Red);
-			}
-			Debug::Log("Virtual source destructor", Colour::White);
-
 			mCore->RemoveSingleSourceDSP(mSource);
 			Reset();
 		};
 
-		bool VirtualSource::UpdateVirtualSource(const VirtualSourceData& data)
+		bool VirtualSource::UpdateVirtualSource(const VirtualSourceData& data, int& fdnChannel)
 		{
 			if (data.visible) // Process virtual source - Init if doesn't exist
 			{
@@ -183,7 +176,7 @@ namespace UIE
 				mTargetGain = 1.0f;
 				if (!isInitialised)
 					Init(data);
-				Update(data);
+				Update(data, fdnChannel);
 			}
 			else
 			{
@@ -259,11 +252,18 @@ namespace UIE
 						bStore[i] = mFilter.GetOutput(*inputPtr++);
 				}
 
-				for (int i = 0; i < numFrames; i++)
+				if (mCurrentGain == mTargetGain)
 				{
-					bInput[i] = static_cast<float>(bStore[i] * mCurrentGain);
-					if (mCurrentGain != mTargetGain)
+					for (int i = 0; i < numFrames; i++)
+						bInput[i] = static_cast<float>(bStore[i] * mCurrentGain);
+				}
+				else
+				{
+					for (int i = 0; i < numFrames; i++)
+					{
+						bInput[i] = static_cast<float>(bStore[i] * mCurrentGain);
 						mCurrentGain = Lerp(mCurrentGain, mTargetGain, lerpFactor);
+					}
 				}
 		
 				mSource->SetBuffer(bInput);
@@ -271,8 +271,6 @@ namespace UIE
 				CEarPair<CMonoBuffer<float>> bOutput;
 				if (feedsFDN)
 				{
-					Debug::Log("Feeds FDN", Colour::Yellow);
-
 					CMonoBuffer<float> bMonoOutput;
 					{
 						lock_guard<mutex> lock(audioMutex);
@@ -300,22 +298,20 @@ namespace UIE
 
 		void VirtualSource::Init(const VirtualSourceData& data)
 		{
-			if (data.reflection) // Init reflection filter
+#if DEBUG_VIRTUAL_SOURCE
+	Debug::Log("Init virtual source", Colour::Green);
+#endif
+
+			if (reflection) // Init reflection filter
 			{
 				Real fc[] = { 250, 500, 1000, 2000, 4000 };
 				Real g[5];
 				data.GetAbsorption(g);
 				mFilter.UpdateParameters(fc, g);
-				reflection = true;
 			}
-			if (data.diffraction)
-			{
-				// BTM filter already init
-				diffraction = true;
-			}
-			feedsFDN = data.feedsFDN;
 
-			Debug::Log("Init virtual source", Colour::Green);
+			// Set btm currentIr
+			btm.InitParameters();
 
 			// Initialise source to core
 			mSource = mCore->CreateSingleSourceDSP();
@@ -344,27 +340,32 @@ namespace UIE
 			isInitialised = true;
 		}
 
-		void VirtualSource::Update(const VirtualSourceData& data)
+		void VirtualSource::Update(const VirtualSourceData& data, int& fdnChannel)
 		{
-			reflection = data.reflection;
-			diffraction = data.diffraction;
-
 			if (diffraction)
 			{
 				mDiffractionPath = data.mDiffractionPath;
 				btm.UpdateParameters();
 			}
+
+			if (data.feedsFDN != feedsFDN)
+			{
+				feedsFDN = data.feedsFDN;
+				int oldChannel = mFDNChannel;
+				mFDNChannel = fdnChannel;
+				fdnChannel = oldChannel;
+			}
 			mPosition = data.GetPosition();
 			mSource->SetSourceTransform(data.transform);
 		}
 
-
 		void VirtualSource::Remove()
 		{
-			Debug::Log("Remove virtual source", Colour::Red);
+#if DEBUG_VIRTUAL_SOURCE
+	Debug::Log("Remove virtual source", Colour::Red);
+#endif
 
 			mCore->RemoveSingleSourceDSP(mSource);
-
 			isInitialised = false;
 		}
 	}

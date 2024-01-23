@@ -18,6 +18,19 @@ namespace UIE
 	using namespace Common;
 	namespace Spatialiser
 	{
+
+		//////////////////// #defines ////////////////////
+
+// #define DEBUG_INIT
+// #define DEBUG_UPDATE
+// #define DEBUG_REMOVE
+// #define DEBUG_AUDIO_THREAD
+// #define DEBUG_ISM_THREAD
+#define DEBUG_HRTF
+//#define DEBUG_VIRTUAL_SOURCE
+
+		//////////////////// Data Types ////////////////////
+
 		// Class predeclarations
 		class Wall;
 		class Edge;
@@ -25,8 +38,6 @@ namespace UIE
 		class SourceData;
 		class VirtualSource;
 		class VirtualSourceData;
-
-		//////////////////// Data Types ////////////////////
 
 		typedef std::unordered_map<size_t, Wall> WallMap;
 		typedef std::unordered_map<size_t, Edge> EdgeMap;
