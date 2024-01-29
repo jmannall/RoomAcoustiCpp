@@ -21,7 +21,7 @@ namespace UIE
 
 		ReverbSource::~ReverbSource()
 		{
-#if DEBUG_REMOVE
+#ifdef DEBUG_REMOVE
 	Debug::Log("Remove reverb source", Colour::Red);
 #endif
 
@@ -30,7 +30,7 @@ namespace UIE
 
 		void ReverbSource::Init()
 		{
-#if DEBUG_INIT
+#ifdef DEBUG_INIT
 	Debug::Log("Init reverb source", Colour::Green);
 #endif
 
@@ -104,9 +104,7 @@ namespace UIE
 				CMonoBuffer<float> bInput(numFrames);
 				const Real* inputPtr = data;
 				for (int i = 0; i < numFrames; i++)
-				{
 					bInput[i] = static_cast<float>(mReflectionFilter.GetOutput(*inputPtr++));
-				}
 
 				CEarPair<CMonoBuffer<float>> bOutput;
 
@@ -230,12 +228,14 @@ namespace UIE
 				// Process FDN and save to buffer
 				matrix input = matrix(data.Rows(), mNumChannels);
 
-				for (int i = 0; i < data.Rows(); i++)
 				{
-					rowvec out = mFDN.GetOutput(data.GetRow(i), valid);
-					for (int j = 0; j < mNumChannels; j++)
+					lock_guard <mutex> lock(mFDNMutex);
+
+					for (int i = 0; i < data.Rows(); i++)
 					{
-						input.AddEntry(out[j], i, j);
+						rowvec out = mFDN.GetOutput(data.GetRow(i), valid);
+						for (int j = 0; j < mNumChannels; j++)
+							input.AddEntry(out[j], i, j);
 					}
 				}
 				// Process buffer of each channel
@@ -250,22 +250,30 @@ namespace UIE
 
 		void Reverb::SetFDNParameters(const FrequencyDependence& T60, const vec& dimensions)
 		{
-			mFDN.SetParameters(T60, dimensions);
+			{
+				lock_guard <mutex> lock(mFDNMutex);
+				mFDN.SetParameters(T60, dimensions);
+				/*mFDN.Reset();
+				for (ReverbSource& source : mReverbSources)
+					source.Reset();*/
+			}
 			if (T60 < 20)
 			{
-#if DEBUG_INIT
-	Debug::Log("Init FDN", Colour::Green);
-	Debug::Log("Reverb T60: [" + RealToStr(t60[0]) + ", " + RealToStr(t60[1]) + ", " +
-		RealToStr(t60[2]) + ", " + RealToStr(t60[3]) + ", " + RealToStr(t60[4]) + "]", Colour::Orange);
-#endif
-
-				valid = true;
+#ifdef DEBUG_INIT
 				Real t60[5]; T60.GetValues(&t60[0]);
-			}
-#if DEBUG_INIT
-	else
-		Debug::Log("FDN reverb failed to initialise. Excessively long T60.", Colour::Red);
+				Debug::Log("Init FDN", Colour::Green);
+				Debug::Log("Reverb T60: [" + RealToStr(t60[0]) + ", " + RealToStr(t60[1]) + ", " +
+					RealToStr(t60[2]) + ", " + RealToStr(t60[3]) + ", " + RealToStr(t60[4]) + "]", Colour::Orange);
 #endif
+				valid = true;
+			}
+			else
+			{
+				valid = false;
+#ifdef DEBUG_INIT
+				Debug::Log("FDN reverb failed to initialise. Excessively long T60.", Colour::Red);
+#endif
+			}
 		}
 	}
 }

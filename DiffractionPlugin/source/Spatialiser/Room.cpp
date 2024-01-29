@@ -26,6 +26,8 @@ namespace UIE
 		{
 			mListenerPosition = position;
 			lock_guard <mutex> wLock(mWallMutex);
+
+			// Determine if receiver is in front or behind wall face
 			for (auto it = mWalls.begin(); it != mWalls.end(); it++)
 			{
 				it->second.SetRValid(it->second.ReflectPointInWall(mListenerPosition));
@@ -49,7 +51,9 @@ namespace UIE
 			}
 			else // Create a new ID
 			{
-				size_t next = mWalls.size();
+				// size_t next = mWalls.size();
+				size_t next = nextWall;
+				nextWall++;
 				mWalls.insert_or_assign(next, wall);
 				InitEdges(next);
 				return next;
@@ -188,13 +192,13 @@ namespace UIE
 						Real k = b.PointWallPosition(verticesA[check]);	// Only valid for convex shapes
 						if (k < 0) // Check angle greater than 180
 						{
-#if DEBUG_INIT
+#ifdef DEBUG_INIT
 	Debug::Log("Init Edge", Colour::Green);
 #endif
 
 							// Cross(a.GetNormal(), b.GetNormal()) gives vector in direction of the edge
 							// verticesA[idxA] - verticesA[i] give vector from base to top of edge
-							bool reflexAngle = UnitVector(Cross(a.GetNormal(), b.GetNormal())) == UnitVector(verticesA[idxA] - verticesA[i]);
+							bool reflexAngle = UnitVectorRound(Cross(a.GetNormal(), b.GetNormal())) == UnitVectorRound(verticesA[idxA] - verticesA[i]);
 
 							if (reflexAngle) // Check returns correct angle type
 							{
@@ -227,7 +231,9 @@ namespace UIE
 			}
 			else // Create a new ID
 			{
-				size_t next = mEdges.size();
+				//  next = mEdges.size();
+				size_t next = nextEdge;
+				nextEdge++;
 				mEdges.insert_or_assign(next, edge);
 				return next;
 			}
@@ -239,11 +245,15 @@ namespace UIE
 			FrequencyDependence absorption = FrequencyDependence(0.0, 0.0, 0.0, 0.0, 0.0);
 			Real surfaceArea = 0.0;
 
-			lock_guard <mutex> wLock(mWallMutex);
-			for (auto wall : mWalls)
 			{
-				absorption += (1.0 - wall.second.GetAbsorption() * wall.second.GetAbsorption()) * wall.second.GetArea();
-				surfaceArea += wall.second.GetArea();
+				lock_guard <mutex> wLock(mWallMutex);
+				Debug::Log("Number of walls: " + IntToStr(mWalls.size()), Colour::Orange);
+
+				for (auto wall : mWalls)
+				{
+					absorption += (1.0 - wall.second.GetAbsorption() * wall.second.GetAbsorption()) * wall.second.GetArea();
+					surfaceArea += wall.second.GetArea();
+				}
 			}
 			Real temp[5];
 			absorption.GetValues(&temp[0]);

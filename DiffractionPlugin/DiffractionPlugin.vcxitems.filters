@@ -164,5 +164,11 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Vec3.h">
       <Filter>Header Files\Common</Filter>
     </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Unity\IUnityProfiler.h">
+      <Filter>Header Files\Unity</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Unity\Profiler.h">
+      <Filter>Header Files\Unity</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -223,6 +223,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>$(PathTo3DTI)3dti_Toolkit;$(PathTo3DTI)3dti_ResourceManager;$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\boost_circular_buffer;$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\cereal\include;$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include;$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src;$(ProjectDir)include;$(SolutionDir)DiffractionPlugin\codegen\lib\myNN\include;$(SolutionDir)DiffractionPlugin\include;$(SolutionDir)DiffractionPlugin\include\Spatialiser;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp14</LanguageStandard>
+      <IntrinsicFunctions>false</IntrinsicFunctions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -230,6 +231,7 @@
       <EnableUAC>false</EnableUAC>
       <AdditionalLibraryDirectories>$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\lib\win;$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>netcdf_x64.lib;libsofa_debug_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AssemblyDebug>true</AssemblyDebug>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -245,6 +247,7 @@
       <AdditionalIncludeDirectories>$(PathTo3DTI)3dti_Toolkit;$(PathTo3DTI)3dti_ResourceManager;$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\boost_circular_buffer;$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\cereal\include;$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include;$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src;$(ProjectDir)include;$(SolutionDir)DiffractionPlugin\codegen\lib\myNN\include;$(SolutionDir)DiffractionPlugin\include;$(SolutionDir)DiffractionPlugin\include\Spatialiser;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp14</LanguageStandard>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions</EnableEnhancedInstructionSet>
+      <Optimization>Full</Optimization>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -263,7 +266,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_TEST;NDEBUG;WINDOWS_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_TEST;NDEBUG;WINDOWS_EXPORTS;_WINDOWS;_USRDLL;_SOLUTIONDIR=R"($(SolutionDir))";%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>

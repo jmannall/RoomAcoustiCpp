@@ -27,7 +27,7 @@ namespace UIE
 // #define DEBUG_AUDIO_THREAD
 // #define DEBUG_ISM_THREAD
 #define DEBUG_HRTF
-//#define DEBUG_VIRTUAL_SOURCE
+// #define DEBUG_VIRTUAL_SOURCE
 
 		//////////////////// Data Types ////////////////////
 
@@ -46,6 +46,8 @@ namespace UIE
 		typedef std::unordered_map<size_t, VirtualSource> VirtualSourceMap;
 		typedef std::unordered_map<std::string, VirtualSourceData> VirtualSourceDataMap;
 		typedef std::unordered_multimap<size_t, VirtualSourceData> VirtualSourceDataStore;
+
+		typedef std::unordered_map<size_t, std::vector<size_t>> EdgeIDMap;
 
 		enum class Model
 		{

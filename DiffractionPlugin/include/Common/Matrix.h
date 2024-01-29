@@ -131,7 +131,7 @@ namespace UIE
 		{
 			assert(u.Rows() == v.Rows());
 			assert(u.Cols() == v.Cols());
-			matrix out = matrix(u.Rows(), u.Cols());
+
 			bool equal = true;
 			int i = 0;
 			int j = 0;
@@ -198,6 +198,25 @@ namespace UIE
 				}
 			}
 			return out;
+		}
+
+		inline void Mult(const matrix& u, const matrix& v, matrix& out)
+		{
+			assert(u.Cols() == v.Rows());
+			assert(out.Rows() == u.Rows());
+			assert(out.Cols() == v.Cols());
+
+			out.Reset();
+			for (int i = 0; i < u.Rows(); ++i)
+			{
+				for (int j = 0; j < v.Cols(); ++j)
+				{
+					for (int k = 0; k < u.Cols(); ++k)
+					{
+						out.IncreaseEntry(u.GetEntry(i, k) * v.GetEntry(k, j), i, j);
+					}
+				}
+			}
 		}
 
 		inline matrix operator*(const Real& a, const matrix& mat)

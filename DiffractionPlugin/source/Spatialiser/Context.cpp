@@ -10,6 +10,7 @@
 
 // Unity headers
 #include "Unity/Debug.h"
+#include "Unity/Profiler.h"
 
 namespace UIE
 {
@@ -56,7 +57,7 @@ namespace UIE
 
 		Context::Context(const Config* config, const std::vector<std::string>& filePaths) : mIsRunning(true), ISMThread()
 		{
-#if DEBUG_INIT
+#ifdef DEBUG_INIT
 	Debug::Log("Init Context", Colour::Green);
 #endif
 
@@ -154,7 +155,7 @@ namespace UIE
 
 		Context::~Context()
 		{
-#if DEBUG_REMOVE
+#ifdef DEBUG_REMOVE
 	Debug::Log("Exit Context", Colour::Red);
 #endif
 
@@ -203,7 +204,7 @@ namespace UIE
 
 		size_t Context::InitSource()
 		{
-#if DEBUG_INIT
+#ifdef DEBUG_INIT
 	Debug::Log("Init Source", Colour::Green);
 #endif
 
@@ -212,7 +213,7 @@ namespace UIE
 
 		void Context::UpdateSource(size_t id, const vec3& position, const vec4& orientation)
 		{
-#if DEBUG_UPDATE
+#ifdef DEBUG_UPDATE
 	Debug::Log("Update Source", Colour::Yellow);
 #endif
 
@@ -224,6 +225,7 @@ namespace UIE
 			CTransform transform;
 			transform.SetOrientation(CQuaternion(static_cast<float>(orientation.w), static_cast<float>(orientation.x), static_cast<float>(orientation.y), static_cast<float>(orientation.z)));
 			transform.SetPosition(CVector3(static_cast<float>(position.x), static_cast<float>(position.y), static_cast<float>(position.z)));
+			
 			mSources->Update(id, transform, data);
 
 			mReverb->UpdateValid(mISMConfig.lateReverb);
@@ -232,7 +234,7 @@ namespace UIE
 		void Context::RemoveSource(size_t id)
 		{
 
-#if DEBUG_REMOVE
+#ifdef DEBUG_REMOVE
 	Debug::Log("Remove Source", Colour::Red);
 #endif
 
@@ -244,7 +246,7 @@ namespace UIE
 
 		size_t Context::InitWall(const vec3& normal, const Real* vData, size_t numVertices, Absorption& absorption, const ReverbWall& reverbWall)
 		{
-#if DEBUG_INIT
+#ifdef DEBUG_INIT
 	Debug::Log("Init Wall and Edges", Colour::Green);
 #endif
 
@@ -264,7 +266,7 @@ namespace UIE
 		// Assumes reverbWall never changes
 		void Context::RemoveWall(size_t id, const ReverbWall& reverbWall)
 		{
-#if DEBUG_REMOVE
+#ifdef DEBUG_REMOVE
 	Debug::Log("Remove Wall and Edges", Colour::Red);
 #endif
 
@@ -290,6 +292,7 @@ namespace UIE
 		{
 			// Process reverb
 			mReverb->ProcessAudio(mReverbInput, mOutputBuffer);
+
 
 			// Copy output to send and set pointer
 			// TO DO: Chek unity can't call ProcessAudio and GetOutput at the same time

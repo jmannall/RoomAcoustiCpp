@@ -59,5 +59,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Wall.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Unity\Debug.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Unity\IUnityInterface.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Unity\IUnityProfiler.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Unity\Profiler.h" />
   </ItemGroup>
 </Project>

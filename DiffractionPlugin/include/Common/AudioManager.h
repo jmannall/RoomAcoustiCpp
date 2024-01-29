@@ -30,7 +30,7 @@ namespace UIE
 
 			void ResetBuffer();
 			void ResizeBuffer(size_t numSamples);
-			size_t Length() const { return mBuffer.size(); }
+			inline size_t Length() const { return mBuffer.size(); }
 			bool Valid();
 
 			std::vector<Real> GetBuffer() { std::vector<Real> buffer(mBuffer.begin(), mBuffer.end()); return buffer; }
@@ -92,6 +92,8 @@ namespace UIE
 
 			Real GetOutput(Real input);
 			void SetT(int fs);
+
+			inline void ClearBuffers() { x.ResetBuffer(); y.ResetBuffer(); }
 
 		protected:
 			int order;
@@ -196,6 +198,12 @@ namespace UIE
 			void UpdateParameters(Real fb, Real g, FilterShape shape);
 			Real GetOutput(const Real input);
 
+			inline void ClearBuffers()
+			{
+				for (int i = 0; i < numFilters; i++)
+					filters[i].ClearBuffers();
+			}
+
 		private:
 			int M;
 			size_t numFilters;
@@ -211,6 +219,12 @@ namespace UIE
 
 			void UpdateParameters(const Real fc[], Real gain[]);
 			Real GetOutput(const Real input);
+
+			inline void ClearBuffers()
+			{
+				for (int i = 0; i < numFilters; i++)
+					bands[i].ClearBuffers();
+			}
 		private:
 			void InitBands(int fs);
 

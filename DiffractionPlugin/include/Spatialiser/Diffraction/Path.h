@@ -54,7 +54,12 @@ namespace UIE
 				void UpdateParameters(const vec3& receiver);
 
 				// Getters
-				inline Real GetD(Real z) const { return sqrt(pow(sData.r, 2.0) + pow(z - sData.z, 2.0)) + sqrt(pow(rData.r, 2.0) + pow(z - rData.z, 2.0)); }
+				inline Real GetD(Real z) const
+				{ 
+					Real sZ = z - sData.z;
+					Real rZ = z - rData.z;
+					return sqrt(sData.r * sData.r + sZ * sZ) + sqrt(rData.r * rData.r + rZ * rZ);
+				}
 				inline Real GetMaxD() const { return std::max(GetD(0), GetD(wData.z)); }
 				inline vec3 GetApex() const
 				{

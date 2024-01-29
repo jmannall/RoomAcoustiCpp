@@ -28,11 +28,11 @@ namespace UIE
 
 		Wall::Wall(const vec3& normal, const Real* vData, size_t numVertices, Absorption& absorption) : mNormal(normal), rValid(false), mNumVertices(numVertices), mAbsorption(absorption)
 		{
-			mNormal = UnitVector(vec3(Round(normal.x, NUM_PRECISION), Round(normal.y, NUM_PRECISION), Round(normal.z, NUM_PRECISION)));
+			mNormal = UnitVectorRound(normal);
 			Update(vData);
 			absorption.area = mAbsorption.area;
 
-#if DEBUG_INIT
+#ifdef DEBUG_INIT
 	Debug::Log("Vertecies: " + VecArrayToStr(mVertices), Colour::Orange);
 	Debug::Log("Normal: " + VecToStr(mNormal), Colour::Orange);
 #endif
@@ -43,7 +43,7 @@ namespace UIE
 		{
 			Absorption oldAbsorption = mAbsorption;
 
-			mNormal = UnitVector(vec3(Round(normal.x, NUM_PRECISION), Round(normal.y, NUM_PRECISION), Round(normal.z, NUM_PRECISION)));
+			mNormal = UnitVectorRound(normal);
 			mNumVertices = numVertices;
 			mAbsorption = absorption;
 			Update(vData);

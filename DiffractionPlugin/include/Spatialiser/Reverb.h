@@ -45,6 +45,13 @@ namespace UIE
 			void ProcessAudio(const Real* data, const size_t& numFrames, Buffer& outputBuffer);
 
 			inline void Deactivate() { mSource = NULL; }
+			inline void Reset() { mReflectionFilter.ClearBuffers(); }
+
+#ifdef _TEST
+#pragma optimize("", off)
+			inline Absorption GetAbsorption() const { return mAbsorption;	}
+#pragma optimize("", on)
+#endif
 		private:
 			void Init();
 
@@ -82,6 +89,7 @@ namespace UIE
 			FDN mFDN;
 			std::vector<ReverbSource> mReverbSources;
 			HRTFMode mHRTFMode;
+			std::mutex mFDNMutex;
 
 			Binaural::CCore* mCore;
 			std::mutex mCoreMutex; // This would ideally be per reverbSource but can't copy a class with a mutex

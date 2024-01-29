@@ -23,9 +23,6 @@
     <ClCompile Include="source\dllmain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Test.cpp">
-      <Filter>UnitTest</Filter>
-    </ClCompile>
     <ClCompile Include="source\FirstDLL.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -49,6 +46,9 @@
     </ClCompile>
     <ClCompile Include="..\DiffractionPlugin\codegen\lib\myNN\source\predict.cpp">
       <Filter>Source Files\NN</Filter>
+    </ClCompile>
+    <ClCompile Include="Test.cpp">
+      <Filter>UnitTest</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

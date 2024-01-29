@@ -19,12 +19,10 @@ namespace UIE
 		std::vector<size_t> VirtualSourceData::GetWallIDs() const
 		{
 			std::vector<size_t> ret;
-			for (int i = 0; i < order; i++)
+			for (Part part : parts)
 			{
-				if (isReflection[i])
-				{
-					ret.push_back(IDs[i]);
-				}
+				if (part.isReflection)
+					ret.push_back(part.id);
 			}
 			return ret;
 		}
@@ -125,27 +123,49 @@ namespace UIE
 				mPositions.erase(mPositions.begin() + order, mPositions.end());
 			if (!mRPositions.empty())
 				mRPositions.erase(mRPositions.begin() + order, mRPositions.end());
-			if (!isReflection.empty())
-				isReflection.erase(isReflection.begin() + order, isReflection.end());
-			if (!IDs.empty())
-				IDs.erase(IDs.begin() + order, IDs.end());
+			if (!parts.empty())
+				parts.erase(parts.begin() + order, parts.end());
 
 			feedsFDN = false;
 			mFDNChannel = -1;
 
 			Reset();
 
+			key = "";
 			reflection = false;
+			diffraction = false;
+			int j = 0;
+			for (Part part : parts)
+			{
+				if (part.isReflection)
+				{
+					reflection = true;
+					key = key + IntToStr(part.id) + "r";
+				}
+				else
+				{
+					diffraction = true;
+					key = key + IntToStr(part.id) + "d";
+				}
+				j++;
+			}
+
+
+			/*reflection = false;
 			diffraction = false;
 			for (int i = 0; i < order; i++)
 			{
 				if (isReflection[i])
+				{
 					reflection = true;
+					key = key + IntToStr(IDs[i]) + "r";
+				}
 				else
+				{
 					diffraction = true;
-			}
-
-			key = key.substr(0, 2 * order);
+					key = key + IntToStr(IDs[i]) + "d";
+				}
+			}*/
 
 			return *this;
 		}
@@ -226,6 +246,7 @@ namespace UIE
 			}
 
 			ret++;
+			lock_guard<mutex> lock(audioMutex);
 			if (isInitialised)
 			{
 				// Copy input into internal storage and apply wall absorption
@@ -236,7 +257,7 @@ namespace UIE
 				if (diffraction)
 				{
 					{
-						lock_guard<mutex> lock(audioMutex);
+						//lock_guard<mutex> lock(audioMutex);
 						btm.ProcessAudio(inputPtr, &bStore[0], numFrames, lerpFactor);
 						if (reflection)
 						{
@@ -247,7 +268,7 @@ namespace UIE
 				}
 				else if (reflection)
 				{
-					lock_guard<mutex> lock(audioMutex);
+					//lock_guard<mutex> lock(audioMutex);
 					for (int i = 0; i < numFrames; i++)
 						bStore[i] = mFilter.GetOutput(*inputPtr++);
 				}
@@ -273,17 +294,15 @@ namespace UIE
 				{
 					CMonoBuffer<float> bMonoOutput;
 					{
-						lock_guard<mutex> lock(audioMutex);
+						//lock_guard<mutex> lock(audioMutex);
 						mSource->ProcessAnechoic(bMonoOutput, bOutput.left, bOutput.right);
-					}
-					for (int i = 0; i < numFrames; i++)
-					{
-						reverbInput.IncreaseEntry(bMonoOutput[i], i, mFDNChannel);
+						for (int i = 0; i < numFrames; i++)
+							reverbInput.IncreaseEntry(bMonoOutput[i], i, mFDNChannel);
 					}
 				}
 				else
 				{
-					lock_guard<mutex> lock(audioMutex);
+					//lock_guard<mutex> lock(audioMutex);
 					mSource->ProcessAnechoic(bOutput.left, bOutput.right);
 				}
 				int j = 0;
@@ -298,7 +317,7 @@ namespace UIE
 
 		void VirtualSource::Init(const VirtualSourceData& data)
 		{
-#if DEBUG_VIRTUAL_SOURCE
+#ifdef DEBUG_VIRTUAL_SOURCE
 	Debug::Log("Init virtual source", Colour::Green);
 #endif
 
@@ -311,7 +330,8 @@ namespace UIE
 			}
 
 			// Set btm currentIr
-			btm.InitParameters();
+			if (diffraction)
+				btm.InitParameters();
 
 			// Initialise source to core
 			mSource = mCore->CreateSingleSourceDSP();
@@ -361,7 +381,7 @@ namespace UIE
 
 		void VirtualSource::Remove()
 		{
-#if DEBUG_VIRTUAL_SOURCE
+#ifdef DEBUG_VIRTUAL_SOURCE
 	Debug::Log("Remove virtual source", Colour::Red);
 #endif
 

@@ -38,20 +38,20 @@ namespace UIE
 
 		void Edge::InitEdge()
 		{
-#if DEBUG_INIT
+#ifdef DEBUG_INIT
 	Debug::Log("Edge init", Colour::Green);
 #endif
 
 			midPoint = (mTop + mBase) / 2;
-			mEdgeVector = UnitVector(mTop - mBase);
-			mEdgeNormal = UnitVector(mFaceNormals[0] + mFaceNormals[1]);
+			mEdgeVector = UnitVectorRound(mTop - mBase);
+			mEdgeNormal = UnitVectorRound(mFaceNormals[0] + mFaceNormals[1]);
 
-			if (UnitVector(Cross(mFaceNormals[0], mFaceNormals[1])) == mEdgeVector) // case true: angle is reflex
+			if (Dot(Cross(mFaceNormals[0], mFaceNormals[1]), mEdgeVector) > 0) // case true: angle is reflex
 				t = PI_1 + acos(Dot(mFaceNormals[0], mFaceNormals[1]));
 			else
 				t = PI_1 - acos(Dot(mFaceNormals[0], mFaceNormals[1]));
 
-#if DEBUG_INIT
+#ifdef DEBUG_INIT
 	Debug::Log("Edge angle: " + RealToStr(t), Colour::Orange);
 #endif
 			UpdateEdgeLength();

@@ -37,8 +37,8 @@ namespace UIE
 		public:
 
 			// Load and Destroy
-			Room() : mISMConfig(), mListenerPosition() {};
-			Room(int order) : mISMConfig(), mListenerPosition() { mISMConfig.order = order; };
+			Room() : mISMConfig(), mListenerPosition(), nextWall(0), nextEdge(0) {};
+			Room(int order) : mISMConfig(), mListenerPosition(), nextWall(0), nextEdge(0) { mISMConfig.order = order; };
 			~Room() {};
 
 			// Image source model
@@ -64,6 +64,16 @@ namespace UIE
 					return it->second.Update(normal, vData, numVertices, absorption);
 				}
 			}
+			inline void FreeWallId(const size_t& id)
+			{ 
+				mEmptyWallSlots.push_back(id);
+				auto it = oldEdgeIDs.find(id);
+				if (it != oldEdgeIDs.end())		// case: attached edges
+				{
+					for (auto edgeID : it->second)
+						mEmptyEdgeSlots.push_back(edgeID);
+				}
+			}
 			inline Absorption RemoveWall(const size_t& id)
 			{
 				Absorption absorption = Absorption();
@@ -82,8 +92,8 @@ namespace UIE
 					absorption.area = -absorption.area;
 					RemoveEdges(id, it->second);
 				}
-				mWalls.erase(id);
-				mEmptyWallSlots.push_back(id);
+				mWalls.erase(id);		
+
 				return absorption;
 			}
 
@@ -92,6 +102,7 @@ namespace UIE
 			inline void RemoveEdges(const size_t& id, const Wall& wall)
 			{
 				std::vector<size_t> edgeIDs = wall.GetEdges();
+				oldEdgeIDs.insert_or_assign(id, edgeIDs);
 				for (int i = 0; i < edgeIDs.size(); i++)
 				{
 					auto itE = mEdges.find(edgeIDs[i]);
@@ -101,7 +112,7 @@ namespace UIE
 					}
 					else
 					{
-						size_t wallID = itE->second.GetWallID(id);
+						size_t wallID = itE->second.GetWallID(id); // ID of second wall attached to the edge
 						auto itW = mWalls.find(wallID);
 						if (itW == mWalls.end())		// case: wall does not exist
 						{
@@ -112,7 +123,6 @@ namespace UIE
 							itW->second.RemoveEdge(edgeIDs[i]);
 						}
 						mEdges.erase(edgeIDs[i]);
-						mEmptyEdgeSlots.push_back(edgeIDs[i]);
 					}
 				}
 			}
@@ -170,7 +180,6 @@ namespace UIE
 			bool ReflectPointInRoom(const vec3& point, VirtualSourceDataMap& vSources);
 
 			void SetMaxRefOrder(const int& order) { mISMConfig.order = order; }
-
 		private:
 			void ParallelFindEdges(Wall& a, Wall& b, const size_t IDa, const size_t IDb);
 			void FindEdges(Wall& a, Wall& b, const size_t IDa, const size_t IDb);
@@ -185,8 +194,11 @@ namespace UIE
 
 			WallMap mWalls;
 			std::vector<size_t> mEmptyWallSlots;
+			size_t nextWall;
 			EdgeMap mEdges;
 			std::vector<size_t> mEmptyEdgeSlots;
+			size_t nextEdge;
+			EdgeIDMap oldEdgeIDs;
 
 			vec3 mListenerPosition;
 			SourceDataMap mSources;

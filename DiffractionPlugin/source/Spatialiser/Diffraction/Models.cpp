@@ -118,8 +118,8 @@ namespace UIE
 					{
 						params.g[i] = gt[i + 1] / gt[i];
 						gi[i] = CalcG(fi[i]) / gt[i];
-						Real giSq = pow(gi[i], 2.0);
-						Real gSq = pow(params.g[i], 2.0);
+						Real giSq = gi[i] * gi[i];
+						Real gSq = params.g[i] * params.g[i];
 						params.fc[i] = fi[i] * sqrt((giSq - gSq) / (params.g[i] * (1.0 - giSq))) * (1.0 + gSq / 12.0);
 					}
 					params.gain = gt[0];
@@ -143,7 +143,8 @@ namespace UIE
 				Real d = 2.0 * mPath->sData.d * mPath->rData.d / (mPath->sData.d + mPath->rData.d);
 				v = PI_1 / mPath->wData.t;
 				t0 = (mPath->sData.d + mPath->rData.d) / SPEED_OF_SOUND;
-				front = 2.0 * SPEED_OF_SOUND / (PI_SQ * d * pow(sin(mPath->phi), 2.0));
+				Real sinPhi = sin(mPath->phi);
+				front = 2.0 * SPEED_OF_SOUND / (PI_SQ * d * sinPhi * sinPhi);
 			}
 
 			void UDFA::CalcGT()
@@ -166,12 +167,13 @@ namespace UIE
 
 			Complex UDFA::CalcH(Real z, Real t, Real f)
 			{
-				Real fc = front * pow(CalcNv(t), 2);
+				Real nV = CalcNv(t);
+				Real fc = front * nV * nV;
 
 				Real t1 = mPath->GetD(z) / SPEED_OF_SOUND;
 
 				Real g = (2.0 / PI_1) * atan(PI_1 * sqrt(2.0 * fc * (t1 - t0)));
-				fc *= (1 / pow(g, 2.0));
+				fc *= (1 / (g * g));
 				return g * CalcUDFA(f, fc, g);
 			}
 
@@ -182,7 +184,7 @@ namespace UIE
 				Real Q = 0.2;
 				Real r = 1.6;
 
-				Real gSq = pow(g, 2.0);
+				Real gSq = g * g;
 
 				b = 1 + (b - 1.0) * gSq;
 				Q = 0.5 + (Q - 0.5) * gSq;
@@ -238,8 +240,8 @@ namespace UIE
 					{
 						params.g[i] = gt[i + 1] / gt[i];
 						gi[i] = CalcG(fi[i]) / gt[i];
-						Real giSq = pow(gi[i], 2.0);
-						Real gSq = pow(params.g[i], 2.0);
+						Real giSq = gi[i] * gi[i];
+						Real gSq = params.g[i] * params.g[i];
 						params.fc[i] = fi[i] * sqrt((giSq - gSq) / (params.g[i] * (1.0 - giSq))) * (1.0 + gSq / 12.0);
 					}
 					params.gain = gt[0];
@@ -263,7 +265,8 @@ namespace UIE
 				Real d = 2.0 * mPath->sData.d * mPath->rData.d / (mPath->sData.d + mPath->rData.d);
 				v = PI_1 / mPath->wData.t;
 				t0 = (mPath->sData.d + mPath->rData.d) / SPEED_OF_SOUND;
-				front = SPEED_OF_SOUND / (PI_SQ * d * pow(sin(mPath->phi), 2.0));
+				Real sinPhi = sin(mPath->phi);
+				front = SPEED_OF_SOUND / (PI_SQ * d * sinPhi * sinPhi);
 
 				Real scale = 0;
 				Real theta[2] = { mPath->sData.t + mPath->rData.t, mPath->rData.t - mPath->sData.t };
@@ -271,8 +274,9 @@ namespace UIE
 				{
 					scale += Sign(theta[i] - PI_1) / fabs(cos(v * PI_1) - cos(v * theta[i]));
 				}
-				scale = pow(scale, 2.0);
-				front = scale * front * pow(v * sin(v * PI_1), 2.0) / 2.0;
+				scale *= scale;
+				Real vSin = v * sin(v * PI_1);
+				front = scale * front * vSin * vSin / 2.0;
 			}
 
 			Complex UDFAI::CalcH(Real z, Real t, Real f)
@@ -281,7 +285,7 @@ namespace UIE
 				Real t1 = mPath->GetD(z) / SPEED_OF_SOUND;
 
 				Real g = (2 / PI_1) * atan(PI_1 * sqrt(2 * fc * (t1 - t0)));
-				fc *= (1.0 / pow(g, 2.0));
+				fc *= (1.0 / (g * g));
 				return g * CalcUDFA(f, fc, g);
 			}
 
@@ -419,7 +423,7 @@ namespace UIE
 				Real B0 = sin(mPath->phi);
 				Real dSR = mPath->sData.d + mPath->rData.d;
 				Real temp = sqrt(mPath->sData.d * mPath->rData.d * dSR) * n * B0;
-				L = mPath->sData.d * mPath->rData.d * pow(B0, 2.0) / (dSR);
+				L = mPath->sData.d * mPath->rData.d * B0 * B0 / (dSR);
 
 				Real idx = (mPath->bA - PI_1) / ((Real)mPath->wData.t - (Real)mPath->sData.t - PI_1);
 				for (int i = 0; i < 4; i++)
@@ -462,7 +466,8 @@ namespace UIE
 			Real UTD::Apm(Real t, bool plus)
 			{
 				Real tArg = CalcTArg(t, plus);
-				return 2.0 * pow(cos(tArg / 2.0), 2.0);
+				Real cosArg = cos(tArg / 2.0);
+				return 2.0 * cosArg * cosArg;
 			}
 
 			Real UTD::CalcTArg(Real t, bool plus)
@@ -485,7 +490,10 @@ namespace UIE
 					temp = sqrt(PI_1 * x) * (1.0 - (sqrtX / (0.7 * sqrtX + 1.2)));
 				}
 				else
-					temp = 1 - 0.8 / pow(x + 1.25, 2.0);
+				{
+					Real store = x + 1.25;
+					temp = 1 - 0.8 / (store * store);
+				}
 				return temp * exp(imUnit * PI_1 / 4.0 * (1.0 - sqrtX / (x + 1.4)));
 			}
 
@@ -510,7 +518,7 @@ namespace UIE
 			BTM::BTM(Path* path, int fs) : mPath(path), firFilter(currentIr)
 			{
 				m = new std::mutex();
-				samplesPerMetre = fs / SPEED_OF_SOUND;
+				samplesPerMetre = fs * INV_SPEED_OF_SOUND;
 				UpdateParameters();
 			};
 
@@ -539,41 +547,110 @@ namespace UIE
 
 			void BTM::CalcBTM()
 			{
-				int n0 = (int)floor(samplesPerMetre * (mPath->sData.d + mPath->rData.d));
-				int nir = (int)ceil(samplesPerMetre * mPath->GetMaxD());
+				Real R0 = mPath->sData.d + mPath->rData.d;
+
+				int n0 = (int)round(samplesPerMetre * R0);
+				int nir = (int)round(samplesPerMetre * mPath->GetMaxD());
 				int irLen = nir - n0;
 				ir.ResizeBuffer((size_t)irLen);
 
-				dSSq = pow(mPath->sData.d, 2.0);
-				dRSq = pow(mPath->rData.d, 2.0);
-				rSSq = pow(mPath->sData.r, 2.0);
-				rRSq = pow(mPath->rData.r, 2.0);
+				dSSq = mPath->sData.d * mPath->sData.d;
+				dRSq = mPath->rData.d * mPath->rData.d;
+				rSSq = mPath->sData.r * mPath->sData.r;
+				rRSq = mPath->rData.r * mPath->rData.r;
 				rr = mPath->sData.r * mPath->rData.r;
 
 				zSRel = mPath->sData.z - mPath->zA;
 				zRRel = mPath->rData.z - mPath->zA;
 				dz = zSRel - zRRel;
-				dzSq = pow(dz, 2);
+				dzSq = dz * dz;
 				v = PI_1 / mPath->wData.t;
+				Real vSq = v * v;
 
 				edgeHi = mPath->wData.z - mPath->zA;
 				edgeLo = -mPath->zA;
 
 				Real plus = mPath->sData.t + mPath->rData.t;
-				Real minus = mPath->rData.t - mPath->sData.t;
-				vTheta[0] = v * (PI_1 + plus);
-				vTheta[1] = v * (PI_1 + minus);
-				vTheta[2] = v * (PI_1 - plus);
-				vTheta[3] = v * (PI_1 - minus);
+				Real minus = mPath->sData.t - mPath->rData.t;
+
+				theta[0] = PI_1 + plus;
+				theta[1] = PI_1 + minus;
+				theta[2] = PI_1 - minus;
+				theta[3] = PI_1 - plus;
+
+				Real x = (n0 + 0.5) / samplesPerMetre;
+				Real xSq = x * x;
+				Real MSq = rSSq + zSRel * zSRel;
+				Real LSq = rRSq + zRRel * zRRel;
+				Real K = MSq - LSq - xSq;
+				Real denom = dzSq - xSq;
+				Real a = (2.0 * xSq * zRRel - K * dz) / denom;
+				Real b = ((K * K / 4) - xSq * LSq) / denom;
+				Real zRangeApex = -a / 2.0 + sqrt(a * a / 4.0 - b);
+				Real zRange = 0.1 * std::min(mPath->sData.r, mPath->rData.r);
+
+				bool splitIntegral = true;
+				if (zRange > zRangeApex)
+				{
+					zRange = abs(zRangeApex);
+					splitIntegral = false;
+				}
+
+				Real rho = mPath->rData.r / mPath->sData.r;
+				Real rhoOne = rho + 1.0;
+				Real rhoOneSq = rhoOne * rhoOne;
+				Real sinPsi = (mPath->sData.r + mPath->rData.r) / R0;
+				Real tempFact = rhoOneSq * sinPsi * sinPsi - 2.0 * rho;
+				Real sqrtB3 = SQRT_2 * R0 * rho / rhoOne / sqrt(tempFact);
+				Real temp3vec = -1.0 / sqrtB3 * atan(zRange / sqrtB3);
+				ir[0] = 0.0;
 
 				for (int i = 0; i < 4; i++)
 				{
-					sinTheta[i] = sin(vTheta[i]);
-					cosTheta[i] = cos(vTheta[i]);
+					vTheta = v * theta[i];
+					absvTheta = abs(vTheta);
+					absvThetaPi = abs(vTheta - PI_2);
+					sinTheta[i] = sin(vTheta);
+					cosTheta[i] = cos(vTheta);
+					singular = absvTheta < MIN_VALUE || absvThetaPi < MIN_VALUE;
+
+					if (absvTheta < 0.01)
+					{
+						Real store = 1.0 - absvTheta * absvTheta / 12;
+						sqrtB1vec = theta[i] * sqrt(store) * R0 * rho / rhoOneSq;
+						fifactvec = (theta[i] * theta[i]) / 2.0 * store;
+					}
+					else if (absvThetaPi < 0.01)
+					{
+						Real store1 = theta[i] - PI_2 / v;
+						Real store2 = 1.0 - absvThetaPi * absvThetaPi / 12;
+						sqrtB1vec = store1 * sqrt(store2) * R0 * rho / rhoOneSq;
+						fifactvec = store1 * store1 / 2.0 * (store2);
+					}
+					else
+					{
+						Real store = 1 - cosTheta[i];
+						sqrtB1vec = sqrt(2 * store) * R0 * rho / rhoOneSq / v;
+						fifactvec = store / vSq;
+					}
+
+					temp1vec = sinTheta[i] / (rhoOneSq - tempFact * fifactvec + MIN_VALUE);
+					temp1_2vec = (sinTheta[i] + MIN_VALUE) / (rhoOneSq - tempFact * fifactvec) / (sqrtB1vec + MIN_VALUE) * atan(zRange / (sqrtB1vec + DBL_MIN));
+					sampleOneVec[i] = 2.0 / vSq * rho * (temp1_2vec + temp1vec * temp3vec);
+					// Check for special case - see EDwedge1st_ir.m
+					if (!singular)
+						ir[0] += sampleOneVec[i];
 				}
 
-				Real d = mPath->sData.d + mPath->rData.d;
-				for (int i = 0; i < irLen; i++)
+
+				if (splitIntegral)
+				{
+					ir[0] += CalcIntegral(zRange, zRangeApex);
+				}
+				Real d = mPath->sData.d + mPath->rData.d; // Remove 1 / r as applied by HRTF processing
+				ir[0] *= -v * d / PI_2; // Multiply by 2 for pos and neg wedge part - add check for edge hi and lo?
+
+				for (int i = 1; i < irLen; i++)
 				{
 					int n = n0 + i;
 					ir[i] = d * CalcSample(n);
@@ -602,36 +679,63 @@ namespace UIE
 				// Check ranges against edge boundries
 				// The two ranges are [zn2.m, zn1.m] and [zn1.p, zn2.p] (neg to pos)
 
-				if (zn2.m < edgeLo) { zn2.m = edgeLo; }
-				if (zn1.m > edgeHi) { zn1.m = edgeHi; }
-				if (zn1.p < edgeLo) { zn1.p = edgeLo; }
-				if (zn2.p > edgeHi) { zn2.p = edgeHi; }
-
 				Real output = 0.0;
-				if (zn2.m < zn1.m)
+				if (zn2.m >= edgeLo)
 				{
-					output += CalcIntegral(zn2.m, zn1.m);
+					if (zn2.p <= edgeHi)
+					{
+						output = CalcIntegral(zn1.p, zn2.p);
+						output *= -v / PI_2;
+					}
+
+					else
+					{
+						output += CalcIntegral(zn2.m, zn1.m);
+						if (zn1.p < edgeHi)
+							output += CalcIntegral(zn1.p, edgeHi);
+						output *= -v / PI_4;
+					}
 				}
-				if (zn1.p < zn2.p)
+				else
 				{
-					output += CalcIntegral(zn1.p, zn2.p);
+					if (zn1.m > edgeLo)
+						output += CalcIntegral(edgeLo, zn1.m);
+					if (zn2.p <= edgeHi)
+						output += CalcIntegral(zn1.p, zn2.p);
+					else if (zn1.p < edgeHi)
+						output += CalcIntegral(zn1.p, edgeHi);
+					output *= -v / PI_4;
 				}
-				output *= -v / PI_4;
+
+				//if (zn2.m < edgeLo) { zn2.m = edgeLo; }
+				//if (zn1.m > edgeHi) { zn1.m = edgeHi; }
+				//if (zn1.p < edgeLo) { zn1.p = edgeLo; }
+				//if (zn2.p > edgeHi) { zn2.p = edgeHi; }
+
+				//if (zn2.m < zn1.m)
+				//{
+				//	output += CalcIntegral(zn2.m, zn1.m);
+				//}
+				//if (zn1.p < zn2.p)
+				//{
+				//	output += CalcIntegral(zn1.p, zn2.p);
+				//}
+				//output *= -v / PI_4;
 
 				return output;
 			}
 
 			IntegralLimits BTM::CalcLimits(Real delta)
 			{
-				Real dSq = pow(delta, 2.0);
+				Real dSq = delta * delta;
 				Real kq = dSSq - dRSq - dSq;
 				Real aq = dzSq - dSq;
 				Real bq = 2.0 * dSq * zRRel - kq * dz;
-				Real cq = pow(kq, 2.0) / 4.0 - dSq * dRSq;
+				Real cq = (kq * kq) / 4.0 - dSq * dRSq;
 
 				bq /= aq;
 				cq /= aq;
-				Real sq = pow(bq, 2.0) - 4.0 * cq;
+				Real sq = (bq * bq) - 4.0 * cq;
 				if (sq < 0.0)
 				{
 					return IntegralLimits(NAN, NAN);
@@ -643,6 +747,17 @@ namespace UIE
 			Real BTM::CalcIntegral(Real zn1, Real zn2)
 			{
 				Real mid = (zn1 + zn2) / 2.0;
+
+				// Quadrature rule
+				//Real n = 6.0;
+				//Real output = (CalcIntegrand(zn1) + CalcIntegrand(zn2)) / 2.0;
+				//for (int i = 1; i < n; i++)
+				//{
+				//	output += CalcIntegrand(zn1 + i * (zn2 - zn1) / n);
+				//}
+				//return (zn2 - zn1) / n * output;
+
+				// Simpson's rule
 				return (zn2 - zn1) / 6.0 * (CalcIntegrand(zn1) + 4.0 * CalcIntegrand(mid) + CalcIntegrand(zn2));
 			}
 
@@ -651,12 +766,15 @@ namespace UIE
 				Real dzS = z - zSRel;
 				Real dzR = z - zRRel;
 
-				Real dS = sqrt(pow(dzS, 2.0) + rSSq);
-				Real dR = sqrt(pow(dzR, 2.0) + rRSq);
+				Real dzSSq = dzS * dzS;
+				Real dzRSq = dzR * dzR;
 
-				Real ml = sqrt(pow(dzS, 2.0) + rSSq) * sqrt(pow(dzR, 2.0) + rRSq);
-				Real y = std::max(1.0, (ml + dzS * dzR) / rr); // limit to 1 - real(sqrt(y ^ 2)) returns 0 if y <= 1
-				Real A = y + sqrt(pow(y, 2.0) - 1.0);
+				Real dS = sqrt(dzSSq + rSSq);
+				Real dR = sqrt(dzRSq + rRSq);
+
+				Real ml = dS * dR;
+				Real y = std::max(1.0, (ml + dzS * dzR) / rr); // limit to 1 -> real(sqrt(y ^ 2 - 1)) returns 0 if y <= 1
+				Real A = y + sqrt(y * y - 1.0);
 				Real Apow = pow(A, v);
 				Real coshvtheta = (Apow + (1.0 / Apow)) / 2.0;
 

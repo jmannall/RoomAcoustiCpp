@@ -8,6 +8,7 @@
 #define Common_Types_h
 
 #include <cmath>
+#include <string>
 
 namespace UIE
 {
@@ -58,6 +59,11 @@ namespace UIE
 			return start * (1.0 - factor) + end * factor;
 		}
 
+		inline Real StrToReal(const std::string& str)
+		{
+			return std::stod(str);
+		}
+
 // Float
 #else
 		
@@ -88,6 +94,11 @@ namespace UIE
 		inline Real Lerp(Real start, Real end, Real factor)
 		{
 			return start * (1.0f - factor) + end * factor;
+		}
+
+		inline Real StrToReal(const std::string& str)
+		{
+			return std::stof(str);
 		}
 
 #endif

@@ -65,7 +65,7 @@ namespace UIE
 			Real mag = 0.0;
 			for (int i = 0; i < length; i++)
 			{
-				mag += pow(e[i][0], 2.0);
+				mag += e[i][0] * e[i][0];
 			}
 			return sqrt(mag);
 		}

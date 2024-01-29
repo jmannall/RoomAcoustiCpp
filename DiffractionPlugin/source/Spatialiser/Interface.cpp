@@ -24,13 +24,13 @@ namespace UIE
 		{
 			if (context) // Delete any existing context
 			{
-#if DEBUG_INIT
+#ifdef DEBUG_INIT
 	Debug::Log("Delete Existing Context", Colour::Red);
 #endif
 
 				Exit();
 			}
-#if DEBUG_INIT
+#ifdef DEBUG_INIT
 	Debug::Log("Create New Context", Colour::Green);
 #endif
 
@@ -115,6 +115,13 @@ namespace UIE
 			auto* context = GetContext();
 			if (context)
 				context->UpdateWall(id, normal, vData, numVertices, absorption, reverbWall);
+		}
+
+		void FreeWallId(size_t id)
+		{
+			auto* context = GetContext();
+			if (context)
+				context->FreeWallId(id);
 		}
 
 		void RemoveWall(size_t id, const ReverbWall& reverbWall)

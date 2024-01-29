@@ -13,6 +13,7 @@
 
 // Common headers
 #include "Common/Types.h"
+#include "Common/Definitions.h"
 
 namespace UIE
 {
@@ -36,6 +37,13 @@ namespace UIE
 			~vec3() {}
 
 			Real Length() { return sqrt(x * x + y * y + z * z); }
+
+			inline void RoundVec(size_t dp)
+			{
+				x = Round(x, dp);
+				y = Round(y, dp);
+				z = Round(z, dp);
+			}
 
 			// Operators
 			inline vec3 operator+=(const vec3& v)
@@ -129,6 +137,16 @@ namespace UIE
 			}
 			return v / len;
 		}
+
+#pragma optimise("", off)
+		inline vec3 UnitVectorRound(vec3 v)
+		{
+			v.x = Round(v.x, static_cast<size_t>(NUM_PRECISION));
+			v.y = Round(v.y, static_cast<size_t>(NUM_PRECISION));
+			v.z = Round(v.z, static_cast<size_t>(NUM_PRECISION));
+			return UnitVector(v);
+		}
+#pragma optimise("", on)
 
 		inline Real Dot(vec3 v, vec3 u)
 		{

@@ -91,7 +91,7 @@ namespace UIE
 				}
 			}
 
-#if DEBUG_AUDIO_THREAD
+#ifdef DEBUG_AUDIO_THREAD
 	Debug::Log("Total audio vSources: " + IntToStr(counter), Colour::Orange);
 #endif
 
@@ -151,6 +151,16 @@ namespace UIE
 			std::vector<std::string> keys;
 			std::vector<VirtualSourceData> newVSources;
 
+			/*std::vector<size_t>::iterator iter;
+			for (iter = mOldWallSlots.begin(); iter != mOldWallSlots.end(); ) {
+				if (std::find(mWallsInUse.begin(), mWallsInUse.end(), *iter) == mWallsInUse.end())
+				{
+					mEmptyWallSlots.push_back(*iter);
+					iter = mOldWallSlots.erase(iter);
+				}
+				else
+					++iter;
+			}*/
 			// for (auto it : oldData)
 			int j = 0;
 			for (auto it = oldData.begin(); it != oldData.end(); it++, j++)
@@ -178,7 +188,7 @@ namespace UIE
 				UpdateVirtualSource(it->second, newVSources);	// newVSources are new placeholders in the ISM tree
 				oldData.insert_or_assign(it->first, it->second);
 
-#if DEBUG_VIRTUAL_SOURCE
+#ifdef DEBUG_VIRTUAL_SOURCE
 	Debug::Log("vSource: " + it->first, Colour::Yellow);
 #endif
 			}
@@ -186,7 +196,7 @@ namespace UIE
 			for (auto vSource : newVSources)
 				oldData.insert({ vSource.GetKey(), vSource });
 
-#if DEBUG_VIRTUAL_SOURCE
+#ifdef DEBUG_VIRTUAL_SOURCE
 	Debug::Log("Total vSources: " + IntToStr(oldData.size()), Colour::Yellow);
 #endif
 		}

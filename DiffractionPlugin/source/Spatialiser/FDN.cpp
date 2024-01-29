@@ -9,6 +9,7 @@
 	 /* Microsoft C/C++-compatible compiler */
 #include <intrin.h>
 #endif
+#include <mutex>
 //#include <xmmintrin.h>
 
 // Spatialiser headers
@@ -24,12 +25,14 @@ namespace UIE
 
 		Channel::Channel(int fs) : mT(1.0 / fs), sampleRate(fs), mAbsorptionFilter(4, fs), mAirAbsorption(14000, fs), idx(0)
 		{
+			mBufferMutex = new std::mutex();
 			SetDelay();
 			SetAbsorption({ 0.0, 0.0, 0.0, 0.0, 0.0 });
 		}
 
 		Channel::Channel(Real t, const FrequencyDependence& T60, int fs) : mT(t), sampleRate(fs), mAbsorptionFilter(4, fs), mAirAbsorption(14000, fs), idx(0)
 		{
+			mBufferMutex = new std::mutex();
 			SetDelay();
 			SetAbsorption(T60);
 		}
@@ -65,16 +68,18 @@ namespace UIE
 
 		void Channel::SetDelay()
 		{
-			mDelay = round(mT * sampleRate);
-			mBuffer.ResizeBuffer(mDelay);
+			std::lock_guard<std::mutex> lock(*mBufferMutex);
+			mBuffer.ResizeBuffer(round(mT * sampleRate));
 		}
 
 		Real Channel::GetOutput(const Real input)
 		{
+			std::lock_guard<std::mutex> lock(*mBufferMutex);
+
+			idx = idx % mBuffer.Length();
 			Real out = mAirAbsorption.GetOutput(mAbsorptionFilter.GetOutput(mBuffer[idx]));
 			mBuffer[idx] = input;
 			idx++;
-			idx = idx % mDelay;
 			return out;
 		}
 
@@ -207,9 +212,8 @@ namespace UIE
 #endif
 			Real output = 0;
 			for (int i = 0; i < mNumChannels; i++)
-			{
 				y[i] = mChannels[i].GetOutput(x[i] + data[i]);
-			}
+
 			ProcessMatrix();
 #if(_WINDOWS)
 			_MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_OFF);

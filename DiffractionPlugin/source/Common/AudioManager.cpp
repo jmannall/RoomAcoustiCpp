@@ -218,7 +218,7 @@ namespace UIE
 		void TransDF2::UpdateLPF(Real fc)
 		{
 			Real omega = cot(PI_1 * fc * T); // 2 * PI * fc * T / 2
-			Real omega_sq = pow(omega, 2.0);
+			Real omega_sq = omega * omega;
 
 			Real a0 = 1.0 / (1.0 + SQRT_2 * omega + omega_sq);
 			b[0] = a0;
@@ -232,7 +232,7 @@ namespace UIE
 		void TransDF2::UpdateHPF(Real fc)
 		{
 			Real omega = cot(PI_1 * fc * T); // 2 * PI * fc * T / 2
-			Real omega_sq = pow(omega, 2.0);
+			Real omega_sq = omega * omega;
 
 			Real a0 = 1.0 / (1.0 + SQRT_2 * omega + omega_sq);
 			b[0] = omega_sq * a0;
@@ -247,13 +247,13 @@ namespace UIE
 		{
 			Real K = tan(PI_1 * fb * T);
 			Real K_2 = 2.0 * K;
-			Real K_sq = pow(K, 2.0);
+			Real K_sq = K * K;
 			Real K_sq_2 = 2.0 * K_sq;
 			Real M_2 = 2.0 * M;
 			Real V = pow(g, 1.0 / M) - 1.0;
 			Real VK = V * K;
 			Real VK_2 = 2.0 * VK;
-			Real VK_sq = pow(VK, 2.0);
+			Real VK_sq = VK * VK;
 
 			Real alpha = (0.5 - (2.0 * m - 1.0) / (M_2)) * PI_1;
 			Real cm = cos(alpha);
@@ -271,13 +271,13 @@ namespace UIE
 		{
 			Real K = tan(PI_1 * fb * T);
 			Real K_2 = 2.0 * K;
-			Real K_sq = pow(K, 2.0);
+			Real K_sq = K * K;
 			Real K_sq_2 = 2.0 * K_sq;
 			Real M_2 = 2.0 * M;
 			Real V = pow(g, 1.0 / static_cast<Real>(M)) - 1.0;
 			Real VK = V * K;
 			Real VK_2 = 2.0 * VK;
-			Real VK_sq = pow(VK, 2.0);
+			Real VK_sq = VK * VK;
 
 			Real alpha = (0.5 - (2.0 * static_cast<Real>(m) - 1.0) / M_2) * PI_1;
 			Real cm = cos(alpha);
@@ -413,10 +413,9 @@ namespace UIE
 		Real BandPass::GetOutput(const Real input)
 		{
 			Real out = input;
-			for (int i = 0; i < numFilters; i++)
-			{
-				out = filters[i].GetOutput(out);
-			}
+			for (TransDF2& filter : filters)
+				out = filter.GetOutput(out);
+
 			return out;
 		}
 
@@ -454,19 +453,16 @@ namespace UIE
 		Real ParametricEQ::GetOutput(const Real input)
 		{
 			Real out = input;
-			for (int i = 0; i < numFilters; i++)
-			{
-				out = bands[i].GetOutput(out);
-			}
+			for (BandPass& band : bands)
+				out = band.GetOutput(out);
+
 			return mGain * out;
 		}
 
 		void ParametricEQ::InitBands(int fs)
 		{
-			for (int i = 0; i < numFilters; i++)
-			{
-				bands[i].InitFilters(mOrder, fs);
-			}
+			for (BandPass& band : bands)
+				band.InitFilters(mOrder, fs);
 		}
 	}
 }

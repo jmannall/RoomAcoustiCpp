@@ -37,6 +37,14 @@ namespace UIE
 	using namespace Unity;
 	namespace Spatialiser
 	{
+
+		struct Part
+		{
+			bool isReflection;
+			size_t id;
+			Part(const size_t _id, const bool _isReflection) : id(_id), isReflection(_isReflection) {};
+		};
+
 		//////////////////// VirtualSourceData class ////////////////////
 
 		class VirtualSourceData
@@ -52,8 +60,9 @@ namespace UIE
 			{
 				for (int i = 0; i < ids.size(); i++)
 				{
-					IDs.push_back(ids[i]);
-					isReflection.push_back(true);
+					parts.push_back(Part(ids[i], true));
+					//IDs.push_back(ids[i]);
+					//isReflection.push_back(true);
 					order++;
 					key = key + IntToStr(ids[i]) + "r";
 				}
@@ -62,8 +71,9 @@ namespace UIE
 			}
 			inline void AddWallID(const size_t& id, const Absorption& absorption)
 			{
-				IDs.push_back(id);
-				isReflection.push_back(true);
+				parts.push_back(Part(id, true));
+				//IDs.push_back(id);
+				//isReflection.push_back(true);
 				order++;
 				mAbsorption *= absorption;
 				reflection = true;
@@ -73,8 +83,9 @@ namespace UIE
 			// Edge
 			inline void AddEdgeID(const size_t& id, const Diffraction::Path path)
 			{
-				IDs.push_back(id);
-				isReflection.push_back(false);
+				parts.push_back(Part(id, false));
+				//IDs.push_back(id);
+				//isReflection.push_back(false);
 				order++;
 				mDiffractionPath = path;
 				diffraction = true;
@@ -82,8 +93,9 @@ namespace UIE
 			}
 			inline void AddEdgeIDToStart(const size_t& id, const Diffraction::Path path)
 			{
-				IDs.insert(IDs.begin(), id);
-				isReflection.insert(isReflection.begin(), false);
+				parts.insert(parts.begin(), Part(id, true));
+				//IDs.insert(IDs.begin(), id);
+				//isReflection.insert(isReflection.begin(), false);
 				order++;
 				mDiffractionPath = path;
 				diffraction = true;
@@ -91,11 +103,11 @@ namespace UIE
 			}
 
 			// Getters
-			size_t GetID() const { return IDs.back(); }
-			size_t GetID(int i) const { return IDs[i]; }
+			size_t GetID() const { return parts.back().id; }
+			size_t GetID(int i) const { return parts[i].id; }
 			std::string GetKey() const { return key; }
 			std::vector<size_t> GetWallIDs() const;
-			inline bool IsReflection(int i) const { return isReflection[i]; }
+			inline bool IsReflection(int i) const { return parts[i].isReflection; }
 			inline void GetAbsorption(Real* g) const { mAbsorption.GetValues(g); }
 			inline void GetAbsorption(Absorption& a) const { a = mAbsorption; }
 			inline size_t GetOrder() const { return order; }
@@ -135,7 +147,7 @@ namespace UIE
 
 			// Reset
 			inline void Reset() { Invalid();  Invisible(); RInvalid(); }
-			inline void Clear() { IDs.clear(); mPositions.clear(); }
+			inline void Clear() { parts.clear(); mPositions.clear(); mRPositions.clear(); }
 
 			// bool AppendVSource(VirtualSourceData& data, const vec3& listenerPosition);
 
@@ -156,8 +168,7 @@ namespace UIE
 
 		private:
 			std::string key;
-			std::vector<size_t> IDs;
-			std::vector<bool> isReflection;
+			std::vector<Part> parts;
 			std::vector<vec3> mPositions;
 			std::vector<vec3> mRPositions;
 			size_t order;

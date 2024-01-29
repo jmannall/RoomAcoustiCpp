@@ -271,6 +271,23 @@ namespace UIE
 				void InitParameters();
 				void ProcessAudio(const Real* inBuffer, Real* outBuffer, int numFrames, Real lerpFactor);
 				void UpdatePath(Path* path) { mPath = path; }
+
+#ifdef _TEST
+#pragma optimize("", off)
+				void AddIr(Buffer& buffer)
+				{ 
+					int irLen = ir.Length();
+					int bufferLen = buffer.Length();
+
+					buffer.ResizeBuffer(irLen + bufferLen);
+					Real d = mPath->sData.d + mPath->rData.d;
+					int j = 0;
+					for (int i = bufferLen; i < irLen + bufferLen; i++, j++)
+						buffer[i] = ir[j] / d;
+				}
+#pragma optimize("", on)
+#endif
+
 			private:
 				void CalcBTM();
 				Real CalcSample(int n);
@@ -298,12 +315,21 @@ namespace UIE
 				Real edgeHi;
 				Real edgeLo;
 
-				Real vTheta[4];
+				Real absvTheta;
+				Real absvThetaPi;
+				Real theta[4];
+				Real vTheta;
 				Real sinTheta[4];
 				Real cosTheta[4];
+				bool singular;
+				Real temp1_2vec;
+				Real temp1vec;
+				Real sqrtB1vec;
+				Real fifactvec;
+				Real sampleOneVec[4];
 
 				Path* mPath;
-				std::mutex* m;
+				std::mutex* m; // Protects currentIr and targetIr
 			};
 		}
 	}

@@ -6,7 +6,9 @@
 
 // Unity headers
 #include "Unity/IUnityInterface.h"
+#include "Unity/IUnityProfiler.h"
 #include "Unity/Debug.h"
+#include "Unity/Profiler.h"
 
 // Common headers
 #include "Common/AudioManager.h" 
@@ -30,14 +32,19 @@ extern "C"
 {
 	//////////////////// Unity Plugin Interface ////////////////////
 
-	UI_EXPORT void UI_API UnityPluginLoad(IUnityInterfaces* unityInterfaces)
+	void UI_EXPORT UI_API UnityPluginLoad(IUnityInterfaces* unityInterfaces)
 	{
+		/*unityProfiler = unityInterfaces->Get<IUnityProfiler>();
+		if (unityProfiler == NULL)
+			return;
+		isDevelopmentBuild = unityProfiler->IsAvailable() != 0;
+		unityProfiler->CreateMarker(&spatialiserMarker, "Spatialiser", kUnityProfilerCategoryOther, kUnityProfilerMarkerFlagDefault, 0);*/
 		(void)unityInterfaces;
 	}
 
-	UI_EXPORT void UI_API UnityPluginUnload()
+	void UI_EXPORT UI_API UnityPluginUnload()
 	{
-
+		//unityProfiler = NULL;
 	}
 
 	//////////////////// Spatialiser ////////////////////
@@ -59,6 +66,7 @@ extern "C"
 			default:
 			{ mode = HRTFMode::performance; break; }
 		}
+
 		Config config = Config(fs, numFrames, numChannels, numFDNChannels, static_cast<Real>(lerpFactor), hrtfResamplingStep, mode);
 		return Init(&config, filePaths);
 	}
@@ -159,6 +167,11 @@ extern "C"
 		UpdateWall(static_cast<size_t>(id), vec3(nX, nY, nZ), &in[0], static_cast<size_t>(numVertices), absorption, reverbWall);
 	}
 
+	UI_EXPORT void UI_API SPATFreeWallId(int id)
+	{
+		FreeWallId(static_cast<size_t>(id));
+	}
+
 	UI_EXPORT void UI_API SPATRemoveWall(int id, int reverbWallId)
 	{
 		ReverbWall reverbWall = ReturnReverbWall(reverbWallId);
@@ -178,19 +191,19 @@ extern "C"
 		GetOutput(&buffer);
 		if (!buffer)
 		{
-#if DEBUG_AUDIO_THREAD
+#ifdef DEBUG_AUDIO_THREAD
 	Debug::Log("Process Output Failed", Colour::Orange);
 #endif
 			return false;
 		}
 		else if (std::isnan(*buffer))
 		{
-#if DEBUG_AUDIO_THREAD
+#ifdef DEBUG_AUDIO_THREAD
 	Debug::Log("Process Output is NaN", Colour::Orange);
 #endif
 			return false;
 		}
-#if DEBUG_AUDIO_THREAD
+#ifdef DEBUG_AUDIO_THREAD
 	Debug::Log("Process Output Success", Colour::Orange);
 #endif
 		return true;

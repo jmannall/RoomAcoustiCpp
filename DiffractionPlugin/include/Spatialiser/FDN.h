@@ -9,6 +9,7 @@
 
 // C++ headers
 #include <vector>
+#include <mutex>
 
 // Spatialiser headers
 #include "Spatialiser/Types.h"
@@ -38,7 +39,14 @@ namespace UIE
 			// Setters
 			void SetParameters(const FrequencyDependence& T60, const Real& t);
 			void SetAbsorption(const FrequencyDependence& T60);
-			void SetDelay(const Real& t) { mT = t; SetDelay(); }
+			inline void SetDelay(const Real& t) { mT = t; SetDelay(); }
+			inline void Reset()
+			{ 
+				idx = 0; 
+				mBuffer.ResetBuffer();
+				mAbsorptionFilter.ClearBuffers();
+				mAirAbsorption.ClearBuffers();
+			}
 
 			// Getters
 			Real GetOutput(const Real input);
@@ -51,11 +59,11 @@ namespace UIE
 			// Member variables
 			Real mT;
 			int sampleRate;
-			size_t mDelay;
 			Buffer mBuffer;
 			ParametricEQ mAbsorptionFilter;
 			LowPass mAirAbsorption;
 			
+			std::mutex* mBufferMutex;
 			int idx;	// Read index
 		};
 
@@ -74,6 +82,12 @@ namespace UIE
 
 			// Setters
 			void SetParameters(const FrequencyDependence& T60, const vec& dimensions);
+			inline void Reset()
+			{ 
+				x.Reset(); y.Reset();  
+				for (int i = 0; i < mNumChannels; i++)
+					mChannels[i].Reset();
+			}
 
 		private:
 			// Init
@@ -81,7 +95,7 @@ namespace UIE
 			void CalculateTimeDelay(const vec& dimensions, vec& t);
 
 			// Process
-			void ProcessMatrix() { x = y * mat; }
+			void ProcessMatrix() { Mult(y, mat, x); }//x = y * mat; }
 
 			// Member variables
 			size_t mNumChannels;
