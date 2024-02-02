@@ -85,30 +85,30 @@ namespace UIE
 
 		//////////////////// FDN class ////////////////////
 
-		FDN::FDN(size_t numChannels, int fs) : mNumChannels(numChannels), x(mNumChannels), y(mNumChannels), mat(mNumChannels, mNumChannels)
+		FDN::FDN(const Config& config) : mConfig(config), x(config.numFDNChannels), y(config.numFDNChannels), mat(config.numFDNChannels, config.numFDNChannels)
 		{
-			mChannels.reserve(mNumChannels);
-			std::fill_n(std::back_inserter(mChannels), mNumChannels, Channel(fs));
+			mChannels.reserve(mConfig.numFDNChannels);
+			std::fill_n(std::back_inserter(mChannels), mConfig.numFDNChannels, Channel(mConfig.fs));
 			InitMatrix();
 		}
 
-		FDN::FDN(const FrequencyDependence& T60, const vec& dimensions, size_t numChannels, int fs) : mNumChannels(numChannels), x(mNumChannels), y(mNumChannels), mat(mNumChannels, mNumChannels)
+		FDN::FDN(const FrequencyDependence& T60, const vec& dimensions, const Config& config) : mConfig(config), x(config.numFDNChannels), y(config.numFDNChannels), mat(config.numFDNChannels, config.numFDNChannels)
 		{
-			vec t = vec(mNumChannels);
+			vec t = vec(mConfig.numFDNChannels);
 			CalculateTimeDelay(dimensions, t);
-			mChannels.reserve(mNumChannels);
-			for (int i = 0; i < mNumChannels; i++)
+			mChannels.reserve(mConfig.numFDNChannels);
+			for (int i = 0; i < mConfig.numFDNChannels; i++)
 			{
-				mChannels.push_back(Channel(t[i], T60, fs));
+				mChannels.push_back(Channel(t[i], T60, mConfig.fs));
 			}
 			InitMatrix();
 		}
 
 		void FDN::SetParameters(const FrequencyDependence& T60, const vec& dimensions)
 		{
-			vec t = vec(mNumChannels);
+			vec t = vec(mConfig.numFDNChannels);
 			CalculateTimeDelay(dimensions, t);
-			for (int i = 0; i < mNumChannels; i++)
+			for (int i = 0; i < mConfig.numFDNChannels; i++)
 			{
 				mChannels[i].SetParameters(T60, t[i]);
 			}
@@ -116,7 +116,7 @@ namespace UIE
 
 		void FDN::CalculateTimeDelay(const vec& dimensions, vec& t)
 		{
-			Real idx = static_cast<Real>(mNumChannels) / static_cast<Real>(dimensions.Rows());
+			Real idx = static_cast<Real>(mConfig.numFDNChannels) / static_cast<Real>(dimensions.Rows());
 			assert(t.Rows() == mNumChannels);
 			assert(dimensions.Rows() <= mNumChannels);
 			assert(idx == floor(idx)); // length of dimensions must be a multiple of mNumChannels
@@ -125,7 +125,7 @@ namespace UIE
 			t *= dimensions.Mean();
 
 			int k = 0;
-			for (int j = 0; j < mNumChannels / idx; j++)
+			for (int j = 0; j < mConfig.numFDNChannels / idx; j++)
 			{
 				for (int i = 0; i < idx; i++)
 				{
@@ -137,7 +137,7 @@ namespace UIE
 
 		void FDN::InitMatrix()
 		{
-			vec vector = vec(mNumChannels);
+			vec vector = vec(mConfig.numFDNChannels);
 
 			const int numCh = 12;
 			Real col0[numCh] = { 0.251288080910173f, 0.463081025830656f, 0.123001447429897f, 0.111209155896334f, 0.283637518863125f, 0.570862560700583f, 0.277922724930659f, -0.0140354015504064f, 0.367357631085153f, 0.256510104845225f, -0.0578512136087400f, -0.0839360870952322f };
@@ -221,6 +221,7 @@ namespace UIE
 			//	y[i] = mChannels[i].GetOutput(x[i] + data[i]);
 
 			ProcessMatrix();
+
 #if(_WINDOWS)
 			_MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_OFF);
 #elif(_ANDROID)

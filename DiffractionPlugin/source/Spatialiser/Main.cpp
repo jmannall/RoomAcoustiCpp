@@ -5,8 +5,6 @@
 */
 
 // Unity headers
-#include "Unity/IUnityInterface.h"
-#include "Unity/IUnityProfiler.h"
 #include "Unity/Debug.h"
 #include "Unity/Profiler.h"
 
@@ -14,7 +12,7 @@
 #include "Common/AudioManager.h" 
 
 // Spatialiser headers
-// #include "Spatialiser/Main.h"
+#include "Spatialiser/Main.h"
 #include "Spatialiser/Types.h"
 #include "Spatialiser/Interface.h"
 
@@ -28,24 +26,101 @@ using namespace UIE::Unity;
 // Pointer to return buffer
 static float* buffer = nullptr;
 
+static IUnityProfiler* unityProfiler = NULL;
+static bool* isDevelopmentBuild = nullptr;
+
+static const UnityProfilerMarkerDesc* sourceMarker = NULL;
+static const UnityProfilerMarkerDesc* virtualSourceMarker = NULL;
+static const UnityProfilerMarkerDesc* fdnMarker = NULL;
+static const UnityProfilerMarkerDesc* reverbMarker = NULL;
+static const UnityProfilerMarkerDesc* reverbSourceMarker = NULL;
+
+IUnityProfiler* GetUnityProfiler() { return unityProfiler; }
+
+bool* GetDevBuild() { return isDevelopmentBuild; }
+
+void BeginSource()
+{
+	if (GetDevBuild())
+		GetUnityProfiler()->BeginSample(sourceMarker);
+}
+
+void EndSource()
+{
+	if (GetDevBuild())
+		GetUnityProfiler()->EndSample(sourceMarker);
+}
+
+void BeginVirtualSource()
+{
+	if (GetDevBuild())
+		GetUnityProfiler()->BeginSample(virtualSourceMarker);
+}
+
+void EndVirtualSource()
+{
+	if (GetDevBuild())
+		GetUnityProfiler()->EndSample(virtualSourceMarker);
+}
+
+void BeginFDN()
+{
+	if (GetDevBuild())
+		GetUnityProfiler()->BeginSample(fdnMarker);
+}
+
+void EndFDN()
+{
+	if (GetDevBuild())
+		GetUnityProfiler()->EndSample(fdnMarker);
+}
+
+void BeginReverb()
+{
+	if (GetDevBuild())
+		GetUnityProfiler()->BeginSample(reverbMarker);
+}
+
+void EndReverb()
+{
+	if (GetDevBuild())
+		GetUnityProfiler()->EndSample(reverbMarker);
+}
+
+void BeginReverbSource()
+{
+	if (GetDevBuild())
+		GetUnityProfiler()->BeginSample(reverbSourceMarker);
+}
+
+void EndReverbSource()
+{
+	if (GetDevBuild())
+		GetUnityProfiler()->EndSample(reverbSourceMarker);
+}
+
+extern "C" void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API UnityPluginLoad(IUnityInterfaces * unityInterfaces)
+{
+	unityProfiler = unityInterfaces->Get<IUnityProfiler>();
+	if (unityProfiler == NULL)
+		return;
+	isDevelopmentBuild = new bool(unityProfiler->IsAvailable() != 0);
+	unityProfiler->CreateMarker(&sourceMarker, "Source", kUnityProfilerCategoryOther, kUnityProfilerMarkerFlagDefault, 0);
+	unityProfiler->CreateMarker(&virtualSourceMarker, "VirtualSource", kUnityProfilerCategoryOther, kUnityProfilerMarkerFlagDefault, 0);
+	unityProfiler->CreateMarker(&fdnMarker, "FDN", kUnityProfilerCategoryOther, kUnityProfilerMarkerFlagDefault, 0);
+	unityProfiler->CreateMarker(&reverbMarker, "Reverb", kUnityProfilerCategoryOther, kUnityProfilerMarkerFlagDefault, 0);
+	unityProfiler->CreateMarker(&reverbSourceMarker, "ReverbSource", kUnityProfilerCategoryOther, kUnityProfilerMarkerFlagDefault, 0);
+}
+
+extern "C" void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API UnityPluginUnload()
+{
+	unityProfiler = NULL;
+}
+
 extern "C"
 {
 	//////////////////// Unity Plugin Interface ////////////////////
 
-	void UI_EXPORT UI_API UnityPluginLoad(IUnityInterfaces* unityInterfaces)
-	{
-		/*unityProfiler = unityInterfaces->Get<IUnityProfiler>();
-		if (unityProfiler == NULL)
-			return;
-		isDevelopmentBuild = unityProfiler->IsAvailable() != 0;
-		unityProfiler->CreateMarker(&spatialiserMarker, "Spatialiser", kUnityProfilerCategoryOther, kUnityProfilerMarkerFlagDefault, 0);*/
-		(void)unityInterfaces;
-	}
-
-	void UI_EXPORT UI_API UnityPluginUnload()
-	{
-		//unityProfiler = NULL;
-	}
 
 	//////////////////// Spatialiser ////////////////////
 

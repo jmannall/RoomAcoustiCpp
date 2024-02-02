@@ -100,7 +100,7 @@ namespace UIE
 					{	
 						if (itP->second.RemoveWall(it->first)) // If plane contains no other walls
 						{
-							mEmptyWallsSlots.push_back(itP->first);
+							mEmptyPlanesSlots.push_back(itP->first);
 							mPlanes.erase(itP);
 						}
 					}

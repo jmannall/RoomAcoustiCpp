@@ -7,7 +7,23 @@
 #ifndef Spatialiser_Main_h
 #define Spatialiser_Main_h
 
-// #include "Spatialiser/Types.h"
-// #include "Spatialiser/Interface.h"
+// Unity headers
+#include "Unity/IUnityInterface.h"
+#include "Unity/IUnityProfiler.h"
+
+void BeginSource();
+void EndSource();
+
+void BeginVirtualSource();
+void EndVirtualSource();
+
+void BeginFDN();
+void EndFDN();
+
+void BeginReverb();
+void EndReverb();
+
+void BeginReverbSource();
+void EndReverbSource();
 
 #endif

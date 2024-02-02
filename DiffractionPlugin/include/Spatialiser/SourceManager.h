@@ -31,7 +31,7 @@ namespace UIE
 		public:
 
 			// Load and Destroy
-			SourceManager(Binaural::CCore* core, const size_t& numFDNChannels, HRTFMode hrtfMode, int fs) : mSources(), mEmptySlots(), mCore(core), mNumFDNChannels(numFDNChannels), mHRTFMode(hrtfMode), sampleRate(fs) {};
+			SourceManager(Binaural::CCore* core, const Config& config) : mSources(), mEmptySlots(), mCore(core), mConfig(config) {};
 			~SourceManager() { Reset(); };
 
 			// Sources
@@ -79,7 +79,7 @@ namespace UIE
 			}*/
 
 			// Audio
-			void ProcessAudio(const size_t& id, const Real* data, const size_t& numFrames, matrix& reverbInput, Buffer& outputBuffer, const Real lerpFactor);
+			void ProcessAudio(const size_t& id, const Real* data, matrix& reverbInput, Buffer& outputBuffer, const Real lerpFactor);
 
 		private:
 			inline void Reset() { mSources.clear(); mEmptySlots.clear(); }
@@ -94,9 +94,7 @@ namespace UIE
 
 			// Variables
 			Binaural::CCore* mCore;
-			size_t mNumFDNChannels;
-			HRTFMode mHRTFMode;
-			int sampleRate;
+			Config mConfig;
 		};
 	}
 }

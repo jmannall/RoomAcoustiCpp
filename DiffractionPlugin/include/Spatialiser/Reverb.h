@@ -35,14 +35,14 @@ namespace UIE
 		class ReverbSource
 		{
 		public:
-			ReverbSource(Binaural::CCore* core, HRTFMode hrtfMode, int fs);
+			ReverbSource(Binaural::CCore* core, const Config& config);
 			~ReverbSource();
 
 			inline void SetShift(const vec3& shift) { mShift = shift; }
 			void Update(const vec3& position);
 			void UpdateReflectionFilter();
 			void UpdateReflectionFilter(const Absorption& absorption);
-			void ProcessAudio(const Real* data, const size_t& numFrames, Buffer& outputBuffer);
+			void ProcessAudio(const Real* data, Buffer& outputBuffer);
 
 			inline void Deactivate() { mSource = NULL; }
 			inline void Reset() { mReflectionFilter.ClearBuffers(); }
@@ -60,9 +60,10 @@ namespace UIE
 			Absorption mAbsorption;
 			ParametricEQ mReflectionFilter;
 			shared_ptr<Binaural::CSingleSourceDSP> mSource;
-			HRTFMode mHRTFMode;
+			Config mConfig;
 
 			Binaural::CCore* mCore;
+			CMonoBuffer<float> bInput;
 		};
 
 		//////////////////// Reverb class ////////////////////
@@ -70,8 +71,8 @@ namespace UIE
 		class Reverb
 		{
 		public:
-			Reverb(Binaural::CCore* core, HRTFMode hrtfMode, const vec& dimensions, int fs);
-			Reverb(Binaural::CCore* core, HRTFMode hrtfMode, const vec& dimensions, const FrequencyDependence& T60, int fs);
+			Reverb(Binaural::CCore* core, const Config& config, const vec& dimensions);
+			Reverb(Binaural::CCore* core, const Config& config, const vec& dimensions, const FrequencyDependence& T60);
 
 			void UpdateReverbSources(const vec3& position);
 			void UpdateReflectionFilters(const ReverbWall& id, const Absorption& absorption);
@@ -82,16 +83,18 @@ namespace UIE
 
 			inline void UpdateValid(bool v) { valid = v; }
 		private:
-			void InitSources(int fs);
+			void InitSources();
+
+			matrix input;
+			Real* col;
 
 			bool valid;
-			size_t mNumChannels;
 			FDN mFDN;
 			std::vector<ReverbSource> mReverbSources;
-			HRTFMode mHRTFMode;
 			std::mutex mFDNMutex;
 
 			Binaural::CCore* mCore;
+			Config mConfig;
 			std::mutex mCoreMutex; // This would ideally be per reverbSource but can't copy a class with a mutex
 		};
 	}

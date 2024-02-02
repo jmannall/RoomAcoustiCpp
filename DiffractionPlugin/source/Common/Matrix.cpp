@@ -100,22 +100,6 @@ namespace UIE
 			}
 		}
 
-		Real* matrix::GetColumn(int idx) const
-		{
-			Real* column = new Real[rows];
-			for (int i = 0; i < rows; i++)
-			{
-				column[i] = e[i][idx];
-			}
-			return column;
-		}
-
-		Real* matrix::GetRow(int idx) const
-		{
-			Real* column = e[idx];
-			return column;
-		}
-
 		matrix matrix::Transpose()
 		{
 			matrix mat = matrix(cols, rows);

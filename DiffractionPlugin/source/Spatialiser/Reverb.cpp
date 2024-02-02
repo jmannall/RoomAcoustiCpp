@@ -1,5 +1,6 @@
 
 #include "Spatialiser/Reverb.h"
+#include "Spatialiser/Main.h"
 
 // Unity headers
 #include "Unity/Debug.h"
@@ -13,8 +14,9 @@ namespace UIE
 
 		//////////////////// ReverbSource class ////////////////////
 
-		ReverbSource::ReverbSource(Binaural::CCore* core, HRTFMode hrtfMode, int fs) : mCore(core), mHRTFMode(hrtfMode), mReflectionFilter(4, fs), mAbsorption(1.0f, 1.0f, 1.0f, 1.0f, 1.0f)
+		ReverbSource::ReverbSource(Binaural::CCore* core, const Config& config) : mCore(core), mConfig(config), mReflectionFilter(4, config.fs), mAbsorption(1.0f, 1.0f, 1.0f, 1.0f, 1.0f)
 		{
+			bInput = CMonoBuffer<float>(config.numFrames);
 			UpdateReflectionFilter();
 			Init();
 		}
@@ -43,7 +45,7 @@ namespace UIE
 			mSource->DisableFarDistanceEffect();
 
 			//Select spatialisation mode
-			switch (mHRTFMode)
+			switch (mConfig.hrtfMode)
 			{
 			case HRTFMode::quality:
 			{
@@ -58,6 +60,11 @@ namespace UIE
 			case HRTFMode::none:
 			{
 				mSource->SetSpatializationMode(Binaural::TSpatializationMode::NoSpatialization);
+				break;
+			}
+			default:
+			{
+				mSource->SetSpatializationMode(Binaural::TSpatializationMode::HighPerformance);
 				break;
 			}
 			}
@@ -96,15 +103,18 @@ namespace UIE
 			valid = mAbsorption > EPS;
 		}
 
-		void ReverbSource::ProcessAudio(const Real* data, const size_t& numFrames, Buffer& outputBuffer)
+		void ReverbSource::ProcessAudio(const Real* data, Buffer& outputBuffer)
 		{
 			if (valid)
 			{
+				BeginReverbSource();
 				// Copy input into internal storage and apply wall absorption
-				CMonoBuffer<float> bInput(numFrames);
+				//CMonoBuffer<float> bInput(numFrames);
 				const Real* inputPtr = data;
-				for (int i = 0; i < numFrames; i++)
-					bInput[i] = static_cast<float>(mReflectionFilter.GetOutput(*inputPtr++));
+				for (float& in : bInput)
+					in = static_cast<float>(mReflectionFilter.GetOutput(*inputPtr++));
+				/*for (int i = 0; i < numFrames; i++)
+					bInput[i] = static_cast<float>(mReflectionFilter.GetOutput(*inputPtr++));*/
 
 				CEarPair<CMonoBuffer<float>> bOutput;
 
@@ -113,34 +123,40 @@ namespace UIE
 				mSource->ProcessAnechoic(bOutput.left, bOutput.right);
 
 				int j = 0;
-				for (int i = 0; i < numFrames; i++)
+				for (int i = 0; i < mConfig.numFrames; i++)
 				{
 					outputBuffer[j++] += bOutput.left[i];
 					outputBuffer[j++] += bOutput.right[i];
 				}
+				EndReverbSource();
 			}
 		}
 
 		//////////////////// Reverb class ////////////////////
 
-		Reverb::Reverb(Binaural::CCore* core, HRTFMode hrtfMode, const vec& dimensions, int fs) : mNumChannels(12), mFDN(mNumChannels, fs), mCore(core), mHRTFMode(hrtfMode), valid(false)
+		Reverb::Reverb(Binaural::CCore* core, const Config& config, const vec& dimensions) : mConfig(config), mFDN(config), mCore(core), valid(false)
 		{
-			InitSources(fs);
+			input = matrix(mConfig.numFrames, mConfig.numFDNChannels);
+			col = new Real[mConfig.numFrames];
+			InitSources();
 		}
 
-		Reverb::Reverb(Binaural::CCore* core, HRTFMode hrtfMode, const vec& dimensions, const FrequencyDependence& T60, int fs) : mNumChannels(12), mFDN(T60, dimensions, mNumChannels, fs), mCore(core), mHRTFMode(hrtfMode), valid(false)
+		Reverb::Reverb(Binaural::CCore* core, const Config& config, const vec& dimensions, const FrequencyDependence& T60) : mFDN(T60, dimensions, config), mCore(core), mConfig(config), valid(false)
 		{
-			InitSources(fs);
+			input = matrix(mConfig.numFrames, mConfig.numFDNChannels);
+			col = new Real[mConfig.numFDNChannels];
+			InitSources();
 		}
 
-		void Reverb::InitSources(int fs)
+		void Reverb::InitSources()
 		{
 			lock_guard<mutex> lock(mCoreMutex);
 
-			mReverbSources.reserve(mNumChannels);
-			for (int i = 0; i < mNumChannels; i++)
+			mReverbSources.reserve(mConfig.numFDNChannels);
+
+			for (int i = 0; i < mConfig.numFDNChannels; i++)
 			{
-				ReverbSource temp = ReverbSource(mCore, mHRTFMode, fs);
+				ReverbSource temp = ReverbSource(mCore, mConfig);
 				mReverbSources.push_back(temp);
 				temp.Deactivate();
 			}
@@ -161,7 +177,7 @@ namespace UIE
 
 		void Reverb::UpdateReverbSources(const vec3& position)
 		{
-			for (int i = 0; i < mNumChannels; i++)
+			for (int i = 0; i < mConfig.numFDNChannels; i++)
 			{
 				lock_guard<mutex> lock(mCoreMutex);
 
@@ -225,26 +241,29 @@ namespace UIE
 		{
 			if (valid)
 			{
+				BeginReverb();
 				// Process FDN and save to buffer
-				matrix input = matrix(data.Rows(), mNumChannels);
 				{
 					lock_guard <mutex> lock(mFDNMutex);
 
+					BeginFDN();
 					for (int i = 0; i < data.Rows(); i++)
 					{
 						rowvec out = mFDN.GetOutput(data.GetRow(i), valid);
-						for (int j = 0; j < mNumChannels; j++)
+						for (int j = 0; j < mConfig.numFDNChannels; j++)
 							input.AddEntry(out[j], i, j);
 					}
+					EndFDN();
 				}
 				// Process buffer of each channel
 				lock_guard<mutex> lock(mCoreMutex);
 				int j = 0;
 				for (ReverbSource& source : mReverbSources)
 				{
-					source.ProcessAudio(input.GetColumn(j), data.Rows(), outputBuffer);
+					source.ProcessAudio(input.GetColumn(col, j), outputBuffer);
 					j++;
 				}
+				EndReverb();
 			}
 		}
 

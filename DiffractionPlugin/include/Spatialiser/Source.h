@@ -70,15 +70,15 @@ namespace UIE
 		public:
 
 			// Load and Destroy
-			Source(Binaural::CCore* core, const size_t& numFDNChannels, HRTFMode hrtfMode, int fs);
-			Source(const Source& s) : mCore(s.mCore), mNumFDNChannels(s.mNumFDNChannels), mHRTFMode(s.mHRTFMode), sampleRate(s.sampleRate), mSource(s.mSource),
-				targetGain(s.targetGain), currentGain(s.currentGain), isVisible(s.isVisible), mVirtualSources(s.mVirtualSources), mVirtualEdgeSources(s.mVirtualEdgeSources),
+			Source(Binaural::CCore* core, const Config& config);
+			Source(const Source& s) : mCore(s.mCore), mConfig(s.mConfig), mSource(s.mSource),
+				bInput(s.bInput), targetGain(s.targetGain), currentGain(s.currentGain), isVisible(s.isVisible), mVirtualSources(s.mVirtualSources), mVirtualEdgeSources(s.mVirtualEdgeSources),
 				oldData(s.oldData), freeFDNChannels(s.freeFDNChannels) {};
 			~Source();
 
 			// Operators
 			inline Source operator=(const Source& s) {
-				mCore = s.mCore; mNumFDNChannels = s.mNumFDNChannels; mHRTFMode = s.mHRTFMode; sampleRate = s.sampleRate; mSource = s.mSource;
+				mCore = s.mCore; mConfig = s.mConfig; mSource = s.mSource;
 				targetGain = s.targetGain; currentGain = s.currentGain; isVisible = s.isVisible; mVirtualSources = s.mVirtualSources; mVirtualEdgeSources = s.mVirtualEdgeSources;
 				oldData = s.oldData; freeFDNChannels = s.freeFDNChannels;
 				return *this;
@@ -96,7 +96,7 @@ namespace UIE
 			//inline void LogEdgeRemoval(const size_t& id) { removedEdges.push_back(id); }
 
 			// Audio
-			void ProcessAudio(const Real* data, const size_t& numFrames, matrix& reverbInput, Buffer& outputBuffer, const Real lerpFactor);
+			void ProcessAudio(const Real* data, matrix& reverbInput, Buffer& outputBuffer, const Real lerpFactor);
 
 			// Reset
 			inline void Deactivate() { mSource = NULL; }
@@ -108,11 +108,13 @@ namespace UIE
 
 			// Constants
 			Binaural::CCore* mCore;
-			size_t mNumFDNChannels;
+			Config mConfig;
+			/*size_t mNumFDNChannels;
 			HRTFMode mHRTFMode;
-			int sampleRate;
+			int sampleRate;*/
 
 			// Audio data
+			CMonoBuffer<float> bInput;
 			shared_ptr<Binaural::CSingleSourceDSP> mSource;
 			Real targetGain;
 			Real currentGain;

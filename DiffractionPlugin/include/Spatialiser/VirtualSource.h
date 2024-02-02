@@ -208,16 +208,17 @@ namespace UIE
 		public:
 
 			// Load and Destroy
-			VirtualSource() : mCore(NULL), mSource(NULL), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(4), isInitialised(false), mHRTFMode(HRTFMode::performance), feedsFDN(false), mFDNChannel(-1), btm(&mDiffractionPath, 48000), reflection(false), diffraction(false) {};
-			VirtualSource(Binaural::CCore* core, HRTFMode hrtfMode, int fs) : mCore(core), mSource(NULL), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(4, fs), isInitialised(false), mHRTFMode(hrtfMode), feedsFDN(false), mFDNChannel(-1), btm(&mDiffractionPath, fs), reflection(false), diffraction(false) {};
-			VirtualSource(Binaural::CCore* core, HRTFMode hrtfMode, int fs, const VirtualSourceData& data, const int fdnChannel);
+			VirtualSource() : mCore(NULL), mSource(NULL), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(4), isInitialised(false), feedsFDN(false), mFDNChannel(-1), btm(&mDiffractionPath, 48000), reflection(false), diffraction(false) {};
+			VirtualSource(Binaural::CCore* core, const Config& config);
+			VirtualSource(Binaural::CCore* core, const Config& config, const VirtualSourceData& data, const int fdnChannel);
 			VirtualSource(const VirtualSource& vS);
 			~VirtualSource();
 
 			// Operators
 			inline VirtualSource operator=(const VirtualSource& vS)
 			{
-				mCore = vS.mCore; mSource = vS.mSource; mPosition = vS.mPosition; mFilter = vS.mFilter; isInitialised = vS.isInitialised; mHRTFMode = vS.mHRTFMode; feedsFDN = vS.feedsFDN; mFDNChannel = vS.mFDNChannel; mDiffractionPath = vS.mDiffractionPath; btm = vS.btm; mTargetGain = vS.mTargetGain; mCurrentGain = vS.mCurrentGain; reflection = vS.reflection; diffraction = vS.diffraction; mVirtualSources = vS.mVirtualSources; mVirtualEdgeSources = vS.mVirtualEdgeSources;
+				mCore = vS.mCore; mSource = vS.mSource; mPosition = vS.mPosition; mFilter = vS.mFilter; isInitialised = vS.isInitialised; mConfig = vS.mConfig; feedsFDN = vS.feedsFDN; mFDNChannel = vS.mFDNChannel; mDiffractionPath = vS.mDiffractionPath; btm = vS.btm; mTargetGain = vS.mTargetGain;
+				mCurrentGain = vS.mCurrentGain; reflection = vS.reflection; diffraction = vS.diffraction; mVirtualSources = vS.mVirtualSources; mVirtualEdgeSources = vS.mVirtualEdgeSources; bInput = vS.bInput; bStore = vS.bStore;
 				return *this;
 			}
 
@@ -235,7 +236,7 @@ namespace UIE
 			// void RemoveVirtualSources(const size_t& id);
 
 			// Audio
-			int ProcessAudio(const Real* data, const size_t& numFrames, matrix& reverbInput, Buffer& outputBuffer, const Real lerpFactor);
+			void ProcessAudio(const Real* data, matrix& reverbInput, Buffer& outputBuffer, const Real lerpFactor);
 
 			// Deactivate
 			inline void Deactivate() { mSource = NULL; }
@@ -255,13 +256,15 @@ namespace UIE
 
 			// Constants
 			Binaural::CCore* mCore;
-			HRTFMode mHRTFMode;
+			Config mConfig;
 			bool feedsFDN;
 			int mFDNChannel;
 
 			shared_ptr<Binaural::CSingleSourceDSP> mSource;
 			vec3 mPosition;
 
+			CMonoBuffer<Real> bStore;
+			CMonoBuffer<float> bInput;
 			Real mCurrentGain;
 			Real mTargetGain;
 			ParametricEQ mFilter;

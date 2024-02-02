@@ -9,6 +9,7 @@
 #include "Common/Vec3.h"
 
 // Spatialiser headers
+#include "Spatialiser/Main.h"
 #include "Spatialiser/Source.h"
 
 // Unity headers
@@ -26,13 +27,13 @@ namespace UIE
 
 		//////////////////// Source class ////////////////////
 
-		Source::Source(Binaural::CCore* core, const size_t& numFDNChannels, HRTFMode hrtfMode, int fs) : mCore(core), mNumFDNChannels(numFDNChannels), targetGain(0.0f), currentGain(0.0f), isVisible(false), mHRTFMode(hrtfMode), sampleRate(fs)
+		Source::Source(Binaural::CCore* core, const Config& config) : mCore(core), mConfig(config), targetGain(0.0f), currentGain(0.0f), isVisible(false)
 		{
 			// Initialise source to core
 			mSource = mCore->CreateSingleSourceDSP();
 
 			//Select spatialisation mode
-			switch (mHRTFMode)
+			switch (mConfig.hrtfMode)
 			{
 			case HRTFMode::quality:
 			{
@@ -58,6 +59,7 @@ namespace UIE
 			mSource->EnablePropagationDelay();
 
 			ResetFDNSlots();
+			bInput = CMonoBuffer<float>(config.numFrames);
 		}
 
 		Source::~Source()
@@ -72,62 +74,73 @@ namespace UIE
 			std::fill_n(std::back_inserter(freeFDNChannels), 1, 0);
 		}
 
-		void Source::ProcessAudio(const Real* data, const size_t& numFrames, matrix& reverbInput, Buffer& outputBuffer, const Real lerpFactor)
+		void Source::ProcessAudio(const Real* data, matrix& reverbInput, Buffer& outputBuffer, const Real lerpFactor)
 		{
-			int counter = 0;
 			{
 				lock_guard<mutex> lock(vWallMutex);
-				// for (auto it : mVirtualSources)
-				for (auto it = mVirtualSources.begin(); it != mVirtualSources.end(); it++)
+				for (auto& it : mVirtualSources)
+					it.second.ProcessAudio(data, reverbInput, outputBuffer, lerpFactor);
+				/*for (auto it = mVirtualSources.begin(); it != mVirtualSources.end(); it++)
 				{
 					counter += it->second.ProcessAudio(data, numFrames, reverbInput, outputBuffer, lerpFactor);
-				}
+				}*/
 			}
 			{
 				lock_guard<mutex> lock(vEdgeMutex);
-				for (auto it = mVirtualEdgeSources.begin(); it != mVirtualEdgeSources.end(); it++)
+				for (auto& it : mVirtualEdgeSources)
+					it.second.ProcessAudio(data, reverbInput, outputBuffer, lerpFactor);
+				/*for (auto it = mVirtualEdgeSources.begin(); it != mVirtualEdgeSources.end(); it++)
 				{
 					counter += it->second.ProcessAudio(data, numFrames, reverbInput, outputBuffer, lerpFactor);
-				}
+				}*/
 			}
 
 #ifdef DEBUG_AUDIO_THREAD
-	Debug::Log("Total audio vSources: " + IntToStr(counter), Colour::Orange);
+	// Debug::Log("Total audio vSources: " + IntToStr(counter), Colour::Orange);
 #endif
 
 			if (isVisible || currentGain != 0.0f)
 			{
+				BeginSource();
 				CEarPair<CMonoBuffer<float>> bOutput;
 
 				// Copy input into internal storage
-				CMonoBuffer<float> bInput(numFrames);
+				//CMonoBuffer<float> bInput(numFrames);
 				const Real* inputPtr = data;
 
 				{
 					lock_guard<mutex> lock(audioMutex);
 					if (currentGain == targetGain)
 					{
-						for (int i = 0; i < numFrames; i++)
-							bInput[i] = static_cast<float>(*inputPtr++ * currentGain);
+						for (float& in : bInput)
+							in = static_cast<float>(*inputPtr++ * currentGain);
+						/*for (int i = 0; i < numFrames; i++)
+							bInput[i] = static_cast<float>(*inputPtr++ * currentGain);*/
 					}
 					else
 					{
-						for (int i = 0; i < numFrames; i++)
+						for (float& in : bInput)
+						{
+							in = static_cast<float>(*inputPtr++ * currentGain);
+							currentGain = Lerp(currentGain, targetGain, lerpFactor);
+						}
+						/*for (int i = 0; i < numFrames; i++)
 						{
 							bInput[i] = static_cast<float>(*inputPtr++ * currentGain);
 							currentGain = Lerp(currentGain, targetGain, lerpFactor);
-						}
+						}*/
 					}
 					mSource->SetBuffer(bInput);
 					mSource->ProcessAnechoic(bOutput.left, bOutput.right);
 				}
 
 				int j = 0;
-				for (int i = 0; i < numFrames; i++)
+				for (int i = 0; i < mConfig.numFrames; i++)
 				{
 					outputBuffer[j++] += bOutput.left[i];
 					outputBuffer[j++] += bOutput.right[i];
 				}
+				EndSource();
 			}
 		}
 
@@ -225,7 +238,7 @@ namespace UIE
 				if (it == tempStore->end())		// case: virtual source lower in the tree does not exist
 				{
 					lock_guard<mutex> lock(*m);
-					auto newIt = tempStore->insert_or_assign(data.GetID(i), VirtualSource(mCore, mHRTFMode, sampleRate)); // feedsFDN always the highest order ism
+					auto newIt = tempStore->insert_or_assign(data.GetID(i), VirtualSource(mCore, mConfig)); // feedsFDN always the highest order ism
 					it = newIt.first;
 					VirtualSourceData vSource = data;
 					newVSources.push_back(vSource.Trim(i));
@@ -249,13 +262,13 @@ namespace UIE
 				int fdnChannel = -1;
 				if (data.feedsFDN)
 				{
-					fdnChannel = (int)(freeFDNChannels.back() % mNumFDNChannels);
+					fdnChannel = (int)(freeFDNChannels.back() % mConfig.numFDNChannels);
 					if (freeFDNChannels.size() > 1)
 						freeFDNChannels.pop_back();
 					else
 						freeFDNChannels[0]++;
 				}
-				VirtualSource virtualSource = VirtualSource(mCore, mHRTFMode, sampleRate, data, fdnChannel);
+				VirtualSource virtualSource = VirtualSource(mCore, mConfig, data, fdnChannel);
 				{
 					lock_guard<mutex> lock(*m);
 					tempStore->insert_or_assign(data.GetID(orderIdx), virtualSource);
@@ -267,7 +280,7 @@ namespace UIE
 				int fdnChannel = -1;
 				if (data.feedsFDN && it->second.GetFDNChannel() < 0)
 				{
-					fdnChannel = (int)(freeFDNChannels.back() % mNumFDNChannels);
+					fdnChannel = (int)(freeFDNChannels.back() % mConfig.numFDNChannels);
 					if (freeFDNChannels.size() > 1)
 						freeFDNChannels.pop_back();
 					else

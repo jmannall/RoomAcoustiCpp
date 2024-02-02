@@ -43,8 +43,20 @@ namespace UIE
 
 			// Getters
 			inline Real GetEntry(const int& r, const int& c) const { return e[r][c]; } // Add bounds checking
-			Real* GetColumn(int idx) const;
-			Real* GetRow(int idx) const;
+			inline Real* GetRow(int idx) const { return e[idx];	}
+			inline Real* GetColumn(Real* column, int idx) const
+			{
+				for (int i = 0; i < rows; i++)
+				{
+					column[i] = e[i][idx];
+				}
+				return column;
+			}
+			inline Real* GetColumn(int idx) const
+			{
+				Real* column = new Real[rows];
+				return GetColumn(column, idx);
+			}
 			inline int Rows() const { return rows; }
 			inline int Cols() const { return cols; }
 

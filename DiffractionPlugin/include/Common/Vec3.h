@@ -138,7 +138,6 @@ namespace UIE
 			return v / len;
 		}
 
-#pragma optimise("", off)
 		inline vec3 UnitVectorRound(vec3 v)
 		{
 			v.x = Round(v.x, static_cast<size_t>(NUM_PRECISION));
@@ -146,7 +145,6 @@ namespace UIE
 			v.z = Round(v.z, static_cast<size_t>(NUM_PRECISION));
 			return UnitVector(v);
 		}
-#pragma optimise("", on)
 
 		inline Real Dot(vec3 v, vec3 u)
 		{

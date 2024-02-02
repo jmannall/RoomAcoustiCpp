@@ -5,6 +5,8 @@
 *
 */
 
+// Spatialiser headers
+#include "Spatialiser/Main.h"
 #include "Spatialiser/VirtualSource.h"
 
 using namespace Common;
@@ -172,12 +174,20 @@ namespace UIE
 
 		//////////////////// VirtualSource class ////////////////////
 
-		VirtualSource::VirtualSource(Binaural::CCore* core, HRTFMode hrtfMode, int fs, const VirtualSourceData& data, int fdnChannel) : mCore(core), mSource(NULL), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(4, fs), isInitialised(false), mHRTFMode(hrtfMode), feedsFDN(data.feedsFDN), mFDNChannel(fdnChannel), mDiffractionPath(data.mDiffractionPath), btm(&mDiffractionPath, fs), reflection(data.reflection), diffraction(data.diffraction)
+		VirtualSource::VirtualSource(Binaural::CCore* core, const Config& config) : mCore(core), mSource(NULL), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(4, config.fs), isInitialised(false), mConfig(config), feedsFDN(false), mFDNChannel(-1), btm(&mDiffractionPath, config.fs), reflection(false), diffraction(false)
 		{
+			bInput = CMonoBuffer<float>(mConfig.numFrames);
+			bStore = CMonoBuffer<Real>(mConfig.numFrames);
+		}
+
+		VirtualSource::VirtualSource(Binaural::CCore* core, const Config& config, const VirtualSourceData& data, int fdnChannel) : mCore(core), mSource(NULL), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(4, config.fs), isInitialised(false), mConfig(config), feedsFDN(data.feedsFDN), mFDNChannel(fdnChannel), mDiffractionPath(data.mDiffractionPath), btm(&mDiffractionPath, config.fs), reflection(data.reflection), diffraction(data.diffraction)
+		{
+			bInput = CMonoBuffer<float>(mConfig.numFrames);
+			bStore = CMonoBuffer<Real>(mConfig.numFrames);
 			UpdateVirtualSource(data, fdnChannel);
 		}
 
-		VirtualSource::VirtualSource(const VirtualSource& vS) : mCore(vS.mCore), mSource(vS.mSource), mPosition(vS.mPosition), mFilter(vS.mFilter), isInitialised(vS.isInitialised), mHRTFMode(vS.mHRTFMode), feedsFDN(vS.feedsFDN), mFDNChannel(vS.mFDNChannel), mDiffractionPath(vS.mDiffractionPath), btm(vS.btm), mTargetGain(vS.mTargetGain), mCurrentGain(vS.mCurrentGain), reflection(vS.reflection), diffraction(vS.diffraction), mVirtualSources(vS.mVirtualSources), mVirtualEdgeSources(vS.mVirtualEdgeSources)
+		VirtualSource::VirtualSource(const VirtualSource& vS) : mCore(vS.mCore), mSource(vS.mSource), mPosition(vS.mPosition), mFilter(vS.mFilter), isInitialised(vS.isInitialised), mConfig(vS.mConfig), feedsFDN(vS.feedsFDN), mFDNChannel(vS.mFDNChannel), mDiffractionPath(vS.mDiffractionPath), btm(vS.btm), mTargetGain(vS.mTargetGain), mCurrentGain(vS.mCurrentGain), reflection(vS.reflection), diffraction(vS.diffraction), mVirtualSources(vS.mVirtualSources), mVirtualEdgeSources(vS.mVirtualEdgeSources), bInput(vS.bInput), bStore(vS.bStore)
 		{
 			btm.UpdatePath(&mDiffractionPath);
 		}
@@ -226,61 +236,67 @@ namespace UIE
 			}
 		}*/
 
-		int VirtualSource::ProcessAudio(const Real* data, const size_t& numFrames, matrix& reverbInput, Buffer& outputBuffer, const Real lerpFactor)
+		void VirtualSource::ProcessAudio(const Real* data, matrix& reverbInput, Buffer& outputBuffer, const Real lerpFactor)
 		{
-			int ret = 0;
 			{
 				lock_guard<mutex> lock(vWallMutex);
-				// for (auto it : mVirtualSources)
-				for (auto it = mVirtualSources.begin(); it != mVirtualSources.end(); it++)
+				for (auto& it : mVirtualSources)
+					it.second.ProcessAudio(data, reverbInput, outputBuffer, lerpFactor);
+				/*for (auto it = mVirtualSources.begin(); it != mVirtualSources.end(); it++)
 				{
 					ret += it->second.ProcessAudio(data, numFrames, reverbInput, outputBuffer, lerpFactor);
-				}
+				}*/
 			}
 			{
 				lock_guard<mutex> lock(vEdgeMutex);
-				for (auto it = mVirtualEdgeSources.begin(); it != mVirtualEdgeSources.end(); it++)
+				for (auto& it : mVirtualEdgeSources)
+					it.second.ProcessAudio(data, reverbInput, outputBuffer, lerpFactor);
+				/*for (auto it = mVirtualEdgeSources.begin(); it != mVirtualEdgeSources.end(); it++)
 				{
 					ret += it->second.ProcessAudio(data, numFrames, reverbInput, outputBuffer, lerpFactor);
-				}
+				}*/
 			}
 
-			ret++;
 			lock_guard<mutex> lock(audioMutex);
 			if (isInitialised)
 			{
+				BeginSource();
 				// Copy input into internal storage and apply wall absorption
-				CMonoBuffer<Real> bStore(numFrames);
-				CMonoBuffer<float> bInput(numFrames);
+				//CMonoBuffer<Real> bStore(numFrames);
+				//CMonoBuffer<float> bInput(numFrames);
 				const Real* inputPtr = data;
 
 				if (diffraction)
 				{
 					{
 						//lock_guard<mutex> lock(audioMutex);
-						btm.ProcessAudio(inputPtr, &bStore[0], numFrames, lerpFactor);
+						btm.ProcessAudio(inputPtr, &bStore[0], mConfig.numFrames, lerpFactor);
 						if (reflection)
 						{
-							for (int i = 0; i < numFrames; i++)
-								bStore[i] = mFilter.GetOutput(bStore[i]);
+							for (Real& store : bStore)
+								store = mFilter.GetOutput(store);
+							//for (int i = 0; i < numFrames; i++)
+							//	bStore[i] = mFilter.GetOutput(bStore[i]);
 						}
 					}
 				}
 				else if (reflection)
 				{
 					//lock_guard<mutex> lock(audioMutex);
-					for (int i = 0; i < numFrames; i++)
-						bStore[i] = mFilter.GetOutput(*inputPtr++);
+					for (Real& store : bStore)
+						store = mFilter.GetOutput(*inputPtr++);
+					/*for (int i = 0; i < numFrames; i++)
+						bStore[i] = mFilter.GetOutput(*inputPtr++);*/
 				}
 
 				if (mCurrentGain == mTargetGain)
 				{
-					for (int i = 0; i < numFrames; i++)
+					for (int i = 0; i < mConfig.numFrames; i++)
 						bInput[i] = static_cast<float>(bStore[i] * mCurrentGain);
 				}
 				else
 				{
-					for (int i = 0; i < numFrames; i++)
+					for (int i = 0; i < mConfig.numFrames; i++)
 					{
 						bInput[i] = static_cast<float>(bStore[i] * mCurrentGain);
 						mCurrentGain = Lerp(mCurrentGain, mTargetGain, lerpFactor);
@@ -296,7 +312,7 @@ namespace UIE
 					{
 						//lock_guard<mutex> lock(audioMutex);
 						mSource->ProcessAnechoic(bMonoOutput, bOutput.left, bOutput.right);
-						for (int i = 0; i < numFrames; i++)
+						for (int i = 0; i < mConfig.numFrames; i++)
 							reverbInput.IncreaseEntry(bMonoOutput[i], i, mFDNChannel);
 					}
 				}
@@ -306,13 +322,13 @@ namespace UIE
 					mSource->ProcessAnechoic(bOutput.left, bOutput.right);
 				}
 				int j = 0;
-				for (int i = 0; i < numFrames; i++)
+				for (int i = 0; i < mConfig.numFrames; i++)
 				{
 					outputBuffer[j++] += bOutput.left[i];
 					outputBuffer[j++] += bOutput.right[i];
 				}
+				EndSource();
 			}
-			return ret;
 		}
 
 		void VirtualSource::Init(const VirtualSourceData& data)
@@ -337,7 +353,7 @@ namespace UIE
 			mSource = mCore->CreateSingleSourceDSP();
 
 			//Select spatialisation mode
-			switch (mHRTFMode)
+			switch (mConfig.hrtfMode)
 			{
 			case HRTFMode::quality:
 			{
@@ -352,6 +368,11 @@ namespace UIE
 			case HRTFMode::none:
 			{
 				mSource->SetSpatializationMode(Binaural::TSpatializationMode::NoSpatialization);
+				break;
+			}
+			default:
+			{
+				mSource->SetSpatializationMode(Binaural::TSpatializationMode::HighPerformance);
 				break;
 			}
 			}

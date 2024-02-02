@@ -25,7 +25,7 @@ namespace UIE
 		size_t SourceManager::Init()
 		{
 			lock_guard <mutex> lock(updateMutex);
-			Source source = Source(mCore, mNumFDNChannels, mHRTFMode, sampleRate);
+			Source source = Source(mCore, mConfig);
 			if (!mEmptySlots.empty()) // Assign source to an existing ID
 			{
 				size_t next = mEmptySlots.back();
@@ -43,7 +43,7 @@ namespace UIE
 			}
 		}
 
-		void SourceManager::ProcessAudio(const size_t& id, const Real* data, const size_t& numFrames, matrix& reverbInput, Buffer& outputBuffer, const Real lerpFactor)
+		void SourceManager::ProcessAudio(const size_t& id, const Real* data, matrix& reverbInput, Buffer& outputBuffer, const Real lerpFactor)
 		{
 			lock_guard<mutex> lock(processAudioMutex);
 			auto it = mSources.find(id);
@@ -53,7 +53,7 @@ namespace UIE
 			}
 			else
 			{
-				it->second.ProcessAudio(data, numFrames, reverbInput, outputBuffer, lerpFactor);
+				it->second.ProcessAudio(data, reverbInput, outputBuffer, lerpFactor);
 			}
 		}
 	}

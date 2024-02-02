@@ -73,8 +73,8 @@ namespace UIE
 		{
 		public:
 			// Load and Destroy
-			FDN(size_t numChannels, int fs);
-			FDN(const FrequencyDependence& T60, const vec& dimensions, size_t numChannels, int fs);
+			FDN(const Config& config);
+			FDN(const FrequencyDependence& T60, const vec& dimensions, const Config& config);
 			~FDN() {}
 
 			// Getters
@@ -85,7 +85,7 @@ namespace UIE
 			inline void Reset()
 			{ 
 				x.Reset(); y.Reset();  
-				for (int i = 0; i < mNumChannels; i++)
+				for (int i = 0; i < mConfig.numFDNChannels; i++)
 					mChannels[i].Reset();
 			}
 
@@ -98,7 +98,7 @@ namespace UIE
 			void ProcessMatrix() { Mult(y, mat, x); }//x = y * mat; }
 
 			// Member variables
-			size_t mNumChannels;
+			Config mConfig;
 			std::vector<Channel> mChannels;
 			rowvec x;
 			rowvec y;

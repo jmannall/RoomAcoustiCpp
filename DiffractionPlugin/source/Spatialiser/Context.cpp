@@ -143,8 +143,8 @@ namespace UIE
 			mSources = reinterpret_cast<SourceManager*>(temp); temp += sizeof(SourceManager);
 
 			mRoom = new Room();
-			mReverb = new Reverb(&mCore, mConfig.hrtfMode, vec(mConfig.numFDNChannels), mConfig.fs);
-			mSources = new SourceManager(&mCore, mConfig.numFDNChannels, mConfig.hrtfMode, mConfig.fs);
+			mReverb = new Reverb(&mCore, mConfig, vec(mConfig.numFDNChannels));
+			mSources = new SourceManager(&mCore, mConfig);
 
 			// Start background thread after all systems are initialized
 			ISMThread = std::thread(BackgroundProcessor, this);
@@ -285,7 +285,7 @@ namespace UIE
 
 			//memcpy(&in[0], data, mConfig.numFrames);
 
-			mSources->ProcessAudio(id, &in[0], mConfig.numFrames, mReverbInput, mOutputBuffer, mConfig.lerpFactor);
+			mSources->ProcessAudio(id, &in[0], mReverbInput, mOutputBuffer, mConfig.lerpFactor);
 		}
 
 		void Context::GetOutput(float** bufferPtr)
