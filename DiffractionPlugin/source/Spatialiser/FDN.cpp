@@ -210,9 +210,15 @@ namespace UIE
 			// Bit 24 is the flush-to-zero mode control bit. Setting it to 1 flushes denormals to 0.
 			setStatusWord(m_savedCSR | (1 << 24));
 #endif
-			Real output = 0;
-			for (int i = 0; i < mNumChannels; i++)
-				y[i] = mChannels[i].GetOutput(x[i] + data[i]);
+			int i = 0;
+			for (auto& channel : mChannels)
+			{
+				y[i] = channel.GetOutput(x[i] + data[i]);
+				i++;
+			}
+
+			//for (int i = 0; i < mNumChannels; i++)
+			//	y[i] = mChannels[i].GetOutput(x[i] + data[i]);
 
 			ProcessMatrix();
 #if(_WINDOWS)

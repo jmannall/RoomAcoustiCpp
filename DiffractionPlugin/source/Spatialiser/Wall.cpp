@@ -24,9 +24,44 @@ namespace UIE
 	namespace Spatialiser
 	{
 
+		//////////////////// Plane class ////////////////////
+
+		bool Plane::ReflectPointInPlane(const vec3& point) const
+		{
+			Real k = PointPlanePosition(point);
+			if (k > 0) // Check source in front of plane
+				return true;
+			return false;
+		}
+
+		bool Plane::ReflectPointInPlane(vec3& dest, const vec3& point) const
+		{
+			Real k = PointPlanePosition(point);
+			if (k > 0) // Check source in front of plane
+			{
+				dest = point - 2.0 * mNormal * k;
+				return true;
+			}
+			return false;
+		}
+
+		void Plane::ReflectPointInPlaneNoCheck(vec3& point) const
+		{
+			Real k = PointPlanePosition(point);
+			point += -2.0 * mNormal * k;
+		}
+
+		bool Plane::ReflectEdgeInPlane(const Edge& edge) const
+		{
+			bool valid = ReflectPointInPlane(edge.GetEdgeCoord(EPS)); // Prevents false in case edge base is coplanar
+			if (valid)
+				valid = ReflectPointInPlane(edge.GetEdgeCoord(edge.zW - EPS));
+			return valid;
+		}
+
 		//////////////////// Wall class ////////////////////
 
-		Wall::Wall(const vec3& normal, const Real* vData, size_t numVertices, Absorption& absorption) : mNormal(normal), rValid(false), mNumVertices(numVertices), mAbsorption(absorption)
+		Wall::Wall(const vec3& normal, const Real* vData, size_t numVertices, Absorption& absorption) : mNormal(normal), mPlaneId(0), mNumVertices(numVertices), mAbsorption(absorption)
 		{
 			mNormal = UnitVectorRound(normal);
 			Update(vData);
@@ -127,39 +162,6 @@ namespace UIE
 				return false;
 			else
 				return true;
-		}
-
-		bool Wall::ReflectPointInWall(const vec3& point) const
-		{
-			Real k = PointWallPosition(point);
-			if (k > 0) // Check source in front of plane
-				return true;
-			return false;
-		}
-
-		bool Wall::ReflectPointInWall(vec3& dest, const vec3& point) const
-		{
-			Real k = PointWallPosition(point);
-			if (k > 0) // Check source in front of plane
-			{
-				dest = point - 2.0 * mNormal * k;
-				return true;
-			}
-			return false;
-		}
-
-		void Wall::ReflectPointInWallNoCheck(vec3& point) const
-		{
-			Real k = PointWallPosition(point);
-			point += -2.0 * mNormal * k;
-		}
-
-		bool Wall::ReflectEdgeInWall(const Edge& edge) const
-		{
-			bool valid = ReflectPointInWall(edge.GetEdgeCoord(EPS)); // Prevents false in case edge base is coplanar
-			if (valid)
-				valid = ReflectPointInWall(edge.GetEdgeCoord(edge.zW - EPS));
-			return valid;
 		}
 	}
 }

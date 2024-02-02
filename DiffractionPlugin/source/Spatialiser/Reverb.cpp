@@ -227,7 +227,6 @@ namespace UIE
 			{
 				// Process FDN and save to buffer
 				matrix input = matrix(data.Rows(), mNumChannels);
-
 				{
 					lock_guard <mutex> lock(mFDNMutex);
 
@@ -239,11 +238,12 @@ namespace UIE
 					}
 				}
 				// Process buffer of each channel
-				for (int j = 0; j < mNumChannels; j++)
+				lock_guard<mutex> lock(mCoreMutex);
+				int j = 0;
+				for (ReverbSource& source : mReverbSources)
 				{
-					lock_guard<mutex> lock(mCoreMutex);
-
-					mReverbSources[j].ProcessAudio(input.GetColumn(j), data.Rows(), outputBuffer);
+					source.ProcessAudio(input.GetColumn(j), data.Rows(), outputBuffer);
+					j++;
 				}
 			}
 		}

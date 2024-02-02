@@ -58,34 +58,59 @@ namespace UIE
 			// Wall
 			inline void AddWallIDs(const std::vector<size_t>& ids, const Absorption& absorption)
 			{
-				for (int i = 0; i < ids.size(); i++)
+				for (size_t id : ids)
 				{
-					parts.push_back(Part(ids[i], true));
-					//IDs.push_back(ids[i]);
-					//isReflection.push_back(true);
+					pathParts.push_back(Part(id, true));
 					order++;
-					key = key + IntToStr(ids[i]) + "r";
+					key = key + IntToStr(id) + "r";
 				}
 				mAbsorption *= absorption;
 				reflection = true;
 			}
-			inline void AddWallID(const size_t& id, const Absorption& absorption)
+			inline void AddWallID(const size_t& id, const Absorption& absorption) // IDs are added in reverse order (from listener to source)
 			{
-				parts.push_back(Part(id, true));
-				//IDs.push_back(id);
-				//isReflection.push_back(true);
-				order++;
+				pathParts.push_back(Part(id, true));
 				mAbsorption *= absorption;
-				reflection = true;
 				key = key + IntToStr(id) + "r";
+			}
+			inline void AddWallIDToStart(const size_t& id, const Absorption& absorption) // IDs are added in reverse order (from listener to source)
+			{
+				pathParts.insert(pathParts.begin(), Part(id, true));
+				mAbsorption *= absorption;
+				key = IntToStr(id) + "r" + key;
+			}
+			inline void AddPlaneID(const size_t& id)
+			{
+				planeIds.push_back(id);
+				order++;
+				reflection = true;
+			}
+			inline void RemoveWallIDs()
+			{
+				key = "";
+				mAbsorption = Absorption();
+				if (diffraction)
+				{
+					std::vector<Part>::iterator iter;
+					for (iter = pathParts.begin(); iter != pathParts.end(); )
+					{
+						if (iter->isReflection)
+							iter = pathParts.erase(iter);
+						else
+						{
+							key = key + IntToStr(iter->id) + "d";
+							++iter;
+						}
+					}
+				}
+				else
+					pathParts.clear();
 			}
 
 			// Edge
 			inline void AddEdgeID(const size_t& id, const Diffraction::Path path)
 			{
-				parts.push_back(Part(id, false));
-				//IDs.push_back(id);
-				//isReflection.push_back(false);
+				pathParts.push_back(Part(id, false));
 				order++;
 				mDiffractionPath = path;
 				diffraction = true;
@@ -93,9 +118,7 @@ namespace UIE
 			}
 			inline void AddEdgeIDToStart(const size_t& id, const Diffraction::Path path)
 			{
-				parts.insert(parts.begin(), Part(id, true));
-				//IDs.insert(IDs.begin(), id);
-				//isReflection.insert(isReflection.begin(), false);
+				pathParts.insert(pathParts.begin(), Part(id, true));
 				order++;
 				mDiffractionPath = path;
 				diffraction = true;
@@ -103,11 +126,13 @@ namespace UIE
 			}
 
 			// Getters
-			size_t GetID() const { return parts.back().id; }
-			size_t GetID(int i) const { return parts[i].id; }
+			size_t GetID() const { return pathParts.back().id; }
+			size_t GetID(int i) const { return pathParts[i].id; }
+			size_t GetPlaneID() const { return planeIds.back(); }
+			size_t GetPlaneID(int i) const { return planeIds[i]; }
 			std::string GetKey() const { return key; }
 			std::vector<size_t> GetWallIDs() const;
-			inline bool IsReflection(int i) const { return parts[i].isReflection; }
+			inline bool IsReflection(int i) const { return pathParts[i].isReflection; }
 			inline void GetAbsorption(Real* g) const { mAbsorption.GetValues(g); }
 			inline void GetAbsorption(Absorption& a) const { a = mAbsorption; }
 			inline size_t GetOrder() const { return order; }
@@ -147,7 +172,7 @@ namespace UIE
 
 			// Reset
 			inline void Reset() { Invalid();  Invisible(); RInvalid(); }
-			inline void Clear() { parts.clear(); mPositions.clear(); mRPositions.clear(); }
+			inline void Clear() { pathParts.clear(); planeIds.clear(), mPositions.clear(); mRPositions.clear(); }
 
 			// bool AppendVSource(VirtualSourceData& data, const vec3& listenerPosition);
 
@@ -168,7 +193,8 @@ namespace UIE
 
 		private:
 			std::string key;
-			std::vector<Part> parts;
+			std::vector<Part> pathParts;
+			std::vector<size_t> planeIds;
 			std::vector<vec3> mPositions;
 			std::vector<vec3> mRPositions;
 			size_t order;

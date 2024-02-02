@@ -8,6 +8,9 @@
 #ifndef Spatialiser_Edge_h
 #define Spatialiser_Edge_h
 
+// C++ headers
+#include <vector>
+
 // Common headers
 #include "Common/Vec3.h"
 #include "Common/Types.h"
@@ -26,30 +29,33 @@ namespace UIE
 
 			// Load and Destroy
 			Edge();
-			Edge(const vec3& base, const vec3& top, const vec3& normal1, const vec3& normal2, const size_t& ID1, const size_t ID2);
+			Edge(const vec3& base, const vec3& top, const vec3& normal1, const vec3& normal2, const size_t& id1, const size_t id2);
 			~Edge() {};
 
 			// Edge
 			void InitEdge();
-			void UpdateEdgeLength() { zW = (mTop - mBase).Length(); }
+			inline void UpdateEdgeLength() { zW = (mTop - mBase).Length(); }
 
 			// Getters
-			vec3 GetAP(vec3 point) const { return point - mBase; }
-			vec3 GetEdgeCoord(Real z) const { return mBase + z * mEdgeVector; }
-			vec3 GetBase() const { return mBase; }
-			vec3 GetTop() const { return mTop; }
-			vec3 GetMidPoint() const { return midPoint; }
-			size_t GetWallID(const size_t& id) const
+			inline vec3 GetAP(vec3 point) const { return point - mBase; }
+			inline vec3 GetEdgeCoord(Real z) const { return mBase + z * mEdgeVector; }
+			inline vec3 GetBase() const { return mBase; }
+			inline vec3 GetTop() const { return mTop; }
+			inline vec3 GetMidPoint() const { return midPoint; }
+			inline size_t GetWallID(const size_t& id) const
 			{
-				if (id == mPlaneIDs[0])
-					return mPlaneIDs[1];
+				if (id == mWallIds[0])
+					return mWallIds[1];
 				else
-					return mPlaneIDs[0];
+					return mWallIds[0];
 			}
-			bool AttachedToPlane(size_t id) const
+			inline bool AttachedToPlane(const std::vector<size_t>& ids) const
 			{
-				if (id == mPlaneIDs[0] || id == mPlaneIDs[1])
-					return true;
+				for (size_t id : ids)
+				{
+					if (id == mWallIds[0] || id == mWallIds[1])
+						return true;
+				}
 				return false;
 			}
 
@@ -75,7 +81,7 @@ namespace UIE
 			vec3 mBase;
 			vec3 mTop;
 			vec3 mFaceNormals[2];
-			size_t mPlaneIDs[2];
+			size_t mWallIds[2];
 		};
 	}
 }

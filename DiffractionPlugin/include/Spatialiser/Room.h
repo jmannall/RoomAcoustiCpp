@@ -37,8 +37,8 @@ namespace UIE
 		public:
 
 			// Load and Destroy
-			Room() : mISMConfig(), mListenerPosition(), nextWall(0), nextEdge(0) {};
-			Room(int order) : mISMConfig(), mListenerPosition(), nextWall(0), nextEdge(0) { mISMConfig.order = order; };
+			Room() : mISMConfig(), mListenerPosition(), nextPlane(0), nextEdge(0) {};
+			Room(int order) : mISMConfig(), mListenerPosition(), nextPlane(0), nextEdge(0) { mISMConfig.order = order; };
 			~Room() {};
 
 			// Image source model
@@ -48,7 +48,7 @@ namespace UIE
 			void UpdateListenerPosition(const vec3& position);
 
 			// Wall
-			size_t AddWall(const Wall& wall);
+			size_t AddWall(Wall& wall);
 			inline Absorption UpdateWall(const size_t& id, const vec3& normal, const Real* vData, size_t numVertices, Absorption& absorption)
 			{
 				lock_guard <mutex> rLock(mWallMutex);
@@ -66,7 +66,7 @@ namespace UIE
 			}
 			inline void FreeWallId(const size_t& id)
 			{ 
-				mEmptyWallSlots.push_back(id);
+				mEmptyWallsSlots.push_back(id);
 				auto it = oldEdgeIDs.find(id);
 				if (it != oldEdgeIDs.end())		// case: attached edges
 				{
@@ -91,9 +91,21 @@ namespace UIE
 					absorption = it->second.GetAbsorption();
 					absorption.area = -absorption.area;
 					RemoveEdges(id, it->second);
+					auto itP = mPlanes.find(it->second.GetPlaneID());
+					if (itP == mPlanes.end())		// case: plane does not exist
+					{
+						// Plane does not exist
+					}
+					else
+					{	
+						if (itP->second.RemoveWall(it->first)) // If plane contains no other walls
+						{
+							mEmptyWallsSlots.push_back(itP->first);
+							mPlanes.erase(itP);
+						}
+					}
+					mWalls.erase(it);
 				}
-				mWalls.erase(id);		
-
 				return absorption;
 			}
 
@@ -165,10 +177,17 @@ namespace UIE
 				mSources.erase(id);
 			}
 
-			bool LineRoomIntersectionDiff(const vec3& start, const vec3& end);
-			bool LineRoomIntersectionDiff(const vec3& start, const vec3& end, bool& obstruction);
-			void LineRoomIntersectionDiff(const vec3& start, const vec3& end, size_t currentWallID, bool& obstruction);
+			//bool LineRoomIntersectionDiff(const vec3& start, const vec3& end);
+			//bool LineRoomIntersectionDiff(const vec3& start, const vec3& end, bool& obstruction);
+			//void LineRoomIntersectionDiff(const vec3& start, const vec3& end, size_t currentWallID, bool& obstruction);
 
+			bool FindIntersection(vec3& intersection, Wall& wall, size_t& idW, const vec3& start, const vec3& end, const Plane& plane);
+			bool FindIntersections(std::vector<vec3> intersections, VirtualSourceData& vSource, int bounceIdx);
+			bool FindIntersectionsSpEd(std::vector<vec3> intersections, VirtualSourceData& vSource, int bounceIdx);
+			bool FindIntersectionsEdSp(std::vector<vec3> intersections, VirtualSourceData& vSource, int bounceIdx);
+			bool FindIntersectionsSpEdSp(std::vector<vec3> intersections, VirtualSourceData& vSource, int bounceIdx, int edgeIdx);
+			bool FindIntersections(std::vector<vec3> intersections, VirtualSourceData& vSource, int bounceIdx, const vec3& start);
+			bool FindRIntersections(std::vector<vec3> intersections, VirtualSourceData& vSource, int bounceIdx, const vec3& start);
 
 			bool LineRoomIntersection(const vec3& start, const vec3& end);
 			void LineRoomIntersection(const vec3& start, const vec3& end, bool& obstruction);
@@ -193,8 +212,13 @@ namespace UIE
 			size_t AddEdge(const Edge& edge);
 
 			WallMap mWalls;
-			std::vector<size_t> mEmptyWallSlots;
+			std::vector<size_t> mEmptyWallsSlots;
 			size_t nextWall;
+
+			PlaneMap mPlanes;
+			std::vector<size_t> mEmptyPlanesSlots;
+			size_t nextPlane;
+
 			EdgeMap mEdges;
 			std::vector<size_t> mEmptyEdgeSlots;
 			size_t nextEdge;

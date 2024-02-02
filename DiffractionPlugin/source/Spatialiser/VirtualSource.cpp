@@ -19,7 +19,7 @@ namespace UIE
 		std::vector<size_t> VirtualSourceData::GetWallIDs() const
 		{
 			std::vector<size_t> ret;
-			for (Part part : parts)
+			for (Part part : pathParts)
 			{
 				if (part.isReflection)
 					ret.push_back(part.id);
@@ -123,8 +123,8 @@ namespace UIE
 				mPositions.erase(mPositions.begin() + order, mPositions.end());
 			if (!mRPositions.empty())
 				mRPositions.erase(mRPositions.begin() + order, mRPositions.end());
-			if (!parts.empty())
-				parts.erase(parts.begin() + order, parts.end());
+			if (!pathParts.empty())
+				pathParts.erase(pathParts.begin() + order, pathParts.end());
 
 			feedsFDN = false;
 			mFDNChannel = -1;
@@ -135,7 +135,7 @@ namespace UIE
 			reflection = false;
 			diffraction = false;
 			int j = 0;
-			for (Part part : parts)
+			for (Part part : pathParts)
 			{
 				if (part.isReflection)
 				{

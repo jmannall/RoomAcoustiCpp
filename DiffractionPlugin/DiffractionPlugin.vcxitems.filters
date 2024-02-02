@@ -170,5 +170,8 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Unity\Profiler.h">
       <Filter>Header Files\Unity</Filter>
     </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\FrequencyDependence.h">
+      <Filter>Header Files\Spatialiser\Diffraction</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

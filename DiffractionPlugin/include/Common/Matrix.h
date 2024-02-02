@@ -45,8 +45,8 @@ namespace UIE
 			inline Real GetEntry(const int& r, const int& c) const { return e[r][c]; } // Add bounds checking
 			Real* GetColumn(int idx) const;
 			Real* GetRow(int idx) const;
-			int Rows() const { return rows; }
-			int Cols() const { return cols; }
+			inline int Rows() const { return rows; }
+			inline int Cols() const { return cols; }
 
 			matrix Transpose();
 
@@ -202,9 +202,9 @@ namespace UIE
 
 		inline void Mult(const matrix& u, const matrix& v, matrix& out)
 		{
-			assert(u.Cols() == v.Rows());
-			assert(out.Rows() == u.Rows());
-			assert(out.Cols() == v.Cols());
+			//assert(u.Cols() == v.Rows());
+			//assert(out.Rows() == u.Rows());
+			//assert(out.Cols() == v.Cols());
 
 			out.Reset();
 			for (int i = 0; i < u.Rows(); ++i)

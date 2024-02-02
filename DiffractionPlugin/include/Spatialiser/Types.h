@@ -21,9 +21,9 @@ namespace UIE
 
 		//////////////////// #defines ////////////////////
 
-// #define DEBUG_INIT
+#define DEBUG_INIT
 // #define DEBUG_UPDATE
-// #define DEBUG_REMOVE
+#define DEBUG_REMOVE
 // #define DEBUG_AUDIO_THREAD
 // #define DEBUG_ISM_THREAD
 #define DEBUG_HRTF
@@ -32,6 +32,7 @@ namespace UIE
 		//////////////////// Data Types ////////////////////
 
 		// Class predeclarations
+		class Plane;
 		class Wall;
 		class Edge;
 		class Source;
@@ -39,6 +40,7 @@ namespace UIE
 		class VirtualSource;
 		class VirtualSourceData;
 
+		typedef std::unordered_map<size_t, Plane> PlaneMap;
 		typedef std::unordered_map<size_t, Wall> WallMap;
 		typedef std::unordered_map<size_t, Edge> EdgeMap;
 		typedef std::unordered_map<size_t, Source> SourceMap;

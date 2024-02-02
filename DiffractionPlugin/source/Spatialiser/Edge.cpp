@@ -30,8 +30,8 @@ namespace UIE
 			InitEdge();
 		}
 
-		Edge::Edge(const vec3& base, const vec3& top, const vec3& normal1, const vec3& normal2, const size_t& ID1, const size_t ID2)
-			: zW(0.0f), mBase(base), mTop(top), mFaceNormals{ normal1, normal2 }, mPlaneIDs{ ID1, ID2 }
+		Edge::Edge(const vec3& base, const vec3& top, const vec3& normal1, const vec3& normal2, const size_t& id1, const size_t id2)
+			: zW(0.0f), mBase(base), mTop(top), mFaceNormals{ normal1, normal2 }, mWallIds{ id1, id2 }
 		{
 			InitEdge();
 		}

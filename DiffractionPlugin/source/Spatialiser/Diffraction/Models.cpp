@@ -541,7 +541,10 @@ namespace UIE
 					CalcBTM();
 					std::lock_guard<std::mutex> lock(*m);
 					if (ir.Valid())
+					{
 						currentIr = ir;
+						firFilter.SetImpulseResponse(currentIr);
+					}
 				}
 			}
 
