@@ -76,47 +76,6 @@ namespace UIE
 			mRPositions.push_back(vReceiverPosition);
 		}
 
-		// Append EdSp to a SpEd source
-		//bool VirtualSourceData::AppendVSource(VirtualSourceData& data, const vec3& listenerPosition)
-		//{
-		//	assert((IsReflection(order - 1) && data.IsReflection(0)) == false);
-		//	assert(GetID() == data.GetID(0)); // last ref or diffraction was the same
-
-		//	if (data.reflection)
-		//	{
-		//		Absorption absorption;
-		//		data.GetAbsorption(absorption);
-		//		AddWallIDs(data.GetWallIDs(), absorption);
-		//	}
-		//	mRPositions = data.mRPositions;
-		//	if (!reflection)
-		//		reflection = data.reflection;
-
-		//	Edge edge = mDiffractionPath.GetEdge();
-		//	Diffraction::Path oldPath = mDiffractionPath;
-		//	mDiffractionPath = Diffraction::Path(GetPosition(), data.GetRPosition(), edge);
-
-		//	if (mDiffractionPath.valid) // Should be valid as previous paths were valid (unless apex has moved)
-		//	{
-		//		valid = true;
-		//		if (mDiffractionPath.GetApex() == oldPath.GetApex() && mDiffractionPath.GetApex() == data.mDiffractionPath.GetApex())
-		//		{
-		//			vec3 vPosition = listenerPosition + (mDiffractionPath.sData.d + mDiffractionPath.rData.d) * UnitVector(data.GetTransformPosition() - listenerPosition);
-		//			transform.SetPosition(Common::CVector3(vPosition.x, vPosition.y, vPosition.z));
-		//			if (visible && data.visible)
-		//				return false;
-		//		}
-		//		else
-		//		{
-		//			vec3 vPosition = listenerPosition + (mDiffractionPath.sData.d + mDiffractionPath.rData.d) * UnitVector(data.GetTransformPosition() - listenerPosition);
-		//			transform.SetPosition(Common::CVector3(vPosition.x, vPosition.y, vPosition.z));
-		//		}
-		//	}
-		//	else
-		//		valid = false;
-		//	return true;
-		//}
-
 		VirtualSourceData VirtualSourceData::Trim(const int i)
 		{
 			order = i + 1;
@@ -151,24 +110,6 @@ namespace UIE
 				}
 				j++;
 			}
-
-
-			/*reflection = false;
-			diffraction = false;
-			for (int i = 0; i < order; i++)
-			{
-				if (isReflection[i])
-				{
-					reflection = true;
-					key = key + IntToStr(IDs[i]) + "r";
-				}
-				else
-				{
-					diffraction = true;
-					key = key + IntToStr(IDs[i]) + "d";
-				}
-			}*/
-
 			return *this;
 		}
 
@@ -177,17 +118,23 @@ namespace UIE
 		VirtualSource::VirtualSource(Binaural::CCore* core, const Config& config) : mCore(core), mSource(NULL), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(4, config.fs), isInitialised(false), mConfig(config), feedsFDN(false), mFDNChannel(-1), btm(&mDiffractionPath, config.fs), reflection(false), diffraction(false)
 		{
 			bInput = CMonoBuffer<float>(mConfig.numFrames);
-			bStore = CMonoBuffer<Real>(mConfig.numFrames);
+			bStore.ResizeBuffer(mConfig.numFrames);
+			bOutput.left = CMonoBuffer<float>(mConfig.numFrames);
+			bOutput.right = CMonoBuffer<float>(mConfig.numFrames);
+			bMonoOutput = CMonoBuffer<float>(mConfig.numFrames);
 		}
 
 		VirtualSource::VirtualSource(Binaural::CCore* core, const Config& config, const VirtualSourceData& data, int fdnChannel) : mCore(core), mSource(NULL), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(4, config.fs), isInitialised(false), mConfig(config), feedsFDN(data.feedsFDN), mFDNChannel(fdnChannel), mDiffractionPath(data.mDiffractionPath), btm(&mDiffractionPath, config.fs), reflection(data.reflection), diffraction(data.diffraction)
 		{
 			bInput = CMonoBuffer<float>(mConfig.numFrames);
-			bStore = CMonoBuffer<Real>(mConfig.numFrames);
+			bStore.ResizeBuffer(mConfig.numFrames);
+			bOutput.left = CMonoBuffer<float>(mConfig.numFrames);
+			bOutput.right = CMonoBuffer<float>(mConfig.numFrames);
+			bMonoOutput = CMonoBuffer<float>(mConfig.numFrames);
 			UpdateVirtualSource(data, fdnChannel);
 		}
 
-		VirtualSource::VirtualSource(const VirtualSource& vS) : mCore(vS.mCore), mSource(vS.mSource), mPosition(vS.mPosition), mFilter(vS.mFilter), isInitialised(vS.isInitialised), mConfig(vS.mConfig), feedsFDN(vS.feedsFDN), mFDNChannel(vS.mFDNChannel), mDiffractionPath(vS.mDiffractionPath), btm(vS.btm), mTargetGain(vS.mTargetGain), mCurrentGain(vS.mCurrentGain), reflection(vS.reflection), diffraction(vS.diffraction), mVirtualSources(vS.mVirtualSources), mVirtualEdgeSources(vS.mVirtualEdgeSources), bInput(vS.bInput), bStore(vS.bStore)
+		VirtualSource::VirtualSource(const VirtualSource& vS) : mCore(vS.mCore), mSource(vS.mSource), mFilter(vS.mFilter), isInitialised(vS.isInitialised), mConfig(vS.mConfig), feedsFDN(vS.feedsFDN), mFDNChannel(vS.mFDNChannel), mDiffractionPath(vS.mDiffractionPath), btm(vS.btm), mTargetGain(vS.mTargetGain), mCurrentGain(vS.mCurrentGain), reflection(vS.reflection), diffraction(vS.diffraction), mVirtualSources(vS.mVirtualSources), mVirtualEdgeSources(vS.mVirtualEdgeSources), bInput(vS.bInput), bStore(vS.bStore), bOutput(vS.bOutput), bMonoOutput(vS.bMonoOutput)
 		{
 			btm.UpdatePath(&mDiffractionPath);
 		}
@@ -223,70 +170,58 @@ namespace UIE
 			return false;
 		}
 
-		// Obselete? now sources removed automatically
-		/*void VirtualSource::RemoveVirtualSources(const size_t& id)
-		{
-			if (!mVirtualSources.empty())
-			{
-				mVirtualSources.erase(id);
-				for (auto it = mVirtualSources.begin(); it != mVirtualSources.end(); it++)
-				{
-					it->second.RemoveVirtualSources(id);
-				}
-			}
-		}*/
-
-		void VirtualSource::ProcessAudio(const Real* data, matrix& reverbInput, Buffer& outputBuffer, const Real lerpFactor)
+		void VirtualSource::ProcessAudio(const Buffer& data, matrix& reverbInput, Buffer& outputBuffer)
 		{
 			{
 				lock_guard<mutex> lock(vWallMutex);
 				for (auto& it : mVirtualSources)
-					it.second.ProcessAudio(data, reverbInput, outputBuffer, lerpFactor);
-				/*for (auto it = mVirtualSources.begin(); it != mVirtualSources.end(); it++)
-				{
-					ret += it->second.ProcessAudio(data, numFrames, reverbInput, outputBuffer, lerpFactor);
-				}*/
+					it.second.ProcessAudio(data, reverbInput, outputBuffer);
 			}
 			{
 				lock_guard<mutex> lock(vEdgeMutex);
 				for (auto& it : mVirtualEdgeSources)
-					it.second.ProcessAudio(data, reverbInput, outputBuffer, lerpFactor);
-				/*for (auto it = mVirtualEdgeSources.begin(); it != mVirtualEdgeSources.end(); it++)
-				{
-					ret += it->second.ProcessAudio(data, numFrames, reverbInput, outputBuffer, lerpFactor);
-				}*/
+					it.second.ProcessAudio(data, reverbInput, outputBuffer);
 			}
 
 			lock_guard<mutex> lock(audioMutex);
 			if (isInitialised)
 			{
-				BeginSource();
-				// Copy input into internal storage and apply wall absorption
-				//CMonoBuffer<Real> bStore(numFrames);
-				//CMonoBuffer<float> bInput(numFrames);
-				const Real* inputPtr = data;
-
+#ifdef PROFILE_AUDIO_THREAD
+				BeginVirtualSource();
+#endif
 				if (diffraction)
 				{
 					{
-						//lock_guard<mutex> lock(audioMutex);
-						btm.ProcessAudio(inputPtr, &bStore[0], mConfig.numFrames, lerpFactor);
+#ifdef PROFILE_AUDIO_THREAD
+						BeginDiffraction();
+#endif
+						btm.ProcessAudio(data, bStore, mConfig.numFrames, mConfig.lerpFactor);
+#ifdef PROFILE_AUDIO_THREAD
+						EndDiffraction();
+#endif
 						if (reflection)
 						{
-							for (Real& store : bStore)
-								store = mFilter.GetOutput(store);
-							//for (int i = 0; i < numFrames; i++)
-							//	bStore[i] = mFilter.GetOutput(bStore[i]);
+#ifdef PROFILE_AUDIO_THREAD
+							BeginReflection();
+#endif
+							for (int i = 0; i < mConfig.numFrames; i++)
+								bStore[i] = mFilter.GetOutput(bStore[i]);
+#ifdef PROFILE_AUDIO_THREAD
+							EndReflection();
+#endif
 						}
 					}
 				}
 				else if (reflection)
 				{
-					//lock_guard<mutex> lock(audioMutex);
-					for (Real& store : bStore)
-						store = mFilter.GetOutput(*inputPtr++);
-					/*for (int i = 0; i < numFrames; i++)
-						bStore[i] = mFilter.GetOutput(*inputPtr++);*/
+#ifdef PROFILE_AUDIO_THREAD
+					BeginReflection();
+#endif
+					for (int i = 0; i < mConfig.numFrames; i++)
+						bStore[i] = mFilter.GetOutput(data[i]);
+#ifdef PROFILE_AUDIO_THREAD
+					EndReflection();
+#endif
 				}
 
 				if (mCurrentGain == mTargetGain)
@@ -299,35 +234,38 @@ namespace UIE
 					for (int i = 0; i < mConfig.numFrames; i++)
 					{
 						bInput[i] = static_cast<float>(bStore[i] * mCurrentGain);
-						mCurrentGain = Lerp(mCurrentGain, mTargetGain, lerpFactor);
+						mCurrentGain = Lerp(mCurrentGain, mTargetGain, mConfig.lerpFactor);
 					}
 				}
 		
+#ifdef PROFILE_AUDIO_THREAD
+				Begin3DTI();
+#endif
 				mSource->SetBuffer(bInput);
 
-				CEarPair<CMonoBuffer<float>> bOutput;
 				if (feedsFDN)
 				{
-					CMonoBuffer<float> bMonoOutput;
 					{
-						//lock_guard<mutex> lock(audioMutex);
 						mSource->ProcessAnechoic(bMonoOutput, bOutput.left, bOutput.right);
 						for (int i = 0; i < mConfig.numFrames; i++)
-							reverbInput.IncreaseEntry(bMonoOutput[i], i, mFDNChannel);
+							reverbInput.IncreaseEntry(static_cast<Real>(bMonoOutput[i]), i, mFDNChannel);
 					}
 				}
 				else
-				{
-					//lock_guard<mutex> lock(audioMutex);
 					mSource->ProcessAnechoic(bOutput.left, bOutput.right);
-				}
+
+#ifdef PROFILE_AUDIO_THREAD
+				End3DTI();
+#endif
 				int j = 0;
 				for (int i = 0; i < mConfig.numFrames; i++)
 				{
-					outputBuffer[j++] += bOutput.left[i];
-					outputBuffer[j++] += bOutput.right[i];
+					outputBuffer[j++] += static_cast<Real>(bOutput.left[i]);
+					outputBuffer[j++] += static_cast<Real>(bOutput.right[i]);
 				}
-				EndSource();
+#ifdef PROFILE_AUDIO_THREAD
+				EndVirtualSource();
+#endif
 			}
 		}
 
@@ -396,7 +334,6 @@ namespace UIE
 				mFDNChannel = fdnChannel;
 				fdnChannel = oldChannel;
 			}
-			mPosition = data.GetPosition();
 			mSource->SetSourceTransform(data.transform);
 		}
 

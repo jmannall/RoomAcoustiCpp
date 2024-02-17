@@ -96,7 +96,7 @@ namespace UIE
 			//inline void LogEdgeRemoval(const size_t& id) { removedEdges.push_back(id); }
 
 			// Audio
-			void ProcessAudio(const Real* data, matrix& reverbInput, Buffer& outputBuffer, const Real lerpFactor);
+			void ProcessAudio(const Buffer& data, matrix& reverbInput, Buffer& outputBuffer);
 
 			// Reset
 			inline void Deactivate() { mSource = NULL; }
@@ -115,6 +115,7 @@ namespace UIE
 
 			// Audio data
 			CMonoBuffer<float> bInput;
+			CEarPair<CMonoBuffer<float>> bOutput;
 			shared_ptr<Binaural::CSingleSourceDSP> mSource;
 			Real targetGain;
 			Real currentGain;
@@ -125,7 +126,7 @@ namespace UIE
 			VirtualSourceMap mVirtualSources;
 			VirtualSourceMap mVirtualEdgeSources;
 
-			std::vector<size_t> freeFDNChannels;
+			std::vector<int> freeFDNChannels;
 			//std::vector<size_t> removedWalls;
 			//std::vector<size_t> removedEdges;
 

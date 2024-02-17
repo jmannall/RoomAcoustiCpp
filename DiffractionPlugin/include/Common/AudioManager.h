@@ -7,15 +7,49 @@
 #ifndef Common_AudioManager_h
 #define Common_AudioManager_h
 
+// C++ headers
+#if defined(_WINDOWS)
+/* Microsoft C/C++-compatible compiler */
+#include <intrin.h>
+#endif
 #include <vector>
 
+// Common headers
 #include "Common/Definitions.h"
 #include "Common/Types.h"
+
+#include "Spatialiser/Main.h"
 
 namespace UIE
 {
 	namespace Common
 	{
+
+		inline Real Lerp(Real start, Real end, Real factor)
+		{
+			if (end - EPS < start && start < end + EPS)
+				return end;
+#if(_WINDOWS)
+			_MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
+#elif(_ANDROID)
+
+			unsigned m_savedCSR = getStatusWord();
+			// Bit 24 is the flush-to-zero mode control bit. Setting it to 1 flushes denormals to 0.
+			setStatusWord(m_savedCSR | (1 << 24));
+#endif
+			start *= 1.0 - factor;
+			start += end * factor;
+
+#if(_WINDOWS)
+			_MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_OFF);
+#elif(_ANDROID)
+
+			m_savedCSR = getStatusWord();
+			// Bit 24 is the flush-to-zero mode control bit. Setting it to 1 flushes denormals to 0.
+			setStatusWord(m_savedCSR | (0 << 24));
+#endif
+			return start;
+		}
 
 		//////////////////// Buffer class ////////////////////
 
@@ -27,6 +61,7 @@ namespace UIE
 			~Buffer() {};
 
 			inline Real& operator[](const int& i) { return mBuffer[i]; };
+			inline Real operator[](const int& i) const { return mBuffer[i]; };
 
 			void ResetBuffer();
 			void ResizeBuffer(size_t numSamples);
@@ -35,11 +70,111 @@ namespace UIE
 
 			std::vector<Real> GetBuffer() { std::vector<Real> buffer(mBuffer.begin(), mBuffer.end()); return buffer; }
 
+			inline auto begin() { return mBuffer.begin(); }
+			inline auto end() { return mBuffer.end(); }
+
+			inline Buffer operator*=(Real x)
+			{
+				for (Real& sample : mBuffer)
+					sample *= x;
+				return *this;
+			}
+
+			inline Buffer operator+=(Real x)
+			{
+				for (Real& sample : mBuffer)
+					sample += x;
+				return *this;
+			}
+
+			inline Buffer operator+=(Buffer& x)
+			{
+				Real* ptr = &x[0];
+				for (Real& sample : mBuffer)
+					sample += *ptr++;
+				return *this;
+			}
+
 		private:
 			void InitialiseBuffer(int n);
 
 			std::vector<Real> mBuffer;
 		};
+
+		inline Buffer Lerp(Buffer& start, Buffer& end, Real factor)
+		{
+			/*for (int i = 0; i < start.Length(); i++)
+			{
+				if (end[i] - EPS < start[i] && start[i] < end[i] + EPS)
+					start[i] = end[i];
+				else
+					start[i] = (1.0 - factor) * start[i] + factor * end[i];
+			}*/
+
+			/*if (end[0] - EPS < start[0] && start[0] < end[0] + EPS)
+				start = end;
+			else
+			{*/
+#if(_WINDOWS)
+				_MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
+#elif(_ANDROID)
+
+				unsigned m_savedCSR = getStatusWord();
+				// Bit 24 is the flush-to-zero mode control bit. Setting it to 1 flushes denormals to 0.
+				setStatusWord(m_savedCSR | (1 << 24));
+#endif
+				size_t len = start.Length();
+
+				if (len % 8 != 0)
+				{
+					for (int i = 0; i < len; i++)
+					{
+						start[i] *= (1.0 - factor);
+						start[i] += factor * end[i];
+					}
+				}
+				else
+				{
+					int i = 0;
+					while (i < len)
+					{
+						start[i] *= (1.0 - factor);
+						start[i] += factor * end[i];
+						i++;
+						start[i] *= (1.0 - factor);
+						start[i] += factor * end[i];
+						i++;
+						start[i] *= (1.0 - factor);
+						start[i] += factor * end[i];
+						i++;
+						start[i] *= (1.0 - factor);
+						start[i] += factor * end[i];
+						i++;
+						start[i] *= (1.0 - factor);
+						start[i] += factor * end[i];
+						i++;
+						start[i] *= (1.0 - factor);
+						start[i] += factor * end[i];
+						i++;
+						start[i] *= (1.0 - factor);
+						start[i] += factor * end[i];
+						i++;
+						start[i] *= (1.0 - factor);
+						start[i] += factor * end[i];
+						i++;
+					}
+				}
+#if(_WINDOWS)
+				_MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_OFF);
+#elif(_ANDROID)
+
+				m_savedCSR = getStatusWord();
+				// Bit 24 is the flush-to-zero mode control bit. Setting it to 1 flushes denormals to 0.
+				setStatusWord(m_savedCSR | (0 << 24));
+#endif
+			// }
+			return start;
+		}
 
 		bool BuffersEqual(Buffer& x, Buffer& y);
 
@@ -69,17 +204,62 @@ namespace UIE
 		class FIRFilter
 		{
 		public:
-			FIRFilter(Buffer ir) : count(0), x() { SetImpulseResponse(ir); };
+			FIRFilter(Buffer& ir) : irLen(ir.Length()), count(ir.Length() - 1), n(0), inputLine(), store() { SetImpulseResponse(ir); };
 			~FIRFilter() {};
 
 			Real GetOutput(Real input);
-			void SetImpulseResponse(Buffer& ir) { mIr = ir; irLen = mIr.Length(); }
+			
+			inline void Resize(size_t len)
+			{
+				if (len % 8 != 0)
+					len += (8 - len % 8);
+				if (len != irLen)
+				{
+					irLen = len;
+					if (len > irLen)
+						IncreaseSize();
+					else
+						DecreaseSize();
+				}
+			}
+
+			inline void SetImpulseResponse(Buffer& ir)
+			{ 
+				size_t len = ir.Length();
+				if (len != irLen)
+					Resize(len);
+				std::copy(ir.begin(), ir.end(), mIr.begin());
+			}
 
 		private:
+
+			inline void IncreaseSize()
+			{
+				inputLine.ResizeBuffer(irLen);
+				mIr.ResizeBuffer(irLen);
+			}
+
+			inline void DecreaseSize()
+			{
+				store = inputLine;
+				int index = count;
+				for (int i = 0; i < len; i++)
+				{
+					inputLine[i] = store[index++];
+					if (index >= irLen) { index = 0; }
+				}
+				inputLine.ResizeBuffer(irLen);
+				mIr.ResizeBuffer(irLen);
+				count = 0;
+			}
+
 			Buffer mIr;
-			Buffer x;
+			Buffer inputLine;
+			Buffer store;
 			int count;
+			int n;
 			size_t irLen;
+			size_t len;
 		};
 
 		//////////////////// IIR Filter ////////////////////
@@ -208,6 +388,8 @@ namespace UIE
 			int M;
 			size_t numFilters;
 			std::vector<TransDF2> filters;
+
+			Real out;
 		};
 
 		class ParametricEQ
@@ -234,6 +416,7 @@ namespace UIE
 			Real mGain;
 			Real fb[4];
 			Real g[4];
+			Real out;
 		};
 	}
 }

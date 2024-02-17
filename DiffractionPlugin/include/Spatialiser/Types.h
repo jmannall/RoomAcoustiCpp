@@ -21,13 +21,15 @@ namespace UIE
 
 		//////////////////// #defines ////////////////////
 
-#define DEBUG_INIT
+// #define DEBUG_INIT
 // #define DEBUG_UPDATE
-#define DEBUG_REMOVE
+// #define DEBUG_REMOVE
 // #define DEBUG_AUDIO_THREAD
 // #define DEBUG_ISM_THREAD
-#define DEBUG_HRTF
+// #define DEBUG_HRTF
 // #define DEBUG_VIRTUAL_SOURCE
+
+#define PROFILE_AUDIO_THREAD
 
 		//////////////////// Data Types ////////////////////
 

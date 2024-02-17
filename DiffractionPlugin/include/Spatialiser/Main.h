@@ -11,6 +11,10 @@
 #include "Unity/IUnityInterface.h"
 #include "Unity/IUnityProfiler.h"
 
+// Spatialiser headers
+#include "Spatialiser/Types.h"
+
+#ifdef PROFILE_AUDIO_THREAD
 void BeginSource();
 void EndSource();
 
@@ -25,5 +29,27 @@ void EndReverb();
 
 void BeginReverbSource();
 void EndReverbSource();
+
+void BeginReflection();
+void EndReflection();
+
+void BeginDiffraction();
+void EndDiffraction();
+
+void Begin3DTI();
+void End3DTI();
+
+void BeginFIR();
+void EndFIR();
+
+void BeginLerp();
+void EndLerp();
+
+void BeginFDNChannel();
+void EndFDNChannel();
+
+void BeginFDNMatrix();
+void EndFDNMatrix();
+#endif
 
 #endif

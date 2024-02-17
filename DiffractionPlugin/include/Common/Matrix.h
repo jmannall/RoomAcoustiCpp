@@ -212,6 +212,19 @@ namespace UIE
 			return out;
 		}
 
+		inline void HouseholderMult(const matrix& u, const matrix& v, matrix& out)
+		{
+			out.Reset();
+
+			Real entry = 0.0;
+			for (int i = 0; i < u.Cols(); i++)
+				entry += u.GetEntry(0, i) * v.GetEntry(i, 0);
+
+			entry *= 2.0;
+			for (int i = 0; i < u.Cols(); i++)
+				out.AddEntry(u.GetEntry(0, i) - v.GetEntry(i, 0) * entry, 0, i);
+		}
+
 		inline void Mult(const matrix& u, const matrix& v, matrix& out)
 		{
 			//assert(u.Cols() == v.Rows());

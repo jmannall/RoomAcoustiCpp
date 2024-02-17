@@ -118,7 +118,7 @@ namespace UIE
 			}
 			inline void AddEdgeIDToStart(const size_t& id, const Diffraction::Path path)
 			{
-				pathParts.insert(pathParts.begin(), Part(id, true));
+				pathParts.insert(pathParts.begin(), Part(id, false));
 				order++;
 				mDiffractionPath = path;
 				diffraction = true;
@@ -174,8 +174,6 @@ namespace UIE
 			inline void Reset() { Invalid();  Invisible(); RInvalid(); }
 			inline void Clear() { pathParts.clear(); planeIds.clear(), mPositions.clear(); mRPositions.clear(); }
 
-			// bool AppendVSource(VirtualSourceData& data, const vec3& listenerPosition);
-
 			VirtualSourceData Trim(const int i);
 
 			// Status data
@@ -217,8 +215,8 @@ namespace UIE
 			// Operators
 			inline VirtualSource operator=(const VirtualSource& vS)
 			{
-				mCore = vS.mCore; mSource = vS.mSource; mPosition = vS.mPosition; mFilter = vS.mFilter; isInitialised = vS.isInitialised; mConfig = vS.mConfig; feedsFDN = vS.feedsFDN; mFDNChannel = vS.mFDNChannel; mDiffractionPath = vS.mDiffractionPath; btm = vS.btm; mTargetGain = vS.mTargetGain;
-				mCurrentGain = vS.mCurrentGain; reflection = vS.reflection; diffraction = vS.diffraction; mVirtualSources = vS.mVirtualSources; mVirtualEdgeSources = vS.mVirtualEdgeSources; bInput = vS.bInput; bStore = vS.bStore;
+				mCore = vS.mCore; mSource = vS.mSource; mFilter = vS.mFilter; isInitialised = vS.isInitialised; mConfig = vS.mConfig; feedsFDN = vS.feedsFDN; mFDNChannel = vS.mFDNChannel; mDiffractionPath = vS.mDiffractionPath; btm = vS.btm; mTargetGain = vS.mTargetGain;
+				mCurrentGain = vS.mCurrentGain; reflection = vS.reflection; diffraction = vS.diffraction; mVirtualSources = vS.mVirtualSources; mVirtualEdgeSources = vS.mVirtualEdgeSources; bInput = vS.bInput; bStore = vS.bStore; bOutput = vS.bOutput, bMonoOutput = vS.bMonoOutput;
 				return *this;
 			}
 
@@ -233,10 +231,9 @@ namespace UIE
 
 			// Updates
 			bool UpdateVirtualSource(const VirtualSourceData& data, int& fdnChannel);
-			// void RemoveVirtualSources(const size_t& id);
 
 			// Audio
-			void ProcessAudio(const Real* data, matrix& reverbInput, Buffer& outputBuffer, const Real lerpFactor);
+			void ProcessAudio(const Buffer& data, matrix& reverbInput, Buffer& outputBuffer);
 
 			// Deactivate
 			inline void Deactivate() { mSource = NULL; }
@@ -261,10 +258,12 @@ namespace UIE
 			int mFDNChannel;
 
 			shared_ptr<Binaural::CSingleSourceDSP> mSource;
-			vec3 mPosition;
 
-			CMonoBuffer<Real> bStore;
+			Buffer bStore;
 			CMonoBuffer<float> bInput;
+			CEarPair<CMonoBuffer<float>> bOutput;
+			CMonoBuffer<float> bMonoOutput;
+
 			Real mCurrentGain;
 			Real mTargetGain;
 			ParametricEQ mFilter;

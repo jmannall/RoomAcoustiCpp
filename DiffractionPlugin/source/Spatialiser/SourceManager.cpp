@@ -43,7 +43,7 @@ namespace UIE
 			}
 		}
 
-		void SourceManager::ProcessAudio(const size_t& id, const Real* data, matrix& reverbInput, Buffer& outputBuffer, const Real lerpFactor)
+		void SourceManager::ProcessAudio(const size_t& id, const Buffer& data, matrix& reverbInput, Buffer& outputBuffer)
 		{
 			lock_guard<mutex> lock(processAudioMutex);
 			auto it = mSources.find(id);
@@ -53,7 +53,7 @@ namespace UIE
 			}
 			else
 			{
-				it->second.ProcessAudio(data, reverbInput, outputBuffer, lerpFactor);
+				it->second.ProcessAudio(data, reverbInput, outputBuffer);
 			}
 		}
 	}

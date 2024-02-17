@@ -79,7 +79,7 @@ namespace UIE
 			}*/
 
 			// Audio
-			void ProcessAudio(const size_t& id, const Real* data, matrix& reverbInput, Buffer& outputBuffer, const Real lerpFactor);
+			void ProcessAudio(const size_t& id, const Buffer& data, matrix& reverbInput, Buffer& outputBuffer);
 
 		private:
 			inline void Reset() { mSources.clear(); mEmptySlots.clear(); }

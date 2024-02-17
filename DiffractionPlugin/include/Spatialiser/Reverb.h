@@ -49,9 +49,10 @@ namespace UIE
 
 #ifdef _TEST
 #pragma optimize("", off)
-			inline Absorption GetAbsorption() const { return mAbsorption;	}
+			inline Absorption GetAbsorption() const { return mAbsorption; }
 #pragma optimize("", on)
 #endif
+
 		private:
 			void Init();
 
@@ -64,6 +65,8 @@ namespace UIE
 
 			Binaural::CCore* mCore;
 			CMonoBuffer<float> bInput;
+			//CEarPair<CMonoBuffer<float>> bOutput;
+
 		};
 
 		//////////////////// Reverb class ////////////////////
@@ -74,14 +77,13 @@ namespace UIE
 			Reverb(Binaural::CCore* core, const Config& config, const vec& dimensions);
 			Reverb(Binaural::CCore* core, const Config& config, const vec& dimensions, const FrequencyDependence& T60);
 
-			void UpdateReverbSources(const vec3& position);
+			void UpdateReverb(const vec3& position, const bool on);
 			void UpdateReflectionFilters(const ReverbWall& id, const Absorption& absorption);
 			void UpdateReflectionFilters(const ReverbWall& id, const Absorption& absorption, const Absorption& oldAbsorption);
 			void ProcessAudio(const matrix& data, Buffer& outputBuffer);
 			void SetFDNParameters(const FrequencyDependence& T60, const vec& dimensions);
 			// size_t NumChannels() const { return mNumChannels; }
 
-			inline void UpdateValid(bool v) { valid = v; }
 		private:
 			void InitSources();
 
@@ -89,6 +91,10 @@ namespace UIE
 			Real* col;
 
 			bool valid;
+			bool runFDN;
+			Real mTargetGain;
+			Real mCurrentGain;
+
 			FDN mFDN;
 			std::vector<ReverbSource> mReverbSources;
 			std::mutex mFDNMutex;

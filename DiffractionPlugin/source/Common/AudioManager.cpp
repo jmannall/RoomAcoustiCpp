@@ -8,6 +8,8 @@
 #include <cmath>
 #include <cassert>
 
+
+
 #include "Common/AudioManager.h"
 
 namespace UIE
@@ -29,16 +31,17 @@ namespace UIE
 
 		void Buffer::ResizeBuffer(size_t numSamples)
 		{
-			size_t capacity = mBuffer.capacity();
-			if (capacity < numSamples)
+
+			size_t size = mBuffer.size();
+			if (size == numSamples)
+				return;
+			if (size < numSamples)
 			{
 				mBuffer.reserve(numSamples);
-				std::fill_n(std::back_inserter(mBuffer), numSamples - capacity, 0.0);
+				std::fill_n(std::back_inserter(mBuffer), numSamples - size, 0.0);
 			}
 			else
-			{
 				mBuffer.resize(numSamples);
-			}
 		}
 
 		void Buffer::ResetBuffer()
@@ -98,34 +101,55 @@ namespace UIE
 
 		Real FIRFilter::GetOutput(Real input)
 		{
-			x[count] = input;
+			inputLine[count] = input;
 			Real output = 0.0;
-			size_t xLen = x.Length();
-			if (irLen > xLen)
-			{
-				x.ResizeBuffer(irLen);
-			}
-			else if (irLen < xLen)
-			{
-				Buffer store = x;
-				for (int i = 0; i < xLen; i++)
-				{
-					x[i] = store[(count + i) % xLen];
-				}
-				x.ResizeBuffer(irLen);
-				count = 0;
-			}
-			for (int i = 0; i <= count; i++)
-			{
-				output += x[count - i] * mIr[i];
-			}
-			int n = irLen + count;
-			for (int i = count + 1; i < irLen; i++)
-			{
-				output += x[n - i] * mIr[i];
-			}
+			int index = count;
 
-			count = (count + 1) % (int)irLen;
+			if (irLen % 8 != 0)
+			{
+				for (int i = 0; i < irLen; i++)
+				{
+					output += mIr[i] * inputLine[index++];
+					if (index >= irLen) { index = 0; }
+				}
+			}
+			else
+			{
+				// This is easier for the compiler to vectorise
+				Real result_a = 0.0;
+				Real result_b = 0.0;
+				Real result_c = 0.0;
+				Real result_d = 0.0;
+				Real result_e = 0.0;
+				Real result_f = 0.0;
+				Real result_g = 0.0;
+				Real result_h = 0.0;
+				int i = 0;
+				while (i < irLen)
+				{
+					if (index < (irLen - 8))
+					{
+						result_a += mIr[i++] * inputLine[index++];
+						result_b += mIr[i++] * inputLine[index++];
+						result_c += mIr[i++] * inputLine[index++];
+						result_d += mIr[i++] * inputLine[index++];
+						result_e += mIr[i++] * inputLine[index++];
+						result_f += mIr[i++] * inputLine[index++];
+						result_g += mIr[i++] * inputLine[index++];
+						result_h += mIr[i++] * inputLine[index++];
+					}
+					else
+					{
+						for (int k = 0; k < 8; k++)
+						{
+							output += mIr[i++] * inputLine[index++];
+							if (index >= irLen) { index = 0; }
+						}
+					}
+				}
+				output += result_a + result_b + result_c + result_d + result_e + result_f + result_g + result_h;
+			}
+			if (--count < 0) { count = irLen - 1; }
 			return output;
 		}
 
@@ -133,25 +157,41 @@ namespace UIE
 
 		Real IIRFilter::GetOutput(Real input)
 		{
-			x[0] = input;
-			y[0] = 0.0;
-			for (int i = 0; i < order; i++)
-			{
-				y[0] += b[i] * x[i] - a[i + 1] * y[i + 1];
-			}
-			y[0] += b[order] * x[order];
+#if(_WINDOWS)
+			_MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
+#elif(_ANDROID)
 
-			for (int i = order; i > 0; i--)
+			unsigned m_savedCSR = getStatusWord();
+			// Bit 24 is the flush-to-zero mode control bit. Setting it to 1 flushes denormals to 0.
+			setStatusWord(m_savedCSR | (1 << 24));
+#endif
+			Real v = input;
+			Real output = 0.0;
+			for (int i = 1; i <= order; i++)
 			{
-				x[i] = x[i - 1];
-				y[i] = y[i - 1];
+				v += y[i - 1] * (-a[i]);
+				output += y[i - 1] * b[i];
 			}
-			return y[0];
+
+			for (int i = order; i >= 1; i--)
+				y[i] = y[i - 1];
+
+			y[0] = v;
+			output += v * b[0];
+#if(_WINDOWS)
+			_MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_OFF);
+#elif(_ANDROID)
+
+			m_savedCSR = getStatusWord();
+			// Bit 24 is the flush-to-zero mode control bit. Setting it to 1 flushes denormals to 0.
+			setStatusWord(m_savedCSR | (0 << 24));
+#endif
+			return output;
 		}
 
 		void IIRFilter::SetT(int fs)
 		{
-			T = 1.0 / (Real)fs;
+			T = 1.0 / static_cast<Real>(fs);
 		}
 
 		void HighShelf::UpdateParameters(Real fc, Real g)
@@ -375,19 +415,19 @@ namespace UIE
 			return out[0] + out[1] + out[2] + out[3];
 		}
 
-		BandPass::BandPass() : numFilters(0), M(0) {};
+		BandPass::BandPass() : numFilters(0), M(0), out(0.0) {};
 
-		BandPass::BandPass(size_t order)
+		BandPass::BandPass(size_t order) : out(0.0)
 		{
 			InitFilters(order, 48000);
 		};
 
-		BandPass::BandPass(size_t order, int fs)
+		BandPass::BandPass(size_t order, int fs) : out(0.0)
 		{
 			InitFilters(order, fs);
 		};
 
-		BandPass::BandPass(size_t order, FilterShape shape, Real fb, Real g, int fs)
+		BandPass::BandPass(size_t order, FilterShape shape, Real fb, Real g, int fs) : out(0.0)
 		{
 			InitFilters(order, fs);
 			UpdateParameters(fb, g, shape);
@@ -412,24 +452,24 @@ namespace UIE
 
 		Real BandPass::GetOutput(const Real input)
 		{
-			Real out = input;
+			out = input;
 			for (TransDF2& filter : filters)
 				out = filter.GetOutput(out);
 
 			return out;
 		}
 
-		ParametricEQ::ParametricEQ(size_t order) : mOrder(order), numFilters(4), mGain(0.0)
+		ParametricEQ::ParametricEQ(size_t order) : mOrder(order), numFilters(4), mGain(0.0), out(0.0)
 		{
 			InitBands(48000);
 		}
 
-		ParametricEQ::ParametricEQ(size_t order, int fs) : mOrder(order), numFilters(4), mGain(0.0)
+		ParametricEQ::ParametricEQ(size_t order, int fs) : mOrder(order), numFilters(4), mGain(0.0), out(0.0)
 		{
 			InitBands(fs);
 		}
 
-		ParametricEQ::ParametricEQ(size_t order, Real fc[], Real gain[], int fs) : mOrder(order), numFilters(4)
+		ParametricEQ::ParametricEQ(size_t order, Real fc[], Real gain[], int fs) : mOrder(order), numFilters(4), out(0.0)
 		{
 			InitBands(fs);
 			UpdateParameters(fc, gain);
@@ -439,9 +479,8 @@ namespace UIE
 		{
 			mGain = gain[numFilters];
 			for (int i = 0; i < numFilters + 1; i++)
-			{
 				gain[i] = std::max(EPS, gain[i]); // Prevent division by zero
-			}
+
 			for (int i = 0; i < numFilters; i++)
 			{
 				fb[i] = fc[i] * sqrtf(fc[i + 1] / fc[i]);
@@ -452,11 +491,11 @@ namespace UIE
 
 		Real ParametricEQ::GetOutput(const Real input)
 		{
-			Real out = input;
+			out = input;
 			for (BandPass& band : bands)
 				out = band.GetOutput(out);
-
-			return mGain * out;
+			out *= mGain;
+			return out;
 		}
 
 		void ParametricEQ::InitBands(int fs)

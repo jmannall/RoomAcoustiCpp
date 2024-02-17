@@ -14,6 +14,7 @@
 // Spatialiser headers
 #include "Spatialiser/Types.h"
 #include "Spatialiser/Wall.h"
+#include "Spatialiser/Main.h"
 
 // Common headers
 #include "Common/AudioManager.h"
@@ -78,7 +79,7 @@ namespace UIE
 			~FDN() {}
 
 			// Getters
-			rowvec GetOutput(const Real* data, bool valid);
+			rowvec GetOutput(const Real* data, Real gain, bool valid);
 
 			// Setters
 			void SetParameters(const FrequencyDependence& T60, const vec& dimensions);
@@ -95,7 +96,11 @@ namespace UIE
 			void CalculateTimeDelay(const vec& dimensions, vec& t);
 
 			// Process
-			void ProcessMatrix() { Mult(y, mat, x); }//x = y * mat; }
+			inline void ProcessMatrix() //x = y * mat
+			{ 
+				HouseholderMult(y, houseMat, x);
+				// Mult(y, mat, x);
+			}
 
 			// Member variables
 			Config mConfig;
@@ -103,21 +108,8 @@ namespace UIE
 			rowvec x;
 			rowvec y;
 			matrix mat;
+			matrix houseMat;
 		};
-
-#if(_ANDROID)
-		inline int getStatusWord()
-		{
-			int result;
-			asm volatile("mrs %[result], FPCR" : [result] "=r" (result));
-			return result;
-		}
-
-		inline void setStatusWord(int a)
-		{
-			asm volatile("msr FPCR, %[src]" : : [src] "r" (a));
-		}
-#endif
 	}
 }
 

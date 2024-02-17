@@ -84,6 +84,22 @@ namespace UIE
 	}
 }
 
+//////////////////// Android specific functions ////////////////////
+
+#if(_ANDROID)
+inline int getStatusWord()
+{
+	int result;
+	asm volatile("mrs %[result], FPCR" : [result] "=r" (result));
+	return result;
+}
+
+inline void setStatusWord(int a)
+{
+	asm volatile("msr FPCR, %[src]" : : [src] "r" (a));
+}
+#endif
+
 //////////////////// Macros ////////////////////
 
 #define DSP_SAFE_ARRAY_DELETE(ptr)	\

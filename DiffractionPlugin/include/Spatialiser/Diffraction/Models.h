@@ -269,7 +269,7 @@ namespace UIE
 
 				void UpdateParameters();
 				void InitParameters();
-				void ProcessAudio(const Real* inBuffer, Real* outBuffer, int numFrames, Real lerpFactor);
+				void ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const int numFrames, const Real lerpFactor);
 				void UpdatePath(Path* path) { mPath = path; }
 
 #ifdef _TEST

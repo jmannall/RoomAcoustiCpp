@@ -12,6 +12,8 @@
 #include "Unity/Debug.h"
 #include "Unity/Profiler.h"
 
+#include "Main.h"
+
 namespace UIE
 {
 	using namespace Unity;
@@ -149,8 +151,9 @@ namespace UIE
 			// Start background thread after all systems are initialized
 			ISMThread = std::thread(BackgroundProcessor, this);
 
-			mReverbInput = matrix(mConfig.numFrames, mConfig.numFDNChannels);	// Move these to initialise based on unity settings at context init();
+			mInputBuffer = Buffer(mConfig.numFrames);
 			mOutputBuffer = Buffer(mConfig.numFrames * mConfig.numChannels);
+			mReverbInput = matrix(mConfig.numFrames, mConfig.numFDNChannels);	// Move these to initialise based on unity settings at context init();
 		}
 
 		Context::~Context()
@@ -197,7 +200,7 @@ namespace UIE
 				lock_guard <mutex> lock(audioMutex);
 				mListener->SetListenerTransform(transform);
 			}
-			mReverb->UpdateReverbSources(position);
+			mReverb->UpdateReverb(position, mISMConfig.lateReverb);
 		}
 
 		// Source
@@ -227,8 +230,6 @@ namespace UIE
 			transform.SetPosition(CVector3(static_cast<float>(position.x), static_cast<float>(position.y), static_cast<float>(position.z)));
 			
 			mSources->Update(id, transform, data);
-
-			mReverb->UpdateValid(mISMConfig.lateReverb);
 		}
 
 		void Context::RemoveSource(size_t id)
@@ -279,13 +280,46 @@ namespace UIE
 
 		void Context::SubmitAudio(size_t id, const float* data)
 		{
-			Buffer in = Buffer(mConfig.numFrames);
+			// Buffer in = Buffer(mConfig.numFrames);
+
 			for (int i = 0; i < mConfig.numFrames; i++)
-				in[i] = static_cast<Real>(data[i]);
+				mInputBuffer[i] = static_cast<Real>(data[i]);
 
-			//memcpy(&in[0], data, mConfig.numFrames);
+			//CMonoBuffer<float> bInput;
+			//bInput = CMonoBuffer<float>(mConfig.numFrames);
 
-			mSources->ProcessAudio(id, &in[0], mReverbInput, mOutputBuffer, mConfig.lerpFactor);
+			//for (int j = 0; j < 500; j++)
+			//{
+			//	BeginFIR();
+			//	std::transform(mInputBuffer.begin(), mInputBuffer.end(), bInput.begin(), [](Real x) { return static_cast<float>(x) * 2.0; });
+			//	EndFIR();
+			//	/*for (float& in : bInput)
+			//		in = static_cast<float>(*inputPtr++ * currentGain);*/
+			//	BeginFDN();
+			//	for (int i = 0; i < mConfig.numFrames; i++)
+			//		bInput[i] = static_cast<float>(mInputBuffer[i] * 2.0);
+			//	EndFDN();
+			//}
+
+			mSources->ProcessAudio(id, mInputBuffer, mReverbInput, mOutputBuffer);
+
+			/*for (int j = 0; j < 500; j++)
+			{
+				BeginReflection();
+				for (int i = 0; i < mConfig.numFrames; i++)
+					mOutputBuffer[i] = 2.0 * mInputBuffer[i];
+				EndReflection();
+				Real* outPtr = &mOutputBuffer[0];
+				Real* inPtr = &mInputBuffer[0];
+				BeginDiffraction();
+				for (int i = 0; i < mConfig.numFrames; i++)
+					outPtr[i] = 2.0 * inPtr[i];
+				EndDiffraction();
+				BeginLerp();
+				for (Real& sample : mInputBuffer)
+					sample = 2.0f * sample;
+				EndLerp();
+			}*/
 		}
 
 		void Context::GetOutput(float** bufferPtr)

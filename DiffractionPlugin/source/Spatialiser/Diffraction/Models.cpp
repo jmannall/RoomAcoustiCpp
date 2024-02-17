@@ -5,6 +5,8 @@
 */
 
 #include "Spatialiser/Diffraction/Models.h"
+#include "Spatialiser/Types.h"
+#include "Main.h"
 
 namespace UIE
 {
@@ -530,6 +532,48 @@ namespace UIE
 					std::lock_guard<std::mutex> lock(*m);
 					if (ir.Valid())
 						targetIr = ir;
+					size_t currentLen = currentIr.Length();
+					size_t targetLen = targetIr.Length();
+
+					if (currentLen % 8 != 0)
+					{
+						currentLen += 8 - currentLen % 8;
+						currentIr.ResizeBuffer(currentLen);
+					}
+					if (targetLen % 8 != 0)
+					{
+						targetLen += 8 - targetLen % 8;
+						targetIr.ResizeBuffer(targetLen);
+					}
+
+					if (currentLen > targetLen)
+					{
+						Real total = 0.0;
+						size_t i = targetLen - 1;
+						while (i < currentLen)
+						{
+							total += currentIr[i++];
+							total += currentIr[i++];
+							total += currentIr[i++];
+							total += currentIr[i++];
+							total += currentIr[i++];
+							total += currentIr[i++];
+							total += currentIr[i++];
+							total += currentIr[i++];
+							if (total <= MIN_VALUE)
+							{
+								i -= 8;
+								break;
+							}
+							total = 0.0;
+						}
+						currentIr.ResizeBuffer(i);
+						targetIr.ResizeBuffer(i);	
+					}
+					else if (currentLen < targetLen)
+						currentIr.ResizeBuffer(targetLen);
+
+					firFilter.Resize(currentIr.Length());
 				}
 				// else do nothing
 			}
@@ -794,25 +838,54 @@ namespace UIE
 				return sinTheta[i] / (coshvtheta - cosTheta[i]);
 			}
 
-			void BTM::ProcessAudio(const Real* inBuffer, Real* outBuffer, int numFrames, Real lerpFactor)
+			void BTM::ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const int numFrames, const Real lerpFactor)
 			{
 				if (BuffersEqual(currentIr, targetIr))
 				{
+#ifdef PROFILE_AUDIO_THREAD
+					BeginFIR();
+#endif
 					for (int i = 0; i < numFrames; i++)
+					{
 						outBuffer[i] = firFilter.GetOutput(inBuffer[i]);
+					}
+#ifdef PROFILE_AUDIO_THREAD
+					EndFIR();
+#endif
+
+					/*BeginFIR();
+					for (int i = 0; i < numFrames; i++)
+					{
+						outBuffer[i] = mclFirFilter.Filter(inBuffer[i]);
+					}
+					EndFIR();*/
 				}
 				else
 				{
 					std::lock_guard<std::mutex> lock(*m);
+
 					if (currentIr.Length() != targetIr.Length())
 						currentIr.ResizeBuffer(targetIr.Length());
+#ifdef PROFILE_AUDIO_THREAD
+					BeginLerp();
+#endif
 					for (int i = 0; i < numFrames; i++)
 					{
 						outBuffer[i] = firFilter.GetOutput(inBuffer[i]);
-						for (int j = 0; j < currentIr.Length(); j++)
-							currentIr[j] = Lerp(currentIr[j], targetIr[j], lerpFactor);
+						Lerp(currentIr, targetIr, lerpFactor);
 						firFilter.SetImpulseResponse(currentIr);
 					}
+#ifdef PROFILE_AUDIO_THREAD
+					EndLerp();
+#endif
+					/*BeginLerp();
+					for (int i = 0; i < numFrames; i++)
+					{
+						outBuffer[i] = mclFirFilter.Filter(inBuffer[i]);
+						Lerp(currentIr, targetIr, lerpFactor);
+						mclFirFilter.set_impulse_response(currentIr.GetBuffer());
+					}
+					EndLerp();*/
 				}
 			}
 		}

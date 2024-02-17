@@ -182,12 +182,12 @@ namespace UIE
 			//void LineRoomIntersectionDiff(const vec3& start, const vec3& end, size_t currentWallID, bool& obstruction);
 
 			bool FindIntersection(vec3& intersection, Wall& wall, size_t& idW, const vec3& start, const vec3& end, const Plane& plane);
-			bool FindIntersections(std::vector<vec3> intersections, VirtualSourceData& vSource, int bounceIdx);
-			bool FindIntersectionsSpEd(std::vector<vec3> intersections, VirtualSourceData& vSource, int bounceIdx);
-			bool FindIntersectionsEdSp(std::vector<vec3> intersections, VirtualSourceData& vSource, int bounceIdx);
-			bool FindIntersectionsSpEdSp(std::vector<vec3> intersections, VirtualSourceData& vSource, int bounceIdx, int edgeIdx);
-			bool FindIntersections(std::vector<vec3> intersections, VirtualSourceData& vSource, int bounceIdx, const vec3& start);
-			bool FindRIntersections(std::vector<vec3> intersections, VirtualSourceData& vSource, int bounceIdx, const vec3& start);
+			bool FindIntersections(std::vector<vec3>& intersections, VirtualSourceData& vSource, int bounceIdx);
+			bool FindIntersectionsSpEd(std::vector<vec3>& intersections, VirtualSourceData& vSource, int bounceIdx);
+			bool FindIntersectionsEdSp(std::vector<vec3>& intersections, VirtualSourceData& vSource, int bounceIdx);
+			bool FindIntersectionsSpEdSp(std::vector<vec3>& intersections, VirtualSourceData& vSource, int bounceIdx, int edgeIdx);
+			bool FindIntersections(std::vector<vec3>& intersections, VirtualSourceData& vSource, int bounceIdx, const vec3& start);
+			bool FindRIntersections(std::vector<vec3>& intersections, VirtualSourceData& vSource, int bounceIdx, const vec3& start);
 
 			bool LineRoomIntersection(const vec3& start, const vec3& end);
 			void LineRoomIntersection(const vec3& start, const vec3& end, bool& obstruction);

@@ -54,11 +54,6 @@ namespace UIE
 			return round(x * factor) / factor;
 		}
 
-		inline Real Lerp(Real start, Real end, Real factor)
-		{
-			return start * (1.0 - factor) + end * factor;
-		}
-
 		inline Real StrToReal(const std::string& str)
 		{
 			return std::stod(str);

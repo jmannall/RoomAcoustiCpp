@@ -38,10 +38,6 @@ namespace UIE
 
 		void Edge::InitEdge()
 		{
-#ifdef DEBUG_INIT
-	Debug::Log("Edge init", Colour::Green);
-#endif
-
 			midPoint = (mTop + mBase) / 2;
 			mEdgeVector = UnitVectorRound(mTop - mBase);
 			mEdgeNormal = UnitVectorRound(mFaceNormals[0] + mFaceNormals[1]);
@@ -51,9 +47,6 @@ namespace UIE
 			else
 				t = PI_1 - acos(Dot(mFaceNormals[0], mFaceNormals[1]));
 
-#ifdef DEBUG_INIT
-	Debug::Log("Edge angle: " + RealToStr(t), Colour::Orange);
-#endif
 			UpdateEdgeLength();
 		}
 	}

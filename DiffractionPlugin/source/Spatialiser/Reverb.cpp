@@ -16,7 +16,9 @@ namespace UIE
 
 		ReverbSource::ReverbSource(Binaural::CCore* core, const Config& config) : mCore(core), mConfig(config), mReflectionFilter(4, config.fs), mAbsorption(1.0f, 1.0f, 1.0f, 1.0f, 1.0f)
 		{
-			bInput = CMonoBuffer<float>(config.numFrames);
+			bInput = CMonoBuffer<float>(mConfig.numFrames);
+			/*bOutput.left = CMonoBuffer<float>(mConfig.numFrames);
+			bOutput.right = CMonoBuffer<float>(mConfig.numFrames);*/
 			UpdateReflectionFilter();
 			Init();
 		}
@@ -107,41 +109,53 @@ namespace UIE
 		{
 			if (valid)
 			{
+#ifdef PROFILE_AUDIO_THREAD
 				BeginReverbSource();
+#endif
 				// Copy input into internal storage and apply wall absorption
 				//CMonoBuffer<float> bInput(numFrames);
-				const Real* inputPtr = data;
-				for (float& in : bInput)
-					in = static_cast<float>(mReflectionFilter.GetOutput(*inputPtr++));
-				/*for (int i = 0; i < numFrames; i++)
-					bInput[i] = static_cast<float>(mReflectionFilter.GetOutput(*inputPtr++));*/
+				//const Real* inputPtr = data;
+#ifdef PROFILE_AUDIO_THREAD
+				BeginReflection();
+#endif
+				for (int i = 0; i < mConfig.numFrames; i++)
+					bInput[i] = static_cast<float>(mReflectionFilter.GetOutput(data[i]));
 
-				CEarPair<CMonoBuffer<float>> bOutput;
+#ifdef PROFILE_AUDIO_THREAD
+				EndReflection();
+				Begin3DTI();
+#endif
 
 				mSource->SetBuffer(bInput);
 
+				CEarPair<CMonoBuffer<float>> bOutput;
 				mSource->ProcessAnechoic(bOutput.left, bOutput.right);
+#ifdef PROFILE_AUDIO_THREAD
+				End3DTI();
+#endif
 
 				int j = 0;
 				for (int i = 0; i < mConfig.numFrames; i++)
 				{
-					outputBuffer[j++] += bOutput.left[i];
-					outputBuffer[j++] += bOutput.right[i];
+					outputBuffer[j++] += static_cast<Real>(bOutput.left[i]);
+					outputBuffer[j++] += static_cast<Real>(bOutput.right[i]);
 				}
+#ifdef PROFILE_AUDIO_THREAD
 				EndReverbSource();
+#endif
 			}
 		}
 
 		//////////////////// Reverb class ////////////////////
 
-		Reverb::Reverb(Binaural::CCore* core, const Config& config, const vec& dimensions) : mConfig(config), mFDN(config), mCore(core), valid(false)
+		Reverb::Reverb(Binaural::CCore* core, const Config& config, const vec& dimensions) : mConfig(config), mFDN(config), mCore(core), valid(false), runFDN(false), mTargetGain(0.0), mCurrentGain (0.0)
 		{
 			input = matrix(mConfig.numFrames, mConfig.numFDNChannels);
 			col = new Real[mConfig.numFrames];
 			InitSources();
 		}
 
-		Reverb::Reverb(Binaural::CCore* core, const Config& config, const vec& dimensions, const FrequencyDependence& T60) : mFDN(T60, dimensions, config), mCore(core), mConfig(config), valid(false)
+		Reverb::Reverb(Binaural::CCore* core, const Config& config, const vec& dimensions, const FrequencyDependence& T60) : mFDN(T60, dimensions, config), mCore(core), mConfig(config), valid(false), runFDN(false), mTargetGain(0.0), mCurrentGain(0.0)
 		{
 			input = matrix(mConfig.numFrames, mConfig.numFDNChannels);
 			col = new Real[mConfig.numFDNChannels];
@@ -175,14 +189,31 @@ namespace UIE
 			mReverbSources[11].SetShift(vec3(1.0, -3.0, -1.0));	// -y
 		}
 
-		void Reverb::UpdateReverbSources(const vec3& position)
+		void Reverb::UpdateReverb(const vec3& position, const bool on)
 		{
-			for (int i = 0; i < mConfig.numFDNChannels; i++)
 			{
 				lock_guard<mutex> lock(mCoreMutex);
-
-				mReverbSources[i].Update(position);
+				for (int i = 0; i < mConfig.numFDNChannels; i++)
+					mReverbSources[i].Update(position);
 			}
+
+			lock_guard<mutex> lock(mFDNMutex);
+
+			if (valid && on)
+				mTargetGain = 1.0;
+			else
+			{
+				mTargetGain = 0.0;
+				if (mCurrentGain < 0.0001)
+				{
+					runFDN = false;
+					mFDN.Reset();
+					for (ReverbSource& source : mReverbSources)
+						source.Reset();
+					return;
+				}
+			}
+			runFDN = true;
 		}
 
 		void Reverb::UpdateReflectionFilters(const ReverbWall& id, const Absorption& absorption, const Absorption& oldAbsorption)
@@ -239,21 +270,42 @@ namespace UIE
 
 		void Reverb::ProcessAudio(const matrix& data, Buffer& outputBuffer)
 		{
-			if (valid)
+			if (runFDN)
 			{
+#ifdef PROFILE_AUDIO_THREAD
 				BeginReverb();
+#endif
 				// Process FDN and save to buffer
 				{
 					lock_guard <mutex> lock(mFDNMutex);
 
+#ifdef PROFILE_AUDIO_THREAD
 					BeginFDN();
-					for (int i = 0; i < data.Rows(); i++)
+#endif
+
+					if (mCurrentGain == mTargetGain)
 					{
-						rowvec out = mFDN.GetOutput(data.GetRow(i), valid);
-						for (int j = 0; j < mConfig.numFDNChannels; j++)
-							input.AddEntry(out[j], i, j);
+						for (int i = 0; i < data.Rows(); i++)
+						{
+							rowvec out = mFDN.GetOutput(data.GetRow(i), mCurrentGain, valid);
+							for (int j = 0; j < mConfig.numFDNChannels; j++)
+								input.AddEntry(out[j], i, j);
+						}
 					}
+					else
+					{
+						for (int i = 0; i < data.Rows(); i++)
+						{
+							rowvec out = mFDN.GetOutput(data.GetRow(i), mCurrentGain, valid);
+							for (int j = 0; j < mConfig.numFDNChannels; j++)
+								input.AddEntry(out[j], i, j);
+							mCurrentGain = Lerp(mCurrentGain, mTargetGain, mConfig.lerpFactor);
+						}
+					}
+					
+#ifdef PROFILE_AUDIO_THREAD
 					EndFDN();
+#endif
 				}
 				// Process buffer of each channel
 				lock_guard<mutex> lock(mCoreMutex);
@@ -263,7 +315,9 @@ namespace UIE
 					source.ProcessAudio(input.GetColumn(col, j), outputBuffer);
 					j++;
 				}
+#ifdef PROFILE_AUDIO_THREAD
 				EndReverb();
+#endif
 			}
 		}
 
@@ -272,9 +326,6 @@ namespace UIE
 			{
 				lock_guard <mutex> lock(mFDNMutex);
 				mFDN.SetParameters(T60, dimensions);
-				/*mFDN.Reset();
-				for (ReverbSource& source : mReverbSources)
-					source.Reset();*/
 			}
 			if (T60 < 20)
 			{

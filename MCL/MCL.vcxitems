@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="Globals">
+    <MSBuildAllProjects Condition="'$(MSBuildVersion)' == '' Or '$(MSBuildVersion)' &lt; '16.0'">$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <ItemsProjectGuid>{d8f0428c-d318-4649-a3c6-f6b64efa684d}</ItemsProjectGuid>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(MSBuildThisFileDirectory)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ProjectCapability Include="SourceItemsFromImports" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\mcl\include\basicop.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\mcl\include\comparisonop.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\mcl\include\dataop.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\mcl\include\digitalfilter.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\mcl\include\elementaryop.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\mcl\include\firfilter.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\mcl\include\matrixop.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\mcl\include\maxgradientfilter.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\mcl\include\mcltypes.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\mcl\include\point.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\mcl\include\pointwiseop.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\mcl\include\randomop.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\mcl\include\statisticsop.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\mcl\include\transformop.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\mcl\include\vectorop.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\mcl\src\basicop.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\mcl\src\comparisonop.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\mcl\src\dataop.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\mcl\src\elementaryop.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\mcl\src\firfilter.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\mcl\src\matrixop.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\mcl\src\point.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\mcl\src\pointwiseop.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\mcl\src\randomop.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\mcl\src\statisticsop.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\mcl\src\transformop.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\mcl\src\vectorop.cpp" />
+  </ItemGroup>
+</Project>

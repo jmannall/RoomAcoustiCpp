@@ -88,6 +88,7 @@ namespace UIE
 			shared_ptr<Binaural::CListener> mListener;
 
 			// Buffers
+			Buffer mInputBuffer;
 			Buffer mOutputBuffer;
 			matrix mReverbInput;
 			BufferF mSendBuffer;
