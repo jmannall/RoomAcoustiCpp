@@ -27,11 +27,13 @@ namespace UIE
 		public:
 
 			// Load and Destroy
-			vec() : matrix(), length(1)	{ Init(); }
-			vec(const int& len) : matrix(len, 1), length(len) { Init(); }
-			vec(const Real* vec, const int& len) : matrix(len, 1), length(len) { Init(vec); }
+			vec() : matrix() {}
+			vec(const int& len) : matrix(len, 1) {}
+			vec(const std::vector<Real>& vec) : matrix(vec.size(), 1) { Init(vec); }
 			vec(const matrix& mat);
 			~vec() {};
+
+			void Init(const std::vector<Real>& vec);
 
 			// Distributions
 			void RandomNormalDistribution();
@@ -44,16 +46,19 @@ namespace UIE
 			Real CalculateNormal() const;
 			Real Mean() const;
 
-			// Operators
-			inline Real& operator[] (const int& i) const { return e[i][0]; }
+			inline void AddEntry(const Real& in, const int& i) { e[i][0] = in; }
+			inline void IncreaseEntry(const Real& in, const int& i) { e[i][0] += in; }
 
+			inline Real GetEntry(const int& i) const { return e[i][0]; }
+
+			// Operators
 			inline vec operator=(const matrix& mat)
 			{
 				assert(mat.Cols() == 1);
 
 				rows = mat.Rows();
 				cols = mat.Cols();
-				Init();
+				AllocateSpace();
 				for (int i = 0; i < rows; i++)
 				{
 					for (int j = 0; j < cols; j++)
@@ -65,9 +70,6 @@ namespace UIE
 			}
 
 		private:
-
-			// Member Variables
-			int length;
 		};
 
 		//////////////////// rowvec class ////////////////////
@@ -77,22 +79,27 @@ namespace UIE
 		public:
 
 			// Load and Destroy
-			rowvec() : matrix() { Init(); }
-			rowvec(const int& c) : matrix(1, c) { Init(); }
-			rowvec(const Real* vec, const int& c) : matrix(1, c) { Init(vec); }
+			rowvec() : matrix() {}
+			rowvec(const int& c) : matrix(1, c) {}
+			rowvec(const std::vector<Real>& vec, const int& c) : matrix(1, c) { Init(vec); }
 			rowvec(const matrix& mat);
 			~rowvec() {}
 
-			// Operators
-			inline Real& operator[] (const int& i) const { return e[0][i]; }
+			void Init(const std::vector<Real>& vec);
 
+			inline void AddEntry(const Real& in, const int& i) { e[0][i] = in; }
+			inline void IncreaseEntry(const Real& in, const int& i) { e[0][i] += in; }
+
+			inline Real GetEntry(const int& i) const { return e[0][i]; }
+
+			// Operators
 			inline rowvec operator=(const matrix& mat)
 			{
 				assert(mat.Rows() == 1);
 
 				rows = mat.Rows();
 				cols = mat.Cols();
-				Init();
+				AllocateSpace();
 				for (int i = 0; i < rows; i++)
 				{
 					for (int j = 0; j < cols; j++)

@@ -234,7 +234,7 @@ namespace UIE
 					for (int i = 0; i < mConfig.numFrames; i++)
 					{
 						bInput[i] = static_cast<float>(bStore[i] * mCurrentGain);
-						mCurrentGain = Lerp(mCurrentGain, mTargetGain, mConfig.lerpFactor);
+						Lerp(mCurrentGain, mTargetGain, mConfig.lerpFactor);
 					}
 				}
 		

@@ -118,7 +118,7 @@ namespace UIE
 						for (int i = 0; i < mConfig.numFrames; i++)
 						{
 							bInput[i] = static_cast<float>(data[i] * currentGain);
-							currentGain = Lerp(currentGain, targetGain, mConfig.lerpFactor);
+							Lerp(currentGain, targetGain, mConfig.lerpFactor);
 						}
 					}
 					mSource->SetBuffer(bInput);

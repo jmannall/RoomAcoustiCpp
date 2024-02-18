@@ -42,7 +42,7 @@ namespace UIE
 			void Update(const vec3& position);
 			void UpdateReflectionFilter();
 			void UpdateReflectionFilter(const Absorption& absorption);
-			void ProcessAudio(const Real* data, Buffer& outputBuffer);
+			void ProcessAudio(const vec& data, Buffer& outputBuffer);
 
 			inline void Deactivate() { mSource = NULL; }
 			inline void Reset() { mReflectionFilter.ClearBuffers(); }

@@ -292,12 +292,14 @@ namespace UIE
 
 		TEST_METHOD(ReflectionFilters)
 		{
-			int fs = 48000;
-
-			Binaural::CCore core = CreateCore(fs);
-
 			HRTFMode hrtfMode = HRTFMode::none;
-			ReverbSource reverbSource(&core, hrtfMode, fs);
+			Config config;
+			config.fs = 48000;
+			config.hrtfMode = HRTFMode::none;
+
+			Binaural::CCore core = CreateCore(config.fs);
+
+			ReverbSource reverbSource(&core, config);
 			Absorption absorption1(0.7, 0.7, 0.7, 0.7, 0.7, 5.0);
 			Absorption absorption2(0.5, 0.5, 0.3, 0.3, 0.4, 2.0);
 			Absorption absorption3(0.1, 0.2, 0.25, 0.1, 0.2, 3.0);
@@ -324,6 +326,249 @@ namespace UIE
 			TestReverbSource(reverbSource, Absorption(0.0, 0.0, 0.0, 0.0, 0.0, 0.0));
 
 			RemoveCore(core);
+		}
+	};
+
+	//////////////////// Matrix Tests ////////////////////
+
+	TEST_CLASS(Matrix)
+	{
+	public:
+
+		TEST_METHOD(Init)
+		{
+			const int rows = 5;
+			const int cols = 4;
+
+			matrix m = matrix(rows, cols);
+
+			Real x = 1.0;
+
+			for (int i = 0; i < rows; i++)
+			{
+				for (int j = 0; j < cols; j++)
+				{
+					m.AddEntry(x, i, j);
+					Assert::AreEqual(x, m.GetEntry(i, j), L"Error: Add entry");
+					m.IncreaseEntry(1.0, i, j);
+					x += 1.0;
+					Assert::AreEqual(x, m.GetEntry(i, j), L"Error: Increase entry");
+				}
+			}
+
+			matrix mat = matrix(m.Data());
+
+			for (int i = 0; i < rows; i++)
+			{
+				for (int j = 0; j < cols; j++)
+				{
+					Assert::AreEqual(m.GetEntry(i, j), mat.GetEntry(i, j), L"Error: Init from vectors");
+				}
+			}
+
+			m.Reset();
+
+			for (int i = 0; i < rows; i++)
+			{
+				for (int j = 0; j < cols; j++)
+				{
+					Real test = m.GetEntry(i, j);
+					Assert::AreEqual(0.0, test, L"Error: Reset");
+				}
+			}
+		}
+
+		TEST_METHOD(Multiply)
+		{
+			const int a = 2;
+			const int b = 3;
+
+			matrix x = matrix(a, b);
+			matrix y = matrix(b, a);
+
+			for (int i = 0; i < a; i++)
+			{
+				for (int j = 0; j < b; j++)
+				{
+					x.AddEntry(1.0, i, j);
+					y.AddEntry(1.0, j, i);
+				}
+			}
+
+			x.AddEntry(2.0, 0, 0);
+			x.AddEntry(5.0, 0, 2);
+			x.AddEntry(3.0, 1, 1);
+			y.AddEntry(4.0, 1, 0);
+			y.AddEntry(3.0, 0, 1);
+
+			matrix z = x * y;
+
+			Assert::AreEqual(11.0, z.GetEntry(0, 0), L"Error (0, 0)");
+			Assert::AreEqual(12.0, z.GetEntry(0, 1), L"Error (0, 1)");
+			Assert::AreEqual(14.0, z.GetEntry(1, 0), L"Error (1, 0)");
+			Assert::AreEqual(7.0, z.GetEntry(1, 1), L"Error (1, 1)");
+
+			z *= 2.0;
+
+			Assert::AreEqual(22.0, z.GetEntry(0, 0), L"Error 2 (0, 0)");
+			Assert::AreEqual(24.0, z.GetEntry(0, 1), L"Error 2 (0, 1)");
+			Assert::AreEqual(28.0, z.GetEntry(1, 0), L"Error 2 (1, 0)");
+			Assert::AreEqual(14.0, z.GetEntry(1, 1), L"Error 2 (1, 1)");
+
+			matrix w = z * 2.0;
+
+			Assert::AreEqual(44.0, w.GetEntry(0, 0), L"Error 3 (0, 0)");
+			Assert::AreEqual(48.0, w.GetEntry(0, 1), L"Error 3 (0, 1)");
+			Assert::AreEqual(56.0, w.GetEntry(1, 0), L"Error 3 (1, 0)");
+			Assert::AreEqual(28.0, w.GetEntry(1, 1), L"Error 3 (1, 1)");
+		}
+
+		TEST_METHOD(Add)
+		{
+			const int a = 2;
+			const int b = 3;
+
+			matrix x = matrix(a, b);
+			matrix y = matrix(a, b);
+
+			for (int i = 0; i < a; i++)
+			{
+				for (int j = 0; j < b; j++)
+				{
+					x.AddEntry(1.0, i, j);
+					y.AddEntry(1.0, i, j);
+				}
+			}
+
+			x.AddEntry(2.0, 0, 0);
+			x.AddEntry(5.0, 0, 2);
+			x.AddEntry(3.0, 1, 1);
+			y.AddEntry(4.0, 1, 0);
+			y.AddEntry(3.0, 0, 1);
+			y.AddEntry(7.0, 0, 0);
+
+			matrix z = x + y;
+
+			Assert::AreEqual(9.0, z.GetEntry(0, 0), L"Error (0, 0)");
+			Assert::AreEqual(4.0, z.GetEntry(0, 1), L"Error (0, 1)");
+			Assert::AreEqual(6.0, z.GetEntry(0, 2), L"Error (0, 2)");
+			Assert::AreEqual(5.0, z.GetEntry(1, 0), L"Error (1, 0)");
+			Assert::AreEqual(4.0, z.GetEntry(1, 1), L"Error (1, 1)");
+			Assert::AreEqual(2.0, z.GetEntry(1, 2), L"Error (1, 2)");
+		}
+
+		TEST_METHOD(Negative)
+		{
+			const int a = 2;
+			const int b = 3;
+
+			matrix x = matrix(a, b);
+
+			for (int i = 0; i < a; i++)
+			{
+				for (int j = 0; j < b; j++)
+				{
+					x.AddEntry(1.0, i, j);
+				}
+			}
+
+			matrix y = -x;
+
+			Assert::AreEqual(-1.0, y.GetEntry(0, 0), L"Error (0, 0)");
+			Assert::AreEqual(-1.0, y.GetEntry(0, 1), L"Error (0, 1)");
+			Assert::AreEqual(-1.0, y.GetEntry(0, 2), L"Error (0, 2)");
+			Assert::AreEqual(-1.0, y.GetEntry(1, 0), L"Error (1, 0)");
+			Assert::AreEqual(-1.0, y.GetEntry(1, 1), L"Error (1, 1)");
+			Assert::AreEqual(-1.0, y.GetEntry(1, 2), L"Error (1, 2)");
+		}
+
+		TEST_METHOD(Comparison)
+		{
+			const int a = 2;
+			const int b = 3;
+
+			matrix x = matrix(a, b);
+			matrix y = matrix(a, b);
+
+			Assert::AreEqual(true, x == y, L"Match");
+
+			for (int i = 0; i < a; i++)
+			{
+				for (int j = 0; j < b; j++)
+				{
+					x.AddEntry(1.0, i, j);
+				}
+			}
+
+			Assert::AreEqual(false, x == y, L"No match");
+		}
+	};
+
+	//////////////////// FIR Tests ////////////////////
+
+	TEST_CLASS(FIR)
+	{
+	public:
+		
+		TEST_METHOD(Resize)
+		{
+			std::vector<Real> ir = { 1.0, 0.5, 0.0, 0.2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+			Buffer impulseResponse = Buffer(ir);
+			FIRFilter filter = FIRFilter(impulseResponse);
+
+			filter.GetOutput(1.0);
+			filter.GetOutput(2.0);
+			std::vector<Real> ir2 = { 1.0, 0.5, 0.0, 0.2 };
+			Buffer impulseResponse2 = Buffer(ir2);
+			filter.SetImpulseResponse(impulseResponse2);
+
+			std::vector<Real> input = { 1.0, 0.0, 2.0, 0.0, 0.0, 0.0 };
+			std::vector<Real> output = { 2.0, 0.7, 2.4, 1.2, 0.0, 0.4 };
+
+			for (int i = 0; i < input.size(); i++)
+				Assert::AreEqual(output[i], filter.GetOutput(input[i]), L"Wrong output");
+		}
+	};
+
+	//////////////////// Lerp Tests ////////////////////
+
+	TEST_CLASS(Interpolation)
+	{
+	public:
+
+		TEST_METHOD(Single)
+		{
+			Real current = 1.0;
+			Real target = 0.0;
+			Real lerpFactor = 0.2;
+			Lerp(current, target, lerpFactor);
+
+			Assert::AreEqual(0.8, current, EPS, L"Wrong output");
+			Lerp(current, target, lerpFactor);
+			Assert::AreEqual(0.64, current, EPS, L"Wrong output");
+		}
+
+		TEST_METHOD(Vector)
+		{
+			std::vector<Real> start = { 1.0, 4.0, 3.0, 2.0 };
+			Buffer current = Buffer(start);
+
+			std::vector<Real> end = { 0.0, 2.0, 4.0, 2.0 };
+			Buffer target = Buffer(end);
+			Real lerpFactor = 0.2;
+			Lerp(current, target, lerpFactor);
+
+			{
+			std::vector<Real> output = { 0.8, 3.6, 3.2, 2.0 };
+			for (int i = 0; i < 4; i++)
+				Assert::AreEqual(output[i], current[i], EPS, L"Wrong output");
+			}
+			{
+			std::vector<Real> output = { 0.64, 3.28, 3.36, 2.0 };
+			Lerp(current, target, lerpFactor);
+			for (int i = 0; i < 4; i++)
+				Assert::AreEqual(output[i], current[i], EPS, L"Wrong output");
+			}
 		}
 	};
 

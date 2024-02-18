@@ -25,10 +25,13 @@ namespace UIE
 	namespace Common
 	{
 
-		inline Real Lerp(Real start, Real end, Real factor)
+		inline void Lerp(Real& start, const Real& end, const Real factor)
 		{
 			if (end - EPS < start && start < end + EPS)
-				return end;
+			{
+				start = end;
+				return;
+			}
 #if(_WINDOWS)
 			_MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
 #elif(_ANDROID)
@@ -48,7 +51,6 @@ namespace UIE
 			// Bit 24 is the flush-to-zero mode control bit. Setting it to 1 flushes denormals to 0.
 			setStatusWord(m_savedCSR | (0 << 24));
 #endif
-			return start;
 		}
 
 		//////////////////// Buffer class ////////////////////
@@ -56,8 +58,9 @@ namespace UIE
 		class Buffer
 		{
 		public:
-			Buffer();
-			Buffer(int n);
+			Buffer() { InitialiseBuffer(0); };
+			Buffer(int n) { InitialiseBuffer(n); };
+			Buffer(const std::vector<Real>& vec) { mBuffer = vec; };
 			~Buffer() {};
 
 			inline Real& operator[](const int& i) { return mBuffer[i]; };
@@ -101,79 +104,65 @@ namespace UIE
 			std::vector<Real> mBuffer;
 		};
 
-		inline Buffer Lerp(Buffer& start, Buffer& end, Real factor)
+		inline void Lerp(Buffer& start, const Buffer& end, const Real factor)
 		{
-			/*for (int i = 0; i < start.Length(); i++)
+#if(_WINDOWS)
+			_MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
+#elif(_ANDROID)
+
+			unsigned m_savedCSR = getStatusWord();
+			// Bit 24 is the flush-to-zero mode control bit. Setting it to 1 flushes denormals to 0.
+			setStatusWord(m_savedCSR | (1 << 24));
+#endif
+			size_t len = start.Length();
+
+			if (len % 8 != 0)
 			{
-				if (end[i] - EPS < start[i] && start[i] < end[i] + EPS)
-					start[i] = end[i];
-				else
-					start[i] = (1.0 - factor) * start[i] + factor * end[i];
-			}*/
-
-			/*if (end[0] - EPS < start[0] && start[0] < end[0] + EPS)
-				start = end;
+				for (int i = 0; i < len; i++)
+				{
+					start[i] *= (1.0 - factor);
+					start[i] += factor * end[i];
+				}
+			}
 			else
-			{*/
+			{
+				int i = 0;
+				while (i < len)
+				{
+					start[i] *= (1.0 - factor);
+					start[i] += factor * end[i];
+					i++;
+					start[i] *= (1.0 - factor);
+					start[i] += factor * end[i];
+					i++;
+					start[i] *= (1.0 - factor);
+					start[i] += factor * end[i];
+					i++;
+					start[i] *= (1.0 - factor);
+					start[i] += factor * end[i];
+					i++;
+					start[i] *= (1.0 - factor);
+					start[i] += factor * end[i];
+					i++;
+					start[i] *= (1.0 - factor);
+					start[i] += factor * end[i];
+					i++;
+					start[i] *= (1.0 - factor);
+					start[i] += factor * end[i];
+					i++;
+					start[i] *= (1.0 - factor);
+					start[i] += factor * end[i];
+					i++;
+				}
+			}
 #if(_WINDOWS)
-				_MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
+			_MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_OFF);
 #elif(_ANDROID)
 
-				unsigned m_savedCSR = getStatusWord();
-				// Bit 24 is the flush-to-zero mode control bit. Setting it to 1 flushes denormals to 0.
-				setStatusWord(m_savedCSR | (1 << 24));
+			m_savedCSR = getStatusWord();
+			// Bit 24 is the flush-to-zero mode control bit. Setting it to 1 flushes denormals to 0.
+			setStatusWord(m_savedCSR | (0 << 24));
 #endif
-				size_t len = start.Length();
-
-				if (len % 8 != 0)
-				{
-					for (int i = 0; i < len; i++)
-					{
-						start[i] *= (1.0 - factor);
-						start[i] += factor * end[i];
-					}
-				}
-				else
-				{
-					int i = 0;
-					while (i < len)
-					{
-						start[i] *= (1.0 - factor);
-						start[i] += factor * end[i];
-						i++;
-						start[i] *= (1.0 - factor);
-						start[i] += factor * end[i];
-						i++;
-						start[i] *= (1.0 - factor);
-						start[i] += factor * end[i];
-						i++;
-						start[i] *= (1.0 - factor);
-						start[i] += factor * end[i];
-						i++;
-						start[i] *= (1.0 - factor);
-						start[i] += factor * end[i];
-						i++;
-						start[i] *= (1.0 - factor);
-						start[i] += factor * end[i];
-						i++;
-						start[i] *= (1.0 - factor);
-						start[i] += factor * end[i];
-						i++;
-						start[i] *= (1.0 - factor);
-						start[i] += factor * end[i];
-						i++;
-					}
-				}
-#if(_WINDOWS)
-				_MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_OFF);
-#elif(_ANDROID)
-
-				m_savedCSR = getStatusWord();
-				// Bit 24 is the flush-to-zero mode control bit. Setting it to 1 flushes denormals to 0.
-				setStatusWord(m_savedCSR | (0 << 24));
-#endif
-			// }
-			return start;
 		}
 
 		bool BuffersEqual(Buffer& x, Buffer& y);
@@ -204,7 +193,7 @@ namespace UIE
 		class FIRFilter
 		{
 		public:
-			FIRFilter(Buffer& ir) : irLen(ir.Length()), count(ir.Length() - 1), n(0), inputLine(), store() { SetImpulseResponse(ir); };
+			FIRFilter(Buffer& ir) : irLen(0), mIr(), count(ir.Length() - 1), n(0), inputLine(), store() { SetImpulseResponse(ir); };
 			~FIRFilter() {};
 
 			Real GetOutput(Real input);
@@ -215,41 +204,39 @@ namespace UIE
 					len += (8 - len % 8);
 				if (len != irLen)
 				{
-					irLen = len;
 					if (len > irLen)
-						IncreaseSize();
+						IncreaseSize(len);
 					else
-						DecreaseSize();
+						DecreaseSize(len);
+					irLen = len;
 				}
 			}
 
 			inline void SetImpulseResponse(Buffer& ir)
 			{ 
-				size_t len = ir.Length();
-				if (len != irLen)
-					Resize(len);
+				Resize(ir.Length());
 				std::copy(ir.begin(), ir.end(), mIr.begin());
 			}
 
 		private:
 
-			inline void IncreaseSize()
+			inline void IncreaseSize(size_t len)
 			{
-				inputLine.ResizeBuffer(irLen);
-				mIr.ResizeBuffer(irLen);
+				inputLine.ResizeBuffer(len);
+				mIr.ResizeBuffer(len);
 			}
 
-			inline void DecreaseSize()
+			inline void DecreaseSize(size_t len)
 			{
 				store = inputLine;
 				int index = count;
-				for (int i = 0; i < len; i++)
+				for (int i = 0; i < irLen; i++)
 				{
 					inputLine[i] = store[index++];
 					if (index >= irLen) { index = 0; }
 				}
-				inputLine.ResizeBuffer(irLen);
-				mIr.ResizeBuffer(irLen);
+				inputLine.ResizeBuffer(len);
+				mIr.ResizeBuffer(len);
 				count = 0;
 			}
 
@@ -259,7 +246,6 @@ namespace UIE
 			int count;
 			int n;
 			size_t irLen;
-			size_t len;
 		};
 
 		//////////////////// IIR Filter ////////////////////

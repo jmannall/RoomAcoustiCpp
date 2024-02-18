@@ -11,93 +11,35 @@ namespace UIE
 {
 	namespace Common
 	{
-
-		matrix::matrix() : rows(1), cols(1)
+		matrix::matrix(const std::vector<std::vector<Real>>& mat) : rows(mat.size())
 		{
-			Init();
-		}
-
-		matrix::matrix(const int r, const int c) : rows(r), cols(c)
-		{
-			Init();
-		}
-
-		matrix::matrix(const Real** mat, const int r, const int c) : rows(r), cols(c)
-		{
-			Init(mat);
-		}
-
-		matrix::matrix(const Real* in, const int r, const int c) : rows(r), cols(c)
-		{
-			Init(in);
+			if (rows > 0)
+			{
+				cols = mat[0].size();
+				e = mat;
+			}
+			else
+				cols = 0;
 		}
 
 		void matrix::AllocateSpace()
 		{
-			e = new Real*[rows];
-			for (int i = 0; i < rows; i++)
-			{
-				e[i] = new Real[cols];
-			}
+			int r = rows;
+			for (int i = 0; i < r; i++)
+				e.push_back(std::vector<Real>(cols, 0.0));
 		}
 
-		void matrix::Reset()
+		void matrix::DeallocateSpace()
 		{
 			for (int i = 0; i < rows; i++)
-			{
-				for (int j = 0; j < cols; j++)
-				{
-					e[i][j] = 0.0;
-				}
-			}
+				e[i].clear();
+			e.clear();
 		}
 
-		void matrix::Init()
+		void matrix::Init(const const std::vector<std::vector<Real>>& mat)
 		{
 			AllocateSpace();
-			Reset();
-		}
-
-		void matrix::Init(const Real* in)
-		{
-			AllocateSpace();
-			int idx = 0;
-			for (int i = 0; i < rows; i++)
-			{
-				for (int j = 0; j < cols; j++)
-				{
-					e[i][j] = in[idx];
-					idx++;
-				}
-			}
-		}
-
-		void matrix::Init(const Real** mat)
-		{
-			AllocateSpace();
-			for (int i = 0; i < rows; i++)
-			{
-				for (int j = 0; j < cols; j++)
-				{
-					e[i][j] = mat[i][j];
-				}
-			}
-		}
-
-		void matrix::AddColumn(const vec& v, const int& c)
-		{
-			for (int i = 0; i < rows; i++)
-			{
-				e[i][c] = v[i];
-			}
-		}
-
-		void matrix::AddRow(const vec& v, const int& r)
-		{
-			for (int i = 0; i < cols; i++)
-			{
-				e[r][i] = v[i];
-			}
+			e = mat;
 		}
 
 		matrix matrix::Transpose()

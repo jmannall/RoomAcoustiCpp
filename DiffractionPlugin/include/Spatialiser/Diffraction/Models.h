@@ -10,7 +10,6 @@
 // C++ headers
 #include <mutex>
 
-#ifndef _ANDROID
 // NN headers
 #include "rtwtypes.h"
 #include <cstddef>
@@ -19,7 +18,6 @@
 #include "myNN_initialize.h"
 #include "myNN_terminate.h"
 #include "mySmallNN.h"
-#endif
 
 // Common headers
 #include "Common/Types.h"
@@ -139,7 +137,6 @@ namespace UIE
 				Complex CalcH(Real z, Real t, Real f) override;
 			};
 
-#ifndef _ANDROID
 			//////////////////// NN class ////////////////////
 
 			class NN	// Only accurate at 48kHz
@@ -207,8 +204,6 @@ namespace UIE
 					params.k = static_cast<Real>(k);
 				}
 			};
-
-#endif
 
 			//////////////////// UTD class ////////////////////
 

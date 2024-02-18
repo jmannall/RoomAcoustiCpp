@@ -35,7 +35,7 @@ namespace UIE
 					outBuffer[i] = inBuffer[i] * currentGain;
 					std::lock_guard<std::mutex> lock(*m);
 					if (currentGain != targetGain)
-						currentGain = Lerp(currentGain, targetGain, lerpFactor);
+						Lerp(currentGain, targetGain, lerpFactor);
 				}
 			}
 
@@ -66,7 +66,7 @@ namespace UIE
 					outBuffer[i] = filter.GetOutput(inBuffer[i]) * currentGain;
 					std::lock_guard<std::mutex> lock(*m);
 					if (currentGain != targetGain)
-						currentGain = Lerp(currentGain, targetGain, lerpFactor);
+						Lerp(currentGain, targetGain, lerpFactor);
 				}
 			}
 
@@ -219,11 +219,11 @@ namespace UIE
 					std::lock_guard<std::mutex> lock(*m);
 					if (current.gain != target.gain || current.fc != target.fc || current.g != target.g)
 					{
-						current.gain = Lerp(current.gain, target.gain, lerpFactor);
+						Lerp(current.gain, target.gain, lerpFactor);
 						for (int j = 0; j < numFilters; j++)
 						{
-							current.fc[j] = Lerp(current.fc[j], target.fc[j], lerpFactor);
-							current.g[j] = Lerp(current.g[j], target.g[j], lerpFactor);
+							Lerp(current.fc[j], target.fc[j], lerpFactor);
+							Lerp(current.g[j], target.g[j], lerpFactor);
 						}
 						UpdateFilterParameters();
 					}
@@ -291,7 +291,7 @@ namespace UIE
 				return g * CalcUDFA(f, fc, g);
 			}
 
-#ifndef _ANDROID
+// #ifndef _ANDROID
 
 			//////////////////// NN class ////////////////////
 
@@ -379,16 +379,16 @@ namespace UIE
 					{
 						for (int j = 0; j < 2; j++)
 						{
-							current.z[j] = Lerp(current.z[j], target.z[j], lerpFactor);
-							current.p[j] = Lerp(current.p[j], target.p[j], lerpFactor);
+							Lerp(current.z[j], target.z[j], lerpFactor);
+							Lerp(current.p[j], target.p[j], lerpFactor);
 						}
-						current.k = Lerp(current.k, target.k, lerpFactor);
+						Lerp(current.k, target.k, lerpFactor);
 						filter.UpdateParameters(current);
 					}
 				}
 			}
 
-#endif
+// #endif
 
 			//////////////////// UTD class ////////////////////
 
@@ -509,7 +509,7 @@ namespace UIE
 					if (current.g != target.g)
 					{
 						for (int j = 0; j < 4; j++)
-							current.g[j] = Lerp(current.g[j], target.g[j], lerpFactor);
+							Lerp(current.g[j], target.g[j], lerpFactor);
 						lrFilter.UpdateParameters(current.g);
 					}
 				}

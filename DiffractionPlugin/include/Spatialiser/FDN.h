@@ -70,6 +70,34 @@ namespace UIE
 
 		//////////////////// FDN class ////////////////////
 
+		inline void HouseholderMult(const matrix& u, const matrix& v, matrix& out)
+		{
+			out.Reset();
+
+			Real entry = 0.0;
+			for (int i = 0; i < u.Cols(); i++)
+				entry += u.GetEntry(0, i) * v.GetEntry(i, 0);
+
+			entry *= 2.0;
+			for (int i = 0; i < u.Cols(); i++)
+				out.AddEntry(u.GetEntry(0, i) - v.GetEntry(i, 0) * entry, 0, i);
+		}
+
+		inline void Mult(const matrix& u, const matrix& v, matrix& out)
+		{
+			out.Reset();
+			for (int i = 0; i < u.Rows(); ++i)
+			{
+				for (int j = 0; j < v.Cols(); ++j)
+				{
+					for (int k = 0; k < u.Cols(); ++k)
+					{
+						out.IncreaseEntry(u.GetEntry(i, k) * v.GetEntry(k, j), i, j);
+					}
+				}
+			}
+		}
+
 		class FDN
 		{
 		public:
@@ -79,7 +107,7 @@ namespace UIE
 			~FDN() {}
 
 			// Getters
-			rowvec GetOutput(const Real* data, Real gain, bool valid);
+			rowvec GetOutput(const vec& data, Real gain, bool valid);
 
 			// Setters
 			void SetParameters(const FrequencyDependence& T60, const vec& dimensions);

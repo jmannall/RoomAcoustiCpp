@@ -267,10 +267,11 @@ extern "C"
 	UI_EXPORT void UI_API SPATSetFDNParameters(float volume, const float* dim, int numDimensions)
 	{
 		Buffer in = Buffer(numDimensions);
+		vec dimensions = vec(numDimensions);
 		for (int i = 0; i < numDimensions; i++)
-			in[i] = static_cast<Real>(dim[i]);
+			dimensions.AddEntry(static_cast<Real>(dim[i]), i);
 
-		SetFDNParameters(static_cast<Real>(volume), vec(&in[0], numDimensions));
+		SetFDNParameters(static_cast<Real>(volume), dimensions);
 	}
 
 	// Listener

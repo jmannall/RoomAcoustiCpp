@@ -8,6 +8,7 @@
 #define Common_Matrix_h
 
 #include <cassert>
+#include <vector>
 
 #include "Common/Types.h"
 
@@ -24,42 +25,43 @@ namespace UIE
 		public:
 
 			// Load and Destroy
-			matrix();
-			matrix(const int r, const int c);
-			matrix(const Real** mat, const int r, const int c);
-			matrix(const Real* in, const int r, const int c);
-			~matrix() {};
+			matrix() : rows(0), cols(0) { AllocateSpace(); };
+			matrix(const int r, const int c) : rows(r), cols(c) { AllocateSpace(); };
+			matrix(const std::vector<std::vector<Real>>& mat);
+			~matrix() { DeallocateSpace(); };
 
 			// Init
-			void Init(const Real* in);
-			void Init(const Real** mat);
-			void Reset();
+			void Init(const std::vector<std::vector<Real>>& mat);
+			inline void Reset()
+			{
+				for (int i = 0; i < rows; i++)
+					std::fill(e[i].begin(), e[i].end(), 0.0);
+			};
 
 			// Adders
 			virtual inline void AddEntry(const Real& in, const int& r, const int& c) { e[r][c] = in; }
 			virtual inline void IncreaseEntry(const Real& in, const int& r, const int& c) { e[r][c] += in; }
-			void AddColumn(const vec& v, const int& c);
-			void AddRow(const vec& v, const int& r);
-
-			// Getters
-			inline Real GetEntry(const int& r, const int& c) const { return e[r][c]; } // Add bounds checking
-			inline Real* GetRow(int idx) const { return e[idx];	}
-			inline Real* GetColumn(Real* column, int idx) const
+			inline void AddColumn(const std::vector<Real>& v, const int& c)
 			{
 				for (int i = 0; i < rows; i++)
-				{
+					e[i][c] = v[i];
+			}
+			inline void AddRow(const std::vector<Real>& v, const int& r) { e[r] = v; }
+
+			// Getters
+			virtual inline Real GetEntry(const int& r, const int& c) const { return e[r][c]; } // Add bounds checking
+			inline std::vector<Real> GetRow(int idx) const { return e[idx];	}
+			inline std::vector<Real> GetColumn(int idx) const
+			{
+				std::vector<Real> column(rows);
+				for (int i = 0; i < rows; i++)
 					column[i] = e[i][idx];
-				}
 				return column;
 			}
-			inline Real* GetColumn(int idx) const
-			{
-				Real* column = new Real[rows];
-				return GetColumn(column, idx);
-			}
+
 			inline int Rows() const { return rows; }
 			inline int Cols() const { return cols; }
-
+			inline std::vector<std::vector<Real>> Data() const { return e; }
 			matrix Transpose();
 
 			// Operators
@@ -67,14 +69,7 @@ namespace UIE
 			{
 				rows = mat.Rows();
 				cols = mat.Cols();
-				Init();
-				for (int i = 0; i < rows; i++)
-				{
-					for (int j = 0; j < cols; j++)
-					{
-						e[i][j] = mat.GetEntry(i, j);
-					}
-				}
+				Init(mat.Data());
 				return *this;
 			}
 
@@ -128,13 +123,13 @@ namespace UIE
 
 		protected:
 
-			// Init
+			// Memory allocation
 			void AllocateSpace();
-			void Init();
+			void DeallocateSpace();
 
 			// Member variables
 			int rows, cols;
-			Real** e;
+			std::vector<std::vector<Real>> e;
 		};
 
 		//////////////////// Operators ////////////////////
@@ -146,16 +141,10 @@ namespace UIE
 
 			bool equal = true;
 			int i = 0;
-			int j = 0;
-			while (equal && j < u.Cols())
+			while (equal && i < u.Rows())
 			{
-				equal = u.GetEntry(i, j) == v.GetEntry(i, j);
+				equal = u.GetRow(i) == v.GetRow(i);
 				i++;
-				if (i == u.Rows())
-				{
-					i = 0;
-					j++;
-				}
 			}
 			return equal;
 		}
@@ -191,7 +180,18 @@ namespace UIE
 
 		inline matrix operator-(const matrix& u, const matrix& v)
 		{
-			return -v + u;
+			assert(u.Rows() == v.Rows());
+			assert(u.Cols() == v.Cols());
+			matrix out = matrix(u.Rows(), u.Cols());
+			for (int i = 0; i < u.Rows(); i++)
+			{
+				for (int j = 0; j < u.Cols(); j++)
+				{
+					Real entry = u.GetEntry(i, j) - v.GetEntry(i, j);
+					out.AddEntry(entry, i, j);
+				}
+			}
+			return out;
 		}
 
 		inline matrix operator*(const matrix& u, const matrix& v)
@@ -210,38 +210,6 @@ namespace UIE
 				}
 			}
 			return out;
-		}
-
-		inline void HouseholderMult(const matrix& u, const matrix& v, matrix& out)
-		{
-			out.Reset();
-
-			Real entry = 0.0;
-			for (int i = 0; i < u.Cols(); i++)
-				entry += u.GetEntry(0, i) * v.GetEntry(i, 0);
-
-			entry *= 2.0;
-			for (int i = 0; i < u.Cols(); i++)
-				out.AddEntry(u.GetEntry(0, i) - v.GetEntry(i, 0) * entry, 0, i);
-		}
-
-		inline void Mult(const matrix& u, const matrix& v, matrix& out)
-		{
-			//assert(u.Cols() == v.Rows());
-			//assert(out.Rows() == u.Rows());
-			//assert(out.Cols() == v.Cols());
-
-			out.Reset();
-			for (int i = 0; i < u.Rows(); ++i)
-			{
-				for (int j = 0; j < v.Cols(); ++j)
-				{
-					for (int k = 0; k < u.Cols(); ++k)
-					{
-						out.IncreaseEntry(u.GetEntry(i, k) * v.GetEntry(k, j), i, j);
-					}
-				}
-			}
 		}
 
 		inline matrix operator*(const Real& a, const matrix& mat)

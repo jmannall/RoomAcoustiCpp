@@ -19,16 +19,6 @@ namespace UIE
 
 		//////////////////// Buffer ////////////////////
 
-		Buffer::Buffer()
-		{
-			InitialiseBuffer(512);
-		}
-
-		Buffer::Buffer(int n)
-		{
-			InitialiseBuffer(n);
-		}
-
 		void Buffer::ResizeBuffer(size_t numSamples)
 		{
 

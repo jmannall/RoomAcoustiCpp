@@ -105,7 +105,7 @@ namespace UIE
 			valid = mAbsorption > EPS;
 		}
 
-		void ReverbSource::ProcessAudio(const Real* data, Buffer& outputBuffer)
+		void ReverbSource::ProcessAudio(const vec& data, Buffer& outputBuffer)
 		{
 			if (valid)
 			{
@@ -119,7 +119,7 @@ namespace UIE
 				BeginReflection();
 #endif
 				for (int i = 0; i < mConfig.numFrames; i++)
-					bInput[i] = static_cast<float>(mReflectionFilter.GetOutput(data[i]));
+					bInput[i] = static_cast<float>(mReflectionFilter.GetOutput(data.GetEntry(i)));
 
 #ifdef PROFILE_AUDIO_THREAD
 				EndReflection();
@@ -289,7 +289,7 @@ namespace UIE
 						{
 							rowvec out = mFDN.GetOutput(data.GetRow(i), mCurrentGain, valid);
 							for (int j = 0; j < mConfig.numFDNChannels; j++)
-								input.AddEntry(out[j], i, j);
+								input.AddEntry(out.GetEntry(j), i, j);
 						}
 					}
 					else
@@ -298,8 +298,8 @@ namespace UIE
 						{
 							rowvec out = mFDN.GetOutput(data.GetRow(i), mCurrentGain, valid);
 							for (int j = 0; j < mConfig.numFDNChannels; j++)
-								input.AddEntry(out[j], i, j);
-							mCurrentGain = Lerp(mCurrentGain, mTargetGain, mConfig.lerpFactor);
+								input.AddEntry(out.GetEntry(j), i, j);
+							Lerp(mCurrentGain, mTargetGain, mConfig.lerpFactor);
 						}
 					}
 					
@@ -312,7 +312,7 @@ namespace UIE
 				int j = 0;
 				for (ReverbSource& source : mReverbSources)
 				{
-					source.ProcessAudio(input.GetColumn(col, j), outputBuffer);
+					source.ProcessAudio(input.GetColumn(j), outputBuffer);
 					j++;
 				}
 #ifdef PROFILE_AUDIO_THREAD
