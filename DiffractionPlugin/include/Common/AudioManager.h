@@ -58,7 +58,7 @@ namespace UIE
 		class Buffer
 		{
 		public:
-			Buffer() { InitialiseBuffer(0); };
+			Buffer() { InitialiseBuffer(1); };
 			Buffer(int n) { InitialiseBuffer(n); };
 			Buffer(const std::vector<Real>& vec) { mBuffer = vec; };
 			~Buffer() {};
@@ -72,9 +72,6 @@ namespace UIE
 			bool Valid();
 
 			std::vector<Real> GetBuffer() { std::vector<Real> buffer(mBuffer.begin(), mBuffer.end()); return buffer; }
-
-			inline auto begin() { return mBuffer.begin(); }
-			inline auto end() { return mBuffer.end(); }
 
 			inline Buffer operator*=(Real x)
 			{
@@ -92,9 +89,8 @@ namespace UIE
 
 			inline Buffer operator+=(Buffer& x)
 			{
-				Real* ptr = &x[0];
-				for (Real& sample : mBuffer)
-					sample += *ptr++;
+				for (int i = 0; i < mBuffer.size(); i++)
+					mBuffer[i] += x[i];
 				return *this;
 			}
 
@@ -193,7 +189,7 @@ namespace UIE
 		class FIRFilter
 		{
 		public:
-			FIRFilter(Buffer& ir) : irLen(0), mIr(), count(ir.Length() - 1), n(0), inputLine(), store() { SetImpulseResponse(ir); };
+			FIRFilter(Buffer& ir) : irLen(1), mIr(), count(ir.Length() - 1), n(0), inputLine(), store() { SetImpulseResponse(ir); };
 			~FIRFilter() {};
 
 			Real GetOutput(Real input);
@@ -212,10 +208,11 @@ namespace UIE
 				}
 			}
 
-			inline void SetImpulseResponse(Buffer& ir)
+			inline void SetImpulseResponse(const Buffer& ir)
 			{ 
 				Resize(ir.Length());
-				std::copy(ir.begin(), ir.end(), mIr.begin());
+				for (int i = 0; i < ir.Length(); i++)
+					mIr[i] = ir[i];
 			}
 
 		private:

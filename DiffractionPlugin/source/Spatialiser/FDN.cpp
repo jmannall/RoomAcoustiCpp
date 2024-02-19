@@ -217,7 +217,7 @@ namespace UIE
 			}*/
 		}
 
-		rowvec FDN::GetOutput(const vec& data, Real gain, bool valid)
+		rowvec FDN::GetOutput(const std::vector<Real>& data, Real gain, bool valid)
 		{
 #if(_WINDOWS)
 			_MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
@@ -227,16 +227,11 @@ namespace UIE
 			// Bit 24 is the flush-to-zero mode control bit. Setting it to 1 flushes denormals to 0.
 			setStatusWord(m_savedCSR | (1 << 24));
 #endif
-			/*int i = 0;
-			for (Channel& channel : mChannels)
-			{
-				y[i] = gain * channel.GetOutput(x[i] + data[i]);
-				i++;
-			}*/
 
-			x += data;
 			for (int i = 0; i < mChannels.size(); i++)
-				y.AddEntry(gain * mChannels[i].GetOutput(x.GetEntry(i)), i);
+				y.AddEntry(mChannels[i].GetOutput(x.GetEntry(i) + data[i]), i);
+			y *= gain;
+
 #ifdef PROFILE_AUDIO_THREAD
 			BeginFDNMatrix();
 #endif

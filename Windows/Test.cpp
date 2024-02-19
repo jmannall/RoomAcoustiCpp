@@ -12,6 +12,7 @@
 #include "Spatialiser/Edge.h"
 #include "Spatialiser/Wall.h"
 #include "Spatialiser/Reverb.h"
+#include "Spatialiser/VirtualSource.h"
 
 #include "Unity/Debug.h"
 
@@ -21,7 +22,6 @@
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
-// write a unit test for UIE::Diffraction:Btm
 namespace UIE
 {
 	using namespace Common;
@@ -509,7 +509,7 @@ namespace UIE
 	TEST_CLASS(FIR)
 	{
 	public:
-		
+
 		TEST_METHOD(Resize)
 		{
 			std::vector<Real> ir = { 1.0, 0.5, 0.0, 0.2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };

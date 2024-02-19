@@ -107,7 +107,7 @@ namespace UIE
 			~FDN() {}
 
 			// Getters
-			rowvec GetOutput(const vec& data, Real gain, bool valid);
+			rowvec GetOutput(const std::vector<Real>& data, Real gain, bool valid);
 
 			// Setters
 			void SetParameters(const FrequencyDependence& T60, const vec& dimensions);

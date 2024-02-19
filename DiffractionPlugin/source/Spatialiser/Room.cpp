@@ -715,18 +715,23 @@ namespace UIE
 				size_t capacity = intersections.capacity();
 				intersections.reserve(j);
 				std::fill_n(std::back_inserter(intersections), order - capacity, vec3());
-				auto bIdx = sp.bucket(j);
+
+				spEd.push_back(std::vector<VirtualSourceData>());
+				edSp.push_back(std::vector<VirtualSourceData>());
+				size_t numReflectionPaths = sp[j - 1].size();
+				// auto bIdx = sp.bucket(j);
 
 				// Check bIdx is not null
-				if (bIdx == NULL)
+				if (numReflectionPaths == 0)
 					continue;
 
-				auto numReflectionPaths = sp.bucket_size(bIdx);
+				// auto numReflectionPaths = sp.bucket_size(bIdx);
 
-				auto vs = sp.begin(bIdx);
-				for (int i = 0; i < numReflectionPaths; i++, vs++)
+				// auto vs = sp.begin(bIdx);
+				for (VirtualSourceData vSourceStore : sp[j - 1])
+				// for (int i = 0; i < numReflectionPaths; i++, vs++)
 				{
-					VirtualSourceData vSourceStore = vs->second;
+					//VirtualSourceData vSourceStore = vs->second;
 
 					auto itP = mPlanes.find(vSourceStore.GetPlaneID());
 
@@ -790,7 +795,8 @@ namespace UIE
 										}
 									}
 
-									spEd.emplace(j, vSource);
+									spEd[refIdx].push_back(vSource);
+									//spEd.emplace(j, vSource);
 								}
 
 								// edsp
@@ -850,8 +856,8 @@ namespace UIE
 											}
 										}
 									}
-
-									edSp.emplace(j, vSource);
+									edSp[refIdx].push_back(vSource);
+									//edSp.emplace(j, vSource);
 								}
 							}
 						}
@@ -860,30 +866,39 @@ namespace UIE
 				// spedsp paths
 				for (int i = 1; i < j; i++)
 				{
-					auto idxSpEd = spEd.bucket(i);
+					size_t numSpEd = spEd[i - 1].size();
+					if (numSpEd == 0)
+						continue;
+					/*auto idxSpEd = spEd.bucket(i);
 					if (idxSpEd == NULL)
 						continue;
 
 					auto vsSpEd = spEd.begin(idxSpEd);
 
-					auto numSpEd = spEd.bucket_size(idxSpEd);
+					auto numSpEd = spEd.bucket_size(idxSpEd);*/
 
-					for (int x = 0; x < numSpEd; x++, vsSpEd++)
+					for (VirtualSourceData start : spEd[i- 1])
+					//for (int x = 0; x < numSpEd; x++, vsSpEd++)
 					{
-						VirtualSourceData start = vsSpEd->second;
+						//VirtualSourceData start = vsSpEd->second;
 
 						if (start.GetSValid())
 						{
-							auto idxEdSp = edSp.bucket(j - i);
+							size_t numSpEd = edSp[j - i - 1].size();
+							if (numSpEd == 0)
+								continue;
+
+							/*auto idxEdSp = edSp.bucket(j - i);
 							if (idxEdSp == NULL)
 								continue;
 
 							auto vsEdSp = edSp.begin(idxEdSp);
-							auto numEdSp = edSp.bucket_size(idxEdSp);
+							auto numEdSp = edSp.bucket_size(idxEdSp);*/
 
-							for (int y = 0; y < numEdSp; y++, vsEdSp++)
+							for (VirtualSourceData end : edSp[j - i - 1])
+							//for (int y = 0; y < numEdSp; y++, vsEdSp++)
 							{
-								VirtualSourceData end = vsEdSp->second;
+								// VirtualSourceData end = vsEdSp->second;
 
 								if (end.GetRValid())
 								{
@@ -986,6 +1001,7 @@ namespace UIE
 
 			bool feedsFDN = mISMConfig.order == 1;
 			Edge edge; vec3 position; Diffraction::Path path; size_t id;
+			ed.push_back(std::vector<VirtualSourceData>());
 			for (auto it : mEdges)
 			{
 				id = it.first;
@@ -1018,7 +1034,8 @@ namespace UIE
 						}
 					}
 				}
-				ed.emplace(1, vSource);
+				ed[0].push_back(vSource);
+				//ed.emplace(1, vSource);
 			}
 		}
 
@@ -1027,6 +1044,7 @@ namespace UIE
 		{
 			bool feedsFDN = mISMConfig.order == 1;
 			Plane plane;  vec3 position, rPosition, intersection; Wall wall; size_t id, idW; bool valid, rValid;
+			sp.push_back(std::vector<VirtualSourceData>());
 			for (auto it : mPlanes)
 			{
 				id = it.first;
@@ -1066,7 +1084,8 @@ namespace UIE
 						}
 					}
 				}
-				sp.emplace(1, vSource); // In theory only need to do this if either valid or rValid. Could then remove later checks for next vSource
+				sp[0].push_back(vSource);
+				//sp.emplace(1, vSource); // In theory only need to do this if either valid or rValid. Could then remove later checks for next vSource
 			}
 		}
 
@@ -1085,24 +1104,26 @@ namespace UIE
 				size_t capacity = intersections.capacity();
 				intersections.reserve(refOrder);
 				std::fill_n(std::back_inserter(intersections), refOrder - capacity, vec3());
-				auto n = sp.bucket(j);
+				sp.push_back(std::vector<VirtualSourceData>());
+				size_t m = sp[j - 1].size();
+				//auto n = sp.bucket(j);
 
 				// Check n is not null
-				if (n == NULL)
+				if (m == 0)
 					continue;
 
-				auto m = sp.bucket_size(n);
+				// auto m = sp.bucket_size(n);
 
 				for (auto it : mPlanes)
 				{
 					id = it.first;
 					plane = it.second;
 
-					n = sp.bucket(j);
-					auto vs = sp.begin(n);
-					for (int i = 0; i < m; i++, vs++)
+					// auto vs = sp.begin(n);
+					// for (int i = 0; i < m; i++, vs++)
+					for (VirtualSourceData vSource : sp[j -1])
 					{
-						VirtualSourceData vSource = vs->second;
+						// VirtualSourceData vSource = vs->second;
 						if (id != vSource.GetPlaneID(j - 1) && (vSource.valid || vSource.rValid))
 						{
 							vSource.AddPlaneID(id);
@@ -1162,7 +1183,8 @@ namespace UIE
 							}
 							if (s || r) // In theory this only needs to be if current source valid or rValid? - could then remove checks when finding next vSource
 							{
-								sp.emplace(refOrder, vSource); // Need rValid for edsp paths
+								sp[j].push_back(vSource);
+								//sp.emplace(refOrder, vSource); // Need rValid for edsp paths
 							}
 						}
 					}

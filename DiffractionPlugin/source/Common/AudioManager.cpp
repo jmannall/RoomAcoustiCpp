@@ -28,7 +28,7 @@ namespace UIE
 			if (size < numSamples)
 			{
 				mBuffer.reserve(numSamples);
-				std::fill_n(std::back_inserter(mBuffer), numSamples - size, 0.0);
+				mBuffer.insert(mBuffer.end(), numSamples - size, 0.0);
 			}
 			else
 				mBuffer.resize(numSamples);
@@ -42,7 +42,7 @@ namespace UIE
 		void Buffer::InitialiseBuffer(int n)
 		{
 			mBuffer.reserve(n);
-			std::fill_n(std::back_inserter(mBuffer), n, 0.0);
+			mBuffer.insert(mBuffer.end(), n, 0.0);
 		}
 
 		bool Buffer::Valid()
@@ -75,11 +75,11 @@ namespace UIE
 
 		void BufferF::ResizeBuffer(size_t numSamples)
 		{
-			size_t capacity = mBuffer.capacity();
-			if (capacity < numSamples)
+			size_t size = mBuffer.size();
+			if (size < numSamples)
 			{
 				mBuffer.reserve(numSamples);
-				std::fill_n(std::back_inserter(mBuffer), numSamples - capacity, 0.0);
+				mBuffer.insert(mBuffer.end(), numSamples - size, 0.0);
 			}
 			else
 			{
