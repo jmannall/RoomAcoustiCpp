@@ -31,6 +31,8 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\VirtualSource.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Wall.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Unity\Debug.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Unity\Profiler.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Unity\UnityInterface.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\AudioManager.h" />
@@ -62,5 +64,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Unity\IUnityInterface.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Unity\IUnityProfiler.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Unity\Profiler.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Unity\UnityInterface.h" />
   </ItemGroup>
 </Project>

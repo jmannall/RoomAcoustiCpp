@@ -11,6 +11,7 @@
 #endif
 #include <mutex>
 //#include <xmmintrin.h>
+#include <cmath>
 
 #if defined(_ANDROID)
 // Common headers
@@ -122,30 +123,33 @@ namespace UIE
 			CalculateTimeDelay(dimensions, t);
 			for (int i = 0; i < mConfig.numFDNChannels; i++)
 			{
-				mChannels[i].SetParameters(T60, t.GetEntry(i));
+				mChannels[i].SetParameters(T60, std::max(0.0, t.GetEntry(i)));
 			}
 		}
 
 		void FDN::CalculateTimeDelay(const vec& dimensions, vec& t)
 		{
-			Real idx = static_cast<Real>(mConfig.numFDNChannels) / static_cast<Real>(dimensions.Rows());
-			//assert(t.Rows() == config.numFDNChannels);
-			//assert(dimensions.Rows() <= config.numFDNChannels);
-			//assert(idx == floor(idx)); // length of dimensions must be a multiple of mNumChannels
-
-			t.RandomUniformDistribution(-0.1, 0.1f);
-			t *= dimensions.Mean();
-
-			int k = 0;
-			for (int j = 0; j < mConfig.numFDNChannels / idx; j++)
+			if (dimensions.Rows() > 0)
 			{
-				for (int i = 0; i < idx; i++)
+				Real idx = static_cast<Real>(mConfig.numFDNChannels) / static_cast<Real>(dimensions.Rows());
+				//assert(t.Rows() == config.numFDNChannels);
+				//assert(dimensions.Rows() <= config.numFDNChannels);
+				//assert(idx == floor(idx)); // length of dimensions must be a multiple of mNumChannels
+
+				t.RandomUniformDistribution(-0.1, 0.1f);
+				t *= dimensions.Mean();
+
+				int k = 0;
+				for (int j = 0; j < mConfig.numFDNChannels / idx; j++)
 				{
-					t.IncreaseEntry(dimensions.GetEntry(j), k);
-					k++;
+					for (int i = 0; i < idx; i++)
+					{
+						t.IncreaseEntry(dimensions.GetEntry(j), k);
+						k++;
+					}
 				}
+				t *= INV_SPEED_OF_SOUND;
 			}
-			t *= INV_SPEED_OF_SOUND;
 		}
 
 		void FDN::InitMatrix()

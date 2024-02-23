@@ -1,9 +1,9 @@
 
 #include "Spatialiser/Reverb.h"
-#include "Spatialiser/Main.h"
 
 // Unity headers
 #include "Unity/Debug.h"
+#include "Unity/Profiler.h"
 
 using namespace Common;
 namespace UIE
@@ -329,19 +329,29 @@ namespace UIE
 			}
 			if (T60 < 20)
 			{
+				if (T60 > 0.0)
+				{
 #ifdef DEBUG_INIT
-				Real t60[5]; T60.GetValues(&t60[0]);
-				Debug::Log("Init FDN", Colour::Green);
-				Debug::Log("Reverb T60: [" + RealToStr(t60[0]) + ", " + RealToStr(t60[1]) + ", " +
-					RealToStr(t60[2]) + ", " + RealToStr(t60[3]) + ", " + RealToStr(t60[4]) + "]", Colour::Orange);
+					Real t60[5]; T60.GetValues(&t60[0]);
+					Debug::Log("Init FDN", Colour::Green);
+					Debug::Log("Reverb T60: [" + RealToStr(t60[0]) + ", " + RealToStr(t60[1]) + ", " +
+						RealToStr(t60[2]) + ", " + RealToStr(t60[3]) + ", " + RealToStr(t60[4]) + "]", Colour::Orange);
 #endif
-				valid = true;
+					valid = true;
+				}
+				else
+				{
+					valid = false;
+#ifdef DEBUG_INIT
+					Debug::Log("FDN reverb failed to initialise. T60 equal to or less than 0s.", Colour::Red);
+#endif
+				}
 			}
 			else
 			{
 				valid = false;
 #ifdef DEBUG_INIT
-				Debug::Log("FDN reverb failed to initialise. Excessively long T60.", Colour::Red);
+				Debug::Log("FDN reverb failed to initialise. T60 over 20s.", Colour::Red);
 #endif
 			}
 		}

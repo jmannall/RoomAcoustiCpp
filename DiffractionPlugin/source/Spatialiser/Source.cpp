@@ -9,11 +9,11 @@
 #include "Common/Vec3.h"
 
 // Spatialiser headers
-#include "Spatialiser/Main.h"
 #include "Spatialiser/Source.h"
 
 // Unity headers
 #include "Unity/Debug.h"
+#include "Unity/Profiler.h"
 
 // 3DTI headers
 #include "BinauralSpatializer/Core.h"
@@ -121,8 +121,16 @@ namespace UIE
 							Lerp(currentGain, targetGain, mConfig.lerpFactor);
 						}
 					}
+
+#ifdef PROFILE_AUDIO_THREAD
+					Begin3DTI();
+#endif
 					mSource->SetBuffer(bInput);
 					mSource->ProcessAnechoic(bOutput.left, bOutput.right);
+
+#ifdef PROFILE_AUDIO_THREAD
+					End3DTI();
+#endif
 				}
 
 				int j = 0;

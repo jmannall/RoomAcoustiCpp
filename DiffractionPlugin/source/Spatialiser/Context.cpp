@@ -12,8 +12,6 @@
 #include "Unity/Debug.h"
 #include "Unity/Profiler.h"
 
-#include "Main.h"
-
 namespace UIE
 {
 	using namespace Unity;
@@ -74,8 +72,9 @@ namespace UIE
 			mListener = mCore.CreateListener();
 
 #ifdef DEBUG_HRTF
-	Debug::Log("HRTF file path: " + filePaths[0] + filePaths[1]);
-	Debug::Log("ILD file path: " + filePaths[0] + filePaths[2]);
+	Debug::Log("HRTF resampling step: " + mCore.GetHRTFResamplingStep(), Colour::Blue);
+	Debug::Log("HRTF file path: " + filePaths[0] + filePaths[1], Colour::Blue);
+	Debug::Log("ILD file path: " + filePaths[0] + filePaths[2], Colour::Blue);
 #endif
 
 			// Load HRTF files
@@ -280,46 +279,10 @@ namespace UIE
 
 		void Context::SubmitAudio(size_t id, const float* data)
 		{
-			// Buffer in = Buffer(mConfig.numFrames);
-
 			for (int i = 0; i < mConfig.numFrames; i++)
 				mInputBuffer[i] = static_cast<Real>(data[i]);
 
-			//CMonoBuffer<float> bInput;
-			//bInput = CMonoBuffer<float>(mConfig.numFrames);
-
-			//for (int j = 0; j < 500; j++)
-			//{
-			//	BeginFIR();
-			//	std::transform(mInputBuffer.begin(), mInputBuffer.end(), bInput.begin(), [](Real x) { return static_cast<float>(x) * 2.0; });
-			//	EndFIR();
-			//	/*for (float& in : bInput)
-			//		in = static_cast<float>(*inputPtr++ * currentGain);*/
-			//	BeginFDN();
-			//	for (int i = 0; i < mConfig.numFrames; i++)
-			//		bInput[i] = static_cast<float>(mInputBuffer[i] * 2.0);
-			//	EndFDN();
-			//}
-
 			mSources->ProcessAudio(id, mInputBuffer, mReverbInput, mOutputBuffer);
-
-			/*for (int j = 0; j < 500; j++)
-			{
-				BeginReflection();
-				for (int i = 0; i < mConfig.numFrames; i++)
-					mOutputBuffer[i] = 2.0 * mInputBuffer[i];
-				EndReflection();
-				Real* outPtr = &mOutputBuffer[0];
-				Real* inPtr = &mInputBuffer[0];
-				BeginDiffraction();
-				for (int i = 0; i < mConfig.numFrames; i++)
-					outPtr[i] = 2.0 * inPtr[i];
-				EndDiffraction();
-				BeginLerp();
-				for (Real& sample : mInputBuffer)
-					sample = 2.0f * sample;
-				EndLerp();
-			}*/
 		}
 
 		void Context::GetOutput(float** bufferPtr)
@@ -327,9 +290,7 @@ namespace UIE
 			// Process reverb
 			mReverb->ProcessAudio(mReverbInput, mOutputBuffer);
 
-
 			// Copy output to send and set pointer
-			// TO DO: Chek unity can't call ProcessAudio and GetOutput at the same time
 			mSendBuffer = mOutputBuffer;
 			*bufferPtr = &mSendBuffer[0];
 

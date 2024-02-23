@@ -6,7 +6,6 @@
 
 #include "Spatialiser/Diffraction/Models.h"
 #include "Spatialiser/Types.h"
-#include "Main.h"
 
 namespace UIE
 {

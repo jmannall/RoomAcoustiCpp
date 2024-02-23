@@ -84,6 +84,12 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Unity\Debug.cpp">
       <Filter>Source Files\Unity</Filter>
     </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Unity\Profiler.cpp">
+      <Filter>Source Files\Unity</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Unity\UnityInterface.cpp">
+      <Filter>Source Files\Unity</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Types.h">
@@ -172,6 +178,9 @@
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\FrequencyDependence.h">
       <Filter>Header Files\Spatialiser\Diffraction</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Unity\UnityInterface.h">
+      <Filter>Header Files\Unity</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

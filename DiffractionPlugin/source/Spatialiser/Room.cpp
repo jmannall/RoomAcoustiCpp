@@ -240,6 +240,9 @@ namespace UIE
 								size_t id = AddEdge(edge);
 								a.AddEdge(id);
 								b.AddEdge(id);
+#ifdef DEBUG_INIT
+								Debug::Log("Init Edge: " + RealToStr(edge.t), Colour::Green);
+#endif
 							}
 							else
 							{
@@ -247,10 +250,10 @@ namespace UIE
 								size_t id = AddEdge(edge);
 								a.AddEdge(id);
 								b.AddEdge(id);
-							}
 #ifdef DEBUG_INIT
-	Debug::Log("Init Edge: " + RealToStr(edge.t), Colour::Green);
+								Debug::Log("Init Edge: " + RealToStr(edge.t), Colour::Green);
 #endif
+							}
 						}
 					}
 				}
@@ -279,6 +282,9 @@ namespace UIE
 		// Reverb
 		FrequencyDependence Room::GetReverbTime(const Real& volume)
 		{
+			if (volume <= 0.0)
+				return FrequencyDependence(0.0, 0.0, 0.0, 0.0, 0.0);
+
 			FrequencyDependence absorption = FrequencyDependence(0.0, 0.0, 0.0, 0.0, 0.0);
 			Real surfaceArea = 0.0;
 
@@ -292,8 +298,6 @@ namespace UIE
 					surfaceArea += it.second.GetArea();
 				}
 			}
-			Real temp[5];
-			absorption.GetValues(&temp[0]);
 
 			Real factor = 24.0 * log(10.0) / SPEED_OF_SOUND;
 			// Sabine

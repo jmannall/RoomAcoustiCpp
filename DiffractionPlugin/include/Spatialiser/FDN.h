@@ -14,7 +14,9 @@
 // Spatialiser headers
 #include "Spatialiser/Types.h"
 #include "Spatialiser/Wall.h"
-#include "Spatialiser/Main.h"
+
+// Unity headers
+#include "Unity/Profiler.h"
 
 // Common headers
 #include "Common/AudioManager.h"

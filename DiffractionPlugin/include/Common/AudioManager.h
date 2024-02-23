@@ -18,8 +18,6 @@
 #include "Common/Definitions.h"
 #include "Common/Types.h"
 
-#include "Spatialiser/Main.h"
-
 namespace UIE
 {
 	namespace Common

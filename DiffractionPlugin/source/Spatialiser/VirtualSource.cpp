@@ -6,8 +6,10 @@
 */
 
 // Spatialiser headers
-#include "Spatialiser/Main.h"
 #include "Spatialiser/VirtualSource.h"
+
+// Unity headers
+#include "Unity/Profiler.h"
 
 using namespace Common;
 namespace UIE
