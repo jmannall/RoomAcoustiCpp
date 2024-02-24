@@ -13,9 +13,9 @@
 // Common headers
 #include "Common/Types.h"
 #include "Common/Vec3.h"
+#include "Common/Coefficients.h"
 
 // Spatialiser headers
-#include "Spatialiser/FrequencyDependence.h"
 #include "Spatialiser/Edge.h"
 
 namespace UIE
@@ -31,7 +31,7 @@ namespace UIE
 		public:
 
 			// Load and Destroy
-			Wall() : mNumVertices(0), mAbsorption(), mPlaneId(0) {}
+			Wall() : mNumVertices(0), mAbsorption(1), mPlaneId(0), d(0.0) {}
 			Wall(const vec3& normal, const Real* vData, size_t numVertices, Absorption& absorption);
 			~Wall() {}
 
@@ -60,7 +60,7 @@ namespace UIE
 			bool LineWallIntersection(vec3& intersection, const vec3& start, const vec3& end) const;
 
 			// Absorption
-			Absorption Update(const vec3& normal, const Real* vData, size_t numVertices, Absorption& absorption);
+			void Update(const vec3& normal, const Real* vData, size_t numVertices);
 			Absorption GetAbsorption() { return mAbsorption; }
 			Real GetArea() { return mAbsorption.area; }
 
@@ -128,77 +128,6 @@ namespace UIE
 
 			std::vector<size_t> mWalls;
 		};
-
-		//class Wall
-		//{
-		//public:
-
-		//	// Load and Destroy
-		//	Wall() : d(0.0), rValid(false), mNumVertices(0), mAbsorption() {}
-		//	Wall(const vec3& normal, const Real* vData, size_t numVertices, Absorption& absorption);
-		//	~Wall() {}
-
-		//	// Edges
-		//	inline void AddEdge(const size_t& id) { mEdges.push_back(id); }
-		//	inline void RemoveEdge(const size_t& id)
-		//	{
-		//		auto it = mEdges.begin();
-		//		while (it != mEdges.end())
-		//		{
-		//			if (*it == id)
-		//			{
-		//				mEdges.erase(it);
-		//				return;
-		//			}
-		//			else
-		//			{
-		//				it++;
-		//			}
-		//		}
-		//	}
-
-		//	// Getters
-		//	inline vec3 GetNormal() const { return mNormal; }
-		//	inline std::vector<vec3> GetVertices() const { return mVertices; }
-		//	inline std::vector<size_t> GetEdges() const { return mEdges; }
-		//	inline Real GetD() const { return d; }
-		//	inline bool GetRValid() const { return rValid; }
-
-		//	// Setters
-		//	inline void SetRValid(const bool& valid) { rValid = valid; }
-
-		//	// Geometry
-		//	Real PointWallPosition(const vec3& point) const { return Dot(point, mNormal) - d; }
-		//	bool LineWallIntersection(const vec3& start, const vec3& end) const;
-		//	bool LineWallIntersection(vec3& intersection, const vec3& start, const vec3& end) const;
-		//	bool ReflectPointInWall(const vec3& point) const;
-		//	bool ReflectPointInWall(vec3& dest, const vec3& point) const;
-		//	void ReflectPointInWallNoCheck(vec3& point) const;
-		//	bool ReflectEdgeInWall(const Edge& edge) const;
-
-		//	// Absorption
-		//	Absorption Update(const vec3& normal, const Real* vData, size_t numVertices, Absorption& absorption);
-		//	Absorption GetAbsorption() { return mAbsorption; }
-		//	Real GetArea() { return mAbsorption.area; }
-
-		//private:
-
-		//	// Update
-		//	void Update(const Real* vData);
-
-		//	// Area
-		//	void CalculateArea();
-		//	Real AreaOfTriangle(const vec3& v, const vec3& u, const vec3& w);
-
-		//	// Member variables
-		//	Real d;
-		//	bool rValid;
-		//	vec3 mNormal;
-		//	std::vector<vec3> mVertices;
-		//	std::vector<size_t> mEdges;
-		//	size_t mNumVertices;
-		//	Absorption mAbsorption;
-		//};
 	}
 }
 #endif

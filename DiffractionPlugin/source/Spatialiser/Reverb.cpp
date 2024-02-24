@@ -14,7 +14,7 @@ namespace UIE
 
 		//////////////////// ReverbSource class ////////////////////
 
-		ReverbSource::ReverbSource(Binaural::CCore* core, const Config& config) : mCore(core), mConfig(config), mReflectionFilter(4, config.fs), mAbsorption(1.0f, 1.0f, 1.0f, 1.0f, 1.0f)
+		ReverbSource::ReverbSource(Binaural::CCore* core, const Config& config) : mCore(core), mConfig(config), mReflectionFilter(REFLECTION_FILTER_ORDER, config.frequencyBands, config.fs), mAbsorption(config.frequencyBands.Length())
 		{
 			bInput = CMonoBuffer<float>(mConfig.numFrames);
 			/*bOutput.left = CMonoBuffer<float>(mConfig.numFrames);
@@ -81,9 +81,7 @@ namespace UIE
 
 		void ReverbSource::UpdateReflectionFilter()
 		{
-			Real g[NUM_ABSORPTION_FREQ];
-			mAbsorption.GetValues(&g[0]);
-			mReflectionFilter.UpdateParameters(ABSORPTION_FREQ, g);
+			mReflectionFilter.UpdateParameters(mAbsorption);
 		}
 
 		void ReverbSource::UpdateReflectionFilter(const Absorption& absorption)
@@ -91,11 +89,11 @@ namespace UIE
 			assert(absorption.area != 0);
 			if (mAbsorption.area > 0)
 			{
-				mAbsorption = mAbsorption * mAbsorption.area + absorption * absorption.area;
+				mAbsorption *= mAbsorption.area;
+				mAbsorption += absorption * absorption.area;
+				// mAbsorption = mAbsorption * mAbsorption.area + absorption * absorption.area;
 				if (mAbsorption.area != 0)
-				{
 					mAbsorption /= mAbsorption.area;
-				}
 			}
 			else
 			{
@@ -155,7 +153,7 @@ namespace UIE
 			InitSources();
 		}
 
-		Reverb::Reverb(Binaural::CCore* core, const Config& config, const vec& dimensions, const FrequencyDependence& T60) : mFDN(T60, dimensions, config), mCore(core), mConfig(config), valid(false), runFDN(false), mTargetGain(0.0), mCurrentGain(0.0)
+		Reverb::Reverb(Binaural::CCore* core, const Config& config, const vec& dimensions, const Coefficients& T60) : mFDN(T60, dimensions, config), mCore(core), mConfig(config), valid(false), runFDN(false), mTargetGain(0.0), mCurrentGain(0.0)
 		{
 			input = matrix(mConfig.numFrames, mConfig.numFDNChannels);
 			col = new Real[mConfig.numFDNChannels];
@@ -321,13 +319,13 @@ namespace UIE
 			}
 		}
 
-		void Reverb::SetFDNParameters(const FrequencyDependence& T60, const vec& dimensions)
+		void Reverb::SetFDNParameters(const Coefficients& T60, const vec& dimensions)
 		{
 			{
 				lock_guard <mutex> lock(mFDNMutex);
 				mFDN.SetParameters(T60, dimensions);
 			}
-			if (T60 < 20)
+			if (T60 < 20.0)
 			{
 				if (T60 > 0.0)
 				{

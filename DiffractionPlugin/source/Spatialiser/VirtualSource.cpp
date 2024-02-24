@@ -117,7 +117,7 @@ namespace UIE
 
 		//////////////////// VirtualSource class ////////////////////
 
-		VirtualSource::VirtualSource(Binaural::CCore* core, const Config& config) : mCore(core), mSource(NULL), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(4, config.fs), isInitialised(false), mConfig(config), feedsFDN(false), mFDNChannel(-1), btm(&mDiffractionPath, config.fs), reflection(false), diffraction(false)
+		VirtualSource::VirtualSource(Binaural::CCore* core, const Config& config) : mCore(core), mSource(NULL), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(4, config.frequencyBands, config.fs), isInitialised(false), mConfig(config), feedsFDN(false), mFDNChannel(-1), btm(&mDiffractionPath, config.fs), reflection(false), diffraction(false)
 		{
 			bInput = CMonoBuffer<float>(mConfig.numFrames);
 			bStore.ResizeBuffer(mConfig.numFrames);
@@ -126,7 +126,7 @@ namespace UIE
 			bMonoOutput = CMonoBuffer<float>(mConfig.numFrames);
 		}
 
-		VirtualSource::VirtualSource(Binaural::CCore* core, const Config& config, const VirtualSourceData& data, int fdnChannel) : mCore(core), mSource(NULL), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(4, config.fs), isInitialised(false), mConfig(config), feedsFDN(data.feedsFDN), mFDNChannel(fdnChannel), mDiffractionPath(data.mDiffractionPath), btm(&mDiffractionPath, config.fs), reflection(data.reflection), diffraction(data.diffraction)
+		VirtualSource::VirtualSource(Binaural::CCore* core, const Config& config, const VirtualSourceData& data, int fdnChannel) : mCore(core), mSource(NULL), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(4, config.frequencyBands, config.fs), isInitialised(false), mConfig(config), feedsFDN(data.feedsFDN), mFDNChannel(fdnChannel), mDiffractionPath(data.mDiffractionPath), btm(&mDiffractionPath, config.fs), reflection(data.reflection), diffraction(data.diffraction)
 		{
 			bInput = CMonoBuffer<float>(mConfig.numFrames);
 			bStore.ResizeBuffer(mConfig.numFrames);
@@ -279,10 +279,8 @@ namespace UIE
 
 			if (reflection) // Init reflection filter
 			{
-				Real fc[] = { 250, 500, 1000, 2000, 4000 };
-				Real g[5];
-				data.GetAbsorption(g);
-				mFilter.UpdateParameters(fc, g);
+				Absorption g = data.GetAbsorption();
+				mFilter.UpdateParameters(g);
 			}
 
 			// Set btm currentIr
@@ -344,7 +342,6 @@ namespace UIE
 #ifdef DEBUG_VIRTUAL_SOURCE
 	Debug::Log("Remove virtual source", Colour::Red);
 #endif
-
 			mCore->RemoveSingleSourceDSP(mSource);
 			isInitialised = false;
 		}

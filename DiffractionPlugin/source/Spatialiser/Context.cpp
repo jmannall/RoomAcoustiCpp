@@ -143,7 +143,7 @@ namespace UIE
 			mReverb = reinterpret_cast<Reverb*>(temp); temp += sizeof(Reverb);
 			mSources = reinterpret_cast<SourceManager*>(temp); temp += sizeof(SourceManager);
 
-			mRoom = new Room();
+			mRoom = new Room(mConfig.frequencyBands.Length());
 			mReverb = new Reverb(&mCore, mConfig, vec(mConfig.numFDNChannels));
 			mSources = new SourceManager(&mCore, mConfig);
 
@@ -151,7 +151,7 @@ namespace UIE
 			ISMThread = std::thread(BackgroundProcessor, this);
 
 			mInputBuffer = Buffer(mConfig.numFrames);
-			mOutputBuffer = Buffer(mConfig.numFrames * mConfig.numChannels);
+			mOutputBuffer = Buffer(2 * mConfig.numFrames); // Stereo output buffer
 			mReverbInput = matrix(mConfig.numFrames, mConfig.numFDNChannels);	// Move these to initialise based on unity settings at context init();
 		}
 
@@ -177,7 +177,7 @@ namespace UIE
 
 		void Context::SetFDNParameters(const Real& volume, const vec& dimensions)
 		{
-			FrequencyDependence T60 = mRoom->GetReverbTime(volume);
+			Coefficients T60 = mRoom->GetReverbTime(volume);
 			mReverb->SetFDNParameters(T60, dimensions);
 		}
 
@@ -256,11 +256,11 @@ namespace UIE
 		}
 
 		// Assumes reverbWall never changes
-		void Context::UpdateWall(size_t id, const vec3& normal, const Real* vData, size_t numVertices, Absorption& absorption, const ReverbWall& reverbWall)
+		void Context::UpdateWall(size_t id, const vec3& normal, const Real* vData, size_t numVertices)
 		{
-			Absorption oldAbsorption = mRoom->UpdateWall(id, normal, vData, numVertices, absorption);
-			mReverb->UpdateReflectionFilters(reverbWall, absorption, oldAbsorption);
-			// TO DO: Update edges?
+			mRoom->UpdateWall(id, normal, vData, numVertices);
+			// TO DO: Update edges? and reflection filters
+			// mReverb->UpdateReflectionFilters(reverbWall, absorption, oldAbsorption);
 		}
 
 		// Assumes reverbWall never changes

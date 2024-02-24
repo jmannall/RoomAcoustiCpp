@@ -74,16 +74,13 @@ namespace UIE
 		}
 
 		// Update
-		Absorption Wall::Update(const vec3& normal, const Real* vData, size_t numVertices, Absorption& absorption)
+		void Wall::Update(const vec3& normal, const Real* vData, size_t numVertices)
 		{
 			Absorption oldAbsorption = mAbsorption;
 
 			mNormal = UnitVectorRound(normal);
 			mNumVertices = numVertices;
-			mAbsorption = absorption;
 			Update(vData);
-			absorption.area = mAbsorption.area;
-			return oldAbsorption;
 		}
 
 		void Wall::Update(const Real* vData)
@@ -109,9 +106,7 @@ namespace UIE
 		{
 			mAbsorption.area = 0;
 			for (int i = 0; i < mNumVertices - 1; i++)
-			{
 				mAbsorption.area += AreaOfTriangle(mVertices[0], mVertices[i], mVertices[i + 1]);
-			}
 		}
 
 		Real Wall::AreaOfTriangle(const vec3& v, const vec3& u, const vec3& w)

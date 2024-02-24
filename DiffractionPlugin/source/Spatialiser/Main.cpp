@@ -1,54 +1,65 @@
-/*
-*
-*  \Defines linakage between the C# unity code and C++ code
-* 
-*/
+/**
+ *
+ *  \Defines DLL linakage
+ * 
+ */
 
-// Unity headers
-#include "Unity/Debug.h"
-#include "Unity/Profiler.h"
+// C++ headers
+#include <string>
 
 // Common headers
-#include "Common/AudioManager.h" 
+#include "Common/AudioManager.h"
+#include "Common/Coefficients.h"
 
 // Spatialiser headers
 #include "Spatialiser/Main.h"
 #include "Spatialiser/Types.h"
 #include "Spatialiser/Interface.h"
 
-#define UI_API UNITY_INTERFACE_API
-#define UI_EXPORT UNITY_INTERFACE_EXPORT
-
+// DLL Linkage
 #ifdef _ANDROID
-#define UI_API
-#define UI_EXPORT __attribute__ ((visibility ("default")))
+#define API
+#define EXPORT __attribute__ ((visibility ("default")))
 #elif _WINDOWS
-#define UI_API __stdcall
-#define UI_EXPORT __declspec(dllexport)
+#define API __stdcall
+#define EXPORT __declspec(dllexport)
 #else
-#define UI_API
-#define UI_EXPORT
+#define API
+#define EXPORT
 #endif
 
 using namespace UIE::Spatialiser;
 using namespace UIE::Common;
-using namespace UIE::Unity;
 
 // Pointer to return buffer
 static float* buffer = nullptr;
 
+// Store number of bands
+static int numAbsorptionBands = 0;
+
 extern "C"
 {
-	//////////////////// Unity Plugin Interface ////////////////////
 
+	//////////////////// API ////////////////////
 
-	//////////////////// Spatialiser ////////////////////
-
-	// Load and Destroy
-
-	UI_EXPORT bool UI_API SPATInit(int fs, int numFrames, int numChannels, int numFDNChannels, float lerpFactor, int hrtfResamplingStep, int hrtfMode, const char** paths)
+	/**
+	 * Initializes the spatialiser with the given parameters.
+	 *
+	 * @param fs The sample rate for audio processing.
+	 * @param numFrames The number of frames in an audio buffer.
+	 * @param numFDNChannels The number of feedback delay network channels.
+	 * @param lerpFactor The interpolation factor for audio parameters.
+	 * @param hrtfResamplingStep The resampling step for the HRTF.
+	 * @param hrtfMode The mode for HRTF processing. 0 for quality, 1 for performance, 2 for none.
+	 * @param fBands The center frequency bands for reflection filters.
+	 * @param numBands The number of frequency bands provided in the fBands parameter.
+	 * @param paths The file paths for HRTF files.
+	 *
+	 * @return True if the initialization was successful, false otherwise.
+	 */
+	EXPORT bool API SPATInit(int fs, int numFrames, int numFDNChannels, float lerpFactor, int hrtfResamplingStep, int hrtfMode, const float* fBands, int numBands, const char** paths)
 	{
-		std::vector<std::string> filePaths = { string(*(paths)), string(*(paths + 1)), string(*(paths + 2)) };
+		std::vector<std::string> filePaths = { std::string(*(paths)), std::string(*(paths + 1)), std::string(*(paths + 2)) };
 		HRTFMode mode;
 		switch (hrtfMode)
 		{
@@ -62,25 +73,50 @@ extern "C"
 			{ mode = HRTFMode::performance; break; }
 		}
 
-		Config config = Config(fs, numFrames, numChannels, numFDNChannels, static_cast<Real>(lerpFactor), hrtfResamplingStep, mode);
+		numAbsorptionBands = numBands;
+		Coefficients frequencyBands = Coefficients(static_cast<size_t>(numBands));
+		for (int i = 0; i < numBands; i++)
+			frequencyBands[i] = static_cast<Real>(fBands[i]);
+
+		Config config = Config(fs, numFrames, numFDNChannels, static_cast<Real>(lerpFactor), hrtfResamplingStep, mode, frequencyBands);
 		return Init(&config, filePaths);
 	}
 
-	UI_EXPORT void UI_API SPATExit()
+	/**
+	 * Exits and cleans up the spatialiser.
+	 *
+	 * This function should be called when the spatialiser is no longer needed.
+	 * It will free up any resources that the spatialiser is using.
+	 */
+	EXPORT void API SPATExit()
 	{
 		Exit();
 	}
 
-	// Image Source Model
-
-	UI_EXPORT void UI_API SPATUpdateISMConfig(int order, bool dir, bool ref, bool diff, bool refDiff, bool rev, bool spDiff)
+	/**
+	 * Updates the configuration for the Image Source Model (ISM).
+	 *
+	 * @param order The maximum number of reflections or diffractions to consider in the ISM.
+	 * @param dir Whether to consider direct sound.
+	 * @param ref Whether to consider reflected sound.
+	 * @param diff Whether to consider diffracted sound.
+	 * @param refDiff Whether to consider combined reflected diffraction sound.
+	 * @param rev Whether to consider late reverberation.
+	 * @param spDiff Whether to consider diffraction outside of the shadow zone.
+	 */
+	EXPORT void API SPATUpdateISMConfig(int order, bool dir, bool ref, bool diff, bool refDiff, bool rev, bool spDiff)
 	{
 		UpdateISMConfig(ISMConfig(order, dir, ref, diff, refDiff, rev, spDiff));
 	}
 
-	// Reverb
-
-	UI_EXPORT void UI_API SPATSetFDNParameters(float volume, const float* dim, int numDimensions)
+	/**
+	 * Sets the parameters for the Feedback Delay Network (FDN) reverb.
+	 *
+	 * @param volume The volume of the room.
+	 * @param dim The dimensions of the room for the delay lines.
+	 * @param numDimensions The number of dimensions provided in the dim parameter.
+	 */
+	EXPORT void API SPATSetFDNParameters(float volume, const float* dim, int numDimensions)
 	{
 		Buffer in = Buffer(numDimensions);
 		vec dimensions = vec(numDimensions);
@@ -90,32 +126,81 @@ extern "C"
 		SetFDNParameters(static_cast<Real>(volume), dimensions);
 	}
 
-	// Listener
-
-	UI_EXPORT void UI_API SPATUpdateListener(float posX, float posY, float posZ, float oriW, float oriX, float oriY, float oriZ)
+	/**
+	 * Updates the listener's position and orientation.
+	 *
+	 * @param posX The x-coordinate of the listener's position.
+	 * @param posY The y-coordinate of the listener's position.
+	 * @param posZ The z-coordinate of the listener's position.
+	 * @param oriW The w-component of the listener's orientation quaternion.
+	 * @param oriX The x-component of the listener's orientation quaternion.
+	 * @param oriY The y-component of the listener's orientation quaternion.
+	 * @param oriZ The z-component of the listener's orientation quaternion.
+	 */
+	EXPORT void API SPATUpdateListener(float posX, float posY, float posZ, float oriW, float oriX, float oriY, float oriZ)
 	{
 		UpdateListener(vec3(posX, posY, posZ), vec4(oriW, oriX, oriY, oriZ));
 	}
 
-	// Source
-
-	UI_EXPORT int UI_API SPATInitSource()
+	/**
+	 * Initializes a new audio source and returns its ID.
+	 *
+	 * This function should be called when a new audio source is created.
+	 * It will allocate resources for the new source and return an ID that can be used to reference the source in future calls.
+	 *
+	 * @return The ID of the new audio source.
+	 */
+	EXPORT int API SPATInitSource()
 	{
 		return InitSource();
 	}
 
-	UI_EXPORT void UI_API SPATUpdateSource(int id, float posX, float posY, float posZ, float oriW, float oriX, float oriY, float oriZ)
+	/**
+	 * Updates the position and orientation of the audio source with the given ID.
+	 *
+	 * @param id The ID of the audio source to update.
+	 * @param posX The x-coordinate of the source's position.
+	 * @param posY The y-coordinate of the source's position.
+	 * @param posZ The z-coordinate of the source's position.
+	 * @param oriW The w-component of the source's orientation quaternion.
+	 * @param oriX The x-component of the source's orientation quaternion.
+	 * @param oriY The y-component of the source's orientation quaternion.
+	 * @param oriZ The z-component of the source's orientation quaternion.
+	 */
+	EXPORT void API SPATUpdateSource(int id, float posX, float posY, float posZ, float oriW, float oriX, float oriY, float oriZ)
 	{
 		UpdateSource(static_cast<size_t>(id), vec3(posX, posY, posZ), vec4(oriW, oriX, oriY, oriZ));
 	}
 
-	UI_EXPORT void UI_API SPATRemoveSource(int id)
+	/**
+	 * Removes the audio source with the given ID.
+	 *
+	 * This function should be called when an audio source is no longer needed.
+	 * It will free up any resources that the source was using.
+	 *
+	 * @param id The ID of the audio source to remove.
+	 */
+	EXPORT void API SPATRemoveSource(int id)
 	{
 		RemoveSource(static_cast<size_t>(id));
 	}
 
-	// Walls
-
+	/**
+	 * Returns the ReverbWall enum value corresponding to the given ID.
+	 *
+	 * This function is used to map integer IDs to ReverbWall enum values.
+	 * The mapping is as follows:
+	 * 0 -> posZ
+	 * 1 -> negZ
+	 * 2 -> posX
+	 * 3 -> negX
+	 * 4 -> posY
+	 * 5 -> negY
+	 * Any other value -> none
+	 *
+	 * @param id The ID to map to a ReverbWall enum value.
+	 * @return The corresponding ReverbWall enum value.
+	 */
 	ReverbWall ReturnReverbWall(int id)
 	{
 		switch (id)
@@ -137,52 +222,113 @@ extern "C"
 		}
 	}
 
-	UI_EXPORT int UI_API SPATInitWall(float nX, float nY, float nZ, const float* vData, int numVertices, float aL, float aML, float aM, float aMH, float aH, int reverbWallId)
+	/**
+	 * Initializes a new wall with the given parameters and returns its ID.
+	 *
+	 * This function should be called when a new wall is created.
+	 * It will allocate resources for the new wall and return an ID that can be used to reference the wall in future calls.
+	 *
+	 * @param nX The x-coordinate of the wall's normal vector.
+	 * @param nY The y-coordinate of the wall's normal vector.
+	 * @param nZ The z-coordinate of the wall's normal vector.
+	 * @param vData The vertices of the wall.
+	 * @param numVertices The number of vertices provided in the vData parameter.
+	 * @param absorption The frequency absorption coefficients.
+	 * @param reverbWallId The ID of the reverb wall.
+	 *
+	 * @return The ID of the new wall.
+	 */
+	EXPORT int API SPATInitWall(float nX, float nY, float nZ, const float* vData, int numVertices, float* absorption, int reverbWallId)
 	{
 		ReverbWall reverbWall = ReturnReverbWall(reverbWallId);
-		Absorption absorption = Absorption(aL, aML, aM, aMH, aH);
+		std::vector<Real> a = std::vector<Real>(numAbsorptionBands);
+		for (int i = 0; i < numAbsorptionBands; i++)
+			a[i] = static_cast<Real>(absorption[i]);
+		Absorption abs = Absorption(a);
 
 		int numCoords = 3 * numVertices;
 		Buffer in = Buffer(numCoords);
 		for (int i = 0; i < numCoords; i++)
 			in[i] = static_cast<Real>(vData[i]);
 
-		return InitWall(vec3(nX, nY, nZ), &in[0], static_cast<size_t>(numVertices), absorption, reverbWall);
+		return InitWall(vec3(nX, nY, nZ), &in[0], static_cast<size_t>(numVertices), abs, reverbWall);
 	}
 
-	UI_EXPORT void UI_API SPATUpdateWall(int id, float nX, float nY, float nZ, const float* vData, int numVertices, float aL, float aML, float aM, float aMH, float aH, int reverbWallId)
+	/**
+	 * Updates the position and orientation of the wall with the given ID.
+	 *
+	 * This function should be called when the position or orientation of a wall changes.
+	 * It will update the internal representation of the wall to match the new position and orientation.
+	 *
+	 * @param id The ID of the wall to update.
+	 * @param nX The x-coordinate of the wall's normal vector.
+	 * @param nY The y-coordinate of the wall's normal vector.
+	 * @param nZ The z-coordinate of the wall's normal vector.
+	 * @param vData The vertices of the wall.
+	 * @param numVertices The number of vertices provided in the vData parameter.
+	 */
+	EXPORT void API SPATUpdateWall(int id, float nX, float nY, float nZ, const float* vData, int numVertices)
 	{
-		ReverbWall reverbWall = ReturnReverbWall(reverbWallId);
-		Absorption absorption = Absorption(aL, aML, aM, aMH, aH);
-
 		int numCoords = 3 * numVertices;
 		Buffer in = Buffer(numCoords);
 		for (int i = 0; i < numCoords; i++)
 			in[i] = static_cast<Real>(vData[i]);
 
-		UpdateWall(static_cast<size_t>(id), vec3(nX, nY, nZ), &in[0], static_cast<size_t>(numVertices), absorption, reverbWall);
+		UpdateWall(static_cast<size_t>(id), vec3(nX, nY, nZ), &in[0], static_cast<size_t>(numVertices));
 	}
 
-	UI_EXPORT void UI_API SPATFreeWallId(int id)
+	/**
+	 * Frees up the ID of the wall with the given ID.
+	 *
+	 * This function should be called after a wall is removed.
+	 * It will free up the ID of the wall so that it can be reused for new walls.
+	 *
+	 * @param id The ID of the wall to free.
+	 */
+	EXPORT void API SPATFreeWallId(int id)
 	{
 		FreeWallId(static_cast<size_t>(id));
 	}
 
-	UI_EXPORT void UI_API SPATRemoveWall(int id, int reverbWallId)
+	/**
+	 * Removes the wall with the given ID.
+	 *
+	 * This function should be called when a wall is no longer needed.
+	 * It will free up any resources that the wall was using and remove it from the spatialiser.
+	 *
+	 * @param id The ID of the wall to remove.
+	 * @param reverbWallId The ID of the reverb wall.
+	 */
+	EXPORT void API SPATRemoveWall(int id, int reverbWallId)
 	{
 		ReverbWall reverbWall = ReturnReverbWall(reverbWallId);
 
 		RemoveWall(static_cast<size_t>(id), reverbWall);
 	}
 
-	// Audio
-
-	UI_EXPORT void UI_API SPATSubmitAudio(int id, const float* data)
+	/**
+	 * Submits an audio buffer to the audio source with the given ID.
+	 *
+	 * This function should be called when there is a new audio buffer for a source.
+	 * It will process the audio buffer and add it to the output buffer.
+	 *
+	 * @param id The ID of the audio source to update.
+	 * @param data The new audio buffer for the source.
+	 */
+	EXPORT void API SPATSubmitAudio(int id, const float* data)
 	{
 		SubmitAudio(static_cast<size_t>(id), data);
 	}
 
-	UI_EXPORT bool UI_API SPATProcessOutput()
+	/**
+	 * Processes the output of the spatialiser.
+	 *
+	 * This function should be called after all audio sources have been updated for a frame.
+	 * It will process the later reverberation and prepare the output buffer.
+	 *
+	 * @return True if the processing was successful and the output buffer is ready, false otherwise.
+	 */
+	EXPORT bool API SPATProcessOutput()
 	{
 		GetOutput(&buffer);
 		if (!buffer)
@@ -205,7 +351,15 @@ extern "C"
 		return true;
 	}
 
-	UI_EXPORT void UI_API SPATGetOutputBuffer(float** buf)
+	/**
+	 * Returns a pointer to the output buffer of the spatialiser.
+	 *
+	 * This function should be called after SPATProcessOutput has returned true.
+	 * It will return a pointer to the output buffer that contains the processed output buffer.
+	 *
+	 * @param buf A pointer to a float pointer. This will be set to point to the output buffer.
+	 */
+	EXPORT void API SPATGetOutputBuffer(float** buf)
 	{
 		*buf = buffer;
 	}

@@ -29,53 +29,42 @@ namespace UIE
 
 		//////////////////// FDN Channel class ////////////////////
 
-		Channel::Channel(int fs) : mT(1.0 / fs), sampleRate(fs), mAbsorptionFilter(4, fs), mAirAbsorption(14000.0, fs), idx(0)
+		Channel::Channel(const Config& config) : mT(1.0 / config.fs), mConfig(config), mAbsorptionFilter(4, mConfig.frequencyBands, mConfig.fs), mAirAbsorption(14000.0, config.fs), idx(0)
 		{
 			mBufferMutex = new std::mutex();
 			SetDelay();
-			SetAbsorption({ 0.0, 0.0, 0.0, 0.0, 0.0 });
+			SetAbsorption();
 		}
 
-		Channel::Channel(Real t, const FrequencyDependence& T60, int fs) : mT(t), sampleRate(fs), mAbsorptionFilter(4, fs), mAirAbsorption(14000.0, fs), idx(0)
+		Channel::Channel(Real t, const Coefficients& T60, const Config& config) : mT(t), mConfig(config), mAbsorptionFilter(4, mConfig.frequencyBands, mConfig.fs), mAirAbsorption(14000.0, config.fs), idx(0)
 		{
 			mBufferMutex = new std::mutex();
 			SetDelay();
 			SetAbsorption(T60);
 		}
 
-		void Channel::SetParameters(const FrequencyDependence& T60, const Real& t)
+		void Channel::SetParameters(const Coefficients& T60, const Real& t)
 		{
 			SetDelay(t);
 			SetAbsorption(T60);
 		}
 
-		void Channel::SetAbsorption(const FrequencyDependence& T60)
+		void Channel::SetAbsorption()
 		{
-			Real g[5];
-			Real g2[5];
-			Real t[5];
-
-			Real delay = mT * 44100;
-
-			T60.GetValues(&t[0]);
-			for (int i = 0; i < 5; i++)
-			{
-				g[i] = pow(10, -3.0 * mT / t[i]); // 20 * log10(H(f)) = -60 * t / t60(f);
-				g2[i] = pow(10, -3.0 / 44100 / t[i] * delay);
-			}
-			SetAbsorption(g);
+			Coefficients g = Coefficients(mConfig.frequencyBands.Length());
+			mAbsorptionFilter.UpdateParameters(g);
 		}
 
-		void Channel::SetAbsorption(Real g[])
+		void Channel::SetAbsorption(const Coefficients& T60)
 		{
-			Real fc[] = { 250, 500, 1000, 2000, 4000 };
-			mAbsorptionFilter.UpdateParameters(fc, g);
+			Coefficients g = (- 3.0 * mT / T60).Pow(10); // 20 * log10(H(f)) = -60 * t / t60(f);
+			mAbsorptionFilter.UpdateParameters(g);
 		}
 
 		void Channel::SetDelay()
 		{
 			std::lock_guard<std::mutex> lock(*mBufferMutex);
-			mBuffer.ResizeBuffer(round(mT * sampleRate));
+			mBuffer.ResizeBuffer(round(mT * mConfig.fs));
 		}
 
 		Real Channel::GetOutput(const Real input)
@@ -100,24 +89,21 @@ namespace UIE
 
 		FDN::FDN(const Config& config) : mConfig(config), x(config.numFDNChannels), y(config.numFDNChannels), mat(config.numFDNChannels, config.numFDNChannels), houseMat(config.numFDNChannels, 1)
 		{
-			mChannels.reserve(mConfig.numFDNChannels);
-			std::fill_n(std::back_inserter(mChannels), mConfig.numFDNChannels, Channel(mConfig.fs));
+			mChannels = std::vector<Channel>(mConfig.numFDNChannels, Channel(mConfig));
 			InitMatrix();
 		}
 
-		FDN::FDN(const FrequencyDependence& T60, const vec& dimensions, const Config& config) : mConfig(config), x(config.numFDNChannels), y(config.numFDNChannels), mat(config.numFDNChannels, config.numFDNChannels), houseMat(config.numFDNChannels, 1)
+		FDN::FDN(const Coefficients& T60, const vec& dimensions, const Config& config) : mConfig(config), x(config.numFDNChannels), y(config.numFDNChannels), mat(config.numFDNChannels, config.numFDNChannels), houseMat(config.numFDNChannels, 1)
 		{
 			vec t = vec(mConfig.numFDNChannels);
 			CalculateTimeDelay(dimensions, t);
 			mChannels.reserve(mConfig.numFDNChannels);
 			for (int i = 0; i < mConfig.numFDNChannels; i++)
-			{
-				mChannels.push_back(Channel(t.GetEntry(i), T60, mConfig.fs));
-			}
+				mChannels.push_back(Channel(t.GetEntry(i), T60, mConfig));
 			InitMatrix();
 		}
 
-		void FDN::SetParameters(const FrequencyDependence& T60, const vec& dimensions)
+		void FDN::SetParameters(const Coefficients& T60, const vec& dimensions)
 		{
 			vec t = vec(mConfig.numFDNChannels);
 			CalculateTimeDelay(dimensions, t);

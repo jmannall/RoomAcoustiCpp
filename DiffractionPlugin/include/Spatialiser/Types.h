@@ -12,6 +12,7 @@
 
 // Common headers
 #include "Common/Types.h"
+#include "Common/Coefficients.h"
 
 namespace UIE
 {
@@ -90,15 +91,16 @@ namespace UIE
 		struct Config
 		{
 			// DSP parameters
-			int fs, numFrames, numChannels, numFDNChannels, hrtfResamplingStep;
+			int fs, numFrames, numFDNChannels, hrtfResamplingStep;
 			// 1 means DSP parameters are lerped over only 1 audio callback
 			// 5 means lerped over 5 separate audio callbacks
 			// must be greater than 0
 			Real lerpFactor;
 			HRTFMode hrtfMode;
+			Coefficients frequencyBands;
 
-			Config() : fs(44100), numFrames(512), numChannels(2), numFDNChannels(12), hrtfResamplingStep(0), lerpFactor(1.0 / ((Real)numFrames * 2.0)), hrtfMode(HRTFMode::performance) {};
-			Config(int _fs, int _numFrames, int _numChannels, int _numFDNChannels, Real _lerpFactor, int hrtfStep, HRTFMode mode) : fs(_fs), numFrames(_numFrames), numChannels(_numChannels), numFDNChannels(_numFDNChannels), hrtfResamplingStep(hrtfStep), lerpFactor(1.0 / ((Real)numFrames * _lerpFactor)), hrtfMode(mode) {};
+			Config() : fs(44100), numFrames(512), numFDNChannels(12), hrtfResamplingStep(0), lerpFactor(1.0 / ((Real)numFrames * 2.0)), hrtfMode(HRTFMode::performance), frequencyBands({250.0, 500.0, 1000.0, 20000.0}) {};
+			Config(int _fs, int _numFrames, int _numFDNChannels, Real _lerpFactor, int hrtfStep, HRTFMode mode, Coefficients fBands) : fs(_fs), numFrames(_numFrames), numFDNChannels(_numFDNChannels), hrtfResamplingStep(hrtfStep), lerpFactor(1.0 / ((Real)numFrames * _lerpFactor)), hrtfMode(mode), frequencyBands(fBands) {};
 		};
 	}
 }

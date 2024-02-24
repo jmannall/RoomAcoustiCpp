@@ -280,12 +280,12 @@ namespace UIE
 		}
 
 		// Reverb
-		FrequencyDependence Room::GetReverbTime(const Real& volume)
+		Coefficients Room::GetReverbTime(const Real& volume)
 		{
 			if (volume <= 0.0)
-				return FrequencyDependence(0.0, 0.0, 0.0, 0.0, 0.0);
+				return Coefficients(numAbsorptionBands);
 
-			FrequencyDependence absorption = FrequencyDependence(0.0, 0.0, 0.0, 0.0, 0.0);
+			Coefficients absorption = Coefficients(numAbsorptionBands);
 			Real surfaceArea = 0.0;
 
 			{
@@ -294,7 +294,7 @@ namespace UIE
 
 				for (auto& it : mWalls)
 				{
-					absorption += (1.0 - it.second.GetAbsorption() * it.second.GetAbsorption()) * it.second.GetArea();
+					absorption -= (it.second.GetAbsorption() * it.second.GetAbsorption() - 1.0) * it.second.GetArea();
 					surfaceArea += it.second.GetArea();
 				}
 			}
@@ -304,7 +304,7 @@ namespace UIE
 			// FrequencyDependence sabine = factor * volume / absorption;
 
 			// eyring
-			FrequencyDependence eyring = factor * volume / (-surfaceArea * (1 - absorption / surfaceArea).Log());
+			Coefficients eyring = factor * volume / ((absorption / surfaceArea - 1).Log() * surfaceArea);
 			return eyring;
 		}
 
@@ -708,7 +708,7 @@ namespace UIE
 			if (sp.size() == 0)
 				return;
 
-			Plane plane; Edge edge; vec3 position, vPosition; Diffraction::Path path; Absorption absorption; size_t idP, idW, idE; bool valid;
+			Plane plane; Edge edge; vec3 position, vPosition; Diffraction::Path path; size_t idP, idW, idE; bool valid;
 
 			for (int j = 1; j < mISMConfig.order; j++) // only handle up to 1st order diffraction
 			{
@@ -930,8 +930,7 @@ namespace UIE
 											{
 												if (path.GetApex() == start.GetApex() && path.GetApex() == end.GetApex())
 												{
-													end.GetAbsorption(absorption);
-													vSource.AddWallIDs(end.GetWallIDs(), absorption);
+													vSource.AddWallIDs(end.GetWallIDs(), end.GetAbsorption());
 
 													vPosition = mListenerPosition + (path.sData.d + path.rData.d) * UnitVector(end.GetTransformPosition() - mListenerPosition);
 													vSource.UpdateTransform(vPosition);
@@ -1014,7 +1013,7 @@ namespace UIE
 				path = Diffraction::Path(point, mListenerPosition, edge);
 				position = path.CalculateVirtualPostion();
 
-				VirtualSourceData vSource;
+				VirtualSourceData vSource = VirtualSourceData(numAbsorptionBands);
 				vSource.AddEdgeID(id, path);
 				vSource.SetTransform(point, position);
 
@@ -1054,7 +1053,7 @@ namespace UIE
 				id = it.first;
 				plane = it.second;
 
-				VirtualSourceData vSource;
+				VirtualSourceData vSource = VirtualSourceData(numAbsorptionBands);
 
 				vSource.AddPlaneID(id);
 

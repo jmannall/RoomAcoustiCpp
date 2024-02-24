@@ -17,6 +17,7 @@
 // Common headers
 #include "Common/Definitions.h"
 #include "Common/Types.h"
+#include "Common/Coefficients.h"
 
 namespace UIE
 {
@@ -376,11 +377,10 @@ namespace UIE
 		class ParametricEQ
 		{
 		public:
-			ParametricEQ(size_t order);
-			ParametricEQ(size_t order, int fs);
-			ParametricEQ(size_t order, Real fc[], Real gain[], int fs);
+			ParametricEQ(size_t order, const Coefficients& fc, int fs);
+			ParametricEQ(size_t order, const Coefficients& fc, Coefficients& gain, int fs);
 
-			void UpdateParameters(const Real fc[], Real gain[]);
+			void UpdateParameters(Coefficients& gain);
 			Real GetOutput(const Real input);
 
 			inline void ClearBuffers()
@@ -389,14 +389,14 @@ namespace UIE
 					bands[i].ClearBuffers();
 			}
 		private:
-			void InitBands(int fs);
+			void InitBands(const Coefficients& fc, int fs);
 
 			size_t mOrder;
 			size_t numFilters;
-			BandPass bands[4];
+			std::vector<BandPass> bands;
 			Real mGain;
-			Real fb[4];
-			Real g[4];
+			Coefficients fb;
+			Coefficients g;
 			Real out;
 		};
 	}

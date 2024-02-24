@@ -78,6 +78,7 @@ namespace UIE
 
 #endif
 		const constexpr size_t NUM_PRECISION = 3;
+		const constexpr int REFLECTION_FILTER_ORDER = 4;
 
 		const constexpr Real PI_EPS = PI_1 + EPS;
 		const constexpr Real PI_SQ = PI_1 * PI_1;

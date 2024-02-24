@@ -4,13 +4,14 @@
 *
 */
 
+// C++ headers
 #include <iterator>
 #include <cmath>
 #include <cassert>
 
-
-
+// Common headers
 #include "Common/AudioManager.h"
+#include "Common/Coefficients.h"
 
 namespace UIE
 {
@@ -279,13 +280,12 @@ namespace UIE
 			Real K_2 = 2.0 * K;
 			Real K_sq = K * K;
 			Real K_sq_2 = 2.0 * K_sq;
-			Real M_2 = 2.0 * M;
 			Real V = pow(g, 1.0 / M) - 1.0;
 			Real VK = V * K;
 			Real VK_2 = 2.0 * VK;
 			Real VK_sq = VK * VK;
 
-			Real alpha = (0.5 - (2.0 * m - 1.0) / (M_2)) * PI_1;
+			Real alpha = (0.5 - (2.0 * m - 1.0) / (2.0 * M)) * PI_1;
 			Real cm = cos(alpha);
 			Real K2cm = K_2 * cm;
 			Real a0 = 1.0 / (1.0 + K2cm + K_sq);
@@ -429,15 +429,13 @@ namespace UIE
 			assert(numFilters == order * 2); // order must be even
 			M = order;
 			filters.reserve(numFilters);
-			std::fill_n(std::back_inserter(filters), numFilters, TransDF2(fs));
+			filters = std::vector<TransDF2>(numFilters, TransDF2(fs));
 		}
 
 		void BandPass::UpdateParameters(Real fb, Real g, FilterShape shape)
 		{
 			for (int i = 0; i < numFilters; i++)
-			{
 				filters[i].UpdateParameters(fb, g, i + 1, M, shape);
-			}
 		}
 
 		Real BandPass::GetOutput(const Real input)
@@ -449,23 +447,18 @@ namespace UIE
 			return out;
 		}
 
-		ParametricEQ::ParametricEQ(size_t order) : mOrder(order), numFilters(4), mGain(0.0), out(0.0)
+		ParametricEQ::ParametricEQ(size_t order, const Coefficients& fc, int fs) : mOrder(order), numFilters(fc.Length() - 1), fb(numFilters), g(numFilters), mGain(0.0), out(0.0)
 		{
-			InitBands(48000);
+			InitBands(fc, fs);
 		}
 
-		ParametricEQ::ParametricEQ(size_t order, int fs) : mOrder(order), numFilters(4), mGain(0.0), out(0.0)
+		ParametricEQ::ParametricEQ(size_t order, const Coefficients& fc, Coefficients& gain, int fs) : mOrder(order), numFilters(fc.Length() - 1), fb(numFilters), g(numFilters), out(0.0)
 		{
-			InitBands(fs);
+			InitBands(fc, fs);
+			UpdateParameters(gain);
 		}
 
-		ParametricEQ::ParametricEQ(size_t order, Real fc[], Real gain[], int fs) : mOrder(order), numFilters(4), out(0.0)
-		{
-			InitBands(fs);
-			UpdateParameters(fc, gain);
-		}
-
-		void ParametricEQ::UpdateParameters(const Real fc[], Real gain[])
+		void ParametricEQ::UpdateParameters(Coefficients& gain)
 		{
 			mGain = gain[numFilters];
 			for (int i = 0; i < numFilters + 1; i++)
@@ -473,7 +466,6 @@ namespace UIE
 
 			for (int i = 0; i < numFilters; i++)
 			{
-				fb[i] = fc[i] * sqrtf(fc[i + 1] / fc[i]);
 				g[i] = gain[i] / gain[i + 1];
 				bands[i].UpdateParameters(fb[i], g[i], FilterShape(FilterShape::lbf));
 			}
@@ -488,10 +480,11 @@ namespace UIE
 			return out;
 		}
 
-		void ParametricEQ::InitBands(int fs)
+		void ParametricEQ::InitBands(const Coefficients& fc, int fs)
 		{
-			for (BandPass& band : bands)
-				band.InitFilters(mOrder, fs);
+			bands = std::vector<BandPass>(numFilters, BandPass(mOrder, fs));
+			for (int i = 0; i < numFilters; i++)
+				fb[i] = fc[i] * sqrt(fc[i + 1] / fc[i]);
 		}
 	}
 }

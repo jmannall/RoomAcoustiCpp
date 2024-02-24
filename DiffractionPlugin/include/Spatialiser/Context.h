@@ -69,7 +69,7 @@ namespace UIE
 
 			// Wall
 			size_t InitWall(const vec3& normal, const Real* vData, size_t numVertices, Absorption& absorption, const ReverbWall& reverbWall);
-			void UpdateWall(size_t id, const vec3& normal, const Real* vData, size_t numVertices, Absorption& absorption, const ReverbWall& reverbWall);
+			void UpdateWall(size_t id, const vec3& normal, const Real* vData, size_t numVertices);
 			void FreeWallId(size_t id) { mRoom->FreeWallId(id); }
 			void RemoveWall(size_t id, const ReverbWall& reverbWall);
 

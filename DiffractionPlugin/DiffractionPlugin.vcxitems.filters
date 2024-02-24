@@ -176,11 +176,11 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Unity\Profiler.h">
       <Filter>Header Files\Unity</Filter>
     </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\FrequencyDependence.h">
-      <Filter>Header Files\Spatialiser\Diffraction</Filter>
-    </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Unity\UnityInterface.h">
       <Filter>Header Files\Unity</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Coefficients.h">
+      <Filter>Header Files\Common</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

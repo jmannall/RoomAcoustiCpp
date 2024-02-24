@@ -22,6 +22,7 @@
 #include "Common/AudioManager.h"
 #include "Common/Matrix.h"
 #include "Common/Vec.h"
+#include "Common/Coefficients.h"
 
 namespace UIE
 {
@@ -35,13 +36,14 @@ namespace UIE
 		{
 		public:
 			// Load and Destroy
-			Channel(int fs);
-			Channel(Real t, const FrequencyDependence& T60, int fs);
+			Channel(const Config& config);
+			Channel(Real t, const Coefficients& T60, const Config& config);
 			~Channel() {};
 
 			// Setters
-			void SetParameters(const FrequencyDependence& T60, const Real& t);
-			void SetAbsorption(const FrequencyDependence& T60);
+			void SetParameters(const Coefficients& T60, const Real& t);
+			void SetAbsorption();
+			void SetAbsorption(const Coefficients& T60);
 			inline void SetDelay(const Real& t) { mT = t; SetDelay(); }
 			inline void Reset()
 			{ 
@@ -56,12 +58,11 @@ namespace UIE
 
 		private:
 			// Setters
-			void SetAbsorption(Real g[]);
 			void SetDelay();
 
 			// Member variables
 			Real mT;
-			int sampleRate;
+			Config mConfig;
 			Buffer mBuffer;
 			ParametricEQ mAbsorptionFilter;
 			LowPass mAirAbsorption;
@@ -105,14 +106,14 @@ namespace UIE
 		public:
 			// Load and Destroy
 			FDN(const Config& config);
-			FDN(const FrequencyDependence& T60, const vec& dimensions, const Config& config);
+			FDN(const Coefficients& T60, const vec& dimensions, const Config& config);
 			~FDN() {}
 
 			// Getters
 			rowvec GetOutput(const std::vector<Real>& data, Real gain, bool valid);
 
 			// Setters
-			void SetParameters(const FrequencyDependence& T60, const vec& dimensions);
+			void SetParameters(const Coefficients& T60, const vec& dimensions);
 			inline void Reset()
 			{ 
 				x.Reset(); y.Reset();  

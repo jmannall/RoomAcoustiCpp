@@ -36,6 +36,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\AudioManager.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Coefficients.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Complex.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Definitions.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\HelloWorld.h" />
@@ -50,7 +51,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Diffraction\Path.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Edge.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\FDN.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\FrequencyDependence.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Interface.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Main.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\SourceManager.h" />

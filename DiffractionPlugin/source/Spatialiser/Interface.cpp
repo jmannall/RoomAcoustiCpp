@@ -1,7 +1,5 @@
 /*
-*
-* \Spatialiser API
-*
+* \brief Interface between the API and Spatialiser global context
 */
 
 // Spatialiser headers
@@ -12,13 +10,15 @@ namespace UIE
 {
 	namespace Spatialiser
 	{
+		////////////////////////////////////////
 		// Context Singleton
-
 		static Context* context = nullptr;
+
+		////////////////////////////////////////
 
 		Context* GetContext() { return context; }
 
-		// Load and Destroy
+		////////////////////////////////////////
 
 		bool Init(const Config* config, const std::vector<std::string>& filePaths)
 		{
@@ -27,16 +27,16 @@ namespace UIE
 #ifdef DEBUG_INIT
 	Debug::Log("Delete Existing Context", Colour::Red);
 #endif
-
 				Exit();
 			}
 #ifdef DEBUG_INIT
 	Debug::Log("Create New Context", Colour::Green);
 #endif
-
 			context = new Context(config, filePaths);
 			return context->IsRunning();
 		}
+
+		////////////////////////////////////////
 
 		void Exit()
 		{
@@ -47,7 +47,7 @@ namespace UIE
 			}
 		}
 
-		// Image Source Model
+		////////////////////////////////////////
 
 		void UpdateISMConfig(const ISMConfig& config)
 		{
@@ -56,7 +56,7 @@ namespace UIE
 				context->UpdateISMConfig(config);
 		}
 
-		// Reverb
+		////////////////////////////////////////
 
 		void SetFDNParameters(const Real& volume, const vec& dimensions)
 		{
@@ -65,7 +65,7 @@ namespace UIE
 				context->SetFDNParameters(volume, dimensions);
 		}
 
-		// Listener
+		////////////////////////////////////////
 
 		void UpdateListener(const vec3& position, const vec4& orientation)
 		{
@@ -74,7 +74,7 @@ namespace UIE
 				context->UpdateListener(position, orientation);
 		}
 
-		// Source
+		////////////////////////////////////////
 
 		int InitSource()
 		{
@@ -85,12 +85,16 @@ namespace UIE
 				return -1;
 		}
 
+		////////////////////////////////////////
+
 		void UpdateSource(size_t id, const vec3& position, const vec4& orientation)
 		{
 			auto* context = GetContext();
 			if (context)
 				context->UpdateSource(id, position, orientation);
 		}
+
+		////////////////////////////////////////
 
 		void RemoveSource(size_t id)
 		{
@@ -99,7 +103,7 @@ namespace UIE
 				context->RemoveSource(id);
 		}
 
-		// Wall
+		////////////////////////////////////////
 
 		int InitWall(const vec3& normal, const Real* vData, size_t numVertices, Absorption& absorption, const ReverbWall& reverbWall)
 		{
@@ -110,12 +114,16 @@ namespace UIE
 				return -1;
 		}
 
-		void UpdateWall(size_t id, const vec3& normal, const Real* vData, size_t numVertices, Absorption& absorption, const ReverbWall& reverbWall)
+		////////////////////////////////////////
+
+		void UpdateWall(size_t id, const vec3& normal, const Real* vData, size_t numVertices)
 		{
 			auto* context = GetContext();
 			if (context)
-				context->UpdateWall(id, normal, vData, numVertices, absorption, reverbWall);
+				context->UpdateWall(id, normal, vData, numVertices);
 		}
+
+		////////////////////////////////////////
 
 		void FreeWallId(size_t id)
 		{
@@ -124,6 +132,8 @@ namespace UIE
 				context->FreeWallId(id);
 		}
 
+		////////////////////////////////////////
+
 		void RemoveWall(size_t id, const ReverbWall& reverbWall)
 		{
 			auto* context = GetContext();
@@ -131,7 +141,7 @@ namespace UIE
 				context->RemoveWall(id, reverbWall);
 		}
 
-		// Audio
+		////////////////////////////////////////
 
 		void SubmitAudio(size_t id, const float* data)
 		{
@@ -139,6 +149,8 @@ namespace UIE
 			if (context)
 				context->SubmitAudio(id, data);
 		}
+
+		////////////////////////////////////////
 
 		void GetOutput(float** bufferPtr)
 		{

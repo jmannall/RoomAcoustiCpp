@@ -75,13 +75,13 @@ namespace UIE
 		{
 		public:
 			Reverb(Binaural::CCore* core, const Config& config, const vec& dimensions);
-			Reverb(Binaural::CCore* core, const Config& config, const vec& dimensions, const FrequencyDependence& T60);
+			Reverb(Binaural::CCore* core, const Config& config, const vec& dimensions, const Coefficients& T60);
 
 			void UpdateReverb(const vec3& position, const bool on);
 			void UpdateReflectionFilters(const ReverbWall& id, const Absorption& absorption);
 			void UpdateReflectionFilters(const ReverbWall& id, const Absorption& absorption, const Absorption& oldAbsorption);
 			void ProcessAudio(const matrix& data, Buffer& outputBuffer);
-			void SetFDNParameters(const FrequencyDependence& T60, const vec& dimensions);
+			void SetFDNParameters(const Coefficients& T60, const vec& dimensions);
 			// size_t NumChannels() const { return mNumChannels; }
 
 		private:

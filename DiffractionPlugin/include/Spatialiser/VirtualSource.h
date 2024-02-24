@@ -52,7 +52,7 @@ namespace UIE
 		public:
 
 			// Load and Destroy
-			VirtualSourceData() : valid(false), rValid(false), visible(false), feedsFDN(false), mFDNChannel(-1), order(0), reflection(false), diffraction(false), key("") {};
+			VirtualSourceData(size_t numBands) : valid(false), rValid(false), visible(false), feedsFDN(false), mFDNChannel(-1), order(0), reflection(false), diffraction(false), key(""), mAbsorption(numBands) {};
 			~VirtualSourceData() { Clear(); };
 
 			// Wall
@@ -88,7 +88,7 @@ namespace UIE
 			inline void RemoveWallIDs()
 			{
 				key = "";
-				mAbsorption = Absorption();
+				mAbsorption.Reset();
 				if (diffraction)
 				{
 					std::vector<Part>::iterator iter;
@@ -133,8 +133,7 @@ namespace UIE
 			std::string GetKey() const { return key; }
 			std::vector<size_t> GetWallIDs() const;
 			inline bool IsReflection(int i) const { return pathParts[i].isReflection; }
-			inline void GetAbsorption(Real* g) const { mAbsorption.GetValues(g); }
-			inline void GetAbsorption(Absorption& a) const { a = mAbsorption; }
+			inline Absorption GetAbsorption() const { return mAbsorption; }
 			inline size_t GetOrder() const { return order; }
 
 			// Transforms
@@ -206,7 +205,7 @@ namespace UIE
 		public:
 
 			// Load and Destroy
-			VirtualSource() : mCore(NULL), mSource(NULL), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(4), isInitialised(false), feedsFDN(false), mFDNChannel(-1), btm(&mDiffractionPath, 48000), reflection(false), diffraction(false) {};
+			VirtualSource(const Config& config) : mCore(NULL), mSource(NULL), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(4, config.frequencyBands, config.fs), isInitialised(false), feedsFDN(false), mFDNChannel(-1), btm(&mDiffractionPath, 48000), reflection(false), diffraction(false), mConfig(config) {};
 			VirtualSource(Binaural::CCore* core, const Config& config);
 			VirtualSource(Binaural::CCore* core, const Config& config, const VirtualSourceData& data, const int fdnChannel);
 			VirtualSource(const VirtualSource& vS);

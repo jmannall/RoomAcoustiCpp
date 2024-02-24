@@ -37,8 +37,8 @@ namespace UIE
 		public:
 
 			// Load and Destroy
-			Room() : mISMConfig(), mListenerPosition(), nextPlane(0), nextEdge(0) {};
-			Room(int order) : mISMConfig(), mListenerPosition(), nextPlane(0), nextEdge(0) { mISMConfig.order = order; };
+			Room(const size_t numBands) : numAbsorptionBands(numBands), mISMConfig(), mListenerPosition(), nextPlane(0), nextEdge(0) {};
+			Room(const size_t numBands, const int order) : numAbsorptionBands(numBands), mISMConfig(), mListenerPosition(), nextPlane(0), nextEdge(0) { mISMConfig.order = order; };
 			~Room() {};
 
 			// Image source model
@@ -49,19 +49,19 @@ namespace UIE
 
 			// Wall
 			size_t AddWall(Wall& wall);
-			inline Absorption UpdateWall(const size_t& id, const vec3& normal, const Real* vData, size_t numVertices, Absorption& absorption)
+			inline void UpdateWall(const size_t& id, const vec3& normal, const Real* vData, size_t numVertices)
 			{
 				lock_guard <mutex> rLock(mWallMutex);
 				auto it = mWalls.find(id);
 				if (it == mWalls.end())		// case: wall does not exist
 				{
 					// Wall does not exist
-					return Absorption();
+					return;
 				}
 				else
 				{
 					// Update wall
-					return it->second.Update(normal, vData, numVertices, absorption);
+					it->second.Update(normal, vData, numVertices);
 				}
 			}
 			inline void FreeWallId(const size_t& id)
@@ -76,7 +76,6 @@ namespace UIE
 			}
 			inline Absorption RemoveWall(const size_t& id)
 			{
-				Absorption absorption = Absorption();
 				lock_guard <mutex> nLock(mNextMutex);
 				lock_guard <mutex> rLock(mRemoveMutex);
 				lock_guard <mutex> wLock(mWallMutex);
@@ -84,11 +83,12 @@ namespace UIE
 				if (it == mWalls.end())		// case: wall does not exist
 				{
 					// Wall does not exist
+					return Absorption(1);
 				}
 				else
 				{
 					// Get absorption to return
-					absorption = it->second.GetAbsorption();
+					Absorption absorption = it->second.GetAbsorption();
 					absorption.area = -absorption.area;
 					RemoveEdges(id, it->second);
 					auto itP = mPlanes.find(it->second.GetPlaneID());
@@ -105,8 +105,8 @@ namespace UIE
 						}
 					}
 					mWalls.erase(it);
+					return absorption;
 				}
-				return absorption;
 			}
 
 			// Edge
@@ -139,7 +139,7 @@ namespace UIE
 				}
 			}
 
-			FrequencyDependence GetReverbTime(const Real& volume);
+			Coefficients GetReverbTime(const Real& volume);
 
 			// Source
 			inline SourceData UpdateSourcePosition(const size_t& id, const vec3& position)
@@ -210,6 +210,8 @@ namespace UIE
 			void HigherOrderReflections(const vec3& point, VirtualSourceDataStore& sp, VirtualSourceDataMap& vSources);
 
 			size_t AddEdge(const Edge& edge);
+
+			size_t numAbsorptionBands;
 
 			WallMap mWalls;
 			std::vector<size_t> mEmptyWallsSlots;
