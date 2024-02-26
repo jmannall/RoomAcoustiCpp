@@ -40,11 +40,9 @@ namespace UIE
 
 			//////////////////// LPF class ////////////////////
 
-			LPF::LPF(Path* path, int fs) : fc(1000.0), targetGain(0.0), currentGain(0.0), mPath(path)
+			LPF::LPF(Path* path, int fs) : fc(1000.0), targetGain(0.0), currentGain(0.0), mPath(path), filter(fc, fs)
 			{
 				m = new std::mutex();
-				filter.SetT(fs);
-				filter.UpdateParameters(fc);
 				UpdateParameters();
 			}
 
@@ -74,11 +72,8 @@ namespace UIE
 			UDFA::UDFA(Path* path, int fs) : numFilters(4), target(), current(), params(), mPath(path)
 			{
 				m = new std::mutex();
-				for (int i = 0; i < numFilters; i++)
-				{
-					filters[i].SetT(fs);
-				}
 
+				filters = std::vector<HighShelf>(numFilters, HighShelf(fs));
 				CalcF(fs);
 				UpdateParameters();
 			};

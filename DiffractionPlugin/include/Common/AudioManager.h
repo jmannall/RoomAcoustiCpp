@@ -270,16 +270,16 @@ namespace UIE
 		{
 			lpf,
 			hpf,
-			lbf,
-			hbf
+			none
 		};
 
 		class HighShelf : public IIRFilter
 		{
 		public:
-			HighShelf() : IIRFilter(1, 48000) {};
+			// HighShelf() : IIRFilter(1, 48000) {};
 			HighShelf(int fs) : IIRFilter(1, fs) {};
 			HighShelf(Real fc, Real g, int fs) : IIRFilter(1, fs) { UpdateParameters(fc, g); };
+
 			void UpdateParameters(Real fc, Real g);
 
 		private:
@@ -288,9 +288,10 @@ namespace UIE
 		class LowPass : public IIRFilter
 		{
 		public:
-			LowPass() : IIRFilter(1, 48000) {};
+			// LowPass() : IIRFilter(1, 48000) {};
 			LowPass(int fs) : IIRFilter(1, fs) {};
 			LowPass(Real fc, int fs) : IIRFilter(1, fs) { UpdateParameters(fc); };
+
 			void UpdateParameters(Real fc);
 
 		private:
@@ -308,20 +309,46 @@ namespace UIE
 		class TransDF2 : public IIRFilter
 		{
 		public:
-			TransDF2() : IIRFilter(2, 48000) { a[0] = 1.0; };
+			// TransDF2() : IIRFilter(2, 48000) { a[0] = 1.0; };
 			TransDF2(int fs) : IIRFilter(2, fs) { a[0] = 1.0; };
 			TransDF2(TransDF2Parameters zpk, int fs) : IIRFilter(2, fs) { a[0] = 1.0; UpdateParameters(zpk); };
 			TransDF2(Real fc, FilterShape shape, int fs) : IIRFilter(2, fs) { a[0] = 1.0; UpdateParameters(fc, shape); };
-			TransDF2(Real fb, Real g, int m, int M, FilterShape shape, int fs) : IIRFilter(2, fs) { a[0] = 1.0; UpdateParameters(fb, g, m, M, shape); };
+			
 			void UpdateParameters(TransDF2Parameters zpk);
 			void UpdateParameters(Real fc, FilterShape shape);
-			void UpdateParameters(Real fb, Real g, int m, int M, FilterShape shape);
 
 		private:
 			void UpdateLPF(Real fc);
 			void UpdateHPF(Real fc);
-			void UpdateLBF(Real fb, Real g, int m, int M);
-			void UpdateHBF(Real fb, Real g, int m, int M);
+		};
+
+		class Band : public IIRFilter
+		{
+		public:
+			Band(bool isLowBand, int fs) : IIRFilter(2, fs) { a[0] = 1.0; SetUpdatePointer(isLowBand); }
+			Band(Real fb, Real g, int m, int M, bool isLowBand, int fs) : IIRFilter(2, fs)
+			{ 
+				a[0] = 1.0;
+				SetUpdatePointer(isLowBand);
+				UpdateParameters(fb, g, m, M);
+			};
+
+			inline void SetUpdatePointer(bool isLowBand)
+			{
+				if (isLowBand)
+					UpdateBand = &Band::UpdateLowBand;
+				else
+					UpdateBand = &Band::UpdateHighBand;
+			};
+
+			inline void UpdateParameters(Real fb, Real g, int m, int M) { (this->*UpdateBand)(fb, g, m, M); };
+		private:
+			void UpdateLowBand(Real fb, Real g, int m, int M);
+			void UpdateHighBand(Real fb, Real g, int m, int M);
+
+			// Function pointer
+			void (Band::*UpdateBand)(Real fb, Real g, int m, int M);
+
 		};
 
 		//////////////////// Filterbanks ////////////////////
@@ -345,19 +372,19 @@ namespace UIE
 			Real fc[3];
 			Real g[4];
 
-			TransDF2 filters[20];
+			std::vector<TransDF2> filters;
 		};
 
 		class BandPass
 		{
 		public:
-			BandPass();
-			BandPass(size_t order);
-			BandPass(size_t order, int fs);
-			BandPass(size_t order, FilterShape shape, Real fb, Real g, int fs);
+			// BandPass();
+			// BandPass(size_t order);
+			BandPass(const size_t order, const bool useLowBands, const int fs);
+			BandPass(const size_t order, const bool useLowBands, const Real fb, const Real g, const int fs);
 
-			void InitFilters(int order, int fs);
-			void UpdateParameters(Real fb, Real g, FilterShape shape);
+			void InitFilters(size_t order, bool useLowBands, int fs);
+			void UpdateParameters(Real fb, Real g);
 			Real GetOutput(const Real input);
 
 			inline void ClearBuffers()
@@ -368,8 +395,9 @@ namespace UIE
 
 		private:
 			int M;
+			FilterShape mShape;
 			size_t numFilters;
-			std::vector<TransDF2> filters;
+			std::vector<Band> filters;
 
 			Real out;
 		};

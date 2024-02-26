@@ -107,7 +107,7 @@ namespace UIE
 				void UpdateFilterParameters();
 
 				int numFilters;
-				HighShelf filters[4];
+				std::vector<HighShelf> filters;
 				Real ft[5];
 				Real gt[5];
 				Real fi[4];

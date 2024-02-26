@@ -233,19 +233,6 @@ namespace UIE
 			}
 		}
 
-		void TransDF2::UpdateParameters(Real fb, Real g, int m, int M, FilterShape shape)
-		{
-			switch (shape)
-			{
-			case FilterShape::lbf:
-				UpdateLBF(fb, g, m, M);
-				break;
-			case FilterShape::hbf:
-				UpdateHBF(fb, g, m, M);
-				break;
-			}
-		}
-
 		void TransDF2::UpdateLPF(Real fc)
 		{
 			Real omega = cot(PI_1 * fc * T); // 2 * PI * fc * T / 2
@@ -274,7 +261,7 @@ namespace UIE
 			a[2] = (1.0 - SQRT_2 * omega + omega_sq) * a0;
 		}
 
-		void TransDF2::UpdateLBF(Real fb, Real g, int m, int M)
+		void Band::UpdateLowBand(Real fb, Real g, int m, int M)
 		{
 			Real K = tan(PI_1 * fb * T);
 			Real K_2 = 2.0 * K;
@@ -297,7 +284,7 @@ namespace UIE
 			b[2] = a[2] + (VK_2 * (K - cm) + VK_sq) * a0;
 		}
 
-		void TransDF2::UpdateHBF(Real fb, Real g, int m, int M)
+		void Band::UpdateHighBand(Real fb, Real g, int m, int M)
 		{
 			Real K = tan(PI_1 * fb * T);
 			Real K_2 = 2.0 * K;
@@ -323,7 +310,7 @@ namespace UIE
 
 		//////////////////// Filterbanks ////////////////////
 
-		LinkwitzRiley::LinkwitzRiley(int fs) : fc{ 176.0, 775.0, 3408.0 }, g{ 0.0, 0.0, 0.0, 0.0 }, filters()
+		LinkwitzRiley::LinkwitzRiley(int fs) : fc{ 176.0, 775.0, 3408.0 }, g{ 0.0, 0.0, 0.0, 0.0 }
 		{
 			InitFilters(fs);
 			CalcFM();
@@ -337,6 +324,7 @@ namespace UIE
 
 		void LinkwitzRiley::InitFilters(int fs)
 		{
+			filters = std::vector<TransDF2>(20, TransDF2(fs));
 			TransDF2 lpFilter[3] = { TransDF2(fc[0], FilterShape(FilterShape::lpf), fs), TransDF2(fc[1], FilterShape(FilterShape::lpf), fs), TransDF2(fc[2], FilterShape(FilterShape::lpf), fs) };
 			TransDF2 hpFilter[3] = { TransDF2(fc[0], FilterShape(FilterShape::hpf), fs), TransDF2(fc[1], FilterShape(FilterShape::hpf), fs), TransDF2(fc[2], FilterShape(FilterShape::hpf), fs) };
 
@@ -405,43 +393,43 @@ namespace UIE
 			return out[0] + out[1] + out[2] + out[3];
 		}
 
-		BandPass::BandPass() : numFilters(0), M(0), out(0.0) {};
+		/*BandPass::BandPass() : numFilters(0), M(0), out(0.0) {};
 
 		BandPass::BandPass(size_t order) : out(0.0)
 		{
 			InitFilters(order, 48000);
-		};
+		};*/
 
-		BandPass::BandPass(size_t order, int fs) : out(0.0)
+		BandPass::BandPass(const size_t order, const bool useLowBands, const int fs) : out(0.0)
 		{
-			InitFilters(order, fs);
+			InitFilters(order, useLowBands, fs);
 		};
 
-		BandPass::BandPass(size_t order, FilterShape shape, Real fb, Real g, int fs) : out(0.0)
+		BandPass::BandPass(const size_t order, const bool useLowBands, const Real fb, const Real g, const int fs) : out(0.0)
 		{
-			InitFilters(order, fs);
-			UpdateParameters(fb, g, shape);
+			InitFilters(order, useLowBands, fs);
+			UpdateParameters(fb, g);
 		};
 
-		void BandPass::InitFilters(int order, int fs)
+		void BandPass::InitFilters(size_t order, bool useLowBands, int fs)
 		{
 			numFilters = order / 2;
 			assert(numFilters == order * 2); // order must be even
 			M = order;
 			filters.reserve(numFilters);
-			filters = std::vector<TransDF2>(numFilters, TransDF2(fs));
+			filters = std::vector<Band>(numFilters, Band(useLowBands, fs));
 		}
 
-		void BandPass::UpdateParameters(Real fb, Real g, FilterShape shape)
+		void BandPass::UpdateParameters(Real fb, Real g)
 		{
 			for (int i = 0; i < numFilters; i++)
-				filters[i].UpdateParameters(fb, g, i + 1, M, shape);
+				filters[i].UpdateParameters(fb, g, i + 1, M);
 		}
 
 		Real BandPass::GetOutput(const Real input)
 		{
 			out = input;
-			for (TransDF2& filter : filters)
+			for (Band& filter : filters)
 				out = filter.GetOutput(out);
 
 			return out;
@@ -467,7 +455,7 @@ namespace UIE
 			for (int i = 0; i < numFilters; i++)
 			{
 				g[i] = gain[i] / gain[i + 1];
-				bands[i].UpdateParameters(fb[i], g[i], FilterShape(FilterShape::lbf));
+				bands[i].UpdateParameters(fb[i], g[i]);
 			}
 		}
 
@@ -482,7 +470,7 @@ namespace UIE
 
 		void ParametricEQ::InitBands(const Coefficients& fc, int fs)
 		{
-			bands = std::vector<BandPass>(numFilters, BandPass(mOrder, fs));
+			bands = std::vector<BandPass>(numFilters, BandPass(mOrder, true, fs));
 			for (int i = 0; i < numFilters; i++)
 				fb[i] = fc[i] * sqrt(fc[i + 1] / fc[i]);
 		}
