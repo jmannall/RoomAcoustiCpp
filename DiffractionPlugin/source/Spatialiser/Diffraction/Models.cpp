@@ -4,8 +4,12 @@
 *
 */
 
+// Spatialiser headers
 #include "Spatialiser/Diffraction/Models.h"
 #include "Spatialiser/Types.h"
+
+// Unity headers
+#include "Unity/UnityInterface.h"
 
 namespace UIE
 {

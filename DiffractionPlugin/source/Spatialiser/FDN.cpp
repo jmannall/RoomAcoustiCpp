@@ -21,6 +21,9 @@
 // Spatialiser headers
 #include "Spatialiser/FDN.h"
 
+// Unity headers
+#include "Unity/UnityInterface.h"
+
 namespace UIE
 {
 	using namespace Common;

@@ -266,21 +266,16 @@ namespace UIE
 
 	void TestReverbSource(const ReverbSource& rS, const Absorption& t)
 	{
-		Absorption e = rS.GetAbsorption();
+		Absorption a = rS.GetAbsorption();
 		Real tolerance = 0.0001;
-		Assert::AreEqual(e.area, t.area, tolerance, L"Incorrect area");
-
-		Real eV[5];
-		e.GetValues(eV);
-		Real tV[5];
-		t.GetValues(tV);
+		Assert::AreEqual(a.area, t.area, tolerance, L"Incorrect area");
 
 		for (int i = 0; i < 5; i++)
 		{
 			std::string error = "Incorrect Absorption: " + Unity::IntToStr(i);
 			std::wstring werror = std::wstring(error.begin(), error.end());
 			const wchar_t* werrorchar = werror.c_str();
-			Assert::AreEqual(eV[i], tV[i], tolerance, werrorchar);
+			Assert::AreEqual(t[i], a[i], tolerance, werrorchar);
 		}
 	}
 
@@ -300,22 +295,29 @@ namespace UIE
 			Binaural::CCore core = CreateCore(config.fs);
 
 			ReverbSource reverbSource(&core, config);
-			Absorption absorption1(0.7, 0.7, 0.7, 0.7, 0.7, 5.0);
-			Absorption absorption2(0.5, 0.5, 0.3, 0.3, 0.4, 2.0);
-			Absorption absorption3(0.1, 0.2, 0.25, 0.1, 0.2, 3.0);
+			std::vector<Real> in = { 0.7, 0.7, 0.7, 0.7, 0.7 };
+			Absorption absorption1(in, 5.0);
+			in = { 0.5, 0.5, 0.3, 0.3, 0.4 };
+			Absorption absorption2(in, 2.0);
+			in = { 0.1, 0.2, 0.25, 0.1, 0.2 };
+			Absorption absorption3(in, 3.0);
 
+			Absorption test = absorption2;
 			reverbSource.UpdateReflectionFilter(absorption1);
 			TestReverbSource(reverbSource, absorption1);
 
 			reverbSource.UpdateReflectionFilter(absorption2);
-			TestReverbSource(reverbSource, Absorption(9.0 / 14.0, 9.0 / 14.0, 41.0 / 70.0, 41.0 / 70.0, 43.0 / 70.0, 7.0));
+			in = { 9.0 / 14.0, 9.0 / 14.0, 41.0 / 70.0, 41.0 / 70.0, 43.0 / 70.0 };
+			TestReverbSource(reverbSource, Absorption(in, 7.0));
 
 			reverbSource.UpdateReflectionFilter(absorption3);
-			TestReverbSource(reverbSource, Absorption(0.48, 0.51, 0.485, 0.44, 0.49, 10.0));
+			in = { 0.48, 0.51, 0.485, 0.44, 0.49 };
+			TestReverbSource(reverbSource, Absorption(in, 10.0));
 
 			absorption1.area = -absorption1.area;
 			reverbSource.UpdateReflectionFilter(absorption1);
-			TestReverbSource(reverbSource, Absorption(0.26, 0.32, 0.27, 0.18, 0.28, 5.0));
+			in = { 0.26, 0.32, 0.27, 0.18, 0.28 };
+			TestReverbSource(reverbSource, Absorption(in, 5.0));
 
 			absorption2.area = -absorption2.area;
 			reverbSource.UpdateReflectionFilter(absorption2);
@@ -323,7 +325,8 @@ namespace UIE
 
 			absorption3.area = -absorption3.area;
 			reverbSource.UpdateReflectionFilter(absorption3);
-			TestReverbSource(reverbSource, Absorption(0.0, 0.0, 0.0, 0.0, 0.0, 0.0));
+			in = { 0.0, 0.0, 0.0, 0.0, 0.0 };
+			TestReverbSource(reverbSource, Absorption(in, 0.0));
 
 			RemoveCore(core);
 		}

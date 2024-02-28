@@ -68,7 +68,7 @@ Global
 		SolutionGuid = {3767F943-9E3A-48A7-A55D-07DBE2E3C85D}
 	EndGlobalSection
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		3DTI\3DTI.vcxitems*{2f98d92a-d2e5-460b-a1d1-12e9052deb64}*SharedItemsImports = 4
+		3DTI_NoSofa\3DTI_NoSofa.vcxitems*{2f98d92a-d2e5-460b-a1d1-12e9052deb64}*SharedItemsImports = 4
 		DiffractionPlugin\DiffractionPlugin.vcxitems*{2f98d92a-d2e5-460b-a1d1-12e9052deb64}*SharedItemsImports = 4
 		DiffractionPlugin\DiffractionPlugin.vcxitems*{bc8aa037-56ab-4f29-bf45-d410aff883c6}*SharedItemsImports = 9
 		3DTI_NoSofa\3DTI_NoSofa.vcxitems*{c4fbd30d-63ba-4b40-baa1-6c5f91065427}*SharedItemsImports = 4

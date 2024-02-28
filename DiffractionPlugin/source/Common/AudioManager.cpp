@@ -414,7 +414,7 @@ namespace UIE
 		void BandPass::InitFilters(size_t order, bool useLowBands, int fs)
 		{
 			numFilters = order / 2;
-			assert(numFilters == order * 2); // order must be even
+			assert(order == numFilters * 2); // order must be even
 			M = order;
 			filters.reserve(numFilters);
 			filters = std::vector<Band>(numFilters, Band(useLowBands, fs));

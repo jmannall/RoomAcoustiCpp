@@ -13,7 +13,7 @@
 
 // Unity headers
 #include "Unity/Debug.h"
-#include "Unity/Profiler.h"
+#include "Unity/UnityInterface.h"
 
 // 3DTI headers
 #include "BinauralSpatializer/Core.h"

@@ -87,7 +87,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
@@ -100,7 +100,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseTest|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -109,7 +109,7 @@
   </ImportGroup>
   <ImportGroup Label="Shared">
     <Import Project="..\DiffractionPlugin\DiffractionPlugin.vcxitems" Label="Shared" />
-    <Import Project="..\3DTI\3DTI.vcxitems" Label="Shared" />
+    <Import Project="..\3DTI_NoSofa\3DTI_NoSofa.vcxitems" Label="Shared" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -217,12 +217,12 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_TEST;_DEBUG;WINDOWS_EXPORTS;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;_SOLUTIONDIR=R"($(SolutionDir))";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_TEST;_DEBUG;WINDOWS_EXPORTS;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;_SOLUTIONDIR=R"($(SolutionDir))";_HAS_STD_BYTE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>$(PathTo3DTI)3dti_Toolkit;$(PathTo3DTI)3dti_ResourceManager;$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\boost_circular_buffer;$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\cereal\include;$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include;$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src;$(ProjectDir)include;$(SolutionDir)DiffractionPlugin\codegen\lib\myNN\include;$(SolutionDir)DiffractionPlugin\include;$(SolutionDir)DiffractionPlugin\include\Spatialiser;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp14</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <IntrinsicFunctions>false</IntrinsicFunctions>
     </ClCompile>
     <Link>
@@ -230,7 +230,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <AdditionalLibraryDirectories>$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\lib\win;$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>netcdf_x64.lib;libsofa_debug_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>netcdf_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AssemblyDebug>true</AssemblyDebug>
     </Link>
   </ItemDefinitionGroup>
@@ -257,7 +257,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <AdditionalLibraryDirectories>$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\lib\win;$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>netcdf_x64.lib;libsofa_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>netcdf_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AssemblyDebug>true</AssemblyDebug>
     </Link>
   </ItemDefinitionGroup>
@@ -267,12 +267,12 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_TEST;NDEBUG;WINDOWS_EXPORTS;_WINDOWS;_USRDLL;_SOLUTIONDIR=R"($(SolutionDir))";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_TEST;NDEBUG;WINDOWS_EXPORTS;_WINDOWS;_USRDLL;_SOLUTIONDIR=R"($(SolutionDir))";_HAS_STD_BYTE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>$(PathTo3DTI)3dti_Toolkit;$(PathTo3DTI)3dti_ResourceManager;$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\boost_circular_buffer;$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\cereal\include;$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include;$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src;$(ProjectDir)include;$(SolutionDir)DiffractionPlugin\codegen\lib\myNN\include;$(SolutionDir)DiffractionPlugin\include;$(SolutionDir)DiffractionPlugin\include\Spatialiser;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp14</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -281,7 +281,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <AdditionalLibraryDirectories>$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\lib\win;$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>netcdf_x64.lib;libsofa_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>netcdf_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

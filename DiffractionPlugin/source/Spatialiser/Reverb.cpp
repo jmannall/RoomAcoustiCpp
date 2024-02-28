@@ -3,7 +3,7 @@
 
 // Unity headers
 #include "Unity/Debug.h"
-#include "Unity/Profiler.h"
+#include "Unity/UnityInterface.h"
 
 using namespace Common;
 namespace UIE

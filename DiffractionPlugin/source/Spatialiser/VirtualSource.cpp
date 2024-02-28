@@ -9,7 +9,7 @@
 #include "Spatialiser/VirtualSource.h"
 
 // Unity headers
-#include "Unity/Profiler.h"
+#include "Unity/UnityInterface.h"
 
 using namespace Common;
 namespace UIE
