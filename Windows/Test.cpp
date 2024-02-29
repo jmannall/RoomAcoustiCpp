@@ -20,6 +20,8 @@
 #include "Common/Definitions.h"
 #include "Common/Vec3.h"
 
+#include "DSP/Interpolate.h"
+
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 namespace UIE
@@ -507,13 +509,13 @@ namespace UIE
 		}
 	};
 
-	//////////////////// FIR Tests ////////////////////
+	//////////////////// DSP Tests ////////////////////
 
-	TEST_CLASS(FIR)
+	TEST_CLASS(Test_DSP)
 	{
 	public:
 
-		TEST_METHOD(Resize)
+		TEST_METHOD(FIRResize)
 		{
 			std::vector<Real> ir = { 1.0, 0.5, 0.0, 0.2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
 			Buffer impulseResponse = Buffer(ir);
@@ -531,15 +533,21 @@ namespace UIE
 			for (int i = 0; i < input.size(); i++)
 				Assert::AreEqual(output[i], filter.GetOutput(input[i]), L"Wrong output");
 		}
-	};
 
-	//////////////////// Lerp Tests ////////////////////
+		TEST_METHOD(FIRProcess)
+		{
+			std::vector<Real> ir = { 1.0, 0.5, 0.0, 0.2, 0.3, 0.0, 0.7, 0.1 };
+			std::vector<Real> in = { 1.0, 0.0, 0.2, 0.5, 0.0, 0.3, 0.4, 0.2 };
 
-	TEST_CLASS(Interpolation)
-	{
-	public:
+			std::vector<Real> out = { 1.0, 0.5, 0.2, 0.8, 0.55, 0.34, 1.41, 0.65 };
+			Buffer impulseResponse = Buffer(ir);
+			FIRFilter filter = FIRFilter(impulseResponse);
 
-		TEST_METHOD(Single)
+			for (int i = 0; i < out.size(); i++)
+				Assert::AreEqual(out[i], filter.GetOutput(in[i]), EPS, L"Wrong output");
+		}
+
+		TEST_METHOD(InterpolateReal)
 		{
 			Real current = 1.0;
 			Real target = 0.0;
@@ -551,7 +559,7 @@ namespace UIE
 			Assert::AreEqual(0.64, current, EPS, L"Wrong output");
 		}
 
-		TEST_METHOD(Vector)
+		TEST_METHOD(InterpolateBuffer)
 		{
 			std::vector<Real> start = { 1.0, 4.0, 3.0, 2.0 };
 			Buffer current = Buffer(start);
@@ -571,6 +579,29 @@ namespace UIE
 			Lerp(current, target, lerpFactor);
 			for (int i = 0; i < 4; i++)
 				Assert::AreEqual(output[i], current[i], EPS, L"Wrong output");
+			}
+		}
+
+		TEST_METHOD(InterpolateCoefficients)
+		{
+			std::vector<Real> start = { 1.0, 4.0, 3.0, 2.0 };
+			Coefficients current = Coefficients(start);
+
+			std::vector<Real> end = { 0.0, 2.0, 4.0, 2.0 };
+			Coefficients target = Coefficients(end);
+			Real lerpFactor = 0.2;
+			Lerp(current, target, lerpFactor);
+
+			{
+				std::vector<Real> output = { 0.8, 3.6, 3.2, 2.0 };
+				for (int i = 0; i < 4; i++)
+					Assert::AreEqual(output[i], current[i], EPS, L"Wrong output");
+			}
+			{
+				std::vector<Real> output = { 0.64, 3.28, 3.36, 2.0 };
+				Lerp(current, target, lerpFactor);
+				for (int i = 0; i < 4; i++)
+					Assert::AreEqual(output[i], current[i], EPS, L"Wrong output");
 			}
 		}
 	};

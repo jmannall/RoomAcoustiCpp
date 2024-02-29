@@ -18,10 +18,14 @@
 // 3DTI headers
 #include "BinauralSpatializer/Core.h"
 
+// DSP headers
+#include "DSP/Interpolate.h"
+
 namespace UIE
 {
 	using namespace Common;
 	// using namespace Unity;
+	using namespace DSP;
 	namespace Spatialiser
 	{
 

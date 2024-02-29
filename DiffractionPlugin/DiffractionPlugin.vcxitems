@@ -17,6 +17,11 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Common\AudioManager.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Common\Matrix.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Common\Vec.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\Buffer.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\FIRFilter.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\IIRFilter.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\LinkwitzRileyFilter.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\ParametricEQ.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Context.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Diffraction\Models.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Diffraction\Path.cpp" />
@@ -46,6 +51,12 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Types.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Vec.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Vec3.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\Buffer.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\FIRFilter.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\IIRFilter.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\Interpolate.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\LinkwitzRileyFilter.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\ParametricEQ.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Context.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Diffraction\Models.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Diffraction\Path.h" />

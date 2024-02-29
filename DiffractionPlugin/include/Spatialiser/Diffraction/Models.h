@@ -27,9 +27,15 @@
 // Spatialiser headers
 #include "Spatialiser/Diffraction/Path.h"
 
+// DSP headers
+#include "DSP/FIRFilter.h"
+#include "DSP/IIRFilter.h"
+#include "DSP/LinkwitzRileyFilter.h"
+
 namespace UIE
 {
 	using namespace Common;
+	using namespace DSP;
 	namespace Spatialiser
 	{
 		namespace Diffraction
@@ -141,7 +147,7 @@ namespace UIE
 
 			class NN	// Only accurate at 48kHz
 			{
-				using NNParameters = TransDF2Parameters;
+				using NNParameters = ZPKParameters;
 			public:
 				NN(Path* path);
 				~NN() {};
@@ -161,7 +167,7 @@ namespace UIE
 				void AssignInputRZ(SRData* one, SRData* two);
 
 				NNParameters current;
-				TransDF2 filter;
+				ZPKFilter filter;
 
 				Path* mPath;
 				std::mutex* m;
@@ -207,12 +213,6 @@ namespace UIE
 
 			//////////////////// UTD class ////////////////////
 
-			struct UTDParameters
-			{
-				Real g[4];
-				UTDParameters() : g{ 0.0, 0.0, 0.0, 0.0 } {}
-			};
-
 			class UTD
 			{
 			public:
@@ -239,9 +239,9 @@ namespace UIE
 
 				Real g[4];
 				Real gSB[4];
-				UTDParameters params;
-				UTDParameters target;
-				UTDParameters current;
+				Coefficients params;
+				Coefficients target;
+				Coefficients current;
 
 				Path* mPath;
 				std::mutex* m;

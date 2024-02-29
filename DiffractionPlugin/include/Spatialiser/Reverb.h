@@ -24,6 +24,9 @@
 // Unity headers
 #include "Unity/Debug.h"
 
+// DSP headers
+#include "DSP/ParametricEQ.h"
+
 namespace UIE
 {
 	using namespace Common;

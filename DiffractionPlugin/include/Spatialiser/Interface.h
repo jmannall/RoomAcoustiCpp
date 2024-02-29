@@ -1,5 +1,6 @@
 /*
-* \brief Interface between the API and Spatialiser global context
+* @brief Interface between the API and Spatialiser global context
+* 
 */
 
 #ifndef Spatialiser_Interface_h

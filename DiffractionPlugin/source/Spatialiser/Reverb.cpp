@@ -5,10 +5,14 @@
 #include "Unity/Debug.h"
 #include "Unity/UnityInterface.h"
 
+// DSP headers
+#include "DSP/Interpolate.h"
+
 using namespace Common;
 namespace UIE
 {
 	using namespace Unity;
+	using namespace DSP;
 	namespace Spatialiser
 	{
 

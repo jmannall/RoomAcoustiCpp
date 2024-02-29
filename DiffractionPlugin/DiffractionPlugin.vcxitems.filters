@@ -31,6 +31,12 @@
     <Filter Include="Source Files\Common">
       <UniqueIdentifier>{d00b4eae-0a1d-4174-a196-68e8896c0c72}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\DSP">
+      <UniqueIdentifier>{b73dbbb8-a9d2-40dc-b708-7f8d6b809edf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\DSP">
+      <UniqueIdentifier>{6dbdf9af-0bc0-4b16-a505-df86882c6a32}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Context.cpp">
@@ -89,6 +95,21 @@
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Unity\UnityInterface.cpp">
       <Filter>Source Files\Unity</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\Buffer.cpp">
+      <Filter>Source Files\DSP</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\FIRFilter.cpp">
+      <Filter>Source Files\DSP</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\IIRFilter.cpp">
+      <Filter>Source Files\DSP</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\LinkwitzRileyFilter.cpp">
+      <Filter>Source Files\DSP</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\ParametricEQ.cpp">
+      <Filter>Source Files\DSP</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -181,6 +202,24 @@
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Coefficients.h">
       <Filter>Header Files\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\Buffer.h">
+      <Filter>Header Files\DSP</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\FIRFilter.h">
+      <Filter>Header Files\DSP</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\IIRFilter.h">
+      <Filter>Header Files\DSP</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\LinkwitzRileyFilter.h">
+      <Filter>Header Files\DSP</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\ParametricEQ.h">
+      <Filter>Header Files\DSP</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\Interpolate.h">
+      <Filter>Header Files\DSP</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

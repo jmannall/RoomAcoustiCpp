@@ -11,10 +11,14 @@
 // Unity headers
 #include "Unity/UnityInterface.h"
 
+// DSP headers
+#include "DSP/Interpolate.h"
+
 using namespace Common;
 namespace UIE
 {
 	using namespace Common;
+	using namespace DSP;
 	namespace Spatialiser
 	{
 

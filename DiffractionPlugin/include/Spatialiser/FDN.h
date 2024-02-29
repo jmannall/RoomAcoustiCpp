@@ -24,9 +24,14 @@
 #include "Common/Vec.h"
 #include "Common/Coefficients.h"
 
+// DSP headers
+#include "DSP/Buffer.h"
+#include "DSP/ParametricEQ.h"
+
 namespace UIE
 {
 	using namespace Common;
+	using namespace DSP;
 	namespace Spatialiser
 	{
 

@@ -4,6 +4,9 @@
 *
 */
 
+// Common headers
+#include "Common/AudioManager.h"
+
 // Spatialiser headers
 #include "Spatialiser/Diffraction/Models.h"
 #include "Spatialiser/Types.h"
@@ -11,9 +14,13 @@
 // Unity headers
 #include "Unity/UnityInterface.h"
 
+// DSP headers
+#include "DSP/Interpolate.h"
+
 namespace UIE
 {
 	using namespace Common;
+	using namespace DSP;
 	namespace Spatialiser
 	{
 		namespace Diffraction
@@ -390,7 +397,7 @@ namespace UIE
 
 			//////////////////// UTD class ////////////////////
 
-			UTD::UTD(Path* path, int fs) : lrFilter(fs), target(), current(), params(), mPath(path)
+			UTD::UTD(Path* path, int fs) : lrFilter(fs), target(4, 0.0), current(4, 0.0), params(4, 0.0), mPath(path)
 			{
 				m = new std::mutex();
 				for (int i = 0; i < 4; i++)
@@ -413,7 +420,7 @@ namespace UIE
 				{
 					std::lock_guard<std::mutex> lock(*m);
 					for (int i = 0; i < 4; i++)
-						target.g[i] = 0.0;
+						target[i] = 0.0;
 				}
 			}
 
@@ -431,7 +438,7 @@ namespace UIE
 					Complex A = -exp(-imUnit * k[i] * dSR) * E[i] / temp;
 					g[i] = abs(A * (EqHalf(mPath->rData.t - mPath->sData.t, i) + EqHalf(mPath->rData.t + mPath->sData.t, i)));
 					gSB[i] = abs(A * (EqHalf(PI_EPS, i) + EqHalf(2 * mPath->sData.t + PI_EPS, i)));
-					params.g[i] = (1.0 - idx) * g[i] / gSB[i] + idx * g[i] * dSR;
+					params[i] = (1.0 - idx) * g[i] / gSB[i] + idx * g[i] * dSR;
 				}
 			}
 
@@ -504,11 +511,11 @@ namespace UIE
 				{
 					outBuffer[i] = lrFilter.GetOutput(inBuffer[i]);
 					std::lock_guard<std::mutex> lock(*m);
-					if (current.g != target.g)
+					if (current != target)
 					{
 						for (int j = 0; j < 4; j++)
-							Lerp(current.g[j], target.g[j], lerpFactor);
-						lrFilter.UpdateParameters(current.g);
+							Lerp(current[j], target[j], lerpFactor);
+						lrFilter.UpdateParameters(current);
 					}
 				}
 			}
@@ -838,7 +845,7 @@ namespace UIE
 
 			void BTM::ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const int numFrames, const Real lerpFactor)
 			{
-				if (BuffersEqual(currentIr, targetIr))
+				if (currentIr == targetIr)
 				{
 #ifdef PROFILE_AUDIO_THREAD
 					BeginFIR();

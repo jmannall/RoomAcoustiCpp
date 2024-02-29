@@ -12,9 +12,11 @@
 #include "Common/Coefficients.h"
 
 // Spatialiser headers
-#include "Spatialiser/Main.h"
 #include "Spatialiser/Types.h"
 #include "Spatialiser/Interface.h"
+
+// DSP headers
+#include "DSP/Buffer.h"
 
 // DLL Linkage
 #ifdef _ANDROID
@@ -30,6 +32,7 @@
 
 using namespace UIE::Spatialiser;
 using namespace UIE::Common;
+using namespace UIE::DSP;
 
 // Pointer to return buffer
 static float* buffer = nullptr;

@@ -8,7 +8,8 @@
 #define Common_FrequencyDependence_h
 
 // C++ headers
-#include "assert.h"
+#include <assert.h>
+#include <vector>
 
 // Common headers
 #include "Common/Types.h"
@@ -22,7 +23,7 @@ namespace UIE
 		class Coefficients
 		{
 		public:
-			Coefficients(const size_t len) : coefficients(len) {}
+			Coefficients(const size_t len) : coefficients(len, 0.0) {}
 			Coefficients(const size_t len, const Real in) : coefficients(len, in) {}
 			Coefficients(const std::vector<Real>& c) : coefficients(c) {}
 			~Coefficients() {};
@@ -128,6 +129,21 @@ namespace UIE
 
 		inline Coefficients operator*(Coefficients a, const Real& b) { return a *= b; }
 		inline Coefficients operator/(Coefficients a, const Real& b) { return a *= (1.0 / b); }
+
+		inline bool operator==(const Coefficients& a, const Coefficients& b)
+		{
+			if (a.Length() != b.Length())
+				return false;
+			for (int i = 0; i < a.Length(); i++)
+				if (a[i] != b[i])
+					return false;
+			return true;
+		}
+
+		inline bool operator!=(const Coefficients& a, const Coefficients& b)
+		{
+			return !(a == b);
+		}
 
 		//////////////////// Absorption class ////////////////////
 
