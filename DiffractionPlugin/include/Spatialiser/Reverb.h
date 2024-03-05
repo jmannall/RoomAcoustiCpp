@@ -41,6 +41,7 @@ namespace UIE
 			ReverbSource(Binaural::CCore* core, const Config& config);
 			~ReverbSource();
 
+			void UpdateSpatialisationMode(const HRTFMode& mode);
 			inline void SetShift(const vec3& shift) { mShift = shift; }
 			void Update(const vec3& position);
 			void UpdateReflectionFilter();
@@ -79,6 +80,8 @@ namespace UIE
 		public:
 			Reverb(Binaural::CCore* core, const Config& config, const vec& dimensions);
 			Reverb(Binaural::CCore* core, const Config& config, const vec& dimensions, const Coefficients& T60);
+
+			void UpdateSpatialisationMode(const HRTFMode& mode);
 
 			void UpdateReverb(const vec3& position, const bool on);
 			void UpdateReflectionFilters(const ReverbWall& id, const Absorption& absorption);

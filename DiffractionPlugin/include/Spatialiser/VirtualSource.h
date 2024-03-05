@@ -208,7 +208,7 @@ namespace UIE
 		public:
 
 			// Load and Destroy
-			VirtualSource(const Config& config) : mCore(NULL), mSource(NULL), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(4, config.frequencyBands, config.fs), isInitialised(false), feedsFDN(false), mFDNChannel(-1), btm(&mDiffractionPath, 48000), reflection(false), diffraction(false), mConfig(config) {};
+			VirtualSource(const Config& config) : mCore(NULL), mSource(NULL), order(0), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(4, config.frequencyBands, config.fs), isInitialised(false), feedsFDN(false), mFDNChannel(-1), btm(&mDiffractionPath, 48000), reflection(false), diffraction(false), mConfig(config) {};
 			VirtualSource(Binaural::CCore* core, const Config& config);
 			VirtualSource(Binaural::CCore* core, const Config& config, const VirtualSourceData& data, const int fdnChannel);
 			VirtualSource(const VirtualSource& vS);
@@ -230,6 +230,9 @@ namespace UIE
 				return true;
 			}
 			inline int GetFDNChannel() const { return mFDNChannel; }
+
+			void UpdateSpatialisationMode(const HRTFMode& mode);
+			void UpdateSpatialisationMode(const SPATConfig& config);
 
 			// Updates
 			bool UpdateVirtualSource(const VirtualSourceData& data, int& fdnChannel);
@@ -258,6 +261,7 @@ namespace UIE
 			Config mConfig;
 			bool feedsFDN;
 			int mFDNChannel;
+			int order;
 
 			shared_ptr<Binaural::CSingleSourceDSP> mSource;
 

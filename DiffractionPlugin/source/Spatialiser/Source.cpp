@@ -74,6 +74,44 @@ namespace UIE
 			Reset();
 		}
 
+		void Source::UpdateSpatialisationMode(const SPATConfig& config)
+		{
+			mConfig.spatConfig = config;
+			switch (config.GetMode(0))
+			{
+			case HRTFMode::quality:
+			{
+				mSource->SetSpatializationMode(Binaural::TSpatializationMode::HighQuality);
+				break;
+			}
+			case HRTFMode::performance:
+			{
+				mSource->SetSpatializationMode(Binaural::TSpatializationMode::HighPerformance);
+				break;
+			}
+			case HRTFMode::none:
+			{
+				mSource->SetSpatializationMode(Binaural::TSpatializationMode::NoSpatialization);
+				break;
+			}
+			default:
+			{
+				mSource->SetSpatializationMode(Binaural::TSpatializationMode::NoSpatialization);
+				break;
+			}
+			}
+			{
+				lock_guard<mutex> lock(vWallMutex);
+				for (auto& it : mVirtualSources)
+					it.second.UpdateSpatialisationMode(config);
+			}
+			{
+				lock_guard<mutex> lock(vEdgeMutex);
+				for (auto& it : mVirtualEdgeSources)
+					it.second.UpdateSpatialisationMode(config);
+			}
+		}
+
 		void Source::ResetFDNSlots()
 		{
 			freeFDNChannels.reserve(1);
@@ -86,19 +124,11 @@ namespace UIE
 				lock_guard<mutex> lock(vWallMutex);
 				for (auto& it : mVirtualSources)
 					it.second.ProcessAudio(data, reverbInput, outputBuffer);
-				/*for (auto it = mVirtualSources.begin(); it != mVirtualSources.end(); it++)
-				{
-					counter += it->second.ProcessAudio(data, numFrames, reverbInput, outputBuffer, lerpFactor);
-				}*/
 			}
 			{
 				lock_guard<mutex> lock(vEdgeMutex);
 				for (auto& it : mVirtualEdgeSources)
 					it.second.ProcessAudio(data, reverbInput, outputBuffer);
-				/*for (auto it = mVirtualEdgeSources.begin(); it != mVirtualEdgeSources.end(); it++)
-				{
-					counter += it->second.ProcessAudio(data, numFrames, reverbInput, outputBuffer, lerpFactor);
-				}*/
 			}
 
 #ifdef DEBUG_AUDIO_THREAD

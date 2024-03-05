@@ -43,8 +43,10 @@ namespace UIE
 		public:
 
 			// Load and Destroy
-			Context(const Config* config, const std::vector<std::string>& filePaths);
+			Context(const Config* config);
 			~Context();
+
+			bool SetSpatialisationMode(const SPATConfig& config, const int& hrtfResamplingStep, const std::vector<std::string>& filePaths);
 
 			// Image Source Model
 			void StopRunning() { mIsRunning = false; }

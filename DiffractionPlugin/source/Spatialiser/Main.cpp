@@ -52,7 +52,6 @@ extern "C"
 	 * @param numFrames The number of frames in an audio buffer.
 	 * @param numFDNChannels The number of feedback delay network channels.
 	 * @param lerpFactor The interpolation factor for audio parameters.
-	 * @param hrtfResamplingStep The resampling step for the HRTF.
 	 * @param hrtfMode The mode for HRTF processing. 0 for quality, 1 for performance, 2 for none.
 	 * @param fBands The center frequency bands for reflection filters.
 	 * @param numBands The number of frequency bands provided in the fBands parameter.
@@ -60,29 +59,15 @@ extern "C"
 	 *
 	 * @return True if the initialization was successful, false otherwise.
 	 */
-	EXPORT bool API SPATInit(int fs, int numFrames, int numFDNChannels, float lerpFactor, int hrtfResamplingStep, int hrtfMode, const float* fBands, int numBands, const char** paths)
+	EXPORT bool API SPATInit(int fs, int numFrames, int numFDNChannels, float lerpFactor, const float* fBands, int numBands)
 	{
-		std::vector<std::string> filePaths = { std::string(*(paths)), std::string(*(paths + 1)), std::string(*(paths + 2)) };
-		HRTFMode mode;
-		switch (hrtfMode)
-		{
-			case 0:
-			{ mode = HRTFMode::quality; break; }
-			case 1:
-			{ mode = HRTFMode::performance; break; }
-			case 2:
-			{ mode = HRTFMode::none; break; }
-			default:
-			{ mode = HRTFMode::performance; break; }
-		}
-
 		numAbsorptionBands = numBands;
 		Coefficients frequencyBands = Coefficients(static_cast<size_t>(numBands));
 		for (int i = 0; i < numBands; i++)
 			frequencyBands[i] = static_cast<Real>(fBands[i]);
 
-		Config config = Config(fs, numFrames, numFDNChannels, static_cast<Real>(lerpFactor), hrtfResamplingStep, mode, frequencyBands);
-		return Init(&config, filePaths);
+		Config config = Config(fs, numFrames, numFDNChannels, static_cast<Real>(lerpFactor), frequencyBands);
+		return Init(&config);
 	}
 
 	/**
@@ -94,6 +79,24 @@ extern "C"
 	EXPORT void API SPATExit()
 	{
 		Exit();
+	}
+
+	/**
+	 * Sets the spatialisation mode for the HRTF processing.
+	 *
+	 * @param qualityDepth The depth up to which to use high quality HRTF processing. -2 for none, -1 for all (including late reverberation) and 0 for direct sound and 1, 2, 3 etc for the corresponding reflection/diffraction order.
+	 * @param performanceDepth The depth up to which to use high performance ILD processing. -2 for none, -1 for all (including late reverberation) and 0 for direct sound and 1, 2, 3 etc for the corresponding reflection/diffraction order.
+	 * @param hrtfResamplingStep The step size for resampling the HRTF. This should be between 5 - 90. Smaller values indicate higher quality.
+	 * @param paths An array of file paths in the order HRTF, near field and ILD files. The paths are expected to be null-terminated C strings.
+	 *
+	 * @return True if the spatialisation mode was successfully set, false otherwise.
+	 */
+	EXPORT bool API SPATSetSpatialisationMode(int qualityDepth, int performanceDepth, int hrtfResamplingStep, const char** paths)
+	{
+		std::vector<std::string> filePaths = { std::string(*(paths)), std::string(*(paths + 1)), std::string(*(paths + 2)) };
+
+		SPATConfig config = SPATConfig(qualityDepth, performanceDepth);
+		return SetSpatialisationMode(config, hrtfResamplingStep, filePaths);
 	}
 
 	/**
@@ -327,7 +330,7 @@ extern "C"
 	 * Processes the output of the spatialiser.
 	 *
 	 * This function should be called after all audio sources have been updated for a frame.
-	 * It will process the later reverberation and prepare the output buffer.
+	 * It will process the later reverberation and prepare the interleaved output buffer.
 	 *
 	 * @return True if the processing was successful and the output buffer is ready, false otherwise.
 	 */
@@ -360,7 +363,7 @@ extern "C"
 	 * This function should be called after SPATProcessOutput has returned true.
 	 * It will return a pointer to the output buffer that contains the processed output buffer.
 	 *
-	 * @param buf A pointer to a float pointer. This will be set to point to the output buffer.
+	 * @param buf A pointer to a float pointer. This will be set to point to the interleaved output buffer.
 	 */
 	EXPORT void API SPATGetOutputBuffer(float** buf)
 	{

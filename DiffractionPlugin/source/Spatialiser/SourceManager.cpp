@@ -43,6 +43,14 @@ namespace UIE
 			}
 		}
 
+		void SourceManager::UpdateSpatialisationMode(const SPATConfig& config)
+		{
+			mConfig.spatConfig = config;
+			lock_guard<mutex> lock(updateMutex);
+			for (auto& source : mSources)
+				source.second.UpdateSpatialisationMode(config);
+		}
+
 		void SourceManager::ProcessAudio(const size_t& id, const Buffer& data, matrix& reverbInput, Buffer& outputBuffer)
 		{
 			lock_guard<mutex> lock(processAudioMutex);

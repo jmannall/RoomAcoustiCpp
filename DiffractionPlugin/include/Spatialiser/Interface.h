@@ -27,13 +27,23 @@ namespace UIE
 		 * @param filePaths The file paths for HRTF files.
 		 * @return True if the initialization was successful, false otherwise.
 		 */
-		bool Init(const Config* config, const std::vector<std::string>& filePaths);
+		bool Init(const Config* config);
 
 		/**
 		 * Exits and cleans up the spatialiser.
 		 */
 		void Exit();
 
+		/**
+		 * Sets the spatialisation mode for the HRTF processing.
+		 *
+		 * @param config The configuration of the spatialisation mode.
+		 * @param hrtfResamplingStep The resampling step for the HRTF.
+		 * @param filePaths The file paths for HRTF, near field and ILD files.
+		 * @return True if the files were loaded successfully, false otherwise.
+		 */
+		bool SetSpatialisationMode(const SPATConfig& config, const int& hrtfResamplingStep, const std::vector<std::string>& filePaths);
+		
 		/**
 		 * Updates the configuration for the Image Source Model (ISM).
 		 *

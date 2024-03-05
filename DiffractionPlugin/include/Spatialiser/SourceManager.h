@@ -34,6 +34,8 @@ namespace UIE
 			SourceManager(Binaural::CCore* core, const Config& config) : mSources(), mEmptySlots(), mCore(core), mConfig(config) {};
 			~SourceManager() { Reset(); };
 
+			void UpdateSpatialisationMode(const SPATConfig& config);
+
 			// Sources
 			size_t Init();
 			inline void Update(const size_t& id, const CTransform& transform, const SourceData& data)

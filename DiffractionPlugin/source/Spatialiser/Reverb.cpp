@@ -51,7 +51,12 @@ namespace UIE
 			mSource->DisableFarDistanceEffect();
 
 			//Select spatialisation mode
-			switch (mConfig.hrtfMode)
+			UpdateSpatialisationMode(mConfig.spatConfig.GetMode(-1));
+		}
+
+		void ReverbSource::UpdateSpatialisationMode(const HRTFMode& mode)
+		{
+			switch (mode)
 			{
 			case HRTFMode::quality:
 			{
@@ -70,7 +75,7 @@ namespace UIE
 			}
 			default:
 			{
-				mSource->SetSpatializationMode(Binaural::TSpatializationMode::HighPerformance);
+				mSource->SetSpatializationMode(Binaural::TSpatializationMode::NoSpatialization);
 				break;
 			}
 			}
@@ -162,6 +167,12 @@ namespace UIE
 			input = matrix(mConfig.numFrames, mConfig.numFDNChannels);
 			col = new Real[mConfig.numFDNChannels];
 			InitSources();
+		}
+
+		void Reverb::UpdateSpatialisationMode(const HRTFMode& mode)
+		{
+			for (ReverbSource& source : mReverbSources)
+				source.UpdateSpatialisationMode(mode);
 		}
 
 		void Reverb::InitSources()

@@ -87,20 +87,38 @@ namespace UIE
 			ISMConfig(int _order, bool dir, bool ref, bool diff, bool refDif, bool rev, bool spDiff) : order(_order), direct(dir), reflection(ref), diffraction(diff), reflectionDiffraction(refDif), lateReverb(rev), specularDiffraction(spDiff) {};
 		};
 
+		class SPATConfig
+		{
+		public:
+			SPATConfig() : quality(-2), performance(-2) {};
+			SPATConfig(int qualityOrder, int performanceOrder) : quality(qualityOrder), performance(performanceOrder) {};
+		
+			HRTFMode GetMode(const int& order) const
+			{
+				if (quality == -1 || order <= quality)
+					return HRTFMode::quality;
+				if (performance == -1 || order <= performance)
+					return HRTFMode::performance;
+				return HRTFMode::none;
+			}
+		private:
+			int quality, performance;
+		};
+
 
 		struct Config
 		{
 			// DSP parameters
-			int fs, numFrames, numFDNChannels, hrtfResamplingStep;
+			int fs, numFrames, numFDNChannels;
 			// 1 means DSP parameters are lerped over only 1 audio callback
 			// 5 means lerped over 5 separate audio callbacks
 			// must be greater than 0
 			Real lerpFactor;
-			HRTFMode hrtfMode;
 			Coefficients frequencyBands;
+			SPATConfig spatConfig;
 
-			Config() : fs(44100), numFrames(512), numFDNChannels(12), hrtfResamplingStep(0), lerpFactor(1.0 / ((Real)numFrames * 2.0)), hrtfMode(HRTFMode::performance), frequencyBands({250.0, 500.0, 1000.0, 20000.0}) {};
-			Config(int _fs, int _numFrames, int _numFDNChannels, Real _lerpFactor, int hrtfStep, HRTFMode mode, Coefficients fBands) : fs(_fs), numFrames(_numFrames), numFDNChannels(_numFDNChannels), hrtfResamplingStep(hrtfStep), lerpFactor(1.0 / ((Real)numFrames * _lerpFactor)), hrtfMode(mode), frequencyBands(fBands) {};
+			Config() : fs(44100), numFrames(512), numFDNChannels(12), lerpFactor(1.0 / ((Real)numFrames * 2.0)), frequencyBands({250.0, 500.0, 1000.0, 20000.0}), spatConfig() {};
+			Config(int _fs, int _numFrames, int _numFDNChannels, Real _lerpFactor, Coefficients fBands, int quality, int performance) : fs(_fs), numFrames(_numFrames), numFDNChannels(_numFDNChannels), lerpFactor(1.0 / ((Real)numFrames * _lerpFactor)), frequencyBands(fBands), spatConfig(quality, performance) {};
 		};
 	}
 }

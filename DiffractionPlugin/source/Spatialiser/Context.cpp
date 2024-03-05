@@ -55,10 +55,10 @@ namespace UIE
 
 		// Load and Destroy
 
-		Context::Context(const Config* config, const std::vector<std::string>& filePaths) : mIsRunning(true), ISMThread()
+		Context::Context(const Config* config) : mIsRunning(true), ISMThread()
 		{
 #ifdef DEBUG_INIT
-	Debug::Log("Init Context", Colour::Green);
+			Debug::Log("Init Context", Colour::Green);
 #endif
 
 			// Copy config
@@ -66,61 +66,9 @@ namespace UIE
 
 			// Set dsp settings
 			mCore.SetAudioState({ mConfig.fs, mConfig.numFrames });
-			mCore.SetHRTFResamplingStep(mConfig.hrtfResamplingStep);
 
 			// Create listener
 			mListener = mCore.CreateListener();
-
-#ifdef DEBUG_HRTF
-	Debug::Log("HRTF resampling step: " + mCore.GetHRTFResamplingStep(), Colour::Blue);
-	Debug::Log("HRTF file path: " + filePaths[0] + filePaths[1], Colour::Blue);
-	Debug::Log("ILD file path: " + filePaths[0] + filePaths[2], Colour::Blue);
-#endif
-
-			// Load HRTF files
-			bool hrtfLoaded = HRTF::CreateFrom3dti(filePaths[0] + filePaths[1], mListener);
-			bool ildLoaded = false;
-
-			string mode;
-			if (hrtfLoaded)
-			{
-				switch (mConfig.hrtfMode)
-				{
-				case HRTFMode::quality:
-				{ 
-					ildLoaded = ILD::CreateFrom3dti_ILDSpatializationTable(filePaths[0] + filePaths[2], mListener);
-					mode = "quality"; break;
-				}
-				case HRTFMode::performance:
-				{
-					ildLoaded = ILD::CreateFrom3dti_ILDNearFieldEffectTable(filePaths[0] + filePaths[2], mListener);
-					mode = "performance"; break;
-				}
-				case HRTFMode::none:
-					break;
-				default:
-				{ 
-					mConfig.hrtfMode = HRTFMode::none; break;
-				}
-				}
-			}
-			else
-				mConfig.hrtfMode = HRTFMode::none;
-
-#ifdef DEBUG_HRTF
-	if (mConfig.hrtfMode == HRTFMode::none)
-		Debug::Log("Spatialisation set to none", Colour::Green);
-	else if (ildLoaded)
-	{
-		Debug::Log("HRTF files loaded successfully", Colour::Green);
-		Debug::Log("Spatialisation set to " + mode, Colour::Green);
-	}
-	else
-	{
-		Debug::Log("Failed to load HRTF files", Colour::Red);
-		Debug::Log("Spatialisation set to none", Colour::Green);
-	}
-#endif
 
 			// TO DO: Add reverb to the init process then test the audio processing and FDN all working
 
@@ -171,6 +119,51 @@ namespace UIE
 
 			// Deallocate buffers
 			DSP_SAFE_ARRAY_DELETE(mMem);
+		}
+
+		bool Context::SetSpatialisationMode(const SPATConfig& config, const int& hrtfResamplingStep, const std::vector<std::string>& filePaths)
+		{
+			mConfig.spatConfig = config;
+			mReverb->UpdateSpatialisationMode(config.GetMode(-1));
+			mSources->UpdateSpatialisationMode(config);
+
+			// Set HRTF resampling step
+			mCore.SetHRTFResamplingStep(hrtfResamplingStep);
+
+#ifdef DEBUG_HRTF
+			Debug::Log("HRTF resampling step: " + mCore.GetHRTFResamplingStep(), Colour::Blue);
+			Debug::Log("HRTF file path: " + filePaths[0], Colour::Blue);
+			Debug::Log("Near field file path: " + filePaths[1], Colour::Blue);
+			Debug::Log("ILD file path: " + filePaths[2], Colour::Blue);
+#endif
+
+			// Load high quality files
+			bool result = HRTF::CreateFrom3dti(filePaths[0], mListener);
+			if (result)
+				result = ILD::CreateFrom3dti_ILDNearFieldEffectTable(filePaths[1], mListener);
+			else
+			{
+#ifdef DEBUG_HRTF
+				Debug::Log("Failed to load HRTF files", Colour::Red);
+#endif
+			}
+			// Load high performance files
+			if (result)
+				result = ILD::CreateFrom3dti_ILDSpatializationTable(filePaths[2], mListener);
+			else
+			{
+#ifdef DEBUG_HRTF
+				Debug::Log("Failed to load near field files", Colour::Red);
+#endif
+			}
+
+			if (!result)
+			{
+#ifdef DEBUG_HRTF
+				Debug::Log("Failed to load ILD field files", Colour::Red);
+#endif
+			}
+			return result;
 		}
 
 		// Reverb

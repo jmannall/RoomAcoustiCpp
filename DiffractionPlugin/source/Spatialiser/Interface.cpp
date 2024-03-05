@@ -21,7 +21,7 @@ namespace UIE
 
 		////////////////////////////////////////
 
-		bool Init(const Config* config, const std::vector<std::string>& filePaths)
+		bool Init(const Config* config)
 		{
 			if (context) // Delete any existing context
 			{
@@ -33,7 +33,7 @@ namespace UIE
 #ifdef DEBUG_INIT
 	Debug::Log("Create New Context", Colour::Green);
 #endif
-			context = new Context(config, filePaths);
+			context = new Context(config);
 			return context->IsRunning();
 		}
 
@@ -46,6 +46,17 @@ namespace UIE
 				delete context;
 				context = nullptr;
 			}
+		}
+
+		////////////////////////////////////////
+
+		bool SetSpatialisationMode(const SPATConfig& config, const int& hrtfResamplingStep, const std::vector<std::string>& filePaths)
+		{
+			auto* context = GetContext();
+			if (context)
+				return context->SetSpatialisationMode(config, hrtfResamplingStep, filePaths);
+			else
+				return false;
 		}
 
 		////////////////////////////////////////

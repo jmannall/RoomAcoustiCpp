@@ -76,6 +76,8 @@ namespace UIE
 				oldData(s.oldData), freeFDNChannels(s.freeFDNChannels) {};
 			~Source();
 
+			void UpdateSpatialisationMode(const SPATConfig& config);
+
 			// Operators
 			inline Source operator=(const Source& s) {
 				mCore = s.mCore; mConfig = s.mConfig; mSource = s.mSource;

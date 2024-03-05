@@ -121,7 +121,7 @@ namespace UIE
 
 		//////////////////// VirtualSource class ////////////////////
 
-		VirtualSource::VirtualSource(Binaural::CCore* core, const Config& config) : mCore(core), mSource(NULL), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(4, config.frequencyBands, config.fs), isInitialised(false), mConfig(config), feedsFDN(false), mFDNChannel(-1), btm(&mDiffractionPath, config.fs), reflection(false), diffraction(false)
+		VirtualSource::VirtualSource(Binaural::CCore* core, const Config& config) : mCore(core), mSource(NULL), order(0), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(4, config.frequencyBands, config.fs), isInitialised(false), mConfig(config), feedsFDN(false), mFDNChannel(-1), btm(&mDiffractionPath, config.fs), reflection(false), diffraction(false)
 		{
 			bInput = CMonoBuffer<float>(mConfig.numFrames);
 			bStore.ResizeBuffer(mConfig.numFrames);
@@ -174,6 +174,49 @@ namespace UIE
 				}
 			}
 			return false;
+		}
+
+		void VirtualSource::UpdateSpatialisationMode(const HRTFMode& mode)
+		{
+			switch (mode)
+			{
+			case HRTFMode::quality:
+			{
+				mSource->SetSpatializationMode(Binaural::TSpatializationMode::HighQuality);
+				break;
+			}
+			case HRTFMode::performance:
+			{
+				mSource->SetSpatializationMode(Binaural::TSpatializationMode::HighPerformance);
+				break;
+			}
+			case HRTFMode::none:
+			{
+				mSource->SetSpatializationMode(Binaural::TSpatializationMode::NoSpatialization);
+				break;
+			}
+			default:
+			{
+				mSource->SetSpatializationMode(Binaural::TSpatializationMode::NoSpatialization);
+				break;
+			}
+			}
+		}
+
+		void VirtualSource::UpdateSpatialisationMode(const SPATConfig& config)
+		{
+			mConfig.spatConfig = config;
+			UpdateSpatialisationMode(config.GetMode(order));
+			{
+				lock_guard<mutex> lock(vWallMutex);
+				for (auto& it : mVirtualSources)
+					it.second.UpdateSpatialisationMode(config);
+			}
+			{
+				lock_guard<mutex> lock(vEdgeMutex);
+				for (auto& it : mVirtualEdgeSources)
+					it.second.UpdateSpatialisationMode(config);
+			}
 		}
 
 		void VirtualSource::ProcessAudio(const Buffer& data, matrix& reverbInput, Buffer& outputBuffer)
@@ -293,8 +336,12 @@ namespace UIE
 
 			// Initialise source to core
 			mSource = mCore->CreateSingleSourceDSP();
+			
+			order = data.GetOrder();
 
 			//Select spatialisation mode
+			UpdateSpatialisationMode(mConfig.spatConfig.GetMode(order));
+
 			switch (mConfig.hrtfMode)
 			{
 			case HRTFMode::quality:
