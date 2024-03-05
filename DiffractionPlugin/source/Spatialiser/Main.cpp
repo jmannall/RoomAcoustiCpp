@@ -84,6 +84,16 @@ extern "C"
 	/**
 	 * Sets the spatialisation mode for the HRTF processing.
 	 *
+	 * The depth values are mapped as follows.
+	 * -2 -> none
+	 * -1 -> direct + reflection and diffraction components + late reverberation
+	 * 0 -> direct component
+	 * 1 -> direct + 1st-order components
+	 * 2 -> direct + 1st and 2nd-order components
+	 * 3 -> direct + 1st, 2nd and 3rd-order components
+	 * etc
+	 * If the quality depth is set higher than the performance depth then the quality processing will be used.
+	 * 
 	 * @param qualityDepth The depth up to which to use high quality HRTF processing. -2 for none, -1 for all (including late reverberation) and 0 for direct sound and 1, 2, 3 etc for the corresponding reflection/diffraction order.
 	 * @param performanceDepth The depth up to which to use high performance ILD processing. -2 for none, -1 for all (including late reverberation) and 0 for direct sound and 1, 2, 3 etc for the corresponding reflection/diffraction order.
 	 * @param hrtfResamplingStep The step size for resampling the HRTF. This should be between 5 - 90. Smaller values indicate higher quality.
@@ -116,20 +126,22 @@ extern "C"
 	}
 
 	/**
-	 * Sets the parameters for the Feedback Delay Network (FDN) reverb.
+	 * Updates the volume and dimensions of the room.
 	 *
-	 * @param volume The volume of the room.
-	 * @param dim The dimensions of the room for the delay lines.
-	 * @param numDimensions The number of dimensions provided in the dim parameter.
+	 * This function should be called when the volume or dimensions of the room changes and after all ReverbWalls have been initialised.
+	 * It will reset the Feedback Delay Network (FDN) so should be considered a new room rather than a dynamic change.
+	 * 
+	 * @param volume The volume (m^3) of the room.
+	 * @param dim The dimensions (m) of the room for the delay lines.
+	 * @param numDimensions The number of dimensions provided in the dim parameter. This must be a factor of numFDNChannels set in SPATInit. 
 	 */
-	EXPORT void API SPATSetFDNParameters(float volume, const float* dim, int numDimensions)
+	EXPORT void API SPATUpdateRoom(float volume, const float* dim, int numDimensions)
 	{
-		Buffer in = Buffer(numDimensions);
 		vec dimensions = vec(numDimensions);
 		for (int i = 0; i < numDimensions; i++)
 			dimensions.AddEntry(static_cast<Real>(dim[i]), i);
 
-		SetFDNParameters(static_cast<Real>(volume), dimensions);
+		UpdateRoom(static_cast<Real>(volume), dimensions);
 	}
 
 	/**
@@ -303,13 +315,10 @@ extern "C"
 	 * It will free up any resources that the wall was using and remove it from the spatialiser.
 	 *
 	 * @param id The ID of the wall to remove.
-	 * @param reverbWallId The ID of the reverb wall.
 	 */
-	EXPORT void API SPATRemoveWall(int id, int reverbWallId)
+	EXPORT void API SPATRemoveWall(int id)
 	{
-		ReverbWall reverbWall = ReturnReverbWall(reverbWallId);
-
-		RemoveWall(static_cast<size_t>(id), reverbWall);
+		RemoveWall(static_cast<size_t>(id));
 	}
 
 	/**

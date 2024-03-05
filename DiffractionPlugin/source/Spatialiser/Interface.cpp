@@ -70,11 +70,11 @@ namespace UIE
 
 		////////////////////////////////////////
 
-		void SetFDNParameters(const Real& volume, const vec& dimensions)
+		void UpdateRoom(const Real& volume, const vec& dimensions)
 		{
 			auto* context = GetContext();
 			if (context)
-				context->SetFDNParameters(volume, dimensions);
+				context->UpdateRoom(volume, dimensions);
 		}
 
 		////////////////////////////////////////
@@ -146,11 +146,11 @@ namespace UIE
 
 		////////////////////////////////////////
 
-		void RemoveWall(size_t id, const ReverbWall& reverbWall)
+		void RemoveWall(size_t id)
 		{
 			auto* context = GetContext();
 			if (context)
-				context->RemoveWall(id, reverbWall);
+				context->RemoveWall(id);
 		}
 
 		////////////////////////////////////////

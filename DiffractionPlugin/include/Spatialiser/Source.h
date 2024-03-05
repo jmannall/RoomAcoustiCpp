@@ -76,6 +76,7 @@ namespace UIE
 				oldData(s.oldData), freeFDNChannels(s.freeFDNChannels) {};
 			~Source();
 
+			void UpdateSpatialisationMode(const HRTFMode& mode);
 			void UpdateSpatialisationMode(const SPATConfig& config);
 
 			// Operators

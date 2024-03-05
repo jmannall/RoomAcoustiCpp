@@ -61,11 +61,10 @@ namespace UIE
 
 		//////////////////// Wall class ////////////////////
 
-		Wall::Wall(const vec3& normal, const Real* vData, size_t numVertices, Absorption& absorption) : mNormal(normal), mPlaneId(0), mNumVertices(numVertices), mAbsorption(absorption)
+		Wall::Wall(const vec3& normal, const Real* vData, size_t numVertices, const Absorption& absorption, const ReverbWall& reverbWall) : mNormal(normal), mPlaneId(0), mNumVertices(numVertices), mAbsorption(absorption), mReverbWall(reverbWall)
 		{
 			mNormal = UnitVectorRound(normal);
 			Update(vData);
-			absorption.area = mAbsorption.area;
 
 #ifdef DEBUG_INIT
 	Debug::Log("Vertecies: " + VecArrayToStr(mVertices), Colour::Orange);
@@ -76,11 +75,14 @@ namespace UIE
 		// Update
 		void Wall::Update(const vec3& normal, const Real* vData, size_t numVertices)
 		{
-			Absorption oldAbsorption = mAbsorption;
-
-			mNormal = UnitVectorRound(normal);
-			mNumVertices = numVertices;
-			Update(vData);
+			if (mReverbWall == ReverbWall::none)
+			{
+				mNormal = UnitVectorRound(normal);
+				mNumVertices = numVertices;
+				Update(vData);
+			}
+			else
+				Debug::Log("Cannot update reverb wall", Colour::Red);
 		}
 
 		void Wall::Update(const Real* vData)

@@ -74,7 +74,7 @@ namespace UIE
 						mEmptyEdgeSlots.push_back(edgeID);
 				}
 			}
-			inline Absorption RemoveWall(const size_t& id)
+			inline ReverbWall RemoveWall(const size_t& id, Absorption& absorption)
 			{
 				lock_guard <mutex> nLock(mNextMutex);
 				lock_guard <mutex> rLock(mRemoveMutex);
@@ -83,13 +83,17 @@ namespace UIE
 				if (it == mWalls.end())		// case: wall does not exist
 				{
 					// Wall does not exist
-					return Absorption(1);
+					return ReverbWall::none;
 				}
 				else
 				{
-					// Get absorption to return
-					Absorption absorption = it->second.GetAbsorption();
+					// Get absorption
+					absorption = it->second.GetAbsorption();
 					absorption.area = -absorption.area;
+
+					// Get reverb wall
+					ReverbWall reverbWall = it->second.GetReverbWall();
+
 					RemoveEdges(id, it->second);
 					auto itP = mPlanes.find(it->second.GetPlaneID());
 					if (itP == mPlanes.end())		// case: plane does not exist
@@ -105,7 +109,7 @@ namespace UIE
 						}
 					}
 					mWalls.erase(it);
-					return absorption;
+					return reverbWall;
 				}
 			}
 

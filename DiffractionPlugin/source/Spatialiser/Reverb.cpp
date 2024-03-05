@@ -275,9 +275,7 @@ namespace UIE
 				break;
 			}
 			case ReverbWall::none:
-			{
-				break;
-			}
+			{ break; }
 			}
 		}
 
@@ -338,6 +336,7 @@ namespace UIE
 		{
 			{
 				lock_guard <mutex> lock(mFDNMutex);
+				mFDN.Reset();
 				mFDN.SetParameters(T60, dimensions);
 			}
 			if (T60 < 20.0)
@@ -345,10 +344,9 @@ namespace UIE
 				if (T60 > 0.0)
 				{
 #ifdef DEBUG_INIT
-					Real t60[5]; T60.GetValues(&t60[0]);
 					Debug::Log("Init FDN", Colour::Green);
-					Debug::Log("Reverb T60: [" + RealToStr(t60[0]) + ", " + RealToStr(t60[1]) + ", " +
-						RealToStr(t60[2]) + ", " + RealToStr(t60[3]) + ", " + RealToStr(t60[4]) + "]", Colour::Orange);
+					Debug::Log("Reverb T60: [" + RealToStr(T60[0]) + ", " + RealToStr(T60[1]) + ", " +
+						RealToStr(T60[2]) + ", " + RealToStr(T60[3]) + ", " + RealToStr(T60[4]) + "]", Colour::Orange);
 #endif
 					valid = true;
 				}

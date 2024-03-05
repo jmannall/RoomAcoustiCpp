@@ -37,29 +37,8 @@ namespace UIE
 			mSource = mCore->CreateSingleSourceDSP();
 
 			//Select spatialisation mode
-			switch (mConfig.hrtfMode)
-			{
-			case HRTFMode::quality:
-			{
-				mSource->SetSpatializationMode(Binaural::TSpatializationMode::HighQuality);
-				break;
-			}
-			case HRTFMode::performance:
-			{
-				mSource->SetSpatializationMode(Binaural::TSpatializationMode::HighPerformance);
-				break;
-			}
-			case HRTFMode::none:
-			{
-				mSource->SetSpatializationMode(Binaural::TSpatializationMode::NoSpatialization);
-				break;
-			}
-			default:
-			{
-				mSource->SetSpatializationMode(Binaural::TSpatializationMode::HighPerformance);
-				break;
-			}
-			}
+			UpdateSpatialisationMode(config.spatConfig.GetMode(0));
+
 			mSource->EnablePropagationDelay();
 
 			ResetFDNSlots();
@@ -74,10 +53,9 @@ namespace UIE
 			Reset();
 		}
 
-		void Source::UpdateSpatialisationMode(const SPATConfig& config)
+		void Source::UpdateSpatialisationMode(const HRTFMode& mode)
 		{
-			mConfig.spatConfig = config;
-			switch (config.GetMode(0))
+			switch (mode)
 			{
 			case HRTFMode::quality:
 			{
@@ -100,6 +78,12 @@ namespace UIE
 				break;
 			}
 			}
+		}
+
+		void Source::UpdateSpatialisationMode(const SPATConfig& config)
+		{
+			mConfig.spatConfig = config;
+			UpdateSpatialisationMode(config.GetMode(0));
 			{
 				lock_guard<mutex> lock(vWallMutex);
 				for (auto& it : mVirtualSources)

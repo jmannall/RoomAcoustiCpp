@@ -52,12 +52,12 @@ namespace UIE
 		void UpdateISMConfig(const ISMConfig& config);
 
 		/**
-		 * Sets the parameters for the Feedback Delay Network (FDN) reverb.
+		 * Updates the volume and dimensions of the room.
 		 *
 		 * @param volume The volume of the room.
 		 * @param dimensions The dimensions of the room for the delay lines.
 		 */
-		void SetFDNParameters(const Real& volume, const vec& dimensions);
+		void UpdateRoom(const Real& volume, const vec& dimensions);
 
 		/**
 		 * Updates the listener's position and orientation.
@@ -125,7 +125,7 @@ namespace UIE
 		 * @param id The ID of the wall to remove.
 		 * @param reverbWall The reverb wall.
 		 */
-		void RemoveWall(size_t id, const ReverbWall& reverbWall);
+		void RemoveWall(size_t id);
 
 		/**
 		 * Submits an audio buffer to the audio source with the given ID.

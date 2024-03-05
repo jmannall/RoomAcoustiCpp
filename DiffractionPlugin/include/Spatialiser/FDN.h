@@ -129,7 +129,7 @@ namespace UIE
 		private:
 			// Init
 			void InitMatrix();
-			void CalculateTimeDelay(const vec& dimensions, vec& t);
+			vec CalculateTimeDelay(const vec& dimensions);
 
 			// Process
 			inline void ProcessMatrix() //x = y * mat

@@ -118,6 +118,7 @@ namespace UIE
 			SPATConfig spatConfig;
 
 			Config() : fs(44100), numFrames(512), numFDNChannels(12), lerpFactor(1.0 / ((Real)numFrames * 2.0)), frequencyBands({250.0, 500.0, 1000.0, 20000.0}), spatConfig() {};
+			Config(int _fs, int _numFrames, int _numFDNChannels, Real _lerpFactor, Coefficients fBands) : fs(_fs), numFrames(_numFrames), numFDNChannels(_numFDNChannels), lerpFactor(1.0 / ((Real)numFrames * _lerpFactor)), frequencyBands(fBands), spatConfig() {};
 			Config(int _fs, int _numFrames, int _numFDNChannels, Real _lerpFactor, Coefficients fBands, int quality, int performance) : fs(_fs), numFrames(_numFrames), numFDNChannels(_numFDNChannels), lerpFactor(1.0 / ((Real)numFrames * _lerpFactor)), frequencyBands(fBands), spatConfig(quality, performance) {};
 		};
 	}

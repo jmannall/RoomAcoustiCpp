@@ -98,8 +98,7 @@ namespace UIE
 
 		FDN::FDN(const Coefficients& T60, const vec& dimensions, const Config& config) : mConfig(config), x(config.numFDNChannels), y(config.numFDNChannels), mat(config.numFDNChannels, config.numFDNChannels), houseMat(config.numFDNChannels, 1)
 		{
-			vec t = vec(mConfig.numFDNChannels);
-			CalculateTimeDelay(dimensions, t);
+			vec t = CalculateTimeDelay(dimensions);
 			mChannels.reserve(mConfig.numFDNChannels);
 			for (int i = 0; i < mConfig.numFDNChannels; i++)
 				mChannels.push_back(Channel(t.GetEntry(i), T60, mConfig));
@@ -108,16 +107,14 @@ namespace UIE
 
 		void FDN::SetParameters(const Coefficients& T60, const vec& dimensions)
 		{
-			vec t = vec(mConfig.numFDNChannels);
-			CalculateTimeDelay(dimensions, t);
+			vec t = CalculateTimeDelay(dimensions);
 			for (int i = 0; i < mConfig.numFDNChannels; i++)
-			{
-				mChannels[i].SetParameters(T60, std::max(0.0, t.GetEntry(i)));
-			}
+				mChannels[i].SetParameters(T60, t.GetEntry(i));
 		}
 
-		void FDN::CalculateTimeDelay(const vec& dimensions, vec& t)
+		vec FDN::CalculateTimeDelay(const vec& dimensions)
 		{
+			vec t = vec(mConfig.numFDNChannels);
 			if (dimensions.Rows() > 0)
 			{
 				Real idx = static_cast<Real>(mConfig.numFDNChannels) / static_cast<Real>(dimensions.Rows());
@@ -138,7 +135,9 @@ namespace UIE
 					}
 				}
 				t *= INV_SPEED_OF_SOUND;
+				t.Max(0.0);
 			}
+			return t;
 		}
 
 		void FDN::InitMatrix()

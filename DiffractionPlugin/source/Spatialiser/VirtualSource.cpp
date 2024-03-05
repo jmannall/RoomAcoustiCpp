@@ -332,39 +332,19 @@ namespace UIE
 
 			// Set btm currentIr
 			if (diffraction)
+			{
+				mDiffractionPath = data.mDiffractionPath;
 				btm.InitParameters();
+			}
+
+			order = data.GetOrder();
 
 			// Initialise source to core
 			mSource = mCore->CreateSingleSourceDSP();
 			
-			order = data.GetOrder();
-
 			//Select spatialisation mode
 			UpdateSpatialisationMode(mConfig.spatConfig.GetMode(order));
 
-			switch (mConfig.hrtfMode)
-			{
-			case HRTFMode::quality:
-			{
-				mSource->SetSpatializationMode(Binaural::TSpatializationMode::HighQuality);
-				break;
-			}
-			case HRTFMode::performance:
-			{
-				mSource->SetSpatializationMode(Binaural::TSpatializationMode::HighPerformance);
-				break;
-			}
-			case HRTFMode::none:
-			{
-				mSource->SetSpatializationMode(Binaural::TSpatializationMode::NoSpatialization);
-				break;
-			}
-			default:
-			{
-				mSource->SetSpatializationMode(Binaural::TSpatializationMode::HighPerformance);
-				break;
-			}
-			}
 			mSource->EnablePropagationDelay();
 
 			isInitialised = true;
@@ -372,6 +352,12 @@ namespace UIE
 
 		void VirtualSource::Update(const VirtualSourceData& data, int& fdnChannel)
 		{
+			if (reflection) // Init reflection filter
+			{
+				Absorption g = data.GetAbsorption();
+				mFilter.UpdateParameters(g);
+			}
+
 			if (diffraction)
 			{
 				mDiffractionPath = data.mDiffractionPath;

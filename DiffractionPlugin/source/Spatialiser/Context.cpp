@@ -124,11 +124,6 @@ namespace UIE
 		bool Context::SetSpatialisationMode(const SPATConfig& config, const int& hrtfResamplingStep, const std::vector<std::string>& filePaths)
 		{
 			mConfig.spatConfig = config;
-			mReverb->UpdateSpatialisationMode(config.GetMode(-1));
-			mSources->UpdateSpatialisationMode(config);
-
-			// Set HRTF resampling step
-			mCore.SetHRTFResamplingStep(hrtfResamplingStep);
 
 #ifdef DEBUG_HRTF
 			Debug::Log("HRTF resampling step: " + mCore.GetHRTFResamplingStep(), Colour::Blue);
@@ -163,12 +158,18 @@ namespace UIE
 				Debug::Log("Failed to load ILD field files", Colour::Red);
 #endif
 			}
+
+			mReverb->UpdateSpatialisationMode(config.GetMode(-1));
+			mSources->UpdateSpatialisationMode(config);
+
+			// Set HRTF resampling step
+			mCore.SetHRTFResamplingStep(hrtfResamplingStep);
 			return result;
 		}
 
 		// Reverb
 
-		void Context::SetFDNParameters(const Real& volume, const vec& dimensions)
+		void Context::UpdateRoom(const Real& volume, const vec& dimensions)
 		{
 			Coefficients T60 = mRoom->GetReverbTime(volume);
 			mReverb->SetFDNParameters(T60, dimensions);
@@ -243,12 +244,12 @@ namespace UIE
 	Debug::Log("Init Wall and Edges", Colour::Green);
 #endif
 
-			Wall wall = Wall(normal, vData, numVertices, absorption);
+			Wall wall = Wall(normal, vData, numVertices, absorption, reverbWall);
+			absorption.area = wall.GetArea();
 			mReverb->UpdateReflectionFilters(reverbWall, absorption);
 			return mRoom->AddWall(wall);
 		}
 
-		// Assumes reverbWall never changes
 		void Context::UpdateWall(size_t id, const vec3& normal, const Real* vData, size_t numVertices)
 		{
 			mRoom->UpdateWall(id, normal, vData, numVertices);
@@ -257,13 +258,14 @@ namespace UIE
 		}
 
 		// Assumes reverbWall never changes
-		void Context::RemoveWall(size_t id, const ReverbWall& reverbWall)
+		void Context::RemoveWall(size_t id)
 		{
 #ifdef DEBUG_REMOVE
 	Debug::Log("Remove Wall and Edges", Colour::Red);
 #endif
 
-			Absorption absorption = mRoom->RemoveWall(id);
+			Absorption absorption = Absorption(mConfig.frequencyBands.Length());
+			ReverbWall reverbWall = mRoom->RemoveWall(id, absorption);
 			if (absorption.area != 0)
 				mReverb->UpdateReflectionFilters(reverbWall, absorption);
 		}

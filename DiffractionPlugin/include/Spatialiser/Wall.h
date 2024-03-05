@@ -17,6 +17,7 @@
 
 // Spatialiser headers
 #include "Spatialiser/Edge.h"
+#include "Spatialiser/Types.h"
 
 namespace UIE
 {
@@ -31,8 +32,8 @@ namespace UIE
 		public:
 
 			// Load and Destroy
-			Wall() : mNumVertices(0), mAbsorption(1), mPlaneId(0), d(0.0) {}
-			Wall(const vec3& normal, const Real* vData, size_t numVertices, Absorption& absorption);
+			Wall() : mNumVertices(0), mAbsorption(1), mPlaneId(0), d(0.0), mReverbWall(ReverbWall::none) {}
+			Wall(const vec3& normal, const Real* vData, size_t numVertices, const Absorption& absorption, const ReverbWall& reverbWall);
 			~Wall() {}
 
 			// Edges
@@ -55,14 +56,16 @@ namespace UIE
 			inline void SetPlaneID(const size_t& id) { mPlaneId = id; }
 
 			// Geometry
-			Real PointWallPosition(const vec3& point) const { return Dot(point, mNormal) - d; }
+			inline Real PointWallPosition(const vec3& point) const { return Dot(point, mNormal) - d; }
 			bool LineWallIntersection(const vec3& start, const vec3& end) const;
 			bool LineWallIntersection(vec3& intersection, const vec3& start, const vec3& end) const;
 
 			// Absorption
 			void Update(const vec3& normal, const Real* vData, size_t numVertices);
-			Absorption GetAbsorption() { return mAbsorption; }
-			Real GetArea() { return mAbsorption.area; }
+			inline Absorption GetAbsorption() { return mAbsorption; }
+			inline Real GetArea() { return mAbsorption.area; }
+
+			inline ReverbWall GetReverbWall() { return mReverbWall; }
 
 		private:
 
@@ -80,6 +83,7 @@ namespace UIE
 			std::vector<vec3> mVertices;
 			size_t mNumVertices;
 			Absorption mAbsorption;
+			ReverbWall mReverbWall;
 			std::vector<size_t> mEdges;
 		};
 			

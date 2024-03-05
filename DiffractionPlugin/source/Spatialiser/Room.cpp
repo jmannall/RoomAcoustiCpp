@@ -290,8 +290,6 @@ namespace UIE
 
 			{
 				lock_guard <mutex> wLock(mWallMutex);
-				Debug::Log("Number of walls: " + IntToStr(mWalls.size()), Colour::Orange);
-
 				for (auto& it : mWalls)
 				{
 					absorption -= (it.second.GetAbsorption() * it.second.GetAbsorption() - 1.0) * it.second.GetArea();

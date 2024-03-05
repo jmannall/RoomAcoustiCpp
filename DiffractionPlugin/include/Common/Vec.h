@@ -49,6 +49,12 @@ namespace UIE
 			inline void AddEntry(const Real& in, const int& i) { e[i][0] = in; }
 			inline void IncreaseEntry(const Real& in, const int& i) { e[i][0] += in; }
 
+			inline void Max(const Real& min)
+			{ 
+				for (int i = 0; i < rows; i++)
+					e[i][0] = std::max(min, e[i][0]);
+			}
+
 			inline Real GetEntry(const int& i) const { return e[i][0]; }
 
 			// Operators
