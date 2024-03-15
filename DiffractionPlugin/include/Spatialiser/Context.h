@@ -22,6 +22,7 @@
 #include "Spatialiser/SourceManager.h"
 #include "Spatialiser/Reverb.h"
 #include "Spatialiser/Room.h"
+#include "Spatialiser/ImageEdge.h"
 
 // 3DTI Headers
 #include "Common/Transform.h"
@@ -43,21 +44,22 @@ namespace UIE
 		public:
 
 			// Load and Destroy
-			Context(const Config* config);
+			Context(const Config& config);
 			~Context();
 
-			bool SetSpatialisationMode(const SPATConfig& config, const int& hrtfResamplingStep, const std::vector<std::string>& filePaths);
+			bool LoadSpatialisationFiles(const int& hrtfResamplingStep, const std::vector<std::string>& filePaths);
+			void UpdateSpatialisationMode(const SPATConfig& config);
 
 			// Image Source Model
 			void StopRunning() { mIsRunning = false; }
 			bool IsRunning() const { return mIsRunning; }
 
-			void UpdateISMConfig(const ISMConfig& config) { mISMConfig = config; }
-			ISMConfig GetISMConfig() const { return mISMConfig; }
+			inline void UpdateISMConfig(const ISMConfig& config) { mImageEdgeModel->UpdateISMConfig(config); }
+			void UpdateReverbTimeModel(const ReverbTime& model);
+			void UpdateFDNModel(const FDNMatrix& model);
 
-			SourceManager* GetHRTFManager() { return mSources; }
-			Room* GetRoom() { return mRoom; }
-
+			std::shared_ptr<Room> GetRoom() { return mRoom; }
+			std::shared_ptr<ImageEdge> GetImageEdgeModel() { return mImageEdgeModel; }
 			//Reverb
 			void UpdateRoom(const Real& volume, const vec& dimensions);
 
@@ -70,24 +72,29 @@ namespace UIE
 			void RemoveSource(size_t id);
 
 			// Wall
-			size_t InitWall(const vec3& normal, const Real* vData, size_t numVertices, Absorption& absorption, const ReverbWall& reverbWall);
+			size_t InitWall(const vec3& normal, const Real* vData, size_t numVertices, Absorption& absorption);
 			void UpdateWall(size_t id, const vec3& normal, const Real* vData, size_t numVertices);
 			void FreeWallId(size_t id) { mRoom->FreeWallId(id); }
 			void RemoveWall(size_t id);
+			void UpdatePlanesAndEdges();
 
 			// Audio
 			void SubmitAudio(size_t id, const float* data);
 			void GetOutput(float** bufferPtr);
 
+			inline void GetWallVertices(int id, float** wallVertices)
+			{
+				mRoom->GetWallVertices(id, wallVertices);
+			}
+
 		private:
 
 			// Configs
 			Config mConfig;
-			ISMConfig mISMConfig;
 
 			// 3DTI components
 			Binaural::CCore mCore;
-			shared_ptr<Binaural::CListener> mListener;
+			std::shared_ptr<Binaural::CListener> mListener;
 
 			// Buffers
 			Buffer mInputBuffer;
@@ -96,16 +103,10 @@ namespace UIE
 			BufferF mSendBuffer;
 
 			// Handles
-			char* mMem = nullptr;
-			SourceManager* mSources;
-			Reverb* mReverb;
-			Room* mRoom;
-
-			// Mutexes
-			std::mutex audioMutex;
-			std::mutex roomMutex;
-			std::mutex highPriority;
-			std::mutex lowPriority;
+			std::shared_ptr<Room> mRoom;
+			std::shared_ptr<Reverb> mReverb;
+			std::shared_ptr<SourceManager> mSources;
+			std::shared_ptr<ImageEdge> mImageEdgeModel;
 
 			// Image Source Model
 			std::thread ISMThread;

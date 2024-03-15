@@ -6,6 +6,9 @@
 
 // DSP headers
 #include "DSP/ParametricEQ.h"
+#include "DSP/Interpolate.h"
+
+#include "Unity/UnityInterface.h"
 
 namespace UIE
 {
@@ -44,7 +47,7 @@ namespace UIE
 			a[1] = (K_sq_2 - 2.0) * a[0];
 			a[2] = (1.0 - K2cm + K_sq) * a[0];
 
-			b[0] = a[0] + (VK_2 * (K + cm) + VK_sq) * a[0];
+			b[0] = 1.0 + (VK_2 * (K + cm) + VK_sq) * a[0];
 			b[1] = a[1] + (VK_2 * K_2 + VK_sq * 2.0) * a[0];
 			b[2] = a[2] + (VK_2 * (K - cm) + VK_sq) * a[0];
 		}
@@ -68,7 +71,7 @@ namespace UIE
 			a[1] = (2.0 - K_sq_2) * a[0];
 			a[2] = (1.0 - K2cm + K_sq) * a[0];
 
-			b[0] = a[0] + (VK_2 * (K + cm) + VK_sq) * a[0];
+			b[0] = 1.0 + (VK_2 * (K + cm) + VK_sq) * a[0];
 			b[1] = a[1] - (VK_2 * K_2 + VK_sq * 2.0) * a[0];
 			b[2] = a[2] + (VK_2 * (K - cm) + VK_sq) * a[0];
 		}
@@ -104,35 +107,51 @@ namespace UIE
 		}
 
 		ParametricEQ::ParametricEQ(const size_t& order, const Coefficients& fc, const int& sampleRate)
-			: numFilters(fc.Length() - 1), fb(numFilters), mGain(0.0), out(0.0)
+			: numFilters(fc.Length() - 1), fb(numFilters), mGain(0.0), out(0.0), currentGain(fc.Length()), targetGain(fc.Length())
 		{
 			InitBands(order, fc, sampleRate);
 		}
 
-		ParametricEQ::ParametricEQ(Coefficients& gain, const size_t& order, const Coefficients& fc, const int& sampleRate)
-			: numFilters(fc.Length() - 1), fb(numFilters), out(0.0)
+		ParametricEQ::ParametricEQ(const Coefficients& gain, const size_t& order, const Coefficients& fc, const int& sampleRate)
+			: numFilters(fc.Length() - 1), fb(numFilters), out(0.0), currentGain(gain), targetGain(gain)
 		{
 			InitBands(order, fc, sampleRate);
-			UpdateParameters(gain);
+			UpdateParameters();
 		}
 
-		void ParametricEQ::UpdateParameters(Coefficients& gain)
+		void ParametricEQ::SetTargetGain(Coefficients& gain)
 		{
-			mGain = gain[numFilters];
 			for (int i = 0; i < numFilters + 1; i++)
 				gain[i] = std::max(EPS, gain[i]); // Prevent division by zero
-
 			for (int i = 0; i < numFilters; i++)
-				filters[i].UpdateParameters(fb[i], gain[i] / gain[i + 1]);
+				targetGain[i] = gain[i] / gain[i + 1];
+			targetGain[numFilters] = gain[numFilters];
+			currentGain = targetGain;
+			UpdateParameters();
 		}
 
-		Real ParametricEQ::GetOutput(const Real input)
+		void ParametricEQ::UpdateParameters()
+		{
+			for (int i = 0; i < numFilters; i++)
+				filters[i].UpdateParameters(fb[i], currentGain[i]);
+			mGain = currentGain[numFilters];
+		}
+
+		Real ParametricEQ::GetOutput(const Real& input, const Real& lerpFactor)
 		{
 			out = input;
 			for (BandFilter& filter : filters)
 				out = filter.GetOutput(out);
 			out *= mGain;
+			if (currentGain != targetGain)
+			{
+				Lerp(currentGain, targetGain, lerpFactor);
+				BeginFIR();
+				UpdateParameters();
+				EndFIR();
+			}
 			return out;
+
 		}
 
 		void ParametricEQ::InitBands(const size_t& order, const Coefficients& fc, int fs)

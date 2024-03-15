@@ -24,6 +24,34 @@
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
+namespace Microsoft
+{
+	namespace VisualStudio
+	{
+		namespace CppUnitTestFramework
+		{
+			template<> static std::wstring ToString<UIE::Common::Coefficients>(const UIE::Common::Coefficients& t)
+			{
+				std::string str = "Coefficients: ";
+				for (int i = 0; i < t.Length(); i++)
+					str += UIE::Unity::RealToStr(t[i]) + ", ";
+				std::wstring werror = std::wstring(str.begin(), str.end());
+				return werror;
+			}
+
+			template<> static std::wstring ToString<UIE::Common::Absorption>(const UIE::Common::Absorption& t)
+			{
+				std::string str = "Absorption: ";
+				for (int i = 0; i < t.Length(); i++)
+					str += UIE::Unity::RealToStr(t[i]) + ", ";
+				str += "Area: " + UIE::Unity::RealToStr(t.area);
+				std::wstring werror = std::wstring(str.begin(), str.end());
+				return werror;
+			}
+		}
+	}
+}
+
 namespace UIE
 {
 	using namespace Common;
@@ -281,6 +309,108 @@ namespace UIE
 		}
 	}
 
+	
+	TEST_CLASS(Test_Coefficients)
+	{
+	public:
+
+		TEST_METHOD(Operators)
+		{
+			std::vector<Real> a = { 2.0, 3.0 };
+			std::vector<Real> b = { 5.0, 2.0 };
+
+			Coefficients c1 = Coefficients(a);
+			Coefficients c2 = Coefficients(b);
+
+			Coefficients out = Coefficients(c1.Length());
+			out[0] = 7.0;
+			out[1] = 5.0;
+			Assert::AreEqual(out, c1 + c2, L"Error: Incorrect addition");
+
+			out[0] = -3.0;
+			out[1] = 1.0;
+			Assert::AreEqual(out, c1 - c2, L"Error: Incorrect subtraction");
+
+			out[0] = 10.0;
+			out[1] = 6.0;
+			Assert::AreEqual(out, c1 * c2, L"Error: Incorrect multiplication");
+
+			out[0] = 0.4;
+			out[1] = 1.5;
+			Assert::AreEqual(out, c1 / c2, L"Error: Incorrect division");
+
+			Real x = 2.0;
+
+			out[0] = 4.0;
+			out[1] = 5.0;
+			Assert::AreEqual(out, c1 + x, L"Error: Incorrect factor addition");
+
+			out[0] = 0.0;
+			out[1] = -1.0;
+			Assert::AreEqual(out, x - c1, L"Error: Incorrect factor subtraction");
+
+			out[0] = 4.0;
+			out[1] = 6.0;
+			Assert::AreEqual(out, c1 * x, L"Error: Incorrect factor multiplication");
+
+			out[0] = 1.0;
+			out[1] = 1.5;
+			Assert::AreEqual(out, c1 / x, L"Error: Incorrect factor division");
+		}
+	};
+
+	TEST_CLASS(Test_Absorption)
+	{
+	public:
+
+		TEST_METHOD(Operators)
+		{
+			std::vector<Real> a = { 2.0, 3.0 };
+			std::vector<Real> b = { 5.0, 2.0 };
+
+			Absorption c1 = Absorption(a, 2.0);
+			Absorption c2 = Absorption(b, 5.0);
+
+			Absorption out = Absorption(c1.Length());
+			out[0] = 7.0;
+			out[1] = 5.0;
+			out.area = 7.0;
+			Assert::AreEqual(out, c1 + c2, L"Error: Incorrect addition");
+
+			out[0] = -3.0;
+			out[1] = 1.0;
+			out.area = -3.0;
+			Assert::AreEqual(out, c1 - c2, L"Error: Incorrect subtraction");
+
+			out[0] = 10.0;
+			out[1] = 6.0;
+			out.area = 2.0;
+			Assert::AreEqual(out, c1 * c2, L"Error: Incorrect multiplication");
+
+			out[0] = 0.4;
+			out[1] = 1.5;
+			Assert::AreEqual(out, c1 / c2, L"Error: Incorrect division");
+
+			Real x = 2.0;
+
+			out[0] = 4.0;
+			out[1] = 5.0;
+			Assert::AreEqual(out, c1 + x, L"Error: Incorrect factor addition");
+
+			out[0] = 0.0;
+			out[1] = -1.0;
+			Assert::AreEqual(out, x - c1, L"Error: Incorrect factor subtraction");
+
+			out[0] = 4.0;
+			out[1] = 6.0;
+			Assert::AreEqual(out, c1 * x, L"Error: Incorrect factor multiplication");
+
+			out[0] = 1.0;
+			out[1] = 1.5;
+			Assert::AreEqual(out, c1 / x, L"Error: Incorrect factor division");
+		}
+	};
+
 	//////////////////// FDN Tests ////////////////////
 
 	TEST_CLASS(FDNModel)
@@ -289,10 +419,8 @@ namespace UIE
 
 		TEST_METHOD(ReflectionFilters)
 		{
-			HRTFMode hrtfMode = HRTFMode::none;
 			Config config;
 			config.fs = 48000;
-			config.hrtfMode = HRTFMode::none;
 
 			Binaural::CCore core = CreateCore(config.fs);
 
@@ -331,6 +459,14 @@ namespace UIE
 			TestReverbSource(reverbSource, Absorption(in, 0.0));
 
 			RemoveCore(core);
+		}
+
+		TEST_METHOD(FDNChannel)
+		{
+			Config config;
+			Real t = 0.1;
+			Coefficients T60 = Coefficients(5, 1.0);
+			Channel channel = Channel(t, T60, config);
 		}
 	};
 
@@ -603,6 +739,23 @@ namespace UIE
 				for (int i = 0; i < 4; i++)
 					Assert::AreEqual(output[i], current[i], EPS, L"Wrong output");
 			}
+		}
+
+		TEST_METHOD(LowBandFilter)
+		{
+			int fs = 48000;
+			int order = 4;
+			std::vector<Real> f = { 250.0, 500.0, 1000.0, 2000.0, 4000.0 };
+			std::vector<Real> gain = { 0.06, 0.15, 0.4, 0.4, 0.6 };
+			Coefficients fc = Coefficients(f);
+			Coefficients g = Coefficients(gain);
+			ParametricEQ eq = ParametricEQ(g, order, fc, fs);
+
+
+			std::vector<Real> in = { 1.0, 0.2, 0.3, 0.5, -0.4, 0.1, 0.0, -0.2, 0.7 };
+			std::vector<Real> out = std::vector<Real>(in.size());
+			for (int i = 0; i < in.size(); i++)
+				out[i] = eq.GetOutput(in[i]);
 		}
 	};
 

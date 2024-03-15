@@ -1,5 +1,12 @@
+/*
+*
+*  \Reverb class
+*
+*/
 
+// Spatialiser headers
 #include "Spatialiser/Reverb.h"
+#include "Spatialiser/Mutexes.h"
 
 // Unity headers
 #include "Unity/Debug.h"
@@ -7,6 +14,9 @@
 
 // DSP headers
 #include "DSP/Interpolate.h"
+
+// Common headers
+#include "Common/SphericalGeometries.h"
 
 using namespace Common;
 namespace UIE
@@ -18,40 +28,58 @@ namespace UIE
 
 		//////////////////// ReverbSource class ////////////////////
 
-		ReverbSource::ReverbSource(Binaural::CCore* core, const Config& config) : mCore(core), mConfig(config), mReflectionFilter(REFLECTION_FILTER_ORDER, config.frequencyBands, config.fs), mAbsorption(config.frequencyBands.Length())
+		ReverbSource::ReverbSource(Binaural::CCore* core, const Config& config) : mCore(core), mConfig(config), mReflectionFilter(REFLECTION_FILTER_ORDER, config.frequencyBands, config.fs), mAbsorption(config.frequencyBands.Length()), valid(false)
 		{
+			mMutex = std::make_shared<std::mutex>();
+			inputBuffer = vec(mConfig.numFrames);
 			bInput = CMonoBuffer<float>(mConfig.numFrames);
-			/*bOutput.left = CMonoBuffer<float>(mConfig.numFrames);
-			bOutput.right = CMonoBuffer<float>(mConfig.numFrames);*/
-			UpdateReflectionFilter();
+			bOutput.left = CMonoBuffer<float>(mConfig.numFrames);
+			bOutput.right = CMonoBuffer<float>(mConfig.numFrames);
+			Init();
+		}
+
+		ReverbSource::ReverbSource(Binaural::CCore* core, const Config& config, const vec3& shift) : mCore(core), mConfig(config), mReflectionFilter(REFLECTION_FILTER_ORDER, config.frequencyBands, config.fs), mAbsorption(config.frequencyBands.Length()), mShift(shift), valid(false)
+		{
+			mMutex = std::make_shared<std::mutex>();
+			inputBuffer = vec(mConfig.numFrames);
+			bInput = CMonoBuffer<float>(mConfig.numFrames);
+			bOutput.left = CMonoBuffer<float>(mConfig.numFrames);
+			bOutput.right = CMonoBuffer<float>(mConfig.numFrames);
 			Init();
 		}
 
 		ReverbSource::~ReverbSource()
 		{
+			// delete mMutex;
 #ifdef DEBUG_REMOVE
 	Debug::Log("Remove reverb source", Colour::Red);
 #endif
-
-		mCore->RemoveSingleSourceDSP(mSource);
+			{
+				lock_guard<mutex> lock(tuneInMutex);
+				mCore->RemoveSingleSourceDSP(mSource);
+			}
 		}
 
 		void ReverbSource::Init()
 		{
 #ifdef DEBUG_INIT
-	Debug::Log("Init reverb source", Colour::Green);
+			Debug::Log("Init reverb source", Colour::Green);
 #endif
+			{
+				lock_guard<mutex> lock(tuneInMutex);
 
-			// Initialise source to core
-			mSource = mCore->CreateSingleSourceDSP();
-			mSource->DisablePropagationDelay();
-			mSource->DisableDistanceAttenuationAnechoic();
-			mSource->DisableDistanceAttenuationSmoothingAnechoic();
-			mSource->DisableNearFieldEffect();
-			mSource->DisableFarDistanceEffect();
+				// Initialise source to core
+				mSource = mCore->CreateSingleSourceDSP();
+				mSource->DisablePropagationDelay();
+				mSource->DisableDistanceAttenuationSmoothingAnechoic();
+				mSource->DisableDistanceAttenuationAnechoic();
+				mSource->DisableNearFieldEffect();
+				mSource->DisableFarDistanceEffect();
 
-			//Select spatialisation mode
-			UpdateSpatialisationMode(mConfig.spatConfig.GetMode(-1));
+				//Select spatialisation mode
+				UpdateSpatialisationMode(mConfig.spatConfig.GetMode(-1));
+			}
+			
 		}
 
 		void ReverbSource::UpdateSpatialisationMode(const HRTFMode& mode)
@@ -81,38 +109,25 @@ namespace UIE
 			}
 		}
 
-		void ReverbSource::Update(const vec3& position)
+		void ReverbSource::UpdatePosition(const vec3& position)
 		{
 			CTransform transform;
 			transform.SetPosition(CVector3(static_cast<float>(position.x + mShift.x), static_cast<float>(position.y + mShift.y), static_cast<float>(position.z + mShift.z)));
-			mSource->SetSourceTransform(transform);
-		}
-
-		void ReverbSource::UpdateReflectionFilter()
-		{
-			mReflectionFilter.UpdateParameters(mAbsorption);
+			{
+				lock_guard<mutex> lock(tuneInMutex);
+				mSource->SetSourceTransform(transform);
+			}
 		}
 
 		void ReverbSource::UpdateReflectionFilter(const Absorption& absorption)
 		{
-			assert(absorption.area != 0);
-			if (mAbsorption.area > 0)
-			{
-				mAbsorption *= mAbsorption.area;
-				mAbsorption += absorption * absorption.area;
-				// mAbsorption = mAbsorption * mAbsorption.area + absorption * absorption.area;
-				if (mAbsorption.area != 0)
-					mAbsorption /= mAbsorption.area;
-			}
-			else
-			{
-				mAbsorption = absorption;
-			}
-			UpdateReflectionFilter();
+			lock_guard<mutex> lock(*mMutex);
+			mAbsorption = absorption;
+			mReflectionFilter.SetTargetGain(mAbsorption);
 			valid = mAbsorption > EPS;
 		}
 
-		void ReverbSource::ProcessAudio(const vec& data, Buffer& outputBuffer)
+		void ReverbSource::ProcessAudio(Buffer& outputBuffer)
 		{
 			if (valid)
 			{
@@ -125,18 +140,21 @@ namespace UIE
 #ifdef PROFILE_AUDIO_THREAD
 				BeginReflection();
 #endif
-				for (int i = 0; i < mConfig.numFrames; i++)
-					bInput[i] = static_cast<float>(mReflectionFilter.GetOutput(data.GetEntry(i)));
-
+				{
+					lock_guard<mutex> lock(*mMutex);
+					for (int i = 0; i < mConfig.numFrames; i++)
+						bInput[i] = static_cast<float>(mReflectionFilter.GetOutput(inputBuffer.GetEntry(i), mConfig.lerpFactor));
+				}
 #ifdef PROFILE_AUDIO_THREAD
 				EndReflection();
 				Begin3DTI();
 #endif
+				{
+					lock_guard<mutex> lock(tuneInMutex);
+					mSource->SetBuffer(bInput);
 
-				mSource->SetBuffer(bInput);
-
-				CEarPair<CMonoBuffer<float>> bOutput;
-				mSource->ProcessAnechoic(bOutput.left, bOutput.right);
+					mSource->ProcessAnechoic(bOutput.left, bOutput.right);
+				}
 #ifdef PROFILE_AUDIO_THREAD
 				End3DTI();
 #endif
@@ -155,22 +173,24 @@ namespace UIE
 
 		//////////////////// Reverb class ////////////////////
 
-		Reverb::Reverb(Binaural::CCore* core, const Config& config, const vec& dimensions) : mConfig(config), mFDN(config), mCore(core), valid(false), runFDN(false), mTargetGain(0.0), mCurrentGain (0.0)
+		Reverb::Reverb(Binaural::CCore* core, const Config& config) : mConfig(config), mFDN(config), mCore(core), valid(false), runFDN(false), mTargetGain(0.0), mCurrentGain (0.0)
 		{
-			input = matrix(mConfig.numFrames, mConfig.numFDNChannels);
+			input = matrix(mConfig.numFDNChannels, mConfig.numFrames);
+			out = rowvec(mConfig.numFDNChannels);
 			col = new Real[mConfig.numFrames];
 			InitSources();
 		}
 
 		Reverb::Reverb(Binaural::CCore* core, const Config& config, const vec& dimensions, const Coefficients& T60) : mFDN(T60, dimensions, config), mCore(core), mConfig(config), valid(false), runFDN(false), mTargetGain(0.0), mCurrentGain(0.0)
 		{
-			input = matrix(mConfig.numFrames, mConfig.numFDNChannels);
+			input = matrix(mConfig.numFDNChannels, mConfig.numFrames);
 			col = new Real[mConfig.numFDNChannels];
 			InitSources();
 		}
 
 		void Reverb::UpdateSpatialisationMode(const HRTFMode& mode)
 		{
+			lock_guard<mutex> lock(tuneInMutex);
 			for (ReverbSource& source : mReverbSources)
 				source.UpdateSpatialisationMode(mode);
 		}
@@ -179,104 +199,67 @@ namespace UIE
 		{
 			lock_guard<mutex> lock(mCoreMutex);
 
-			mReverbSources.reserve(mConfig.numFDNChannels);
+			std::vector<vec3> points;
+			switch (mConfig.numFDNChannels)
+			{
+			case 4:
+			{ Tetrahedron(points, true); break; }
+			case 6:
+			{ Octahedron(points); break; }
+			case 8:
+			{ Cube(points); break; }
+			case 12:
+			{ Icosahedron(points, true); break; }
+			case 16:
+			{ Cube(points); Octahedron(points); break; }
+			case 20:
+			{ Dodecahedron(points, true); break; }
+			case 24:
+			{ Icosahedron(points, true); Icosahedron(points, false); break; }
+			case 32:
+			{ Icosahedron(points, true); Dodecahedron(points, true); break; }
+			}
 
+			// BREAKS update reverb source system!!!
+			// Remove and replace with ray traced wall absorption intersection.
+			mReverbSources.reserve(mConfig.numFDNChannels);
 			for (int i = 0; i < mConfig.numFDNChannels; i++)
 			{
-				ReverbSource temp = ReverbSource(mCore, mConfig);
+				ReverbSource temp = ReverbSource(mCore, mConfig, points[i]);
 				mReverbSources.push_back(temp);
 				temp.Deactivate();
 			}
-
-			mReverbSources[0].SetShift(vec3(1.0, 1.0, 3.0));		// +z
-			mReverbSources[1].SetShift(vec3(-1.0, -1.0, 3.0));	// +z
-			mReverbSources[2].SetShift(vec3(-1.0, 1.0, -3.0));	// -z
-			mReverbSources[3].SetShift(vec3(1.0, -1.0, -3.0));	// -z
-			mReverbSources[4].SetShift(vec3(3.0, 1.0, 1.0));		// +x
-			mReverbSources[5].SetShift(vec3(3.0, -1.0, -1.0));	// +x
-			mReverbSources[6].SetShift(vec3(-3.0, -1.0, 1.0));	// -x
-			mReverbSources[7].SetShift(vec3(-3.0, 1.0, -1.0));	// -x
-			mReverbSources[8].SetShift(vec3(1.0, 3.0, 1.0));		// +y
-			mReverbSources[9].SetShift(vec3(-1.0, 3.0, -1.0));	// +y
-			mReverbSources[10].SetShift(vec3(-1.0, -3.0, 1.0));	// -y
-			mReverbSources[11].SetShift(vec3(1.0, -3.0, -1.0));	// -y
 		}
 
-		void Reverb::UpdateReverb(const vec3& position, const bool on)
+		void Reverb::UpdateReverb(const vec3& position)
+		{
+			for (int i = 0; i < mConfig.numFDNChannels; i++)
+				mReverbSources[i].UpdatePosition(position);
+		}
+
+		void Reverb::UpdateReflectionFilters(const std::vector<Absorption>& absorptions, const bool running)
 		{
 			{
-				lock_guard<mutex> lock(mCoreMutex);
-				for (int i = 0; i < mConfig.numFDNChannels; i++)
-					mReverbSources[i].Update(position);
-			}
-
-			lock_guard<mutex> lock(mFDNMutex);
-
-			if (valid && on)
-				mTargetGain = 1.0;
-			else
-			{
-				mTargetGain = 0.0;
-				if (mCurrentGain < 0.0001)
+				lock_guard<mutex> lock(mFDNMutex);
+				if (valid && running)
+					mTargetGain = 1.0;
+				else
 				{
-					runFDN = false;
-					mFDN.Reset();
-					for (ReverbSource& source : mReverbSources)
-						source.Reset();
-					return;
+					mTargetGain = 0.0;
+					if (mCurrentGain < EPS)
+					{
+						runFDN = false;
+						mFDN.Reset();
+						for (ReverbSource& source : mReverbSources)
+							source.Reset();
+						return;
+					}
 				}
+				runFDN = true;
 			}
-			runFDN = true;
-		}
 
-		void Reverb::UpdateReflectionFilters(const ReverbWall& id, const Absorption& absorption, const Absorption& oldAbsorption)
-		{
-			UpdateReflectionFilters(id, absorption * absorption.area - oldAbsorption * oldAbsorption.area);
-		}
-
-		void Reverb::UpdateReflectionFilters(const ReverbWall& id, const Absorption& absorption)
-		{
-			switch (id)
-			{
-			case ReverbWall::posZ: // +z
-			{
-				mReverbSources[0].UpdateReflectionFilter(absorption);
-				mReverbSources[1].UpdateReflectionFilter(absorption);
-				break;
-			}
-			case ReverbWall::negZ: // -z
-			{
-				mReverbSources[2].UpdateReflectionFilter(absorption);
-				mReverbSources[3].UpdateReflectionFilter(absorption);
-				break;
-			}
-			case ReverbWall::posX: // +x
-			{
-				mReverbSources[4].UpdateReflectionFilter(absorption);
-				mReverbSources[5].UpdateReflectionFilter(absorption);
-				break;
-			}
-			case ReverbWall::negX: // -x
-			{
-				mReverbSources[6].UpdateReflectionFilter(absorption);
-				mReverbSources[7].UpdateReflectionFilter(absorption);
-				break;
-			}
-			case ReverbWall::posY: // +y
-			{
-				mReverbSources[8].UpdateReflectionFilter(absorption);
-				mReverbSources[9].UpdateReflectionFilter(absorption);
-				break;
-			}
-			case ReverbWall::negY: // -y
-			{
-				mReverbSources[10].UpdateReflectionFilter(absorption);
-				mReverbSources[11].UpdateReflectionFilter(absorption);
-				break;
-			}
-			case ReverbWall::none:
-			{ break; }
-			}
+			for (int i = 0; i < mConfig.numFDNChannels; i++)
+				mReverbSources[i].UpdateReflectionFilter(absorptions[i]);
 		}
 
 		void Reverb::ProcessAudio(const matrix& data, Buffer& outputBuffer)
@@ -298,38 +281,50 @@ namespace UIE
 					{
 						for (int i = 0; i < data.Rows(); i++)
 						{
-							rowvec out = mFDN.GetOutput(data.GetRow(i), mCurrentGain, valid);
-							for (int j = 0; j < mConfig.numFDNChannels; j++)
-								input.AddEntry(out.GetEntry(j), i, j);
+							out = mFDN.GetOutput(data.GetRow(i), mCurrentGain, valid);
+							int j = 0;
+							for (auto& source : mReverbSources)
+							{
+								source.AddInput(out.GetEntry(j), i);
+								j++;
+							}
 						}
 					}
 					else
 					{
 						for (int i = 0; i < data.Rows(); i++)
 						{
-							rowvec out = mFDN.GetOutput(data.GetRow(i), mCurrentGain, valid);
-							for (int j = 0; j < mConfig.numFDNChannels; j++)
-								input.AddEntry(out.GetEntry(j), i, j);
+							out = mFDN.GetOutput(data.GetRow(i), mCurrentGain, valid);
+							int j = 0;
+							for (auto& source : mReverbSources)
+							{
+								source.AddInput(out.GetEntry(j), i);
+								j++;
+							}
 							Lerp(mCurrentGain, mTargetGain, mConfig.lerpFactor);
 						}
 					}
-					
 #ifdef PROFILE_AUDIO_THREAD
 					EndFDN();
 #endif
 				}
 				// Process buffer of each channel
-				lock_guard<mutex> lock(mCoreMutex);
-				int j = 0;
-				for (ReverbSource& source : mReverbSources)
-				{
-					source.ProcessAudio(input.GetColumn(j), outputBuffer);
-					j++;
-				}
+				for (auto& source : mReverbSources)
+					source.ProcessAudio(outputBuffer);
 #ifdef PROFILE_AUDIO_THREAD
 				EndReverb();
 #endif
 			}
+		}
+
+		void Reverb::UpdateReverbTime(const Coefficients& T60)
+		{
+#ifdef DEBUG_INIT
+			Debug::Log("Reverb T60: [" + RealToStr(T60[0]) + ", " + RealToStr(T60[1]) + ", " +
+				RealToStr(T60[2]) + ", " + RealToStr(T60[3]) + ", " + RealToStr(T60[4]) + "]", Colour::Orange);
+#endif
+			lock_guard <mutex> lock(mFDNMutex);
+			mFDN.UpdateT60(T60);
 		}
 
 		void Reverb::SetFDNParameters(const Coefficients& T60, const vec& dimensions)

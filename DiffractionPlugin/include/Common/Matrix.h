@@ -39,11 +39,11 @@ namespace UIE
 			};
 
 			// Adders
-			virtual inline void AddEntry(const Real& in, const int& r, const int& c) {  CheckRows(r); CheckCols(c); e[r][c] = in; }
-			virtual inline void IncreaseEntry(const Real& in, const int& r, const int& c) { CheckRows(r); CheckCols(c); e[r][c] += in; }
+			virtual inline void AddEntry(const Real& in, const int& r, const int& c) {  /*CheckRows(r); CheckCols(c);*/ e[r][c] = in; }
+			virtual inline void IncreaseEntry(const Real& in, const int& r, const int& c) { /*CheckRows(r); CheckCols(c);*/ e[r][c] += in; }
 			inline void AddColumn(const std::vector<Real>& v, const int& c)
 			{
-				CheckCols(c);
+				//CheckCols(c);
 				for (int i = 0; i < rows; i++)
 					e[i][c] = v[i];
 			}
@@ -53,11 +53,11 @@ namespace UIE
 			inline void CheckCols(const int& c) const { if (c >= cols) throw "Column index out of bounds"; }
 
 			// Getters
-			virtual inline Real GetEntry(const int& r, const int& c) const { CheckRows(r); CheckCols(c); return e[r][c]; }
-			inline std::vector<Real> GetRow(int r) const { CheckRows(r); return e[r];	}
+			virtual inline Real GetEntry(const int& r, const int& c) const { /*CheckRows(r); CheckCols(c);*/ return e[r][c]; }
+			inline std::vector<Real> GetRow(int r) const { /*CheckRows(r);*/ return e[r];	}
 			inline std::vector<Real> GetColumn(int c) const
 			{
-				CheckCols(c);
+				//CheckCols(c);
 				std::vector<Real> column(rows);
 				for (int i = 0; i < rows; i++)
 					column[i] = e[i][c];

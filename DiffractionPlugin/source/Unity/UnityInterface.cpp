@@ -23,6 +23,7 @@ static const UnityProfilerMarkerDesc* firMarker = NULL;
 static const UnityProfilerMarkerDesc* lerpMarker = NULL;
 static const UnityProfilerMarkerDesc* fdnChannelMarker = NULL;
 static const UnityProfilerMarkerDesc* fdnMatrixMarker = NULL;
+static const UnityProfilerMarkerDesc* ismMarker = NULL;
 #endif
 
 extern "C" void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API UnityPluginLoad(IUnityInterfaces * unityInterfaces)
@@ -45,6 +46,7 @@ extern "C" void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API UnityPluginLoad(IUnit
 	unityProfiler->CreateMarker(&lerpMarker, "Lerp", kUnityProfilerCategoryOther, kUnityProfilerMarkerFlagDefault, 0);
 	unityProfiler->CreateMarker(&fdnChannelMarker, "FDN Channel", kUnityProfilerCategoryOther, kUnityProfilerMarkerFlagDefault, 0);
 	unityProfiler->CreateMarker(&fdnMatrixMarker, "FDN Matrix", kUnityProfilerCategoryOther, kUnityProfilerMarkerFlagDefault, 0);
+	unityProfiler->CreateMarker(&ismMarker, "ISM", kUnityProfilerCategoryOther, kUnityProfilerMarkerFlagDefault, 0);
 #endif
 }
 
@@ -196,5 +198,17 @@ void EndFDNMatrix()
 {
 	if (GetDevBuild())
 		GetUnityProfiler()->EndSample(fdnMatrixMarker);
+}
+
+void BeginISM()
+{
+	if (GetDevBuild())
+		GetUnityProfiler()->BeginSample(ismMarker);
+}
+
+void EndISM()
+{
+	if (GetDevBuild())
+		GetUnityProfiler()->EndSample(ismMarker);
 }
 #endif

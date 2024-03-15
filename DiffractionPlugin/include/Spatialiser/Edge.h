@@ -21,6 +21,14 @@ namespace UIE
 	namespace Spatialiser
 	{
 
+		struct EdgeData
+		{
+			vec3 base, top, normal1, normal2;
+			size_t id1, id2;
+			EdgeData(const vec3& _base, const vec3& _top, const vec3& _normal1, const vec3& _normal2, const size_t& _id1, const size_t& _id2)
+				: base(_base), top(_top), normal1(_normal1), normal2(_normal2), id1(_id1), id2(_id2) {};
+		};
+
 		//////////////////// Edge class ////////////////////
 
 		class Edge
@@ -29,12 +37,12 @@ namespace UIE
 
 			// Load and Destroy
 			Edge();
-			Edge(const vec3& base, const vec3& top, const vec3& normal1, const vec3& normal2, const size_t& id1, const size_t id2);
+			Edge(const EdgeData& data);
+			Edge(const vec3& base, const vec3& top, const vec3& normal1, const vec3& normal2, const size_t& id1, const size_t& id2);
 			~Edge() {};
 
 			// Edge
-			void InitEdge();
-			inline void UpdateEdgeLength() { zW = (mTop - mBase).Length(); }
+			void Update();
 
 			// Getters
 			inline vec3 GetAP(vec3 point) const { return point - mBase; }
@@ -49,6 +57,7 @@ namespace UIE
 				else
 					return mWallIds[0];
 			}
+			inline std::vector<size_t> GetWallIDs() const { return mWallIds; }
 			inline bool AttachedToPlane(const std::vector<size_t>& ids) const
 			{
 				for (size_t id : ids)
@@ -57,6 +66,15 @@ namespace UIE
 						return true;
 				}
 				return false;
+			}
+
+			void Update(const EdgeData data)
+			{
+				mBase = data.base;
+				mTop = data.top;
+				mFaceNormals[0] = data.normal1;
+				mFaceNormals[1] = data.normal2;
+				Update();
 			}
 
 			//inline bool GetRValid() const { return rValid; }
@@ -80,8 +98,8 @@ namespace UIE
 			// Edge data
 			vec3 mBase;
 			vec3 mTop;
-			vec3 mFaceNormals[2];
-			size_t mWallIds[2];
+			std::vector <vec3> mFaceNormals;
+			std::vector<size_t> mWallIds;
 		};
 	}
 }

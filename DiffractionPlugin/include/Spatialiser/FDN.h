@@ -17,6 +17,7 @@
 
 // Unity headers
 #include "Unity/Profiler.h"
+#include "Unity/Debug.h"
 
 // Common headers
 #include "Common/AudioManager.h"
@@ -32,6 +33,7 @@ namespace UIE
 {
 	using namespace Common;
 	using namespace DSP;
+	using namespace Unity;
 	namespace Spatialiser
 	{
 
@@ -43,9 +45,10 @@ namespace UIE
 			// Load and Destroy
 			Channel(const Config& config);
 			Channel(Real t, const Coefficients& T60, const Config& config);
-			~Channel() {};
+			~Channel() { /*delete mBufferMutex;*/ };
 
 			// Setters
+			// void UpdateT60(const Coefficients& T60);
 			void SetParameters(const Coefficients& T60, const Real& t);
 			void SetAbsorption();
 			void SetAbsorption(const Coefficients& T60);
@@ -55,7 +58,6 @@ namespace UIE
 				idx = 0; 
 				mBuffer.ResetBuffer();
 				mAbsorptionFilter.ClearBuffers();
-				mAirAbsorption.ClearBuffers();
 			}
 
 			// Getters
@@ -70,41 +72,13 @@ namespace UIE
 			Config mConfig;
 			Buffer mBuffer;
 			ParametricEQ mAbsorptionFilter;
-			LowPass mAirAbsorption;
 			
-			std::mutex* mBufferMutex;
+			//std::mutex* mBufferMutex;
+			std::shared_ptr<std::mutex> mBufferMutex;
 			int idx;	// Read index
 		};
 
 		//////////////////// FDN class ////////////////////
-
-		inline void HouseholderMult(const matrix& u, const matrix& v, matrix& out)
-		{
-			out.Reset();
-
-			Real entry = 0.0;
-			for (int i = 0; i < u.Cols(); i++)
-				entry += u.GetEntry(0, i) * v.GetEntry(i, 0);
-
-			entry *= 2.0;
-			for (int i = 0; i < u.Cols(); i++)
-				out.AddEntry(u.GetEntry(0, i) - v.GetEntry(i, 0) * entry, 0, i);
-		}
-
-		inline void Mult(const matrix& u, const matrix& v, matrix& out)
-		{
-			out.Reset();
-			for (int i = 0; i < u.Rows(); ++i)
-			{
-				for (int j = 0; j < v.Cols(); ++j)
-				{
-					for (int k = 0; k < u.Cols(); ++k)
-					{
-						out.IncreaseEntry(u.GetEntry(i, k) * v.GetEntry(k, j), i, j);
-					}
-				}
-			}
-		}
 
 		class FDN
 		{
@@ -118,6 +92,7 @@ namespace UIE
 			rowvec GetOutput(const std::vector<Real>& data, Real gain, bool valid);
 
 			// Setters
+			void UpdateT60(const Coefficients& T60);
 			void SetParameters(const Coefficients& T60, const vec& dimensions);
 			inline void Reset()
 			{ 
@@ -125,17 +100,70 @@ namespace UIE
 				for (int i = 0; i < mConfig.numFDNChannels; i++)
 					mChannels[i].Reset();
 			}
+			inline void SetFDNModel(const FDNMatrix& model)
+			{
+				switch (model)
+				{
+				case FDNMatrix::householder:
+				{ 
+					mat = matrix(mConfig.numFDNChannels, 1);
+					Init = &FDN::InitHouseHolder;
+					Process = &FDN::ProcessHouseholder;
+					break;
+				}
+				case FDNMatrix::randomOrthogonal:
+				{ 
+					mat = matrix(mConfig.numFDNChannels, mConfig.numFDNChannels);
+					Init = &FDN::InitRandomOrthogonal;
+					Process = &FDN::ProcessSquare;
+					break;
+				}
+				}
+				InitMatrix();
+			}
 
 		private:
 			// Init
-			void InitMatrix();
+			void InitMatrix() { (this->*Init)(); };
+			void (FDN::* Init)();
 			vec CalculateTimeDelay(const vec& dimensions);
 
 			// Process
-			inline void ProcessMatrix() //x = y * mat
-			{ 
-				HouseholderMult(y, houseMat, x);
-				// Mult(y, mat, x);
+			inline void ProcessMatrix() { (this->*Process)(); };
+			void (FDN::* Process)();
+
+			inline void InitHouseHolder() { houseHolderFactor = 2 / mConfig.numFDNChannels; }
+			void InitRandomOrthogonal();
+
+			inline void ProcessHouseholder()
+			{
+				// x.Reset();
+				/*for (int i = 0; i < y.Cols(); i++)
+					x.AddEntry(houseHolderFactor - y.GetEntry(i), i);*/
+				x.Reset();
+				Real entry = houseHolderFactor * y.Sum();
+				for (int i = 0; i < y.Cols(); i++)
+					x.AddEntry(entry - y.GetEntry(i), i);
+
+				/*Real entry = 0.0;
+				for (int i = 0; i < y.Cols(); i++)
+					entry += y.GetEntry(i) * mat.GetEntry(i, 0);
+
+				entry *= 2.0;
+				for (int i = 0; i < y.Cols(); i++)
+					x.AddEntry(y.GetEntry(i) - mat.GetEntry(i, 0) * entry, i);*/
+			}
+
+			inline void ProcessSquare()
+			{
+				x.Reset();
+				for (int j = 0; j < mat.Cols(); ++j)
+				{
+					for (int k = 0; k < mat.Rows(); ++k)
+					{
+						x.IncreaseEntry(y.GetEntry(k) * mat.GetEntry(k, j), j);
+					}
+				}
 			}
 
 			// Member variables
@@ -144,7 +172,9 @@ namespace UIE
 			rowvec x;
 			rowvec y;
 			matrix mat;
-			matrix houseMat;
+
+			FDNMatrix mModel;
+			Real houseHolderFactor;
 		};
 	}
 }

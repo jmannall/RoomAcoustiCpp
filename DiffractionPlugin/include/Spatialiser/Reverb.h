@@ -12,6 +12,7 @@
 
 // 3DTI headers
 #include "BinauralSpatializer/SingleSourceDSP.h"
+#include "Common/Transform.h"
 
 // Common headers
 #include "Common/Types.h"
@@ -27,6 +28,7 @@
 // DSP headers
 #include "DSP/ParametricEQ.h"
 
+using namespace Common;
 namespace UIE
 {
 	using namespace Common;
@@ -39,14 +41,17 @@ namespace UIE
 		{
 		public:
 			ReverbSource(Binaural::CCore* core, const Config& config);
+			ReverbSource(Binaural::CCore* core, const Config& config, const vec3& shift);
 			~ReverbSource();
 
 			void UpdateSpatialisationMode(const HRTFMode& mode);
 			inline void SetShift(const vec3& shift) { mShift = shift; }
-			void Update(const vec3& position);
-			void UpdateReflectionFilter();
+			inline vec3 GetShift() const { return mShift; }
+			void UpdatePosition(const vec3& position);
 			void UpdateReflectionFilter(const Absorption& absorption);
-			void ProcessAudio(const vec& data, Buffer& outputBuffer);
+
+			void AddInput(const Real& in, const int& i) { inputBuffer.AddEntry(in, i); }
+			void ProcessAudio(Buffer& outputBuffer);
 
 			inline void Deactivate() { mSource = NULL; }
 			inline void Reset() { mReflectionFilter.ClearBuffers(); }
@@ -62,15 +67,17 @@ namespace UIE
 
 			bool valid;
 			vec3 mShift;
-			Absorption mAbsorption;
+			Coefficients mAbsorption;
 			ParametricEQ mReflectionFilter;
 			shared_ptr<Binaural::CSingleSourceDSP> mSource;
 			Config mConfig;
 
 			Binaural::CCore* mCore;
+			vec inputBuffer;
 			CMonoBuffer<float> bInput;
-			//CEarPair<CMonoBuffer<float>> bOutput;
+			CEarPair<CMonoBuffer<float>> bOutput;
 
+			std::shared_ptr<std::mutex> mMutex;
 		};
 
 		//////////////////// Reverb class ////////////////////
@@ -78,22 +85,30 @@ namespace UIE
 		class Reverb
 		{
 		public:
-			Reverb(Binaural::CCore* core, const Config& config, const vec& dimensions);
+			Reverb(Binaural::CCore* core, const Config& config);
 			Reverb(Binaural::CCore* core, const Config& config, const vec& dimensions, const Coefficients& T60);
 
 			void UpdateSpatialisationMode(const HRTFMode& mode);
 
-			void UpdateReverb(const vec3& position, const bool on);
-			void UpdateReflectionFilters(const ReverbWall& id, const Absorption& absorption);
-			void UpdateReflectionFilters(const ReverbWall& id, const Absorption& absorption, const Absorption& oldAbsorption);
+			void UpdateReverb(const vec3& position);
+			void UpdateReflectionFilters(const std::vector<Absorption>& absorptions, bool running);
 			void ProcessAudio(const matrix& data, Buffer& outputBuffer);
+			void UpdateReverbTime(const Coefficients& T60);
+			inline void UpdateFDNModel(const FDNMatrix& model) { mFDN.SetFDNModel(model); }
 			void SetFDNParameters(const Coefficients& T60, const vec& dimensions);
-			// size_t NumChannels() const { return mNumChannels; }
+			inline std::vector<vec3> GetReverbSourceDirections()
+			{
+				std::vector<vec3> directions;
+				for (ReverbSource& reverbSource : mReverbSources)
+					directions.push_back(reverbSource.GetShift());
+				return directions;
+			}
 
 		private:
 			void InitSources();
 
 			matrix input;
+			rowvec out;
 			Real* col;
 
 			bool valid;

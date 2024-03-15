@@ -13,15 +13,15 @@ namespace UIE
 	{
 		////////////////////////////////////////
 		// Context Singleton
-		static Context* context = nullptr;
+		static std::shared_ptr<Context> context = nullptr;
 
 		////////////////////////////////////////
 
-		Context* GetContext() { return context; }
+		static std::shared_ptr<Context> GetContext() { return context; }
 
 		////////////////////////////////////////
 
-		bool Init(const Config* config)
+		bool Init(const Config& config)
 		{
 			if (context) // Delete any existing context
 			{
@@ -33,7 +33,7 @@ namespace UIE
 #ifdef DEBUG_INIT
 	Debug::Log("Create New Context", Colour::Green);
 #endif
-			context = new Context(config);
+			context = std::make_shared<Context>(config);
 			return context->IsRunning();
 		}
 
@@ -43,36 +43,63 @@ namespace UIE
 		{
 			if (context)
 			{
-				delete context;
+				context.reset();
 				context = nullptr;
 			}
 		}
 
 		////////////////////////////////////////
 
-		bool SetSpatialisationMode(const SPATConfig& config, const int& hrtfResamplingStep, const std::vector<std::string>& filePaths)
+		bool LoadSpatialisationFiles(const int& hrtfResamplingStep, const std::vector<std::string>& filePaths)
 		{
-			auto* context = GetContext();
+			auto context = GetContext();
 			if (context)
-				return context->SetSpatialisationMode(config, hrtfResamplingStep, filePaths);
+				return context->LoadSpatialisationFiles(hrtfResamplingStep, filePaths);
 			else
 				return false;
 		}
 
 		////////////////////////////////////////
 
+		void UpdateSpatialisationMode(const SPATConfig& config)
+		{
+			auto context = GetContext();
+			if (context)
+				context->UpdateSpatialisationMode(config);
+		}
+
+		////////////////////////////////////////
+
 		void UpdateISMConfig(const ISMConfig& config)
 		{
-			auto* context = GetContext();
+			auto context = GetContext();
 			if (context)
 				context->UpdateISMConfig(config);
 		}
 
 		////////////////////////////////////////
 
+		void UpdateReverbTimeModel(const ReverbTime& model)
+		{
+			auto context = GetContext();
+			if (context)
+				context->UpdateReverbTimeModel(model);
+		}
+
+		////////////////////////////////////////
+
+		void UpdateFDNModel(const FDNMatrix& model)
+		{
+			auto context = GetContext();
+			if (context)
+				context->UpdateFDNModel(model);
+		}
+
+		////////////////////////////////////////
+
 		void UpdateRoom(const Real& volume, const vec& dimensions)
 		{
-			auto* context = GetContext();
+			auto context = GetContext();
 			if (context)
 				context->UpdateRoom(volume, dimensions);
 		}
@@ -81,7 +108,7 @@ namespace UIE
 
 		void UpdateListener(const vec3& position, const vec4& orientation)
 		{
-			auto* context = GetContext();
+			auto context = GetContext();
 			if (context)
 				context->UpdateListener(position, orientation);
 		}
@@ -90,7 +117,7 @@ namespace UIE
 
 		int InitSource()
 		{
-			auto* context = GetContext();
+			auto context = GetContext();
 			if (context)
 				return (int)context->InitSource();
 			else
@@ -101,7 +128,7 @@ namespace UIE
 
 		void UpdateSource(size_t id, const vec3& position, const vec4& orientation)
 		{
-			auto* context = GetContext();
+			auto context = GetContext();
 			if (context)
 				context->UpdateSource(id, position, orientation);
 		}
@@ -110,18 +137,18 @@ namespace UIE
 
 		void RemoveSource(size_t id)
 		{
-			auto* context = GetContext();
+			auto context = GetContext();
 			if (context)
 				context->RemoveSource(id);
 		}
 
 		////////////////////////////////////////
 
-		int InitWall(const vec3& normal, const Real* vData, size_t numVertices, Absorption& absorption, const ReverbWall& reverbWall)
+		int InitWall(const vec3& normal, const Real* vData, size_t numVertices, Absorption& absorption)
 		{
-			auto* context = GetContext();
+			auto context = GetContext();
 			if (context)
-				return (int)context->InitWall(normal, vData, numVertices, absorption, reverbWall);
+				return (int)context->InitWall(normal, vData, numVertices, absorption);
 			else
 				return -1;
 		}
@@ -130,7 +157,7 @@ namespace UIE
 
 		void UpdateWall(size_t id, const vec3& normal, const Real* vData, size_t numVertices)
 		{
-			auto* context = GetContext();
+			auto context = GetContext();
 			if (context)
 				context->UpdateWall(id, normal, vData, numVertices);
 		}
@@ -139,7 +166,7 @@ namespace UIE
 
 		void FreeWallId(size_t id)
 		{
-			auto* context = GetContext();
+			auto context = GetContext();
 			if (context)
 				context->FreeWallId(id);
 		}
@@ -148,16 +175,23 @@ namespace UIE
 
 		void RemoveWall(size_t id)
 		{
-			auto* context = GetContext();
+			auto context = GetContext();
 			if (context)
 				context->RemoveWall(id);
+		}
+
+		void UpdatePlanesAndEdges()
+		{
+			auto context = GetContext();
+			if (context)
+				context->UpdatePlanesAndEdges();
 		}
 
 		////////////////////////////////////////
 
 		void SubmitAudio(size_t id, const float* data)
 		{
-			auto* context = GetContext();
+			auto context = GetContext();
 			if (context)
 				context->SubmitAudio(id, data);
 		}
@@ -166,11 +200,18 @@ namespace UIE
 
 		void GetOutput(float** bufferPtr)
 		{
-			auto* context = GetContext();
+			auto context = GetContext();
 			if (context)
 				context->GetOutput(bufferPtr);
 			else
 				*bufferPtr = nullptr;
+		}
+
+		void GetWallVertices(int id, float** wallVertices)
+		{
+			auto context = GetContext();
+			if (context)
+				context->GetWallVertices(id, wallVertices);
 		}
 	}
 }

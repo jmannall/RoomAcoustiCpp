@@ -18,6 +18,8 @@
 // DSP headers
 #include "DSP/Buffer.h"
 
+#include "Unity/Debug.h"
+
 // DLL Linkage
 #ifdef _ANDROID
 #define API
@@ -33,9 +35,11 @@
 using namespace UIE::Spatialiser;
 using namespace UIE::Common;
 using namespace UIE::DSP;
+using namespace UIE::Unity;
 
 // Pointer to return buffer
 static float* buffer = nullptr;
+static float* wallVertices = nullptr;
 
 // Store number of bands
 static int numAbsorptionBands = 0;
@@ -59,15 +63,36 @@ extern "C"
 	 *
 	 * @return True if the initialization was successful, false otherwise.
 	 */
-	EXPORT bool API SPATInit(int fs, int numFrames, int numFDNChannels, float lerpFactor, const float* fBands, int numBands)
+	EXPORT bool API SPATInit(int fs, int numFrames, int maxFDNChannels, float lerpFactor, const float* fBands, int numBands)
 	{
+
+		int numFDNChannels = 0;
+		if (maxFDNChannels < 4)
+		{ numFDNChannels = 0; }
+		else if (maxFDNChannels < 6)
+		{ numFDNChannels = 4; }
+		else if (maxFDNChannels < 8)
+		{ numFDNChannels = 6; }
+		else if (maxFDNChannels < 12)
+		{ numFDNChannels = 8; }
+		else if (maxFDNChannels < 16)
+		{ numFDNChannels = 12; }
+		else if (maxFDNChannels < 20)
+		{ numFDNChannels = 16; }
+		else if (maxFDNChannels < 24)
+		{ numFDNChannels = 20; }
+		else if (maxFDNChannels < 32)
+		{ numFDNChannels = 24; }
+		else if (maxFDNChannels < 6)
+		{ numFDNChannels = 32; }
+
 		numAbsorptionBands = numBands;
 		Coefficients frequencyBands = Coefficients(static_cast<size_t>(numBands));
 		for (int i = 0; i < numBands; i++)
 			frequencyBands[i] = static_cast<Real>(fBands[i]);
 
 		Config config = Config(fs, numFrames, numFDNChannels, static_cast<Real>(lerpFactor), frequencyBands);
-		return Init(&config);
+		return Init(config);
 	}
 
 	/**
@@ -82,7 +107,21 @@ extern "C"
 	}
 
 	/**
-	 * Sets the spatialisation mode for the HRTF processing.
+	 * Loads the HRTF, near field and ILD files.
+	 *
+	 * @param hrtfResamplingStep The step size for resampling the HRTF. This should be between 5 - 90. Smaller values indicate higher quality.
+	 * @param paths An array of file paths in the order HRTF, near field and ILD files. The paths are expected to be null-terminated C strings.
+	 *
+	 * @return True if the spatialisation mode was successfully set, false otherwise.
+	 */
+	EXPORT bool API SPATLoadSpatialisationFiles(int hrtfResamplingStep, const char** paths)
+	{
+		std::vector<std::string> filePaths = { std::string(*(paths)), std::string(*(paths + 1)), std::string(*(paths + 2)) };
+		return LoadSpatialisationFiles(hrtfResamplingStep, filePaths);
+	}
+
+	/**
+	 * Sets the spatialisation mode (high quality, high performance or none).
 	 *
 	 * The depth values are mapped as follows.
 	 * -2 -> none
@@ -93,20 +132,14 @@ extern "C"
 	 * 3 -> direct + 1st, 2nd and 3rd-order components
 	 * etc
 	 * If the quality depth is set higher than the performance depth then the quality processing will be used.
-	 * 
+	 *
 	 * @param qualityDepth The depth up to which to use high quality HRTF processing. -2 for none, -1 for all (including late reverberation) and 0 for direct sound and 1, 2, 3 etc for the corresponding reflection/diffraction order.
 	 * @param performanceDepth The depth up to which to use high performance ILD processing. -2 for none, -1 for all (including late reverberation) and 0 for direct sound and 1, 2, 3 etc for the corresponding reflection/diffraction order.
-	 * @param hrtfResamplingStep The step size for resampling the HRTF. This should be between 5 - 90. Smaller values indicate higher quality.
-	 * @param paths An array of file paths in the order HRTF, near field and ILD files. The paths are expected to be null-terminated C strings.
-	 *
-	 * @return True if the spatialisation mode was successfully set, false otherwise.
-	 */
-	EXPORT bool API SPATSetSpatialisationMode(int qualityDepth, int performanceDepth, int hrtfResamplingStep, const char** paths)
+	*/
+	EXPORT void API SPATUpdateSpatialisationMode(int qualityDepth, int performanceDepth)
 	{
-		std::vector<std::string> filePaths = { std::string(*(paths)), std::string(*(paths + 1)), std::string(*(paths + 2)) };
-
 		SPATConfig config = SPATConfig(qualityDepth, performanceDepth);
-		return SetSpatialisationMode(config, hrtfResamplingStep, filePaths);
+		UpdateSpatialisationMode(config);
 	}
 
 	/**
@@ -123,6 +156,50 @@ extern "C"
 	EXPORT void API SPATUpdateISMConfig(int order, bool dir, bool ref, bool diff, bool refDiff, bool rev, bool spDiff)
 	{
 		UpdateISMConfig(ISMConfig(order, dir, ref, diff, refDiff, rev, spDiff));
+	}
+
+	/**
+	 * Updates the model in order to calculate the late reverberation time (T60).
+	 *
+	 * The mapping is as follows:
+	 * 0 -> Sabine
+	 * 1 -> Eyring
+	 * 
+	 * @param id The ID corresponding to a reverb time model.
+	 */
+	EXPORT void API SPATUpdateReverbTimeModel(int id)
+	{
+		switch (id)
+		{
+			case(0):
+			{ UpdateReverbTimeModel(ReverbTime::Sabine); break; }
+			case(1):
+			{ UpdateReverbTimeModel(ReverbTime::Eyring); break; }
+			default:
+			{ UpdateReverbTimeModel(ReverbTime::Sabine); break; }
+		}
+	}
+
+	/**
+	 * Updates the FDN matrix used to process the late reverberation.
+	 *
+	 * The mapping is as follows:
+	 * 0 -> House holder
+	 * 1 -> Random orthogonal
+	 *
+	 * @param id The ID corresponding to a FDN matrix.
+	 */
+	EXPORT void API SPATUpdateFDNModel(int id)
+	{
+		switch (id)
+		{
+		case(0):
+		{ UpdateFDNModel(FDNMatrix::householder); break; }
+		case(1):
+		{ UpdateFDNModel(FDNMatrix::randomOrthogonal); break; }
+		default:
+		{ UpdateFDNModel(FDNMatrix::householder); break; }
+		}
 	}
 
 	/**
@@ -256,9 +333,9 @@ extern "C"
 	 *
 	 * @return The ID of the new wall.
 	 */
-	EXPORT int API SPATInitWall(float nX, float nY, float nZ, const float* vData, int numVertices, float* absorption, int reverbWallId)
+	EXPORT int API SPATInitWall(float nX, float nY, float nZ, const float* vData, int numVertices, const float* absorption)
 	{
-		ReverbWall reverbWall = ReturnReverbWall(reverbWallId);
+		// ReverbWall reverbWall = ReturnReverbWall(reverbWallId);
 		std::vector<Real> a = std::vector<Real>(numAbsorptionBands);
 		for (int i = 0; i < numAbsorptionBands; i++)
 			a[i] = static_cast<Real>(absorption[i]);
@@ -269,7 +346,7 @@ extern "C"
 		for (int i = 0; i < numCoords; i++)
 			in[i] = static_cast<Real>(vData[i]);
 
-		return InitWall(vec3(nX, nY, nZ), &in[0], static_cast<size_t>(numVertices), abs, reverbWall);
+		return InitWall(vec3(nX, nY, nZ), &in[0], static_cast<size_t>(numVertices), abs);
 	}
 
 	/**
@@ -319,6 +396,17 @@ extern "C"
 	EXPORT void API SPATRemoveWall(int id)
 	{
 		RemoveWall(static_cast<size_t>(id));
+	}
+
+	/**
+	 * Updates the planes and edges of the room.
+	 *
+	 * This function should be called after all walls have been updated for a frame.
+	 * It will update the planes and edges of the room to match the new wall positions and orientations.
+	 */
+	EXPORT void API SPATUpdatePlanesAndEdges()
+	{
+		UpdatePlanesAndEdges();
 	}
 
 	/**
@@ -377,5 +465,11 @@ extern "C"
 	EXPORT void API SPATGetOutputBuffer(float** buf)
 	{
 		*buf = buffer;
+	}
+
+	EXPORT void API SPATGetWallVertices(int id, float** buf)
+	{
+		GetWallVertices(static_cast<size_t>(id), &wallVertices);
+		*buf = wallVertices;
 	}
 }

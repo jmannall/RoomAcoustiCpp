@@ -73,7 +73,8 @@ namespace UIE
 			inline void SetImpulseResponse(const Buffer& impulseResponse)
 			{
 				Resize(impulseResponse.Length());
-				ir = impulseResponse;
+				for (int i = 0; i < impulseResponse.Length(); i++)
+					ir[i] = impulseResponse[i];
 			}
 
 		private:

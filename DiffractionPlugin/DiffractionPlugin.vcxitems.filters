@@ -37,6 +37,9 @@
     <Filter Include="Source Files\DSP">
       <UniqueIdentifier>{6dbdf9af-0bc0-4b16-a505-df86882c6a32}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\safe">
+      <UniqueIdentifier>{556e7a98-9944-4086-979f-913653336a37}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Context.cpp">
@@ -90,9 +93,6 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Unity\Debug.cpp">
       <Filter>Source Files\Unity</Filter>
     </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\Unity\Profiler.cpp">
-      <Filter>Source Files\Unity</Filter>
-    </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Unity\UnityInterface.cpp">
       <Filter>Source Files\Unity</Filter>
     </ClCompile>
@@ -110,6 +110,9 @@
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\ParametricEQ.cpp">
       <Filter>Source Files\DSP</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\ImageEdge.cpp">
+      <Filter>Source Files\Spatialiser</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -194,9 +197,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Unity\IUnityProfiler.h">
       <Filter>Header Files\Unity</Filter>
     </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Unity\Profiler.h">
-      <Filter>Header Files\Unity</Filter>
-    </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Unity\UnityInterface.h">
       <Filter>Header Files\Unity</Filter>
     </ClInclude>
@@ -220,6 +220,27 @@
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\Interpolate.h">
       <Filter>Header Files\DSP</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\SphericalGeometries.h">
+      <Filter>Header Files\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\ImageEdge.h">
+      <Filter>Header Files\Spatialiser</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\safe\accessmode.h">
+      <Filter>Header Files\safe</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\safe\defaulttypes.h">
+      <Filter>Header Files\safe</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\safe\mutableref.h">
+      <Filter>Header Files\safe</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\safe\safe.h">
+      <Filter>Header Files\safe</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Mutexes.h">
+      <Filter>Header Files\Spatialiser</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

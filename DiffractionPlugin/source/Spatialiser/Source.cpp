@@ -7,9 +7,11 @@
 // Common headers
 #include "Common/Types.h" 
 #include "Common/Vec3.h"
+#include "Common/Vec4.h"
 
 // Spatialiser headers
 #include "Spatialiser/Source.h"
+#include "Spatialiser/Mutexes.h"
 
 // Unity headers
 #include "Unity/Debug.h"
@@ -31,15 +33,21 @@ namespace UIE
 
 		//////////////////// Source class ////////////////////
 
-		Source::Source(Binaural::CCore* core, const Config& config) : mCore(core), mConfig(config), targetGain(0.0f), currentGain(0.0f), isVisible(false)
+		Source::Source(Binaural::CCore* core, const Config& config) : mCore(core), mConfig(config), targetGain(0.0f), currentGain(0.0f)
 		{
+			vWallMutex = std::make_shared<std::mutex>();
+			vEdgeMutex = std::make_shared<std::mutex>();
+			dataMutex = std::make_shared<std::mutex>();
+
 			// Initialise source to core
-			mSource = mCore->CreateSingleSourceDSP();
+			{
+				lock_guard<mutex> lock(tuneInMutex);
+				mSource = mCore->CreateSingleSourceDSP();
+				mSource->EnablePropagationDelay();
 
-			//Select spatialisation mode
-			UpdateSpatialisationMode(config.spatConfig.GetMode(0));
-
-			mSource->EnablePropagationDelay();
+				//Select spatialisation mode
+				UpdateSpatialisationMode(config.spatConfig.GetMode(0));
+			}
 
 			ResetFDNSlots();
 			bInput = CMonoBuffer<float>(config.numFrames);
@@ -49,7 +57,10 @@ namespace UIE
 
 		Source::~Source()
 		{
-			mCore->RemoveSingleSourceDSP(mSource);
+			{
+				lock_guard<mutex> lock(tuneInMutex);
+				mCore->RemoveSingleSourceDSP(mSource);
+			}
 			Reset();
 		}
 
@@ -85,12 +96,12 @@ namespace UIE
 			mConfig.spatConfig = config;
 			UpdateSpatialisationMode(config.GetMode(0));
 			{
-				lock_guard<mutex> lock(vWallMutex);
+				lock_guard<mutex> lock(*vWallMutex);
 				for (auto& it : mVirtualSources)
 					it.second.UpdateSpatialisationMode(config);
 			}
 			{
-				lock_guard<mutex> lock(vEdgeMutex);
+				lock_guard<mutex> lock(*vEdgeMutex);
 				for (auto& it : mVirtualEdgeSources)
 					it.second.UpdateSpatialisationMode(config);
 			}
@@ -98,19 +109,19 @@ namespace UIE
 
 		void Source::ResetFDNSlots()
 		{
-			freeFDNChannels.reserve(1);
-			std::fill_n(std::back_inserter(freeFDNChannels), 1, 0);
+			freeFDNChannels.clear();
+			freeFDNChannels.push_back(0);
 		}
 
 		void Source::ProcessAudio(const Buffer& data, matrix& reverbInput, Buffer& outputBuffer)
 		{
 			{
-				lock_guard<mutex> lock(vWallMutex);
+				lock_guard<mutex> lock(*vWallMutex);
 				for (auto& it : mVirtualSources)
 					it.second.ProcessAudio(data, reverbInput, outputBuffer);
 			}
 			{
-				lock_guard<mutex> lock(vEdgeMutex);
+				lock_guard<mutex> lock(*vEdgeMutex);
 				for (auto& it : mVirtualEdgeSources)
 					it.second.ProcessAudio(data, reverbInput, outputBuffer);
 			}
@@ -118,38 +129,36 @@ namespace UIE
 #ifdef DEBUG_AUDIO_THREAD
 	// Debug::Log("Total audio vSources: " + IntToStr(counter), Colour::Orange);
 #endif
-
-			if (isVisible || currentGain != 0.0f)
+			lock_guard<std::mutex> lock(*dataMutex);
+			if (mData.visible || currentGain != 0.0f)
 			{
 #ifdef PROFILE_AUDIO_THREAD
 				BeginSource();
 #endif
+				if (currentGain == targetGain)
 				{
-					lock_guard<mutex> lock(audioMutex);
-					if (currentGain == targetGain)
+					for (int i = 0; i < mConfig.numFrames; i++)
+						bInput[i] = static_cast<float>(data[i] * currentGain);
+				}
+				else
+				{
+					for (int i = 0; i < mConfig.numFrames; i++)
 					{
-						for (int i = 0; i < mConfig.numFrames; i++)
-							bInput[i] = static_cast<float>(data[i] * currentGain);
+						bInput[i] = static_cast<float>(data[i] * currentGain);
+						Lerp(currentGain, targetGain, mConfig.lerpFactor);
 					}
-					else
-					{
-						for (int i = 0; i < mConfig.numFrames; i++)
-						{
-							bInput[i] = static_cast<float>(data[i] * currentGain);
-							Lerp(currentGain, targetGain, mConfig.lerpFactor);
-						}
-					}
-
+				}
 #ifdef PROFILE_AUDIO_THREAD
-					Begin3DTI();
+				Begin3DTI();
 #endif
+				{
+					lock_guard<mutex> lock(tuneInMutex);
 					mSource->SetBuffer(bInput);
 					mSource->ProcessAnechoic(bOutput.left, bOutput.right);
-
-#ifdef PROFILE_AUDIO_THREAD
-					End3DTI();
-#endif
 				}
+#ifdef PROFILE_AUDIO_THREAD
+				End3DTI();
+#endif
 
 				int j = 0;
 				for (int i = 0; i < mConfig.numFrames; i++)
@@ -163,19 +172,28 @@ namespace UIE
 			}
 		}
 
-		void Source::Update(const CTransform& transform, const SourceData& data)
+		void Source::Update(const vec3& position, const vec4& orientation)
 		{
+			CTransform transform;
+			transform.SetOrientation(CQuaternion(static_cast<float>(orientation.w), static_cast<float>(orientation.x), static_cast<float>(orientation.y), static_cast<float>(orientation.z)));
+			transform.SetPosition(CVector3(static_cast<float>(position.x), static_cast<float>(position.y), static_cast<float>(position.z)));
+
 			{
-				lock_guard<mutex> lock(audioMutex);
-				mSource->SetSourceTransform(transform); // Could lock the source while being updated to prevent background thread changing the data?
-				isVisible = data.visible;
-				if (data.visible)
+				lock_guard<mutex> lock(tuneInMutex);
+				mSource->SetSourceTransform(transform);
+			}
+
+			VirtualSourceDataMap vSources;	
+			{
+				lock_guard<std::mutex>lock(*dataMutex);
+				mData.mPosition = position;
+				if (mData.visible)
 					targetGain = 1.0f;
 				else
 					targetGain = 0.0f;
+				vSources = mData.vSources;
 			}
-
-			UpdateVirtualSources(data.vSources);
+			UpdateVirtualSources(vSources);
 		}
 
 		void Source::UpdateVirtualSources(const VirtualSourceDataMap& data)
@@ -183,17 +201,6 @@ namespace UIE
 			std::vector<std::string> keys;
 			std::vector<VirtualSourceData> newVSources;
 
-			/*std::vector<size_t>::iterator iter;
-			for (iter = mOldWallSlots.begin(); iter != mOldWallSlots.end(); ) {
-				if (std::find(mWallsInUse.begin(), mWallsInUse.end(), *iter) == mWallsInUse.end())
-				{
-					mEmptyWallSlots.push_back(*iter);
-					iter = mOldWallSlots.erase(iter);
-				}
-				else
-					++iter;
-			}*/
-			// for (auto it : oldData)
 			int j = 0;
 			for (auto it = oldData.begin(); it != oldData.end(); it++, j++)
 			{
@@ -210,9 +217,7 @@ namespace UIE
 			}
 
 			for (auto key : keys)
-			{
 				oldData.erase(key);
-			}
 
 			// new or existing vSources
 			for (auto it = data.begin(); it != data.end(); it++)
@@ -238,17 +243,17 @@ namespace UIE
 			int orderIdx = data.GetOrder() - 1;
 
 			VirtualSourceMap* tempStore;
-			std::mutex* m;
+			std::shared_ptr<std::mutex> m;
 
 			if (data.IsReflection(0))
 			{
 				tempStore = &mVirtualSources;
-				m = &vWallMutex;
+				m = vWallMutex;
 			}
 			else
 			{
 				tempStore = &mVirtualEdgeSources;
-				m = &vEdgeMutex;
+				m = vEdgeMutex;
 			}
 
 			for (int i = 0; i < orderIdx; i++)
@@ -271,12 +276,12 @@ namespace UIE
 				if (data.IsReflection(i + 1))
 				{
 					tempStore = &it->second.mVirtualSources;
-					m = &it->second.vWallMutex;
+					m = it->second.vWallMutex;
 				}
 				else
 				{
 					tempStore = &it->second.mVirtualEdgeSources;
-					m = &it->second.vEdgeMutex;
+					m = it->second.vEdgeMutex;
 				}
 			}
 
@@ -286,7 +291,9 @@ namespace UIE
 				int fdnChannel = -1;
 				if (data.feedsFDN)
 				{
-					fdnChannel = (int)(freeFDNChannels.back() % mConfig.numFDNChannels);
+					if (freeFDNChannels.back() >= mConfig.numFDNChannels)
+						freeFDNChannels.back() = 0;
+					fdnChannel = static_cast<int>(freeFDNChannels.back());
 					if (freeFDNChannels.size() > 1)
 						freeFDNChannels.pop_back();
 					else
@@ -305,15 +312,13 @@ namespace UIE
 				int fdnChannel = -1;
 				if (data.feedsFDN && it->second.GetFDNChannel() < 0)
 				{
-					fdnChannel = freeFDNChannels.back();
+					if (freeFDNChannels.back() >= mConfig.numFDNChannels)
+						freeFDNChannels.back() = 0;
+					fdnChannel = static_cast<int>(freeFDNChannels.back());
 					if (freeFDNChannels.size() > 1)
 						freeFDNChannels.pop_back();
 					else
-					{
 						freeFDNChannels[0]++;
-						if (freeFDNChannels[0] >= mConfig.numFDNChannels)
-							freeFDNChannels[0] = 0;
-					}
 				}
 
 				bool remove = it->second.UpdateVirtualSource(data, fdnChannel);

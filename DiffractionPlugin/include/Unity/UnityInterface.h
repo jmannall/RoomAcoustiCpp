@@ -46,5 +46,8 @@ void EndFDNChannel();
 
 void BeginFDNMatrix();
 void EndFDNMatrix();
+
+void BeginISM();
+void EndISM();
 #endif
 #endif

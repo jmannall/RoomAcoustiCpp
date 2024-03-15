@@ -24,10 +24,9 @@ namespace UIE
 		 * Initializes the spatialiser with the given configuration and file paths.
 		 *
 		 * @param config The configuration of the spatialiser.
-		 * @param filePaths The file paths for HRTF files.
 		 * @return True if the initialization was successful, false otherwise.
 		 */
-		bool Init(const Config* config);
+		bool Init(const Config& config);
 
 		/**
 		 * Exits and cleans up the spatialiser.
@@ -37,12 +36,17 @@ namespace UIE
 		/**
 		 * Sets the spatialisation mode for the HRTF processing.
 		 *
-		 * @param config The configuration of the spatialisation mode.
-		 * @param hrtfResamplingStep The resampling step for the HRTF.
-		 * @param filePaths The file paths for HRTF, near field and ILD files.
-		 * @return True if the files were loaded successfully, false otherwise.
+		 * @param hrtfResamplingStep The step size for resampling the HRTF.
+		 * @param filePaths The file paths for HRTF files.
 		 */
-		bool SetSpatialisationMode(const SPATConfig& config, const int& hrtfResamplingStep, const std::vector<std::string>& filePaths);
+		bool LoadSpatialisationFiles(const int& hrtfResamplingStep, const std::vector<std::string>& filePaths);
+
+		/**
+		 * Sets the spatialisation mode for the HRTF processing.
+		 *
+		 * @param config The configuration of the spatialisation mode.
+		 */
+		void UpdateSpatialisationMode(const SPATConfig& config);
 		
 		/**
 		 * Updates the configuration for the Image Source Model (ISM).
@@ -50,6 +54,20 @@ namespace UIE
 		 * @param config The new configuration for the ISM.
 		 */
 		void UpdateISMConfig(const ISMConfig& config);
+
+		/**
+		 * Updates the model in order to calculate the late reverberation time (T60).
+		 *
+		 * @param model The model used to calculate the late reverberation time.
+		 */
+		void UpdateReverbTimeModel(const ReverbTime& model);
+
+		/**
+		 * Updates the FDN matrix used to process the late reverberation.
+		 *
+		 * @param model The matrix used within the FDN.
+		 */
+		void UpdateFDNModel(const FDNMatrix& model);
 
 		/**
 		 * Updates the volume and dimensions of the room.
@@ -100,7 +118,7 @@ namespace UIE
 		 * @param reverbWall The reverb wall.
 		 * @return The ID of the new wall.
 		 */
-		int InitWall(const vec3& normal, const Real* vData, size_t numVertices, Absorption& absorption, const ReverbWall& reverbWall);
+		int InitWall(const vec3& normal, const Real* vData, size_t numVertices, Absorption& absorption);
 		
 		/**
 		 * Updates the position and orientation of the wall with the given ID.
@@ -128,6 +146,11 @@ namespace UIE
 		void RemoveWall(size_t id);
 
 		/**
+		 * Updates the planes and edges of the room.
+		 */
+		void UpdatePlanesAndEdges();
+
+		/**
 		 * Submits an audio buffer to the audio source with the given ID.
 		 *
 		 * @param id The ID of the audio source to update.
@@ -141,6 +164,8 @@ namespace UIE
 		 * @param bufferPtr A pointer to a float pointer. This will be set to point to the output buffer.
 		 */
 		void GetOutput(float** bufferPtr);
+
+		void GetWallVertices(int id, float** wallVertices);
 	}
 }
 #endif

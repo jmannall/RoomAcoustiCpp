@@ -32,53 +32,39 @@ namespace UIE
 
 			// Load and Destroy
 			SourceManager(Binaural::CCore* core, const Config& config) : mSources(), mEmptySlots(), mCore(core), mConfig(config) {};
-			~SourceManager() { Reset(); };
+			~SourceManager()
+			{ 
+				std::lock(updateMutex, processAudioMutex);
+				std::lock_guard<std::mutex> lk1(updateMutex, std::adopt_lock);
+				std::lock_guard<std::mutex> lk2(processAudioMutex, std::adopt_lock); 
+				Reset();
+			};
 
 			void UpdateSpatialisationMode(const SPATConfig& config);
 
 			// Sources
 			size_t Init();
-			inline void Update(const size_t& id, const CTransform& transform, const SourceData& data)
+
+			inline void Update(const size_t& id, const vec3& position, const vec4& orientation)
 			{
 				lock_guard <mutex> lock(updateMutex); // Lock before locate to ensure not deleted between found and mutex lock
 				auto it = mSources.find(id);
-				if (it == mSources.end())		// case: source does not exist
-				{
-					// Source does not exist
-				}
-				else
-				{
-					it->second.Update(transform, data);
-				}
+				if (it != mSources.end()) { it->second.Update(position, orientation); } // case: source does exist
 			}
+
 			inline void Remove(const size_t& id)
 			{
 				std::lock(updateMutex, processAudioMutex);
 				std::lock_guard<std::mutex> lk1(updateMutex, std::adopt_lock);
 				std::lock_guard<std::mutex> lk2(processAudioMutex, std::adopt_lock);
+
 				mSources.erase(id);
 				mEmptySlots.push_back(id);
 			}
-			/*inline void LogWallRemoval(const size_t& id)
-			{
-				std::lock(updateMutex, processAudioMutex);
-				std::lock_guard<std::mutex> lk1(updateMutex, std::adopt_lock);
-				std::lock_guard<std::mutex> lk2(processAudioMutex, std::adopt_lock);
-				for (auto it = mSources.begin(); it != mSources.end(); it++)
-				{
-					it->second.LogWallRemoval(id);
-				}
-			}
-			inline void LogEdgeRemoval(const size_t& id)
-			{
-				std::lock(updateMutex, processAudioMutex);
-				std::lock_guard<std::mutex> lk1(updateMutex, std::adopt_lock);
-				std::lock_guard<std::mutex> lk2(processAudioMutex, std::adopt_lock);
-				for (auto it = mSources.begin(); it != mSources.end(); it++)
-				{
-					it->second.LogEdgeRemoval(id);
-				}
-			}*/
+
+			void GetSourceData(std::vector<SourceData>& data);
+
+			void UpdateSourceData(const SourceData& data);
 
 			// Audio
 			void ProcessAudio(const size_t& id, const Buffer& data, matrix& reverbInput, Buffer& outputBuffer);

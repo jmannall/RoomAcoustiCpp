@@ -74,10 +74,11 @@ namespace UIE
 		{
 		public:
 			ParametricEQ(const size_t& order, const Coefficients& fc, const int& sampleRate);
-			ParametricEQ(Coefficients& gain, const size_t& order, const Coefficients& fc, const int& sampleRate);
+			ParametricEQ(const Coefficients& gain, const size_t& order, const Coefficients& fc, const int& sampleRate);
 
-			void UpdateParameters(Coefficients& gain);
-			Real GetOutput(const Real input);
+			void UpdateParameters();
+			void SetTargetGain(Coefficients& gain);
+			Real GetOutput(const Real& input, const Real& lerpFactor);
 
 			inline void ClearBuffers()
 			{
@@ -90,6 +91,9 @@ namespace UIE
 			size_t numFilters;
 			std::vector<BandFilter> filters;
 			Real mGain;
+			bool runAllFilters;
+			Coefficients targetGain;
+			Coefficients currentGain;
 			Coefficients fb;
 			Real out;
 		};

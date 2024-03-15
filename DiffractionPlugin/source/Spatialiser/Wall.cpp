@@ -61,9 +61,11 @@ namespace UIE
 
 		//////////////////// Wall class ////////////////////
 
-		Wall::Wall(const vec3& normal, const Real* vData, size_t numVertices, const Absorption& absorption, const ReverbWall& reverbWall) : mNormal(normal), mPlaneId(0), mNumVertices(numVertices), mAbsorption(absorption), mReverbWall(reverbWall)
+		Wall::Wall(const vec3& normal, const Real* vData, size_t numVertices, const Absorption& absorption) : mNormal(normal), mPlaneId(0), mNumVertices(numVertices), mAbsorption(absorption)
 		{
 			mNormal = UnitVectorRound(normal);
+			mVertices.reserve(mNumVertices);
+			std::fill_n(std::back_inserter(mVertices), mNumVertices, vec3());
 			Update(vData);
 
 #ifdef DEBUG_INIT
@@ -75,21 +77,24 @@ namespace UIE
 		// Update
 		void Wall::Update(const vec3& normal, const Real* vData, size_t numVertices)
 		{
-			if (mReverbWall == ReverbWall::none)
+			mNormal = UnitVectorRound(normal);
+			if (mNumVertices == numVertices)
+				Update(vData);
+			else
+				Debug::Log("Cannot update wall because the number of vertices has changed", Colour::Red);
+			/*if (mReverbWall == ReverbWall::none)
 			{
 				mNormal = UnitVectorRound(normal);
 				mNumVertices = numVertices;
 				Update(vData);
 			}
 			else
-				Debug::Log("Cannot update reverb wall", Colour::Red);
+				Debug::Log("Cannot update reverb wall", Colour::Red);*/
 		}
 
 		void Wall::Update(const Real* vData)
 		{
 			int j = 0;
-			mVertices.reserve(mNumVertices);
-			std::fill_n(std::back_inserter(mVertices), mNumVertices, vec3());
 			for (int i = 0; i < (int)mNumVertices; i++)
 			{
 				// Round as otherwise comparing identical vertices from unity still returns false
@@ -127,6 +132,8 @@ namespace UIE
 		{
 			vec3 grad = start - end;
 			Real scale = Dot(mNormal, grad);
+			if (scale == 0)
+				return false;
 			Real k = Dot(start, mNormal) - d;
 			intersection = start - grad * k / scale;
 
@@ -153,12 +160,17 @@ namespace UIE
 			}
 
 			Real eps = 0.00001;
-			if (angleRot > PI_2 + eps)
+			if (angleRot < PI_2 + eps && angleRot > PI_2 - eps)
+				return true;
+			if (angleRot < PI_1 + eps && angleRot > PI_1 - eps) // lies on edge of wall
+				return true;
+			return false;
+			/*if (angleRot > PI_2 + eps)
 				return false;
 			else if (angleRot < PI_2 - eps)
 				return false;
 			else
-				return true;
+				return true;*/
 		}
 	}
 }

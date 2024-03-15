@@ -10,6 +10,7 @@
 // C++ headers
 #include <assert.h>
 #include <vector>
+#include <cmath>
 
 // Common headers
 #include "Common/Types.h"
@@ -50,6 +51,13 @@ namespace UIE
 			inline Real operator[](const int& i) const { return coefficients[i]; };
 
 			// Operators
+			inline Coefficients& operator-()
+			{
+				for (int i = 0; i < coefficients.size(); i++)
+					coefficients[i] = -coefficients[i];
+				return *this;
+			}
+
 			inline Coefficients& operator+=(const Coefficients& v)
 			{
 				assert(coefficients.size() == v.Length());
@@ -79,6 +87,13 @@ namespace UIE
 				assert(coefficients.size() == v.Length());
 				for (int i = 0; i < coefficients.size(); i++)
 					coefficients[i] /= v[i];
+				return *this;
+			}
+
+			inline Coefficients& operator+=(const Real& a)
+			{
+				for (int i = 0; i < coefficients.size(); i++)
+					coefficients[i] += a;
 				return *this;
 			}
 
@@ -127,8 +142,25 @@ namespace UIE
 		inline Coefficients operator*(Coefficients a, const Coefficients& b) { return a *= b; }
 		inline Coefficients operator/(Coefficients a, const Coefficients& b) { return a /= b; }
 
+		inline Coefficients operator+(Coefficients a, const Real& b) { return a += b; }
+		inline Coefficients operator-(Coefficients a, const Real& b) { return a += (-b); }
+		inline Coefficients operator-(const Real& b, Coefficients a) { return -a += b; }
 		inline Coefficients operator*(Coefficients a, const Real& b) { return a *= b; }
 		inline Coefficients operator/(Coefficients a, const Real& b) { return a *= (1.0 / b); }
+		inline Coefficients operator/(const Real& b, const Coefficients& a) { Coefficients c = Coefficients(a.Length(), b);  return c /= a; }
+
+		inline bool operator==(const Coefficients& a, const Real& b)
+		{
+			for (int i = 0; i < a.Length(); i++)
+				if (a[i] != b)
+					return false;
+			return true;
+		}
+
+		inline bool operator!=(const Coefficients& a, const Real& b)
+		{
+			return !(a == b);
+		}
 
 		inline bool operator==(const Coefficients& a, const Coefficients& b)
 		{
@@ -147,16 +179,18 @@ namespace UIE
 
 		//////////////////// Absorption class ////////////////////
 
-		class Absorption : public Coefficients // Stores sqrt(1 - R). Where R is the absortion property of the material in the pressure domain
-		{												// Processing done in the energy domain
+		class Absorption : public Coefficients // Stores 1 - R. Where R is the absortion property of the material in the pressure domain
+		{
 		public:
 
 			// Load and Destroy
+			Absorption() : Coefficients(1.0, 1.0), area(0.0) {}
 			Absorption(size_t len) : Coefficients(len, 1.0), area(0.0) {}
+			Absorption(size_t len, const Real& x) : Coefficients(len, x), area(0.0) {}
 			Absorption(const std::vector<Real>& c) : Coefficients(c.size()), area(0.0)
 			{
 				for (int i = 0; i < c.size(); i++)
-					coefficients[i] = sqrt(1.0 - c[i]);
+					coefficients[i] = 1.0 - c[i];
 			}
 			Absorption(const std::vector<Real>& c, Real _area) : Coefficients(c), area(_area) {}
 			~Absorption() {}
@@ -164,6 +198,13 @@ namespace UIE
 			void Reset() { std::fill(coefficients.begin(), coefficients.end(), 1.0); }
 
 			// Operators
+			inline Absorption& operator-()
+			{
+				for (int i = 0; i < coefficients.size(); i++)
+					coefficients[i] = -coefficients[i];
+				return *this;
+			}
+
 			inline Absorption& operator+=(const Absorption& v)
 			{
 				assert(coefficients.size() == v.Length());
@@ -198,6 +239,18 @@ namespace UIE
 				return *this;
 			}
 
+			inline Absorption& operator+=(const Real& a)
+			{
+				for (int i = 0; i < coefficients.size(); i++)
+					coefficients[i] += a;
+				return *this;
+			}
+
+			inline Absorption& operator-=(const Real& a)
+			{
+				return *this += -a;
+			}
+
 			inline Absorption& operator*=(const Real& a)
 			{
 				for (int i = 0; i < coefficients.size(); i++)
@@ -221,8 +274,35 @@ namespace UIE
 		inline Absorption operator*(Absorption a, const Absorption& b) { return a *= b; }
 		inline Absorption operator/(Absorption a, const Absorption& b) { return a /= b; }
 
+		inline Absorption operator+(Absorption a, const Real& b) { return a += b; }
+		inline Absorption operator-(Absorption a, const Real& b) { return a += (-b); }
+		inline Absorption operator-(const Real& b, Absorption a) { return -a += b; }
 		inline Absorption operator*(Absorption a, const Real& b) { return a *= b; }
-		inline Absorption operator/(Absorption a, const Real& b) { return a *= (1.0 / b); }
+		inline Absorption operator/(Absorption a, const Real& b) { return a /= b; }
+
+		inline bool operator==(const Absorption& a, const Absorption& b)
+		{
+			if (a.Length() != b.Length())
+				return false;
+			if (a.area != b.area)
+				return false;
+			for (int i = 0; i < a.Length(); i++)
+				if (a[i] != b[i])
+					return false;
+			return true;
+		}
+
+		inline bool operator!=(const Absorption& a, const Absorption& b)
+		{
+			return !(a == b);
+		}
+
+		inline Absorption Sqrt(Absorption a)
+		{
+			for (int i = 0; i < a.Length(); i++)
+				a[i] = sqrt(a[i]);
+			return a;
+		}
 	}
 }
 

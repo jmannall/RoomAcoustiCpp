@@ -58,8 +58,8 @@ namespace UIE
 			VirtualSourceData(size_t numBands) : valid(false), rValid(false), visible(false), feedsFDN(false), mFDNChannel(-1), order(0), reflection(false), diffraction(false), key(""), mAbsorption(numBands) {};
 			~VirtualSourceData() { Clear(); };
 
-			// Wall
-			inline void AddWallIDs(const std::vector<size_t>& ids, const Absorption& absorption)
+			// Plane
+			inline void AddPlaneIDs(const std::vector<size_t>& ids)
 			{
 				for (size_t id : ids)
 				{
@@ -67,28 +67,21 @@ namespace UIE
 					order++;
 					key = key + IntToStr(id) + "r";
 				}
-				mAbsorption *= absorption;
 				reflection = true;
-			}
-			inline void AddWallID(const size_t& id, const Absorption& absorption) // IDs are added in reverse order (from listener to source)
-			{
-				pathParts.push_back(Part(id, true));
-				mAbsorption *= absorption;
-				key = key + IntToStr(id) + "r";
-			}
-			inline void AddWallIDToStart(const size_t& id, const Absorption& absorption) // IDs are added in reverse order (from listener to source)
-			{
-				pathParts.insert(pathParts.begin(), Part(id, true));
-				mAbsorption *= absorption;
-				key = IntToStr(id) + "r" + key;
 			}
 			inline void AddPlaneID(const size_t& id)
 			{
-				planeIds.push_back(id);
+				pathParts.push_back(Part(id, true));
 				order++;
 				reflection = true;
+				key = key + IntToStr(id) + "r";
 			}
-			inline void RemoveWallIDs()
+			inline void AddPlaneIDToStart(const size_t& id) // IDs are added in reverse order (from listener to source)
+			{
+				pathParts.insert(pathParts.begin(), Part(id, true));
+				key = IntToStr(id) + "r" + key;
+			}
+			inline void RemovePlaneIDs()
 			{
 				key = "";
 				mAbsorption.Reset();
@@ -109,6 +102,10 @@ namespace UIE
 				else
 					pathParts.clear();
 			}
+
+			// Absorption
+			inline void AddAbsorption(const Absorption& absorption) { mAbsorption *= absorption; }
+			inline void ResetAbsorption() { mAbsorption.Reset(); }
 
 			// Edge
 			inline void AddEdgeID(const size_t& id, const Diffraction::Path path)
@@ -131,10 +128,8 @@ namespace UIE
 			// Getters
 			size_t GetID() const { return pathParts.back().id; }
 			size_t GetID(int i) const { return pathParts[i].id; }
-			size_t GetPlaneID() const { return planeIds.back(); }
-			size_t GetPlaneID(int i) const { return planeIds[i]; }
+			std::vector<size_t> GetPlaneIDs() const;
 			std::string GetKey() const { return key; }
-			std::vector<size_t> GetWallIDs() const;
 			inline bool IsReflection(int i) const { return pathParts[i].isReflection; }
 			inline Absorption GetAbsorption() const { return mAbsorption; }
 			inline size_t GetOrder() const { return order; }
@@ -174,7 +169,7 @@ namespace UIE
 
 			// Reset
 			inline void Reset() { Invalid();  Invisible(); RInvalid(); }
-			inline void Clear() { pathParts.clear(); planeIds.clear(), mPositions.clear(); mRPositions.clear(); }
+			inline void Clear() { pathParts.clear(); mPositions.clear(); mRPositions.clear(); }
 
 			VirtualSourceData Trim(const int i);
 
@@ -194,7 +189,7 @@ namespace UIE
 		private:
 			std::string key;
 			std::vector<Part> pathParts;
-			std::vector<size_t> planeIds;
+			// std::vector<size_t> planeIds;
 			std::vector<vec3> mPositions;
 			std::vector<vec3> mRPositions;
 			size_t order;
@@ -208,7 +203,9 @@ namespace UIE
 		public:
 
 			// Load and Destroy
-			VirtualSource(const Config& config) : mCore(NULL), mSource(NULL), order(0), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(4, config.frequencyBands, config.fs), isInitialised(false), feedsFDN(false), mFDNChannel(-1), btm(&mDiffractionPath, 48000), reflection(false), diffraction(false), mConfig(config) {};
+			VirtualSource(const Config& config) : mCore(NULL), mSource(NULL), order(0), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(4, config.frequencyBands, config.fs),
+				isInitialised(false), feedsFDN(false), mFDNChannel(-1), btm(&mDiffractionPath, 48000), reflection(false), diffraction(false), mConfig(config)
+			{ vWallMutex = std::make_shared<std::mutex>(); vEdgeMutex = std::make_shared<std::mutex>(); }
 			VirtualSource(Binaural::CCore* core, const Config& config);
 			VirtualSource(Binaural::CCore* core, const Config& config, const VirtualSourceData& data, const int fdnChannel);
 			VirtualSource(const VirtualSource& vS);
@@ -217,7 +214,7 @@ namespace UIE
 			// Operators
 			inline VirtualSource operator=(const VirtualSource& vS)
 			{
-				mCore = vS.mCore; mSource = vS.mSource; mFilter = vS.mFilter; isInitialised = vS.isInitialised; mConfig = vS.mConfig; feedsFDN = vS.feedsFDN; mFDNChannel = vS.mFDNChannel; mDiffractionPath = vS.mDiffractionPath; btm = vS.btm; mTargetGain = vS.mTargetGain;
+				mCore = vS.mCore; mSource = vS.mSource; mFilter = vS.mFilter; isInitialised = vS.isInitialised; mConfig = vS.mConfig; feedsFDN = vS.feedsFDN; mFDNChannel = vS.mFDNChannel; mDiffractionPath = vS.mDiffractionPath; btm = vS.btm; mTargetGain = vS.mTargetGain; order = vS.order;
 				mCurrentGain = vS.mCurrentGain; reflection = vS.reflection; diffraction = vS.diffraction; mVirtualSources = vS.mVirtualSources; mVirtualEdgeSources = vS.mVirtualEdgeSources; bInput = vS.bInput; bStore = vS.bStore; bOutput = vS.bOutput, bMonoOutput = vS.bMonoOutput;
 				return *this;
 			}
@@ -246,8 +243,8 @@ namespace UIE
 			VirtualSourceMap mVirtualSources;
 			VirtualSourceMap mVirtualEdgeSources;
 
-			std::mutex vWallMutex;
-			std::mutex vEdgeMutex;
+			shared_ptr<std::mutex> vWallMutex;
+			shared_ptr<std::mutex> vEdgeMutex;
 
 		private:
 			void Init(const VirtualSourceData& data);

@@ -27,6 +27,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Diffraction\Path.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Edge.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\FDN.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\ImageEdge.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Interface.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Main.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\SourceManager.cpp" />
@@ -36,7 +37,6 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\VirtualSource.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Wall.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Unity\Debug.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\Unity\Profiler.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Unity\UnityInterface.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -46,6 +46,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Definitions.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\HelloWorld.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Matrix.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\SphericalGeometries.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Vec4.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\ScopedTimer.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Types.h" />
@@ -57,13 +58,19 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\Interpolate.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\LinkwitzRileyFilter.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\ParametricEQ.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\safe\accessmode.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\safe\defaulttypes.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\safe\mutableref.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\safe\safe.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Context.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Diffraction\Models.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Diffraction\Path.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Edge.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\FDN.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\ImageEdge.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Interface.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Main.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Mutexes.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\SourceManager.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Reverb.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Room.h" />
@@ -74,7 +81,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Unity\Debug.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Unity\IUnityInterface.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Unity\IUnityProfiler.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Unity\Profiler.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Unity\UnityInterface.h" />
   </ItemGroup>
 </Project>

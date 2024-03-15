@@ -22,13 +22,14 @@ namespace UIE
 
 		//////////////////// #defines ////////////////////
 
-// #define DEBUG_INIT
+#define DEBUG_INIT
 // #define DEBUG_UPDATE
 // #define DEBUG_REMOVE
 // #define DEBUG_AUDIO_THREAD
 // #define DEBUG_ISM_THREAD
 // #define DEBUG_HRTF
 // #define DEBUG_VIRTUAL_SOURCE
+#define DEBUG_ISM
 
 		//////////////////// Data Types ////////////////////
 
@@ -51,6 +52,18 @@ namespace UIE
 		typedef std::vector<std::vector<VirtualSourceData>> VirtualSourceDataStore;
 
 		typedef std::unordered_map<size_t, std::vector<size_t>> EdgeIDMap;
+
+		enum class ReverbTime
+		{
+			Sabine,
+			Eyring
+		};
+
+		enum class FDNMatrix
+		{
+			householder,
+			randomOrthogonal			
+		};
 
 		enum class Model
 		{

@@ -57,6 +57,14 @@ namespace UIE
 
 			inline Real GetEntry(const int& i) const { return e[i][0]; }
 
+			inline Real Sum() const
+			{
+				Real sum = 0.0;
+				for (int i = 0; i < cols; i++)
+					sum += e[i][0];
+				return sum;
+			}
+
 			// Operators
 			inline vec operator=(const matrix& mat)
 			{
@@ -97,6 +105,15 @@ namespace UIE
 			inline void IncreaseEntry(const Real& in, const int& i) { e[0][i] += in; }
 
 			inline Real GetEntry(const int& i) const { return e[0][i]; }
+
+			inline Real Sum() const
+			{
+				Real sum = 0.0;
+				for (int i = 0; i < cols; i++)
+					sum += e[0][i];
+				return sum;
+			}
+
 
 			// Operators
 			inline rowvec operator=(const matrix& mat)

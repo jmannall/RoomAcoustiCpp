@@ -7,6 +7,7 @@
 
 // Spatialiser headers
 #include "Spatialiser/VirtualSource.h"
+#include "Spatialiser/Mutexes.h"
 
 // Unity headers
 #include "Unity/UnityInterface.h"
@@ -24,7 +25,7 @@ namespace UIE
 
 		//////////////////// VirtualSourceData class ////////////////////
 
-		std::vector<size_t> VirtualSourceData::GetWallIDs() const
+		std::vector<size_t> VirtualSourceData::GetPlaneIDs() const
 		{
 			std::vector<size_t> ret;
 			for (Part part : pathParts)
@@ -123,6 +124,8 @@ namespace UIE
 
 		VirtualSource::VirtualSource(Binaural::CCore* core, const Config& config) : mCore(core), mSource(NULL), order(0), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(4, config.frequencyBands, config.fs), isInitialised(false), mConfig(config), feedsFDN(false), mFDNChannel(-1), btm(&mDiffractionPath, config.fs), reflection(false), diffraction(false)
 		{
+			vWallMutex = std::make_shared<std::mutex>();
+			vEdgeMutex = std::make_shared<std::mutex>();
 			bInput = CMonoBuffer<float>(mConfig.numFrames);
 			bStore.ResizeBuffer(mConfig.numFrames);
 			bOutput.left = CMonoBuffer<float>(mConfig.numFrames);
@@ -132,6 +135,8 @@ namespace UIE
 
 		VirtualSource::VirtualSource(Binaural::CCore* core, const Config& config, const VirtualSourceData& data, int fdnChannel) : mCore(core), mSource(NULL), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(4, config.frequencyBands, config.fs), isInitialised(false), mConfig(config), feedsFDN(data.feedsFDN), mFDNChannel(fdnChannel), mDiffractionPath(data.mDiffractionPath), btm(&mDiffractionPath, config.fs), reflection(data.reflection), diffraction(data.diffraction)
 		{
+			vWallMutex = std::make_shared<std::mutex>();
+			vEdgeMutex = std::make_shared<std::mutex>();
 			bInput = CMonoBuffer<float>(mConfig.numFrames);
 			bStore.ResizeBuffer(mConfig.numFrames);
 			bOutput.left = CMonoBuffer<float>(mConfig.numFrames);
@@ -140,8 +145,10 @@ namespace UIE
 			UpdateVirtualSource(data, fdnChannel);
 		}
 
-		VirtualSource::VirtualSource(const VirtualSource& vS) : mCore(vS.mCore), mSource(vS.mSource), mFilter(vS.mFilter), isInitialised(vS.isInitialised), mConfig(vS.mConfig), feedsFDN(vS.feedsFDN), mFDNChannel(vS.mFDNChannel), mDiffractionPath(vS.mDiffractionPath), btm(vS.btm), mTargetGain(vS.mTargetGain), mCurrentGain(vS.mCurrentGain), reflection(vS.reflection), diffraction(vS.diffraction), mVirtualSources(vS.mVirtualSources), mVirtualEdgeSources(vS.mVirtualEdgeSources), bInput(vS.bInput), bStore(vS.bStore), bOutput(vS.bOutput), bMonoOutput(vS.bMonoOutput)
+		VirtualSource::VirtualSource(const VirtualSource& vS) : mCore(vS.mCore), mSource(vS.mSource), mFilter(vS.mFilter), isInitialised(vS.isInitialised), mConfig(vS.mConfig), feedsFDN(vS.feedsFDN), mFDNChannel(vS.mFDNChannel), mDiffractionPath(vS.mDiffractionPath), btm(vS.btm), mTargetGain(vS.mTargetGain), mCurrentGain(vS.mCurrentGain), reflection(vS.reflection), diffraction(vS.diffraction), mVirtualSources(vS.mVirtualSources), mVirtualEdgeSources(vS.mVirtualEdgeSources), bInput(vS.bInput), bStore(vS.bStore), bOutput(vS.bOutput), bMonoOutput(vS.bMonoOutput), order(vS.order)
 		{
+			vWallMutex = std::make_shared<std::mutex>();
+			vEdgeMutex = std::make_shared<std::mutex>();
 			btm.UpdatePath(&mDiffractionPath);
 		}
 
@@ -178,6 +185,7 @@ namespace UIE
 
 		void VirtualSource::UpdateSpatialisationMode(const HRTFMode& mode)
 		{
+			lock_guard<mutex> lock(tuneInMutex);
 			switch (mode)
 			{
 			case HRTFMode::quality:
@@ -206,14 +214,15 @@ namespace UIE
 		void VirtualSource::UpdateSpatialisationMode(const SPATConfig& config)
 		{
 			mConfig.spatConfig = config;
-			UpdateSpatialisationMode(config.GetMode(order));
+			if (isInitialised)
+				UpdateSpatialisationMode(config.GetMode(order));
 			{
-				lock_guard<mutex> lock(vWallMutex);
+				lock_guard<mutex> lock(*vWallMutex);
 				for (auto& it : mVirtualSources)
 					it.second.UpdateSpatialisationMode(config);
 			}
 			{
-				lock_guard<mutex> lock(vEdgeMutex);
+				lock_guard<mutex> lock(*vEdgeMutex);
 				for (auto& it : mVirtualEdgeSources)
 					it.second.UpdateSpatialisationMode(config);
 			}
@@ -222,12 +231,12 @@ namespace UIE
 		void VirtualSource::ProcessAudio(const Buffer& data, matrix& reverbInput, Buffer& outputBuffer)
 		{
 			{
-				lock_guard<mutex> lock(vWallMutex);
+				lock_guard<mutex> lock(*vWallMutex);
 				for (auto& it : mVirtualSources)
 					it.second.ProcessAudio(data, reverbInput, outputBuffer);
 			}
 			{
-				lock_guard<mutex> lock(vEdgeMutex);
+				lock_guard<mutex> lock(*vEdgeMutex);
 				for (auto& it : mVirtualEdgeSources)
 					it.second.ProcessAudio(data, reverbInput, outputBuffer);
 			}
@@ -254,7 +263,7 @@ namespace UIE
 							BeginReflection();
 #endif
 							for (int i = 0; i < mConfig.numFrames; i++)
-								bStore[i] = mFilter.GetOutput(bStore[i]);
+								bStore[i] = mFilter.GetOutput(bStore[i], mConfig.lerpFactor);
 #ifdef PROFILE_AUDIO_THREAD
 							EndReflection();
 #endif
@@ -267,7 +276,7 @@ namespace UIE
 					BeginReflection();
 #endif
 					for (int i = 0; i < mConfig.numFrames; i++)
-						bStore[i] = mFilter.GetOutput(data[i]);
+						bStore[i] = mFilter.GetOutput(data[i], mConfig.lerpFactor);
 #ifdef PROFILE_AUDIO_THREAD
 					EndReflection();
 #endif
@@ -290,19 +299,21 @@ namespace UIE
 #ifdef PROFILE_AUDIO_THREAD
 				Begin3DTI();
 #endif
-				mSource->SetBuffer(bInput);
-
-				if (feedsFDN)
 				{
-					{
-						mSource->ProcessAnechoic(bMonoOutput, bOutput.left, bOutput.right);
-						for (int i = 0; i < mConfig.numFrames; i++)
-							reverbInput.IncreaseEntry(static_cast<Real>(bMonoOutput[i]), i, mFDNChannel);
-					}
-				}
-				else
-					mSource->ProcessAnechoic(bOutput.left, bOutput.right);
+					lock_guard<mutex> lock(tuneInMutex);
+					mSource->SetBuffer(bInput);
 
+					if (feedsFDN)
+					{
+						{
+							mSource->ProcessAnechoic(bMonoOutput, bOutput.left, bOutput.right);
+							for (int i = 0; i < mConfig.numFrames; i++)
+								reverbInput.IncreaseEntry(static_cast<Real>(bMonoOutput[i] / 0.9), i, mFDNChannel);
+						}
+					}
+					else
+						mSource->ProcessAnechoic(bOutput.left, bOutput.right);
+				}
 #ifdef PROFILE_AUDIO_THREAD
 				End3DTI();
 #endif
@@ -324,12 +335,6 @@ namespace UIE
 	Debug::Log("Init virtual source", Colour::Green);
 #endif
 
-			if (reflection) // Init reflection filter
-			{
-				Absorption g = data.GetAbsorption();
-				mFilter.UpdateParameters(g);
-			}
-
 			// Set btm currentIr
 			if (diffraction)
 			{
@@ -339,23 +344,26 @@ namespace UIE
 
 			order = data.GetOrder();
 
-			// Initialise source to core
-			mSource = mCore->CreateSingleSourceDSP();
-			
+			{
+				lock_guard<mutex> lock(tuneInMutex);
+
+				// Initialise source to core
+				mSource = mCore->CreateSingleSourceDSP();
+				mSource->EnablePropagationDelay();
+			}
+
 			//Select spatialisation mode
 			UpdateSpatialisationMode(mConfig.spatConfig.GetMode(order));
-
-			mSource->EnablePropagationDelay();
 
 			isInitialised = true;
 		}
 
 		void VirtualSource::Update(const VirtualSourceData& data, int& fdnChannel)
 		{
-			if (reflection) // Init reflection filter
+			if (reflection) // Update reflection filter
 			{
 				Absorption g = data.GetAbsorption();
-				mFilter.UpdateParameters(g);
+				mFilter.SetTargetGain(g);
 			}
 
 			if (diffraction)
@@ -371,7 +379,10 @@ namespace UIE
 				mFDNChannel = fdnChannel;
 				fdnChannel = oldChannel;
 			}
-			mSource->SetSourceTransform(data.transform);
+			{
+				lock_guard<mutex> lock(tuneInMutex);
+				mSource->SetSourceTransform(data.transform);
+			}
 		}
 
 		void VirtualSource::Remove()
@@ -379,7 +390,10 @@ namespace UIE
 #ifdef DEBUG_VIRTUAL_SOURCE
 	Debug::Log("Remove virtual source", Colour::Red);
 #endif
-			mCore->RemoveSingleSourceDSP(mSource);
+			{
+				lock_guard<mutex> lock(tuneInMutex);
+				mCore->RemoveSingleSourceDSP(mSource);
+			}
 			isInitialised = false;
 		}
 	}
