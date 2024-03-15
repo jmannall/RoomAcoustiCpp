@@ -13,12 +13,18 @@
 #include "Unity/Debug.h"
 #include "Unity/UnityInterface.h"
 
+// 3DTI headers
+#include "HRTF/HRTFFactory.h"
+#include "HRTF/HRTFCereal.h"
+#include "ILD/ILDCereal.h"
+
 namespace UIE
 {
 	using namespace Unity;
 	namespace Spatialiser
 	{
 
+		// Global mutex
 		std::mutex tuneInMutex;
 
 #ifndef DISABLE_SOFA_SUPPORT
@@ -59,9 +65,9 @@ namespace UIE
 
 		//////////////////// Context ////////////////////
 
-		// Load and Destroy
+		////////////////////////////////////////
 
-		Context::Context(const Config& config) : mIsRunning(true), mConfig(config), ISMThread()
+		Context::Context(const Config& config) : mConfig(config), mIsRunning(true), IEMThread()
 		{
 #ifdef DEBUG_INIT
 			Debug::Log("Init Context", Colour::Green);
@@ -79,12 +85,14 @@ namespace UIE
 			mImageEdgeModel = std::make_shared<ImageEdge>(mRoom, mSources, mReverb, mConfig.frequencyBands.Length());
 			
 			// Start background thread after all systems are initialized
-			ISMThread = std::thread(BackgroundProcessor, this);
+			IEMThread = std::thread(BackgroundProcessor, this);
 
 			mInputBuffer = Buffer(mConfig.numFrames);
 			mOutputBuffer = Buffer(2 * mConfig.numFrames); // Stereo output buffer
 			mReverbInput = matrix(mConfig.numFrames, mConfig.numFDNChannels);
 		}
+
+		////////////////////////////////////////
 
 		Context::~Context()
 		{
@@ -93,7 +101,7 @@ namespace UIE
 #endif
 
 			StopRunning();
-			ISMThread.join();
+			IEMThread.join();
 
 			mSources.reset();
 			mReverb.reset();
@@ -103,6 +111,8 @@ namespace UIE
 			lock_guard<mutex> audioLock(tuneInMutex);
 			mCore.RemoveListener();
 		}
+
+		////////////////////////////////////////
 
 		bool Context::LoadSpatialisationFiles(const int& hrtfResamplingStep, const std::vector<std::string>& filePaths)
 		{
@@ -148,6 +158,8 @@ namespace UIE
 			return result;
 		}
 
+		////////////////////////////////////////
+
 		void Context::UpdateSpatialisationMode(const SPATConfig& config)
 		{
 			mConfig.spatConfig = config;
@@ -156,18 +168,15 @@ namespace UIE
 			mSources->UpdateSpatialisationMode(config);
 		}
 
+		////////////////////////////////////////
+
 		void Context::UpdateReverbTimeModel(const ReverbTime& model)
 		{
 			Coefficients T60 = mRoom->UpdateReverbTimeModel(model);
 			mReverb->UpdateReverbTime(T60);
 		}
 
-		void Context::UpdateFDNModel(const FDNMatrix& model)
-		{
-			mReverb->UpdateFDNModel(model);
-		}
-
-		// Reverb
+		////////////////////////////////////////
 
 		void Context::UpdateRoom(const Real& volume, const vec& dimensions)
 		{
@@ -175,35 +184,26 @@ namespace UIE
 			mReverb->SetFDNParameters(T60, dimensions);
 		}
 
-		// Listener
+		////////////////////////////////////////
 
 		void Context::UpdateListener(const vec3& position, const vec4& orientation)
 		{
 #if DEBUG_UPDATE
 	Debug::Log("Update Listener", Colour::Yellow);
 #endif
-
-			// mRoom->UpdateListenerPosition(position);
-
 			// Set listener position and orientation
 			CTransform transform;
 			transform.SetOrientation(CQuaternion(static_cast<float>(orientation.w), static_cast<float>(orientation.x), static_cast<float>(orientation.y), static_cast<float>(orientation.z)));
 			transform.SetPosition(CVector3(static_cast<float>(position.x), static_cast<float>(position.y), static_cast<float>(position.z)));
-			BeginLerp();
 			{
 				lock_guard<mutex> lock(tuneInMutex);
 				mListener->SetListenerTransform(transform);
 			}
-			EndLerp();
-			BeginFIR();
 			mImageEdgeModel->SetListenerPosition(position);
-			EndFIR();
-			BeginFDN();
 			mReverb->UpdateReverb(position);
-			EndFDN();
 		}
 
-		// Source
+		////////////////////////////////////////
 
 		size_t Context::InitSource()
 		{
@@ -214,6 +214,8 @@ namespace UIE
 			return mSources->Init();
 		}
 
+		////////////////////////////////////////
+
 		void Context::UpdateSource(size_t id, const vec3& position, const vec4& orientation)
 		{
 #ifdef DEBUG_UPDATE
@@ -222,6 +224,8 @@ namespace UIE
 			// Update source position, orientation and virtual sources
 			mSources->Update(id, position, orientation);
 		}
+
+		////////////////////////////////////////
 
 		void Context::RemoveSource(size_t id)
 		{
@@ -232,7 +236,7 @@ namespace UIE
 			mSources->Remove(id);
 		}
 
-		// Wall
+		////////////////////////////////////////
 
 		size_t Context::InitWall(const vec3& normal, const Real* vData, size_t numVertices, Absorption& absorption)
 		{
@@ -241,21 +245,20 @@ namespace UIE
 #endif
 
 			Wall wall = Wall(normal, vData, numVertices, absorption);
-			//absorption.area = wall.GetArea();
-			//mReverb->UpdateReflectionFilters(reverbWall, absorption);
 			size_t id = mRoom->AddWall(wall);
 			mRoom->InitEdges(id);
 			return id;
 		}
 
+		////////////////////////////////////////
+
 		void Context::UpdateWall(size_t id, const vec3& normal, const Real* vData, size_t numVertices)
 		{
 			mRoom->UpdateWall(id, normal, vData, numVertices);
-			// TO DO: Update edges? and reflection filters
-			// mReverb->UpdateReflectionFilters(reverbWall, absorption, oldAbsorption);
 		}
 
-		// Assumes reverbWall never changes
+		////////////////////////////////////////
+
 		void Context::RemoveWall(size_t id)
 		{
 #ifdef DEBUG_REMOVE
@@ -264,13 +267,15 @@ namespace UIE
 			mRoom->RemoveWall(id);
 		}
 
+		////////////////////////////////////////
+
 		void Context::UpdatePlanesAndEdges()
 		{
 			mRoom->UpdatePlanes();
 			mRoom->UpdateEdges();
 		}
 
-		// Audio
+		////////////////////////////////////////
 
 		void Context::SubmitAudio(size_t id, const float* data)
 		{
@@ -279,6 +284,8 @@ namespace UIE
 
 			mSources->ProcessAudio(id, mInputBuffer, mReverbInput, mOutputBuffer);
 		}
+
+		////////////////////////////////////////
 
 		void Context::GetOutput(float** bufferPtr)
 		{

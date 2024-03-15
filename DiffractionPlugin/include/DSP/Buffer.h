@@ -15,15 +15,16 @@
 #include "Common/Types.h"
 #include "Common/Definitions.h"
 
-//////////////////// Buffer class ////////////////////
-
 namespace UIE
 {
 	using namespace Common;
 	namespace DSP
 	{
+
+		//////////////////// Buffer class ////////////////////
+
 		/**
-		 * Stores a resizeable buffer of Real values
+		 * Stores a resizeable buffer of Real values.
 		 * 
 		 * @details Used to store audio buffers and impulse responses
 		 */
@@ -56,8 +57,41 @@ namespace UIE
 			~Buffer() {};
 
 			/**
-			 * Returns the sample at a specified index.
+			 * Resets all samples in the buffer to 0.
+			 */
+			inline void ResetBuffer() { std::fill(mBuffer.begin(), mBuffer.end(), 0.0); };
+
+			/**
+			 * Returns the length of the buffer.
+			 */
+			inline size_t Length() const { return mBuffer.size(); }
+
+			/**
+			 * Resizes the buffer to a specified number of samples.
 			 * 
+			 * @details If the new size is larger than the current size, the new samples are initialised to 0.
+			 * 
+			 * @param numSamples The number of samples to resize the buffer to.
+			 */
+			void ResizeBuffer(const size_t& numSamples);
+
+			/**
+			 * Checks if the buffer is valid.
+			 * 
+			 * @details A buffer is valid if none of the values are nan.
+			 */
+			bool Valid();
+
+			/**
+			 * Returns the buffer as a vector of Real values.
+			 */
+			std::vector<Real> GetBuffer() { return mBuffer; }
+
+			//////////////////// Member Operators ////////////////////
+
+			/**
+			 * Returns the sample at a specified index.
+			 *
 			 * @param i The index of the sample to return.
 			 */
 			inline Real& operator[](const int& i) { return mBuffer[i]; };
@@ -93,44 +127,17 @@ namespace UIE
 				return *this;
 			}
 
-			/**
-			 * Resets all samples in the buffer to 0.
-			 */
-			inline void ResetBuffer() { std::fill(mBuffer.begin(), mBuffer.end(), 0.0); };
-
-			/**
-			 * Returns the length of the buffer.
-			 */
-			inline size_t Length() const { return mBuffer.size(); }
-
-			/**
-			 * Resizes the buffer to a specified number of samples.
-			 * 
-			 * @details If the new size is larger than the current size, the new samples are initialised to 0.
-			 * 
-			 * @param numSamples The number of samples to resize the buffer to.
-			 */
-			void ResizeBuffer(const size_t& numSamples);
-
-			/**
-			 * Checks if the buffer is valid.
-			 * 
-			 * @details A buffer is valid if none of the values are nan.
-			 */
-			bool Valid();
-
-			/**
-			 * Returns the buffer as a vector of Real values.
-			 */
-			std::vector<Real> GetBuffer() { return mBuffer; }
-
 		private:
 
+			//////////////////// Member Variables ////////////////////
+
 			/**
-			 * The buffer of Real values. 
+			 * Buffer
 			 */
-			std::vector<Real> mBuffer;
+			std::vector<Real> mBuffer;	// The buffer of Real values
 		};
+
+		//////////////////// Buffer Operators ////////////////////
 
 		/**
 		 * Compares two buffers to check if they are equal.
@@ -146,6 +153,8 @@ namespace UIE
 					return false;
 			return true;
 		}
+
+		//////////////////// BufferF class ////////////////////
 
 		/**
 		 * Stores a resizeable buffer of float values
@@ -172,6 +181,8 @@ namespace UIE
 			 * Default deconstructor.
 			 */
 			~BufferF() {};
+
+			//////////////////// Member Operators ////////////////////
 
 			/**
 			 * Returns the sample at a specified index.
@@ -203,10 +214,12 @@ namespace UIE
 			 */
 			void ResizeBuffer(const size_t& numSamples);
 
+			//////////////////// Member Variables ////////////////////
+
 			/**
-			 * The buffer of float values.
+			 * Buffer
 			 */
-			std::vector<float> mBuffer;
+			std::vector<float> mBuffer; // The buffer of float values
 		};
 	}
 }

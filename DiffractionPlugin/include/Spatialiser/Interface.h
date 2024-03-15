@@ -164,8 +164,6 @@ namespace UIE
 		 * @param bufferPtr A pointer to a float pointer. This will be set to point to the output buffer.
 		 */
 		void GetOutput(float** bufferPtr);
-
-		void GetWallVertices(int id, float** wallVertices);
 	}
 }
 #endif

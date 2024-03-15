@@ -27,9 +27,6 @@
 // 3DTI Headers
 #include "Common/Transform.h"
 #include "BinauralSpatializer/3DTI_BinauralSpatializer.h"
-#include "HRTF/HRTFFactory.h"
-#include "HRTF/HRTFCereal.h"
-#include "ILD/ILDCereal.h"
 
 namespace UIE
 {
@@ -37,80 +34,224 @@ namespace UIE
 	namespace Spatialiser
 	{
 
-		//////////////////// Context ////////////////////
+		//////////////////// Context clas ////////////////////
 
+		/**
+		 * Global context for the spatialiser.
+		 * 
+		 * @details This class is the main interface for the spatialiser
+		 */
 		class Context
 		{
 		public:
 
-			// Load and Destroy
+			/**
+			 * Constructor that initialises the spatialiser with the given configuration.
+			 * 
+			 * @param config The configuration for the spatialiser.
+			 */
 			Context(const Config& config);
+
+			/**
+			 * Default deconstructor.
+			 */
 			~Context();
 
+			/**
+			 * Loads the HRTF, near field and ILD files from the given file paths.
+			 *
+			 * @param hrtfResamplingStep The resampling step for the HRTF files.
+			 * @param filePaths The file paths for the HRTF, near field and ILD files.
+			 * 
+			 * @return True if the files were loaded successfully, false otherwise.
+			 */
 			bool LoadSpatialisationFiles(const int& hrtfResamplingStep, const std::vector<std::string>& filePaths);
+				
+			/**
+			 * Updates the spatialisation mode for each component of the spatialiser.
+			 *
+			 * @param config The new spatialisation configuration.
+			 */
 			void UpdateSpatialisationMode(const SPATConfig& config);
 
-			// Image Source Model
+			/**
+			 * Stop the spatialiser running.
+			 */
 			void StopRunning() { mIsRunning = false; }
+
+			/**
+			 * Check if the spatialiser is running.
+			 * 
+			 * @return True if the spatialiser is running, false otherwise.
+			 */
 			bool IsRunning() const { return mIsRunning; }
 
+			/**
+			 * Updates the image source model (ISM) configuration.
+			 *
+			 * @param config The new ISM configuration.
+			 */
 			inline void UpdateISMConfig(const ISMConfig& config) { mImageEdgeModel->UpdateISMConfig(config); }
-			void UpdateReverbTimeModel(const ReverbTime& model);
-			void UpdateFDNModel(const FDNMatrix& model);
 
-			std::shared_ptr<Room> GetRoom() { return mRoom; }
-			std::shared_ptr<ImageEdge> GetImageEdgeModel() { return mImageEdgeModel; }
-			//Reverb
+			/**
+			 * Updates the reverb time model.
+			 *
+			 * @param model The new reverb time model.
+			 */
+			void UpdateReverbTimeModel(const ReverbTime& model);
+
+			/**
+			 * Updates the feedback delay network (FDN) model.
+			 *
+			 * @param model The new FDN model.
+			 */
+			inline void UpdateFDNModel(const FDNMatrix& model) { mReverb->UpdateFDNModel(model); }
+
+			/**
+			 * Returns a pointer to the room class.
+			 * 
+			 * @return A pointer to the room class.
+			 */
+			inline std::shared_ptr<Room> GetRoom() { return mRoom; }
+
+			/**
+			 * Returns a pointer to the image edge class.
+			 * 
+			 * @return A pointer to the image edge class.
+			 */
+			inline std::shared_ptr<ImageEdge> GetImageEdgeModel() { return mImageEdgeModel; }
+
+			/**
+			 * Sets the room volume and dimensions.
+			 * 
+			 * @param volume The volume of the room used to predict the reverberation time.
+			 * @param dimensions The dimensions of the room used to set the FDN delay lines.
+			 */
 			void UpdateRoom(const Real& volume, const vec& dimensions);
 
-			// Listener
+			/**
+			 * Update the listener position and orientation.
+			 * 
+			 * @param position The new position of the listener.
+			 * @param orientation The new orientation of the listener.
+			 */
 			void UpdateListener(const vec3& position, const vec4& orientation);
 
-			// Source
+			/**
+			 * Initialises a new source in the spatialsier.
+			 * 
+			 * @return The ID of the new source.
+			 */
 			size_t InitSource();
+
+			/**
+			 * Updates the position and orientation of a source.
+			 * 
+			 * @param id The ID of the source to update.
+			 * @param position The new position of the source.
+			 * @param orientation The new orientation of the source.
+			 */
 			void UpdateSource(size_t id, const vec3& position, const vec4& orientation);
+
+			/**
+			 * Removes a source from the spatialiser.
+			 * 
+			 * @param id The ID of the source to remove.
+			 */
 			void RemoveSource(size_t id);
 
-			// Wall
+			/**
+			 * Initialises a new wall in the spatialsier.
+			 * 
+			 * @param normal The normal of the wall.
+			 * @param vData The vertices of the wall.
+			 * @param numVertices The number of vertices in the wall.
+			 * @param absorption The absorption of the wall.
+			 * 
+			 * @return The ID of the new wall.
+			 */
 			size_t InitWall(const vec3& normal, const Real* vData, size_t numVertices, Absorption& absorption);
+			
+			/**
+			 * Updates the position of a wall.
+			 * 
+			 * @param id The ID of the wall to update.
+			 * @param normal The new normal of the wall.
+			 * @param vData The new vertices of the wall.
+			 * @param numVertices The number of vertices in the wall.
+			 */
 			void UpdateWall(size_t id, const vec3& normal, const Real* vData, size_t numVertices);
-			void FreeWallId(size_t id) { mRoom->FreeWallId(id); }
+
+			/**
+			 * Frees up a wall ID.
+			 * 
+			 * @param id The wall ID to free.
+			 */
+			inline void FreeWallId(size_t id) { mRoom->FreeWallId(id); }
+
+			/**
+			 * Removes a wall from the spatialiser.
+			 * 
+			 * @param id The ID of the wall to remove.
+			 */
 			void RemoveWall(size_t id);
+
+			/**
+			 * Updates the planes and edges of the room.
+			 */
 			void UpdatePlanesAndEdges();
 
-			// Audio
+			/**
+			 * Sends an audio buffer to a source and adds the output to mOutputBuffer.
+			 * 
+			 * @param id The ID of the source to send the audio to.
+			 * @param data The audio buffer.
+			 */
 			void SubmitAudio(size_t id, const float* data);
-			void GetOutput(float** bufferPtr);
 
-			inline void GetWallVertices(int id, float** wallVertices)
-			{
-				mRoom->GetWallVertices(id, wallVertices);
-			}
+			/**
+			 * Accesses the output of the spatialiser.
+			 *
+			 * Processes the reverberation and adds the output to mOutputBuffer.
+			 * This is copied to mSendBuffer and mOutuputBuffer and mReverbBuffer are reset.
+			 * 
+			 * @param bufferPtr Pointer to a float pointer that is pointed towards mSendBuffer.
+			 */
+			void GetOutput(float** bufferPtr);
 
 		private:
 
-			// Configs
-			Config mConfig;
+			//////////////////// Member Variables ////////////////////
 
-			// 3DTI components
-			Binaural::CCore mCore;
-			std::shared_ptr<Binaural::CListener> mListener;
+			/**
+			 * Spatialiser
+			 */
+			Config mConfig;			// Configuration for the spatialiser
+			bool mIsRunning;		// Flag to check if the spatialiser is running
+			std::thread IEMThread;	// Background thread to run the image edge model
 
-			// Buffers
-			Buffer mInputBuffer;
-			Buffer mOutputBuffer;
-			matrix mReverbInput;
-			BufferF mSendBuffer;
+			/**
+			 * 3DTI components
+			 */
+			Binaural::CCore mCore;							// 3DTI core
+			std::shared_ptr<Binaural::CListener> mListener;	// 3DTI listener
 
-			// Handles
-			std::shared_ptr<Room> mRoom;
-			std::shared_ptr<Reverb> mReverb;
-			std::shared_ptr<SourceManager> mSources;
-			std::shared_ptr<ImageEdge> mImageEdgeModel;
+			/**
+			 * Audio buffers
+			 */
+			Buffer mInputBuffer;	// Audio input buffer
+			Buffer mOutputBuffer;	// Audio output buffer
+			matrix mReverbInput;	// Audio reverb input matrix
+			BufferF mSendBuffer;	// Audio send buffer (float)
 
-			// Image Source Model
-			std::thread ISMThread;
-			bool mIsRunning;
+			/**
+			 * Handles
+			 */
+			std::shared_ptr<Room> mRoom;				// Room class
+			std::shared_ptr<Reverb> mReverb;			// Reverb class
+			std::shared_ptr<SourceManager> mSources;	// Source manager class
+			std::shared_ptr<ImageEdge> mImageEdgeModel;	// Image edge class
+
 		};
 	}
 }

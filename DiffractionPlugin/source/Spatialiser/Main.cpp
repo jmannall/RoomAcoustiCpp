@@ -18,9 +18,11 @@
 // DSP headers
 #include "DSP/Buffer.h"
 
+// Unity headers
 #include "Unity/Debug.h"
 
-// DLL Linkage
+//////////////////// DLL Linkage ////////////////////
+
 #ifdef _ANDROID
 #define API
 #define EXPORT __attribute__ ((visibility ("default")))
@@ -32,17 +34,17 @@
 #define EXPORT
 #endif
 
+//////////////////// Namespaces ////////////////////
+
 using namespace UIE::Spatialiser;
 using namespace UIE::Common;
 using namespace UIE::DSP;
 using namespace UIE::Unity;
 
-// Pointer to return buffer
-static float* buffer = nullptr;
-static float* wallVertices = nullptr;
+//////////////////// Variables ////////////////////
 
-// Store number of bands
-static int numAbsorptionBands = 0;
+static float* buffer = nullptr;	// Pointer to return buffer
+static int numAbsorptionBands = 0;	// Store number of frequency bands for any reflection filters
 
 extern "C"
 {
@@ -184,7 +186,7 @@ extern "C"
 	 * Updates the FDN matrix used to process the late reverberation.
 	 *
 	 * The mapping is as follows:
-	 * 0 -> House holder
+	 * 0 -> Householder
 	 * 1 -> Random orthogonal
 	 *
 	 * @param id The ID corresponding to a FDN matrix.
@@ -281,43 +283,6 @@ extern "C"
 	}
 
 	/**
-	 * Returns the ReverbWall enum value corresponding to the given ID.
-	 *
-	 * This function is used to map integer IDs to ReverbWall enum values.
-	 * The mapping is as follows:
-	 * 0 -> posZ
-	 * 1 -> negZ
-	 * 2 -> posX
-	 * 3 -> negX
-	 * 4 -> posY
-	 * 5 -> negY
-	 * Any other value -> none
-	 *
-	 * @param id The ID to map to a ReverbWall enum value.
-	 * @return The corresponding ReverbWall enum value.
-	 */
-	ReverbWall ReturnReverbWall(int id)
-	{
-		switch (id)
-		{
-		case 0:
-		{ return ReverbWall::posZ; break; }
-		case 1:
-		{ return ReverbWall::negZ; break; }
-		case 2:
-		{ return ReverbWall::posX; break; }
-		case 3:
-		{ return ReverbWall::negX; break; }
-		case 4:
-		{ return ReverbWall::posY; break; }
-		case 5:
-		{ return ReverbWall::negY; break; }
-		default:
-		{ return ReverbWall::none; break; }
-		}
-	}
-
-	/**
 	 * Initializes a new wall with the given parameters and returns its ID.
 	 *
 	 * This function should be called when a new wall is created.
@@ -329,13 +294,11 @@ extern "C"
 	 * @param vData The vertices of the wall.
 	 * @param numVertices The number of vertices provided in the vData parameter.
 	 * @param absorption The frequency absorption coefficients.
-	 * @param reverbWallId The ID of the reverb wall.
 	 *
 	 * @return The ID of the new wall.
 	 */
 	EXPORT int API SPATInitWall(float nX, float nY, float nZ, const float* vData, int numVertices, const float* absorption)
 	{
-		// ReverbWall reverbWall = ReturnReverbWall(reverbWallId);
 		std::vector<Real> a = std::vector<Real>(numAbsorptionBands);
 		for (int i = 0; i < numAbsorptionBands; i++)
 			a[i] = static_cast<Real>(absorption[i]);
@@ -465,11 +428,5 @@ extern "C"
 	EXPORT void API SPATGetOutputBuffer(float** buf)
 	{
 		*buf = buffer;
-	}
-
-	EXPORT void API SPATGetWallVertices(int id, float** buf)
-	{
-		GetWallVertices(static_cast<size_t>(id), &wallVertices);
-		*buf = wallVertices;
 	}
 }

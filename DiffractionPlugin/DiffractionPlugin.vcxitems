@@ -58,10 +58,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\Interpolate.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\LinkwitzRileyFilter.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\ParametricEQ.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\safe\accessmode.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\safe\defaulttypes.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\safe\mutableref.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\safe\safe.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Context.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Diffraction\Models.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Diffraction\Path.h" />

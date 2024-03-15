@@ -206,12 +206,5 @@ namespace UIE
 			else
 				*bufferPtr = nullptr;
 		}
-
-		void GetWallVertices(int id, float** wallVertices)
-		{
-			auto context = GetContext();
-			if (context)
-				context->GetWallVertices(id, wallVertices);
-		}
 	}
 }
