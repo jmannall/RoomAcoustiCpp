@@ -129,6 +129,8 @@ namespace UIE
 			 */
 			void UpdateRoom(const Real& volume, const vec& dimensions);
 
+			inline void ResetFDN() { mReverb->ResetFDN(); }
+
 			/**
 			 * Update the listener position and orientation.
 			 * 
@@ -229,6 +231,7 @@ namespace UIE
 			Config mConfig;			// Configuration for the spatialiser
 			bool mIsRunning;		// Flag to check if the spatialiser is running
 			std::thread IEMThread;	// Background thread to run the image edge model
+			vec3 listenerPosition;	// Stored listener position
 
 			/**
 			 * 3DTI components
@@ -251,7 +254,6 @@ namespace UIE
 			std::shared_ptr<Reverb> mReverb;			// Reverb class
 			std::shared_ptr<SourceManager> mSources;	// Source manager class
 			std::shared_ptr<ImageEdge> mImageEdgeModel;	// Image edge class
-
 		};
 	}
 }

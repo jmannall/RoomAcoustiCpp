@@ -106,7 +106,7 @@ namespace UIE
 			SPATConfig() : quality(-2), performance(-2) {};
 			SPATConfig(int qualityOrder, int performanceOrder) : quality(qualityOrder), performance(performanceOrder) {};
 		
-			HRTFMode GetMode(const int& order) const
+			inline HRTFMode GetMode(const int& order) const
 			{
 				if (quality == -1 || order <= quality)
 					return HRTFMode::quality;

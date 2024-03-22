@@ -10,6 +10,7 @@
 // C++ headers
 #include <iostream>
 #include <cmath>
+#include <algorithm>
 
 // Common headers
 #include "Common/Types.h"
@@ -45,12 +46,36 @@ namespace UIE
 				z = Round(z, dp);
 			}
 
+			inline vec3 Min(const vec3& v)
+			{
+				this->x = std::min(this->x, v.x);
+				this->y = std::min(this->y, v.y);
+				this->z = std::min(this->z, v.z);
+				return *this;
+			}
+
+			inline vec3 Max(const vec3& v)
+			{
+				this->x = std::max(this->x, v.x);
+				this->y = std::max(this->y, v.y);
+				this->z = std::max(this->z, v.z);
+				return *this;
+			}
+
 			// Operators
 			inline vec3 operator+=(const vec3& v)
 			{
 				this->x += v.x;
 				this->y += v.y;
 				this->z += v.z;
+				return *this;
+			}
+
+			inline vec3 operator-=(const vec3& v)
+			{
+				this->x -= v.x;
+				this->y -= v.y;
+				this->z -= v.z;
 				return *this;
 			}
 
@@ -146,12 +171,12 @@ namespace UIE
 			return UnitVector(v);
 		}
 
-		inline Real Dot(vec3 v, vec3 u)
+		inline Real Dot(const vec3& v, const vec3& u)
 		{
 			return v.x * u.x + v.y * u.y + v.z * u.z;
 		}
 
-		inline vec3 Cross(vec3 v, vec3 u)
+		inline vec3 Cross(const vec3& v, const vec3& u)
 		{
 			return vec3(v.y * u.z - v.z * u.y,
 				v.z * u.x - v.x * u.z,

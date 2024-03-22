@@ -22,6 +22,7 @@
 #include "Spatialiser/Types.h"
 #include "Diffraction/Path.h"
 #include "Diffraction/Models.h"
+#include "Spatialiser/AirAbsorption.h"
 
 // 3DTI headers
 #include "BinauralSpatializer/SingleSourceDSP.h"
@@ -55,7 +56,7 @@ namespace UIE
 		public:
 
 			// Load and Destroy
-			VirtualSourceData(size_t numBands) : valid(false), rValid(false), visible(false), feedsFDN(false), mFDNChannel(-1), order(0), reflection(false), diffraction(false), key(""), mAbsorption(numBands) {};
+			VirtualSourceData(size_t numBands) : valid(false), rValid(false), visible(false), feedsFDN(false), mFDNChannel(-1), order(0), reflection(false), diffraction(false), key(""), mAbsorption(numBands), distance(10) {};
 			~VirtualSourceData() { Clear(); };
 
 			// Plane
@@ -171,6 +172,8 @@ namespace UIE
 			inline void Reset() { Invalid();  Invisible(); RInvalid(); }
 			inline void Clear() { pathParts.clear(); mPositions.clear(); mRPositions.clear(); }
 
+			void SetDistance(const vec3& listenerPosition);
+
 			VirtualSourceData Trim(const int i);
 
 			// Status data
@@ -185,6 +188,7 @@ namespace UIE
 			int mFDNChannel;
 			CTransform transform;
 			Diffraction::Path mDiffractionPath;
+			Real distance;
 
 		private:
 			std::string key;
@@ -204,7 +208,7 @@ namespace UIE
 
 			// Load and Destroy
 			VirtualSource(const Config& config) : mCore(NULL), mSource(NULL), order(0), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(4, config.frequencyBands, config.fs),
-				isInitialised(false), feedsFDN(false), mFDNChannel(-1), btm(&mDiffractionPath, 48000), reflection(false), diffraction(false), mConfig(config)
+				isInitialised(false), feedsFDN(false), mFDNChannel(-1), btm(&mDiffractionPath, 48000), reflection(false), diffraction(false), mConfig(config), mAirAbsorption(mConfig.fs)
 			{ vWallMutex = std::make_shared<std::mutex>(); vEdgeMutex = std::make_shared<std::mutex>(); }
 			VirtualSource(Binaural::CCore* core, const Config& config);
 			VirtualSource(Binaural::CCore* core, const Config& config, const VirtualSourceData& data, const int fdnChannel);
@@ -272,6 +276,7 @@ namespace UIE
 			ParametricEQ mFilter;
 			Diffraction::Path mDiffractionPath;
 			Diffraction::BTM btm;
+			AirAbsorption mAirAbsorption;
 
 			bool isInitialised;
 			bool reflection;

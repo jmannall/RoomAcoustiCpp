@@ -125,11 +125,11 @@ namespace UIE
 
 			void InitEdges(const size_t& id, const std::vector<size_t>& IDsW);
 
-			void FindEdges(const size_t& idA, const size_t& idB, std::vector<EdgeData> data, std::vector<size_t> IDs);
-			void FindEdges(const Wall& wallA, const Wall& wallB, const size_t& idA, const size_t& idB, std::vector<EdgeData> data);
+			void FindEdges(const size_t& idA, const size_t& idB, std::vector<EdgeData>& data, std::vector<size_t>& IDs);
+			void FindEdges(const Wall& wallA, const Wall& wallB, const size_t& idA, const size_t& idB, std::vector<EdgeData>& data);
 
-			void FindParallelEdges(const Wall& wallA, const Wall& wallB, const size_t& idA, const size_t& idB, std::vector<EdgeData> data);
-			void FindEdge(const Wall& wallA, const Wall& wallB, const size_t& idA, const size_t& idB, std::vector<EdgeData> data);
+			void FindParallelEdges(const Wall& wallA, const Wall& wallB, const size_t& idA, const size_t& idB, std::vector<EdgeData>& data);
+			void FindEdge(const Wall& wallA, const Wall& wallB, const size_t& idA, const size_t& idB, std::vector<EdgeData>& data);
 
 			inline void UpdateEdge(const size_t& id, const EdgeData& edge)
 			{ 

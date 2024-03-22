@@ -227,5 +227,8 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Mutexes.h">
       <Filter>Header Files\Spatialiser</Filter>
     </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\AirAbsorption.h">
+      <Filter>Header Files\Spatialiser</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

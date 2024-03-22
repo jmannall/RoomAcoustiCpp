@@ -96,6 +96,7 @@ namespace UIE
 			void UpdateReverbTime(const Coefficients& T60);
 			inline void UpdateFDNModel(const FDNMatrix& model) { mFDN.SetFDNModel(model); }
 			void SetFDNParameters(const Coefficients& T60, const vec& dimensions);
+			inline void ResetFDN() { mFDN.Reset(); }
 			inline std::vector<vec3> GetReverbSourceDirections()
 			{
 				std::vector<vec3> directions;

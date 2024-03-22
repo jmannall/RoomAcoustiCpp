@@ -33,7 +33,7 @@ namespace UIE
 
 		//////////////////// Source class ////////////////////
 
-		Source::Source(Binaural::CCore* core, const Config& config) : mCore(core), mConfig(config), targetGain(0.0f), currentGain(0.0f)
+		Source::Source(Binaural::CCore* core, const Config& config) : mCore(core), mConfig(config), targetGain(0.0f), currentGain(0.0f), mAirAbsorption(mConfig.fs)
 		{
 			vWallMutex = std::make_shared<std::mutex>();
 			vEdgeMutex = std::make_shared<std::mutex>();
@@ -50,6 +50,7 @@ namespace UIE
 			}
 
 			ResetFDNSlots();
+			bStore.ResizeBuffer(mConfig.numFrames);
 			bInput = CMonoBuffer<float>(config.numFrames);
 			bOutput.left = CMonoBuffer<float>(mConfig.numFrames);
 			bOutput.right = CMonoBuffer<float>(mConfig.numFrames);
@@ -125,7 +126,6 @@ namespace UIE
 				for (auto& it : mVirtualEdgeSources)
 					it.second.ProcessAudio(data, reverbInput, outputBuffer);
 			}
-
 #ifdef DEBUG_AUDIO_THREAD
 	// Debug::Log("Total audio vSources: " + IntToStr(counter), Colour::Orange);
 #endif
@@ -134,20 +134,26 @@ namespace UIE
 			{
 #ifdef PROFILE_AUDIO_THREAD
 				BeginSource();
+				BeginAirAbsorption();
+#endif
+				mAirAbsorption.ProcessAudio(data, bStore, mConfig.numFrames, mConfig.lerpFactor);
+#ifdef PROFILE_AUDIO_THREAD
+				EndAirAbsorption();
 #endif
 				if (currentGain == targetGain)
 				{
 					for (int i = 0; i < mConfig.numFrames; i++)
-						bInput[i] = static_cast<float>(data[i] * currentGain);
+						bInput[i] = static_cast<float>(currentGain * bStore[i]);
 				}
 				else
 				{
 					for (int i = 0; i < mConfig.numFrames; i++)
 					{
-						bInput[i] = static_cast<float>(data[i] * currentGain);
+						bInput[i] = static_cast<float>(currentGain * bStore[i]);
 						Lerp(currentGain, targetGain, mConfig.lerpFactor);
 					}
 				}
+
 #ifdef PROFILE_AUDIO_THREAD
 				Begin3DTI();
 #endif
@@ -172,7 +178,7 @@ namespace UIE
 			}
 		}
 
-		void Source::Update(const vec3& position, const vec4& orientation)
+		void Source::Update(const vec3& position, const vec4& orientation, const Real& distance)
 		{
 			CTransform transform;
 			transform.SetOrientation(CQuaternion(static_cast<float>(orientation.w), static_cast<float>(orientation.x), static_cast<float>(orientation.y), static_cast<float>(orientation.z)));
@@ -186,6 +192,7 @@ namespace UIE
 			VirtualSourceDataMap vSources;	
 			{
 				lock_guard<std::mutex>lock(*dataMutex);
+				mAirAbsorption.SetDistance(distance);
 				mData.mPosition = position;
 				if (mData.visible)
 					targetGain = 1.0f;

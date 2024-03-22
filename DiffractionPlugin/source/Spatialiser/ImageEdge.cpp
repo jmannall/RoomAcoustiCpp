@@ -4,7 +4,11 @@
 *
 */
 
+// Spatialiser headers
 #include "Spatialiser/ImageEdge.h"
+
+// Unity headers
+#include "Unity/UnityInterface.h"
 
 namespace UIE
 {
@@ -65,28 +69,15 @@ namespace UIE
 
 		bool ImageEdge::LineRoomIntersection(const vec3& start, const vec3& end, size_t currentPlaneId)
 		{
-			Plane plane; Wall wall; Real kS, kE;  size_t idP;
-			//lock_guard <mutex> wLock(mWallMutex);
+			vec3 intersection;
 			for (auto& itP : mPlanes)
 			{
-				idP = itP.first;
-				plane = itP.second;
-				if (idP != currentPlaneId)
+				if (itP.first != currentPlaneId)
 				{
-					kS = plane.PointPlanePosition(start);
-					kE = plane.PointPlanePosition(end);
-
-					if (kS * kE < 0)	// point lies on plane when kS || kE == 0. Therefore not obstructed
+					if (itP.second.LinePlaneIntersection(intersection, start, end))
 					{
-						for (auto& idW : plane.GetWalls())
-						{
-							auto itW = mWalls.find(idW);
-							if (itW != mWalls.end()) // case: wall exists
-							{
-								if (itW->second.LineWallIntersection(start, end))
-									return true;
-							}
-						}
+						if (FindWallIntersection(intersection, start, end, itP.second))
+							return true;
 					}
 				}
 			}
@@ -98,33 +89,16 @@ namespace UIE
 			if (obstruction)
 				return;
 
-			Plane plane; Wall wall; Real kS, kE; size_t idP;
-			//lock_guard <mutex> wLock(mWallMutex);
+			vec3 intersection;
 			for (auto& itP : mPlanes)
 			{
-				idP = itP.first;
-				plane = itP.second;
-				if (idP != currentPlaneId)
+				if (itP.first != currentPlaneId)
 				{
-					kS = plane.PointPlanePosition(start);
-					kE = plane.PointPlanePosition(end);
-
-					if (kS * kE < 0)	// point lies on plane when kS || kE == 0. Therefore not obstructed
+					if (itP.second.LinePlaneIntersection(intersection, start, end))
 					{
-						for (auto& idW : plane.GetWalls())
-						{
-							auto itW = mWalls.find(idW);
-							if (itW != mWalls.end()) // case: wall exists
-							{
-								obstruction = itW->second.LineWallIntersection(start, end);
-								if (obstruction)
-									return;
-							}
-							/*wall = mWalls.find(id)->second;
-							obstruction = wall.LineWallIntersection(start, end);
-							if (obstruction)
-								return;*/
-						}
+						obstruction = FindWallIntersection(intersection, start, end, itP.second);
+						if (obstruction)
+							return;
 					}
 				}
 			}
@@ -132,35 +106,53 @@ namespace UIE
 
 		bool ImageEdge::LineRoomIntersection(const vec3& start, const vec3& end, size_t currentPlaneId1, size_t currentPlaneId2)
 		{
-			Plane plane; Wall wall; Real kS, kE; size_t idP;
-			//lock_guard <mutex> wLock(mWallMutex);
+			vec3 intersection;
 			for (auto& itP : mPlanes)
 			{
-				idP = itP.first;
-				plane = itP.second;
-				if (idP != currentPlaneId1 && idP != currentPlaneId2)
+				if (itP.first != currentPlaneId1 && itP.first != currentPlaneId2)
 				{
-					kS = plane.PointPlanePosition(start);
-					kE = plane.PointPlanePosition(end);
-
-					if (kS * kE < 0)	// point lies on plane when kS || kE == 0. Therefore not obstructed
+					if (itP.second.LinePlaneIntersection(intersection, start, end))
 					{
-						for (auto& idW : plane.GetWalls())
-						{
-							auto itW = mWalls.find(idW);
-							if (itW != mWalls.end()) // case: wall exists
-							{
-								if (itW->second.LineWallIntersection(start, end))
-									return true;
-							}
-							/*wall = mWalls.find(id)->second;
-							if (wall.LineWallIntersection(start, end))
-								return true;*/
-						}
+						if (FindWallIntersection(intersection, start, end, itP.second))
+							return true;
 					}
 				}
 			}
 			return false;
+		}
+
+		bool ImageEdge::FindWallIntersection(const vec3& intersection, const vec3& start, const vec3& end, const Plane& plane) const
+		{
+			Absorption absorption;
+			return FindWallIntersection(absorption, intersection, start, end, plane);
+		}
+
+		bool ImageEdge::FindWallIntersection(Absorption& absorption, const vec3& intersection, const vec3& start, const vec3& end, const Plane& plane) const
+		{
+			for (auto& idW : plane.GetWalls())
+			{
+				auto itW = mWalls.find(idW);
+				if (itW != mWalls.end()) // case: wall exists
+				{
+					if (itW->second.LineWallIntersection(intersection, start, end))
+					{
+						absorption = itW->second.GetAbsorption();
+						return true;
+					}
+				}
+			}
+			return false;
+		}
+
+		bool ImageEdge::FindIntersection(vec3& intersection, Absorption& absorption, const vec3& start, const vec3& end, const Plane& plane)
+		{
+			if (plane.LinePlaneIntersection(intersection, start, end))
+			{
+				if (FindWallIntersection(absorption, intersection, start, end, plane))
+					return true;
+			}
+			else
+				return false;
 		}
 
 		bool ImageEdge::FindIntersections(std::vector<vec3>& intersections, VirtualSourceData& vSource, int bounceIdx)
@@ -180,7 +172,7 @@ namespace UIE
 
 		bool ImageEdge::FindIntersectionsSpEdSp(std::vector<vec3>& intersections, VirtualSourceData& vSource, int bounceIdx, int edgeIdx)
 		{
-			Plane plane; Wall wall; size_t idW;
+			Plane plane; Absorption absorption = Absorption(numAbsorptionBands);
 			vSource.ResetAbsorption();
 			int idx1 = edgeIdx - 1;
 			int idx2 = edgeIdx;
@@ -192,8 +184,8 @@ namespace UIE
 					auto it = mPlanes.find(vSource.GetID(idx1));
 					if (it != mPlanes.end()) // case: wall exists
 					{
-						valid = FindIntersection(intersections[idx1], wall, idW, intersections[idx2], vSource.GetPosition(idx1), it->second);
-						vSource.AddAbsorption(wall.GetAbsorption());
+						valid = FindIntersection(intersections[idx1], absorption, intersections[idx2], vSource.GetPosition(idx1), it->second);
+						vSource.AddAbsorption(absorption);
 						idx1--; idx2--;
 					}
 					else
@@ -209,8 +201,8 @@ namespace UIE
 					auto it = mPlanes.find(vSource.GetID(idx1));
 					if (it != mPlanes.end()) // case: wall exists
 					{
-						valid = FindIntersection(intersections[idx1], wall, idW, intersections[idx2], vSource.GetRPosition(idx3), it->second);
-						vSource.AddAbsorption(wall.GetAbsorption());
+						valid = FindIntersection(intersections[idx1], absorption, intersections[idx2], vSource.GetRPosition(idx3), it->second);
+						vSource.AddAbsorption(absorption);
 						idx1++; idx2++; idx3--;
 					}
 					else
@@ -222,77 +214,59 @@ namespace UIE
 
 		bool ImageEdge::FindIntersections(std::vector<vec3>& intersections, VirtualSourceData& vSource, int bounceIdx, const vec3& start)
 		{
-			Wall wall; size_t idW;
+			Absorption absorption = Absorption(numAbsorptionBands);
 			vSource.ResetAbsorption();
 			bool valid = true;
 			auto it = mPlanes.find(vSource.GetID(bounceIdx));
 			if (it != mPlanes.end()) // case: wall exists
-				valid = FindIntersection(intersections[bounceIdx], wall, idW, start, vSource.GetPosition(bounceIdx), it->second);
+				valid = FindIntersection(intersections[bounceIdx], absorption, start, vSource.GetPosition(bounceIdx), it->second);
 
 			int idx1 = bounceIdx - 1;
 			int idx2 = bounceIdx;
 			while (valid && idx1 >= 0)
 			{
-				vSource.AddAbsorption(wall.GetAbsorption());
+				vSource.AddAbsorption(absorption);
 				// (idx1) Current bounce (idx2) Previous bounce in code and next bounce in path
 
 				it = mPlanes.find(vSource.GetID(idx1));
 				if (it != mPlanes.end()) // case: wall exists
 				{
-					valid = FindIntersection(intersections[idx1], wall, idW, intersections[idx2], vSource.GetPosition(idx1), it->second);
+					valid = FindIntersection(intersections[idx1], absorption, intersections[idx2], vSource.GetPosition(idx1), it->second);
 					idx1--; idx2--;
 				}
 				else
 					valid = false;
 			}
-			vSource.AddAbsorption(wall.GetAbsorption());
+			vSource.AddAbsorption(absorption);
 			return valid;
 		}
 
 		bool ImageEdge::FindRIntersections(std::vector<vec3>& intersections, VirtualSourceData& vSource, int bounceIdx, const vec3& start)
 		{
-			Wall wall; size_t idW;
+			Absorption absorption = Absorption(numAbsorptionBands);
 			vSource.ResetAbsorption();
 			bool valid = true;
 			auto it = mPlanes.find(vSource.GetID(bounceIdx));
 			if (it != mPlanes.end()) // case: wall exists
-				valid = FindIntersection(intersections[bounceIdx], wall, idW, start, vSource.GetRPosition(bounceIdx), it->second);
+				valid = FindIntersection(intersections[bounceIdx], absorption, start, vSource.GetRPosition(bounceIdx), it->second);
 
 			int idx1 = bounceIdx - 1;
 			int idx2 = bounceIdx;
 			while (valid && idx1 >= 0)
 			{
-				vSource.AddAbsorption(wall.GetAbsorption());
+				vSource.AddAbsorption(absorption);
 				// (idx1) Current bounce (idx2) Previous bounce in code and next bounce in path
 				it = mPlanes.find(vSource.GetID(idx1));
 				if (it != mPlanes.end()) // case: wall exists
 				{
-					valid = FindIntersection(intersections[idx1], wall, idW, intersections[idx2], vSource.GetRPosition(idx1), it->second);
+					valid = FindIntersection(intersections[idx1], absorption, intersections[idx2], vSource.GetRPosition(idx1), it->second);
 					idx1--; idx2--;
 				}
 				else
 					valid = false;
 			}
-			vSource.AddAbsorption(wall.GetAbsorption());
+			vSource.AddAbsorption(absorption);
 			return valid;
-		}
-
-		bool ImageEdge::FindIntersection(vec3& intersection, Wall& wall, size_t& idW, const vec3& start, const vec3& end, const Plane& plane)
-		{
-			for (auto& id : plane.GetWalls())
-			{
-				auto it = mWalls.find(id);
-				if (it != mWalls.end()) // case: wall exists
-				{
-					if (it->second.LineWallIntersection(intersection, start, end))
-					{
-						idW = id;
-						wall = it->second;
-						return true;
-					}
-				}
-			}
-			return false;
 		}
 
 		// Image Source Model
@@ -303,9 +277,7 @@ namespace UIE
 			Real k;
 			vec3 normal, point, intersection;
 			Plane plane;
-			Wall wall;
-			size_t idW;
-			Absorption average = Absorption(numAbsorptionBands);
+			Absorption absorption = Absorption(numAbsorptionBands);
 			for (int j = 0; j < reverbDirections.size(); j++)
 			{
 				std::vector<Plane> planes;
@@ -342,28 +314,24 @@ namespace UIE
 				int i = 0;
 				while (!valid && i < planes.size())
 				{
-					valid = FindIntersection(intersection, wall, idW, mListenerPosition, point, planes[i]);
+					valid = FindIntersection(intersection, absorption, mListenerPosition, point, planes[i]);
 					if (valid)
-						reverbAbsorptions[j] = wall.GetAbsorption();
+						reverbAbsorptions[j] = absorption;
 					i++;
 				}
 				if (!valid)
 					reverbAbsorptions[j] = Absorption(numAbsorptionBands, 0.0);
-				/*else
-					average += reverbAbsorptions[j];*/
-				// reverbAbsorptions[j] = Absorption(numAbsorptionBands, 1.0);
 			}
-			/*if (average > 0)
-			{
-				average /= reverbAbsorptions.size();
-				for (auto& absorption : reverbAbsorptions)
-					absorption /= average;
-			}*/
 			mReverb->UpdateReflectionFilters(reverbAbsorptions, mISMConfig.lateReverb);
 		}
 
 		bool ImageEdge::ReflectPointInRoom(const vec3& point, VirtualSourceDataMap& vSources)
 		{
+
+#ifdef PROFILE_BACKGROUND_THREAD
+			BeginIEM();
+#endif
+
 			bool lineOfSight = false;
 
 			// Direct sound
@@ -401,7 +369,9 @@ namespace UIE
 			Debug::Log("RefDiff: " + IntToStr((int)spEd.size()), Colour::White);
 			Debug::Log("DiffRef: " + IntToStr((int)edSp.size()), Colour::White);
 #endif
-
+#ifdef PROFILE_BACKGROUND_THREAD
+			EndIEM();
+#endif
 			return lineOfSight;
 		}
 
@@ -496,6 +466,7 @@ namespace UIE
 												}
 												if (!obstruction)
 												{
+													vSource.SetDistance(mListenerPosition);
 													vSource.Visible(feedsFDN);
 													vSources.insert_or_assign(vSource.GetKey(), vSource);
 												}
@@ -558,6 +529,7 @@ namespace UIE
 												}
 												if (!obstruction)
 												{
+													vSource.SetDistance(mListenerPosition);
 													vSource.Visible(feedsFDN);
 													vSources.insert_or_assign(vSource.GetKey(), vSource);
 												}
@@ -619,6 +591,7 @@ namespace UIE
 													vSource.UpdateTransform(vPosition);
 													if (start.visible && end.visible)
 													{
+														vSource.SetDistance(mListenerPosition);
 														vSource.Visible(feedsFDN);
 														vSources.insert_or_assign(vSource.GetKey(), vSource);
 													}
@@ -662,6 +635,7 @@ namespace UIE
 														}
 														if (!obstruction)
 														{
+															vSource.SetDistance(mListenerPosition);
 															vSource.Visible(feedsFDN);
 															vSources.insert_or_assign(vSource.GetKey(), vSource);
 														}
@@ -712,6 +686,7 @@ namespace UIE
 
 						if (!obstruction) // Visible diffraction path
 						{
+							vSource.SetDistance(mListenerPosition);
 							vSource.Visible(feedsFDN);
 							vSources.insert_or_assign(vSource.GetKey(), vSource);
 						}
@@ -725,7 +700,7 @@ namespace UIE
 		void ImageEdge::FirstOrderReflections(const vec3& point, VirtualSourceDataStore& sp, VirtualSourceDataMap& vSources)
 		{
 			bool feedsFDN = mISMConfig.order == 1;
-			Plane plane;  vec3 position, rPosition, intersection; Wall wall; size_t id, idW; bool valid, rValid;
+			Plane plane;  vec3 position, rPosition, intersection; Absorption absorption; size_t id; bool valid, rValid;
 			sp.push_back(std::vector<VirtualSourceData>());
 			for (auto it : mPlanes)
 			{
@@ -751,15 +726,16 @@ namespace UIE
 
 					if (mISMConfig.reflection)
 					{
-						valid = FindIntersection(intersection, wall, idW, mListenerPosition, position, plane);
+						valid = FindIntersection(intersection, absorption, mListenerPosition, position, plane);
 
 						if (valid)
 						{
-							vSource.AddAbsorption(wall.GetAbsorption());
+							vSource.AddAbsorption(absorption);
 							bool obstruction = LineRoomIntersection(point, intersection, id);
 							LineRoomIntersection(intersection, mListenerPosition, id, obstruction);
 							if (!obstruction)
 							{
+								vSource.SetDistance(mListenerPosition);
 								vSource.Visible(feedsFDN);
 								vSources.insert_or_assign(vSource.GetKey(), vSource);
 							}
@@ -846,6 +822,7 @@ namespace UIE
 												}
 												if (!obstruction)
 												{
+													vSource.SetDistance(mListenerPosition);
 													vSource.Visible(feedsFDN);
 													vSources.insert_or_assign(vSource.GetKey(), vSource);
 												}

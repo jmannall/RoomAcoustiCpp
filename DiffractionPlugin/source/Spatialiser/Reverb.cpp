@@ -4,6 +4,17 @@
 *
 */
 
+// C++ headers
+#if defined(_WINDOWS)
+/* Microsoft C/C++-compatible compiler */
+#include <intrin.h>
+#endif
+
+#if defined(_ANDROID)
+// Common headers
+#include "Common/Definitions.h"
+#endif
+
 // Spatialiser headers
 #include "Spatialiser/Reverb.h"
 #include "Spatialiser/Mutexes.h"
@@ -143,7 +154,10 @@ namespace UIE
 				{
 					lock_guard<mutex> lock(*mMutex);
 					for (int i = 0; i < mConfig.numFrames; i++)
-						bInput[i] = static_cast<float>(mReflectionFilter.GetOutput(inputBuffer.GetEntry(i), mConfig.lerpFactor));
+					{
+						bInput[i] = static_cast<float>(mReflectionFilter.GetOutput(inputBuffer.GetEntry(i)));
+						mReflectionFilter.UpdateParameters(mConfig.lerpFactor);
+					}
 				}
 #ifdef PROFILE_AUDIO_THREAD
 				EndReflection();
@@ -205,7 +219,7 @@ namespace UIE
 			case 4:
 			{ Tetrahedron(points, true); break; }
 			case 6:
-			{ Octahedron(points); break; }
+			{ Octahedron(points); break; }	
 			case 8:
 			{ Cube(points); break; }
 			case 12:
@@ -276,16 +290,23 @@ namespace UIE
 #ifdef PROFILE_AUDIO_THREAD
 					BeginFDN();
 #endif
+#if(_WINDOWS)
+					_MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
+#elif(_ANDROID)
 
+					unsigned m_savedCSR = getStatusWord();
+					// Bit 24 is the flush-to-zero mode control bit. Setting it to 1 flushes denormals to 0.
+					setStatusWord(m_savedCSR | (1 << 24));
+#endif
 					if (mCurrentGain == mTargetGain)
 					{
 						for (int i = 0; i < data.Rows(); i++)
 						{
-							out = mFDN.GetOutput(data.GetRow(i), mCurrentGain, valid);
+							mFDN.ProcessOutput(data.GetRow(i), mCurrentGain);
 							int j = 0;
 							for (auto& source : mReverbSources)
 							{
-								source.AddInput(out.GetEntry(j), i);
+								source.AddInput(mFDN.GetOutput(j), i);
 								j++;
 							}
 						}
@@ -294,16 +315,24 @@ namespace UIE
 					{
 						for (int i = 0; i < data.Rows(); i++)
 						{
-							out = mFDN.GetOutput(data.GetRow(i), mCurrentGain, valid);
+							mFDN.ProcessOutput(data.GetRow(i), mCurrentGain);
 							int j = 0;
 							for (auto& source : mReverbSources)
 							{
-								source.AddInput(out.GetEntry(j), i);
+								source.AddInput(mFDN.GetOutput(j), i);
 								j++;
 							}
 							Lerp(mCurrentGain, mTargetGain, mConfig.lerpFactor);
 						}
 					}
+#if(_WINDOWS)
+					_MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_OFF);
+#elif(_ANDROID)
+
+					m_savedCSR = getStatusWord();
+					// Bit 24 is the flush-to-zero mode control bit. Setting it to 1 flushes denormals to 0.
+					setStatusWord(m_savedCSR | (0 << 24));
+#endif
 #ifdef PROFILE_AUDIO_THREAD
 					EndFDN();
 #endif

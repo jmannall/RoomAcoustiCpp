@@ -223,6 +223,11 @@ extern "C"
 		UpdateRoom(static_cast<Real>(volume), dimensions);
 	}
 
+	EXPORT void API SPATResetFDN()
+	{
+		ResetFDN();
+	}
+
 	/**
 	 * Updates the listener's position and orientation.
 	 *

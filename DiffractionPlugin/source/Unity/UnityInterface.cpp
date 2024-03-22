@@ -17,13 +17,15 @@ static const UnityProfilerMarkerDesc* fdnMarker = NULL;
 static const UnityProfilerMarkerDesc* reverbMarker = NULL;
 static const UnityProfilerMarkerDesc* reverbSourceMarker = NULL;
 static const UnityProfilerMarkerDesc* reflectionMarker = NULL;
+static const UnityProfilerMarkerDesc* airAbsorptionMarker = NULL;
 static const UnityProfilerMarkerDesc* diffractionMarker = NULL;
 static const UnityProfilerMarkerDesc* threedtiMarker = NULL;
 static const UnityProfilerMarkerDesc* firMarker = NULL;
 static const UnityProfilerMarkerDesc* lerpMarker = NULL;
 static const UnityProfilerMarkerDesc* fdnChannelMarker = NULL;
 static const UnityProfilerMarkerDesc* fdnMatrixMarker = NULL;
-static const UnityProfilerMarkerDesc* ismMarker = NULL;
+static const UnityProfilerMarkerDesc* backgroundLoopMarker = NULL;
+static const UnityProfilerMarkerDesc* iemMarker = NULL;
 #endif
 
 extern "C" void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API UnityPluginLoad(IUnityInterfaces * unityInterfaces)
@@ -40,13 +42,15 @@ extern "C" void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API UnityPluginLoad(IUnit
 	unityProfiler->CreateMarker(&reverbMarker, "Reverb", kUnityProfilerCategoryOther, kUnityProfilerMarkerFlagDefault, 0);
 	unityProfiler->CreateMarker(&reverbSourceMarker, "ReverbSource", kUnityProfilerCategoryOther, kUnityProfilerMarkerFlagDefault, 0);
 	unityProfiler->CreateMarker(&reflectionMarker, "Reflection", kUnityProfilerCategoryOther, kUnityProfilerMarkerFlagDefault, 0);
+	unityProfiler->CreateMarker(&airAbsorptionMarker, "AirAbsorption", kUnityProfilerCategoryOther, kUnityProfilerMarkerFlagDefault, 0);
 	unityProfiler->CreateMarker(&diffractionMarker, "Diffraction", kUnityProfilerCategoryOther, kUnityProfilerMarkerFlagDefault, 0);
 	unityProfiler->CreateMarker(&threedtiMarker, "3DTI", kUnityProfilerCategoryOther, kUnityProfilerMarkerFlagDefault, 0);
 	unityProfiler->CreateMarker(&firMarker, "FIR Filter", kUnityProfilerCategoryOther, kUnityProfilerMarkerFlagDefault, 0);
 	unityProfiler->CreateMarker(&lerpMarker, "Lerp", kUnityProfilerCategoryOther, kUnityProfilerMarkerFlagDefault, 0);
 	unityProfiler->CreateMarker(&fdnChannelMarker, "FDN Channel", kUnityProfilerCategoryOther, kUnityProfilerMarkerFlagDefault, 0);
 	unityProfiler->CreateMarker(&fdnMatrixMarker, "FDN Matrix", kUnityProfilerCategoryOther, kUnityProfilerMarkerFlagDefault, 0);
-	unityProfiler->CreateMarker(&ismMarker, "ISM", kUnityProfilerCategoryOther, kUnityProfilerMarkerFlagDefault, 0);
+	unityProfiler->CreateMarker(&backgroundLoopMarker, "BackgroundLoop", kUnityProfilerCategoryOther, kUnityProfilerMarkerFlagDefault, 0);
+	unityProfiler->CreateMarker(&iemMarker, "ImageEdgeModel", kUnityProfilerCategoryOther, kUnityProfilerMarkerFlagDefault, 0);
 #endif
 }
 
@@ -128,6 +132,18 @@ void EndReflection()
 		GetUnityProfiler()->EndSample(reflectionMarker);
 }
 
+void BeginAirAbsorption()
+{
+	if (GetDevBuild())
+		GetUnityProfiler()->BeginSample(airAbsorptionMarker);
+}
+
+void EndAirAbsorption()
+{
+	if (GetDevBuild())
+		GetUnityProfiler()->EndSample(airAbsorptionMarker);
+}
+
 void BeginDiffraction()
 {
 	if (GetDevBuild())
@@ -200,15 +216,27 @@ void EndFDNMatrix()
 		GetUnityProfiler()->EndSample(fdnMatrixMarker);
 }
 
-void BeginISM()
+void BeginBackgroundLoop()
 {
 	if (GetDevBuild())
-		GetUnityProfiler()->BeginSample(ismMarker);
+		GetUnityProfiler()->BeginSample(backgroundLoopMarker);
 }
 
-void EndISM()
+void EndBackgroundLoop()
 {
 	if (GetDevBuild())
-		GetUnityProfiler()->EndSample(ismMarker);
+		GetUnityProfiler()->EndSample(backgroundLoopMarker);
+}
+
+void BeginIEM()
+{
+	if (GetDevBuild())
+		GetUnityProfiler()->BeginSample(iemMarker);
+}
+
+void EndIEM()
+{
+	if (GetDevBuild())
+		GetUnityProfiler()->EndSample(iemMarker);
 }
 #endif

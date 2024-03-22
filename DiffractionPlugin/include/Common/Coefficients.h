@@ -179,7 +179,7 @@ namespace UIE
 
 		//////////////////// Absorption class ////////////////////
 
-		class Absorption : public Coefficients // Stores 1 - R. Where R is the absortion property of the material in the pressure domain
+		class Absorption : public Coefficients // Stores 1 - sqrt(R). Where R is the absortion property of the material in the pressure domain
 		{
 		public:
 
@@ -190,7 +190,7 @@ namespace UIE
 			Absorption(const std::vector<Real>& c) : Coefficients(c.size()), area(0.0)
 			{
 				for (int i = 0; i < c.size(); i++)
-					coefficients[i] = 1.0 - c[i];
+					coefficients[i] = sqrt(1.0 - c[i]);
 			}
 			Absorption(const std::vector<Real>& c, Real _area) : Coefficients(c), area(_area) {}
 			~Absorption() {}

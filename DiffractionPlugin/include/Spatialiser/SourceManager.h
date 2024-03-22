@@ -45,11 +45,11 @@ namespace UIE
 			// Sources
 			size_t Init();
 
-			inline void Update(const size_t& id, const vec3& position, const vec4& orientation)
+			inline void Update(const size_t& id, const vec3& position, const vec4& orientation, Real& distance)
 			{
 				lock_guard <mutex> lock(updateMutex); // Lock before locate to ensure not deleted between found and mutex lock
 				auto it = mSources.find(id);
-				if (it != mSources.end()) { it->second.Update(position, orientation); } // case: source does exist
+				if (it != mSources.end()) { it->second.Update(position, orientation, distance); } // case: source does exist
 			}
 
 			inline void Remove(const size_t& id)

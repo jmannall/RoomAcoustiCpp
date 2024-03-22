@@ -137,7 +137,7 @@ namespace UIE
 			}
 		}
 
-		void Room::FindEdges(const size_t& idA, const size_t& idB, std::vector<EdgeData> data, std::vector<size_t> IDs)
+		void Room::FindEdges(const size_t& idA, const size_t& idB, std::vector<EdgeData>& data, std::vector<size_t>& IDs)
 		{
 			auto itA = mWalls.find(idA);
 			auto itB = mWalls.find(idB);
@@ -148,7 +148,7 @@ namespace UIE
 				FindEdges(itA->second, itB->second, idA, idB, data);
 		}
 
-		void Room::FindEdges(const Wall& wallA, const Wall& wallB, const size_t& idA, const size_t& idB, std::vector<EdgeData> data)
+		void Room::FindEdges(const Wall& wallA, const Wall& wallB, const size_t& idA, const size_t& idB, std::vector<EdgeData>& data)
 		{
 			if (idA != idB)
 			{
@@ -164,7 +164,7 @@ namespace UIE
 			}
 		}
 
-		void Room::FindParallelEdges(const Wall& wallA, const Wall& wallB, const size_t& idA, const size_t& idB, std::vector<EdgeData> data)
+		void Room::FindParallelEdges(const Wall& wallA, const Wall& wallB, const size_t& idA, const size_t& idB, std::vector<EdgeData>& data)
 		{
 			if (wallA.GetD() == wallB.GetD())
 			{
@@ -216,7 +216,7 @@ namespace UIE
 		// Vertices are defined using a right hand curl around the direction of the normal
 		// Edge face normals are defined using right hand curl rule around the direction of the edge (from base to top) that rotates from plane A to plane B through the exterior of the wedge.
 
-		void Room::FindEdge(const Wall& wallA, const Wall& wallB, const size_t& idA, const size_t& idB, std::vector<EdgeData> data)
+		void Room::FindEdge(const Wall& wallA, const Wall& wallB, const size_t& idA, const size_t& idB, std::vector<EdgeData>& data)
 		{
 			std::vector<vec3> verticesA = wallA.GetVertices();
 			std::vector<vec3> verticesB = wallB.GetVertices();
@@ -504,7 +504,7 @@ namespace UIE
 				lock_guard<std::mutex> lock(mWallMutex);
 				for (const auto& it : mWalls)
 				{
-					absorption -= (Sqrt(it.second.GetAbsorption() * it.second.GetAbsorption()) - 1.0) * it.second.GetArea();
+					absorption -= (it.second.GetAbsorption() * it.second.GetAbsorption() - 1.0) * it.second.GetArea();
 					surfaceArea += it.second.GetArea();
 				}
 			}

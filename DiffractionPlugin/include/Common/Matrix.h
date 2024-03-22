@@ -28,7 +28,7 @@ namespace UIE
 			matrix() : rows(0), cols(0) { AllocateSpace(); };
 			matrix(const int r, const int c) : rows(r), cols(c) { AllocateSpace(); };
 			matrix(const std::vector<std::vector<Real>>& mat);
-			~matrix() { DeallocateSpace(); };
+			~matrix() { /*DeallocateSpace()*/ };
 
 			// Init
 			void Init(const std::vector<std::vector<Real>>& mat);
@@ -54,8 +54,8 @@ namespace UIE
 
 			// Getters
 			virtual inline Real GetEntry(const int& r, const int& c) const { /*CheckRows(r); CheckCols(c);*/ return e[r][c]; }
-			inline std::vector<Real> GetRow(int r) const { /*CheckRows(r);*/ return e[r];	}
-			inline std::vector<Real> GetColumn(int c) const
+			inline const std::vector<Real>& GetRow(int r) const { /*CheckRows(r);*/ return e[r];	}
+			inline const std::vector<Real>& GetColumn(int c) const
 			{
 				//CheckCols(c);
 				std::vector<Real> column(rows);
@@ -66,7 +66,7 @@ namespace UIE
 
 			inline int Rows() const { return rows; }
 			inline int Cols() const { return cols; }
-			inline std::vector<std::vector<Real>> Data() const { return e; }
+			inline const std::vector<std::vector<Real>>& Data() const { return e; }
 			matrix Transpose();
 
 			// Operators

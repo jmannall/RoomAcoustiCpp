@@ -20,6 +20,7 @@
 // Spatialiser headers
 #include "Spatialiser/VirtualSource.h"
 #include "Spatialiser/Types.h"
+#include "Spatialiser/AirAbsorption.h"
 
 // 3DTI headers
 #include "BinauralSpatializer/SingleSourceDSP.h"
@@ -94,7 +95,7 @@ namespace UIE
 			inline shared_ptr<Binaural::CSingleSourceDSP>& GetSource() { return mSource; }
 
 			// Updates
-			void Update(const vec3& position, const vec4& orientation);
+			void Update(const vec3& position, const vec4& orientation, const Real& distance);
 			void UpdateVirtualSources(const VirtualSourceDataMap& data);
 			bool UpdateVirtualSource(const VirtualSourceData& data, std::vector<VirtualSourceData>& newVSources);
 
@@ -120,9 +121,11 @@ namespace UIE
 			Config mConfig;
 
 			// Audio data
+			Buffer bStore;
 			CMonoBuffer<float> bInput;
 			CEarPair<CMonoBuffer<float>> bOutput;
 			shared_ptr<Binaural::CSingleSourceDSP> mSource;
+			AirAbsorption mAirAbsorption;
 			Real targetGain;
 			Real currentGain;
 			VirtualSourceDataMap oldData;

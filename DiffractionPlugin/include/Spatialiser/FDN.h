@@ -89,7 +89,8 @@ namespace UIE
 			~FDN() {}
 
 			// Getters
-			rowvec GetOutput(const std::vector<Real>& data, Real gain, bool valid);
+			void ProcessOutput(const std::vector<Real>& data, const Real& gain);
+			inline Real GetOutput(const size_t& i) const { return y.GetEntry(i); }
 
 			// Setters
 			void UpdateT60(const Coefficients& T60);
@@ -132,7 +133,7 @@ namespace UIE
 			inline void ProcessMatrix() { (this->*Process)(); };
 			void (FDN::* Process)();
 
-			inline void InitHouseHolder() { houseHolderFactor = 2 / mConfig.numFDNChannels; }
+			inline void InitHouseHolder() { houseHolderFactor = 2.0 / mConfig.numFDNChannels; }
 			void InitRandomOrthogonal();
 
 			inline void ProcessHouseholder()

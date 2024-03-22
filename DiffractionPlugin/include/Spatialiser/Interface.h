@@ -77,6 +77,8 @@ namespace UIE
 		 */
 		void UpdateRoom(const Real& volume, const vec& dimensions);
 
+		void ResetFDN();
+
 		/**
 		 * Updates the listener's position and orientation.
 		 *

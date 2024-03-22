@@ -5,18 +5,9 @@
 */
 
 // C++ headers
-#if defined(_WINDOWS)
-	 /* Microsoft C/C++-compatible compiler */
-#include <intrin.h>
-#endif
 #include <mutex>
 //#include <xmmintrin.h>
 #include <cmath>
-
-#if defined(_ANDROID)
-// Common headers
-#include "Common/Definitions.h"
-#endif
 
 // Spatialiser headers
 #include "Spatialiser/FDN.h"
@@ -76,7 +67,8 @@ namespace UIE
 
 			if (idx >= mBuffer.Length())
 				idx = 0;
-			Real out = mAbsorptionFilter.GetOutput(mBuffer[idx], mConfig.lerpFactor);
+			Real out = mAbsorptionFilter.GetOutput(mBuffer[idx]);
+			mAbsorptionFilter.UpdateParameters(mConfig.lerpFactor);
 			mBuffer[idx] = input;
 			idx++;
 			return out;
@@ -240,17 +232,9 @@ namespace UIE
 		//	}*/
 		//}
 
-		rowvec FDN::GetOutput(const std::vector<Real>& data, Real gain, bool valid)
+		void FDN::ProcessOutput(const std::vector<Real>& data, const Real& gain)
 		{
-#if(_WINDOWS)
-			_MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
-#elif(_ANDROID)
-
-			unsigned m_savedCSR = getStatusWord();
-			// Bit 24 is the flush-to-zero mode control bit. Setting it to 1 flushes denormals to 0.
-			setStatusWord(m_savedCSR | (1 << 24));
-#endif
-
+			BeginFDNChannel();
 			int i = 0;
 			for (auto& channel : mChannels)
 			{
@@ -258,7 +242,7 @@ namespace UIE
 				i++;
 			}
 			y *= gain;
-
+			EndFDNChannel();
 #ifdef PROFILE_AUDIO_THREAD
 			BeginFDNMatrix();
 #endif
@@ -266,16 +250,6 @@ namespace UIE
 #ifdef PROFILE_AUDIO_THREAD
 			EndFDNMatrix();
 #endif
-
-#if(_WINDOWS)
-			_MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_OFF);
-#elif(_ANDROID)
-
-			m_savedCSR = getStatusWord();
-			// Bit 24 is the flush-to-zero mode control bit. Setting it to 1 flushes denormals to 0.
-			setStatusWord(m_savedCSR | (0 << 24));
-#endif
-			return y;
 		}
 	}
 }

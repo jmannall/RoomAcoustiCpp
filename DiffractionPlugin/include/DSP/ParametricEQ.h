@@ -77,8 +77,10 @@ namespace UIE
 			ParametricEQ(const Coefficients& gain, const size_t& order, const Coefficients& fc, const int& sampleRate);
 
 			void UpdateParameters();
+			void UpdateParameters(const Real& lerpFactor);
 			void SetTargetGain(Coefficients& gain);
-			Real GetOutput(const Real& input, const Real& lerpFactor);
+			Real GetOutput(const Real& input);
+			void ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const int numFrames, const Real lerpFactor);
 
 			inline void ClearBuffers()
 			{

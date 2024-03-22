@@ -137,21 +137,40 @@ namespace UIE
 			mGain = currentGain[numFilters];
 		}
 
-		Real ParametricEQ::GetOutput(const Real& input, const Real& lerpFactor)
+		void ParametricEQ::UpdateParameters(const Real& lerpFactor)
+		{
+			if (currentGain != targetGain)
+			{
+				Lerp(currentGain, targetGain, lerpFactor);
+				UpdateParameters();
+			}
+		}
+
+		Real ParametricEQ::GetOutput(const Real& input)
 		{
 			out = input;
 			for (BandFilter& filter : filters)
 				out = filter.GetOutput(out);
 			out *= mGain;
-			if (currentGain != targetGain)
-			{
-				Lerp(currentGain, targetGain, lerpFactor);
-				BeginFIR();
-				UpdateParameters();
-				EndFIR();
-			}
 			return out;
+		}
 
+		void ParametricEQ::ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const int numFrames, const Real lerpFactor)
+		{
+			if (currentGain == targetGain)
+			{
+				for (int i = 0; i < numFrames; i++)
+					outBuffer[i] = GetOutput(inBuffer[i]);
+			}
+			else
+			{
+				for (int i = 0; i < numFrames; i++)
+				{
+					outBuffer[i] = GetOutput(inBuffer[i]);
+					Lerp(currentGain, targetGain, lerpFactor);
+					UpdateParameters();
+				}
+			}
 		}
 
 		void ParametricEQ::InitBands(const size_t& order, const Coefficients& fc, int fs)

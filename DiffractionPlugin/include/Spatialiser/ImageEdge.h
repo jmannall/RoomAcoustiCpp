@@ -29,6 +29,7 @@ namespace UIE
 
 			inline void UpdateISMConfig(const ISMConfig& config) { lock_guard<std::mutex> lock(mMutex); mISMConfigStore = config; }
 			inline void SetListenerPosition(const vec3& position) { lock_guard<std::mutex> lock(mMutex); mListenerPositionStore = position; }
+			inline vec3 GetListenerPosition() { lock_guard<std::mutex> lock(mMutex); return mListenerPositionStore; }
 			
 			void RunIEM();
 			void UpdateLateReverbFilters();
@@ -38,7 +39,10 @@ namespace UIE
 
 			void UpdateRValid();
 
-			bool FindIntersection(vec3& intersection, Wall& wall, size_t& idW, const vec3& start, const vec3& end, const Plane& plane);
+			bool FindWallIntersection(const vec3& intersection, const vec3& start, const vec3& end, const Plane& plane) const;
+			bool FindWallIntersection(Absorption& absorption, const vec3& intersection, const vec3& start, const vec3& end, const Plane& plane) const;
+
+			bool FindIntersection(vec3& intersection, Absorption& absorption, const vec3& start, const vec3& end, const Plane& plane);
 			bool FindIntersections(std::vector<vec3>& intersections, VirtualSourceData& vSource, int bounceIdx);
 			bool FindIntersectionsSpEd(std::vector<vec3>& intersections, VirtualSourceData& vSource, int bounceIdx);
 			bool FindIntersectionsEdSp(std::vector<vec3>& intersections, VirtualSourceData& vSource, int bounceIdx);

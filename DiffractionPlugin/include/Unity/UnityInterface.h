@@ -6,6 +6,7 @@
 #include "Unity/IUnityProfiler.h"
 
 #define PROFILE_AUDIO_THREAD
+//#define PROFILE_BACKGROUND_THREAD
 
 IUnityProfiler* GetUnityProfiler();
 bool* GetDevBuild();
@@ -29,6 +30,9 @@ void EndReverbSource();
 void BeginReflection();
 void EndReflection();
 
+void BeginAirAbsorption();
+void EndAirAbsorption();
+
 void BeginDiffraction();
 void EndDiffraction();
 
@@ -46,8 +50,13 @@ void EndFDNChannel();
 
 void BeginFDNMatrix();
 void EndFDNMatrix();
+#endif
 
-void BeginISM();
-void EndISM();
+#ifdef PROFILE_BACKGROUND_THREAD
+void BeginBackgroundLoop();
+void EndBackgroundLoop();
+
+void BeginIEM();
+void EndIEM();
 #endif
 #endif

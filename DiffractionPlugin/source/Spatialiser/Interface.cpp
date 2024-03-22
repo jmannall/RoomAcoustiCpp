@@ -106,6 +106,15 @@ namespace UIE
 
 		////////////////////////////////////////
 
+		void ResetFDN()
+		{
+			auto context = GetContext();
+			if (context)
+				context->ResetFDN();
+		}
+
+		////////////////////////////////////////
+
 		void UpdateListener(const vec3& position, const vec4& orientation)
 		{
 			auto context = GetContext();

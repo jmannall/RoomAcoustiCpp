@@ -71,7 +71,7 @@ namespace UIE
 			// Geometry
 			inline Real PointWallPosition(const vec3& point) const { return Dot(point, mNormal) - d; }
 			bool LineWallIntersection(const vec3& start, const vec3& end) const;
-			bool LineWallIntersection(vec3& intersection, const vec3& start, const vec3& end) const;
+			bool LineWallIntersection(const vec3& intersection, const vec3& start, const vec3& end) const;
 
 			// Absorption
 			void Update(const vec3& normal, const Real* vData, size_t numVertices);
@@ -85,16 +85,19 @@ namespace UIE
 
 			// Area
 			void CalculateArea();
-			Real AreaOfTriangle(const vec3& v, const vec3& u, const vec3& w);
+			Real AreaOfTriangle(const vec3& v, const vec3& u, const vec3& w) const;
 
 			// Member variables
 			Real d;
 			vec3 mNormal;
 			size_t mPlaneId;
 			std::vector<vec3> mVertices;
+			vec3 min;
+			vec3 max;
 			std::vector<float> mFVertices;
 			size_t mNumVertices;
 			Absorption mAbsorption;
+			std::vector<Real> triangleAreas;
 			std::vector<size_t> mEdges;
 		};
 			
@@ -129,6 +132,7 @@ namespace UIE
 			// Geometry
 			bool IsCoplanar(const Wall& wall) const { return mNormal == wall.GetNormal() && d == wall.GetD(); }
 			Real PointPlanePosition(const vec3& point) const { return Dot(point, mNormal) - d; }
+			bool LinePlaneIntersection(vec3& intersection, const vec3& start, const vec3& end) const;
 			bool ReflectPointInPlane(const vec3& point) const;
 			bool ReflectPointInPlane(vec3& dest, const vec3& point) const;
 			void ReflectPointInPlaneNoCheck(vec3& point) const;

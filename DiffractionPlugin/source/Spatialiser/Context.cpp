@@ -46,6 +46,9 @@ namespace UIE
 
 			while (isRunning)
 			{
+#ifdef PROFILE_BACKGROUND_THREAD
+				BeginBackgroundLoop();
+#endif
 				// Update ISM Config
 				// imageEdgeModel->UpdateISMConfig(context->GetISMConfig());
 
@@ -56,6 +59,9 @@ namespace UIE
 				imageEdgeModel->UpdateLateReverbFilters();
 
 				isRunning = context->IsRunning();
+#ifdef PROFILE_BACKGROUND_THREAD
+				EndBackgroundLoop();
+#endif
 			}
 
 #ifdef DEBUG_ISM_THREAD
@@ -198,6 +204,7 @@ namespace UIE
 			{
 				lock_guard<mutex> lock(tuneInMutex);
 				mListener->SetListenerTransform(transform);
+				listenerPosition = position;
 			}
 			mImageEdgeModel->SetListenerPosition(position);
 			mReverb->UpdateReverb(position);
@@ -219,10 +226,16 @@ namespace UIE
 		void Context::UpdateSource(size_t id, const vec3& position, const vec4& orientation)
 		{
 #ifdef DEBUG_UPDATE
-	Debug::Log("Update Source", Colour::Yellow);
+			Debug::Log("Update Source", Colour::Yellow);
 #endif
+			Real distance;
+			{
+				lock_guard<mutex> lock(tuneInMutex);
+				distance = (position - listenerPosition).Length();
+			}
+
 			// Update source position, orientation and virtual sources
-			mSources->Update(id, position, orientation);
+			mSources->Update(id, position, orientation, distance);
 		}
 
 		////////////////////////////////////////
