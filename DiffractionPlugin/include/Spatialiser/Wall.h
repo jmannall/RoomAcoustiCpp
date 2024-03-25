@@ -132,6 +132,8 @@ namespace UIE
 			// Geometry
 			bool IsCoplanar(const Wall& wall) const { return mNormal == wall.GetNormal() && d == wall.GetD(); }
 			Real PointPlanePosition(const vec3& point) const { return Dot(point, mNormal) - d; }
+			bool FindIntersectionPoint(vec3& intersection, const vec3& start, const vec3& end, const Real& k) const;
+			bool LinePlaneObstruction(vec3& intersection, const vec3& start, const vec3& end) const;
 			bool LinePlaneIntersection(vec3& intersection, const vec3& start, const vec3& end) const;
 			bool ReflectPointInPlane(const vec3& point) const;
 			bool ReflectPointInPlane(vec3& dest, const vec3& point) const;

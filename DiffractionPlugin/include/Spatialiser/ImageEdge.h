@@ -50,11 +50,11 @@ namespace UIE
 			bool FindIntersections(std::vector<vec3>& intersections, VirtualSourceData& vSource, int bounceIdx, const vec3& start);
 			bool FindRIntersections(std::vector<vec3>& intersections, VirtualSourceData& vSource, int bounceIdx, const vec3& start);
 
-			bool LineRoomIntersection(const vec3& start, const vec3& end);
-			void LineRoomIntersection(const vec3& start, const vec3& end, bool& obstruction);
-			bool LineRoomIntersection(const vec3& start, const vec3& end, size_t currentWallID);
-			void LineRoomIntersection(const vec3& start, const vec3& end, size_t currentWallID, bool& obstruction);
-			bool LineRoomIntersection(const vec3& start, const vec3& end, size_t currentWallID1, size_t currentWallID2);
+			bool LineRoomObstruction(const vec3& start, const vec3& end);
+			void LineRoomObstruction(const vec3& start, const vec3& end, bool& obstruction);
+			bool LineRoomObstruction(const vec3& start, const vec3& end, size_t currentWallID);
+			void LineRoomObstruction(const vec3& start, const vec3& end, size_t currentWallID, bool& obstruction);
+			bool LineRoomObstruction(const vec3& start, const vec3& end, size_t currentWallID1, size_t currentWallID2);
 
 			void HigherOrderSpecularDiffraction(const vec3& point, VirtualSourceDataStore& sp, VirtualSourceDataStore& edSp, VirtualSourceDataStore& spEd, VirtualSourceDataMap& vSources);
 			void FirstOrderDiffraction(const vec3& point, VirtualSourceDataStore& ed, VirtualSourceDataMap& vSources);

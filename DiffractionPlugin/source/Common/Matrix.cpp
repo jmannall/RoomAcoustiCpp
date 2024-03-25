@@ -20,6 +20,7 @@ namespace UIE
 			}
 			else
 				cols = 0;
+			column = std::vector<Real>(rows);
 		}
 
 		void matrix::AllocateSpace()
@@ -27,13 +28,15 @@ namespace UIE
 			int r = rows;
 			for (int i = 0; i < r; i++)
 				e.push_back(std::vector<Real>(cols, 0.0));
+			column = std::vector<Real>(rows);
 		}
 
 		void matrix::DeallocateSpace()
 		{
-			for (int i = 0; i < rows; i++)
-				e[i].clear();
 			e.clear();
+			/*for (int i = 0; i < rows; i++)
+				e[i].clear();
+			e.clear();*/
 		}
 
 		void matrix::Init(const const std::vector<std::vector<Real>>& mat)

@@ -254,6 +254,8 @@ namespace UIE
 			std::shared_ptr<Reverb> mReverb;			// Reverb class
 			std::shared_ptr<SourceManager> mSources;	// Source manager class
 			std::shared_ptr<ImageEdge> mImageEdgeModel;	// Image edge class
+
+			std::mutex audioMutex; // Mutex for audio processing
 		};
 	}
 }

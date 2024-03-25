@@ -112,7 +112,6 @@ namespace UIE
 			auto itA = mWalls.find(id);
 			if (itA != mWalls.end())
 			{
-				size_t id;
 				for (auto& itB : mWalls)
 					FindEdges(itA->second, itB.second, itA->first, itB.first, data);
 				for (auto& edge : data)
@@ -126,7 +125,6 @@ namespace UIE
 			auto itA = mWalls.find(id);
 			if (itA != mWalls.end())
 			{
-				size_t id;
 				for (auto& itB : mWalls)
 				{
 					if (std::find(IDsW.begin(), IDsW.end(), itB.first) == IDsW.end())
@@ -188,7 +186,14 @@ namespace UIE
 					{
 						j--;
 						int idxA[2] = { i, (i + 1) % numA };
-						bool validEdge = verticesA[idxA[1]] == verticesB[(j - 1) % numB];
+						if (idxA[1] == numA)
+							idxA[1] = 0;
+						int idxB[2] = { j - 1, j + 1 };
+						if (idxB[0] < 0)
+							idxB[0] = numB - 1;
+						if (idxB[1] == numB)
+							idxB[1] = 0;
+						bool validEdge = verticesA[idxA[1]] == verticesB[idxB[0]];
 
 						if (validEdge)
 						{
@@ -199,7 +204,7 @@ namespace UIE
 						if (i > 0 || evenNum)
 						{
 							idxA[1] = (i - 1) % numA;
-							validEdge = verticesA[idxA[1]] == verticesB[(j + 1) % numB];
+							validEdge = verticesA[idxA[1]] == verticesB[idxB[1]];
 
 							if (validEdge)
 							{
@@ -244,13 +249,23 @@ namespace UIE
 				if (match)
 				{
 					j--;
-					int idxA = (i + 1) % numA;
-					bool validEdge = verticesA[idxA] == verticesB[(j - 1) % numB]; // Must be this way to ensure normals not twisted. (right hand rule) therefore one rotated up the edge one rotates down
+					int idxA = i + 1;
+					if (idxA == numA)
+						idxA = 0;
+					int idxB = j - 1;
+					if (idxB < 0)
+						idxB = numB - 1;
+					bool validEdge = verticesA[idxA] == verticesB[idxB]; // Must be this way to ensure normals not twisted. (right hand rule) therefore one rotated up the edge one rotates down
 
 					if (!validEdge)
 					{
-						idxA = (i - 1) % numA;
-						validEdge = verticesA[idxA] == verticesB[(j + 1) % numB];
+						idxA = i - 1;
+						if (idxA < 0)
+							idxA = numA - 1;
+						idxB = j + 1;
+						if (idxB == numB)
+							idxB = 0;
+						validEdge = verticesA[idxA] == verticesB[idxB];
 					}
 					if (validEdge) // Planes not twisted
 					{

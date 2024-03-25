@@ -208,17 +208,31 @@ namespace UIE
 			std::vector<std::string> keys;
 			std::vector<VirtualSourceData> newVSources;
 
-			int j = 0;
-			for (auto it = oldData.begin(); it != oldData.end(); it++, j++)
+			//int j = 0;
+			//for (auto it = oldData.begin(); it != oldData.end(); it++, j++)
+			//{
+			//	auto out = data.find(it->first);
+			//	if (out == data.end()) // case: old vSource
+			//	{
+			//		it->second.Invisible();
+			//		bool remove = UpdateVirtualSource(it->second, newVSources);
+			//		if (remove)
+			//		{
+			//			keys.push_back(it->first);
+			//		}
+			//	}
+			//}
+
+			for (auto& oData : oldData)
 			{
-				auto out = data.find(it->first);
+				auto out = data.find(oData.first);
 				if (out == data.end()) // case: old vSource
 				{
-					it->second.Invisible();
-					bool remove = UpdateVirtualSource(it->second, newVSources);
+					oData.second.Invisible();
+					bool remove = UpdateVirtualSource(oData.second, newVSources);
 					if (remove)
 					{
-						keys.push_back(it->first);
+						keys.push_back(oData.first);
 					}
 				}
 			}
@@ -227,13 +241,23 @@ namespace UIE
 				oldData.erase(key);
 
 			// new or existing vSources
-			for (auto it = data.begin(); it != data.end(); it++)
+//			for (auto it = data.begin(); it != data.end(); it++)
+//			{
+//				UpdateVirtualSource(it->second, newVSources);	// newVSources are new placeholders in the ISM tree
+//				oldData.insert_or_assign(it->first, it->second);
+//
+//#ifdef DEBUG_VIRTUAL_SOURCE
+//	Debug::Log("vSource: " + it->first, Colour::Yellow);
+//#endif
+//			}
+
+			for (auto& in : data)
 			{
-				UpdateVirtualSource(it->second, newVSources);	// newVSources are new placeholders in the ISM tree
-				oldData.insert_or_assign(it->first, it->second);
+				UpdateVirtualSource(in.second, newVSources);	// newVSources are new placeholders in the ISM tree
+				oldData.insert_or_assign(in.first, in.second);
 
 #ifdef DEBUG_VIRTUAL_SOURCE
-	Debug::Log("vSource: " + it->first, Colour::Yellow);
+				Debug::Log("vSource: " + it->first, Colour::Yellow);
 #endif
 			}
 
@@ -307,6 +331,8 @@ namespace UIE
 						freeFDNChannels[0]++;
 				}
 				VirtualSource virtualSource = VirtualSource(mCore, mConfig, data, fdnChannel);
+
+				assert(!(data.feedsFDN && virtualSource->GetFDNChannel() == -1));
 				{
 					unique_lock<mutex> lck(*m, std::defer_lock);
 					if (lck.try_lock())
@@ -330,8 +356,10 @@ namespace UIE
 
 				bool remove = it->second.UpdateVirtualSource(data, fdnChannel);
 
+				assert(!(data.feedsFDN && it->second->GetFDNChannel() == -1));
+
 				if (fdnChannel >= 0) // Add vSource old fdnChannel to freeFDNChannels (Also prevents leaking FDN channels if !data.visible and the channel is not assigned to vSource)
-					freeFDNChannels.push_back(it->second.GetFDNChannel());
+					freeFDNChannels.push_back(fdnChannel);
 				if (remove)
 				{
 					if (it->second.GetFDNChannel() >= 0)

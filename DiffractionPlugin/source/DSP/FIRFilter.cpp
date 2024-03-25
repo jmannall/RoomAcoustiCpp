@@ -67,7 +67,7 @@ namespace UIE
 				}
 				output += result_a + result_b + result_c + result_d + result_e + result_f + result_g + result_h;
 			}
-			if (--count < 0) { count = irLen - 1; }
+			if (--count < 0) { count = static_cast<int>(irLen) - 1; }
 			return output;
 		}
 	}

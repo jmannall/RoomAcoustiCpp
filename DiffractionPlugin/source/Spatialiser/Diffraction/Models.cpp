@@ -554,7 +554,7 @@ namespace UIE
 					if (currentLen > targetLen)
 					{
 						Real total = 0.0;
-						size_t i = targetLen - 1;
+						int i = targetLen - 1;
 						while (i < currentLen)
 						{
 							total += currentIr[i++];

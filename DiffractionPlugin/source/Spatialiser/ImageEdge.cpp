@@ -4,6 +4,9 @@
 *
 */
 
+// C++ headers
+#include <algorithm>
+
 // Spatialiser headers
 #include "Spatialiser/ImageEdge.h"
 
@@ -57,24 +60,24 @@ namespace UIE
 				it.second.SetRValid(it.second.ReflectPointInPlane(mListenerPosition));
 		}
 
-		bool ImageEdge::LineRoomIntersection(const vec3& start, const vec3& end)
+		bool ImageEdge::LineRoomObstruction(const vec3& start, const vec3& end)
 		{
-			return LineRoomIntersection(start, end, -1);
+			return LineRoomObstruction(start, end, -1);
 		}
 
-		void ImageEdge::LineRoomIntersection(const vec3& start, const vec3& end, bool& obstruction)
+		void ImageEdge::LineRoomObstruction(const vec3& start, const vec3& end, bool& obstruction)
 		{
-			LineRoomIntersection(start, end, -1, obstruction);
+			LineRoomObstruction(start, end, -1, obstruction);
 		}
 
-		bool ImageEdge::LineRoomIntersection(const vec3& start, const vec3& end, size_t currentPlaneId)
+		bool ImageEdge::LineRoomObstruction(const vec3& start, const vec3& end, size_t currentPlaneId)
 		{
 			vec3 intersection;
 			for (auto& itP : mPlanes)
 			{
 				if (itP.first != currentPlaneId)
 				{
-					if (itP.second.LinePlaneIntersection(intersection, start, end))
+					if (itP.second.LinePlaneObstruction(intersection, start, end))
 					{
 						if (FindWallIntersection(intersection, start, end, itP.second))
 							return true;
@@ -84,7 +87,7 @@ namespace UIE
 			return false;
 		}
 
-		void ImageEdge::LineRoomIntersection(const vec3& start, const vec3& end, size_t currentPlaneId, bool& obstruction)
+		void ImageEdge::LineRoomObstruction(const vec3& start, const vec3& end, size_t currentPlaneId, bool& obstruction)
 		{
 			if (obstruction)
 				return;
@@ -94,7 +97,7 @@ namespace UIE
 			{
 				if (itP.first != currentPlaneId)
 				{
-					if (itP.second.LinePlaneIntersection(intersection, start, end))
+					if (itP.second.LinePlaneObstruction(intersection, start, end))
 					{
 						obstruction = FindWallIntersection(intersection, start, end, itP.second);
 						if (obstruction)
@@ -104,14 +107,14 @@ namespace UIE
 			}
 		}
 
-		bool ImageEdge::LineRoomIntersection(const vec3& start, const vec3& end, size_t currentPlaneId1, size_t currentPlaneId2)
+		bool ImageEdge::LineRoomObstruction(const vec3& start, const vec3& end, size_t currentPlaneId1, size_t currentPlaneId2)
 		{
 			vec3 intersection;
 			for (auto& itP : mPlanes)
 			{
 				if (itP.first != currentPlaneId1 && itP.first != currentPlaneId2)
 				{
-					if (itP.second.LinePlaneIntersection(intersection, start, end))
+					if (itP.second.LinePlaneObstruction(intersection, start, end))
 					{
 						if (FindWallIntersection(intersection, start, end, itP.second))
 							return true;
@@ -137,6 +140,8 @@ namespace UIE
 					if (itW->second.LineWallIntersection(intersection, start, end))
 					{
 						absorption = itW->second.GetAbsorption();
+						if (start == intersection) // case: point on edge (consecutive inersections are identical)
+							absorption *= 0.5;
 						return true;
 					}
 				}
@@ -151,8 +156,7 @@ namespace UIE
 				if (FindWallIntersection(absorption, intersection, start, end, plane))
 					return true;
 			}
-			else
-				return false;
+			return false;
 		}
 
 		bool ImageEdge::FindIntersections(std::vector<vec3>& intersections, VirtualSourceData& vSource, int bounceIdx)
@@ -271,6 +275,11 @@ namespace UIE
 
 		// Image Source Model
 
+		typedef std::pair<Real, int> mypair;
+		bool comparator(const mypair& l, const mypair& r)
+		{
+			return l.first < r.first;
+		}
 
 		void ImageEdge::UpdateLateReverbFilters()
 		{
@@ -280,43 +289,31 @@ namespace UIE
 			Absorption absorption = Absorption(numAbsorptionBands);
 			for (int j = 0; j < reverbDirections.size(); j++)
 			{
-				std::vector<Plane> planes;
-				std::vector<Real> ks;
+				std::vector<mypair> ks = std::vector(mPlanes.size(), mypair(0.0, -1));
 				point = mListenerPosition + 100.0 * reverbDirections[j];
+				int i = 0;
 				for (auto& it : mPlanes)
 				{
-					plane = it.second;
-					k = plane.PointPlanePosition(point);
-					if (plane.GetRValid() && k < 0) // receiver in front of wall and point behind wall
+					k = it.second.PointPlanePosition(point);
+					if (it.second.GetRValid() && k < 0) // receiver in front of wall and point behind wall
+						ks[i] = mypair(k, it.first); // A more negative k means the plane is closer to the receiver
+					i++;
+				}
+				std::sort(ks.begin(), ks.end());
+				bool valid = false;
+				i = 0;
+				while (!valid && i < ks.size())
+				{
+					if (ks[i].first < 0.0)
 					{
-						auto iterK = ks.begin();
-						auto iterP = planes.begin();
-						bool inserted = false;
-						while (!inserted && iterK != ks.end())
+						auto itP = mPlanes.find(ks[i].second);
+						if (itP != mPlanes.end()) // case: plane exists
 						{
-							if (k > *iterK)
-							{
-								ks.insert(iterK, k);
-								planes.insert(iterP, it.second);
-								inserted = true;
-							}
-							iterK++;
-							iterP++;
-						}
-						if (!inserted)
-						{
-							ks.push_back(k);
-							planes.push_back(it.second);
+							valid = FindIntersection(intersection, absorption, mListenerPosition, point, itP->second);
+							if (valid)
+								reverbAbsorptions[j] = absorption;
 						}
 					}
-				}
-				bool valid = false;
-				int i = 0;
-				while (!valid && i < planes.size())
-				{
-					valid = FindIntersection(intersection, absorption, mListenerPosition, point, planes[i]);
-					if (valid)
-						reverbAbsorptions[j] = absorption;
 					i++;
 				}
 				if (!valid)
@@ -336,7 +333,7 @@ namespace UIE
 
 			// Direct sound
 			if (mISMConfig.direct)
-				lineOfSight = !LineRoomIntersection(point, mListenerPosition);
+				lineOfSight = !LineRoomObstruction(point, mListenerPosition);
 
 			if (mISMConfig.order < 1)
 				return lineOfSight;
@@ -382,7 +379,7 @@ namespace UIE
 			if (sp.size() == 0)
 				return;
 
-			Plane plane; Edge edge; vec3 position, vPosition; Diffraction::Path path; size_t idP, idW, idE; bool valid;
+			Plane plane; Edge edge; vec3 position, vPosition; Diffraction::Path path; size_t idP, idE; bool valid;
 
 			for (int j = 1; j < mISMConfig.order; j++) // only handle up to 1st order diffraction
 			{
@@ -452,16 +449,16 @@ namespace UIE
 											if (valid)
 											{
 												// Check for obstruction
-												bool obstruction = LineRoomIntersection(mListenerPosition, intersections[j]);
-												LineRoomIntersection(intersections[0], point, vSource.GetID(0), obstruction);
+												bool obstruction = LineRoomObstruction(mListenerPosition, intersections[j]);
+												LineRoomObstruction(intersections[0], point, vSource.GetID(0), obstruction);
 
 												int p = 0;
 												while (!obstruction && p < j)
 												{
 													if (vSource.IsReflection(p) && vSource.IsReflection(p + 1))
-														obstruction = LineRoomIntersection(intersections[p], intersections[p + 1], vSource.GetID(p), vSource.GetID(p + 1));
+														obstruction = LineRoomObstruction(intersections[p], intersections[p + 1], vSource.GetID(p), vSource.GetID(p + 1));
 													else
-														obstruction = LineRoomIntersection(intersections[p], intersections[p + 1], vSource.GetID(p));
+														obstruction = LineRoomObstruction(intersections[p], intersections[p + 1], vSource.GetID(p));
 													p++;
 												}
 												if (!obstruction)
@@ -515,16 +512,16 @@ namespace UIE
 											if (valid)
 											{
 												// Check for obstruction
-												bool obstruction = LineRoomIntersection(point, intersections[j]);
-												LineRoomIntersection(intersections[0], mListenerPosition, idP, obstruction);
+												bool obstruction = LineRoomObstruction(point, intersections[j]);
+												LineRoomObstruction(intersections[0], mListenerPosition, idP, obstruction);
 
 												int p = 0;
 												while (!obstruction && p < j)
 												{
 													if (vSource.IsReflection(p) && vSource.IsReflection(p + 1))
-														obstruction = LineRoomIntersection(intersections[p], intersections[p + 1], vSource.GetID(p), vSource.GetID(p + 1));
+														obstruction = LineRoomObstruction(intersections[p], intersections[p + 1], vSource.GetID(p), vSource.GetID(p + 1));
 													else
-														obstruction = LineRoomIntersection(intersections[p], intersections[p + 1], vSource.GetID(p));
+														obstruction = LineRoomObstruction(intersections[p], intersections[p + 1], vSource.GetID(p));
 													p++;
 												}
 												if (!obstruction)
@@ -621,16 +618,16 @@ namespace UIE
 													if (valid)
 													{
 														// Check for obstruction
-														bool obstruction = LineRoomIntersection(point, intersections[0], vSource.GetID(0));
-														LineRoomIntersection(mListenerPosition, intersections[j], vSource.GetID(j), obstruction);
+														bool obstruction = LineRoomObstruction(point, intersections[0], vSource.GetID(0));
+														LineRoomObstruction(mListenerPosition, intersections[j], vSource.GetID(j), obstruction);
 
 														int p = 0;
 														while (!obstruction && p < j)
 														{
 															if (vSource.IsReflection(p) && vSource.IsReflection(p + 1))
-																obstruction = LineRoomIntersection(intersections[p], intersections[p + 1], vSource.GetID(p), vSource.GetID(p + 1));
+																obstruction = LineRoomObstruction(intersections[p], intersections[p + 1], vSource.GetID(p), vSource.GetID(p + 1));
 															else
-																obstruction = LineRoomIntersection(intersections[p], intersections[p + 1], vSource.GetID(p));
+																obstruction = LineRoomObstruction(intersections[p], intersections[p + 1], vSource.GetID(p));
 															p++;
 														}
 														if (!obstruction)
@@ -681,8 +678,8 @@ namespace UIE
 
 					if (path.inShadow || mISMConfig.specularDiffraction)
 					{
-						bool obstruction = LineRoomIntersection(point, path.GetApex());
-						LineRoomIntersection(path.GetApex(), mListenerPosition, obstruction);
+						bool obstruction = LineRoomObstruction(point, path.GetApex());
+						LineRoomObstruction(path.GetApex(), mListenerPosition, obstruction);
 
 						if (!obstruction) // Visible diffraction path
 						{
@@ -731,8 +728,8 @@ namespace UIE
 						if (valid)
 						{
 							vSource.AddAbsorption(absorption);
-							bool obstruction = LineRoomIntersection(point, intersection, id);
-							LineRoomIntersection(intersection, mListenerPosition, id, obstruction);
+							bool obstruction = LineRoomObstruction(point, intersection, id);
+							LineRoomObstruction(intersection, mListenerPosition, id, obstruction);
 							if (!obstruction)
 							{
 								vSource.SetDistance(mListenerPosition);
@@ -752,7 +749,7 @@ namespace UIE
 			if (sp.size() == 0)
 				return;
 
-			Plane plane; Wall wall; vec3 position, rPosition; size_t id, idW; bool r, s, valid, rValid;
+			Plane plane; Wall wall; vec3 position, rPosition; size_t id; bool r, s, valid, rValid;
 			for (int j = 1; j < mISMConfig.order; j++)
 			{
 				int refOrder = j + 1;
@@ -805,19 +802,18 @@ namespace UIE
 										if (plane.GetRValid()) // wall.GetRValid() returns if mListenerPosition in front of current wall
 										{
 											// Check valid intersections
-
 											valid = FindIntersections(intersections, vSource, j);
 
 											if (valid)
 											{
 												// Check for obstruction
-												bool obstruction = LineRoomIntersection(intersections[j], mListenerPosition, id);
-												LineRoomIntersection(intersections[0], point, vSource.GetID(0), obstruction);
+												bool obstruction = LineRoomObstruction(intersections[j], mListenerPosition, id);
+												LineRoomObstruction(intersections[0], point, vSource.GetID(0), obstruction);
 
 												int p = 0;
 												while (!obstruction && p < j)
 												{
-													obstruction = LineRoomIntersection(intersections[p], intersections[p + 1], vSource.GetID(p), vSource.GetID(p + 1));
+													obstruction = LineRoomObstruction(intersections[p], intersections[p + 1], vSource.GetID(p), vSource.GetID(p + 1));
 													p++;
 												}
 												if (!obstruction)

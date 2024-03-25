@@ -95,6 +95,7 @@ namespace UIE
 
 			mInputBuffer = Buffer(mConfig.numFrames);
 			mOutputBuffer = Buffer(2 * mConfig.numFrames); // Stereo output buffer
+			mSendBuffer = BufferF(2 * mConfig.numFrames);
 			mReverbInput = matrix(mConfig.numFrames, mConfig.numFDNChannels);
 		}
 
@@ -109,10 +110,10 @@ namespace UIE
 			StopRunning();
 			IEMThread.join();
 
-			mSources.reset();
-			mReverb.reset();
-			mRoom.reset();
 			mImageEdgeModel.reset();
+			mSources.reset();
+			mRoom.reset();
+			mReverb.reset();
 
 			lock_guard<mutex> audioLock(tuneInMutex);
 			mCore.RemoveListener();
@@ -295,7 +296,9 @@ namespace UIE
 			for (int i = 0; i < mConfig.numFrames; i++)
 				mInputBuffer[i] = static_cast<Real>(data[i]);
 
-			mSources->ProcessAudio(id, mInputBuffer, mReverbInput, mOutputBuffer);
+			unique_lock<mutex> lock(audioMutex, std::defer_lock);
+			if (lock.try_lock())
+				mSources->ProcessAudio(id, mInputBuffer, mReverbInput, mOutputBuffer);
 		}
 
 		////////////////////////////////////////
@@ -303,15 +306,19 @@ namespace UIE
 		void Context::GetOutput(float** bufferPtr)
 		{
 			// Process reverb
-			mReverb->ProcessAudio(mReverbInput, mOutputBuffer);
+			unique_lock<mutex> lock(audioMutex, std::defer_lock);
+			if (lock.try_lock())
+			{
+				mReverb->ProcessAudio(mReverbInput, mOutputBuffer);
+				mReverbInput.Reset();
+			}
 
 			// Copy output to send and set pointer
 			mSendBuffer = mOutputBuffer;
 			*bufferPtr = &mSendBuffer[0];
 
-			// Reset output and reverb buffers
+			// Reset output buffer
 			mOutputBuffer.ResetBuffer();
-			mReverbInput.Reset();
 		}
 	}
 }

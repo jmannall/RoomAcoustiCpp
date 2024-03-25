@@ -14,7 +14,7 @@ namespace UIE
 	{
 		//////////////////// vec class ////////////////////
 
-		vec::vec(const matrix& mat)
+		vec::vec(matrix& mat)
 		{
 			assert(mat.Cols() == 1);
 			Init(mat.GetColumn(0));

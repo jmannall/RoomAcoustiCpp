@@ -90,7 +90,7 @@ namespace UIE
 
 			// Getters
 			void ProcessOutput(const std::vector<Real>& data, const Real& gain);
-			inline Real GetOutput(const size_t& i) const { return y.GetEntry(i); }
+			inline Real GetOutput(const int& i) const { return y.GetEntry(i); }
 
 			// Setters
 			void UpdateT60(const Coefficients& T60);

@@ -109,6 +109,12 @@ namespace UIE
 
 		inline void Lerp(Coefficients& start, const Coefficients& end, const Real factor)
 		{
+			if (end - EPS < start && start < end + EPS)
+			{
+				start = end;
+				return;
+			}
+
 #if(_WINDOWS)
 			_MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
 #elif(_ANDROID)

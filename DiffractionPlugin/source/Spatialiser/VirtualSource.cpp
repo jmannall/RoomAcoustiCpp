@@ -88,11 +88,11 @@ namespace UIE
 		{
 			order = i + 1;
 
-			if (!mPositions.empty())
+			if (mPositions.size() > i)
 				mPositions.erase(mPositions.begin() + order, mPositions.end());
-			if (!mRPositions.empty())
+			if (mRPositions.size() > i)
 				mRPositions.erase(mRPositions.begin() + order, mRPositions.end());
-			if (!pathParts.empty())
+			if (pathParts.size() > i)
 				pathParts.erase(pathParts.begin() + order, pathParts.end());
 
 			feedsFDN = false;
@@ -136,6 +136,7 @@ namespace UIE
 		{
 			vWallMutex = std::make_shared<std::mutex>();
 			vEdgeMutex = std::make_shared<std::mutex>();
+			audioMutex = std::make_shared<std::mutex>();
 			bInput = CMonoBuffer<float>(mConfig.numFrames);
 			bStore.ResizeBuffer(mConfig.numFrames);
 			bOutput.left = CMonoBuffer<float>(mConfig.numFrames);
@@ -148,6 +149,7 @@ namespace UIE
 		{
 			vWallMutex = std::make_shared<std::mutex>();
 			vEdgeMutex = std::make_shared<std::mutex>();
+			audioMutex = std::make_shared<std::mutex>();
 			bInput = CMonoBuffer<float>(mConfig.numFrames);
 			bStore.ResizeBuffer(mConfig.numFrames);
 			bOutput.left = CMonoBuffer<float>(mConfig.numFrames);
@@ -156,14 +158,14 @@ namespace UIE
 			UpdateVirtualSource(data, fdnChannel);
 		}
 
-		VirtualSource::VirtualSource(const VirtualSource& vS) : mCore(vS.mCore), mSource(vS.mSource), mFilter(vS.mFilter), isInitialised(vS.isInitialised), mConfig(vS.mConfig), feedsFDN(vS.feedsFDN), mFDNChannel(vS.mFDNChannel), mDiffractionPath(vS.mDiffractionPath),
+		/*VirtualSource::VirtualSource(const VirtualSource& vS) : mCore(vS.mCore), mSource(vS.mSource), mFilter(vS.mFilter), isInitialised(vS.isInitialised), mConfig(vS.mConfig), feedsFDN(vS.feedsFDN), mFDNChannel(vS.mFDNChannel), mDiffractionPath(vS.mDiffractionPath),
 			btm(vS.btm), mTargetGain(vS.mTargetGain), mCurrentGain(vS.mCurrentGain), reflection(vS.reflection), diffraction(vS.diffraction), mVirtualSources(vS.mVirtualSources), mVirtualEdgeSources(vS.mVirtualEdgeSources), bInput(vS.bInput), bStore(vS.bStore),
 			bOutput(vS.bOutput), bMonoOutput(vS.bMonoOutput), order(vS.order), mAirAbsorption(vS.mAirAbsorption)
 		{
 			vWallMutex = std::make_shared<std::mutex>();
 			vEdgeMutex = std::make_shared<std::mutex>();
 			btm.UpdatePath(&mDiffractionPath);
-		}
+		}*/
 
 		VirtualSource::~VirtualSource()
 		{
@@ -175,7 +177,7 @@ namespace UIE
 		{
 			if (data.visible) // Process virtual source - Init if doesn't exist
 			{
-				lock_guard<mutex> lock(audioMutex);
+				lock_guard<mutex> lock(*audioMutex);
 				mTargetGain = 1.0f;
 				if (!isInitialised)
 					Init(data);
@@ -183,7 +185,7 @@ namespace UIE
 			}
 			else
 			{
-				std::unique_lock<mutex> lock(audioMutex);
+				std::unique_lock<mutex> lock(*audioMutex);
 				mTargetGain = 0.0f;
 				if (mCurrentGain < 0.0001)
 				{
@@ -254,7 +256,7 @@ namespace UIE
 					it.second.ProcessAudio(data, reverbInput, outputBuffer);
 			}
 
-			lock_guard<mutex> lock(audioMutex);
+			lock_guard<mutex> lock(*audioMutex);
 			if (isInitialised)
 			{
 #ifdef PROFILE_AUDIO_THREAD

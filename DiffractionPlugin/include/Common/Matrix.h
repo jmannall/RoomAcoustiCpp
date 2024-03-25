@@ -20,7 +20,7 @@ namespace UIE
 
 		//////////////////// matrix class ////////////////////
 
-		class matrix
+		class matrix	
 		{
 		public:
 
@@ -28,15 +28,18 @@ namespace UIE
 			matrix() : rows(0), cols(0) { AllocateSpace(); };
 			matrix(const int r, const int c) : rows(r), cols(c) { AllocateSpace(); };
 			matrix(const std::vector<std::vector<Real>>& mat);
-			~matrix() { /*DeallocateSpace()*/ };
+			~matrix() { /*DeallocateSpace(); */ };
 
 			// Init
 			void Init(const std::vector<std::vector<Real>>& mat);
 			inline void Reset()
 			{
 				for (int i = 0; i < rows; i++)
-					std::fill(e[i].begin(), e[i].end(), 0.0);
-			};
+				{
+					for (int j = 0; j < cols; j++)
+						e[i][j] = 0.0;
+				}
+			}
 
 			// Adders
 			virtual inline void AddEntry(const Real& in, const int& r, const int& c) {  /*CheckRows(r); CheckCols(c);*/ e[r][c] = in; }
@@ -55,10 +58,9 @@ namespace UIE
 			// Getters
 			virtual inline Real GetEntry(const int& r, const int& c) const { /*CheckRows(r); CheckCols(c);*/ return e[r][c]; }
 			inline const std::vector<Real>& GetRow(int r) const { /*CheckRows(r);*/ return e[r];	}
-			inline const std::vector<Real>& GetColumn(int c) const
+			inline const std::vector<Real>& GetColumn(int c)
 			{
 				//CheckCols(c);
-				std::vector<Real> column(rows);
 				for (int i = 0; i < rows; i++)
 					column[i] = e[i][c];
 				return column;
@@ -135,6 +137,7 @@ namespace UIE
 			// Member variables
 			int rows, cols;
 			std::vector<std::vector<Real>> e;
+			std::vector<Real> column;
 		};
 
 		//////////////////// Operators ////////////////////

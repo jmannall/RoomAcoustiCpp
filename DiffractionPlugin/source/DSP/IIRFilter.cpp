@@ -21,20 +21,6 @@ namespace UIE
 
 		Real IIRFilter::GetOutput(const Real& input)
 		{
-			/*x[0] = input;
-			y[0] = 0.0;
-			for (int i = 0; i < order; i++)
-			{
-				y[0] += b[i] * x[i] - a[i + 1] * y[i + 1];
-			}
-			y[0] += b[order] * x[order];
-
-			for (int i = order; i > 0; i--)
-			{
-				x[i] = x[i - 1];
-				y[i] = y[i - 1];
-			}
-			return y[0];*/
 #if(_WINDOWS)
 			_MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
 #elif(_ANDROID)

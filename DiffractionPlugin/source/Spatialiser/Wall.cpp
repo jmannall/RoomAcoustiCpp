@@ -59,36 +59,44 @@ namespace UIE
 			return valid;
 		}
 
-		bool Plane::LinePlaneIntersection(vec3& intersection, const vec3& start, const vec3& end) const
+		bool Plane::FindIntersectionPoint(vec3& intersection, const vec3& start, const vec3& end, const Real& k) const
+		{
+			vec3 grad = start - end;
+			Real scale = Dot(mNormal, grad);
+			if (scale == 0)
+				return false;
+			intersection = start - grad * k / scale;
+
+			Real test = PointPlanePosition(intersection);
+			if (test != 0)
+				intersection -= mNormal * test;
+
+			return true;
+		}
+
+		bool Plane::LinePlaneObstruction(vec3& intersection, const vec3& start, const vec3& end) const
 		{
 			Real kS = PointPlanePosition(start);
 			Real kE = PointPlanePosition(end);
 
-			if (kS * kE < 0)	// point lies on plane when kS || kE == 0. Therefore no intersection
-			{
-				vec3 grad = start - end;
-				Real scale = Dot(mNormal, grad);
-				if (scale == 0)
-					return false;
-				intersection = start - grad * kS / scale;
+			if (kS * kE < 0)	// point lies on plane when kS || kE == 0. Therefore, not obstructed
+				return FindIntersectionPoint(intersection, start, end, kS);
+			else
+				return false;
+		}
 
-				Real test = PointPlanePosition(intersection);
-				if (test != 0)
-					intersection -= mNormal * test;
-
-				return true;
-
-				// Check intersection lies in line segment (can this check be made without this part?)
-				/*vec3 grad2 = start - intersection;
-				Real scale2 = Dot(plane.GetNormal(), grad2);
-				if (scale2 > scale)
-				{
-					if (scale2 > 0)
-						return false;
-				}
-				else if (scale2 < 0)
-					return false;*/
-			}
+		bool Plane::LinePlaneIntersection(vec3& intersection, const vec3& start, const vec3& end) const
+		{
+			Real kS = PointPlanePosition(start);
+			Real kE = PointPlanePosition(end);
+			/*
+			* In the unlikely case intersection points of a reflection between two adjacent planes
+			* lies on the edge between the two planes, kS or kE will equal zero. Therefore, for this
+			* case to be a valid reflection a point lying on a plane must be considered as intersecting
+			* with the plane.
+			*/
+			if (kS * kE <= 0)	// point lies on plane when kS || kE == 0.
+				return FindIntersectionPoint(intersection, start, end, kS);
 			else
 				return false;
 		}
@@ -210,6 +218,8 @@ namespace UIE
 			//	ret = true;
 			//if (angleRot < PI_1 + eps && angleRot > PI_1 - eps) // lies on edge of wall
 			//	ret = true;
+
+			//return ret;
 
 			/*if (angleRot > PI_2 + eps)
 				return false;

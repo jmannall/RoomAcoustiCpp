@@ -29,8 +29,8 @@ namespace UIE
 			// Load and Destroy
 			vec() : matrix() {}
 			vec(const int& len) : matrix(len, 1) {}
-			vec(const std::vector<Real>& vec) : matrix(vec.size(), 1) { Init(vec); }
-			vec(const matrix& mat);
+			vec(const std::vector<Real>& vec) : matrix(static_cast<int>(vec.size()), 1) { Init(vec); }
+			vec(matrix& mat);
 			~vec() {};
 
 			void Init(const std::vector<Real>& vec);

@@ -7,7 +7,7 @@
 #define Spatialiser_AirAbsorption_h
 
 // Common headers
-#include "Common/Types.h";
+#include "Common/Types.h"
 
 // Spatialsier headers
 #include "Spatialiser/Types.h"

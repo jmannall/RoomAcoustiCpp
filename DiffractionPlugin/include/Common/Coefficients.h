@@ -177,6 +177,26 @@ namespace UIE
 			return !(a == b);
 		}
 
+		inline bool operator>(const Coefficients& a, const Coefficients& b)
+		{
+			if (a.Length() != b.Length())
+				return false;
+			for (int i = 0; i < a.Length(); i++)
+				if (a[i] <= b[i])
+					return false;
+			return true;
+		}
+
+		inline bool operator<(const Coefficients& a, const Coefficients& b)
+		{
+			if (a.Length() != b.Length())
+				return false;
+			for (int i = 0; i < a.Length(); i++)
+				if (a[i] >= b[i])
+					return false;
+			return true;
+		}
+
 		//////////////////// Absorption class ////////////////////
 
 		class Absorption : public Coefficients // Stores 1 - sqrt(R). Where R is the absortion property of the material in the pressure domain
@@ -184,7 +204,7 @@ namespace UIE
 		public:
 
 			// Load and Destroy
-			Absorption() : Coefficients(1.0, 1.0), area(0.0) {}
+			Absorption() : Coefficients(1, 1.0), area(0.0) {}
 			Absorption(size_t len) : Coefficients(len, 1.0), area(0.0) {}
 			Absorption(size_t len, const Real& x) : Coefficients(len, x), area(0.0) {}
 			Absorption(const std::vector<Real>& c) : Coefficients(c.size()), area(0.0)

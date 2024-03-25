@@ -23,7 +23,6 @@ namespace UIE
 		{
 		public:
 			BandSection(const int& idx, const int& order, const bool& isLowBand, const int& sampleRate);
-
 			BandSection(const Real& fb, const Real& g, const int& m, const int& M, const bool& isLowBand, const int& sampleRate);
 
 			inline void SetUpdatePointer(bool isLowBand)
@@ -49,10 +48,10 @@ namespace UIE
 		class BandFilter
 		{
 		public:
-			BandFilter(const size_t& order, const bool& useLowBands, const int& sampleRate)
+			BandFilter(const size_t& order, const bool& useLowBands, const int& sampleRate) : out(0.0)
 			{ InitSections(order, useLowBands, sampleRate); }
-
 			BandFilter(const size_t& order, const bool& useLowBands, const Real& fb, const Real& g, const int& sampleRate);
+			~BandFilter() {};
 
 			void UpdateParameters(const Real& fb, const Real& g);
 			Real GetOutput(const Real& input);
@@ -68,6 +67,7 @@ namespace UIE
 
 			int M;
 			std::vector<BandSection> sections;
+			Real out;
 		};
 
 		class ParametricEQ
@@ -75,6 +75,7 @@ namespace UIE
 		public:
 			ParametricEQ(const size_t& order, const Coefficients& fc, const int& sampleRate);
 			ParametricEQ(const Coefficients& gain, const size_t& order, const Coefficients& fc, const int& sampleRate);
+			~ParametricEQ() {};
 
 			void UpdateParameters();
 			void UpdateParameters(const Real& lerpFactor);
@@ -93,7 +94,7 @@ namespace UIE
 			size_t numFilters;
 			std::vector<BandFilter> filters;
 			Real mGain;
-			bool runAllFilters;
+			bool singleGain;
 			Coefficients targetGain;
 			Coefficients currentGain;
 			Coefficients fb;

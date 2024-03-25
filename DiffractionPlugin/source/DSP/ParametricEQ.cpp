@@ -76,7 +76,7 @@ namespace UIE
 			b[2] = a[2] + (VK_2 * (K - cm) + VK_sq) * a[0];
 		}
 
-		BandFilter::BandFilter(const size_t& order, const bool& useLowBands, const Real& fb, const Real& g, const int& sampleRate)
+		BandFilter::BandFilter(const size_t& order, const bool& useLowBands, const Real& fb, const Real& g, const int& sampleRate) : out(0.0)
 		{
 			InitSections(order, useLowBands, sampleRate);
 			UpdateParameters(fb, g);
@@ -100,20 +100,20 @@ namespace UIE
 
 		Real BandFilter::GetOutput(const Real& input)
 		{
-			Real out = input;
+			out = input;
 			for (BandSection& section : sections)
 				out = section.GetOutput(out);
 			return out;
 		}
 
 		ParametricEQ::ParametricEQ(const size_t& order, const Coefficients& fc, const int& sampleRate)
-			: numFilters(fc.Length() - 1), fb(numFilters), mGain(0.0), out(0.0), currentGain(fc.Length()), targetGain(fc.Length())
+			: numFilters(fc.Length() - 1), fb(numFilters), mGain(0.0), out(0.0), currentGain(fc.Length()), targetGain(fc.Length()), singleGain(false)
 		{
 			InitBands(order, fc, sampleRate);
 		}
 
 		ParametricEQ::ParametricEQ(const Coefficients& gain, const size_t& order, const Coefficients& fc, const int& sampleRate)
-			: numFilters(fc.Length() - 1), fb(numFilters), out(0.0), currentGain(gain), targetGain(gain)
+			: numFilters(fc.Length() - 1), fb(numFilters), out(0.0), currentGain(gain), targetGain(gain), singleGain(false)
 		{
 			InitBands(order, fc, sampleRate);
 			UpdateParameters();
@@ -126,8 +126,15 @@ namespace UIE
 			for (int i = 0; i < numFilters; i++)
 				targetGain[i] = gain[i] / gain[i + 1];
 			targetGain[numFilters] = gain[numFilters];
-			currentGain = targetGain;
-			UpdateParameters();
+			bool noFilter = true;
+			int i = 0;
+			while (noFilter && i < numFilters)
+				noFilter = currentGain[i++] == 1.0;
+			if (!singleGain && noFilter)
+			{
+				singleGain = true;
+				ClearBuffers();
+			}
 		}
 
 		void ParametricEQ::UpdateParameters()
@@ -159,8 +166,16 @@ namespace UIE
 		{
 			if (currentGain == targetGain)
 			{
-				for (int i = 0; i < numFrames; i++)
-					outBuffer[i] = GetOutput(inBuffer[i]);
+				if (singleGain)
+				{
+					for (int i = 0; i < numFrames; i++)
+						outBuffer[i] = mGain * inBuffer[i];
+				}
+				else
+				{
+					for (int i = 0; i < numFrames; i++)
+						outBuffer[i] = GetOutput(inBuffer[i]);
+				}
 			}
 			else
 			{

@@ -29,7 +29,7 @@ namespace UIE
 			 *
 			 * @param ir The impulse response to initialise the FIRFilter with
 			 */
-			FIRFilter(const Buffer& impulseResponse) : ir(), irLen(ir.Length()), count(impulseResponse.Length() - 1), inputLine() { SetImpulseResponse(impulseResponse); };
+			FIRFilter(const Buffer& impulseResponse) : ir(), irLen(ir.Length()), count(static_cast<int>(impulseResponse.Length()) - 1), inputLine() { SetImpulseResponse(impulseResponse); };
 			
 			/**
 			 * Default deconstructor

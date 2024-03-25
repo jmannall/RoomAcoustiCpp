@@ -209,19 +209,23 @@ namespace UIE
 			// Load and Destroy
 			VirtualSource(const Config& config) : mCore(NULL), mSource(NULL), order(0), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(4, config.frequencyBands, config.fs),
 				isInitialised(false), feedsFDN(false), mFDNChannel(-1), btm(&mDiffractionPath, 48000), reflection(false), diffraction(false), mConfig(config), mAirAbsorption(mConfig.fs)
-			{ vWallMutex = std::make_shared<std::mutex>(); vEdgeMutex = std::make_shared<std::mutex>(); }
+			{
+				vWallMutex = std::make_shared<std::mutex>();
+				vEdgeMutex = std::make_shared<std::mutex>();
+				audioMutex = std::make_shared<std::mutex>();
+			}
 			VirtualSource(Binaural::CCore* core, const Config& config);
 			VirtualSource(Binaural::CCore* core, const Config& config, const VirtualSourceData& data, const int fdnChannel);
-			VirtualSource(const VirtualSource& vS);
+			//VirtualSource(const VirtualSource& vS);
 			~VirtualSource();
 
 			// Operators
-			inline VirtualSource operator=(const VirtualSource& vS)
+			/*inline VirtualSource operator=(const VirtualSource& vS)
 			{
 				mCore = vS.mCore; mSource = vS.mSource; mFilter = vS.mFilter; isInitialised = vS.isInitialised; mConfig = vS.mConfig; feedsFDN = vS.feedsFDN; mFDNChannel = vS.mFDNChannel; mDiffractionPath = vS.mDiffractionPath; btm = vS.btm; mTargetGain = vS.mTargetGain; order = vS.order;
 				mCurrentGain = vS.mCurrentGain; reflection = vS.reflection; diffraction = vS.diffraction; mVirtualSources = vS.mVirtualSources; mVirtualEdgeSources = vS.mVirtualEdgeSources; bInput = vS.bInput; bStore = vS.bStore; bOutput = vS.bOutput, bMonoOutput = vS.bMonoOutput;
 				return *this;
-			}
+			}*/
 
 			inline bool IsInit() const { return isInitialised; }
 			inline bool Exists() const
@@ -283,7 +287,7 @@ namespace UIE
 			bool diffraction;
 
 			// Mutexes
-			std::mutex audioMutex;
+			shared_ptr<std::mutex> audioMutex;
 		};
 	}
 }
