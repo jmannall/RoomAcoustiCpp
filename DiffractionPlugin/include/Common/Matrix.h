@@ -143,6 +143,26 @@ namespace UIE
 				return *this;
 			}
 
+			inline matrix operator+=(const Real& a)
+			{
+				for (int i = 0; i < rows; i++)
+				{
+					for (int j = 0; j < cols; j++)
+						this->e[i][j] += a;
+				}
+				return *this;
+			}
+
+			inline matrix operator-=(const Real& a)
+			{
+				for (int i = 0; i < rows; i++)
+				{
+					for (int j = 0; j < cols; j++)
+						this->e[i][j] -= a;
+				}
+				return *this;
+			}
+
 		protected:
 
 			// Memory allocation

@@ -50,7 +50,7 @@ namespace UIE
 			void UpdatePosition(const vec3& position);
 			void UpdateReflectionFilter(const Absorption& absorption);
 
-			void AddInput(const Real& in, const int& i) { inputBuffer.AddEntry(in, i); }
+			void AddInput(const Real& in, const int& i) { inputBuffer[i] = in; }
 			void ProcessAudio(Buffer& outputBuffer);
 
 			inline void Deactivate() { mSource = NULL; }
@@ -65,15 +65,18 @@ namespace UIE
 		private:
 			void Init();
 
-			bool valid;
+			bool filterInitialised;
 			vec3 mShift;
 			Coefficients mAbsorption;
 			GraphicEQ mReflectionFilter;
 			shared_ptr<Binaural::CSingleSourceDSP> mSource;
 			Config mConfig;
 
+			Real targetGain;
+			Real currentGain;
+
 			Binaural::CCore* mCore;
-			vec inputBuffer;
+			Buffer inputBuffer;
 			CMonoBuffer<float> bInput;
 			CEarPair<CMonoBuffer<float>> bOutput;
 

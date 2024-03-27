@@ -31,10 +31,10 @@ namespace UIE
 		{
 			size_t id;
 			lock_guard<std::mutex> lock(mWallMutex);
-			if (!mEmptyWallsSlots.empty()) // Assign wall to an existing ID
+			if (!mEmptyWallSlots.empty()) // Assign wall to an existing ID
 			{
-				id = mEmptyWallsSlots.back();
-				mEmptyWallsSlots.pop_back();
+				id = mEmptyWallSlots.back();
+				mEmptyWallSlots.pop_back();
 			}
 			else // Create a new ID
 				id = nextWall++;
@@ -66,10 +66,10 @@ namespace UIE
 
 			size_t idP;
 			// Initialise a new plane
-			if (!mEmptyPlanesSlots.empty()) // Assign plane to an existing ID
+			if (!mEmptyPlaneSlots.empty()) // Assign plane to an existing ID
 			{
-				idP = mEmptyPlanesSlots.back();
-				mEmptyPlanesSlots.pop_back();
+				idP = mEmptyPlaneSlots.back();
+				mEmptyPlaneSlots.pop_back();
 			}
 			else // Create a new ID
 				idP = nextPlane++;

@@ -34,10 +34,12 @@ namespace UIE
 
 		void GraphicEQ::InitFilters(const Coefficients& fc, const Real& Q, const int& sampleRate)
 		{
-			Real shelfFc = fc[0] * sqrt(fc[numFilters - 1] / fc[0]);
+			/*Real shelfFc = fc[0] * sqrt(fc[numFilters - 1] / fc[0]);
 			lowShelf = PeakLowShelf(shelfFc, Q, sampleRate);
-			highShelf = PeakHighShelf(shelfFc, Q, sampleRate);
-			for (int i = 1; i < numFilters - 1; i++)
+			highShelf = PeakHighShelf(shelfFc, Q, sampleRate);*/
+			/*for (int i = 1; i < numFilters - 1; i++)
+				peakingFilters.push_back(PeakingFilter(fc[i], Q, sampleRate));*/
+			for (int i = 0; i < numFilters; i++)
 				peakingFilters.push_back(PeakingFilter(fc[i], Q, sampleRate));
 		}
 
@@ -46,7 +48,8 @@ namespace UIE
 			auto idxL = std::lower_bound(thirdOctBands.begin(), thirdOctBands.end(), fc[0]);
 			auto idxH = std::upper_bound(thirdOctBands.begin(), thirdOctBands.end(), fc[numFilters - 1]);
 
-			for (int i = 0; i < 4; i++)
+			// for (int i = 0; i < 4; i++)
+			for (int i = 0; i < 1; i++)
 			{
 				if (idxL != thirdOctBands.begin())
 					idxL--;
@@ -75,7 +78,7 @@ namespace UIE
 			Real pdb = 6.0;
 			Real p = pow(10.0, pdb / 20.0);
 
-			lowShelf.UpdateGain(p);
+			/*lowShelf.UpdateGain(p);
 			std::vector<Real> out = lowShelf.GetFrequencyResponse(f);
 			lowShelf.UpdateGain(1.0);
 
@@ -87,9 +90,11 @@ namespace UIE
 			highShelf.UpdateGain(1.0);
 
 			for (int i = 0; i < out.size(); i++)
-				mat.IncreaseEntry(out[i] / counter[fidx[i]], numFilters - 1, fidx[i]);
+				mat.IncreaseEntry(out[i] / counter[fidx[i]], numFilters - 1, fidx[i]);*/
 
-			int j = 1;
+			// int j = 1;
+			std::vector<Real> out = std::vector<Real>(f.size(), 0.0);
+			int j = 0;
 			for (PeakingFilter& filter : peakingFilters)
 			{
 				filter.UpdateGain(p);
@@ -121,21 +126,27 @@ namespace UIE
 			
 			if (valid)
 			{
+				// when dB is used here. Factors of 20 are cancelled out.
 				for (int i = 0; i < numFilters; i++)
 					dbGain.AddEntry(std::max(currentGain[i], EPS), i); // Prevent log10(0)
 
 				dbGain.Log10();
+				Real meandBGain = dbGain.Sum() / dbGain.Cols();
+				mGain = Pow10(meandBGain); // 10 ^ mean(dbGain);
+				dbGain -= meandBGain; // dbGain - mean(dbGain);
+
 				Mulitply(inputGain, dbGain, mat);
 				inputGain.Pow10();
 
 
-				lowShelf.UpdateGain(inputGain.GetEntry(0));
-				highShelf.UpdateGain(inputGain.GetEntry(numFilters - 1));
+				//lowShelf.UpdateGain(inputGain.GetEntry(0));
+				//highShelf.UpdateGain(inputGain.GetEntry(numFilters - 1));
 
+				// int i = 1;
 				int i = 0;
 				for (PeakingFilter& filter : peakingFilters)
 				{
-					filter.UpdateGain(inputGain.GetEntry(i + 1));
+					filter.UpdateGain(inputGain.GetEntry(i));
 					i++;
 				}
 			}
@@ -145,10 +156,12 @@ namespace UIE
 		{
 			if (valid)
 			{
-				out = lowShelf.GetOutput(input);
+				//out = lowShelf.GetOutput(input);
+				out = input;
 				for (PeakingFilter& filter : peakingFilters)
 					out = filter.GetOutput(out);
-				out = highShelf.GetOutput(out);
+				//out = highShelf.GetOutput(out);
+				out *= mGain;
 				return out;
 			}
 			else
@@ -167,12 +180,8 @@ namespace UIE
 				for (int i = 0; i < numFrames; i++)
 				{
 					outBuffer[i] = GetOutput(inBuffer[i]);
-					BeginLerp();
 					Lerp(currentGain, targetGain, lerpFactor);
-					EndLerp();
-					BeginFIR();
 					UpdateParameters();
-					EndFIR();
 				}
 			}
 		}

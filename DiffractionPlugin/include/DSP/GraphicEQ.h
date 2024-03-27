@@ -67,6 +67,7 @@ namespace UIE
 			rowvec inputGain;
 			// Coefficients fb;
 			Real out;
+			Real mGain;
 
 			bool valid;
 		};

@@ -25,6 +25,13 @@ namespace UIE
 		typedef float Real; /**< Real type */
 #endif
 
+		struct TimerPair
+		{
+			size_t id;
+			time_t time;
+			TimerPair(const size_t _id, const time_t _time) : id(_id), time(_time) {};
+		};
+
 		//////////////////// Functions ////////////////////
 
 // Double

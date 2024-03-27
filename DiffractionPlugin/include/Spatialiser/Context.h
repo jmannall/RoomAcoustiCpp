@@ -185,13 +185,6 @@ namespace UIE
 			void UpdateWall(size_t id, const vec3& normal, const Real* vData, size_t numVertices);
 
 			/**
-			 * Frees up a wall ID.
-			 * 
-			 * @param id The wall ID to free.
-			 */
-			inline void FreeWallId(size_t id) { mRoom->FreeWallId(id); }
-
-			/**
 			 * Removes a wall from the spatialiser.
 			 * 
 			 * @param id The ID of the wall to remove.

@@ -39,20 +39,20 @@ namespace UIE
 
 		//////////////////// ReverbSource class ////////////////////
 
-		ReverbSource::ReverbSource(Binaural::CCore* core, const Config& config) : mCore(core), mConfig(config), mReflectionFilter(config.frequencyBands, config.Q, config.fs), mAbsorption(config.frequencyBands.Length()), valid(false)
+		ReverbSource::ReverbSource(Binaural::CCore* core, const Config& config) : mCore(core), mConfig(config), mReflectionFilter(config.frequencyBands, config.Q, config.fs),
+			mAbsorption(config.frequencyBands.Length()), filterInitialised(false), targetGain(0.0), currentGain(0.0), inputBuffer(mConfig.numFrames)
 		{
 			mMutex = std::make_shared<std::mutex>();
-			inputBuffer = vec(mConfig.numFrames);
 			bInput = CMonoBuffer<float>(mConfig.numFrames);
 			bOutput.left = CMonoBuffer<float>(mConfig.numFrames);
 			bOutput.right = CMonoBuffer<float>(mConfig.numFrames);
 			Init();
 		}
 
-		ReverbSource::ReverbSource(Binaural::CCore* core, const Config& config, const vec3& shift) : mCore(core), mConfig(config), mReflectionFilter(config.frequencyBands, config.Q, config.fs), mAbsorption(config.frequencyBands.Length()), mShift(shift), valid(false)
+		ReverbSource::ReverbSource(Binaural::CCore* core, const Config& config, const vec3& shift) : mCore(core), mConfig(config), mReflectionFilter(config.frequencyBands, config.Q, config.fs),
+			mAbsorption(config.frequencyBands.Length()), mShift(shift), filterInitialised(false), targetGain(0.0), currentGain(0.0), inputBuffer(mConfig.numFrames)
 		{
 			mMutex = std::make_shared<std::mutex>();
-			inputBuffer = vec(mConfig.numFrames);
 			bInput = CMonoBuffer<float>(mConfig.numFrames);
 			bOutput.left = CMonoBuffer<float>(mConfig.numFrames);
 			bOutput.right = CMonoBuffer<float>(mConfig.numFrames);
@@ -134,55 +134,76 @@ namespace UIE
 		{
 			lock_guard<mutex> lock(*mMutex);
 			mAbsorption = absorption;
-			mReflectionFilter.SetGain(mAbsorption);
-			valid = mAbsorption > EPS;
+
+			if (mAbsorption > EPS)
+			{
+				if (filterInitialised)
+					mReflectionFilter.SetGain(mAbsorption);
+				else
+				{
+					mReflectionFilter.InitParameters(mAbsorption);
+					filterInitialised = true;
+					targetGain = 1.0;
+				}
+			}
+			else
+			{
+				filterInitialised = false;
+				targetGain = 0.0;
+			}
 		}
 
 		void ReverbSource::ProcessAudio(Buffer& outputBuffer)
 		{
-			if (valid)
-			{
 #ifdef PROFILE_AUDIO_THREAD
-				BeginReverbSource();
+			BeginReverbSource();
 #endif
-				// Copy input into internal storage and apply wall absorption
-				//CMonoBuffer<float> bInput(numFrames);
-				//const Real* inputPtr = data;
+			{
+				lock_guard<mutex> lock(*mMutex);
 #ifdef PROFILE_AUDIO_THREAD
 				BeginReflection();
 #endif
-				{
-					lock_guard<mutex> lock(*mMutex);
-					for (int i = 0; i < mConfig.numFrames; i++)
-					{
-						bInput[i] = static_cast<float>(mReflectionFilter.GetOutput(inputBuffer.GetEntry(i)));
-						mReflectionFilter.UpdateParameters(mConfig.lerpFactor);
-					}
-				}
+				mReflectionFilter.ProcessAudio(inputBuffer, inputBuffer, mConfig.numFrames, mConfig.lerpFactor);
+
 #ifdef PROFILE_AUDIO_THREAD
 				EndReflection();
-				Begin3DTI();
 #endif
+				if (currentGain == targetGain)
 				{
-					lock_guard<mutex> lock(tuneInMutex);
-					mSource->SetBuffer(bInput);
-
-					mSource->ProcessAnechoic(bOutput.left, bOutput.right);
+					for (int i = 0; i < mConfig.numFrames; i++)
+						bInput[i] = static_cast<float>(currentGain * inputBuffer[i]);
 				}
-#ifdef PROFILE_AUDIO_THREAD
-				End3DTI();
-#endif
-
-				int j = 0;
-				for (int i = 0; i < mConfig.numFrames; i++)
+				else
 				{
-					outputBuffer[j++] += static_cast<Real>(bOutput.left[i]);
-					outputBuffer[j++] += static_cast<Real>(bOutput.right[i]);
+					for (int i = 0; i < mConfig.numFrames; i++)
+					{
+						bInput[i] = static_cast<float>(currentGain * inputBuffer[i]);
+						Lerp(currentGain, targetGain, mConfig.lerpFactor);
+					}
 				}
-#ifdef PROFILE_AUDIO_THREAD
-				EndReverbSource();
-#endif
 			}
+#ifdef PROFILE_AUDIO_THREAD
+			Begin3DTI();
+#endif
+			{
+				lock_guard<mutex> lock(tuneInMutex);
+				mSource->SetBuffer(bInput);
+
+				mSource->ProcessAnechoic(bOutput.left, bOutput.right);
+			}
+#ifdef PROFILE_AUDIO_THREAD
+			End3DTI();
+#endif
+
+			int j = 0;
+			for (int i = 0; i < mConfig.numFrames; i++)
+			{
+				outputBuffer[j++] += static_cast<Real>(bOutput.left[i]);
+				outputBuffer[j++] += static_cast<Real>(bOutput.right[i]);
+			}
+#ifdef PROFILE_AUDIO_THREAD
+			EndReverbSource();
+#endif
 		}
 
 		//////////////////// Reverb class ////////////////////

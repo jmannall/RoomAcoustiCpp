@@ -222,6 +222,9 @@ extern "C"
 		UpdateRoom(static_cast<Real>(volume), dimensions);
 	}
 
+	/**
+	 * Clears the internal FDN buffers.
+	 */
 	EXPORT void API SPATResetFDN()
 	{
 		ResetFDN();
@@ -337,19 +340,6 @@ extern "C"
 			in[i] = static_cast<Real>(vData[i]);
 
 		UpdateWall(static_cast<size_t>(id), vec3(nX, nY, nZ), &in[0], static_cast<size_t>(numVertices));
-	}
-
-	/**
-	 * Frees up the ID of the wall with the given ID.
-	 *
-	 * This function should be called after a wall is removed.
-	 * It will free up the ID of the wall so that it can be reused for new walls.
-	 *
-	 * @param id The ID of the wall to free.
-	 */
-	EXPORT void API SPATFreeWallId(int id)
-	{
-		FreeWallId(static_cast<size_t>(id));
 	}
 
 	/**

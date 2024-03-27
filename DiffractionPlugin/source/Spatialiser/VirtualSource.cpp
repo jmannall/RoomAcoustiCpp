@@ -132,40 +132,29 @@ namespace UIE
 		//////////////////// VirtualSource class ////////////////////
 
 		VirtualSource::VirtualSource(Binaural::CCore* core, const Config& config) : mCore(core), mSource(NULL), order(0), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(config.frequencyBands, config.Q, config.fs),
-			isInitialised(false), mConfig(config), feedsFDN(false), mFDNChannel(-1), btm(&mDiffractionPath, config.fs), reflection(false), diffraction(false), mAirAbsorption(config.fs)
+			isInitialised(false), mConfig(config), feedsFDN(false), mFDNChannel(-1), btm(&mDiffractionPath, config.fs), reflection(false), diffraction(false), mAirAbsorption(config.fs), bStore(config.numFrames)
 		{
 			vWallMutex = std::make_shared<std::mutex>();
 			vEdgeMutex = std::make_shared<std::mutex>();
 			audioMutex = std::make_shared<std::mutex>();
 			bInput = CMonoBuffer<float>(mConfig.numFrames);
-			bStore.ResizeBuffer(mConfig.numFrames);
 			bOutput.left = CMonoBuffer<float>(mConfig.numFrames);
 			bOutput.right = CMonoBuffer<float>(mConfig.numFrames);
 			bMonoOutput = CMonoBuffer<float>(mConfig.numFrames);
 		}
 
 		VirtualSource::VirtualSource(Binaural::CCore* core, const Config& config, const VirtualSourceData& data, int fdnChannel) : mCore(core), mSource(NULL), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(data.GetAbsorption(), config.frequencyBands, config.Q, config.fs),
-			isInitialised(false), mConfig(config), feedsFDN(data.feedsFDN), mFDNChannel(fdnChannel), mDiffractionPath(data.mDiffractionPath), btm(&mDiffractionPath, config.fs), reflection(data.reflection), diffraction(data.diffraction), mAirAbsorption(data.distance, mConfig.fs)
+			isInitialised(false), mConfig(config), feedsFDN(data.feedsFDN), mFDNChannel(fdnChannel), mDiffractionPath(data.mDiffractionPath), btm(&mDiffractionPath, config.fs), reflection(data.reflection), diffraction(data.diffraction), mAirAbsorption(data.distance, mConfig.fs), bStore(config.numFrames)
 		{
 			vWallMutex = std::make_shared<std::mutex>();
 			vEdgeMutex = std::make_shared<std::mutex>();
 			audioMutex = std::make_shared<std::mutex>();
 			bInput = CMonoBuffer<float>(mConfig.numFrames);
-			bStore.ResizeBuffer(mConfig.numFrames);
 			bOutput.left = CMonoBuffer<float>(mConfig.numFrames);
 			bOutput.right = CMonoBuffer<float>(mConfig.numFrames);
 			bMonoOutput = CMonoBuffer<float>(mConfig.numFrames);
 			UpdateVirtualSource(data, fdnChannel);
 		}
-
-		/*VirtualSource::VirtualSource(const VirtualSource& vS) : mCore(vS.mCore), mSource(vS.mSource), mFilter(vS.mFilter), isInitialised(vS.isInitialised), mConfig(vS.mConfig), feedsFDN(vS.feedsFDN), mFDNChannel(vS.mFDNChannel), mDiffractionPath(vS.mDiffractionPath),
-			btm(vS.btm), mTargetGain(vS.mTargetGain), mCurrentGain(vS.mCurrentGain), reflection(vS.reflection), diffraction(vS.diffraction), mVirtualSources(vS.mVirtualSources), mVirtualEdgeSources(vS.mVirtualEdgeSources), bInput(vS.bInput), bStore(vS.bStore),
-			bOutput(vS.bOutput), bMonoOutput(vS.bMonoOutput), order(vS.order), mAirAbsorption(vS.mAirAbsorption)
-		{
-			vWallMutex = std::make_shared<std::mutex>();
-			vEdgeMutex = std::make_shared<std::mutex>();
-			btm.UpdatePath(&mDiffractionPath);
-		}*/
 
 		VirtualSource::~VirtualSource()
 		{
@@ -364,6 +353,7 @@ namespace UIE
 			if (diffraction)
 			{
 				mDiffractionPath = data.mDiffractionPath;
+				btm.UpdatePath(&mDiffractionPath);
 				btm.InitParameters();
 			}
 
@@ -392,6 +382,7 @@ namespace UIE
 			if (diffraction)
 			{
 				mDiffractionPath = data.mDiffractionPath;
+				btm.UpdatePath(&mDiffractionPath);
 				btm.UpdateParameters();
 			}
 

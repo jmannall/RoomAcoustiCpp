@@ -54,17 +54,6 @@ namespace UIE
 				else { it->second.Update(normal, vData, numVertices); } // case: wall does exist
 			}
 
-			inline void FreeWallId(const size_t& id)
-			{ 
-				lock_guard<std::mutex> lock(mWallMutex);
-				mEmptyWallsSlots.push_back(id);
-				auto it = oldEdgeIDs.find(id);
-				if (it != oldEdgeIDs.end())		// case: attached edges
-				{
-					for (auto edgeID : it->second)
-						mEmptyEdgeSlots.push_back(edgeID);
-				}
-			}
 			inline void RemoveWall(const size_t& id)
 			{
 				lock_guard<std::mutex> lock(mWallMutex);
@@ -75,7 +64,14 @@ namespace UIE
 				{
 					RemoveEdges(it->second.GetEdges(), id);
 					RemoveWallFromPlane(it->second.GetPlaneID(), id);
+
 					mWalls.erase(it);
+					while (!mWallTimers.empty() && difftime(time(NULL), mWallTimers.front().time) > 60)
+					{
+						mEmptyWallSlots.push_back(mWallTimers.front().id);
+						mWallTimers.erase(mWallTimers.begin());
+					}
+					mWallTimers.push_back(TimerPair(id, time(NULL)));
 				}
 			}
 
@@ -85,15 +81,6 @@ namespace UIE
 
 			void UpdateEdges();
 
-			inline void GetWallVertices(int id, float** wallVertices)
-			{
-				lock_guard<std::mutex> lock(mWallMutex);
-				auto it = mWalls.find(id);
-
-				if (it != mWalls.end()) { return; } // case: wall does not exist
-				else { it->second.GetVertices(wallVertices); } // case: wall does exist
-			}
-
 			Coefficients GetReverbTime();
 			Coefficients GetReverbTime(const Real& volume) { mVolume = volume; return GetReverbTime(); }
 
@@ -102,6 +89,9 @@ namespace UIE
 			EdgeMap GetEdges() { lock_guard<std::mutex> lock(mEdgeMutex); return mEdges; }
 
 		private:
+			void AssignWallToPlane(const size_t& id);
+			void AssignWallToPlane(const size_t& wallID, Wall& wall);
+
 			inline void RemoveWallFromPlane(const size_t& idP, const size_t& idW)
 			{
 				lock_guard<std::mutex> lock(mPlaneMutex);
@@ -111,14 +101,16 @@ namespace UIE
 				{
 					if (itP->second.RemoveWall(idW)) // If plane contains no other walls
 					{
-						mEmptyPlanesSlots.push_back(itP->first);
 						mPlanes.erase(itP);
+						while (!mPlaneTimers.empty() && difftime(time(NULL), mPlaneTimers.front().time) > 60)
+						{
+							mEmptyPlaneSlots.push_back(mPlaneTimers.front().id);
+							mPlaneTimers.erase(mPlaneTimers.begin());
+						}
+						mPlaneTimers.push_back(TimerPair(idP, time(NULL)));
 					}
 				}
 			}
-
-			void AssignWallToPlane(const size_t& id);
-			void AssignWallToPlane(const size_t& wallID, Wall& wall);
 
 			// Edge
 			void AddEdge(const EdgeData& data);
@@ -151,7 +143,6 @@ namespace UIE
 			inline void RemoveEdges(const std::vector<size_t>& IDsE, const size_t& idW)
 			{
 				lock_guard<std::mutex> lock(mEdgeMutex);
-				oldEdgeIDs.insert_or_assign(idW, IDsE);
 				for (auto& idE : IDsE)
 					RemoveEdge(idE, idW);
 			}
@@ -165,16 +156,16 @@ namespace UIE
 					auto itW = mWalls.find(id);
 					if (itW != mWalls.end())
 						itW->second.RemoveEdge(idE);
+
 					mEdges.erase(idE);
+					while (!mEdgeTimers.empty() && difftime(time(NULL), mEdgeTimers.front().time) > 60)
+					{
+						mEmptyEdgeSlots.push_back(mEdgeTimers.front().id);
+						mEdgeTimers.erase(mEdgeTimers.begin());
+					}
+					mEdgeTimers.push_back(TimerPair(idE, time(NULL)));
 				}
 			}
-
-
-
-			/*void FindEdges(const size_t& id);
-			bool UpdateEdge(const size_t& id, Wall& a, Wall& b);*/
-
-			
 
 			Coefficients Sabine(const Coefficients& absorption);
 			Coefficients Eyring(const Coefficients& absorption, const Real& surfaceArea);
@@ -184,15 +175,18 @@ namespace UIE
 			size_t numAbsorptionBands;
 
 			WallMap mWalls;
-			std::vector<size_t> mEmptyWallsSlots;
+			std::vector<size_t> mEmptyWallSlots;
+			std::vector<TimerPair> mWallTimers;
 			size_t nextWall;
 
 			PlaneMap mPlanes;
-			std::vector<size_t> mEmptyPlanesSlots;
+			std::vector<size_t> mEmptyPlaneSlots;
+			std::vector<TimerPair> mPlaneTimers;
 			size_t nextPlane;
 
 			EdgeMap mEdges;
 			std::vector<size_t> mEmptyEdgeSlots;
+			std::vector<TimerPair> mEdgeTimers;
 			size_t nextEdge;
 			EdgeIDMap oldEdgeIDs;
 

@@ -173,15 +173,6 @@ namespace UIE
 
 		////////////////////////////////////////
 
-		void FreeWallId(size_t id)
-		{
-			auto context = GetContext();
-			if (context)
-				context->FreeWallId(id);
-		}
-
-		////////////////////////////////////////
-
 		void RemoveWall(size_t id)
 		{
 			auto context = GetContext();

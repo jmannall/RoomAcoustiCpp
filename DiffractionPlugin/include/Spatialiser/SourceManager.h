@@ -10,6 +10,7 @@
 // C++ headers
 #include <unordered_map>
 #include <mutex>
+#include <ctime>
 
 // Spatialiser headers
 #include "Spatialiser/Types.h"
@@ -31,7 +32,7 @@ namespace UIE
 		public:
 
 			// Load and Destroy
-			SourceManager(Binaural::CCore* core, const Config& config) : mSources(), mEmptySlots(), mCore(core), mConfig(config) {};
+			SourceManager(Binaural::CCore* core, const Config& config) : mSources(), mEmptySlots(), mCore(core), mConfig(config), nextSource(0) {};
 			~SourceManager()
 			{ 
 				std::lock(updateMutex, processAudioMutex);
@@ -59,7 +60,12 @@ namespace UIE
 				std::lock_guard<std::mutex> lk2(processAudioMutex, std::adopt_lock);
 
 				mSources.erase(id);
-				mEmptySlots.push_back(id);
+				while (!mTimers.empty() && difftime(time(NULL), mTimers.front().time) > 60)
+				{
+					mEmptySlots.push_back(mTimers.front().id);
+					mTimers.erase(mTimers.begin());
+				}
+				mTimers.push_back(TimerPair(id, time(NULL)));
 			}
 
 			void GetSourceData(std::vector<SourceData>& data);
@@ -75,6 +81,8 @@ namespace UIE
 			// Sources
 			SourceMap mSources;
 			std::vector<size_t> mEmptySlots;
+			std::vector<TimerPair> mTimers;
+			size_t nextSource;
 
 			// Mutexes
 			std::mutex updateMutex; // Locks during update step

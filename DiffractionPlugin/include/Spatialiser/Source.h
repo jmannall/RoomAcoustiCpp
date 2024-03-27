@@ -75,21 +75,10 @@ namespace UIE
 
 			// Load and Destroy
 			Source(Binaural::CCore* core, const Config& config);
-			/*Source(const Source& s) : mCore(s.mCore), mConfig(s.mConfig), mSource(s.mSource),
-				bInput(s.bInput), targetGain(s.targetGain), currentGain(s.currentGain), mVirtualSources(s.mVirtualSources), mVirtualEdgeSources(s.mVirtualEdgeSources),
-				oldData(s.oldData), freeFDNChannels(s.freeFDNChannels) {};*/
 			~Source();
 
 			void UpdateSpatialisationMode(const HRTFMode& mode);
 			void UpdateSpatialisationMode(const SPATConfig& config);
-
-			// Operators
-			/*inline Source operator=(const Source& s) {
-				mCore = s.mCore; mConfig = s.mConfig; mSource = s.mSource;
-				targetGain = s.targetGain; currentGain = s.currentGain; mVirtualSources = s.mVirtualSources; mVirtualEdgeSources = s.mVirtualEdgeSources;
-				oldData = s.oldData; freeFDNChannels = s.freeFDNChannels;
-				return *this;
-			}*/
 
 			// Getters
 			inline shared_ptr<Binaural::CSingleSourceDSP>& GetSource() { return mSource; }
@@ -101,9 +90,6 @@ namespace UIE
 
 			inline SourceData GetData(const size_t& id) { lock_guard<std::mutex> lock(*dataMutex); mData.id = id; return mData; }
 			inline void UpdateData(const SourceData& data) { lock_guard<std::mutex> lock(*dataMutex); mData = data; }
-
-			//inline void LogWallRemoval(const size_t& id) { removedWalls.push_back(id); }
-			//inline void LogEdgeRemoval(const size_t& id) { removedEdges.push_back(id); }
 
 			// Audio
 			void ProcessAudio(const Buffer& data, matrix& reverbInput, Buffer& outputBuffer);

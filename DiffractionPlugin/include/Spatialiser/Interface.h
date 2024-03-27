@@ -77,6 +77,9 @@ namespace UIE
 		 */
 		void UpdateRoom(const Real& volume, const vec& dimensions);
 
+		/**
+		 * Clears the internal FDN buffers.
+		 */
 		void ResetFDN();
 
 		/**
@@ -131,13 +134,6 @@ namespace UIE
 		 * @param numVertices The number of vertices provided in the vData parameter.
 		 */
 		void UpdateWall(size_t id, const vec3& normal, const Real* vData, size_t numVertices);
-
-		/**
-		 * Frees up the ID of the wall with the given ID.
-		 *
-		 * @param id The ID of the wall to free.
-		 */
-		void FreeWallId(size_t id);
 
 		/**
 		 * Removes the wall with the given ID.
