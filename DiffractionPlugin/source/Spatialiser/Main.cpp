@@ -56,16 +56,15 @@ extern "C"
 	 *
 	 * @param fs The sample rate for audio processing.
 	 * @param numFrames The number of frames in an audio buffer.
-	 * @param numFDNChannels The number of feedback delay network channels.
+	 * @param maxFDNChannels The number of feedback delay network channels.
 	 * @param lerpFactor The interpolation factor for audio parameters.
-	 * @param hrtfMode The mode for HRTF processing. 0 for quality, 1 for performance, 2 for none.
+	 * @param Q The quality factor for reflection filters. (0.77 is a good starting point)
 	 * @param fBands The center frequency bands for reflection filters.
 	 * @param numBands The number of frequency bands provided in the fBands parameter.
-	 * @param paths The file paths for HRTF files.
 	 *
 	 * @return True if the initialization was successful, false otherwise.
 	 */
-	EXPORT bool API SPATInit(int fs, int numFrames, int maxFDNChannels, float lerpFactor, const float* fBands, int numBands)
+	EXPORT bool API SPATInit(int fs, int numFrames, int maxFDNChannels, float lerpFactor, float Q, const float* fBands, int numBands)
 	{
 
 		int numFDNChannels = 0;
@@ -93,7 +92,7 @@ extern "C"
 		for (int i = 0; i < numBands; i++)
 			frequencyBands[i] = static_cast<Real>(fBands[i]);
 
-		Config config = Config(fs, numFrames, numFDNChannels, static_cast<Real>(lerpFactor), frequencyBands);
+		Config config = Config(fs, numFrames, numFDNChannels, static_cast<Real>(lerpFactor), static_cast<Real>(Q), frequencyBands);
 		return Init(config);
 	}
 

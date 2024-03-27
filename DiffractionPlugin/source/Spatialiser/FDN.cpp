@@ -23,14 +23,14 @@ namespace UIE
 
 		//////////////////// FDN Channel class ////////////////////
 
-		Channel::Channel(const Config& config) : mT(1.0 / config.fs), mConfig(config), mAbsorptionFilter(4, mConfig.frequencyBands, mConfig.fs), idx(0)
+		Channel::Channel(const Config& config) : mT(1.0 / config.fs), mConfig(config), mAbsorptionFilter(mConfig.frequencyBands, mConfig.Q, mConfig.fs), idx(0)
 		{
 			mBufferMutex = std::make_shared<std::mutex>();
 			SetDelay();
 			SetAbsorption();
 		}
 
-		Channel::Channel(Real t, const Coefficients& T60, const Config& config) : mT(t), mConfig(config), mAbsorptionFilter(4, mConfig.frequencyBands, mConfig.fs), idx(0)
+		Channel::Channel(Real t, const Coefficients& T60, const Config& config) : mT(t), mConfig(config), mAbsorptionFilter(mConfig.frequencyBands, mConfig.Q, mConfig.fs), idx(0)
 		{
 			mBufferMutex = std::make_shared<std::mutex>();
 			SetDelay();
@@ -40,19 +40,22 @@ namespace UIE
 		void Channel::SetParameters(const Coefficients& T60, const Real& t)
 		{
 			SetDelay(t);
-			SetAbsorption(T60);
+			if (T60 > 0.0)
+				SetAbsorption(T60);
+			else
+				SetAbsorption();
 		}
 
 		void Channel::SetAbsorption()
 		{
-			Coefficients g = Coefficients(mConfig.frequencyBands.Length());
-			mAbsorptionFilter.SetTargetGain(g);
+			Coefficients g = Coefficients(mConfig.frequencyBands.Length(), 1.0);
+			mAbsorptionFilter.InitParameters(g);
 		}
 
 		void Channel::SetAbsorption(const Coefficients& T60)
 		{
 			Coefficients g = (- 3.0 * mT / T60).Pow(10); // 20 * log10(H(f)) = -60 * t / t60(f);
-			mAbsorptionFilter.SetTargetGain(g);
+			mAbsorptionFilter.InitParameters(g);
 		}
 
 		void Channel::SetDelay()

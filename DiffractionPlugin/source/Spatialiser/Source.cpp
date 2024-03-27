@@ -332,7 +332,7 @@ namespace UIE
 				}
 				VirtualSource virtualSource = VirtualSource(mCore, mConfig, data, fdnChannel);
 
-				assert(!(data.feedsFDN && virtualSource->GetFDNChannel() == -1));
+				assert(!(data.feedsFDN && virtualSource.GetFDNChannel() == -1));
 				{
 					unique_lock<mutex> lck(*m, std::defer_lock);
 					if (lck.try_lock())
@@ -356,7 +356,7 @@ namespace UIE
 
 				bool remove = it->second.UpdateVirtualSource(data, fdnChannel);
 
-				assert(!(data.feedsFDN && it->second->GetFDNChannel() == -1));
+				assert(!(data.feedsFDN && it->second.GetFDNChannel() == -1));
 
 				if (fdnChannel >= 0) // Add vSource old fdnChannel to freeFDNChannels (Also prevents leaking FDN channels if !data.visible and the channel is not assigned to vSource)
 					freeFDNChannels.push_back(fdnChannel);

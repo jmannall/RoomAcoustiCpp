@@ -34,9 +34,18 @@ namespace UIE
 		const constexpr Real PI_8 = 8.0 * PI_1;
 		const constexpr Real SQRT_2 = 1.414213562373095048801688724209698078569671875376948073176680;
 		const constexpr Real INV_SQRT_2 = 1.0 / SQRT_2;
+		const constexpr Real LOG_10 = 2.302585092994045684017991454684364207601101488628772976033328;
+		const constexpr Real LOG2_10 = 3.321928094887362347870319429489390175864831393024580612054756;
+		const constexpr Real INV_LOG2_10 = 1.0 / LOG2_10;
 
 		const constexpr Real MIN_VALUE = 10.0 * DBL_MIN;
 
+		const std::vector<Real> thirdOctBands = {
+				25.0, 31.5, 40.0, 50.0, 63.0, 80.0,
+				100.0, 125.0, 160.0, 200.0, 250.0, 315.0,
+				400.0, 500.0, 630.0, 800.0, 1.0e3, 1.25e3,
+				1.6e3, 2.0e3, 2.5e3, 3.15e3, 4.0e3, 5.0e3,
+				6.3e3, 8.0e3, 10.0e3, 12.5e3, 16.0e3, 20.0e3 };
 
 		inline Real Deg2Rad(Real x)
 		{
@@ -46,6 +55,16 @@ namespace UIE
 		inline Real Rad2Deg(Real x)
 		{
 			return x * 180.0 / PI_1;
+		}
+
+		inline Real Pow10(Real x)
+		{
+			return exp(LOG_10 * x);
+		}
+
+		inline Real Log10(Real x)
+		{
+			return std::log2(x) * INV_LOG2_10;
 		}
 
 		// Float
@@ -62,6 +81,8 @@ namespace UIE
 		const constexpr Real PI_8 = 8.0f * PI_1;
 		const constexpr Real SQRT_2 = 1.414213562373095048801688724209698078569671875376948073176680f;
 		const constexpr Real INV_SQRT_2 = 1.0f / SQRT_2;
+		const constexpr Real LOG_10 = 2.302585092994045684017991454684364207601101488628772976033328f;
+		const constexpr Real LOG2_10 = 3.321928094887362347870319429489390175864831393024580612054756f;
 
 		const constexpr Real MIN_VALUE = 10.0 * FLT_MIN;
 
@@ -74,6 +95,16 @@ namespace UIE
 		inline Real Rad2Deg(Real x)
 		{
 			return x * 180.0f / PI_1;
+		}
+
+		inline Real Pow10(Real x)
+		{
+			return expf(LOG_10 * x);
+		}
+
+		inline Real Log10(Real x)
+		{
+			return std::log2f(x) * LOG2_10;
 		}
 
 #endif

@@ -27,7 +27,7 @@
 
 // DSP headers
 #include "DSP/Buffer.h"
-#include "DSP/ParametricEQ.h"
+#include "DSP/GraphicEQ.h"
 
 namespace UIE
 {
@@ -71,7 +71,7 @@ namespace UIE
 			Real mT;
 			Config mConfig;
 			Buffer mBuffer;
-			ParametricEQ mAbsorptionFilter;
+			GraphicEQ mAbsorptionFilter;
 			
 			//std::mutex* mBufferMutex;
 			std::shared_ptr<std::mutex> mBufferMutex;

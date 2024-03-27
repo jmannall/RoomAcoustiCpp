@@ -19,6 +19,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Common\Vec.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\Buffer.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\FIRFilter.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\GraphicEQ.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\IIRFilter.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\LinkwitzRileyFilter.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\ParametricEQ.cpp" />
@@ -54,6 +55,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Vec3.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\Buffer.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\FIRFilter.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\GraphicEQ.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\IIRFilter.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\Interpolate.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\LinkwitzRileyFilter.h" />

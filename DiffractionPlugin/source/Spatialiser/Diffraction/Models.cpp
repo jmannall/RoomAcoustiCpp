@@ -591,6 +591,7 @@ namespace UIE
 					std::lock_guard<std::mutex> lock(*m);
 					if (ir.Valid())
 					{
+						targetIr = ir;
 						currentIr = ir;
 						firFilter.SetImpulseResponse(currentIr);
 					}

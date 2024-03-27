@@ -1,7 +1,7 @@
 /*
-* @class Buffer, BufferF
+* @class ParametricEQ, BandFilter, BandSection
 *
-* @brief Declaration of Buffer and BufferF classes
+* @brief Declaration of ParametricEQ, BandFilter, BandSection classes
 *
 */
 

@@ -7,10 +7,13 @@
 #ifndef Common_Matrix_h
 #define Common_Matrix_h
 
+// C++ headers
 #include <cassert>
 #include <vector>
 
+// Common headers
 #include "Common/Types.h"
+#include "Common/Definitions.h"
 
 namespace UIE
 {
@@ -71,6 +74,26 @@ namespace UIE
 			inline const std::vector<std::vector<Real>>& Data() const { return e; }
 			matrix Transpose();
 
+			void Inverse();
+
+			inline void Log10()
+			{
+				for (int i = 0; i < rows; i++)
+				{
+					for (int j = 0; j < cols; j++)
+						this->e[i][j] = UIE::Common::Log10(e[i][j]);
+				}
+			}
+
+			inline void Pow10()
+			{
+				for (int i = 0; i < rows; i++)
+				{
+					for (int j = 0; j < cols; j++)
+						this->e[i][j] = UIE::Common::Pow10(e[i][j]);
+				}
+			}
+
 			// Operators
 			inline matrix operator=(const matrix& mat)
 			{
@@ -85,9 +108,7 @@ namespace UIE
 				for (int i = 0; i < rows; i++)
 				{
 					for (int j = 0; j < cols; j++)
-					{
 						this->e[i][j] += mat.GetEntry(i, j);
-					}
 				}
 				return *this;
 			}
@@ -97,9 +118,7 @@ namespace UIE
 				for (int i = 0; i < rows; i++)
 				{
 					for (int j = 0; j < cols; j++)
-					{
 						this->e[i][j] -= mat.GetEntry(i, j);
-					}
 				}
 				return *this;
 			}
@@ -109,9 +128,7 @@ namespace UIE
 				for (int i = 0; i < rows; i++)
 				{
 					for (int j = 0; j < cols; j++)
-					{
 						this->e[i][j] *= a;
-					}
 				}
 				return *this;
 			}
@@ -121,9 +138,7 @@ namespace UIE
 				for (int i = 0; i < rows; i++)
 				{
 					for (int j = 0; j < cols; j++)
-					{
 						this->e[i][j] /= a;
-					}
 				}
 				return *this;
 			}
@@ -203,22 +218,30 @@ namespace UIE
 			return out;
 		}
 
-		inline matrix operator*(const matrix& u, const matrix& v)
+		inline matrix Mulitply(matrix& out, const matrix& u, const matrix& v)
 		{
 			assert(u.Cols() == v.Rows());
-			matrix out = matrix(u.Rows(), v.Cols());
+			assert(out.Rows() == u.Rows());
+			assert(out.Cols() == v.Rows());
 
+			out.Reset();
 			for (int i = 0; i < u.Rows(); ++i)
 			{
 				for (int j = 0; j < v.Cols(); ++j)
 				{
 					for (int k = 0; k < u.Cols(); ++k)
 					{
-						out.IncreaseEntry(u.GetEntry(i, k) * v.GetEntry(k, j), i, j);		
+						out.IncreaseEntry(u.GetEntry(i, k) * v.GetEntry(k, j), i, j);
 					}
 				}
 			}
 			return out;
+		}
+
+		inline matrix operator*(const matrix& u, const matrix& v)
+		{
+			matrix out = matrix(u.Rows(), v.Cols());
+			return Mulitply(out, u, v);
 		}
 
 		inline matrix operator*(const Real& a, const matrix& mat)

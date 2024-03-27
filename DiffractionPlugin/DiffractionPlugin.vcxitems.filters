@@ -111,6 +111,9 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\ImageEdge.cpp">
       <Filter>Source Files\Spatialiser</Filter>
     </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\GraphicEQ.cpp">
+      <Filter>Source Files\DSP</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Types.h">
@@ -229,6 +232,9 @@
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\AirAbsorption.h">
       <Filter>Header Files\Spatialiser</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\GraphicEQ.h">
+      <Filter>Header Files\DSP</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

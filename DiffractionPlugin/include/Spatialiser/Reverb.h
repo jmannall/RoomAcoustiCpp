@@ -26,7 +26,7 @@
 #include "Unity/Debug.h"
 
 // DSP headers
-#include "DSP/ParametricEQ.h"
+#include "DSP/GraphicEQ.h"
 
 using namespace Common;
 namespace UIE
@@ -58,7 +58,7 @@ namespace UIE
 
 #ifdef _TEST
 #pragma optimize("", off)
-			inline Absorption GetAbsorption() const { return mAbsorption; }
+			inline Coefficients GetAbsorption() const { return mAbsorption; }
 #pragma optimize("", on)
 #endif
 
@@ -68,7 +68,7 @@ namespace UIE
 			bool valid;
 			vec3 mShift;
 			Coefficients mAbsorption;
-			ParametricEQ mReflectionFilter;
+			GraphicEQ mReflectionFilter;
 			shared_ptr<Binaural::CSingleSourceDSP> mSource;
 			Config mConfig;
 

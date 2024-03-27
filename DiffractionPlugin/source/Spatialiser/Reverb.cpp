@@ -39,7 +39,7 @@ namespace UIE
 
 		//////////////////// ReverbSource class ////////////////////
 
-		ReverbSource::ReverbSource(Binaural::CCore* core, const Config& config) : mCore(core), mConfig(config), mReflectionFilter(REFLECTION_FILTER_ORDER, config.frequencyBands, config.fs), mAbsorption(config.frequencyBands.Length()), valid(false)
+		ReverbSource::ReverbSource(Binaural::CCore* core, const Config& config) : mCore(core), mConfig(config), mReflectionFilter(config.frequencyBands, config.Q, config.fs), mAbsorption(config.frequencyBands.Length()), valid(false)
 		{
 			mMutex = std::make_shared<std::mutex>();
 			inputBuffer = vec(mConfig.numFrames);
@@ -49,7 +49,7 @@ namespace UIE
 			Init();
 		}
 
-		ReverbSource::ReverbSource(Binaural::CCore* core, const Config& config, const vec3& shift) : mCore(core), mConfig(config), mReflectionFilter(REFLECTION_FILTER_ORDER, config.frequencyBands, config.fs), mAbsorption(config.frequencyBands.Length()), mShift(shift), valid(false)
+		ReverbSource::ReverbSource(Binaural::CCore* core, const Config& config, const vec3& shift) : mCore(core), mConfig(config), mReflectionFilter(config.frequencyBands, config.Q, config.fs), mAbsorption(config.frequencyBands.Length()), mShift(shift), valid(false)
 		{
 			mMutex = std::make_shared<std::mutex>();
 			inputBuffer = vec(mConfig.numFrames);
@@ -134,7 +134,7 @@ namespace UIE
 		{
 			lock_guard<mutex> lock(*mMutex);
 			mAbsorption = absorption;
-			mReflectionFilter.SetTargetGain(mAbsorption);
+			mReflectionFilter.SetGain(mAbsorption);
 			valid = mAbsorption > EPS;
 		}
 

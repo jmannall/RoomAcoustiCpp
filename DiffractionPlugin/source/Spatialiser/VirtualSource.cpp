@@ -131,7 +131,7 @@ namespace UIE
 
 		//////////////////// VirtualSource class ////////////////////
 
-		VirtualSource::VirtualSource(Binaural::CCore* core, const Config& config) : mCore(core), mSource(NULL), order(0), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(4, config.frequencyBands, config.fs),
+		VirtualSource::VirtualSource(Binaural::CCore* core, const Config& config) : mCore(core), mSource(NULL), order(0), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(config.frequencyBands, config.Q, config.fs),
 			isInitialised(false), mConfig(config), feedsFDN(false), mFDNChannel(-1), btm(&mDiffractionPath, config.fs), reflection(false), diffraction(false), mAirAbsorption(config.fs)
 		{
 			vWallMutex = std::make_shared<std::mutex>();
@@ -144,7 +144,7 @@ namespace UIE
 			bMonoOutput = CMonoBuffer<float>(mConfig.numFrames);
 		}
 
-		VirtualSource::VirtualSource(Binaural::CCore* core, const Config& config, const VirtualSourceData& data, int fdnChannel) : mCore(core), mSource(NULL), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(4, config.frequencyBands, config.fs),
+		VirtualSource::VirtualSource(Binaural::CCore* core, const Config& config, const VirtualSourceData& data, int fdnChannel) : mCore(core), mSource(NULL), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(data.GetAbsorption(), config.frequencyBands, config.Q, config.fs),
 			isInitialised(false), mConfig(config), feedsFDN(data.feedsFDN), mFDNChannel(fdnChannel), mDiffractionPath(data.mDiffractionPath), btm(&mDiffractionPath, config.fs), reflection(data.reflection), diffraction(data.diffraction), mAirAbsorption(data.distance, mConfig.fs)
 		{
 			vWallMutex = std::make_shared<std::mutex>();
@@ -357,6 +357,9 @@ namespace UIE
 			reflection = data.reflection;
 			diffraction = data.diffraction;
 
+			if (reflection) // Set reflection filter
+				mFilter.InitParameters(data.GetAbsorption());
+
 			// Set btm currentIr
 			if (diffraction)
 			{
@@ -384,10 +387,7 @@ namespace UIE
 		{
 			// audioMutex already locked
 			if (reflection) // Update reflection filter
-			{
-				Absorption g = data.GetAbsorption();
-				mFilter.SetTargetGain(g);
-			}
+				mFilter.SetGain(data.GetAbsorption());
 
 			if (diffraction)
 			{

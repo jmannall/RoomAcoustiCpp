@@ -55,6 +55,14 @@ namespace UIE
 			 */
 			inline void ClearBuffers() { x.ResetBuffer(); y.ResetBuffer(); }
 
+			/**
+			 * Returns the filter response at given frequencies
+			 *
+			 * @param frequencies The frequencies at which to calculate the response
+			 * @return The frequency response of the filter
+			 */
+			std::vector<Real> GetFrequencyResponse(const std::vector<Real>& frequencies) const;
+
 		protected:
 
 			/**
@@ -108,11 +116,11 @@ namespace UIE
 			~HighShelf() {};
 
 			/**
-			* Updates the parameters of the high shelf filter
-			* 
-			* @param fc The cut off frequency of the filter
-			* @param g The shelf gain of the filter (linear)
-			*/
+			 * Updates the parameters of the high shelf filter
+			 * 
+			 * @param fc The cut off frequency of the filter
+			 * @param g The shelf gain of the filter (linear)
+			 */
 			void UpdateParameters(const Real& fc, const Real& g);
 		};
 
@@ -143,13 +151,166 @@ namespace UIE
 			~LowPass() {};
 
 			/**
-			* Updates the parameters of the low pass filter
-			*
-			* @param fc The cut off frequency of the filter
-			*/
+			 * Updates the parameters of the low pass filter
+			 *
+			 * @param fc The cut off frequency of the filter
+			 */
 			void UpdateParameters(const Real& fc);
 		};
 
+		/**
+		 * Class that implements a 2nd order high shelf IIR filter (used by GraphicEQ)
+		 */
+		class PeakHighShelf : public IIRFilter
+		{
+		public:
+			/**
+			 * Constructor that initialises an 2nd order high shelf filter with a given cut off frequency
+			 *
+			 * @param fc The cut off frequency of the filter
+			 * @param Q The quality factor of the filter
+			 * @param sampleRate The sample rate for calculating filter coefficients
+			 */
+			PeakHighShelf(const Real& fc, const Real& Q, const int& sampleRate) : IIRFilter(2, sampleRate) { SetParameters(fc, Q); }
+
+			/**
+			 * Constructor that initialises an 2nd order high shelf filter with a given cut off frequency and shelf gain
+			 *
+			 * @param fc The cut off frequency of the filter
+			 * @param g The shelf gain of the filter (linear)
+			 * @param Q The quality factor of the filter
+			 * @param sampleRate The sample rate for calculating filter coefficients
+			 */
+			PeakHighShelf(const Real& fc, const Real& g, const Real& Q, const int& sampleRate) : IIRFilter(2, sampleRate) { SetParameters(fc, Q); UpdateGain(g); }
+
+			/**
+			 * Default deconstructor
+			 */
+			~PeakHighShelf() {};
+
+			/**
+			 * Updates the gain of the high shelf filter
+			 *
+			 * @param g The shelf gain of the filter (linear)
+			 */
+			void UpdateGain(const Real& g);
+
+		private:
+			/**
+			 * Sets the cut off frequency of the high shelf filter
+			 *
+			 * @param fs The cut off frequency of the filter
+			 * @param Q The quality factor of the filter
+			 */
+			void SetParameters(const Real& fc, const Real& Q);
+
+			Real cosOmega;
+			Real alpha;
+		};
+
+		/**
+		 * Class that implements a 2nd order low shelf IIR filter (used by GraphicEQ)
+		 */
+		class PeakLowShelf : public IIRFilter
+		{
+		public:
+			/**
+			 * Constructor that initialises an 2nd order low shelf filter with a given cut off frequency
+			 *
+			 * @param fc The cut off frequency of the filter
+			 * @param Q The quality factor of the filter
+			 * @param sampleRate The sample rate for calculating filter coefficients
+			 */
+			PeakLowShelf(const Real& fc, const Real& Q, const int& sampleRate) : IIRFilter(2, sampleRate) { SetParameters(fc, Q); }
+
+			/**
+			 * Constructor that initialises an 2nd order low shelf filter with a given cut off frequency and shelf gain
+			 *
+			 * @param fc The cut off frequency of the filter
+			 * @param g The shelf gain of the filter (linear)
+			 * @param Q The quality factor of the filter
+			 * @param sampleRate The sample rate for calculating filter coefficients
+			 */
+			PeakLowShelf(const Real& fc, const Real& g, const Real& Q, const int& sampleRate) : IIRFilter(2, sampleRate) { SetParameters(fc, Q); UpdateGain(g); }
+
+			/**
+			 * Default deconstructor
+			 */
+			~PeakLowShelf() {};
+
+			/**
+			 * Updates the gain of the low shelf filter
+			 *
+			 * @param g The shelf gain of the filter (linear)
+			 */
+			void UpdateGain(const Real& g);
+
+		private:
+			/**
+			 * Sets the cut off frequency of the low shelf filter
+			 *
+			 * @param fs The cut off frequency of the filter
+			 * @param Q The quality factor of the filter
+			 */
+			void SetParameters(const Real& fc, const Real& Q);
+
+			Real cosOmega;
+			Real alpha;
+		};
+
+		/**
+		 * Class that implements a 2nd order peaking IIR filter (used by GraphicEQ)
+		 */
+		class PeakingFilter : public IIRFilter
+		{
+		public:
+			/**
+			 * Constructor that initialises an 2nd order peaking filter with a given cut off frequency
+			 *
+			 * @param fc The center frequency of the filter
+			 * @param Q The quality factor of the filter
+			 * @param sampleRate The sample rate for calculating filter coefficients
+			 */
+			PeakingFilter(const Real& fc, const Real& Q, const int& sampleRate) : IIRFilter(2, sampleRate) { SetParameters(fc, Q); }
+
+			/**
+			 * Constructor that initialises an 2nd order peaking filter with a given cut off frequency and gain
+			 *
+			 * @param fc The center frequency of the filter
+			 * @param g The gain of the filter (linear)
+			 * @param Q The quality factor of the filter
+			 * @param sampleRate The sample rate for calculating filter coefficients
+			 */
+			PeakingFilter(const Real& fc, const Real& g, const Real& Q, const int& sampleRate) : IIRFilter(2, sampleRate) { SetParameters(fc, Q); UpdateGain(g); }
+
+			/**
+			 * Default deconstructor
+			 */
+			~PeakingFilter() {};
+
+			/**
+			 * Updates the gain of the peaking filter
+			 *
+			 * @param g The gain of the filter (linear)
+			 */
+			void UpdateGain(const Real& g);
+
+		private:
+			/**
+			 * Sets the center frequency of the peaking filter
+			 *
+			 * @param fs The center frequency of the filter
+			 * @param Q The quality factor of the filter
+			 */
+			void SetParameters(const Real& fc, const Real& Q);
+
+			Real cosOmega;
+			Real alpha;
+		};
+
+		/**
+		 * Class that implements a 2nd order IIR filter from poles, zeros and gain (used by NN models)
+		 */
 		struct ZPKParameters
 		{
 			Coefficients z;
@@ -168,6 +329,9 @@ namespace UIE
 			void UpdateParameters(const ZPKParameters& zpk);
 		};
 
+		/**
+		 * Class that implements a low or high pass IIR filter (used by LinkwitzRiley filter)
+		 */
 		class PassFilter : public IIRFilter
 		{
 		public:

@@ -69,10 +69,11 @@ namespace UIE
 			inline vec operator=(const matrix& mat)
 			{
 				assert(mat.Cols() == 1);
-
-				rows = mat.Rows();
 				cols = mat.Cols();
-				AllocateSpace();
+
+				if (rows != mat.Rows())
+					e.resize(mat.Cols(), std::vector<Real>(1, 0.0));
+
 				for (int i = 0; i < rows; i++)
 				{
 					for (int j = 0; j < cols; j++)
@@ -119,10 +120,11 @@ namespace UIE
 			inline rowvec operator=(const matrix& mat)
 			{
 				assert(mat.Rows() == 1);
-
 				rows = mat.Rows();
-				cols = mat.Cols();
-				AllocateSpace();
+
+				if (cols != mat.Cols())
+					e[0].resize(mat.Cols());
+				
 				for (int i = 0; i < rows; i++)
 				{
 					for (int j = 0; j < cols; j++)
