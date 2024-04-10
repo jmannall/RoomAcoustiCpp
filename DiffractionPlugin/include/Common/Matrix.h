@@ -242,7 +242,7 @@ namespace UIE
 		{
 			assert(u.Cols() == v.Rows());
 			assert(out.Rows() == u.Rows());
-			assert(out.Cols() == v.Rows());
+			assert(out.Cols() == v.Cols());
 
 			out.Reset();
 			for (int i = 0; i < u.Rows(); ++i)

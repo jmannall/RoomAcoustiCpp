@@ -9,6 +9,7 @@
 
 #include <chrono>
 #include <iostream>
+#include <string>
 
 namespace UIE
 {
@@ -36,14 +37,18 @@ namespace UIE
 				m_startTimePoint = std::chrono::high_resolution_clock::now();
 			}
 
-			void Stop()
+			void Stop() { Stop(""); }
+
+			void Stop(const std::string header)
 			{
+
 				auto endTimePoint = std::chrono::high_resolution_clock::now();
 				auto start = std::chrono::time_point_cast<std::chrono::microseconds>(m_startTimePoint).time_since_epoch().count();
 				auto end = std::chrono::time_point_cast<std::chrono::microseconds>(endTimePoint).time_since_epoch().count();
 
 				auto duration = end - start;
-				m_outputStream << (duration)/1000.f << "ms";
+
+				m_outputStream << header << ": " << (duration) / 1000.f << "ms" << "\n";
 			}
 
 		private:

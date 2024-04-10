@@ -29,16 +29,24 @@ namespace UIE
 			GraphicEQ(const Coefficients& gain, const Coefficients& fc, const Real& Q, const int& sampleRate);
 			~GraphicEQ() {};
 
-			void InitParameters(const Coefficients& g);
+			void InitParameters(const Coefficients& gain);
 			inline void UpdateParameters(const Real& lerpFactor)
 			{
-				if (currentGain != targetGain)
+				if (equal)
+					return;
+				if (Equals(currentGain, targetGain))
+				{
+					currentGain = targetGain;
+					equal = true;
+					UpdateParameters();
+				}
+				else
 				{
 					Lerp(currentGain, targetGain, lerpFactor);
 					UpdateParameters();
 				}
 			}
-			inline void SetGain(const Coefficients& g) { targetGain = g; }
+			void SetGain(const Coefficients& gain);
 			Real GetOutput(const Real& input);
 			void ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const int numFrames, const Real lerpFactor);
 
@@ -61,14 +69,14 @@ namespace UIE
 
 			matrix mat;
 
+			Coefficients lastInput;
 			Coefficients targetGain;
 			Coefficients currentGain;
 			rowvec dbGain;
 			rowvec inputGain;
-			// Coefficients fb;
 			Real out;
-			Real mGain;
 
+			bool equal;
 			bool valid;
 		};
 	}

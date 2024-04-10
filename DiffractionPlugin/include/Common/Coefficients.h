@@ -14,6 +14,7 @@
 
 // Common headers
 #include "Common/Types.h"
+#include "Common/Definitions.h"
 
 namespace UIE
 {
@@ -136,6 +137,16 @@ namespace UIE
 		protected:
 			std::vector<Real> coefficients;
 		};
+
+		inline bool Equals(const Coefficients& a, const Coefficients& b)
+		{
+			if (a.Length() != b.Length())
+				return false;
+			for (int i = 0; i < a.Length(); i++)
+				if (a[i] > b[i] + EPS || a[i] < b[i] - EPS)
+					return false;
+			return true;
+		}
 
 		inline Coefficients operator+(Coefficients a, const Coefficients& b) { return a += b; }
 		inline Coefficients operator-(Coefficients a, const Coefficients& b) { return a -= b; }

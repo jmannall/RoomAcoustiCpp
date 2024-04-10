@@ -116,6 +116,33 @@ namespace UIE
 				// Member variables
 				Edge mEdge;
 			};
+
+			inline bool operator==(const Path& u, const Path& v)
+			{
+				if (u.valid != v.valid)
+					return false;
+
+				if (u.sData.point != v.sData.point)
+					return false;
+				if (u.rData.point != v.rData.point)
+					return false;
+				
+				if (u.bA != v.bA)
+					return false;
+				if (u.mA != v.mA)
+					return false;
+				if (u.zA != v.zA)
+					return false;
+				if (u.phi != v.phi)
+					return false;
+
+				if (u.wData.t != v.wData.t)
+					return false;
+				if (u.wData.z != v.wData.z)
+					return false;
+				
+				return true;
+			}
 		}
 	}
 }

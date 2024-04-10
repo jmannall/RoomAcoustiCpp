@@ -208,21 +208,6 @@ namespace UIE
 			std::vector<std::string> keys;
 			std::vector<VirtualSourceData> newVSources;
 
-			//int j = 0;
-			//for (auto it = oldData.begin(); it != oldData.end(); it++, j++)
-			//{
-			//	auto out = data.find(it->first);
-			//	if (out == data.end()) // case: old vSource
-			//	{
-			//		it->second.Invisible();
-			//		bool remove = UpdateVirtualSource(it->second, newVSources);
-			//		if (remove)
-			//		{
-			//			keys.push_back(it->first);
-			//		}
-			//	}
-			//}
-
 			for (auto& oData : oldData)
 			{
 				auto out = data.find(oData.first);
@@ -239,17 +224,6 @@ namespace UIE
 
 			for (auto key : keys)
 				oldData.erase(key);
-
-			// new or existing vSources
-//			for (auto it = data.begin(); it != data.end(); it++)
-//			{
-//				UpdateVirtualSource(it->second, newVSources);	// newVSources are new placeholders in the ISM tree
-//				oldData.insert_or_assign(it->first, it->second);
-//
-//#ifdef DEBUG_VIRTUAL_SOURCE
-//	Debug::Log("vSource: " + it->first, Colour::Yellow);
-//#endif
-//			}
 
 			for (auto& in : data)
 			{

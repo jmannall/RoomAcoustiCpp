@@ -19,14 +19,14 @@ namespace UIE
 	namespace DSP
 	{
 		GraphicEQ::GraphicEQ(const Coefficients& fc, const Real& Q, const int& sampleRate) : numFilters(fc.Length()), lowShelf(fc[0], Q, sampleRate), highShelf(fc[numFilters - 1], Q, sampleRate),
-			targetGain(fc.Length(), 1.0), currentGain(fc.Length(), 1.0), dbGain(fc.Length()), inputGain(fc.Length()), mat(fc.Length(), fc.Length()), valid(false)
+			dbGain(fc.Length()), inputGain(fc.Length()), targetGain(fc.Length() + 1), currentGain(fc.Length() + 1), lastInput(fc.Length()), mat(fc.Length(), fc.Length()), equal(false), valid(false)
 		{
 			InitFilters(fc, Q, sampleRate);
 			InitMatrix(fc);
 		}
 
 		GraphicEQ::GraphicEQ(const Coefficients& gain, const Coefficients& fc, const Real& Q, const int& sampleRate) : numFilters(fc.Length()), lowShelf(fc[0], Q, sampleRate), highShelf(fc[numFilters - 1], Q, sampleRate),
-			targetGain(fc.Length()), currentGain(fc.Length()), dbGain(fc.Length()), inputGain(fc.Length()), mat(fc.Length(), fc.Length()), valid(false)
+			dbGain(fc.Length()), inputGain(fc.Length()), targetGain(fc.Length() + 1), currentGain(fc.Length() + 1), lastInput(fc.Length()), mat(fc.Length(), fc.Length()), equal(false), valid(false)
 		{
 			InitFilters(fc, Q, sampleRate);
 			InitMatrix(fc);
@@ -34,11 +34,6 @@ namespace UIE
 
 		void GraphicEQ::InitFilters(const Coefficients& fc, const Real& Q, const int& sampleRate)
 		{
-			/*Real shelfFc = fc[0] * sqrt(fc[numFilters - 1] / fc[0]);
-			lowShelf = PeakLowShelf(shelfFc, Q, sampleRate);
-			highShelf = PeakHighShelf(shelfFc, Q, sampleRate);*/
-			/*for (int i = 1; i < numFilters - 1; i++)
-				peakingFilters.push_back(PeakingFilter(fc[i], Q, sampleRate));*/
 			for (int i = 0; i < numFilters; i++)
 				peakingFilters.push_back(PeakingFilter(fc[i], Q, sampleRate));
 		}
@@ -48,7 +43,6 @@ namespace UIE
 			auto idxL = std::lower_bound(thirdOctBands.begin(), thirdOctBands.end(), fc[0]);
 			auto idxH = std::upper_bound(thirdOctBands.begin(), thirdOctBands.end(), fc[numFilters - 1]);
 
-			// for (int i = 0; i < 4; i++)
 			for (int i = 0; i < 1; i++)
 			{
 				if (idxL != thirdOctBands.begin())
@@ -78,21 +72,6 @@ namespace UIE
 			Real pdb = 6.0;
 			Real p = pow(10.0, pdb / 20.0);
 
-			/*lowShelf.UpdateGain(p);
-			std::vector<Real> out = lowShelf.GetFrequencyResponse(f);
-			lowShelf.UpdateGain(1.0);
-
-			for (int i = 0; i < out.size(); i++)
-				mat.IncreaseEntry(out[i] / counter[fidx[i]], 0, fidx[i]);
-
-			highShelf.UpdateGain(p);
-			out = highShelf.GetFrequencyResponse(f);
-			highShelf.UpdateGain(1.0);
-
-			for (int i = 0; i < out.size(); i++)
-				mat.IncreaseEntry(out[i] / counter[fidx[i]], numFilters - 1, fidx[i]);*/
-
-			// int j = 1;
 			std::vector<Real> out = std::vector<Real>(f.size(), 0.0);
 			int j = 0;
 			for (PeakingFilter& filter : peakingFilters)
@@ -110,58 +89,66 @@ namespace UIE
 			mat *= pdb;
 		}
 
-		void GraphicEQ::InitParameters(const Coefficients& g)
+		void GraphicEQ::InitParameters(const Coefficients& gain)
 		{
-			currentGain = g;
-			targetGain = g;
+			SetGain(gain);
+			currentGain = targetGain;
+			equal = true;
 			UpdateParameters();
 		}
 
-		void GraphicEQ::UpdateParameters()
+		void GraphicEQ::SetGain(const Coefficients& gain)
 		{
-			if (currentGain == 0)
-				valid = false;
+			if (gain == lastInput)
+				return;
+
+			lastInput = gain;
+			if (gain == 0)
+			{
+				inputGain.Reset();
+				targetGain[0] = 0;
+			}
 			else
-				valid = true;
-			
-			if (valid)
 			{
 				// when dB is used here. Factors of 20 are cancelled out.
 				for (int i = 0; i < numFilters; i++)
-					dbGain.AddEntry(std::max(currentGain[i], EPS), i); // Prevent log10(0)
+					dbGain.AddEntry(std::max(gain[i], EPS), i); // Prevent log10(0)
 
 				dbGain.Log10();
 				Real meandBGain = dbGain.Sum() / dbGain.Cols();
-				mGain = Pow10(meandBGain); // 10 ^ mean(dbGain);
+				targetGain[0] = Pow10(meandBGain); // 10 ^ mean(dbGain);
 				dbGain -= meandBGain; // dbGain - mean(dbGain);
 
 				Mulitply(inputGain, dbGain, mat);
 				inputGain.Pow10();
-
-
-				//lowShelf.UpdateGain(inputGain.GetEntry(0));
-				//highShelf.UpdateGain(inputGain.GetEntry(numFilters - 1));
-
-				// int i = 1;
-				int i = 0;
-				for (PeakingFilter& filter : peakingFilters)
-				{
-					filter.UpdateGain(inputGain.GetEntry(i));
-					i++;
-				}
 			}
+			for (int i = 0; i < numFilters; i++)
+				targetGain[i + 1] = inputGain.GetEntry(i);
+		}
+
+		void GraphicEQ::UpdateParameters()
+		{
+			int i = 1;
+			for (PeakingFilter& filter : peakingFilters)
+			{
+				filter.UpdateGain(currentGain[i]);
+				i++;
+			}
+
+			if (currentGain[0] == 0)
+				valid = false;
+			else
+				valid = true;
 		}
 
 		Real GraphicEQ::GetOutput(const Real& input)
 		{
 			if (valid)
 			{
-				//out = lowShelf.GetOutput(input);
 				out = input;
 				for (PeakingFilter& filter : peakingFilters)
 					out = filter.GetOutput(out);
-				//out = highShelf.GetOutput(out);
-				out *= mGain;
+				out *= currentGain[0];
 				return out;
 			}
 			else
@@ -170,8 +157,16 @@ namespace UIE
 
 		void GraphicEQ::ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const int numFrames, const Real lerpFactor)
 		{
-			if (currentGain == targetGain)
+			if (equal)
 			{
+				for (int i = 0; i < numFrames; i++)
+					outBuffer[i] = GetOutput(inBuffer[i]);
+			}
+			else if (Equals(currentGain, targetGain))
+			{
+				currentGain = targetGain;
+				equal = true;
+				UpdateParameters();
 				for (int i = 0; i < numFrames; i++)
 					outBuffer[i] = GetOutput(inBuffer[i]);
 			}

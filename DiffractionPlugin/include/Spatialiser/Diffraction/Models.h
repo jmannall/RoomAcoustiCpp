@@ -324,6 +324,7 @@ namespace UIE
 				Real sampleOneVec[4];
 
 				Path* mPath;
+				Path lastPath;
 				std::mutex* m; // Protects currentIr and targetIr
 			};
 		}

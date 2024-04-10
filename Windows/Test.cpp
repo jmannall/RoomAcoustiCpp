@@ -24,6 +24,10 @@
 #include "DSP/ParametricEQ.h"
 #include "DSP/GraphicEQ.h"
 
+#include <iostream>
+#include <chrono>
+#include "omp.h"
+
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -472,6 +476,82 @@ namespace UIE
 			Coefficients T60 = Coefficients(5, 1.0);
 			Channel channel = Channel(t, T60, config);
 		}
+
+		TEST_METHOD(Parellise)
+		{
+			Config config;
+			Real t = 0.1;
+			Coefficients T60 = Coefficients(5, 1.0);
+			Channel channel = Channel(t, T60, config);
+
+			int a = 12;
+			rowvec y1 = rowvec(a);
+			rowvec y2 = rowvec(a);
+
+			rowvec x = rowvec(a);
+			std::vector<Real> data = std::vector<Real>(a, 1.0);
+
+			std::ofstream out("RunTime.txt");
+			std::streambuf* coutbuf = std::cout.rdbuf(); //save old buf
+			std::cout.rdbuf(out.rdbuf()); //redirect std::cout to out.txt!
+
+			ScopedTimer timer;
+
+
+			std::default_random_engine gen(200);
+			std::uniform_real_distribution<Real> distribution(-1.0, 1.0);
+			for (int i = 0; i < a; i++)
+			{
+				x.AddEntry(distribution(gen), i);
+			}
+
+			int repeats = 2048;
+			std::vector<Channel> mChannels = std::vector<Channel>(a, Channel(t, T60, config));
+			int i = 0;
+			timer.Start();
+
+			for (int k = 0; k < repeats; k++)
+			{
+				i = 0;
+				for (auto& channel : mChannels)
+				{
+					y1.AddEntry(channel.GetOutput(x.GetEntry(i) + data[i]), i);
+					i++;
+				}
+				for (int i = 0; i < a; i++)
+				{
+					x.AddEntry(distribution(gen), i);
+				}
+			}
+
+			timer.Stop("Serial");
+			timer.Start();
+
+			for (int k = 0; k < repeats; k++)
+			{
+				i = 0;
+#pragma omp parallel for
+
+				for (auto& channel : mChannels)
+				{
+					y2.AddEntry(channel.GetOutput(x.GetEntry(i) + data[i]), i);
+					i++;
+				}
+				for (int i = 0; i < a; i++)
+				{
+					x.AddEntry(distribution(gen), i);
+				}
+			}
+			timer.Stop("Parrallel");
+
+
+			std::cout.rdbuf(coutbuf); //reset to standard output again
+
+			/*for (int i = 0; i < a; i++)
+				Assert::AreEqual(y1.GetEntry(i), y2.GetEntry(i), L"Mismatch results");*/
+
+		}
+
 	};
 
 	//////////////////// Matrix Tests ////////////////////
@@ -521,6 +601,76 @@ namespace UIE
 					Assert::AreEqual(0.0, test, L"Error: Reset");
 				}
 			}
+		}
+
+		TEST_METHOD(Parellise)
+		{
+			const int a = 12;
+			const int b = 12;
+
+			matrix mat = matrix(a, b);
+			rowvec x1 = rowvec(a);
+			rowvec x2 = rowvec(a);
+			rowvec y = rowvec(a);
+
+			std::default_random_engine gen(50);
+			std::uniform_real_distribution<Real> distribution(-1.0, 1.0);
+			for (int i = 0; i < a; i++)
+			{
+				y.AddEntry(distribution(gen), i);
+			}
+
+			for (int i = 0; i < a; i++)
+			{
+				for (int j = 0; j < b; j++)
+				{
+					mat.AddEntry(distribution(gen), i, j);
+				}
+			}
+
+			std::ofstream out("RunTime4.txt");
+			std::streambuf *coutbuf = std::cout.rdbuf(); //save old buf
+			std::cout.rdbuf(out.rdbuf()); //redirect std::cout to out.txt!
+
+			ScopedTimer timer;
+			x1.Reset();
+			timer.Start();
+
+			for (int k = 0; k < mat.Rows(); ++k)
+			{
+				for (int j = 0; j < mat.Cols(); ++j)
+				{
+					x1.IncreaseEntry(y.GetEntry(k) * mat.GetEntry(k, j), j);
+				}
+			}
+
+			timer.Stop("Serial");
+
+			int maxThreads = omp_get_max_threads();
+
+			cout << "Max threads: " << maxThreads << "\n";
+
+			for (int i = 1; i <= maxThreads; i++)
+			{
+				x2.Reset();
+				timer.Start();
+
+				omp_set_num_threads(i);
+#pragma omp parallel for
+				for (int k = 0; k < mat.Rows(); ++k)
+				{
+					for (int j = 0; j < mat.Cols(); ++j)
+					{
+						x2.IncreaseEntry(y.GetEntry(k) * mat.GetEntry(k, j), j);
+					}
+				}
+
+				timer.Stop("Parallel " + IntToStr(i));
+			}
+			std::cout.rdbuf(coutbuf); //reset to standard output again
+
+			for (int i = 0; i < a; i++)
+				Assert::AreEqual(x1.GetEntry(i), x2.GetEntry(i), L"Mismatch results");
 		}
 
 		TEST_METHOD(Multiply)
@@ -687,6 +837,25 @@ namespace UIE
 				Assert::AreEqual(out[i], filter.GetOutput(in[i]), EPS, L"Wrong output");
 		}
 
+		TEST_METHOD(Denormals)
+		{
+			Real current = MIN_VALUE;
+			Real target = 0.0;
+			Real lerpFactor = 0.5;
+
+			FlushDenormals();
+			for (int i = 0; i < 10; i++)
+				Lerp(current, target, lerpFactor);
+			NoFlushDenormals();
+			Assert::AreEqual(0.0, current, L"DenormalsFlushed");
+
+			current = MIN_VALUE;
+			for (int i = 0; i < 10; i++)
+				Lerp(current, target, lerpFactor);
+
+			Assert::AreNotEqual(0.0, current, L"NoDenormalsFlushed");
+		}
+
 		TEST_METHOD(InterpolateReal)
 		{
 			Real current = 1.0;
@@ -775,8 +944,7 @@ namespace UIE
 			GraphicEQ eq = GraphicEQ(fc, Q, fs);
 
 			Coefficients gain = Coefficients({ 1.0 - 0.06, 1.0 - 0.15, 1.0 - 0.4, 1.0 - 0.4, 1.0 - 0.6 });
-			eq.SetGain(gain);
-			eq.UpdateParameters();
+			eq.InitParameters(gain);
 		}
 	};
 #pragma optimize("", on)

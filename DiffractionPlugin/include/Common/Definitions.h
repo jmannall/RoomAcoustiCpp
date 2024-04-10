@@ -27,7 +27,7 @@ namespace UIE
 
 		const constexpr Real INV_SPEED_OF_SOUND = 1.0 / SPEED_OF_SOUND;
 
-		const constexpr Real EPS = 0.000001;
+		const constexpr Real EPS = 0.000001;	// Tolerance for floating point comparisons
 		const constexpr Real PI_1 = 3.141592653589793238462643383279502884197169399375105820974944;
 		const constexpr Real PI_2 = 2.0 * PI_1;
 		const constexpr Real PI_4 = 4.0 * PI_1;

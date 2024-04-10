@@ -522,7 +522,7 @@ namespace UIE
 
 			//////////////////// BTM class ////////////////////
 
-			BTM::BTM(Path* path, int fs) : mPath(path), firFilter(currentIr)
+			BTM::BTM(Path* path, int fs) : mPath(path), firFilter(currentIr), lastPath()
 			{
 				m = new std::mutex();
 				samplesPerMetre = fs * INV_SPEED_OF_SOUND;
@@ -531,6 +531,11 @@ namespace UIE
 
 			void BTM::UpdateParameters()
 			{
+				if (lastPath == *mPath)
+					return;
+
+				lastPath = *mPath;
+
 				if (mPath->valid)
 				{
 					CalcBTM();
@@ -875,12 +880,14 @@ namespace UIE
 #ifdef PROFILE_AUDIO_THREAD
 					BeginLerp();
 #endif
+					FlushDenormals();
 					for (int i = 0; i < numFrames; i++)
 					{
 						outBuffer[i] = firFilter.GetOutput(inBuffer[i]);
 						Lerp(currentIr, targetIr, lerpFactor);
 						firFilter.SetImpulseResponse(currentIr);
 					}
+					NoFlushDenormals();
 #ifdef PROFILE_AUDIO_THREAD
 					EndLerp();
 #endif
