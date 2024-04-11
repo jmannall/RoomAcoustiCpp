@@ -1,12 +1,14 @@
 /*
+* @class VirtualSource, VirtualsourceData
 *
-*  \VirtualSource class
-*  \Currently can only handle one edge per path/virtual source
+* @brief Declaration of VirtualSource and VirtualsourceData classes
+*
+* @remarks Currently, it can only handle one diffracting edge per path/virtual source
 *
 */
 
-#ifndef Spatialiser_VirtualSource_h
-#define Spatialiser_VirtualSource_h
+#ifndef RoomAcoustiCpp_VirtualSource_h
+#define RoomAcoustiCpp_VirtualSource_h
 
 // C++ headers
 #include <vector>
@@ -15,7 +17,6 @@
 // Common headers
 #include "Common/Vec3.h"
 #include "Common/Matrix.h"
-#include "Common/AudioManager.h"
 
 // Spatialiser headers
 #include "Spatialiser/Wall.h"
@@ -35,7 +36,7 @@
 #include "DSP/GraphicEQ.h"
 
 using namespace Common;
-namespace UIE
+namespace RAC
 {
 	using namespace Common;
 	using namespace Unity;
@@ -70,14 +71,14 @@ namespace UIE
 				}
 				reflection = true;
 			}
-			inline void AddPlaneID(const size_t& id)
+			inline void AddPlaneID(const size_t id)
 			{
 				pathParts.push_back(Part(id, true));
 				order++;
 				reflection = true;
 				key = key + IntToStr(id) + "r";
 			}
-			inline void AddPlaneIDToStart(const size_t& id) // IDs are added in reverse order (from listener to source)
+			inline void AddPlaneIDToStart(const size_t id) // IDs are added in reverse order (from listener to source)
 			{
 				pathParts.insert(pathParts.begin(), Part(id, true));
 				key = IntToStr(id) + "r" + key;
@@ -109,7 +110,7 @@ namespace UIE
 			inline void ResetAbsorption() { mAbsorption.Reset(); }
 
 			// Edge
-			inline void AddEdgeID(const size_t& id, const Diffraction::Path path)
+			inline void AddEdgeID(const size_t id, const Diffraction::Path path)
 			{
 				pathParts.push_back(Part(id, false));
 				order++;
@@ -117,7 +118,7 @@ namespace UIE
 				diffraction = true;
 				key = key + IntToStr(id) + "d";
 			}
-			inline void AddEdgeIDToStart(const size_t& id, const Diffraction::Path path)
+			inline void AddEdgeIDToStart(const size_t id, const Diffraction::Path path)
 			{
 				pathParts.insert(pathParts.begin(), Part(id, false));
 				order++;
@@ -150,7 +151,7 @@ namespace UIE
 			void SetRTransform(const vec3& vReceiverPosition, const vec3& vEdgeSourcePosition);
 			
 			vec3 GetRPosition() const { return mRPositions.back(); }
-			vec3 GetRPosition(int i) const;
+			vec3 GetRPosition(const int i) const;
 			inline std::vector<vec3> GetRPositions() const { return mRPositions; };
 
 			// Diffraction
@@ -161,7 +162,7 @@ namespace UIE
 			inline bool GetRValid() const { return mDiffractionPath.rValid; }
 
 			// Visibility and Validity
-			inline void Visible(const bool& _feedsFDN) { visible = true; feedsFDN = _feedsFDN; }
+			inline void Visible(const bool fdn) { visible = true; feedsFDN = fdn; }
 			inline void Invisible() { visible = false; }
 			inline void Valid() { valid = true; }
 			inline void Invalid() { valid = false; }
@@ -227,8 +228,8 @@ namespace UIE
 			}
 			inline int GetFDNChannel() const { return mFDNChannel; }
 
-			void UpdateSpatialisationMode(const HRTFMode& mode);
-			void UpdateSpatialisationMode(const SPATConfig& config);
+			void UpdateSpatialisationMode(const HRTFMode mode);
+			void UpdateSpatialisationMode(const SPATConfig config);
 
 			// Updates
 			bool UpdateVirtualSource(const VirtualSourceData& data, int& fdnChannel);

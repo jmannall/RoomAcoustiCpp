@@ -1,7 +1,9 @@
 /*
+* @class VirtualSource, VirtualsourceData
 *
-*  \VirtualSource class
-*  \Currently can only handle one edge per path/virtual source
+* @brief Declaration of VirtualSource and VirtualsourceData classes
+* 
+* @remarks Currently, it can only handle one diffracting edge per path/virtual source
 *
 */
 
@@ -17,7 +19,7 @@
 #include "DSP/Interpolate.h"
 
 using namespace Common;
-namespace UIE
+namespace RAC
 {
 	using namespace Common;
 	using namespace DSP;
@@ -37,7 +39,7 @@ namespace UIE
 			return ret;
 		}
 
-		vec3 VirtualSourceData::GetPosition(int i) const
+		vec3 VirtualSourceData::GetPosition(const int i) const
 		{
 			assert(i < order);
 			return mPositions[i];
@@ -67,7 +69,7 @@ namespace UIE
 		}
 
 
-		vec3 VirtualSourceData::GetRPosition(int i) const
+		vec3 VirtualSourceData::GetRPosition(const int i) const
 		{
 			assert(i < order);
 			return mRPositions[i];
@@ -187,7 +189,7 @@ namespace UIE
 			return false;
 		}
 
-		void VirtualSource::UpdateSpatialisationMode(const HRTFMode& mode)
+		void VirtualSource::UpdateSpatialisationMode(const HRTFMode mode)
 		{
 			lock_guard<mutex> lock(tuneInMutex);
 			switch (mode)
@@ -215,7 +217,7 @@ namespace UIE
 			}
 		}
 
-		void VirtualSource::UpdateSpatialisationMode(const SPATConfig& config)
+		void VirtualSource::UpdateSpatialisationMode(const SPATConfig config)
 		{
 			mConfig.spatConfig = config;
 			if (isInitialised)

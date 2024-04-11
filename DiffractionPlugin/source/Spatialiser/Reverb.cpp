@@ -24,7 +24,7 @@
 #include "Common/SphericalGeometries.h"
 
 using namespace Common;
-namespace UIE
+namespace RAC
 {
 	using namespace Unity;
 	using namespace DSP;
@@ -87,7 +87,7 @@ namespace UIE
 			
 		}
 
-		void ReverbSource::UpdateSpatialisationMode(const HRTFMode& mode)
+		void ReverbSource::UpdateSpatialisationMode(const HRTFMode mode)
 		{
 			switch (mode)
 			{
@@ -219,7 +219,7 @@ namespace UIE
 			InitSources();
 		}
 
-		void Reverb::UpdateSpatialisationMode(const HRTFMode& mode)
+		void Reverb::UpdateSpatialisationMode(const HRTFMode mode)
 		{
 			lock_guard<mutex> lock(tuneInMutex);
 			for (ReverbSource& source : mReverbSources)
@@ -306,11 +306,11 @@ namespace UIE
 
 #ifdef PROFILE_AUDIO_THREAD
 					BeginFDN();
-#endif
+#endif					
 					FlushDenormals();
 					if (mCurrentGain > mTargetGain + EPS || mCurrentGain < mTargetGain - EPS)
 					{
-						for (int i = 0; i < data.Rows(); i++)
+						for (int i = 0; i < mConfig.numFrames; i++)
 						{
 							mFDN.ProcessOutput(data.GetRow(i), mCurrentGain);
 							int j = 0;
@@ -324,7 +324,7 @@ namespace UIE
 					}
 					else
 					{
-						for (int i = 0; i < data.Rows(); i++)
+						for (int i = 0; i < mConfig.numFrames; i++)
 						{
 							mFDN.ProcessOutput(data.GetRow(i), mTargetGain);
 							int j = 0;

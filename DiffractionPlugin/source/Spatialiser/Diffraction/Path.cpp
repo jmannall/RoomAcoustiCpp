@@ -10,7 +10,7 @@
 // Spatialiser headers
 #include "Spatialiser/Diffraction/Path.h"
 
-namespace UIE
+namespace RAC
 {
 	namespace Spatialiser
 	{

@@ -4,8 +4,8 @@
 *
 */
 
-#ifndef Spatialiser_Diffraction_Models_h
-#define Spatialiser_Diffraction_Models_h
+#ifndef RoomAcoustiCpp_Diffraction_Models_h
+#define RoomAcoustiCpp_Diffraction_Models_h
 
 // C++ headers
 #include <mutex>
@@ -22,7 +22,6 @@
 // Common headers
 #include "Common/Types.h"
 #include "Common/Complex.h"
-#include "Common/AudioManager.h"
 
 // Spatialiser headers
 #include "Spatialiser/Diffraction/Path.h"
@@ -32,7 +31,7 @@
 #include "DSP/IIRFilter.h"
 #include "DSP/LinkwitzRileyFilter.h"
 
-namespace UIE
+namespace RAC
 {
 	using namespace Common;
 	using namespace DSP;

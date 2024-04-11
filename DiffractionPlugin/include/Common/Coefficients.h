@@ -1,11 +1,12 @@
 /*
+* @class Coefficients, Absorption
 *
-*  \FrequencyDependence class
+* @brief Declaration of Coefficient and Absorption class
 *
 */
 
-#ifndef Common_FrequencyDependence_h
-#define Common_FrequencyDependence_h
+#ifndef Common_Coefficients_h
+#define Common_Coefficients_h
 
 // C++ headers
 #include <assert.h>
@@ -16,7 +17,7 @@
 #include "Common/Types.h"
 #include "Common/Definitions.h"
 
-namespace UIE
+namespace RAC
 {
 	namespace Common
 	{
@@ -25,185 +26,185 @@ namespace UIE
 		class Coefficients
 		{
 		public:
-			Coefficients(const size_t len) : coefficients(len, 0.0) {}
-			Coefficients(const size_t len, const Real in) : coefficients(len, in) {}
-			Coefficients(const std::vector<Real>& c) : coefficients(c) {}
+			Coefficients(const size_t len) : mCoefficients(len, 0.0) {}
+			Coefficients(const size_t len, const Real in) : mCoefficients(len, in) {}
+			Coefficients(const std::vector<Real>& coefficients) : mCoefficients(coefficients) {}
 			~Coefficients() {};
 
-			inline void Update(std::vector<Real> c) { coefficients = c; }
-			inline size_t Length() const { return coefficients.size(); }
+			inline void Update(const std::vector<Real>& coefficients) { mCoefficients = coefficients; }
+			inline size_t Length() const { return mCoefficients.size(); }
 
 			inline Coefficients Log()
 			{
-				for (int i = 0; i < coefficients.size(); i++)
-					coefficients[i] = log(coefficients[i]);
+				for (int i = 0; i < mCoefficients.size(); i++)
+					mCoefficients[i] = log(mCoefficients[i]);
 				return *this;
 			}
 
 			inline Coefficients Pow(Real exp)
 			{
-				for (int i = 0; i < coefficients.size(); i++)
-					coefficients[i] = pow(exp, coefficients[i]);
+				for (int i = 0; i < mCoefficients.size(); i++)
+					mCoefficients[i] = pow(exp, mCoefficients[i]);
 				return *this;
 			}
 
 			// Operators
-			inline Real& operator[](const int& i) { return coefficients[i]; };
-			inline Real operator[](const int& i) const { return coefficients[i]; };
+			inline Real& operator[](const int i) { return mCoefficients[i]; };
+			inline Real operator[](const int i) const { return mCoefficients[i]; };
 
 			// Operators
 			inline Coefficients& operator-()
 			{
-				for (int i = 0; i < coefficients.size(); i++)
-					coefficients[i] = -coefficients[i];
+				for (int i = 0; i < mCoefficients.size(); i++)
+					mCoefficients[i] = -mCoefficients[i];
 				return *this;
 			}
 
 			inline Coefficients& operator+=(const Coefficients& v)
 			{
-				assert(coefficients.size() == v.Length());
-				for (int i = 0; i < coefficients.size(); i++)
-					coefficients[i] += v[i];
+				assert(mCoefficients.size() == v.Length());
+				for (int i = 0; i < mCoefficients.size(); i++)
+					mCoefficients[i] += v[i];
 				return *this;
 			}
 
 			inline Coefficients& operator-=(const Coefficients& v)
 			{
-				assert(coefficients.size() == v.Length());
-				for (int i = 0; i < coefficients.size(); i++)
-					coefficients[i] -= v[i];
+				assert(mCoefficients.size() == v.Length());
+				for (int i = 0; i < mCoefficients.size(); i++)
+					mCoefficients[i] -= v[i];
 				return *this;
 			}
 
 			inline Coefficients& operator*=(const Coefficients& v)
 			{
-				assert(coefficients.size() == v.Length());
-				for (int i = 0; i < coefficients.size(); i++)
-					coefficients[i] *= v[i];
+				assert(mCoefficients.size() == v.Length());
+				for (int i = 0; i < mCoefficients.size(); i++)
+					mCoefficients[i] *= v[i];
 				return *this;
 			}
 
 			inline Coefficients& operator/=(const Coefficients& v)
 			{
-				assert(coefficients.size() == v.Length());
-				for (int i = 0; i < coefficients.size(); i++)
-					coefficients[i] /= v[i];
+				assert(mCoefficients.size() == v.Length());
+				for (int i = 0; i < mCoefficients.size(); i++)
+					mCoefficients[i] /= v[i];
 				return *this;
 			}
 
-			inline Coefficients& operator+=(const Real& a)
+			inline Coefficients& operator+=(const Real a)
 			{
-				for (int i = 0; i < coefficients.size(); i++)
-					coefficients[i] += a;
+				for (int i = 0; i < mCoefficients.size(); i++)
+					mCoefficients[i] += a;
 				return *this;
 			}
 
-			inline Coefficients& operator*=(const Real& a)
+			inline Coefficients& operator*=(const Real a)
 			{
-				for (int i = 0; i < coefficients.size(); i++)
-					coefficients[i] *= a;
+				for (int i = 0; i < mCoefficients.size(); i++)
+					mCoefficients[i] *= a;
 				return *this;
 			}
 
-			inline Coefficients& operator/=(const Real& a)
+			inline Coefficients& operator/=(const Real a)
 			{
 				return *this *= (1 / a);
 			}
 
-			inline bool operator<(const Real& a) const
+			inline bool operator<(const Real a) const
 			{
 				bool valid = true;
 				int i = 0;
-				while (valid && i < coefficients.size())
+				while (valid && i < mCoefficients.size())
 				{
-					valid = coefficients[i] < a;
+					valid = mCoefficients[i] < a;
 					i++;
 				}
 				return valid;
 			}
 
-			inline bool operator>(const Real& a) const
+			inline bool operator>(const Real a) const
 			{
 				bool valid = true;
 				int i = 0;
-				while (valid&& i < coefficients.size())
+				while (valid&& i < mCoefficients.size())
 				{
-					valid = coefficients[i] > a;
+					valid = mCoefficients[i] > a;
 					i++;
 				}
 				return valid;
 			}
 
 		protected:
-			std::vector<Real> coefficients;
+			std::vector<Real> mCoefficients;
 		};
 
-		inline bool Equals(const Coefficients& a, const Coefficients& b)
+		inline bool Equals(const Coefficients& u, const Coefficients& v)
 		{
-			if (a.Length() != b.Length())
+			if (u.Length() != v.Length())
 				return false;
-			for (int i = 0; i < a.Length(); i++)
-				if (a[i] > b[i] + EPS || a[i] < b[i] - EPS)
+			for (int i = 0; i < u.Length(); i++)
+				if (u[i] > v[i] + EPS || u[i] < v[i] - EPS)
 					return false;
 			return true;
 		}
 
-		inline Coefficients operator+(Coefficients a, const Coefficients& b) { return a += b; }
-		inline Coefficients operator-(Coefficients a, const Coefficients& b) { return a -= b; }
-		inline Coefficients operator*(Coefficients a, const Coefficients& b) { return a *= b; }
-		inline Coefficients operator/(Coefficients a, const Coefficients& b) { return a /= b; }
+		inline Coefficients operator+(Coefficients u, const Coefficients& v) { return u += v; }
+		inline Coefficients operator-(Coefficients u, const Coefficients& v) { return u -= v; }
+		inline Coefficients operator*(Coefficients u, const Coefficients& v) { return u *= v; }
+		inline Coefficients operator/(Coefficients u, const Coefficients& v) { return u /= v; }
 
-		inline Coefficients operator+(Coefficients a, const Real& b) { return a += b; }
-		inline Coefficients operator-(Coefficients a, const Real& b) { return a += (-b); }
-		inline Coefficients operator-(const Real& b, Coefficients a) { return -a += b; }
-		inline Coefficients operator*(Coefficients a, const Real& b) { return a *= b; }
-		inline Coefficients operator/(Coefficients a, const Real& b) { return a *= (1.0 / b); }
-		inline Coefficients operator/(const Real& b, const Coefficients& a) { Coefficients c = Coefficients(a.Length(), b);  return c /= a; }
+		inline Coefficients operator+(Coefficients v, const Real a) { return v += a; }
+		inline Coefficients operator-(Coefficients v, const Real a) { return v += (-a); }
+		inline Coefficients operator-(const Real a, Coefficients v) { return -v += a; }
+		inline Coefficients operator*(Coefficients v, const Real a) { return v *= a; }
+		inline Coefficients operator/(Coefficients v, const Real a) { return v *= (1.0 / a); }
+		inline Coefficients operator/(const Real a, const Coefficients& v) { Coefficients u = Coefficients(v.Length(), a);  return u /= v; }
 
-		inline bool operator==(const Coefficients& a, const Real& b)
+		inline bool operator==(const Coefficients& v, const Real a)
 		{
-			for (int i = 0; i < a.Length(); i++)
-				if (a[i] != b)
+			for (int i = 0; i < v.Length(); i++)
+				if (v[i] != a)
 					return false;
 			return true;
 		}
 
-		inline bool operator!=(const Coefficients& a, const Real& b)
+		inline bool operator!=(const Coefficients& v, const Real a)
 		{
-			return !(a == b);
+			return !(v == a);
 		}
 
-		inline bool operator==(const Coefficients& a, const Coefficients& b)
+		inline bool operator==(const Coefficients& u, const Coefficients& v)
 		{
-			if (a.Length() != b.Length())
+			if (u.Length() != v.Length())
 				return false;
-			for (int i = 0; i < a.Length(); i++)
-				if (a[i] != b[i])
+			for (int i = 0; i < u.Length(); i++)
+				if (u[i] != v[i])
 					return false;
 			return true;
 		}
 
-		inline bool operator!=(const Coefficients& a, const Coefficients& b)
+		inline bool operator!=(const Coefficients& u, const Coefficients& v)
 		{
-			return !(a == b);
+			return !(u == v);
 		}
 
-		inline bool operator>(const Coefficients& a, const Coefficients& b)
+		inline bool operator>(const Coefficients& u, const Coefficients& v)
 		{
-			if (a.Length() != b.Length())
+			if (u.Length() != v.Length())
 				return false;
-			for (int i = 0; i < a.Length(); i++)
-				if (a[i] <= b[i])
+			for (int i = 0; i < u.Length(); i++)
+				if (u[i] <= v[i])
 					return false;
 			return true;
 		}
 
-		inline bool operator<(const Coefficients& a, const Coefficients& b)
+		inline bool operator<(const Coefficients& u, const Coefficients& v)
 		{
-			if (a.Length() != b.Length())
+			if (u.Length() != v.Length())
 				return false;
-			for (int i = 0; i < a.Length(); i++)
-				if (a[i] >= b[i])
+			for (int i = 0; i < u.Length(); i++)
+				if (u[i] >= v[i])
 					return false;
 			return true;
 		}
@@ -215,124 +216,124 @@ namespace UIE
 		public:
 
 			// Load and Destroy
-			Absorption() : Coefficients(1, 1.0), area(0.0) {}
-			Absorption(size_t len) : Coefficients(len, 1.0), area(0.0) {}
-			Absorption(size_t len, const Real& x) : Coefficients(len, x), area(0.0) {}
-			Absorption(const std::vector<Real>& c) : Coefficients(c.size()), area(0.0)
+			Absorption() : Coefficients(1, 1.0), mArea(0.0) {}
+			Absorption(size_t len) : Coefficients(len, 1.0), mArea(0.0) {}
+			Absorption(size_t len, const Real x) : Coefficients(len, x), mArea(0.0) {}
+			Absorption(const std::vector<Real>& coefficients) : Coefficients(coefficients.size()), mArea(0.0)
 			{
-				for (int i = 0; i < c.size(); i++)
-					coefficients[i] = sqrt(1.0 - c[i]);
+				for (int i = 0; i < mCoefficients.size(); i++)
+					mCoefficients[i] = sqrt(1.0 - coefficients[i]);
 			}
-			Absorption(const std::vector<Real>& c, Real _area) : Coefficients(c), area(_area) {}
+			Absorption(const std::vector<Real>& coefficients, Real area) : Coefficients(coefficients), mArea(area) {}
 			~Absorption() {}
 
-			void Reset() { std::fill(coefficients.begin(), coefficients.end(), 1.0); }
+			void Reset() { std::fill(mCoefficients.begin(), mCoefficients.end(), 1.0); }
 
 			// Operators
 			inline Absorption& operator-()
 			{
-				for (int i = 0; i < coefficients.size(); i++)
-					coefficients[i] = -coefficients[i];
+				for (int i = 0; i < mCoefficients.size(); i++)
+					mCoefficients[i] = -mCoefficients[i];
 				return *this;
 			}
 
 			inline Absorption& operator+=(const Absorption& v)
 			{
-				assert(coefficients.size() == v.Length());
-				for (int i = 0; i < coefficients.size(); i++)
-					coefficients[i] += v[i];
-				area += v.area;
+				assert(mCoefficients.size() == v.Length());
+				for (int i = 0; i < mCoefficients.size(); i++)
+					mCoefficients[i] += v[i];
+				mArea += v.mArea;
 				return *this;
 			}
 
 			inline Absorption& operator-=(const Absorption& v)
 			{
-				assert(coefficients.size() == v.Length());
-				for (int i = 0; i < coefficients.size(); i++)
-					coefficients[i] -= v[i];
-				area -= v.area;
+				assert(mCoefficients.size() == v.Length());
+				for (int i = 0; i < mCoefficients.size(); i++)
+					mCoefficients[i] -= v[i];
+				mArea -= v.mArea;
 				return *this;
 			}
 
 			inline Absorption& operator*=(const Absorption& v)
 			{
-				assert(coefficients.size() == v.Length());
-				for (int i = 0; i < coefficients.size(); i++)
-					coefficients[i] *= v[i];
+				assert(mCoefficients.size() == v.Length());
+				for (int i = 0; i < mCoefficients.size(); i++)
+					mCoefficients[i] *= v[i];
 				return *this;
 			}
 
 			inline Absorption& operator/=(const Absorption& v)
 			{
-				assert(coefficients.size() == v.Length());
-				for (int i = 0; i < coefficients.size(); i++)
-					coefficients[i] /= v[i];
+				assert(mCoefficients.size() == v.Length());
+				for (int i = 0; i < mCoefficients.size(); i++)
+					mCoefficients[i] /= v[i];
 				return *this;
 			}
 
-			inline Absorption& operator+=(const Real& a)
+			inline Absorption& operator+=(const Real a)
 			{
-				for (int i = 0; i < coefficients.size(); i++)
-					coefficients[i] += a;
+				for (int i = 0; i < mCoefficients.size(); i++)
+					mCoefficients[i] += a;
 				return *this;
 			}
 
-			inline Absorption& operator-=(const Real& a)
+			inline Absorption& operator-=(const Real a)
 			{
 				return *this += -a;
 			}
 
-			inline Absorption& operator*=(const Real& a)
+			inline Absorption& operator*=(const Real a)
 			{
-				for (int i = 0; i < coefficients.size(); i++)
-					coefficients[i] *= a;
+				for (int i = 0; i < mCoefficients.size(); i++)
+					mCoefficients[i] *= a;
 				return *this;
 			}
 
-			inline Absorption& operator/=(const Real& a)
+			inline Absorption& operator/=(const Real a)
 			{
 				return *this *= (1 / a);
 			}
 
 			// Member variables
-			Real area;
+			Real mArea;
 
 		private:
 		};
 
-		inline Absorption operator+(Absorption a, const Absorption& b) { return a += b; }
-		inline Absorption operator-(Absorption a, const Absorption& b) { return a -= b; }
-		inline Absorption operator*(Absorption a, const Absorption& b) { return a *= b; }
-		inline Absorption operator/(Absorption a, const Absorption& b) { return a /= b; }
+		inline Absorption operator+(Absorption u, const Absorption& v) { return u += v; }
+		inline Absorption operator-(Absorption u, const Absorption& v) { return u -= v; }
+		inline Absorption operator*(Absorption u, const Absorption& v) { return u *= v; }
+		inline Absorption operator/(Absorption u, const Absorption& v) { return u /= v; }
 
-		inline Absorption operator+(Absorption a, const Real& b) { return a += b; }
-		inline Absorption operator-(Absorption a, const Real& b) { return a += (-b); }
-		inline Absorption operator-(const Real& b, Absorption a) { return -a += b; }
-		inline Absorption operator*(Absorption a, const Real& b) { return a *= b; }
-		inline Absorption operator/(Absorption a, const Real& b) { return a /= b; }
+		inline Absorption operator+(Absorption v, const Real a) { return v += a; }
+		inline Absorption operator-(Absorption v, const Real a) { return v += (-a); }
+		inline Absorption operator-(const Real a, Absorption v) { return -v += a; }
+		inline Absorption operator*(Absorption v, const Real a) { return v *= a; }
+		inline Absorption operator/(Absorption v, const Real a) { return v /= a; }
 
-		inline bool operator==(const Absorption& a, const Absorption& b)
+		inline bool operator==(const Absorption& u, const Absorption& v)
 		{
-			if (a.Length() != b.Length())
+			if (u.Length() != v.Length())
 				return false;
-			if (a.area != b.area)
+			if (u.mArea != v.mArea)
 				return false;
-			for (int i = 0; i < a.Length(); i++)
-				if (a[i] != b[i])
+			for (int i = 0; i < u.Length(); i++)
+				if (u[i] != v[i])
 					return false;
 			return true;
 		}
 
-		inline bool operator!=(const Absorption& a, const Absorption& b)
+		inline bool operator!=(const Absorption& u, const Absorption& v)
 		{
-			return !(a == b);
+			return !(u == v);
 		}
 
-		inline Absorption Sqrt(Absorption a)
+		inline Absorption Sqrt(Absorption v)
 		{
-			for (int i = 0; i < a.Length(); i++)
-				a[i] = sqrt(a[i]);
-			return a;
+			for (int i = 0; i < v.Length(); i++)
+				v[i] = sqrt(v[i]);
+			return v;
 		}
 	}
 }

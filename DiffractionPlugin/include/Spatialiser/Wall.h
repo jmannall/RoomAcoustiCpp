@@ -1,11 +1,12 @@
 /*
+* @class Wall, Plane
 *
-*  \Wall class
+* @brief Declaration of Wall and Plane classes
 *
 */
 
-#ifndef Spatialiser_Wall_h
-#define Spatialiser_Wall_h
+#ifndef RoomAcoustiCpp_Wall_h
+#define RoomAcoustiCpp_Wall_h
 
 // C++ headers
 #include <vector>
@@ -20,7 +21,7 @@
 #include "Spatialiser/Edge.h"
 #include "Spatialiser/Types.h"
 
-namespace UIE
+namespace RAC
 {
 	using namespace Common;
 	namespace Spatialiser
@@ -38,8 +39,8 @@ namespace UIE
 			~Wall() {}
 
 			// Edges
-			inline void AddEdge(const size_t& id) { mEdges.push_back(id); std::sort(mEdges.begin(), mEdges.end()); }
-			inline void RemoveEdge(const size_t& id)
+			inline void AddEdge(const size_t id) { mEdges.push_back(id); std::sort(mEdges.begin(), mEdges.end()); }
+			inline void RemoveEdge(const size_t id)
 			{
 				auto it = std::find(mEdges.begin(), mEdges.end(), id);
 				if (it != mEdges.end())
@@ -66,7 +67,7 @@ namespace UIE
 			inline size_t GetPlaneID() const { return mPlaneId; }
 
 			// Setters
-			inline void SetPlaneID(const size_t& id) { mPlaneId = id; }
+			inline void SetPlaneID(const size_t id) { mPlaneId = id; }
 
 			// Geometry
 			inline Real PointWallPosition(const vec3& point) const { return Dot(point, mNormal) - d; }
@@ -76,7 +77,7 @@ namespace UIE
 			// Absorption
 			void Update(const vec3& normal, const Real* vData, size_t numVertices);
 			inline Absorption GetAbsorption() const { return mAbsorption; }
-			inline Real GetArea() const { return mAbsorption.area; }
+			inline Real GetArea() const { return mAbsorption.mArea; }
 
 		private:
 
@@ -107,12 +108,12 @@ namespace UIE
 		{
 		public:
 			Plane() : d(0.0), rValid(false) {}
-			Plane(const size_t& id, const Wall& wall) : d(wall.GetD()), rValid(false), mNormal(wall.GetNormal()) { AddWall(id); }
+			Plane(const size_t id, const Wall& wall) : d(wall.GetD()), rValid(false), mNormal(wall.GetNormal()) { AddWall(id); }
 			~Plane() {}
 
 			// Walls
-			inline void AddWall(const size_t& id) { mWalls.push_back(id); };
-			inline bool RemoveWall(const size_t& id)
+			inline void AddWall(const size_t id) { mWalls.push_back(id); };
+			inline bool RemoveWall(const size_t id)
 			{
 				auto it = std::find(mWalls.begin(), mWalls.end(), id);
 				if (it != mWalls.end())
@@ -127,12 +128,12 @@ namespace UIE
 			inline std::vector<size_t> GetWalls() const { return mWalls; }
 
 			// Setters
-			inline void SetRValid(const bool& valid) { rValid = valid; }
+			inline void SetRValid(const bool valid) { rValid = valid; }
 
 			// Geometry
 			bool IsCoplanar(const Wall& wall) const { return mNormal == wall.GetNormal() && d == wall.GetD(); }
 			Real PointPlanePosition(const vec3& point) const { return Dot(point, mNormal) - d; }
-			bool FindIntersectionPoint(vec3& intersection, const vec3& start, const vec3& end, const Real& k) const;
+			bool FindIntersectionPoint(vec3& intersection, const vec3& start, const vec3& end, const Real k) const;
 			bool LinePlaneObstruction(vec3& intersection, const vec3& start, const vec3& end) const;
 			bool LinePlaneIntersection(vec3& intersection, const vec3& start, const vec3& end) const;
 			bool ReflectPointInPlane(const vec3& point) const;

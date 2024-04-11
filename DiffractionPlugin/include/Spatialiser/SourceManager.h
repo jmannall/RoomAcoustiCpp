@@ -1,11 +1,12 @@
 /*
+* @class SourceManager
 *
-*  \Source manager class
+* @brief Declaration of SourceManager class
 *
 */
 
-#ifndef Spatialiser_SourceManager_h
-#define Spatialiser_SourceManager_h
+#ifndef RoomAcoustiCpp_SourceManager_h
+#define RoomAcoustiCpp_SourceManager_h
 
 // C++ headers
 #include <unordered_map>
@@ -20,7 +21,7 @@
 #include "BinauralSpatializer/Core.h"
 
 using namespace Common;
-namespace UIE
+namespace RAC
 {
 	using namespace Common;
 	namespace Spatialiser
@@ -41,19 +42,19 @@ namespace UIE
 				Reset();
 			};
 
-			void UpdateSpatialisationMode(const SPATConfig& config);
+			void UpdateSpatialisationMode(const SPATConfig config);
 
 			// Sources
 			size_t Init();
 
-			inline void Update(const size_t& id, const vec3& position, const vec4& orientation, Real& distance)
+			inline void Update(const size_t id, const vec3& position, const vec4& orientation, Real& distance)
 			{
 				lock_guard <mutex> lock(updateMutex); // Lock before locate to ensure not deleted between found and mutex lock
 				auto it = mSources.find(id);
 				if (it != mSources.end()) { it->second.Update(position, orientation, distance); } // case: source does exist
 			}
 
-			inline void Remove(const size_t& id)
+			inline void Remove(const size_t id)
 			{
 				std::lock(updateMutex, processAudioMutex);
 				std::lock_guard<std::mutex> lk1(updateMutex, std::adopt_lock);
@@ -73,7 +74,7 @@ namespace UIE
 			void UpdateSourceData(const SourceData& data);
 
 			// Audio
-			void ProcessAudio(const size_t& id, const Buffer& data, matrix& reverbInput, Buffer& outputBuffer);
+			void ProcessAudio(const size_t id, const Buffer& data, matrix& reverbInput, Buffer& outputBuffer);
 
 		private:
 			inline void Reset() { mSources.clear(); mEmptySlots.clear(); }

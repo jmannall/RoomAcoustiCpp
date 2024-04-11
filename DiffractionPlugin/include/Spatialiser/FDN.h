@@ -1,11 +1,12 @@
 /*
+* @class FDN, Channel
 *
-*  \FDN class
+* @brief Declaration of FDN and Channel classes
 *
 */
 
-#ifndef Spatialiser_FDN_h
-#define Spatialiser_FDN_h
+#ifndef RoomAcoustiCpp_FDN_h
+#define RoomAcoustiCpp_FDN_h
 
 // C++ headers
 #include <vector>
@@ -20,7 +21,6 @@
 #include "Unity/Debug.h"
 
 // Common headers
-#include "Common/AudioManager.h"
 #include "Common/Matrix.h"
 #include "Common/Vec.h"
 #include "Common/Coefficients.h"
@@ -29,7 +29,7 @@
 #include "DSP/Buffer.h"
 #include "DSP/GraphicEQ.h"
 
-namespace UIE
+namespace RAC
 {
 	using namespace Common;
 	using namespace DSP;
@@ -49,10 +49,10 @@ namespace UIE
 
 			// Setters
 			// void UpdateT60(const Coefficients& T60);
-			void SetParameters(const Coefficients& T60, const Real& t);
+			void SetParameters(const Coefficients& T60, const Real t);
 			void SetAbsorption();
 			void SetAbsorption(const Coefficients& T60);
-			inline void SetDelay(const Real& t) { mT = t; SetDelay(); }
+			inline void SetDelay(const Real t) { mT = t; SetDelay(); }
 			inline void Reset()
 			{ 
 				idx = 0; 
@@ -89,8 +89,8 @@ namespace UIE
 			~FDN() {}
 
 			// Getters
-			void ProcessOutput(const std::vector<Real>& data, const Real& gain);
-			inline Real GetOutput(const int& i) const { return y.GetEntry(i); }
+			void ProcessOutput(const std::vector<Real>& data, const Real gain);
+			inline Real GetOutput(const int i) const { return y.GetEntry(i); }
 
 			// Setters
 			void UpdateT60(const Coefficients& T60);
@@ -138,32 +138,20 @@ namespace UIE
 
 			inline void ProcessHouseholder()
 			{
-				// x.Reset();
-				/*for (int i = 0; i < y.Cols(); i++)
-					x.AddEntry(houseHolderFactor - y.GetEntry(i), i);*/
-				x.Reset();
 				Real entry = houseHolderFactor * y.Sum();
 				for (int i = 0; i < y.Cols(); i++)
 					x.AddEntry(entry - y.GetEntry(i), i);
-
-				/*Real entry = 0.0;
-				for (int i = 0; i < y.Cols(); i++)
-					entry += y.GetEntry(i) * mat.GetEntry(i, 0);
-
-				entry *= 2.0;
-				for (int i = 0; i < y.Cols(); i++)
-					x.AddEntry(y.GetEntry(i) - mat.GetEntry(i, 0) * entry, i);*/
 			}
 
 			inline void ProcessSquare()
 			{
-				x.Reset();
+				Real sum = 0.0;
 				for (int j = 0; j < mat.Cols(); ++j)
 				{
+					sum = 0.0;
 					for (int k = 0; k < mat.Rows(); ++k)
-					{
-						x.IncreaseEntry(y.GetEntry(k) * mat.GetEntry(k, j), j);
-					}
+						sum += y.GetEntry(k) * mat.GetEntry(k, j);
+					x.AddEntry(sum, j);
 				}
 			}
 

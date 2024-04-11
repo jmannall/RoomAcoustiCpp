@@ -1,4 +1,7 @@
-#pragma once
+/*
+* @brief Linear interpolation functions for various classes. Also handles flushing of denormals.
+*
+*/
 
 #ifndef DSP_Interpolate_h
 #define DSP_Interpolate_h
@@ -8,6 +11,7 @@
 /* Microsoft C/C++-compatible compiler */
 #include <intrin.h>
 #endif
+#include <omp.h>
 
 // Common headers
 #include "Common/Coefficients.h"
@@ -18,10 +22,27 @@
 // Unity headers
 #include "Unity/UnityInterface.h"
 
-namespace UIE
+namespace RAC
 {
 	namespace DSP
 	{
+
+		//////////////////// Android specific functions ////////////////////
+
+#if(_ANDROID)
+		inline int getStatusWord()
+		{
+			int result;
+			asm volatile("mrs %[result], FPCR" : [result] "=r" (result));
+			return result;
+	}
+
+		inline void setStatusWord(int a)
+		{
+			asm volatile("msr FPCR, %[src]" : : [src] "r" (a));
+		}
+#endif
+
 		inline void FlushDenormals()
 		{
 #if(_WINDOWS)
@@ -44,7 +65,7 @@ namespace UIE
 #endif
 		}
 
-		inline bool DoLerp(const Real& current, const Real& target)
+		inline bool DoLerp(const Real current, const Real target)
 		{
 			return (current > target + EPS || current < target - EPS);
 		}
@@ -54,17 +75,24 @@ namespace UIE
 			return (current > target + EPS || current < target - EPS);
 		}
 
-		inline void Lerp(Real& start, const Real& end, const Real factor)
+		inline void Lerp(Real& start, const Real end, const Real factor)
 		{
+#ifdef PROFILE_AUDIO_THREAD
 			BeginLerp();
+#endif			
 			start *= 1.0 - factor;
 			start += end * factor;
+#ifdef PROFILE_AUDIO_THREAD
 			EndLerp();
+#endif		
 		}
 
 		inline void Lerp(Buffer& start, const Buffer& end, const Real factor)
 		{
+#ifdef PROFILE_AUDIO_THREAD
 			BeginLerp();
+#endif
+
 			size_t len = start.Length();
 
 			if (len % 8 != 0)
@@ -106,19 +134,25 @@ namespace UIE
 					i++;
 				}
 			}
+#ifdef PROFILE_AUDIO_THREAD
 			EndLerp();
+#endif		
 		}
 
 		inline void Lerp(Coefficients& start, const Coefficients& end, const Real factor)
 		{
+#ifdef PROFILE_AUDIO_THREAD
 			BeginLerp();
+#endif			
 			size_t len = start.Length();
 			for (int i = 0; i < len; i++)
 			{
 				start[i] *= (1.0 - factor);
 				start[i] += factor * end[i];
 			}
+#ifdef PROFILE_AUDIO_THREAD
 			EndLerp();
+#endif		
 		}
 	}
 }

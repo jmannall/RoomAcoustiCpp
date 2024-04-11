@@ -1,16 +1,16 @@
 /*
 *
-*  \Global mutexes for the spatialiser
+*  \Global mutexes for the RoomAcoustiCpp Spatialiser
 *
 */
 
-#ifndef Spatialiser_Mutexes_h
-#define Spatialiser_Mutexes_h
+#ifndef RoomAcoustiCpp_Mutexes_h
+#define RoomAcoustiCpp_Mutexes_h
 
 // C++ headers
 #include <mutex>
 
-namespace UIE
+namespace RAC
 {
 	namespace Spatialiser
 	{

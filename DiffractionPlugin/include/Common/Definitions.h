@@ -1,19 +1,20 @@
 /*
-*
-*  \Common definitions
+* @brief Defines constants and some simple mathematicla functions
 *
 */
 
 #ifndef Common_Definitions_h
 #define Common_Definitions_h
 
-#include <Common/ScopedTimer.h>
+// C++ headers
+#include <vector>
 
+// Common headers
 #include "Common/Types.h"
 
 //////////////////// Constants ////////////////////
 
-namespace UIE
+namespace RAC
 {
 	namespace Common
 	{
@@ -27,7 +28,7 @@ namespace UIE
 
 		const constexpr Real INV_SPEED_OF_SOUND = 1.0 / SPEED_OF_SOUND;
 
-		const constexpr Real EPS = 0.000001;	// Tolerance for floating point comparisons
+		const constexpr Real EPS = 0.000001;	// Tolerance for some floating point comparisons
 		const constexpr Real PI_1 = 3.141592653589793238462643383279502884197169399375105820974944;
 		const constexpr Real PI_2 = 2.0 * PI_1;
 		const constexpr Real PI_4 = 4.0 * PI_1;
@@ -65,6 +66,35 @@ namespace UIE
 		inline Real Log10(Real x)
 		{
 			return std::log2(x) * INV_LOG2_10;
+		}
+
+		inline Real Sign(const Real x)
+		{
+			if (x == 0)
+				return 0.0;
+			else
+			{
+				if (signbit(x))
+					return -1.0;
+				else
+					return 1.0;
+			}
+		}
+
+		inline Real cot(const Real x)
+		{
+			return cos(x) / sin(x);
+		}
+
+		inline Real Round(Real x, size_t dp)
+		{
+			Real factor = pow(10.0, (Real)dp);
+			return round(x * factor) / factor;
+		}
+
+		inline Real StrToReal(const std::string& str)
+		{
+			return std::stod(str);
 		}
 
 		// Float
@@ -107,6 +137,35 @@ namespace UIE
 			return std::log2f(x) * LOG2_10;
 		}
 
+		inline Real Sign(const Real x)
+		{
+			if (x == 0)
+				return 0.0f;
+			else
+			{
+				if (signbit(x))
+					return -1.0f;
+				else
+					return 1.0f;
+			}
+		}
+
+		inline Real cot(const Real x)
+		{
+			return cosf(x) / sinf(x);
+		}
+
+		inline Real Round(Real x, size_t dp)
+		{
+			Real factor = powf(10.0f, (Real)dp);
+			return round(x * factor) / factor;
+		}
+
+		inline Real StrToReal(const std::string& str)
+		{
+			return std::stof(str);
+		}
+
 #endif
 		const constexpr size_t NUM_PRECISION = 3;
 		const constexpr int REFLECTION_FILTER_ORDER = 4;
@@ -115,86 +174,5 @@ namespace UIE
 		const constexpr Real PI_SQ = PI_1 * PI_1;
 	}
 }
-
-//////////////////// Android specific functions ////////////////////
-
-#if(_ANDROID)
-inline int getStatusWord()
-{
-	int result;
-	asm volatile("mrs %[result], FPCR" : [result] "=r" (result));
-	return result;
-}
-
-inline void setStatusWord(int a)
-{
-	asm volatile("msr FPCR, %[src]" : : [src] "r" (a));
-}
-#endif
-
-//////////////////// Macros ////////////////////
-
-#define DSP_SAFE_ARRAY_DELETE(ptr)	\
-if((ptr))	\
-{	\
-	delete[] (ptr);	\
-	(ptr) = nullptr;	\
-}
-
-//////////////////// Debug print macros ////////////////////
-
-// Redefine these to true to enable debug print information to stdout
-#define PRINT_AUDIO_PROFILE false
-#define PRINT_AUDIO_PROFILE_SECTION false
-#define PRINT_UPDATE_PROFILE false
-#define PRINT_UPDATE_PROFILE_SECTION false
-
-#if PRINT_AUDIO_PROFILE
-#define AUDIO_PROFILE_TIME(line, tag)	\
-	std::cout << tag << ": ";	\
-	{							\
-		ScopedTimer _t;			\
-		(line);					\
-	}							\
-	std::cout << std::endl
-#else
-#define AUDIO_PROFILE_TIME(line, tag) line
-#endif
-
-#if PRINT_AUDIO_PROFILE_SECTION
-#define AUDIO_PROFILE_SECTION(section, tag)	\
-	std::cout << tag << ":\n";	\
-	{							\
-		ScopedTimer _s;			\
-		section					\
-	}							\
-	std::cout << std::endl
-#else
-#define AUDIO_PROFILE_SECTION(section, tag) section
-#endif
-
-#if PRINT_UPDATE_PROFILE
-#define UPDATE_PROFILE_TIME(line, tag)	\
-	std::cout << tag << ": ";	\
-	{							\
-		ScopedTimer _t;			\
-		(line);					\
-	}							\
-	std::cout << std::endl
-#else
-#define UPDATE_PROFILE_TIME(line, tag) line
-#endif
-
-#if PRINT_UPDATE_PROFILE_SECTION
-#define UPDATE_PROFILE_SECTION(section, tag)	\
-	std::cout << tag << ":\n";	\
-	{							\
-		ScopedTimer _s;			\
-		section					\
-	}							\
-	std::cout << std::endl
-#else
-#define UPDATE_PROFILE_SECTION(section, tag) section
-#endif
 
 #endif

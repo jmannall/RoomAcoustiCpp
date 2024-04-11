@@ -13,12 +13,12 @@
 // Unity headers
 #include "Unity/UnityInterface.h"
 
-namespace UIE
+namespace RAC
 {
 	namespace Spatialiser
 	{
 
-		ImageEdge::ImageEdge(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const size_t& numBands) :
+		ImageEdge::ImageEdge(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const size_t numBands) :
 			mRoom(room), mSourceManager(sourceManager), mReverb(reverb), numAbsorptionBands(numBands)
 		{
 			reverbDirections = mReverb->GetReverbSourceDirections();

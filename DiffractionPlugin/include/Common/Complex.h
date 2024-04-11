@@ -1,6 +1,7 @@
 /*
+* @class Complex
 *
-*  \Complex variable definition
+* @brief Declaration of Complex class
 *
 */
 
@@ -11,7 +12,7 @@
 
 #include "Common/Types.h"
 
-namespace UIE
+namespace RAC
 {
 	namespace Common
 	{
@@ -27,27 +28,27 @@ namespace UIE
 
 		//////////////////// Functions ////////////////////
 
-		inline Complex operator*(const Complex& a, const Real& b)
+		inline Complex operator*(const Complex a, const Real b)
 		{
 			return Complex(a.real() * b, a.imag() * b);
 		}
 
-		inline Complex operator*(const Real& b, const Complex& a)
+		inline Complex operator*(const Real b, const Complex a)
 		{
 			return a * b;
 		}
 
-		inline Complex operator+(const Complex& a, const Real& b)
+		inline Complex operator+(const Complex a, const Real b)
 		{
 			return Complex(a.real() + b, a.imag());
 		}
 
-		inline Complex operator+(const Real& b, const Complex& a)
+		inline Complex operator+(const Real b, const Complex a)
 		{
 			return a + b;
 		}
 
-		inline Complex operator/(const Complex& a, const Real& b)
+		inline Complex operator/(const Complex a, const Real b)
 		{
 			return Complex(a.real() / b, a.imag() / b);
 		}

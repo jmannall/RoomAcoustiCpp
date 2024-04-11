@@ -37,7 +37,7 @@ extern "C"
     // UI_EXPORT void UI_API RegisterDebugCallback(FuncCallBack cb);
 }
 
-namespace UIE
+namespace RAC
 {
     using namespace Common;
     namespace Unity

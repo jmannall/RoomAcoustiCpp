@@ -13,7 +13,7 @@
 // UNity headers
 #include "Unity/Debug.h"
 
-namespace UIE
+namespace RAC
 {
     namespace Unity
     {

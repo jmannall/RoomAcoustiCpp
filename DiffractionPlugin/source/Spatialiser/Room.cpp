@@ -1,6 +1,7 @@
 /*
+* @class Room
 *
-*  \Room class
+* @brief Declaration of Room class
 *
 */
 
@@ -19,7 +20,7 @@
 // Spatialiser headers
 #include "Spatialiser/Room.h"
 
-namespace UIE
+namespace RAC
 {
 	using namespace Unity;
 	namespace Spatialiser
@@ -44,14 +45,14 @@ namespace UIE
 			return id;
 		}
 
-		void Room::AssignWallToPlane(const size_t& id)
+		void Room::AssignWallToPlane(const size_t id)
 		{
 			auto it = mWalls.find(id);
 			if (it != mWalls.end())
 				AssignWallToPlane(id, it->second);
 		}
 
-		void Room::AssignWallToPlane(const size_t& idW, Wall& wall)
+		void Room::AssignWallToPlane(const size_t idW, Wall& wall)
 		{
 			lock_guard<std::mutex> lock(mPlaneMutex);
 			for (auto& it : mPlanes)
@@ -105,7 +106,7 @@ namespace UIE
 			mEdges.insert_or_assign(id, Edge(data));
 		}
 
-		void Room::InitEdges(const size_t& id)
+		void Room::InitEdges(const size_t id)
 		{
 			std::vector<EdgeData> data;
 			lock_guard<std::mutex> lock(mWallMutex);
@@ -119,7 +120,7 @@ namespace UIE
 			}
 		}
 
-		void Room::InitEdges(const size_t& id, const std::vector<size_t>& IDsW)
+		void Room::InitEdges(const size_t id, const std::vector<size_t>& IDsW)
 		{
 			std::vector<EdgeData> data;
 			auto itA = mWalls.find(id);
@@ -135,7 +136,7 @@ namespace UIE
 			}
 		}
 
-		void Room::FindEdges(const size_t& idA, const size_t& idB, std::vector<EdgeData>& data, std::vector<size_t>& IDs)
+		void Room::FindEdges(const size_t idA, const size_t idB, std::vector<EdgeData>& data, std::vector<size_t>& IDs)
 		{
 			auto itA = mWalls.find(idA);
 			auto itB = mWalls.find(idB);
@@ -146,7 +147,7 @@ namespace UIE
 				FindEdges(itA->second, itB->second, idA, idB, data);
 		}
 
-		void Room::FindEdges(const Wall& wallA, const Wall& wallB, const size_t& idA, const size_t& idB, std::vector<EdgeData>& data)
+		void Room::FindEdges(const Wall& wallA, const Wall& wallB, const size_t idA, const size_t idB, std::vector<EdgeData>& data)
 		{
 			if (idA != idB)
 			{
@@ -162,7 +163,7 @@ namespace UIE
 			}
 		}
 
-		void Room::FindParallelEdges(const Wall& wallA, const Wall& wallB, const size_t& idA, const size_t& idB, std::vector<EdgeData>& data)
+		void Room::FindParallelEdges(const Wall& wallA, const Wall& wallB, const size_t idA, const size_t idB, std::vector<EdgeData>& data)
 		{
 			if (wallA.GetD() == wallB.GetD())
 			{
@@ -221,7 +222,7 @@ namespace UIE
 		// Vertices are defined using a right hand curl around the direction of the normal
 		// Edge face normals are defined using right hand curl rule around the direction of the edge (from base to top) that rotates from plane A to plane B through the exterior of the wedge.
 
-		void Room::FindEdge(const Wall& wallA, const Wall& wallB, const size_t& idA, const size_t& idB, std::vector<EdgeData>& data)
+		void Room::FindEdge(const Wall& wallA, const Wall& wallB, const size_t idA, const size_t idB, std::vector<EdgeData>& data)
 		{
 			std::vector<vec3> verticesA = wallA.GetVertices();
 			std::vector<vec3> verticesB = wallB.GetVertices();
@@ -381,7 +382,7 @@ namespace UIE
 		}
 
 		// Edges
-		//void Room::FindEdges(const size_t& id)
+		//void Room::FindEdges(const size_t id)
 		//{
 		//	lock_guard<std::mutex> lock(mWallMutex);
 		//	auto itA = mWalls.find(id);
@@ -426,7 +427,7 @@ namespace UIE
 		//	}
 		//}
 
-		//void Room::UpdateEdge(const size_t& id, Wall& a, Wall& b)
+		//void Room::UpdateEdge(const size_t id, Wall& a, Wall& b)
 		//{
 		//	std::vector<vec3> verticesA = a.GetVertices();
 		//	std::vector<vec3> verticesB = b.GetVertices();

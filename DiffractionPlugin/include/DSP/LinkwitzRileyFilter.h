@@ -18,7 +18,7 @@
 #include "Common/Types.h"
 #include "Common/Coefficients.h"
 
-namespace UIE
+namespace RAC
 {
 	using namespace Common;
 	namespace DSP
@@ -31,7 +31,7 @@ namespace UIE
 			 *
 			 * @param sampleRate The sample rate for calculating filter coefficients
 			 */
-			LinkwitzRiley(const int& sampleRate) : fm(4), fc(std::vector<Real>({ 176.0, 775.0, 3408.0 })),
+			LinkwitzRiley(const int sampleRate) : fm(4), fc(std::vector<Real>({ 176.0, 775.0, 3408.0 })),
 				g(4, 1.0) { InitFilters(sampleRate); CalcMidFrequencies(); }
 
 			/**
@@ -42,7 +42,7 @@ namespace UIE
 			 * @param fc2 The third cutoff frequency
 			 * @param sampleRate The sample rate for calculating filter coefficients
 			 */
-			LinkwitzRiley(const Real& fc0, const Real& fc1, const Real& fc2, const int& sampleRate) : fm(4),
+			LinkwitzRiley(const Real fc0, const Real fc1, const Real fc2, const int sampleRate) : fm(4),
 				fc({ fc0, fc1, fc2 }), g(4, 1.0) { InitFilters(sampleRate); CalcMidFrequencies(); }
 
 			/**
@@ -56,7 +56,7 @@ namespace UIE
 			 * @param input The input to the FIRFilter
 			 * @return The output of the FIRFilter
 			 */
-			Real GetOutput(const Real& input);
+			Real GetOutput(const Real input);
 
 			/**
 			 * Updates the gain parameters of the LinkwitzRiley filter
@@ -75,7 +75,7 @@ namespace UIE
 			Coefficients fm;
 
 		private:
-			void InitFilters(const int& fs);
+			void InitFilters(const int fs);
 			void CalcMidFrequencies();
 
 			/**

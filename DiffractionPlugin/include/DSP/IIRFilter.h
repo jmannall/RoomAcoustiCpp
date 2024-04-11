@@ -15,7 +15,7 @@
 #include "Common/Types.h"
 #include "Common/Coefficients.h"
 
-namespace UIE
+namespace RAC
 {
 	namespace DSP
 	{
@@ -33,7 +33,7 @@ namespace UIE
 			 * @param filterOrder The order of the filter
 			 * @param sampleRate The sample rate for calculating filter coefficients
 			 */
-			IIRFilter(const size_t& filterOrder, const int& sampleRate) : order(filterOrder),
+			IIRFilter(const size_t filterOrder, const int sampleRate) : order(filterOrder),
 				T(1.0 / static_cast<Real>(sampleRate)), b(filterOrder + 1),
 				a(filterOrder + 1), x(filterOrder + 1), y(filterOrder + 1) {};
 			
@@ -48,7 +48,7 @@ namespace UIE
 			 * @param input The input to the IIRFilter
 			 * @return The output of the IIRFilter
 			 */
-			Real GetOutput(const Real& input);
+			Real GetOutput(const Real input);
 
 			/**
 			 * Resets the input and output buffers to zeros.
@@ -99,7 +99,7 @@ namespace UIE
 			 *
 			 * @param sampleRate The sample rate for calculating filter coefficients
 			 */
-			HighShelf(const int& sampleRate) : IIRFilter(1, sampleRate) { UpdateParameters(1000.0, 1.0); };
+			HighShelf(const int sampleRate) : IIRFilter(1, sampleRate) { UpdateParameters(1000.0, 1.0); };
 
 			/**
 			 * Constructor that initialises an 1st order high shelf filter with a given cut off frequency and shelf gain
@@ -108,7 +108,7 @@ namespace UIE
 			 * @param g The shelf gain of the filter (linear)
 			 * @param sampleRate The sample rate for calculating filter coefficients
 			 */
-			HighShelf(const Real& fc, const Real& g, const int& sampleRate) : IIRFilter(1, sampleRate) { UpdateParameters(fc, g); };
+			HighShelf(const Real fc, const Real g, const int sampleRate) : IIRFilter(1, sampleRate) { UpdateParameters(fc, g); };
 
 			/**
 			 * Default deconstructor
@@ -121,7 +121,7 @@ namespace UIE
 			 * @param fc The cut off frequency of the filter
 			 * @param g The shelf gain of the filter (linear)
 			 */
-			void UpdateParameters(const Real& fc, const Real& g);
+			void UpdateParameters(const Real fc, const Real g);
 		};
 
 		/**
@@ -135,7 +135,7 @@ namespace UIE
 			 *
 			 * @param sampleRate The sample rate for calculating filter coefficients
 			 */
-			LowPass(const int& sampleRate) : IIRFilter(1, sampleRate) { UpdateParameters(1000.0); };
+			LowPass(const int sampleRate) : IIRFilter(1, sampleRate) { UpdateParameters(1000.0); };
 			
 			/**
 			 * Constructor that initialises an 1st order low pass filter with a given cut off frequency
@@ -143,7 +143,7 @@ namespace UIE
 			 * @param fc The cut off frequency of the filter
 			 * @param sampleRate The sample rate for calculating filter coefficients
 			 */
-			LowPass(const Real& fc, const int& sampleRate) : IIRFilter(1, sampleRate) { UpdateParameters(fc); };
+			LowPass(const Real fc, const int sampleRate) : IIRFilter(1, sampleRate) { UpdateParameters(fc); };
 
 			/**
 			 * Default deconstructor
@@ -155,7 +155,7 @@ namespace UIE
 			 *
 			 * @param fc The cut off frequency of the filter
 			 */
-			void UpdateParameters(const Real& fc);
+			void UpdateParameters(const Real fc);
 		};
 
 		/**
@@ -171,7 +171,7 @@ namespace UIE
 			 * @param Q The quality factor of the filter
 			 * @param sampleRate The sample rate for calculating filter coefficients
 			 */
-			PeakHighShelf(const Real& fc, const Real& Q, const int& sampleRate) : IIRFilter(2, sampleRate) { SetParameters(fc, Q); }
+			PeakHighShelf(const Real fc, const Real Q, const int sampleRate) : IIRFilter(2, sampleRate) { SetParameters(fc, Q); }
 
 			/**
 			 * Constructor that initialises an 2nd order high shelf filter with a given cut off frequency and shelf gain
@@ -181,7 +181,7 @@ namespace UIE
 			 * @param Q The quality factor of the filter
 			 * @param sampleRate The sample rate for calculating filter coefficients
 			 */
-			PeakHighShelf(const Real& fc, const Real& g, const Real& Q, const int& sampleRate) : IIRFilter(2, sampleRate) { SetParameters(fc, Q); UpdateGain(g); }
+			PeakHighShelf(const Real fc, const Real g, const Real Q, const int sampleRate) : IIRFilter(2, sampleRate) { SetParameters(fc, Q); UpdateGain(g); }
 
 			/**
 			 * Default deconstructor
@@ -193,7 +193,7 @@ namespace UIE
 			 *
 			 * @param g The shelf gain of the filter (linear)
 			 */
-			void UpdateGain(const Real& g);
+			void UpdateGain(const Real g);
 
 		private:
 			/**
@@ -202,7 +202,7 @@ namespace UIE
 			 * @param fs The cut off frequency of the filter
 			 * @param Q The quality factor of the filter
 			 */
-			void SetParameters(const Real& fc, const Real& Q);
+			void SetParameters(const Real fc, const Real Q);
 
 			Real cosOmega;
 			Real alpha;
@@ -221,7 +221,7 @@ namespace UIE
 			 * @param Q The quality factor of the filter
 			 * @param sampleRate The sample rate for calculating filter coefficients
 			 */
-			PeakLowShelf(const Real& fc, const Real& Q, const int& sampleRate) : IIRFilter(2, sampleRate) { SetParameters(fc, Q); }
+			PeakLowShelf(const Real fc, const Real Q, const int sampleRate) : IIRFilter(2, sampleRate) { SetParameters(fc, Q); }
 
 			/**
 			 * Constructor that initialises an 2nd order low shelf filter with a given cut off frequency and shelf gain
@@ -231,7 +231,7 @@ namespace UIE
 			 * @param Q The quality factor of the filter
 			 * @param sampleRate The sample rate for calculating filter coefficients
 			 */
-			PeakLowShelf(const Real& fc, const Real& g, const Real& Q, const int& sampleRate) : IIRFilter(2, sampleRate) { SetParameters(fc, Q); UpdateGain(g); }
+			PeakLowShelf(const Real fc, const Real g, const Real Q, const int sampleRate) : IIRFilter(2, sampleRate) { SetParameters(fc, Q); UpdateGain(g); }
 
 			/**
 			 * Default deconstructor
@@ -243,7 +243,7 @@ namespace UIE
 			 *
 			 * @param g The shelf gain of the filter (linear)
 			 */
-			void UpdateGain(const Real& g);
+			void UpdateGain(const Real g);
 
 		private:
 			/**
@@ -252,7 +252,7 @@ namespace UIE
 			 * @param fs The cut off frequency of the filter
 			 * @param Q The quality factor of the filter
 			 */
-			void SetParameters(const Real& fc, const Real& Q);
+			void SetParameters(const Real fc, const Real Q);
 
 			Real cosOmega;
 			Real alpha;
@@ -271,7 +271,7 @@ namespace UIE
 			 * @param Q The quality factor of the filter
 			 * @param sampleRate The sample rate for calculating filter coefficients
 			 */
-			PeakingFilter(const Real& fc, const Real& Q, const int& sampleRate) : IIRFilter(2, sampleRate) { SetParameters(fc, Q); }
+			PeakingFilter(const Real fc, const Real Q, const int sampleRate) : IIRFilter(2, sampleRate) { SetParameters(fc, Q); }
 
 			/**
 			 * Constructor that initialises an 2nd order peaking filter with a given cut off frequency and gain
@@ -281,7 +281,7 @@ namespace UIE
 			 * @param Q The quality factor of the filter
 			 * @param sampleRate The sample rate for calculating filter coefficients
 			 */
-			PeakingFilter(const Real& fc, const Real& g, const Real& Q, const int& sampleRate) : IIRFilter(2, sampleRate) { SetParameters(fc, Q); UpdateGain(g); }
+			PeakingFilter(const Real fc, const Real g, const Real Q, const int sampleRate) : IIRFilter(2, sampleRate) { SetParameters(fc, Q); UpdateGain(g); }
 
 			/**
 			 * Default deconstructor
@@ -293,7 +293,7 @@ namespace UIE
 			 *
 			 * @param g The gain of the filter (linear)
 			 */
-			void UpdateGain(const Real& g);
+			void UpdateGain(const Real g);
 
 		private:
 			/**
@@ -302,7 +302,7 @@ namespace UIE
 			 * @param fs The center frequency of the filter
 			 * @param Q The quality factor of the filter
 			 */
-			void SetParameters(const Real& fc, const Real& Q);
+			void SetParameters(const Real fc, const Real Q);
 
 			Real cosOmega;
 			Real alpha;
@@ -335,15 +335,15 @@ namespace UIE
 		class PassFilter : public IIRFilter
 		{
 		public:
-			PassFilter(const bool& isLowPass, const int& sampleRate) : IIRFilter(2, sampleRate) { a[0] = 1.0; SetUpdatePointer(isLowPass); };
-			PassFilter(const Real& fc, const bool& isLowPass, const int& sampleRate) : IIRFilter(2, sampleRate)
+			PassFilter(const bool isLowPass, const int sampleRate) : IIRFilter(2, sampleRate) { a[0] = 1.0; SetUpdatePointer(isLowPass); };
+			PassFilter(const Real fc, const bool isLowPass, const int sampleRate) : IIRFilter(2, sampleRate)
 			{ 
 				a[0] = 1.0;
 				SetUpdatePointer(isLowPass);
 				UpdateParameters(fc);
 			};
 
-			void UpdateParameters(const Real& fc) { (this->*UpdatePass)(fc); };
+			void UpdateParameters(const Real fc) { (this->*UpdatePass)(fc); };
 
 			inline void SetUpdatePointer(bool isLowPass)
 			{
@@ -354,11 +354,11 @@ namespace UIE
 			};
 
 		private:
-			void UpdateLowPass(const Real& fc);
-			void UpdateHighPass(const Real& fc);
+			void UpdateLowPass(const Real fc);
+			void UpdateHighPass(const Real fc);
 
 			// Function pointer
-			void (PassFilter::* UpdatePass)(const Real& fc);
+			void (PassFilter::* UpdatePass)(const Real fc);
 		};
 	}
 }

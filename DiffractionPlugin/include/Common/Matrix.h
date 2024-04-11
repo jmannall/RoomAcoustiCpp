@@ -1,6 +1,7 @@
 /*
+* @class matrix
 *
-*  \matrix class
+* @brief Declaration of matrix class
 *
 */
 
@@ -15,15 +16,14 @@
 #include "Common/Types.h"
 #include "Common/Definitions.h"
 
-namespace UIE
+namespace RAC
 {
 	namespace Common
 	{
-		class vec;
 
 		//////////////////// matrix class ////////////////////
 
-		class matrix	
+		class matrix
 		{
 		public:
 
@@ -45,25 +45,20 @@ namespace UIE
 			}
 
 			// Adders
-			virtual inline void AddEntry(const Real& in, const int& r, const int& c) {  /*CheckRows(r); CheckCols(c);*/ e[r][c] = in; }
-			virtual inline void IncreaseEntry(const Real& in, const int& r, const int& c) { /*CheckRows(r); CheckCols(c);*/ e[r][c] += in; }
-			inline void AddColumn(const std::vector<Real>& v, const int& c)
+			virtual inline void AddEntry(const Real in, const int r, const int c) { e[r][c] = in; }
+			virtual inline void IncreaseEntry(const Real in, const int r, const int c) { e[r][c] += in; }
+			inline void AddColumn(const std::vector<Real>& v, const int c)
 			{
-				//CheckCols(c);
 				for (int i = 0; i < rows; i++)
 					e[i][c] = v[i];
 			}
-			inline void AddRow(const std::vector<Real>& v, const int& r) { CheckRows(r); e[r] = v; }
-
-			inline void CheckRows(const int& r) const { if (r >= rows) throw "Row index out of bounds"; }
-			inline void CheckCols(const int& c) const { if (c >= cols) throw "Column index out of bounds"; }
+			inline void AddRow(const std::vector<Real>& v, const int r) { e[r] = v; }
 
 			// Getters
-			virtual inline Real GetEntry(const int& r, const int& c) const { /*CheckRows(r); CheckCols(c);*/ return e[r][c]; }
-			inline const std::vector<Real>& GetRow(int r) const { /*CheckRows(r);*/ return e[r];	}
+			virtual inline Real GetEntry(const int& r, const int& c) const { return e[r][c]; }
+			inline const std::vector<Real>& GetRow(int r) const { return e[r];	}
 			inline const std::vector<Real>& GetColumn(int c)
 			{
-				//CheckCols(c);
 				for (int i = 0; i < rows; i++)
 					column[i] = e[i][c];
 				return column;
@@ -81,7 +76,7 @@ namespace UIE
 				for (int i = 0; i < rows; i++)
 				{
 					for (int j = 0; j < cols; j++)
-						this->e[i][j] = UIE::Common::Log10(e[i][j]);
+						this->e[i][j] = RAC::Common::Log10(e[i][j]);
 				}
 			}
 
@@ -90,7 +85,7 @@ namespace UIE
 				for (int i = 0; i < rows; i++)
 				{
 					for (int j = 0; j < cols; j++)
-						this->e[i][j] = UIE::Common::Pow10(e[i][j]);
+						this->e[i][j] = RAC::Common::Pow10(e[i][j]);
 				}
 			}
 
@@ -123,7 +118,7 @@ namespace UIE
 				return *this;
 			}
 
-			inline matrix operator*=(const Real& a)
+			inline matrix operator*=(const Real a)
 			{
 				for (int i = 0; i < rows; i++)
 				{
@@ -133,7 +128,7 @@ namespace UIE
 				return *this;
 			}
 
-			inline matrix operator/=(const Real& a)
+			inline matrix operator/=(const Real a)
 			{
 				for (int i = 0; i < rows; i++)
 				{
@@ -143,7 +138,7 @@ namespace UIE
 				return *this;
 			}
 
-			inline matrix operator+=(const Real& a)
+			inline matrix operator+=(const Real a)
 			{
 				for (int i = 0; i < rows; i++)
 				{
@@ -153,7 +148,7 @@ namespace UIE
 				return *this;
 			}
 
-			inline matrix operator-=(const Real& a)
+			inline matrix operator-=(const Real a)
 			{
 				for (int i = 0; i < rows; i++)
 				{
@@ -244,15 +239,15 @@ namespace UIE
 			assert(out.Rows() == u.Rows());
 			assert(out.Cols() == v.Cols());
 
-			out.Reset();
+			Real sum = 0.0;
 			for (int i = 0; i < u.Rows(); ++i)
 			{
 				for (int j = 0; j < v.Cols(); ++j)
 				{
+					sum = 0.0;
 					for (int k = 0; k < u.Cols(); ++k)
-					{
-						out.IncreaseEntry(u.GetEntry(i, k) * v.GetEntry(k, j), i, j);
-					}
+						sum += u.GetEntry(i, k) * v.GetEntry(k, j);
+					out.AddEntry(sum, i, j);
 				}
 			}
 			return out;
@@ -264,7 +259,7 @@ namespace UIE
 			return Mulitply(out, u, v);
 		}
 
-		inline matrix operator*(const Real& a, const matrix& mat)
+		inline matrix operator*(const Real a, const matrix& mat)
 		{
 			matrix out = matrix(mat.Rows(), mat.Cols());
 			for (int i = 0; i < mat.Rows(); i++)
@@ -280,7 +275,7 @@ namespace UIE
 			return out;
 		}
 
-		inline matrix operator*(const matrix& mat, const Real& a)
+		inline matrix operator*(const matrix& mat, const Real a)
 		{
 			return a * mat;
 		}

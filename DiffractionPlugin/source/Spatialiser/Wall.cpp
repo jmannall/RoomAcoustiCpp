@@ -1,6 +1,7 @@
 /*
+* @class Wall, Plane
 *
-*  \Wall class
+* @brief Declaration of Wall and Plane classes
 *
 */
 
@@ -17,7 +18,7 @@
 #include "Spatialiser/Edge.h"
 #include "Spatialiser/Types.h"
 
-namespace UIE
+namespace RAC
 {
 	using namespace Common;
 	using namespace Unity;
@@ -59,7 +60,7 @@ namespace UIE
 			return valid;
 		}
 
-		bool Plane::FindIntersectionPoint(vec3& intersection, const vec3& start, const vec3& end, const Real& k) const
+		bool Plane::FindIntersectionPoint(vec3& intersection, const vec3& start, const vec3& end, const Real k) const
 		{
 			vec3 grad = start - end;
 			Real scale = Dot(mNormal, grad);
@@ -159,11 +160,11 @@ namespace UIE
 		// Area
 		void Wall::CalculateArea()
 		{
-			mAbsorption.area = 0;
+			mAbsorption.mArea = 0;
 			for (int i = 0; i < mNumVertices - 2; i++)
 			{
 				triangleAreas[i] = AreaOfTriangle(mVertices[0], mVertices[i + 1], mVertices[i + 2]);
-				mAbsorption.area += triangleAreas[i];
+				mAbsorption.mArea += triangleAreas[i];
 			}
 		}
 
@@ -242,7 +243,7 @@ namespace UIE
 				area += AreaOfTriangle(intersection, mVertices[i], mVertices[j]);
 			}
 
-			if (Round(area, 4) == Round(mAbsorption.area, 4))
+			if (Round(area, 4) == Round(mAbsorption.mArea, 4))
 				return true;
 
 			return false;

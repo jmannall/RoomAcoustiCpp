@@ -1,17 +1,17 @@
 /*
+* @class Source, SourceData
 *
-*  \Source class
+* @brief Declaration of Source and SourceData classes
 *
 */
 
-#ifndef Spatialiser_Source_h
-#define Spatialiser_Source_h
+#ifndef RoomAcoustiCpp_Source_h
+#define RoomAcoustiCpp_Source_h
 
 // C++ headers
 #include <unordered_map>
 
 // Common headers
-#include "Common/AudioManager.h"
 #include "Common/Matrix.h"
 #include "Common/Types.h" 
 #include "Common/Vec3.h"
@@ -30,7 +30,7 @@
 #include "Unity/Debug.h"
 
 using namespace Common;
-namespace UIE
+namespace RAC
 {
 	using namespace Common;
 	namespace Spatialiser
@@ -61,7 +61,6 @@ namespace UIE
 			size_t id;
 			vec3 mPosition;
 			bool visible;
-			// std::mutex mMutex;
 			VirtualSourceDataMap vSources;
 
 		private:
@@ -77,14 +76,14 @@ namespace UIE
 			Source(Binaural::CCore* core, const Config& config);
 			~Source();
 
-			void UpdateSpatialisationMode(const HRTFMode& mode);
-			void UpdateSpatialisationMode(const SPATConfig& config);
+			void UpdateSpatialisationMode(const HRTFMode mode);
+			void UpdateSpatialisationMode(const SPATConfig config);
 
 			// Getters
 			inline shared_ptr<Binaural::CSingleSourceDSP>& GetSource() { return mSource; }
 
 			// Updates
-			void Update(const vec3& position, const vec4& orientation, const Real& distance);
+			void Update(const vec3& position, const vec4& orientation, const Real distance);
 			void UpdateVirtualSources(const VirtualSourceDataMap& data);
 			bool UpdateVirtualSource(const VirtualSourceData& data, std::vector<VirtualSourceData>& newVSources);
 

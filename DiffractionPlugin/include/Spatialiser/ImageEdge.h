@@ -1,11 +1,12 @@
 /*
+* @class ImageEdge
 *
-*  \ImageEdge class
+* @brief Declaration of ImageEdge class
 *
 */
 
-#ifndef Spatialiser_ImageEdge_h
-#define Spatialiser_ImageEdge_h
+#ifndef RoomAcoustiCpp_ImageEdge_h
+#define RoomAcoustiCpp_ImageEdge_h
 
 // Common headers
 #include "Common/Vec3.h" 
@@ -16,7 +17,7 @@
 #include "Spatialiser/Room.h"
 #include "Spatialiser/Reverb.h"
 
-namespace UIE
+namespace RAC
 {
 	namespace Spatialiser
 	{
@@ -24,7 +25,7 @@ namespace UIE
 		class ImageEdge
 		{
 		public:
-			ImageEdge(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const size_t& numBands);
+			ImageEdge(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const size_t numBands);
 			~ImageEdge() {}
 
 			inline void UpdateISMConfig(const ISMConfig& config) { lock_guard<std::mutex> lock(mMutex); mISMConfigStore = config; }

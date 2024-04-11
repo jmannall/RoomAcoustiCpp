@@ -1,6 +1,7 @@
 /*
+* @class Source, SourceData
 *
-*  \Source class
+* @brief Declaration of Source and SourceData classes
 *
 */
 
@@ -23,7 +24,7 @@
 // DSP headers
 #include "DSP/Interpolate.h"
 
-namespace UIE
+namespace RAC
 {
 	using namespace Common;
 	// using namespace Unity;
@@ -65,7 +66,7 @@ namespace UIE
 			Reset();
 		}
 
-		void Source::UpdateSpatialisationMode(const HRTFMode& mode)
+		void Source::UpdateSpatialisationMode(const HRTFMode mode)
 		{
 			switch (mode)
 			{
@@ -92,7 +93,7 @@ namespace UIE
 			}
 		}
 
-		void Source::UpdateSpatialisationMode(const SPATConfig& config)
+		void Source::UpdateSpatialisationMode(const SPATConfig config)
 		{
 			mConfig.spatConfig = config;
 			UpdateSpatialisationMode(config.GetMode(0));
@@ -112,6 +113,11 @@ namespace UIE
 		{
 			freeFDNChannels.clear();
 			freeFDNChannels.push_back(0);
+		}
+
+		void ProcessVirtualSource(VirtualSource& vS, const Buffer& data, matrix& reverbInput, Buffer& outputBuffer)
+		{
+			vS.ProcessAudio(data, reverbInput, outputBuffer);
 		}
 
 		void Source::ProcessAudio(const Buffer& data, matrix& reverbInput, Buffer& outputBuffer)
@@ -178,7 +184,7 @@ namespace UIE
 			}
 		}
 
-		void Source::Update(const vec3& position, const vec4& orientation, const Real& distance)
+		void Source::Update(const vec3& position, const vec4& orientation, const Real distance)
 		{
 			CTransform transform;
 			transform.SetOrientation(CQuaternion(static_cast<float>(orientation.w), static_cast<float>(orientation.x), static_cast<float>(orientation.y), static_cast<float>(orientation.z)));

@@ -78,9 +78,6 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Source.cpp">
       <Filter>Source Files\Spatialiser</Filter>
     </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\Common\AudioManager.cpp">
-      <Filter>Source Files\Common</Filter>
-    </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Common\Matrix.cpp">
       <Filter>Source Files\Common</Filter>
     </ClCompile>
@@ -125,9 +122,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\SourceManager.h">
       <Filter>Header Files\Spatialiser</Filter>
     </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Main.h">
-      <Filter>Header Files\Spatialiser</Filter>
-    </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Interface.h">
       <Filter>Header Files\Spatialiser</Filter>
     </ClInclude>
@@ -163,9 +157,6 @@
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Unity\IUnityInterface.h">
       <Filter>Header Files\Unity</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\AudioManager.h">
-      <Filter>Header Files\Common</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Complex.h">
       <Filter>Header Files\Common</Filter>

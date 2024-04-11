@@ -18,19 +18,19 @@
 #include "DSP/IIRFilter.h"
 #include "DSP/Interpolate.h"
 
-namespace UIE
+namespace RAC
 {
 	namespace DSP
 	{
 		class GraphicEQ
 		{
 		public:
-			GraphicEQ(const Coefficients& fc, const Real& Q, const int& sampleRate);
-			GraphicEQ(const Coefficients& gain, const Coefficients& fc, const Real& Q, const int& sampleRate);
+			GraphicEQ(const Coefficients& fc, const Real Q, const int sampleRate);
+			GraphicEQ(const Coefficients& gain, const Coefficients& fc, const Real Q, const int sampleRate);
 			~GraphicEQ() {};
 
 			void InitParameters(const Coefficients& gain);
-			inline void UpdateParameters(const Real& lerpFactor)
+			inline void UpdateParameters(const Real lerpFactor)
 			{
 				if (equal)
 					return;
@@ -47,7 +47,7 @@ namespace UIE
 				}
 			}
 			void SetGain(const Coefficients& gain);
-			Real GetOutput(const Real& input);
+			Real GetOutput(const Real input);
 			void ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const int numFrames, const Real lerpFactor);
 
 			inline void ClearBuffers()
@@ -59,7 +59,7 @@ namespace UIE
 			}
 		private:
 			void UpdateParameters();
-			void InitFilters(const Coefficients& fc, const Real& Q, const int& sampleRate);
+			void InitFilters(const Coefficients& fc, const Real Q, const int sampleRate);
 			void InitMatrix(const Coefficients& fc);
 
 			Real numFilters;
@@ -74,7 +74,6 @@ namespace UIE
 			Coefficients currentGain;
 			rowvec dbGain;
 			rowvec inputGain;
-			Real out;
 
 			bool equal;
 			bool valid;
