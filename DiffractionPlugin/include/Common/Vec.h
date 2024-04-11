@@ -1,6 +1,7 @@
 /*
+* @class vec, rowvec
 *
-*  \vec class
+* @brief Declaration of vec and rowvec classes
 *
 */
 
@@ -15,7 +16,7 @@
 
 static std::default_random_engine generator (100);
 
-namespace UIE
+namespace RAC
 {
 	namespace Common
 	{
@@ -46,16 +47,16 @@ namespace UIE
 			Real CalculateNormal() const;
 			Real Mean() const;
 
-			inline void AddEntry(const Real& in, const int& i) { e[i][0] = in; }
-			inline void IncreaseEntry(const Real& in, const int& i) { e[i][0] += in; }
+			inline void AddEntry(const Real in, const int i) { e[i][0] = in; }
+			inline void IncreaseEntry(const Real in, const int i) { e[i][0] += in; }
 
-			inline void Max(const Real& min)
+			inline void Max(const Real min)
 			{ 
 				for (int i = 0; i < rows; i++)
 					e[i][0] = std::max(min, e[i][0]);
 			}
 
-			inline Real GetEntry(const int& i) const { return e[i][0]; }
+			inline Real GetEntry(const int i) const { return e[i][0]; }
 
 			inline Real Sum() const
 			{
@@ -102,10 +103,10 @@ namespace UIE
 
 			void Init(const std::vector<Real>& vec);
 
-			inline void AddEntry(const Real& in, const int& i) { e[0][i] = in; }
-			inline void IncreaseEntry(const Real& in, const int& i) { e[0][i] += in; }
+			inline void AddEntry(const Real in, const int i) { e[0][i] = in; }
+			inline void IncreaseEntry(const Real in, const int i) { e[0][i] += in; }
 
-			inline Real GetEntry(const int& i) const { return e[0][i]; }
+			inline Real GetEntry(const int i) const { return e[0][i]; }
 
 			inline Real Sum() const
 			{

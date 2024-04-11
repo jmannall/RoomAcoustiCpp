@@ -1,6 +1,5 @@
 /*
-*
-*  \Spherical geometry classes
+* @brief Functions for generating spherically distributed points
 *
 */
 
@@ -13,7 +12,7 @@
 #ifndef Common_SphericalGeometries_h
 #define Common_SphericalGeometries_h
 
-namespace UIE
+namespace RAC
 {
 	namespace Common
 	{

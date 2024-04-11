@@ -15,7 +15,7 @@
 #include "Common/Types.h"
 #include "Common/Definitions.h"
 
-namespace UIE
+namespace RAC
 {
 	using namespace Common;
 	namespace DSP
@@ -42,7 +42,7 @@ namespace UIE
 			 *
 			 * @param n The number of samples to initialise the buffer with.
 			 */
-			Buffer(const size_t& n) { ResizeBuffer(n); };
+			Buffer(const size_t n) { ResizeBuffer(n); };
 
 			/**
 			 * Constructor that initialises the buffer with a vector of Real values.
@@ -73,7 +73,7 @@ namespace UIE
 			 * 
 			 * @param numSamples The number of samples to resize the buffer to.
 			 */
-			void ResizeBuffer(const size_t& numSamples);
+			void ResizeBuffer(const size_t numSamples);
 
 			/**
 			 * Checks if the buffer is valid.
@@ -94,13 +94,13 @@ namespace UIE
 			 *
 			 * @param i The index of the sample to return.
 			 */
-			inline Real& operator[](const int& i) { return mBuffer[i]; };
-			inline Real operator[](const int& i) const { return mBuffer[i]; };
+			inline Real& operator[](const int i) { return mBuffer[i]; };
+			inline Real operator[](const int i) const { return mBuffer[i]; };
 
 			/**
 			 * Multiplies each sample in the buffer by a scalar value.
 			 */
-			inline Buffer operator*=(const Real& x)
+			inline Buffer operator*=(const Real x)
 			{
 				for (Real& sample : mBuffer)
 					sample *= x;
@@ -110,7 +110,7 @@ namespace UIE
 			/**
 			 * Adds a scalar value to each sample in the buffer.
 			 */
-			inline Buffer operator+=(const Real& x)
+			inline Buffer operator+=(const Real x)
 			{
 				for (Real& sample : mBuffer)
 					sample += x;
@@ -175,7 +175,7 @@ namespace UIE
 			 *
 			 * @param n The number of samples to initialise the buffer with.
 			 */
-			BufferF(const size_t& n) { ResizeBuffer(n); };
+			BufferF(const size_t n) { ResizeBuffer(n); };
 
 			/**
 			 * Default deconstructor.
@@ -212,7 +212,7 @@ namespace UIE
 			 *
 			 * @param numSamples The number of samples to resize the buffer to.
 			 */
-			void ResizeBuffer(const size_t& numSamples);
+			void ResizeBuffer(const size_t numSamples);
 
 			//////////////////// Member Variables ////////////////////
 

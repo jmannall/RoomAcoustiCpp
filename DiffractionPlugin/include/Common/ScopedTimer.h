@@ -1,6 +1,7 @@
 /*
+* @class ScopedTimer
 *
-*  \ScopedTimer class
+* @brief Declaration of ScopedTimer class
 *
 */
 
@@ -11,7 +12,7 @@
 #include <iostream>
 #include <string>
 
-namespace UIE
+namespace RAC
 {
 	namespace Common
 	{

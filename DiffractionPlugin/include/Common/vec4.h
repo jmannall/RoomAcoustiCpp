@@ -1,6 +1,7 @@
 /*
+* @class vec4
 *
-*  \vec4 class
+* @brief Declaration of vec4 class
 *
 */
 
@@ -9,7 +10,7 @@
 
 #include "Common/Types.h"
 
-namespace UIE
+namespace RAC
 {
 	namespace Common
 	{

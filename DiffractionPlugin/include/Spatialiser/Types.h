@@ -4,8 +4,8 @@
 *
 */
 
-#ifndef Spatialiser_Types_h
-#define Spatialiser_Types_h
+#ifndef RoomAcoustiCpp_Types_h
+#define RoomAcoustiCpp_Types_h
 
 // C++ headers
 #include <unordered_map>
@@ -14,7 +14,7 @@
 #include "Common/Types.h"
 #include "Common/Coefficients.h"
 
-namespace UIE
+namespace RAC
 {
 	using namespace Common;
 	namespace Spatialiser

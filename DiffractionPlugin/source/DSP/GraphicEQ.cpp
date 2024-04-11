@@ -1,3 +1,9 @@
+/*
+* @class GraphicEQ
+*
+* @brief Declaration of Graphic EQ class
+*
+*/
 
 // C++ headers
 #include <vector> 
@@ -14,25 +20,25 @@
 // Unity headers
 #include "Unity/UnityInterface.h"
 
-namespace UIE
+namespace RAC
 {
 	namespace DSP
 	{
-		GraphicEQ::GraphicEQ(const Coefficients& fc, const Real& Q, const int& sampleRate) : numFilters(fc.Length()), lowShelf(fc[0], Q, sampleRate), highShelf(fc[numFilters - 1], Q, sampleRate),
+		GraphicEQ::GraphicEQ(const Coefficients& fc, const Real Q, const int sampleRate) : numFilters(fc.Length()), lowShelf(fc[0], Q, sampleRate), highShelf(fc[numFilters - 1], Q, sampleRate),
 			dbGain(fc.Length()), inputGain(fc.Length()), targetGain(fc.Length() + 1), currentGain(fc.Length() + 1), lastInput(fc.Length()), mat(fc.Length(), fc.Length()), equal(false), valid(false)
 		{
 			InitFilters(fc, Q, sampleRate);
 			InitMatrix(fc);
 		}
 
-		GraphicEQ::GraphicEQ(const Coefficients& gain, const Coefficients& fc, const Real& Q, const int& sampleRate) : numFilters(fc.Length()), lowShelf(fc[0], Q, sampleRate), highShelf(fc[numFilters - 1], Q, sampleRate),
+		GraphicEQ::GraphicEQ(const Coefficients& gain, const Coefficients& fc, const Real Q, const int sampleRate) : numFilters(fc.Length()), lowShelf(fc[0], Q, sampleRate), highShelf(fc[numFilters - 1], Q, sampleRate),
 			dbGain(fc.Length()), inputGain(fc.Length()), targetGain(fc.Length() + 1), currentGain(fc.Length() + 1), lastInput(fc.Length()), mat(fc.Length(), fc.Length()), equal(false), valid(false)
 		{
 			InitFilters(fc, Q, sampleRate);
 			InitMatrix(fc);
 		}
 
-		void GraphicEQ::InitFilters(const Coefficients& fc, const Real& Q, const int& sampleRate)
+		void GraphicEQ::InitFilters(const Coefficients& fc, const Real Q, const int sampleRate)
 		{
 			for (int i = 0; i < numFilters; i++)
 				peakingFilters.push_back(PeakingFilter(fc[i], Q, sampleRate));
@@ -141,11 +147,11 @@ namespace UIE
 				valid = true;
 		}
 
-		Real GraphicEQ::GetOutput(const Real& input)
+		Real GraphicEQ::GetOutput(const Real input)
 		{
 			if (valid)
 			{
-				out = input;
+				Real out = input;
 				for (PeakingFilter& filter : peakingFilters)
 					out = filter.GetOutput(out);
 				out *= currentGain[0];

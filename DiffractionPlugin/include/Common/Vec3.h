@@ -1,6 +1,7 @@
 /*
+* @class vec3
 *
-*  \vec3 class
+* @brief Declaration of vec3 class
 *
 */
 
@@ -16,7 +17,7 @@
 #include "Common/Types.h"
 #include "Common/Definitions.h"
 
-namespace UIE
+namespace RAC
 {
 	namespace Common
 	{
@@ -171,16 +172,16 @@ namespace UIE
 			return UnitVector(v);
 		}
 
-		inline Real Dot(const vec3& v, const vec3& u)
+		inline Real Dot(const vec3& u, const vec3& v)
 		{
-			return v.x * u.x + v.y * u.y + v.z * u.z;
+			return u.x * v.x + u.y * v.y + u.z * v.z;
 		}
 
-		inline vec3 Cross(const vec3& v, const vec3& u)
+		inline vec3 Cross(const vec3& u, const vec3& v)
 		{
-			return vec3(v.y * u.z - v.z * u.y,
-				v.z * u.x - v.x * u.z,
-				v.x * u.y - v.y * u.x);
+			return vec3(u.y * v.z - u.z * v.y,
+				u.z * v.x - u.x * v.z,
+				u.x * v.y - u.y * v.x);
 		}
 	}
 }

@@ -8,7 +8,6 @@
 #include <string>
 
 // Common headers
-#include "Common/AudioManager.h"
 #include "Common/Coefficients.h"
 
 // Spatialiser headers
@@ -36,10 +35,10 @@
 
 //////////////////// Namespaces ////////////////////
 
-using namespace UIE::Spatialiser;
-using namespace UIE::Common;
-using namespace UIE::DSP;
-using namespace UIE::Unity;
+using namespace RAC::Spatialiser;
+using namespace RAC::Common;
+using namespace RAC::DSP;
+using namespace RAC::Unity;
 
 //////////////////// Variables ////////////////////
 

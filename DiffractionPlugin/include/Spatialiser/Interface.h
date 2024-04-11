@@ -3,8 +3,8 @@
 * 
 */
 
-#ifndef Spatialiser_Interface_h
-#define Spatialiser_Interface_h
+#ifndef RoomAcoustiCpp_Interface_h
+#define RoomAcoustiCpp_Interface_h
 
 // Common headers
 #include "Common/Vec.h"
@@ -15,7 +15,7 @@
 // Spatialiser headers
 #include "Spatialiser/Types.h"
 
-namespace UIE
+namespace RAC
 {
 	using namespace Common;
 	namespace Spatialiser
@@ -39,14 +39,14 @@ namespace UIE
 		 * @param hrtfResamplingStep The step size for resampling the HRTF.
 		 * @param filePaths The file paths for HRTF files.
 		 */
-		bool LoadSpatialisationFiles(const int& hrtfResamplingStep, const std::vector<std::string>& filePaths);
+		bool LoadSpatialisationFiles(const int hrtfResamplingStep, const std::vector<std::string>& filePaths);
 
 		/**
 		 * Sets the spatialisation mode for the HRTF processing.
 		 *
 		 * @param config The configuration of the spatialisation mode.
 		 */
-		void UpdateSpatialisationMode(const SPATConfig& config);
+		void UpdateSpatialisationMode(const SPATConfig config);
 		
 		/**
 		 * Updates the configuration for the Image Source Model (ISM).
@@ -60,7 +60,7 @@ namespace UIE
 		 *
 		 * @param model The model used to calculate the late reverberation time.
 		 */
-		void UpdateReverbTimeModel(const ReverbTime& model);
+		void UpdateReverbTimeModel(const ReverbTime model);
 
 		/**
 		 * Updates the FDN matrix used to process the late reverberation.
@@ -75,7 +75,7 @@ namespace UIE
 		 * @param volume The volume of the room.
 		 * @param dimensions The dimensions of the room for the delay lines.
 		 */
-		void UpdateRoom(const Real& volume, const vec& dimensions);
+		void UpdateRoom(const Real volume, const vec& dimensions);
 
 		/**
 		 * Clears the internal FDN buffers.

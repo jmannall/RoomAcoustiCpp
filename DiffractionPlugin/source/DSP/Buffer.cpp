@@ -8,13 +8,13 @@
 // DSP headers
 #include "DSP/Buffer.h"
 
-namespace UIE
+namespace RAC
 {
 	namespace DSP
 	{
 		////////////////////////////////////////
 
-		void Buffer::ResizeBuffer(const size_t& numSamples)
+		void Buffer::ResizeBuffer(const size_t numSamples)
 		{
 			size_t size = Length();
 			if (size == numSamples)
@@ -40,7 +40,7 @@ namespace UIE
 
 		////////////////////////////////////////
 
-		void BufferF::ResizeBuffer(const size_t& numSamples)
+		void BufferF::ResizeBuffer(const size_t numSamples)
 		{
 			size_t size = mBuffer.size();
 			if (size == numSamples)

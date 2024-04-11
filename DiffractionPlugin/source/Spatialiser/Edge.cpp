@@ -16,7 +16,7 @@
 #include "Spatialiser/Edge.h"
 #include "Spatialiser/Types.h"
 
-namespace UIE
+namespace RAC
 {
 	using namespace Unity;
 	using namespace Common;
@@ -36,7 +36,7 @@ namespace UIE
 			Update();
 		}
 
-		Edge::Edge(const vec3& base, const vec3& top, const vec3& normal1, const vec3& normal2, const size_t& id1, const size_t& id2)
+		Edge::Edge(const vec3& base, const vec3& top, const vec3& normal1, const vec3& normal2, const size_t id1, const size_t id2)
 			: zW(0.0f), mBase(base), mTop(top), mFaceNormals{ normal1, normal2 }, mWallIds{ id1, id2 }
 		{
 			Update();

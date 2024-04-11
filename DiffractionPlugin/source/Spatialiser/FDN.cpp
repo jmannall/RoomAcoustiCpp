@@ -1,6 +1,7 @@
 /*
+* @class FDN, Channel
 *
-*  \FDN class
+* @brief Declaration of FDN and Channel classes
 *
 */
 
@@ -15,7 +16,7 @@
 // Unity headers
 #include "Unity/UnityInterface.h"
 
-namespace UIE
+namespace RAC
 {
 	using namespace Common;
 	namespace Spatialiser
@@ -37,7 +38,7 @@ namespace UIE
 			SetAbsorption(T60);
 		}
 
-		void Channel::SetParameters(const Coefficients& T60, const Real& t)
+		void Channel::SetParameters(const Coefficients& T60, const Real t)
 		{
 			SetDelay(t);
 			if (T60 > 0.0)
@@ -235,7 +236,7 @@ namespace UIE
 		//	}*/
 		//}
 
-		void FDN::ProcessOutput(const std::vector<Real>& data, const Real& gain)
+		void FDN::ProcessOutput(const std::vector<Real>& data, const Real gain)
 		{
 			BeginFDNChannel();
 			int i = 0;

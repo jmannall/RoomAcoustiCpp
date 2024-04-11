@@ -24,7 +24,7 @@
 #include "Common/SphericalGeometries.h"
 
 using namespace Common;
-namespace UIE
+namespace RAC
 {
 	using namespace Unity;
 	using namespace DSP;
@@ -87,7 +87,7 @@ namespace UIE
 			
 		}
 
-		void ReverbSource::UpdateSpatialisationMode(const HRTFMode& mode)
+		void ReverbSource::UpdateSpatialisationMode(const HRTFMode mode)
 		{
 			switch (mode)
 			{
@@ -219,7 +219,7 @@ namespace UIE
 			InitSources();
 		}
 
-		void Reverb::UpdateSpatialisationMode(const HRTFMode& mode)
+		void Reverb::UpdateSpatialisationMode(const HRTFMode mode)
 		{
 			lock_guard<mutex> lock(tuneInMutex);
 			for (ReverbSource& source : mReverbSources)

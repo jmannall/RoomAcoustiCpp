@@ -1,11 +1,12 @@
 /*
+* @class Reverb, ReverbSource
 *
-*  \Reverb class
+* @brief Declaration of Reverb and ReverbSource classes
 *
 */
 
-#ifndef Spatialiser_Reverb_h
-#define Spatialiser_Reverb_h
+#ifndef RoomAcoustiCpp_Reverb_h
+#define RoomAcoustiCpp_Reverb_h
 
 // C++ headers
 #include <mutex>
@@ -29,7 +30,7 @@
 #include "DSP/GraphicEQ.h"
 
 using namespace Common;
-namespace UIE
+namespace RAC
 {
 	using namespace Common;
 	namespace Spatialiser
@@ -44,7 +45,7 @@ namespace UIE
 			ReverbSource(Binaural::CCore* core, const Config& config, const vec3& shift);
 			~ReverbSource();
 
-			void UpdateSpatialisationMode(const HRTFMode& mode);
+			void UpdateSpatialisationMode(const HRTFMode mode);
 			inline void SetShift(const vec3& shift) { mShift = shift; }
 			inline vec3 GetShift() const { return mShift; }
 			void UpdatePosition(const vec3& position);
@@ -91,7 +92,7 @@ namespace UIE
 			Reverb(Binaural::CCore* core, const Config& config);
 			Reverb(Binaural::CCore* core, const Config& config, const vec& dimensions, const Coefficients& T60);
 
-			void UpdateSpatialisationMode(const HRTFMode& mode);
+			void UpdateSpatialisationMode(const HRTFMode mode);
 
 			void UpdateReverb(const vec3& position);
 			void UpdateReflectionFilters(const std::vector<Absorption>& absorptions, bool running);

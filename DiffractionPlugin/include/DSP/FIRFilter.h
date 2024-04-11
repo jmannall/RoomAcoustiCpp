@@ -10,11 +10,12 @@
 
 // DSP headers
 #include "DSP/Buffer.h"
+#include "DSP/Interpolate.h"
 
 // Common headers
 #include "Common/Types.h"
 
-namespace UIE
+namespace RAC
 {
 	namespace DSP
 	{
@@ -27,9 +28,9 @@ namespace UIE
 			/**
 			 * Constructor that initialises the FIRFilter with a given impulse response
 			 *
-			 * @param ir The impulse response to initialise the FIRFilter with
+			 * @param mIr The impulse response to initialise the FIRFilter with
 			 */
-			FIRFilter(const Buffer& impulseResponse) : ir(), irLen(ir.Length()), count(static_cast<int>(impulseResponse.Length()) - 1), inputLine() { SetImpulseResponse(impulseResponse); };
+			FIRFilter(const Buffer& ir) : mIr(), irLen(mIr.Length()), count(static_cast<int>(ir.Length()) - 1), inputLine() { SetImpulseResponse(ir); };
 			
 			/**
 			 * Default deconstructor
@@ -42,7 +43,7 @@ namespace UIE
 			 * @param input The input to the FIRFilter
 			 * @return The output of the FIRFilter
 			 */
-			Real GetOutput(const Real& input);
+			Real GetOutput(const Real input);
 
 			/**
 			 * Resizes the impulse response and input line of the FIRFilter
@@ -65,16 +66,26 @@ namespace UIE
 				}
 			}
 
+			inline void UpdateImpulseResponse(const Buffer& targetIr, const Real lerpFactor)
+			{
+				Lerp(mIr, targetIr, lerpFactor);
+			}
+
+			inline Buffer GetImpulseResponse() const
+			{
+				return mIr;
+			}
+
 			/**
 			 * Sets the impulse response of the FIRFilter
 			 *
 			 * @param ir The new impulse response to set
 			 */
-			inline void SetImpulseResponse(const Buffer& impulseResponse)
+			inline void SetImpulseResponse(const Buffer& ir)
 			{
-				Resize(impulseResponse.Length());
-				for (int i = 0; i < impulseResponse.Length(); i++)
-					ir[i] = impulseResponse[i];
+				Resize(ir.Length());
+				for (int i = 0; i < ir.Length(); i++)
+					mIr[i] = ir[i];
 			}
 
 		private:
@@ -86,10 +97,10 @@ namespace UIE
 			 *
 			 * @param len The new length of the impulse response
 			 */
-			inline void IncreaseSize(const size_t& len)
+			inline void IncreaseSize(const size_t len)
 			{
 				inputLine.ResizeBuffer(len);
-				ir.ResizeBuffer(len);
+				mIr.ResizeBuffer(len);
 			}
 
 			/**
@@ -99,7 +110,7 @@ namespace UIE
 			 *
 			 * @param len The new length of the impulse response
 			 */
-			inline void DecreaseSize(const size_t& len)
+			inline void DecreaseSize(const size_t len)
 			{
 				Buffer store = inputLine;
 				int index = count;
@@ -109,14 +120,14 @@ namespace UIE
 					if (index >= irLen) { index = 0; }
 				}
 				inputLine.ResizeBuffer(len);
-				ir.ResizeBuffer(len);
+				mIr.ResizeBuffer(len);
 				count = 0;
 			}
 
 			/**
 			 * The impulse response and input line buffers
 			 */
-			Buffer ir;
+			Buffer mIr;
 			Buffer inputLine;
 
 			/**

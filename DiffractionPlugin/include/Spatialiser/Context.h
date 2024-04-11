@@ -1,17 +1,15 @@
 /*
-*
-*  \Spatialiser context
+* @brief Defines the RoomAcoustiCpp global context
 *
 */
 
-#ifndef Spatialiser_Context_h
-#define Spatialiser_Context_h
+#ifndef RoomAcoustiCpp_Context_h
+#define RoomAcoustiCpp_Context_h
 
 // C++ headers
 #include <thread>
 
 // Common headers
-#include "Common/AudioManager.h"
 #include "Common/Matrix.h"
 #include "Common/Vec.h"
 #include "Common/Vec3.h"
@@ -28,7 +26,7 @@
 #include "Common/Transform.h"
 #include "BinauralSpatializer/3DTI_BinauralSpatializer.h"
 
-namespace UIE
+namespace RAC
 {
 	using namespace Common;
 	namespace Spatialiser
@@ -65,14 +63,14 @@ namespace UIE
 			 * 
 			 * @return True if the files were loaded successfully, false otherwise.
 			 */
-			bool LoadSpatialisationFiles(const int& hrtfResamplingStep, const std::vector<std::string>& filePaths);
+			bool LoadSpatialisationFiles(const int hrtfResamplingStep, const std::vector<std::string>& filePaths);
 				
 			/**
 			 * Updates the spatialisation mode for each component of the spatialiser.
 			 *
 			 * @param config The new spatialisation configuration.
 			 */
-			void UpdateSpatialisationMode(const SPATConfig& config);
+			void UpdateSpatialisationMode(const SPATConfig config);
 
 			/**
 			 * Stop the spatialiser running.
@@ -98,7 +96,7 @@ namespace UIE
 			 *
 			 * @param model The new reverb time model.
 			 */
-			void UpdateReverbTimeModel(const ReverbTime& model);
+			void UpdateReverbTimeModel(const ReverbTime model);
 
 			/**
 			 * Updates the feedback delay network (FDN) model.
@@ -127,7 +125,7 @@ namespace UIE
 			 * @param volume The volume of the room used to predict the reverberation time.
 			 * @param dimensions The dimensions of the room used to set the FDN delay lines.
 			 */
-			void UpdateRoom(const Real& volume, const vec& dimensions);
+			void UpdateRoom(const Real volume, const vec& dimensions);
 
 			inline void ResetFDN() { mReverb->ResetFDN(); }
 

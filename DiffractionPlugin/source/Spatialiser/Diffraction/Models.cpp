@@ -5,7 +5,6 @@
 */
 
 // Common headers
-#include "Common/AudioManager.h"
 
 // Spatialiser headers
 #include "Spatialiser/Diffraction/Models.h"
@@ -17,7 +16,7 @@
 // DSP headers
 #include "DSP/Interpolate.h"
 
-namespace UIE
+namespace RAC
 {
 	using namespace Common;
 	using namespace DSP;
@@ -863,34 +862,26 @@ namespace UIE
 #ifdef PROFILE_AUDIO_THREAD
 					EndFIR();
 #endif
-
-					/*BeginFIR();
-					for (int i = 0; i < numFrames; i++)
-					{
-						outBuffer[i] = mclFirFilter.Filter(inBuffer[i]);
-					}
-					EndFIR();*/
 				}
 				else
 				{
 					std::lock_guard<std::mutex> lock(*m);
 
-					if (currentIr.Length() != targetIr.Length())
-						currentIr.ResizeBuffer(targetIr.Length());
-#ifdef PROFILE_AUDIO_THREAD
-					BeginLerp();
-#endif
+					/*if (currentIr.Length() != targetIr.Length())
+						currentIr.ResizeBuffer(targetIr.Length());*/
+
 					FlushDenormals();
 					for (int i = 0; i < numFrames; i++)
 					{
 						outBuffer[i] = firFilter.GetOutput(inBuffer[i]);
-						Lerp(currentIr, targetIr, lerpFactor);
+						firFilter.UpdateImpulseResponse(targetIr, lerpFactor);
+						/*Lerp(currentIr, targetIr, lerpFactor);
+						BeginFDNMatrix();
 						firFilter.SetImpulseResponse(currentIr);
+						EndFDNMatrix();*/
 					}
 					NoFlushDenormals();
-#ifdef PROFILE_AUDIO_THREAD
-					EndLerp();
-#endif
+					currentIr = firFilter.GetImpulseResponse();
 					/*BeginLerp();
 					for (int i = 0; i < numFrames; i++)
 					{

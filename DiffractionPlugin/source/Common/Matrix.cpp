@@ -7,7 +7,7 @@
 #include "Common/Matrix.h"
 #include "Common/Vec.h"
 
-namespace UIE
+namespace RAC
 {
 	namespace Common
 	{

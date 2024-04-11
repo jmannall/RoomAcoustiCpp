@@ -1,6 +1,5 @@
 /*
-*
-*  \Spatialiser context
+* @brief Defines the RoomAcoustiCpp global context
 *
 */
 
@@ -18,7 +17,7 @@
 #include "HRTF/HRTFCereal.h"
 #include "ILD/ILDCereal.h"
 
-namespace UIE
+namespace RAC
 {
 	using namespace Unity;
 	namespace Spatialiser
@@ -121,7 +120,7 @@ namespace UIE
 
 		////////////////////////////////////////
 
-		bool Context::LoadSpatialisationFiles(const int& hrtfResamplingStep, const std::vector<std::string>& filePaths)
+		bool Context::LoadSpatialisationFiles(const int hrtfResamplingStep, const std::vector<std::string>& filePaths)
 		{
 			lock_guard<mutex> lock(tuneInMutex);
 
@@ -167,7 +166,7 @@ namespace UIE
 
 		////////////////////////////////////////
 
-		void Context::UpdateSpatialisationMode(const SPATConfig& config)
+		void Context::UpdateSpatialisationMode(const SPATConfig config)
 		{
 			mConfig.spatConfig = config;
 
@@ -177,7 +176,7 @@ namespace UIE
 
 		////////////////////////////////////////
 
-		void Context::UpdateReverbTimeModel(const ReverbTime& model)
+		void Context::UpdateReverbTimeModel(const ReverbTime model)
 		{
 			Coefficients T60 = mRoom->UpdateReverbTimeModel(model);
 			mReverb->UpdateReverbTime(T60);
@@ -185,7 +184,7 @@ namespace UIE
 
 		////////////////////////////////////////
 
-		void Context::UpdateRoom(const Real& volume, const vec& dimensions)
+		void Context::UpdateRoom(const Real volume, const vec& dimensions)
 		{
 			Coefficients T60 = mRoom->GetReverbTime(volume);
 			mReverb->SetFDNParameters(T60, dimensions);

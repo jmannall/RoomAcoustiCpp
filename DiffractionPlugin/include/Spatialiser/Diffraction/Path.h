@@ -4,13 +4,13 @@
 *
 */
 
-#ifndef Spatialiser_Diffraction_Path_h
-#define Spatialiser_Diffraction_Path_h
+#ifndef RoomAcoustiCpp_Diffraction_Path_h
+#define RoomAcoustiCpp_Diffraction_Path_h
 
 #include "Common/Vec3.h"
 #include "Spatialiser/Edge.h"
 
-namespace UIE
+namespace RAC
 {
 	using namespace Common;
 	namespace Spatialiser

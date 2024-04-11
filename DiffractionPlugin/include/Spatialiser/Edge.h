@@ -1,12 +1,14 @@
 /*
+* @class Edge
 *
-*  \Edge class
-*  \faceNormals defined using right hand curl rule that rotates from plane 0 to plane 1 through the exterior wedge.
+* @brief Declaration of Edge class
+*
+* @faceNormals defined using right hand curl rule that rotates from plane 0 to plane 1 through the exterior wedge.
 *
 */
 
-#ifndef Spatialiser_Edge_h
-#define Spatialiser_Edge_h
+#ifndef RoomAcoustiCpp_Edge_h
+#define RoomAcoustiCpp_Edge_h
 
 // C++ headers
 #include <vector>
@@ -15,7 +17,7 @@
 #include "Common/Vec3.h"
 #include "Common/Types.h"
 
-namespace UIE
+namespace RAC
 {
 	using namespace Common;
 	namespace Spatialiser
@@ -25,7 +27,7 @@ namespace UIE
 		{
 			vec3 base, top, normal1, normal2;
 			size_t id1, id2;
-			EdgeData(const vec3& _base, const vec3& _top, const vec3& _normal1, const vec3& _normal2, const size_t& _id1, const size_t& _id2)
+			EdgeData(const vec3& _base, const vec3& _top, const vec3& _normal1, const vec3& _normal2, const size_t _id1, const size_t _id2)
 				: base(_base), top(_top), normal1(_normal1), normal2(_normal2), id1(_id1), id2(_id2) {};
 		};
 
@@ -38,19 +40,19 @@ namespace UIE
 			// Load and Destroy
 			Edge();
 			Edge(const EdgeData& data);
-			Edge(const vec3& base, const vec3& top, const vec3& normal1, const vec3& normal2, const size_t& id1, const size_t& id2);
+			Edge(const vec3& base, const vec3& top, const vec3& normal1, const vec3& normal2, const size_t id1, const size_t id2);
 			~Edge() {};
 
 			// Edge
 			void Update();
 
 			// Getters
-			inline vec3 GetAP(vec3 point) const { return point - mBase; }
+			inline vec3 GetAP(const vec3& point) const { return point - mBase; }
 			inline vec3 GetEdgeCoord(Real z) const { return mBase + z * mEdgeVector; }
 			inline vec3 GetBase() const { return mBase; }
 			inline vec3 GetTop() const { return mTop; }
 			inline vec3 GetMidPoint() const { return midPoint; }
-			inline size_t GetWallID(const size_t& id) const
+			inline size_t GetWallID(const size_t id) const
 			{
 				if (id == mWallIds[0])
 					return mWallIds[1];
@@ -68,7 +70,7 @@ namespace UIE
 				return false;
 			}
 
-			void Update(const EdgeData data)
+			void Update(const EdgeData& data)
 			{
 				mBase = data.base;
 				mTop = data.top;
@@ -76,14 +78,6 @@ namespace UIE
 				mFaceNormals[1] = data.normal2;
 				Update();
 			}
-
-			//inline bool GetRValid() const { return rValid; }
-			//inline void SetRValid(const vec3& receiver)
-			//{
-			//	// Check receiver in front of either plane (in front of both defo not in shadow zone)
-			//	// Be easy if save wall to edge - currently check path is valid in ISM anyway which performs similar checks
-			//	// This way maybe quicker? as avoids initialising a path if unnessesary?
-			//}
 
 			// Edge parameters
 			Real t;

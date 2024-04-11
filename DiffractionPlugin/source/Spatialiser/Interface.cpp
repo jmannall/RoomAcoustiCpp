@@ -7,7 +7,7 @@
 #include "Spatialiser/Interface.h"
 #include "Spatialiser/Context.h"
 
-namespace UIE
+namespace RAC
 {
 	namespace Spatialiser
 	{
@@ -50,7 +50,7 @@ namespace UIE
 
 		////////////////////////////////////////
 
-		bool LoadSpatialisationFiles(const int& hrtfResamplingStep, const std::vector<std::string>& filePaths)
+		bool LoadSpatialisationFiles(const int hrtfResamplingStep, const std::vector<std::string>& filePaths)
 		{
 			auto context = GetContext();
 			if (context)
@@ -61,7 +61,7 @@ namespace UIE
 
 		////////////////////////////////////////
 
-		void UpdateSpatialisationMode(const SPATConfig& config)
+		void UpdateSpatialisationMode(const SPATConfig config)
 		{
 			auto context = GetContext();
 			if (context)
@@ -79,7 +79,7 @@ namespace UIE
 
 		////////////////////////////////////////
 
-		void UpdateReverbTimeModel(const ReverbTime& model)
+		void UpdateReverbTimeModel(const ReverbTime model)
 		{
 			auto context = GetContext();
 			if (context)
@@ -97,7 +97,7 @@ namespace UIE
 
 		////////////////////////////////////////
 
-		void UpdateRoom(const Real& volume, const vec& dimensions)
+		void UpdateRoom(const Real volume, const vec& dimensions)
 		{
 			auto context = GetContext();
 			if (context)

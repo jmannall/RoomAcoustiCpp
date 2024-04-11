@@ -1,6 +1,7 @@
 /*
+* @class SourceManager
 *
-*  \Source manager class
+* @brief Declaration of SourceManager class
 *
 */
 
@@ -15,7 +16,7 @@
 #include "Spatialiser/Source.h"
 #include "Spatialiser/SourceManager.h"
 
-namespace UIE
+namespace RAC
 {
 	namespace Spatialiser
 	{
@@ -43,7 +44,7 @@ namespace UIE
 			return id;
 		}
 
-		void SourceManager::UpdateSpatialisationMode(const SPATConfig& config)
+		void SourceManager::UpdateSpatialisationMode(const SPATConfig config)
 		{
 			mConfig.spatConfig = config;
 			lock_guard <mutex> lock(updateMutex);
@@ -66,7 +67,7 @@ namespace UIE
 			{ it->second.UpdateData(data); }
 		}
 
-		void SourceManager::ProcessAudio(const size_t& id, const Buffer& data, matrix& reverbInput, Buffer& outputBuffer)
+		void SourceManager::ProcessAudio(const size_t id, const Buffer& data, matrix& reverbInput, Buffer& outputBuffer)
 		{
 			lock_guard <mutex> lock(processAudioMutex);
 			auto it = mSources.find(id);

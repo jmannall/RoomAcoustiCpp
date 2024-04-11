@@ -1,10 +1,12 @@
 /*
-* @brief AirAbsorption class
+* @class AirAbsorption
+* 
+* @brief Declaration of AirAbsorption class
 *
 */
 
-#ifndef Spatialiser_AirAbsorption_h
-#define Spatialiser_AirAbsorption_h
+#ifndef RoomAcoustiCpp_AirAbsorption_h
+#define RoomAcoustiCpp_AirAbsorption_h
 
 // Common headers
 #include "Common/Types.h"
@@ -16,7 +18,7 @@
 #include "DSP/IIRFilter.h"
 #include "DSP/Interpolate.h"
 
-namespace UIE
+namespace RAC
 {
 	using namespace DSP;
 	namespace Spatialiser
@@ -24,19 +26,19 @@ namespace UIE
 		class AirAbsorption
 		{
 		public:
-			AirAbsorption(const int& sampleRate) : x(0), y(0), currentD(0.0), targetD(0.0), a(0.0), b(0.0)
+			AirAbsorption(const int sampleRate) : x(0), y(0), currentD(0.0), targetD(0.0), a(0.0), b(0.0)
 			{
 				constant = static_cast<Real>(sampleRate) / (SPEED_OF_SOUND * 7782.0);
 				UpdateParameters();
 			}
-			AirAbsorption(const Real& distance, const int& sampleRate) : x(0), y(0), currentD(distance), targetD(distance), a(0.0), b(0.0)
+			AirAbsorption(const Real distance, const int sampleRate) : x(0), y(0), currentD(distance), targetD(distance), a(0.0), b(0.0)
 			{
 				constant = static_cast<Real>(sampleRate) / (SPEED_OF_SOUND * 7782.0);
 				UpdateParameters();
 			}
 			~AirAbsorption() {}
 
-			inline void SetDistance(const Real& distance) { targetD = distance; }
+			inline void SetDistance(const Real distance) { targetD = distance; }
 
 			inline void UpdateParameters()
 			{
@@ -64,30 +66,17 @@ namespace UIE
 				}
 			}
 
-			inline Real GetOutput(const Real& input)
+			inline Real GetOutput(const Real input)
 			{
-#if(_WINDOWS)
-				_MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
-#elif(_ANDROID)
-
-				unsigned m_savedCSR = getStatusWord();
-				// Bit 24 is the flush-to-zero mode control bit. Setting it to 1 flushes denormals to 0.
-				setStatusWord(m_savedCSR | (1 << 24));
-#endif
+				FlushDenormals();
 				Real v = input;
 				Real output = 0.0;
 
 				v += y * a;
 				y = v;
 				output += v * b;
-#if(_WINDOWS)
-				_MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_OFF);
-#elif(_ANDROID)
 
-				m_savedCSR = getStatusWord();
-				// Bit 24 is the flush-to-zero mode control bit. Setting it to 1 flushes denormals to 0.
-				setStatusWord(m_savedCSR | (0 << 24));
-#endif
+				NoFlushDenormals();
 				return output;
 			}
 			

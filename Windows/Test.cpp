@@ -37,21 +37,21 @@ namespace Microsoft
 	{
 		namespace CppUnitTestFramework
 		{
-			template<> static std::wstring ToString<UIE::Common::Coefficients>(const UIE::Common::Coefficients& t)
+			template<> static std::wstring ToString<RAC::Common::Coefficients>(const RAC::Common::Coefficients& t)
 			{
 				std::string str = "Coefficients: ";
 				for (int i = 0; i < t.Length(); i++)
-					str += UIE::Unity::RealToStr(t[i]) + ", ";
+					str += RAC::Unity::RealToStr(t[i]) + ", ";
 				std::wstring werror = std::wstring(str.begin(), str.end());
 				return werror;
 			}
 
-			template<> static std::wstring ToString<UIE::Common::Absorption>(const UIE::Common::Absorption& t)
+			template<> static std::wstring ToString<RAC::Common::Absorption>(const RAC::Common::Absorption& t)
 			{
 				std::string str = "Absorption: ";
 				for (int i = 0; i < t.Length(); i++)
-					str += UIE::Unity::RealToStr(t[i]) + ", ";
-				str += "Area: " + UIE::Unity::RealToStr(t.area);
+					str += RAC::Unity::RealToStr(t[i]) + ", ";
+				str += "Area: " + RAC::Unity::RealToStr(t.area);
 				std::wstring werror = std::wstring(str.begin(), str.end());
 				return werror;
 			}
@@ -59,7 +59,7 @@ namespace Microsoft
 	}
 }
 
-namespace UIE
+namespace RAC
 {
 	using namespace Common;
 	using namespace Spatialiser;
@@ -530,8 +530,6 @@ namespace UIE
 			for (int k = 0; k < repeats; k++)
 			{
 				i = 0;
-#pragma omp parallel for
-
 				for (auto& channel : mChannels)
 				{
 					y2.AddEntry(channel.GetOutput(x.GetEntry(i) + data[i]), i);
@@ -556,7 +554,7 @@ namespace UIE
 
 	//////////////////// Matrix Tests ////////////////////
 
-	TEST_CLASS(Matrix)
+	TEST_CLASS(MatrixTests)
 	{
 	public:
 
@@ -605,8 +603,8 @@ namespace UIE
 
 		TEST_METHOD(Parellise)
 		{
-			const int a = 12;
-			const int b = 12;
+			const int a = 2000;
+			const int b = 2000;
 
 			matrix mat = matrix(a, b);
 			rowvec x1 = rowvec(a);
@@ -632,40 +630,48 @@ namespace UIE
 			std::streambuf *coutbuf = std::cout.rdbuf(); //save old buf
 			std::cout.rdbuf(out.rdbuf()); //redirect std::cout to out.txt!
 
-			ScopedTimer timer;
-			x1.Reset();
-			timer.Start();
-
-			for (int k = 0; k < mat.Rows(); ++k)
-			{
-				for (int j = 0; j < mat.Cols(); ++j)
-				{
-					x1.IncreaseEntry(y.GetEntry(k) * mat.GetEntry(k, j), j);
-				}
-			}
-
-			timer.Stop("Serial");
-
 			int maxThreads = omp_get_max_threads();
 
 			cout << "Max threads: " << maxThreads << "\n";
+			ScopedTimer timer;
 
-			for (int i = 1; i <= maxThreads; i++)
+			for (int i = 0; i < 10; i++)
 			{
+				Real sum = 0.0;
+
+				x1.Reset();
+				timer.Start();
+
+				for (int j = 0; j < a; ++j)
+				{
+					sum = 0.0;
+					for (int k = 0; k < b; ++k)
+					{
+						sum += y.GetEntry(k) * mat.GetEntry(k, j);
+						//x1.IncreaseEntry(y.GetEntry(k) * mat.GetEntry(k, j), j);
+					}
+					x1.AddEntry(sum, j);
+				}
+
+				timer.Stop("Serial");
+				sum = 0.0;
+
 				x2.Reset();
 				timer.Start();
 
-				omp_set_num_threads(i);
-#pragma omp parallel for
-				for (int k = 0; k < mat.Rows(); ++k)
+#pragma omp parallel for num_threads(omp_get_max_threads()) private (sum)
+				for (int j = 0; j < a; ++j)
 				{
-					for (int j = 0; j < mat.Cols(); ++j)
+					sum = 0.0;
+					for (int k = 0; k < b; ++k)
 					{
-						x2.IncreaseEntry(y.GetEntry(k) * mat.GetEntry(k, j), j);
+						sum += y.GetEntry(k) * mat.GetEntry(k, j);
+						//x2.IncreaseEntry(y.GetEntry(k) * mat.GetEntry(k, j), j);
 					}
+					x2.AddEntry(sum, j);
 				}
 
-				timer.Stop("Parallel " + IntToStr(i));
+				timer.Stop("Parallel");
 			}
 			std::cout.rdbuf(coutbuf); //reset to standard output again
 
@@ -889,6 +895,23 @@ namespace UIE
 			for (int i = 0; i < 4; i++)
 				Assert::AreEqual(output[i], current[i], EPS, L"Wrong output");
 			}
+		}
+
+		TEST_METHOD(ParalleliseInterpolateBuffer)
+		{
+			Buffer current = Buffer(1e3);
+			Buffer target = Buffer(1e3);
+
+			for (int i = 0; i < 400; i++)
+			{
+				current[i] = 1.0;
+				target[i] = 0.2;
+			}
+
+			Real lerpFactor = 0.2;
+
+			for (int i = 0; i < 1e4; i++)
+				Lerp(current, target, lerpFactor);
 		}
 
 		TEST_METHOD(InterpolateCoefficients)

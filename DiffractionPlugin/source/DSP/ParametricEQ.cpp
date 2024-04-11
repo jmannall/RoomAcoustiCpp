@@ -1,3 +1,9 @@
+/*
+* @class ParametricEQ, BandFilter, BandSection
+*
+* @brief Declaration of ParametricEQ, BandFilter, BandSection classes
+*
+*/
 
 // Common headers
 #include "Common/Types.h"
@@ -10,18 +16,18 @@
 
 #include "Unity/UnityInterface.h"
 
-namespace UIE
+namespace RAC
 {
 	namespace DSP
 	{
-		BandSection::BandSection(const int& idx, const int& order, const bool& isLowBand, const int& sampleRate)
+		BandSection::BandSection(const int idx, const int order, const bool isLowBand, const int sampleRate)
 			: IIRFilter(2, sampleRate), m(idx), M(order)
 		{
 			a[0] = 1.0;
 			SetUpdatePointer(isLowBand);
 		}
 
-		BandSection::BandSection(const Real& fb, const Real& g, const int& idx, const int& order, const bool& isLowBand, const int& sampleRate)
+		BandSection::BandSection(const Real fb, const Real g, const int idx, const int order, const bool isLowBand, const int sampleRate)
 			: IIRFilter(2, sampleRate), m(idx), M(order)
 		{
 			a[0] = 1.0;
@@ -29,7 +35,7 @@ namespace UIE
 			UpdateParameters(fb, g);
 		};
 
-		void BandSection::UpdateLowBand(const Real& fb, const Real& g)
+		void BandSection::UpdateLowBand(const Real fb, const Real g)
 		{
 			Real K = tan(PI_1 * fb * T);
 			Real K_2 = 2.0 * K;
@@ -52,7 +58,7 @@ namespace UIE
 			b[2] = a[2] + (VK_2 * (K - cm) + VK_sq) * a[0];
 		}
 
-		void BandSection::UpdateHighBand(const Real& fb, const Real& g)
+		void BandSection::UpdateHighBand(const Real fb, const Real g)
 		{
 			Real K = tan(PI_1 * fb * T);
 			Real K_2 = 2.0 * K;
@@ -76,13 +82,13 @@ namespace UIE
 			b[2] = a[2] + (VK_2 * (K - cm) + VK_sq) * a[0];
 		}
 
-		BandFilter::BandFilter(const size_t& order, const bool& useLowBands, const Real& fb, const Real& g, const int& sampleRate) : out(0.0)
+		BandFilter::BandFilter(const size_t order, const bool useLowBands, const Real fb, const Real g, const int sampleRate) : out(0.0)
 		{
 			InitSections(order, useLowBands, sampleRate);
 			UpdateParameters(fb, g);
 		}
 
-		void BandFilter::InitSections(const size_t& order, const bool& useLowBands, const int& fs)
+		void BandFilter::InitSections(const size_t& order, const bool& useLowBands, const int fs)
 		{
 			size_t numSections = order / 2;
 			assert(order == numSections * 2); // order must be even
@@ -92,13 +98,13 @@ namespace UIE
 				sections.push_back(BandSection(i + 1, order, useLowBands, fs));
 		}
 
-		void BandFilter::UpdateParameters(const Real& fb, const Real& g)
+		void BandFilter::UpdateParameters(const Real fb, const Real g)
 		{
 			for (BandSection& section : sections)
 				section.UpdateParameters(fb, g);
 		}
 
-		Real BandFilter::GetOutput(const Real& input)
+		Real BandFilter::GetOutput(const Real input)
 		{
 			out = input;
 			for (BandSection& section : sections)
@@ -106,13 +112,13 @@ namespace UIE
 			return out;
 		}
 
-		ParametricEQ::ParametricEQ(const size_t& order, const Coefficients& fc, const int& sampleRate)
+		ParametricEQ::ParametricEQ(const size_t& order, const Coefficients& fc, const int sampleRate)
 			: numFilters(fc.Length() - 1), fb(numFilters), mGain(0.0), out(0.0), currentGain(fc.Length()), targetGain(fc.Length()), singleGain(false)
 		{
 			InitBands(order, fc, sampleRate);
 		}
 
-		ParametricEQ::ParametricEQ(const Coefficients& gain, const size_t& order, const Coefficients& fc, const int& sampleRate)
+		ParametricEQ::ParametricEQ(const Coefficients& gain, const size_t& order, const Coefficients& fc, const int sampleRate)
 			: numFilters(fc.Length() - 1), fb(numFilters), out(0.0), currentGain(gain), targetGain(gain), singleGain(false)
 		{
 			InitBands(order, fc, sampleRate);
@@ -144,7 +150,7 @@ namespace UIE
 			mGain = currentGain[numFilters];
 		}
 
-		void ParametricEQ::UpdateParameters(const Real& lerpFactor)
+		void ParametricEQ::UpdateParameters(const Real lerpFactor)
 		{
 			if (currentGain != targetGain)
 			{
@@ -153,7 +159,7 @@ namespace UIE
 			}
 		}
 
-		Real ParametricEQ::GetOutput(const Real& input)
+		Real ParametricEQ::GetOutput(const Real input)
 		{
 			out = input;
 			for (BandFilter& filter : filters)

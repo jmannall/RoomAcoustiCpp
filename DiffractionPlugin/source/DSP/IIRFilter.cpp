@@ -1,3 +1,9 @@
+/*
+* @class IIRFilter
+*
+* @brief Declaration of base IIRFilter class and derived HighShelf, LowPass, ZPKFilter, BandFilter and PassFilter classes
+*
+*/
 
 // C++ headers
 #if defined(_WINDOWS)
@@ -14,24 +20,19 @@
 #include "Common/Types.h"
 #include "Common/Definitions.h"
 #include "Common/Complex.h"
+#include "DSP/Interpolate.h"
 
-namespace UIE
+namespace RAC
 {
 	using namespace Common;
 	namespace DSP
 	{
 		////////////////////////////////////////
 
-		Real IIRFilter::GetOutput(const Real& input)
+		Real IIRFilter::GetOutput(const Real input)
 		{
-#if(_WINDOWS)
-			_MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
-#elif(_ANDROID)
+			FlushDenormals();
 
-			unsigned m_savedCSR = getStatusWord();
-			// Bit 24 is the flush-to-zero mode control bit. Setting it to 1 flushes denormals to 0.
-			setStatusWord(m_savedCSR | (1 << 24));
-#endif
 			Real v = input;
 			Real output = 0.0;
 			for (int i = 1; i <= order; i++)
@@ -45,14 +46,9 @@ namespace UIE
 
 			y[0] = v;
 			output += v * b[0];
-#if(_WINDOWS)
-			_MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_OFF);
-#elif(_ANDROID)
 
-			m_savedCSR = getStatusWord();
-			// Bit 24 is the flush-to-zero mode control bit. Setting it to 1 flushes denormals to 0.
-			setStatusWord(m_savedCSR | (0 << 24));
-#endif
+			NoFlushDenormals();
+
 			return output;
 		}
 
@@ -81,7 +77,7 @@ namespace UIE
 
 		////////////////////////////////////////
 
-		void HighShelf::UpdateParameters(const Real& fc, const Real& g)
+		void HighShelf::UpdateParameters(const Real fc, const Real g)
 		{
 			Real omega = cot(PI_1 * fc * T); // 2 * PI * fc * T / 2
 			Real sqrtG = sqrt(g);
@@ -97,7 +93,7 @@ namespace UIE
 
 		////////////////////////////////////////
 
-		void LowPass::UpdateParameters(const Real& fc)
+		void LowPass::UpdateParameters(const Real fc)
 		{
 			Real K = PI_2 * fc * T;
 
@@ -110,7 +106,7 @@ namespace UIE
 
 		////////////////////////////////////////
 
-		void PeakHighShelf::SetParameters(const Real& fc, const Real& Q)
+		void PeakHighShelf::SetParameters(const Real fc, const Real Q)
 		{
 			Real omega = PI_2 * fc * T;
 			cosOmega = cos(omega);
@@ -119,7 +115,7 @@ namespace UIE
 
 		////////////////////////////////////////
 
-		void PeakHighShelf::UpdateGain(const Real& g)
+		void PeakHighShelf::UpdateGain(const Real g)
 		{
 			Real A = sqrt(g);
 			Real v1 = A + 1.0;
@@ -139,7 +135,7 @@ namespace UIE
 
 		////////////////////////////////////////
 
-		void PeakLowShelf::SetParameters(const Real& fc, const Real& Q)
+		void PeakLowShelf::SetParameters(const Real fc, const Real Q)
 		{
 			Real omega = PI_2 * fc * T;
 			cosOmega = cos(omega);
@@ -148,7 +144,7 @@ namespace UIE
 
 		////////////////////////////////////////
 
-		void PeakLowShelf::UpdateGain(const Real& g)
+		void PeakLowShelf::UpdateGain(const Real g)
 		{
 			Real A = sqrt(g);
 			Real v1 = A + 1.0;
@@ -168,7 +164,7 @@ namespace UIE
 
 		////////////////////////////////////////
 
-		void PeakingFilter::SetParameters(const Real& fc, const Real& Q)
+		void PeakingFilter::SetParameters(const Real fc, const Real Q)
 		{
 			Real omega = PI_2 * fc * T;
 			cosOmega = -2.0 * cos(omega);
@@ -177,7 +173,7 @@ namespace UIE
 
 		////////////////////////////////////////
 
-		void PeakingFilter::UpdateGain(const Real& g)
+		void PeakingFilter::UpdateGain(const Real g)
 		{
 			Real A = sqrt(g);
 			Real v1 = alpha * A;
@@ -206,7 +202,7 @@ namespace UIE
 
 		////////////////////////////////////////
 
-		void PassFilter::UpdateLowPass(const Real& fc)
+		void PassFilter::UpdateLowPass(const Real fc)
 		{
 			Real omega = cot(PI_1 * fc * T); // 2 * PI * fc * T / 2
 			Real omega_sq = omega * omega;
@@ -222,7 +218,7 @@ namespace UIE
 
 		////////////////////////////////////////
 
-		void PassFilter::UpdateHighPass(const Real& fc)
+		void PassFilter::UpdateHighPass(const Real fc)
 		{
 			Real omega = cot(PI_1 * fc * T); // 2 * PI * fc * T / 2
 			Real omega_sq = omega * omega;

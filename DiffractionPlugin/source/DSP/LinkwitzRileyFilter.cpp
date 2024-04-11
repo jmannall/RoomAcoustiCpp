@@ -7,13 +7,13 @@
 // DSP headers
 #include "DSP/LinkwitzRileyFilter.h"
 
-namespace UIE
+namespace RAC
 {
 	namespace DSP
 	{
 		////////////////////////////////////////
 
-		void LinkwitzRiley::InitFilters(const int& fs)
+		void LinkwitzRiley::InitFilters(const int fs)
 		{
 			PassFilter lpFilter[3] = { PassFilter(fc[0], true, fs), PassFilter(fc[1], true, fs), PassFilter(fc[2], true, fs) };
 			PassFilter hpFilter[3] = { PassFilter(fc[0], false, fs), PassFilter(fc[1], false, fs), PassFilter(fc[2], false, fs) };
@@ -64,7 +64,7 @@ namespace UIE
 
 		////////////////////////////////////////
 
-		Real LinkwitzRiley::GetOutput(const Real& input)
+		Real LinkwitzRiley::GetOutput(const Real input)
 		{
 			Real mid[2];
 			mid[0] = filters[1].GetOutput(filters[0].GetOutput(input));

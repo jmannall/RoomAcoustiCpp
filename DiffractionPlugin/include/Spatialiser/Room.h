@@ -1,11 +1,12 @@
 /*
+* @class Room
 *
-*  \Room class
-*
+* @brief Declaration of Room class
+* 
 */
 
-#ifndef Spatialiser_Room_h
-#define Spatialiser_Room_h
+#ifndef RoomAcoustiCpp_Room_h
+#define RoomAcoustiCpp_Room_h
 
 // C++ headers
 #include <vector>
@@ -24,7 +25,7 @@
 #include "Spatialiser/VirtualSource.h"
 #include "Spatialiser/VirtualSource.h"
 
-namespace UIE
+namespace RAC
 {
 	using namespace Common;
 	namespace Spatialiser
@@ -41,12 +42,12 @@ namespace UIE
 			~Room() {};
 
 			// Image source model
-			inline Coefficients UpdateReverbTimeModel(const ReverbTime& model) { reverbTime = model; return GetReverbTime(); }
+			inline Coefficients UpdateReverbTimeModel(const ReverbTime model) { reverbTime = model; return GetReverbTime(); }
 
 			// Wall
 			size_t AddWall(Wall& wall);
 
-			inline void UpdateWall(const size_t& id, const vec3& normal, const Real* vData, size_t numVertices)
+			inline void UpdateWall(const size_t id, const vec3& normal, const Real* vData, size_t numVertices)
 			{
 				lock_guard<std::mutex> lock(mWallMutex);
 				auto it = mWalls.find(id);
@@ -54,7 +55,7 @@ namespace UIE
 				else { it->second.Update(normal, vData, numVertices); } // case: wall does exist
 			}
 
-			inline void RemoveWall(const size_t& id)
+			inline void RemoveWall(const size_t id)
 			{
 				lock_guard<std::mutex> lock(mWallMutex);
 				auto it = mWalls.find(id);
@@ -75,24 +76,24 @@ namespace UIE
 				}
 			}
 
-			void InitEdges(const size_t& id);
+			void InitEdges(const size_t id);
 
 			void UpdatePlanes();
 
 			void UpdateEdges();
 
 			Coefficients GetReverbTime();
-			Coefficients GetReverbTime(const Real& volume) { mVolume = volume; return GetReverbTime(); }
+			Coefficients GetReverbTime(const Real volume) { mVolume = volume; return GetReverbTime(); }
 
 			PlaneMap GetPlanes() { lock_guard<std::mutex> lock(mPlaneMutex); return mPlanes; }
 			WallMap GetWalls() { lock_guard<std::mutex> lock(mWallMutex); return mWalls; }
 			EdgeMap GetEdges() { lock_guard<std::mutex> lock(mEdgeMutex); return mEdges; }
 
 		private:
-			void AssignWallToPlane(const size_t& id);
-			void AssignWallToPlane(const size_t& wallID, Wall& wall);
+			void AssignWallToPlane(const size_t id);
+			void AssignWallToPlane(const size_t wallID, Wall& wall);
 
-			inline void RemoveWallFromPlane(const size_t& idP, const size_t& idW)
+			inline void RemoveWallFromPlane(const size_t idP, const size_t idW)
 			{
 				lock_guard<std::mutex> lock(mPlaneMutex);
 				auto itP = mPlanes.find(idP);
@@ -115,15 +116,15 @@ namespace UIE
 			// Edge
 			void AddEdge(const EdgeData& data);
 
-			void InitEdges(const size_t& id, const std::vector<size_t>& IDsW);
+			void InitEdges(const size_t id, const std::vector<size_t>& IDsW);
 
-			void FindEdges(const size_t& idA, const size_t& idB, std::vector<EdgeData>& data, std::vector<size_t>& IDs);
-			void FindEdges(const Wall& wallA, const Wall& wallB, const size_t& idA, const size_t& idB, std::vector<EdgeData>& data);
+			void FindEdges(const size_t idA, const size_t idB, std::vector<EdgeData>& data, std::vector<size_t>& IDs);
+			void FindEdges(const Wall& wallA, const Wall& wallB, const size_t idA, const size_t idB, std::vector<EdgeData>& data);
 
-			void FindParallelEdges(const Wall& wallA, const Wall& wallB, const size_t& idA, const size_t& idB, std::vector<EdgeData>& data);
-			void FindEdge(const Wall& wallA, const Wall& wallB, const size_t& idA, const size_t& idB, std::vector<EdgeData>& data);
+			void FindParallelEdges(const Wall& wallA, const Wall& wallB, const size_t idA, const size_t idB, std::vector<EdgeData>& data);
+			void FindEdge(const Wall& wallA, const Wall& wallB, const size_t idA, const size_t idB, std::vector<EdgeData>& data);
 
-			inline void UpdateEdge(const size_t& id, const EdgeData& edge)
+			inline void UpdateEdge(const size_t id, const EdgeData& edge)
 			{ 
 				auto it = mEdges.find(id);
 				if (it == mEdges.end()) { return; } // case: edge does not exist
@@ -140,14 +141,14 @@ namespace UIE
 				}
 			}
 
-			inline void RemoveEdges(const std::vector<size_t>& IDsE, const size_t& idW)
+			inline void RemoveEdges(const std::vector<size_t>& IDsE, const size_t idW)
 			{
 				lock_guard<std::mutex> lock(mEdgeMutex);
 				for (auto& idE : IDsE)
 					RemoveEdge(idE, idW);
 			}
 
-			inline void RemoveEdge(const size_t& idE, const size_t& idW)
+			inline void RemoveEdge(const size_t idE, const size_t idW)
 			{
 				auto itE = mEdges.find(idE);
 				if (itE != mEdges.end())

@@ -8,7 +8,7 @@
 
 #include "Common/Vec.h"
 
-namespace UIE
+namespace RAC
 {
 	namespace Common
 	{

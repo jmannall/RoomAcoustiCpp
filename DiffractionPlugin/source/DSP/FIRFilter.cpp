@@ -11,13 +11,13 @@
 // Common headers
 #include "Common/Types.h"
 
-namespace UIE
+namespace RAC
 {
 	namespace DSP
 	{
 		////////////////////////////////////////
 
-		Real FIRFilter::GetOutput(const Real& input)
+		Real FIRFilter::GetOutput(const Real input)
 		{
 			inputLine[count] = input;
 			Real output = 0.0;
@@ -27,7 +27,7 @@ namespace UIE
 			{
 				for (int i = 0; i < irLen; i++)
 				{
-					output += ir[i] * inputLine[index++];
+					output += mIr[i] * inputLine[index++];
 					if (index >= irLen) { index = 0; }
 				}
 			}
@@ -47,20 +47,20 @@ namespace UIE
 				{
 					if (index < (irLen - 8))
 					{
-						result_a += ir[i++] * inputLine[index++];
-						result_b += ir[i++] * inputLine[index++];
-						result_c += ir[i++] * inputLine[index++];
-						result_d += ir[i++] * inputLine[index++];
-						result_e += ir[i++] * inputLine[index++];
-						result_f += ir[i++] * inputLine[index++];
-						result_g += ir[i++] * inputLine[index++];
-						result_h += ir[i++] * inputLine[index++];
+						result_a += mIr[i++] * inputLine[index++];
+						result_b += mIr[i++] * inputLine[index++];
+						result_c += mIr[i++] * inputLine[index++];
+						result_d += mIr[i++] * inputLine[index++];
+						result_e += mIr[i++] * inputLine[index++];
+						result_f += mIr[i++] * inputLine[index++];
+						result_g += mIr[i++] * inputLine[index++];
+						result_h += mIr[i++] * inputLine[index++];
 					}
 					else
 					{
 						for (int k = 0; k < 8; k++)
 						{
-							output += ir[i++] * inputLine[index++];
+							output += mIr[i++] * inputLine[index++];
 							if (index >= irLen) { index = 0; }
 						}
 					}
