@@ -242,8 +242,12 @@ namespace RAC
 			int i = 0;
 			for (auto& channel : mChannels)
 			{
+				if (isnan(x.GetEntry(i)))
+					Debug::Log("X was nan", Colour::Red);
 				y.AddEntry(channel.GetOutput(x.GetEntry(i) + data[i]), i);
 				i++;
+				if (isnan(y.GetEntry(i)))
+					Debug::Log("Y was nan", Colour::Red);
 			}
 			y *= gain;
 			EndFDNChannel();

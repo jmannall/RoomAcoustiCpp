@@ -126,6 +126,13 @@ namespace RAC
 				diffraction = true;
 				key = IntToStr(id) + "d" + key;
 			}
+			inline void FlipPath()
+			{
+				std::reverse(pathParts.begin(), pathParts.end());
+				key = "";
+				for (Part part : pathParts)
+					key = key + IntToStr(part.id) + "r";
+			}
 
 			// Getters
 			size_t GetID() const { return pathParts.back().id; }

@@ -559,7 +559,7 @@ namespace RAC
 					{
 						Real total = 0.0;
 						int i = targetLen - 1;
-						while (i < currentLen)
+						while (i < currentLen && i > 14)
 						{
 							total += currentIr[i++];
 							total += currentIr[i++];
@@ -576,8 +576,8 @@ namespace RAC
 							}
 							total = 0.0;
 						}
-						currentIr.ResizeBuffer(i);
-						targetIr.ResizeBuffer(i);	
+						currentIr.ResizeBuffer(i + 1);
+						targetIr.ResizeBuffer(i + 1);	
 					}
 					else if (currentLen < targetLen)
 						currentIr.ResizeBuffer(targetLen);

@@ -73,7 +73,7 @@ namespace RAC
 			 * 
 			 * @param numSamples The number of samples to resize the buffer to.
 			 */
-			void ResizeBuffer(const size_t numSamples);
+			void ResizeBuffer(const int numSamples);
 
 			/**
 			 * Checks if the buffer is valid.

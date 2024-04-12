@@ -480,6 +480,8 @@ namespace RAC
 								{
 									VirtualSourceData vSource = vSourceStore;
 									vSource.Reset();
+									vSource.FlipPath();
+
 									// Check for ed - sp
 									position = vSource.GetRPosition();
 									path = Diffraction::Path(point, position, edge);
@@ -507,6 +509,7 @@ namespace RAC
 
 											intersections[j] = path.GetApex();
 											valid = FindIntersectionsEdSp(intersections, vSource, j);
+											// Flip plane ids l to r?
 											vSource.AddEdgeIDToStart(idE, path);
 
 											if (valid)
