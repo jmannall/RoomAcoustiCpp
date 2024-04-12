@@ -48,7 +48,6 @@ namespace RAC
 #if(_WINDOWS)
 			_MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
 #elif(_ANDROID)
-
 			unsigned m_savedCSR = getStatusWord();
 			// Bit 24 is the flush-to-zero mode control bit. Setting it to 1 flushes denormals to 0.
 			setStatusWord(m_savedCSR | (1 << 24));
@@ -60,7 +59,7 @@ namespace RAC
 #if(_WINDOWS)
 			_MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_OFF);
 #elif(_ANDROID)
-
+			unsigned m_savedCSR = getStatusWord();
 			setStatusWord(m_savedCSR | (0 << 24));
 #endif
 		}

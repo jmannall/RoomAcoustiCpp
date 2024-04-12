@@ -145,14 +145,17 @@
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>$(VCInstallDir)Auxiliary\VS\UnitTest\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(VCInstallDir)Auxiliary\VS\UnitTest\lib;$(LibraryPath)</LibraryPath>
+    <TargetName>RoomAcoustiCpp_$(Platform)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <TargetName>RoomAcoustiCpp_$(Platform)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseTest|x64'">
     <LinkIncremental>false</LinkIncremental>
     <IncludePath>$(VCInstallDir)Auxiliary\VS\UnitTest\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(VCInstallDir)Auxiliary\VS\UnitTest\lib;$(LibraryPath)</LibraryPath>
+    <TargetName>RoomAcoustiCpp_$(Platform)</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

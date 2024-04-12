@@ -23,8 +23,8 @@ namespace RAC
 #if DATA_TYPE_DOUBLE
 
 		const constexpr Real T_CELCIUS = 20.0;
-		const constexpr Real SPEED_OF_SOUND = 331.5 + 0.6 * T_CELCIUS;
-		//const constexpr Real SPEED_OF_SOUND = 344;
+		//const constexpr Real SPEED_OF_SOUND = 331.5 + 0.6 * T_CELCIUS;
+		const constexpr Real SPEED_OF_SOUND = 344.0;
 
 		const constexpr Real INV_SPEED_OF_SOUND = 1.0 / SPEED_OF_SOUND;
 
@@ -102,6 +102,8 @@ namespace RAC
 
 		const constexpr Real T_CELCIUS = 20.0f;
 		const constexpr Real SPEED_OF_SOUND = 331.5f + 0.6f * T_CELCIUS;
+		const constexpr Real SPEED_OF_SOUND = 344.0f;
+
 		const constexpr Real INV_SPEED_OF_SOUND = 1.0f / SPEED_OF_SOUND;
 
 		const constexpr Real EPS = 0.000001f;
