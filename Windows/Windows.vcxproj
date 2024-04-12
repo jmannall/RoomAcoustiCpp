@@ -109,7 +109,7 @@
   </ImportGroup>
   <ImportGroup Label="Shared">
     <Import Project="..\DiffractionPlugin\DiffractionPlugin.vcxitems" Label="Shared" />
-    <Import Project="..\3DTI_NoSofa\3DTI_NoSofa.vcxitems" Label="Shared" />
+    <Import Project="..\3dti_AudioToolkit\3DTI_NoSofa.vcxitems" Label="Shared" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -233,7 +233,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalLibraryDirectories>$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\lib\win;$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\lib\win;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>netcdf_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AssemblyDebug>true</AssemblyDebug>
     </Link>
@@ -262,7 +262,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalLibraryDirectories>$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\lib\win;$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\lib\win;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>netcdf_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AssemblyDebug>true</AssemblyDebug>
     </Link>
@@ -287,7 +287,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalLibraryDirectories>$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\lib\win;$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\lib\win;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>netcdf_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>

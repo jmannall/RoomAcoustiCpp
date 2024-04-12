@@ -9,7 +9,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Windows", "Windows\Windows.
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Android", "Android\Android.vcxproj", "{C4FBD30D-63BA-4B40-BAA1-6C5F91065427}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "3DTI_NoSofa", "3DTI_NoSofa\3DTI_NoSofa.vcxitems", "{D2696B6B-7DE2-4A2B-B2A6-434C41F4117B}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "3DTI_NoSofa", "3dti_AudioToolkit\3DTI_NoSofa.vcxitems", "{D2696B6B-7DE2-4A2B-B2A6-434C41F4117B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -64,11 +64,11 @@ Global
 		SolutionGuid = {3767F943-9E3A-48A7-A55D-07DBE2E3C85D}
 	EndGlobalSection
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		3DTI_NoSofa\3DTI_NoSofa.vcxitems*{2f98d92a-d2e5-460b-a1d1-12e9052deb64}*SharedItemsImports = 4
+		3dti_AudioToolkit\3DTI_NoSofa.vcxitems*{2f98d92a-d2e5-460b-a1d1-12e9052deb64}*SharedItemsImports = 4
 		DiffractionPlugin\DiffractionPlugin.vcxitems*{2f98d92a-d2e5-460b-a1d1-12e9052deb64}*SharedItemsImports = 4
 		DiffractionPlugin\DiffractionPlugin.vcxitems*{bc8aa037-56ab-4f29-bf45-d410aff883c6}*SharedItemsImports = 9
-		3DTI_NoSofa\3DTI_NoSofa.vcxitems*{c4fbd30d-63ba-4b40-baa1-6c5f91065427}*SharedItemsImports = 4
+		3dti_AudioToolkit\3DTI_NoSofa.vcxitems*{c4fbd30d-63ba-4b40-baa1-6c5f91065427}*SharedItemsImports = 4
 		DiffractionPlugin\DiffractionPlugin.vcxitems*{c4fbd30d-63ba-4b40-baa1-6c5f91065427}*SharedItemsImports = 4
-		3DTI_NoSofa\3DTI_NoSofa.vcxitems*{d2696b6b-7de2-4a2b-b2a6-434c41f4117b}*SharedItemsImports = 9
+		3dti_AudioToolkit\3DTI_NoSofa.vcxitems*{d2696b6b-7de2-4a2b-b2a6-434c41f4117b}*SharedItemsImports = 9
 	EndGlobalSection
 EndGlobal
