@@ -91,13 +91,19 @@ namespace RAC
 			none
 		};
 
+		enum class DirectSound
+		{
+			none, doCheck, alwaysTrue
+		};
+
 		struct ISMConfig
 		{
 			int order;
-			bool direct, reflection, diffraction, reflectionDiffraction, lateReverb, specularDiffraction;
+			DirectSound direct;
+			bool reflection, diffraction, reflectionDiffraction, lateReverb, specularDiffraction;
 
-			ISMConfig() : order(0), direct(true), reflection(false), diffraction(false), reflectionDiffraction(false), lateReverb(false), specularDiffraction(false) {};
-			ISMConfig(int _order, bool dir, bool ref, bool diff, bool refDif, bool rev, bool spDiff) : order(_order), direct(dir), reflection(ref), diffraction(diff), reflectionDiffraction(refDif), lateReverb(rev), specularDiffraction(spDiff) {};
+			ISMConfig() : order(0), direct(DirectSound::doCheck), reflection(false), diffraction(false), reflectionDiffraction(false), lateReverb(false), specularDiffraction(false) {};
+			ISMConfig(int _order, DirectSound dir, bool ref, bool diff, bool refDif, bool rev, bool spDiff) : order(_order), direct(dir), reflection(ref), diffraction(diff), reflectionDiffraction(refDif), lateReverb(rev), specularDiffraction(spDiff) {};
 		};
 
 		class SPATConfig

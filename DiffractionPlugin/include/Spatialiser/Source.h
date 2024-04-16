@@ -88,7 +88,7 @@ namespace RAC
 			bool UpdateVirtualSource(const VirtualSourceData& data, std::vector<VirtualSourceData>& newVSources);
 
 			inline SourceData GetData(const size_t& id) { lock_guard<std::mutex> lock(*dataMutex); mData.id = id; return mData; }
-			inline void UpdateData(const SourceData& data) { lock_guard<std::mutex> lock(*dataMutex); mData = data; }
+			inline void UpdateData(const SourceData& data) { lock_guard<std::mutex> lock(*dataMutex); mData.visible = data.visible; mData.vSources = data.vSources; }
 
 			// Audio
 			void ProcessAudio(const Buffer& data, matrix& reverbInput, Buffer& outputBuffer);

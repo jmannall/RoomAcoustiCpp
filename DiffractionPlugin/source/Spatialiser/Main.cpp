@@ -63,7 +63,7 @@ extern "C"
 	 *
 	 * @return True if the initialization was successful, false otherwise.
 	 */
-	EXPORT bool API SPATInit(int fs, int numFrames, int maxFDNChannels, float lerpFactor, float Q, const float* fBands, int numBands)
+	EXPORT bool API RACInit(int fs, int numFrames, int maxFDNChannels, float lerpFactor, float Q, const float* fBands, int numBands)
 	{
 
 		int numFDNChannels = 0;
@@ -101,7 +101,7 @@ extern "C"
 	 * This function should be called when the spatialiser is no longer needed.
 	 * It will free up any resources that the spatialiser is using.
 	 */
-	EXPORT void API SPATExit()
+	EXPORT void API RACExit()
 	{
 		Exit();
 	}
@@ -114,7 +114,7 @@ extern "C"
 	 *
 	 * @return True if the spatialisation mode was successfully set, false otherwise.
 	 */
-	EXPORT bool API SPATLoadSpatialisationFiles(int hrtfResamplingStep, const char** paths)
+	EXPORT bool API RACLoadSpatialisationFiles(int hrtfResamplingStep, const char** paths)
 	{
 		std::vector<std::string> filePaths = { std::string(*(paths)), std::string(*(paths + 1)), std::string(*(paths + 2)) };
 		return LoadSpatialisationFiles(hrtfResamplingStep, filePaths);
@@ -136,7 +136,7 @@ extern "C"
 	 * @param qualityDepth The depth up to which to use high quality HRTF processing. -2 for none, -1 for all (including late reverberation) and 0 for direct sound and 1, 2, 3 etc for the corresponding reflection/diffraction order.
 	 * @param performanceDepth The depth up to which to use high performance ILD processing. -2 for none, -1 for all (including late reverberation) and 0 for direct sound and 1, 2, 3 etc for the corresponding reflection/diffraction order.
 	*/
-	EXPORT void API SPATUpdateSpatialisationMode(int qualityDepth, int performanceDepth)
+	EXPORT void API RACUpdateSpatialisationMode(int qualityDepth, int performanceDepth)
 	{
 		SPATConfig config = SPATConfig(qualityDepth, performanceDepth);
 		UpdateSpatialisationMode(config);
@@ -144,6 +144,11 @@ extern "C"
 
 	/**
 	 * Updates the configuration for the Image Source Model (ISM).
+	 * 
+	 * The direct sound is mapped as follows.
+	 * 0 -> none
+	 * 1 -> doCheck
+	 * 2 -> alwaysTrue
 	 *
 	 * @param order The maximum number of reflections or diffractions to consider in the ISM.
 	 * @param dir Whether to consider direct sound.
@@ -153,9 +158,21 @@ extern "C"
 	 * @param rev Whether to consider late reverberation.
 	 * @param spDiff Whether to consider diffraction outside of the shadow zone.
 	 */
-	EXPORT void API SPATUpdateISMConfig(int order, bool dir, bool ref, bool diff, bool refDiff, bool rev, bool spDiff)
+	EXPORT void API RACUpdateISMConfig(int order, int dir, bool ref, bool diff, bool refDiff, bool rev, bool spDiff)
 	{
-		UpdateISMConfig(ISMConfig(order, dir, ref, diff, refDiff, rev, spDiff));
+		DirectSound direct;
+		switch (dir)
+		{
+			case(0):
+			{ direct = DirectSound::none; break; }
+			case(1):
+			{ direct = DirectSound::doCheck; break; }
+			case(2):
+			{ direct = DirectSound::alwaysTrue; break; }
+			default:
+			{ direct = DirectSound::none; break; }
+		}
+		UpdateISMConfig(ISMConfig(order, direct, ref, diff, refDiff, rev, spDiff));
 	}
 
 	/**
@@ -167,7 +184,7 @@ extern "C"
 	 * 
 	 * @param id The ID corresponding to a reverb time model.
 	 */
-	EXPORT void API SPATUpdateReverbTimeModel(int id)
+	EXPORT void API RACUpdateReverbTimeModel(int id)
 	{
 		switch (id)
 		{
@@ -189,7 +206,7 @@ extern "C"
 	 *
 	 * @param id The ID corresponding to a FDN matrix.
 	 */
-	EXPORT void API SPATUpdateFDNModel(int id)
+	EXPORT void API RACUpdateFDNModel(int id)
 	{
 		switch (id)
 		{
@@ -210,9 +227,9 @@ extern "C"
 	 * 
 	 * @param volume The volume (m^3) of the room.
 	 * @param dim The dimensions (m) of the room for the delay lines.
-	 * @param numDimensions The number of dimensions provided in the dim parameter. This must be a factor of numFDNChannels set in SPATInit. 
+	 * @param numDimensions The number of dimensions provided in the dim parameter. This must be a factor of numFDNChannels set in RACInit. 
 	 */
-	EXPORT void API SPATUpdateRoom(float volume, const float* dim, int numDimensions)
+	EXPORT void API RACUpdateRoom(float volume, const float* dim, int numDimensions)
 	{
 		vec dimensions = vec(numDimensions);
 		for (int i = 0; i < numDimensions; i++)
@@ -224,7 +241,7 @@ extern "C"
 	/**
 	 * Clears the internal FDN buffers.
 	 */
-	EXPORT void API SPATResetFDN()
+	EXPORT void API RACResetFDN()
 	{
 		ResetFDN();
 	}
@@ -240,7 +257,7 @@ extern "C"
 	 * @param oriY The y-component of the listener's orientation quaternion.
 	 * @param oriZ The z-component of the listener's orientation quaternion.
 	 */
-	EXPORT void API SPATUpdateListener(float posX, float posY, float posZ, float oriW, float oriX, float oriY, float oriZ)
+	EXPORT void API RACUpdateListener(float posX, float posY, float posZ, float oriW, float oriX, float oriY, float oriZ)
 	{
 		UpdateListener(vec3(posX, posY, posZ), vec4(oriW, oriX, oriY, oriZ));
 	}
@@ -253,7 +270,7 @@ extern "C"
 	 *
 	 * @return The ID of the new audio source.
 	 */
-	EXPORT int API SPATInitSource()
+	EXPORT int API RACInitSource()
 	{
 		return InitSource();
 	}
@@ -270,7 +287,7 @@ extern "C"
 	 * @param oriY The y-component of the source's orientation quaternion.
 	 * @param oriZ The z-component of the source's orientation quaternion.
 	 */
-	EXPORT void API SPATUpdateSource(int id, float posX, float posY, float posZ, float oriW, float oriX, float oriY, float oriZ)
+	EXPORT void API RACUpdateSource(int id, float posX, float posY, float posZ, float oriW, float oriX, float oriY, float oriZ)
 	{
 		UpdateSource(static_cast<size_t>(id), vec3(posX, posY, posZ), vec4(oriW, oriX, oriY, oriZ));
 	}
@@ -283,7 +300,7 @@ extern "C"
 	 *
 	 * @param id The ID of the audio source to remove.
 	 */
-	EXPORT void API SPATRemoveSource(int id)
+	EXPORT void API RACRemoveSource(int id)
 	{
 		RemoveSource(static_cast<size_t>(id));
 	}
@@ -303,7 +320,7 @@ extern "C"
 	 *
 	 * @return The ID of the new wall.
 	 */
-	EXPORT int API SPATInitWall(float nX, float nY, float nZ, const float* vData, int numVertices, const float* absorption)
+	EXPORT int API RACInitWall(float nX, float nY, float nZ, const float* vData, int numVertices, const float* absorption)
 	{
 		std::vector<Real> a = std::vector<Real>(numAbsorptionBands);
 		for (int i = 0; i < numAbsorptionBands; i++)
@@ -331,7 +348,7 @@ extern "C"
 	 * @param vData The vertices of the wall.
 	 * @param numVertices The number of vertices provided in the vData parameter.
 	 */
-	EXPORT void API SPATUpdateWall(int id, float nX, float nY, float nZ, const float* vData, int numVertices)
+	EXPORT void API RACUpdateWall(int id, float nX, float nY, float nZ, const float* vData, int numVertices)
 	{
 		int numCoords = 3 * numVertices;
 		Buffer in = Buffer(numCoords);
@@ -349,7 +366,7 @@ extern "C"
 	 *
 	 * @param id The ID of the wall to remove.
 	 */
-	EXPORT void API SPATRemoveWall(int id)
+	EXPORT void API RACRemoveWall(int id)
 	{
 		RemoveWall(static_cast<size_t>(id));
 	}
@@ -360,7 +377,7 @@ extern "C"
 	 * This function should be called after all walls have been updated for a frame.
 	 * It will update the planes and edges of the room to match the new wall positions and orientations.
 	 */
-	EXPORT void API SPATUpdatePlanesAndEdges()
+	EXPORT void API RACUpdatePlanesAndEdges()
 	{
 		UpdatePlanesAndEdges();
 	}
@@ -374,7 +391,7 @@ extern "C"
 	 * @param id The ID of the audio source to update.
 	 * @param data The new audio buffer for the source.
 	 */
-	EXPORT void API SPATSubmitAudio(int id, const float* data)
+	EXPORT void API RACSubmitAudio(int id, const float* data)
 	{
 		SubmitAudio(static_cast<size_t>(id), data);
 	}
@@ -387,7 +404,7 @@ extern "C"
 	 *
 	 * @return True if the processing was successful and the output buffer is ready, false otherwise.
 	 */
-	EXPORT bool API SPATProcessOutput()
+	EXPORT bool API RACProcessOutput()
 	{
 		GetOutput(&buffer);
 		if (!buffer)
@@ -413,12 +430,12 @@ extern "C"
 	/**
 	 * Returns a pointer to the output buffer of the spatialiser.
 	 *
-	 * This function should be called after SPATProcessOutput has returned true.
+	 * This function should be called after RACProcessOutput has returned true.
 	 * It will return a pointer to the output buffer that contains the processed output buffer.
 	 *
 	 * @param buf A pointer to a float pointer. This will be set to point to the interleaved output buffer.
 	 */
-	EXPORT void API SPATGetOutputBuffer(float** buf)
+	EXPORT void API RACGetOutputBuffer(float** buf)
 	{
 		*buf = buffer;
 	}

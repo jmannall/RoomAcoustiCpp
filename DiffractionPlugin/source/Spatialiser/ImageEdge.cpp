@@ -332,8 +332,17 @@ namespace RAC
 			bool lineOfSight = false;
 
 			// Direct sound
-			if (mISMConfig.direct)
-				lineOfSight = !LineRoomObstruction(point, mListenerPosition);
+			switch (mISMConfig.direct)
+			{
+				case DirectSound::doCheck:
+					lineOfSight = !LineRoomObstruction(mListenerPosition, point);
+					break;
+				case DirectSound::alwaysTrue:
+					lineOfSight = true;
+					break;
+				default:
+					lineOfSight = false;
+			}
 
 			if (mISMConfig.order < 1)
 				return lineOfSight;
