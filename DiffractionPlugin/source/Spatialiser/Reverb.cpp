@@ -336,6 +336,9 @@ namespace RAC
 						}
 					}
 					NoFlushDenormals();
+#ifdef PROFILE_AUDIO_THREAD
+					EndFDN();
+#endif
 				}
 				// Process buffer of each channel
 				for (auto& source : mReverbSources)
