@@ -352,11 +352,11 @@ namespace RAC
 			VirtualSourceDataStore spEd;
 			VirtualSourceDataStore ed;
 
-			if (mISMConfig.diffraction && mEdges.size() > 0)
+			if (mISMConfig.diffraction != DiffractionSound::none && mEdges.size() > 0)
 				FirstOrderDiffraction(point, ed, vSources);
 
 			// Reflections
-			if ((mISMConfig.reflection || mISMConfig.reflectionDiffraction) && mWalls.size() > 0)
+			if ((mISMConfig.reflection || mISMConfig.reflectionDiffraction != DiffractionSound::none) && mWalls.size() > 0)
 			{
 				FirstOrderReflections(point, sp, vSources);
 
@@ -365,7 +365,7 @@ namespace RAC
 
 				HigherOrderReflections(point, sp, vSources);
 
-				if (mISMConfig.reflectionDiffraction && mEdges.size() > 0)
+				if (mISMConfig.reflectionDiffraction != DiffractionSound::none && mEdges.size() > 0)
 					HigherOrderSpecularDiffraction(point, sp, edSp, spEd, vSources);
 			}
 
@@ -446,7 +446,7 @@ namespace RAC
 									{
 										vSource.Valid();
 
-										if (path.inShadow || mISMConfig.specularDiffraction)
+										if (path.inShadow || mISMConfig.reflectionDiffraction == DiffractionSound::allZones)
 										{
 											vPosition = path.CalculateVirtualPostion();
 											vSource.SetTransform(position, vPosition);
@@ -512,7 +512,7 @@ namespace RAC
 									if (path.valid) // Would be more effcient to save sValid and rValid for each edge
 									{
 										vSource.RValid();
-										if (path.inShadow || mISMConfig.specularDiffraction)
+										if (path.inShadow || mISMConfig.reflectionDiffraction == DiffractionSound::allZones)
 										{
 
 
@@ -589,7 +589,7 @@ namespace RAC
 											vSource.Valid();
 											vSource.RValid();
 
-											if (path.inShadow || mISMConfig.specularDiffraction)
+											if (path.inShadow || mISMConfig.reflectionDiffraction == DiffractionSound::allZones)
 											{
 												if (path.GetApex() == start.GetApex() && path.GetApex() == end.GetApex())
 												{
@@ -688,7 +688,7 @@ namespace RAC
 					// Valid diffraction path
 					vSource.Valid();
 
-					if (path.inShadow || mISMConfig.specularDiffraction)
+					if (path.inShadow || mISMConfig.diffraction == DiffractionSound::allZones)
 					{
 						bool obstruction = LineRoomObstruction(point, path.GetApex());
 						LineRoomObstruction(path.GetApex(), mListenerPosition, obstruction);

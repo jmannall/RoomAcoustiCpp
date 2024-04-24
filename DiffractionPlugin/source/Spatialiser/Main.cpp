@@ -142,6 +142,37 @@ extern "C"
 		UpdateSpatialisationMode(config);
 	}
 
+
+	DirectSound SelectDirectMode(int dir)
+	{
+		switch (dir)
+		{
+		case(0):
+		{ return DirectSound::none; break; }
+		case(1):
+		{ return DirectSound::doCheck; break; }
+		case(2):
+		{ return DirectSound::alwaysTrue; break; }
+		default:
+		{ return DirectSound::none; break; }
+		}
+	}
+
+	DiffractionSound SelectDiffractionMode(int diff)
+	{
+		switch (diff)
+		{
+		case(0):
+		{ return DiffractionSound::none; break; }
+		case(1):
+		{ return DiffractionSound::shadowZone; break; }
+		case(2):
+		{ return DiffractionSound::allZones; break; }
+		default:
+		{ return DiffractionSound::none; break; }
+		}
+	}
+
 	/**
 	 * Updates the configuration for the Image Source Model (ISM).
 	 * 
@@ -149,6 +180,11 @@ extern "C"
 	 * 0 -> none
 	 * 1 -> doCheck
 	 * 2 -> alwaysTrue
+	 * 
+	 * The diffracted sound is mapped as follows.
+	 * 0 -> none
+	 * 1 -> shadowZone
+	 * 2 -> allZones
 	 *
 	 * @param order The maximum number of reflections or diffractions to consider in the ISM.
 	 * @param dir Whether to consider direct sound.
@@ -156,23 +192,14 @@ extern "C"
 	 * @param diff Whether to consider diffracted sound.
 	 * @param refDiff Whether to consider combined reflected diffraction sound.
 	 * @param rev Whether to consider late reverberation.
-	 * @param spDiff Whether to consider diffraction outside of the shadow zone.
 	 */
-	EXPORT void API RACUpdateISMConfig(int order, int dir, bool ref, bool diff, bool refDiff, bool rev, bool spDiff)
+	EXPORT void API RACUpdateISMConfig(int order, int dir, bool ref, int diff, int refDiff, bool rev)
 	{
-		DirectSound direct;
-		switch (dir)
-		{
-			case(0):
-			{ direct = DirectSound::none; break; }
-			case(1):
-			{ direct = DirectSound::doCheck; break; }
-			case(2):
-			{ direct = DirectSound::alwaysTrue; break; }
-			default:
-			{ direct = DirectSound::none; break; }
-		}
-		UpdateISMConfig(ISMConfig(order, direct, ref, diff, refDiff, rev, spDiff));
+		DirectSound direct = SelectDirectMode(dir);
+		DiffractionSound diffraction = SelectDiffractionMode(diff);
+		DiffractionSound reflectionDiffraction = SelectDiffractionMode(refDiff);
+
+		UpdateISMConfig(ISMConfig(order, direct, ref, diffraction, reflectionDiffraction, rev));
 	}
 
 	/**

@@ -20,10 +20,12 @@
 
 // 3DTI headers
 #include "BinauralSpatializer/Core.h"
+#include "3dti_Toolkit/Common/CommonDefinitions.h"
 
 // DSP headers
 #include "DSP/Interpolate.h"
 
+using namespace Common;
 namespace RAC
 {
 	using namespace Common;
@@ -193,6 +195,8 @@ namespace RAC
 			{
 				lock_guard<mutex> lock(tuneInMutex);
 				mSource->SetSourceTransform(transform);
+				Debug::Log("Azimuth: " + FloatToStr(mSource->GetCurrentEarAzimuth(T_ear::LEFT)));
+				Debug::Log("Elevation: " + FloatToStr(mSource->GetCurrentEarElevation(T_ear::LEFT)));
 			}
 
 			VirtualSourceDataMap vSources;	
