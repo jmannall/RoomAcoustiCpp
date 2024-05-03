@@ -24,15 +24,15 @@ namespace RAC
 {
 	namespace DSP
 	{
-		GraphicEQ::GraphicEQ(const Coefficients& fc, const Real Q, const int sampleRate) : numFilters(fc.Length()), lowShelf(fc[0], Q, sampleRate), highShelf(fc[numFilters - 1], Q, sampleRate),
-			dbGain(fc.Length()), inputGain(fc.Length()), targetGain(fc.Length() + 1), currentGain(fc.Length() + 1), lastInput(fc.Length()), mat(fc.Length(), fc.Length()), equal(false), valid(false)
+		GraphicEQ::GraphicEQ(const Coefficients& fc, const Real Q, const int sampleRate) : numFilters(fc.Length() + 2), lowShelf((fc[0] / 2.0) * sqrt(fc[0] / (fc[0] / 2.0)), Q, sampleRate), highShelf(fc[numFilters - 3] * sqrt((2.0 * fc[numFilters - 3]) / fc[numFilters - 3]), Q, sampleRate),
+			dbGain(numFilters), inputGain(numFilters), targetGain(numFilters + 1), currentGain(numFilters + 1), lastInput(fc.Length()), mat(numFilters, numFilters), equal(false), valid(false)
 		{
 			InitFilters(fc, Q, sampleRate);
 			InitMatrix(fc);
 		}
 
-		GraphicEQ::GraphicEQ(const Coefficients& gain, const Coefficients& fc, const Real Q, const int sampleRate) : numFilters(fc.Length()), lowShelf(fc[0], Q, sampleRate), highShelf(fc[numFilters - 1], Q, sampleRate),
-			dbGain(fc.Length()), inputGain(fc.Length()), targetGain(fc.Length() + 1), currentGain(fc.Length() + 1), lastInput(fc.Length()), mat(fc.Length(), fc.Length()), equal(false), valid(false)
+		GraphicEQ::GraphicEQ(const Coefficients& gain, const Coefficients& fc, const Real Q, const int sampleRate) : numFilters(fc.Length() + 2), lowShelf((fc[0] / 2.0)* sqrt(fc[0] / (fc[0] / 2.0)), Q, sampleRate), highShelf(fc[numFilters - 3] * sqrt((2.0 * fc[numFilters - 3]) / fc[numFilters - 3]), Q, sampleRate),
+			dbGain(numFilters), inputGain(numFilters), targetGain(numFilters + 1), currentGain(numFilters + 1), lastInput(fc.Length()), mat(numFilters, numFilters), equal(false), valid(false)
 		{
 			InitFilters(fc, Q, sampleRate);
 			InitMatrix(fc);
@@ -40,13 +40,13 @@ namespace RAC
 
 		void GraphicEQ::InitFilters(const Coefficients& fc, const Real Q, const int sampleRate)
 		{
-			for (int i = 0; i < numFilters; i++)
+			for (int i = 0; i < numFilters - 2; i++)
 				peakingFilters.push_back(PeakingFilter(fc[i], Q, sampleRate));
 		}
 
 		void GraphicEQ::InitMatrix(const Coefficients& fc)
 		{
-			auto idxL = std::lower_bound(thirdOctBands.begin(), thirdOctBands.end(), fc[0]);
+			/*auto idxL = std::lower_bound(thirdOctBands.begin(), thirdOctBands.end(), fc[0]);
 			auto idxH = std::upper_bound(thirdOctBands.begin(), thirdOctBands.end(), fc[numFilters - 1]);
 
 			for (int i = 0; i < 1; i++)
@@ -58,6 +58,8 @@ namespace RAC
 			}
 
 			std::vector<Real> f = std::vector<Real>(idxL, idxH);
+
+
 
 			Real fm;
 			std::vector<int> counter = std::vector<int>(numFilters, 0);
@@ -73,24 +75,52 @@ namespace RAC
 			}
 
 			for (auto& i : fidx)
-				counter[i]++;
+				counter[i]++;*/
+
+
+			std::vector<Real> f = std::vector<Real>(numFilters, 0.0);;
+
+			f[0] = fc[0] / 2.0;
+			for (int i = 1; i < numFilters - 1; i++)
+				f[i] = fc[i - 1];
+			f[numFilters - 1] = 2.0 * fc[numFilters - 3];
 
 			Real pdb = 6.0;
 			Real p = pow(10.0, pdb / 20.0);
 
 			std::vector<Real> out = std::vector<Real>(f.size(), 0.0);
 			int j = 0;
+
+			lowShelf.UpdateGain(p);
+			out = lowShelf.GetFrequencyResponse(f);
+			lowShelf.UpdateGain(0.0);
+
+			for (int i = 0; i < out.size(); i++)
+				mat.IncreaseEntry(out[i], j, i);
+
+			j++;
+
 			for (PeakingFilter& filter : peakingFilters)
 			{
 				filter.UpdateGain(p);
 				out = filter.GetFrequencyResponse(f);
 				filter.UpdateGain(1.0);
 
+				/*for (int i = 0; i < out.size(); i++)
+					mat.IncreaseEntry(out[i] / counter[fidx[i]], j, fidx[i]);*/
+
 				for (int i = 0; i < out.size(); i++)
-					mat.IncreaseEntry(out[i] / counter[fidx[i]], j, fidx[i]);
+					mat.IncreaseEntry(out[i], j, i);
 				j++;
 			}
-				
+
+			highShelf.UpdateGain(p);
+			out = highShelf.GetFrequencyResponse(f);
+			highShelf.UpdateGain(0.0);
+
+			for (int i = 0; i < out.size(); i++)
+				mat.IncreaseEntry(out[i], j, i);
+
 			mat.Inverse();
 			mat *= pdb;
 		}
@@ -117,8 +147,14 @@ namespace RAC
 			else
 			{
 				// when dB is used here. Factors of 20 are cancelled out.
-				for (int i = 0; i < numFilters; i++)
-					dbGain.AddEntry(std::max(gain[i], EPS), i); // Prevent log10(0)
+				Real g = (gain[0] + gain[1]) / 2.0;
+				dbGain.AddEntry(std::max(g, EPS), 0); // Prevent log10(0)
+
+				for (int i = 1; i < numFilters - 1; i++)
+					dbGain.AddEntry(std::max(gain[i - 1], EPS), i); // Prevent log10(0)
+
+				g = (gain[numFilters - 4] + gain[numFilters - 3]) / 2.0;
+				dbGain.AddEntry(std::max(g, EPS), numFilters - 1); // Prevent log10(0)
 
 				dbGain.Log10();
 				Real meandBGain = dbGain.Sum() / dbGain.Cols();
@@ -135,11 +171,17 @@ namespace RAC
 		void GraphicEQ::UpdateParameters()
 		{
 			int i = 1;
+
+			lowShelf.UpdateGain(currentGain[i]);
+			i++;
+
 			for (PeakingFilter& filter : peakingFilters)
 			{
 				filter.UpdateGain(currentGain[i]);
 				i++;
 			}
+
+			highShelf.UpdateGain(currentGain[i]);
 
 			if (currentGain[0] == 0)
 				valid = false;
@@ -152,8 +194,10 @@ namespace RAC
 			if (valid)
 			{
 				Real out = input;
+				out = lowShelf.GetOutput(out);
 				for (PeakingFilter& filter : peakingFilters)
 					out = filter.GetOutput(out);
+				out = highShelf.GetOutput(out);
 				out *= currentGain[0];
 				return out;
 			}

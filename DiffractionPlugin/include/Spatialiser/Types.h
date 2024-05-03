@@ -26,10 +26,10 @@ namespace RAC
 // #define DEBUG_UPDATE
 // #define DEBUG_REMOVE
 // #define DEBUG_AUDIO_THREAD
-// #define DEBUG_ISM_THREAD
+// #define DEBUG_IEM_THREAD
 // #define DEBUG_HRTF
 // #define DEBUG_VIRTUAL_SOURCE
-#define DEBUG_ISM
+#define DEBUG_IEM
 
 		//////////////////// Data Types ////////////////////
 
@@ -101,15 +101,15 @@ namespace RAC
 			none, shadowZone, allZones
 		};
 
-		struct ISMConfig
+		struct IEMConfig
 		{
 			int order;
 			DirectSound direct;
 			DiffractionSound diffraction, reflectionDiffraction;
 			bool reflection, lateReverb;
 
-			ISMConfig() : order(0), direct(DirectSound::doCheck), reflection(false), diffraction(DiffractionSound::none), reflectionDiffraction(DiffractionSound::none), lateReverb(false) {};
-			ISMConfig(int _order, DirectSound dir, bool ref, DiffractionSound diff, DiffractionSound refDif, bool rev) : order(_order), direct(dir), reflection(ref), diffraction(diff), reflectionDiffraction(refDif), lateReverb(rev) {};
+			IEMConfig() : order(0), direct(DirectSound::doCheck), reflection(false), diffraction(DiffractionSound::none), reflectionDiffraction(DiffractionSound::none), lateReverb(false) {};
+			IEMConfig(int _order, DirectSound dir, bool ref, DiffractionSound diff, DiffractionSound refDif, bool rev) : order(_order), direct(dir), reflection(ref), diffraction(diff), reflectionDiffraction(refDif), lateReverb(rev) {};
 		};
 
 		class SPATConfig

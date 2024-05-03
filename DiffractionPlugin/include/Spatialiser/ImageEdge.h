@@ -28,7 +28,7 @@ namespace RAC
 			ImageEdge(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const size_t numBands);
 			~ImageEdge() {}
 
-			inline void UpdateISMConfig(const ISMConfig& config) { lock_guard<std::mutex> lock(mMutex); mISMConfigStore = config; }
+			inline void UpdateIEMConfig(const IEMConfig& config) { lock_guard<std::mutex> lock(mMutex); mIEMConfigStore = config; }
 			inline void SetListenerPosition(const vec3& position) { lock_guard<std::mutex> lock(mMutex); mListenerPositionStore = position; }
 			inline vec3 GetListenerPosition() { lock_guard<std::mutex> lock(mMutex); return mListenerPositionStore; }
 			
@@ -39,17 +39,18 @@ namespace RAC
 			bool ReflectPointInRoom(const vec3& point, VirtualSourceDataMap& vSources);
 
 			void UpdateRValid();
+			// EdgeZone FindEdgeZone(const vec3& point, const std::vector<size_t> planeIDs);
 
 			bool FindWallIntersection(const vec3& intersection, const vec3& start, const vec3& end, const Plane& plane) const;
 			bool FindWallIntersection(Absorption& absorption, const vec3& intersection, const vec3& start, const vec3& end, const Plane& plane) const;
 
 			bool FindIntersection(vec3& intersection, Absorption& absorption, const vec3& start, const vec3& end, const Plane& plane);
 			bool FindIntersections(std::vector<vec3>& intersections, VirtualSourceData& vSource, int bounceIdx);
-			bool FindIntersectionsSpEd(std::vector<vec3>& intersections, VirtualSourceData& vSource, int bounceIdx);
-			bool FindIntersectionsEdSp(std::vector<vec3>& intersections, VirtualSourceData& vSource, int bounceIdx);
-			bool FindIntersectionsSpEdSp(std::vector<vec3>& intersections, VirtualSourceData& vSource, int bounceIdx, int edgeIdx);
+			//bool FindIntersectionsSpEd(std::vector<vec3>& intersections, VirtualSourceData& vSource, int bounceIdx);
+			//bool FindIntersectionsEdSp(std::vector<vec3>& intersections, VirtualSourceData& vSource, int bounceIdx);
+			//bool FindIntersectionsSpEdSp(std::vector<vec3>& intersections, VirtualSourceData& vSource, int bounceIdx, int edgeIdx);
 			bool FindIntersections(std::vector<vec3>& intersections, VirtualSourceData& vSource, int bounceIdx, const vec3& start);
-			bool FindRIntersections(std::vector<vec3>& intersections, VirtualSourceData& vSource, int bounceIdx, const vec3& start);
+			//bool FindRIntersections(std::vector<vec3>& intersections, VirtualSourceData& vSource, int bounceIdx, const vec3& start);
 
 			bool LineRoomObstruction(const vec3& start, const vec3& end);
 			void LineRoomObstruction(const vec3& start, const vec3& end, bool& obstruction);
@@ -57,8 +58,8 @@ namespace RAC
 			void LineRoomObstruction(const vec3& start, const vec3& end, size_t currentWallID, bool& obstruction);
 			bool LineRoomObstruction(const vec3& start, const vec3& end, size_t currentWallID1, size_t currentWallID2);
 
-			void HigherOrderSpecularDiffraction(const vec3& point, VirtualSourceDataStore& sp, VirtualSourceDataStore& edSp, VirtualSourceDataStore& spEd, VirtualSourceDataMap& vSources);
-			void FirstOrderDiffraction(const vec3& point, VirtualSourceDataStore& ed, VirtualSourceDataMap& vSources);
+			// void HigherOrderSpecularDiffraction(const vec3& point, VirtualSourceDataStore& sp, VirtualSourceDataMap& vSources);
+			void FirstOrderDiffraction(const vec3& point, VirtualSourceDataStore& sp, VirtualSourceDataMap& vSources);
 			void FirstOrderReflections(const vec3& point, VirtualSourceDataStore& sp, VirtualSourceDataMap& vSources);
 			void HigherOrderReflections(const vec3& point, VirtualSourceDataStore& sp, VirtualSourceDataMap& vSources);
 
@@ -71,9 +72,9 @@ namespace RAC
 			WallMap mWalls;
 			EdgeMap mEdges;
 			std::vector<SourceData> mSources;
-			ISMConfig mISMConfig;
+			IEMConfig mIEMConfig;
 			vec3 mListenerPosition;
-			ISMConfig mISMConfigStore;
+			IEMConfig mIEMConfigStore;
 			vec3 mListenerPositionStore;
 
 			size_t numAbsorptionBands;

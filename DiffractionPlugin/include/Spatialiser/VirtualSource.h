@@ -57,33 +57,33 @@ namespace RAC
 		public:
 
 			// Load and Destroy
-			VirtualSourceData(size_t numBands) : valid(false), rValid(false), visible(false), feedsFDN(false), mFDNChannel(-1), order(0), reflection(false), diffraction(false), key(""), mAbsorption(numBands), distance(10) {};
+			VirtualSourceData(size_t numBands) : valid(false), /*rValid(false),*/ visible(false), feedsFDN(false), mFDNChannel(-1), order(0), reflection(false), diffraction(false), key(""), mAbsorption(numBands), distance(10) {};
 			~VirtualSourceData() { Clear(); };
 
 			// Plane
-			inline void AddPlaneIDs(const std::vector<size_t>& ids)
+			/*inline void AddPlaneIDs(const std::vector<size_t>& ids)
 			{
 				for (size_t id : ids)
 				{
 					pathParts.push_back(Part(id, true));
 					order++;
-					key = key + IntToStr(id) + "r";
+					key = key + std::to_string(id) + "r";
 				}
 				reflection = true;
-			}
+			}*/
 			inline void AddPlaneID(const size_t id)
 			{
 				pathParts.push_back(Part(id, true));
 				order++;
 				reflection = true;
-				key = key + IntToStr(id) + "r";
+				key = key + std::to_string(id) + "r";
 			}
-			inline void AddPlaneIDToStart(const size_t id) // IDs are added in reverse order (from listener to source)
-			{
-				pathParts.insert(pathParts.begin(), Part(id, true));
-				key = IntToStr(id) + "r" + key;
-			}
-			inline void RemovePlaneIDs()
+			//inline void AddPlaneIDToStart(const size_t id) // IDs are added in reverse order (from listener to source)
+			//{
+			//	pathParts.insert(pathParts.begin(), Part(id, true));
+			//	key = std::to_string(id) + "r" + key;
+			//}
+			/*inline void RemovePlaneIDs()
 			{
 				key = "";
 				mAbsorption.Reset();
@@ -96,48 +96,53 @@ namespace RAC
 							iter = pathParts.erase(iter);
 						else
 						{
-							key = key + IntToStr(iter->id) + "d";
+							key = key + std::to_string(iter->id) + "d";
 							++iter;
 						}
 					}
 				}
 				else
 					pathParts.clear();
-			}
+			}*/
 
 			// Absorption
 			inline void AddAbsorption(const Absorption& absorption) { mAbsorption *= absorption; }
 			inline void ResetAbsorption() { mAbsorption.Reset(); }
 
 			// Edge
-			inline void AddEdgeID(const size_t id, const Diffraction::Path path)
+			inline void AddEdgeID(const size_t id)
 			{
 				pathParts.push_back(Part(id, false));
 				order++;
-				mDiffractionPath = path;
 				diffraction = true;
-				key = key + IntToStr(id) + "d";
+				key = key + std::to_string(id) + "d";
 			}
-			inline void AddEdgeIDToStart(const size_t id, const Diffraction::Path path)
+			inline void UpdateDiffractionPath(const vec3& source, const vec3& receiver, const Edge& edge)
+			{ 
+				mDiffractionPath.UpdateParameters(source, receiver, edge);
+				vec3 position = mDiffractionPath.CalculateVirtualPostion();
+				SetTransform(mDiffractionPath.GetApex(), position);
+			}
+			/*inline void AddEdgeIDToStart(const size_t id, const Diffraction::Path path)
 			{
 				pathParts.insert(pathParts.begin(), Part(id, false));
 				order++;
 				mDiffractionPath = path;
 				diffraction = true;
-				key = IntToStr(id) + "d" + key;
-			}
-			inline void FlipPath()
+				key = std::to_string(id) + "d" + key;
+			}*/
+			/*inline void FlipPath()
 			{
 				std::reverse(pathParts.begin(), pathParts.end());
 				key = "";
 				for (Part part : pathParts)
-					key = key + IntToStr(part.id) + "r";
-			}
+					key = key + std::to_string(part.id) + "r";
+			}*/
 
 			// Getters
 			size_t GetID() const { return pathParts.back().id; }
 			size_t GetID(int i) const { return pathParts[i].id; }
-			std::vector<size_t> GetPlaneIDs() const;
+			// std::vector<size_t> GetPlaneIDs() const;
 			std::string GetKey() const { return key; }
 			inline bool IsReflection(int i) const { return pathParts[i].isReflection; }
 			inline Absorption GetAbsorption() const { return mAbsorption; }
@@ -146,39 +151,39 @@ namespace RAC
 			// Transforms
 			void SetTransform(const vec3& vSourcePosition);
 			void SetTransform(const vec3& vSourcePosition, const vec3& vEdgeSourcePosition);
-			void UpdateTransform(const vec3& vEdgeSourcePosition);
+			// void UpdateTransform(const vec3& vEdgeSourcePosition);
 
 			inline vec3 GetPosition() const { return mPositions.back(); }
 			vec3 GetPosition(int i) const;
-			vec3 GetTransformPosition();
+			// vec3 GetTransformPosition();
 			
 			// Receiver position
-			void SetRPosition(const vec3& vReceiverPosition);
-			inline void SetRPositions(const std::vector<vec3>& vReceiverPositions) { mRPositions = vReceiverPositions; };
-			void SetRTransform(const vec3& vReceiverPosition, const vec3& vEdgeSourcePosition);
+			// void SetRPosition(const vec3& vReceiverPosition);
+			// inline void SetRPositions(const std::vector<vec3>& vReceiverPositions) { mRPositions = vReceiverPositions; };
+			// void SetRTransform(const vec3& vReceiverPosition, const vec3& vEdgeSourcePosition);
 			
-			vec3 GetRPosition() const { return mRPositions.back(); }
-			vec3 GetRPosition(const int i) const;
-			inline std::vector<vec3> GetRPositions() const { return mRPositions; };
+			// vec3 GetRPosition() const { return mRPositions.back(); }
+			// vec3 GetRPosition(const int i) const;
+			// inline std::vector<vec3> GetRPositions() const { return mRPositions; };
 
 			// Diffraction
 			inline void UpdateDiffractionPath(const Diffraction::Path path) { mDiffractionPath = path; }
 			inline Edge GetEdge() const { return mDiffractionPath.GetEdge(); }
 			inline vec3 GetApex() const { return mDiffractionPath.GetApex(); }
-			inline bool GetSValid() const { return mDiffractionPath.sValid; }
-			inline bool GetRValid() const { return mDiffractionPath.rValid; }
+			// inline bool GetSValid() const { return mDiffractionPath.sValid; }
+			// inline bool GetRValid() const { return mDiffractionPath.rValid; }
 
 			// Visibility and Validity
 			inline void Visible(const bool fdn) { visible = true; feedsFDN = fdn; }
 			inline void Invisible() { visible = false; }
 			inline void Valid() { valid = true; }
 			inline void Invalid() { valid = false; }
-			inline void RValid() { rValid = true; }
-			inline void RInvalid() { rValid = false; }
+			// inline void RValid() { rValid = true; }
+			// inline void RInvalid() { rValid = false; }
 
 			// Reset
-			inline void Reset() { Invalid();  Invisible(); RInvalid(); }
-			inline void Clear() { pathParts.clear(); mPositions.clear(); mRPositions.clear(); }
+			inline void Reset() { Invalid();  Invisible(); /*RInvalid();*/ }
+			inline void Clear() { pathParts.clear(); mPositions.clear(); /*mRPositions.clear();*/ }
 
 			void SetDistance(const vec3& listenerPosition);
 
@@ -189,7 +194,7 @@ namespace RAC
 			bool diffraction;
 			bool valid;
 			bool visible;
-			bool rValid;
+			// bool rValid;
 			bool feedsFDN;
 
 			// DSP 
@@ -203,7 +208,7 @@ namespace RAC
 			std::vector<Part> pathParts;
 			// std::vector<size_t> planeIds;
 			std::vector<vec3> mPositions;
-			std::vector<vec3> mRPositions;
+			// std::vector<vec3> mRPositions;
 			size_t order;
 			Absorption mAbsorption;
 		};

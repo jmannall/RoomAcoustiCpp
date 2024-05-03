@@ -135,7 +135,7 @@ namespace RAC
 					it.second.ProcessAudio(data, reverbInput, outputBuffer);
 			}
 #ifdef DEBUG_AUDIO_THREAD
-	// Debug::Log("Total audio vSources: " + IntToStr(counter), Colour::Orange);
+	// Debug::Log("Total audio vSources: " + std::to_string(counter), Colour::Orange);
 #endif
 			lock_guard<std::mutex> lock(*dataMutex);
 			if (mData.visible || currentGain != 0.0f)
@@ -195,8 +195,10 @@ namespace RAC
 			{
 				lock_guard<mutex> lock(tuneInMutex);
 				mSource->SetSourceTransform(transform);
+#ifdef DEBUG_HRTF
 				Debug::Log("Azimuth: " + FloatToStr(mSource->GetCurrentEarAzimuth(T_ear::LEFT)));
 				Debug::Log("Elevation: " + FloatToStr(mSource->GetCurrentEarElevation(T_ear::LEFT)));
+#endif
 			}
 
 			VirtualSourceDataMap vSources;	
@@ -237,7 +239,7 @@ namespace RAC
 
 			for (auto& in : data)
 			{
-				UpdateVirtualSource(in.second, newVSources);	// newVSources are new placeholders in the ISM tree
+				UpdateVirtualSource(in.second, newVSources);	// newVSources are new placeholders in the IEM tree
 				oldData.insert_or_assign(in.first, in.second);
 
 #ifdef DEBUG_VIRTUAL_SOURCE
@@ -249,7 +251,7 @@ namespace RAC
 				oldData.insert({ vSource.GetKey(), vSource });
 
 #ifdef DEBUG_VIRTUAL_SOURCE
-	Debug::Log("Total vSources: " + IntToStr(oldData.size()), Colour::Yellow);
+	Debug::Log("Total vSources: " + std::to_string(oldData.size()), Colour::Yellow);
 #endif
 		}
 

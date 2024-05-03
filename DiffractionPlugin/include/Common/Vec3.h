@@ -40,11 +40,11 @@ namespace RAC
 
 			Real Length() { return sqrt(x * x + y * y + z * z); }
 
-			inline void RoundVec(size_t dp)
+			inline void RoundVec()
 			{
-				x = Round(x, dp);
-				y = Round(y, dp);
-				z = Round(z, dp);
+				x = Round(x);
+				y = Round(y);
+				z = Round(z);
 			}
 
 			inline vec3 Min(const vec3& v)
@@ -166,9 +166,7 @@ namespace RAC
 
 		inline vec3 UnitVectorRound(vec3 v)
 		{
-			v.x = Round(v.x, static_cast<size_t>(NUM_PRECISION));
-			v.y = Round(v.y, static_cast<size_t>(NUM_PRECISION));
-			v.z = Round(v.z, static_cast<size_t>(NUM_PRECISION));
+			v.RoundVec();
 			return UnitVector(v);
 		}
 

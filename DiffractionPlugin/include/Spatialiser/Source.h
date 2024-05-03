@@ -115,7 +115,7 @@ namespace RAC
 			Real currentGain;
 			VirtualSourceDataMap oldData;
 
-			// ISM tree structure
+			// IEM tree structure
 			VirtualSourceMap mVirtualSources;
 			VirtualSourceMap mVirtualEdgeSources;
 

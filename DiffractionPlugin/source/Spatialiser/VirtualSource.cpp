@@ -28,7 +28,7 @@ namespace RAC
 
 		//////////////////// VirtualSourceData class ////////////////////
 
-		std::vector<size_t> VirtualSourceData::GetPlaneIDs() const
+		/*std::vector<size_t> VirtualSourceData::GetPlaneIDs() const
 		{
 			std::vector<size_t> ret;
 			for (Part part : pathParts)
@@ -37,7 +37,7 @@ namespace RAC
 					ret.push_back(part.id);
 			}
 			return ret;
-		}
+		}*/
 
 		vec3 VirtualSourceData::GetPosition(const int i) const
 		{
@@ -45,11 +45,11 @@ namespace RAC
 			return mPositions[i];
 		}
 
-		vec3 VirtualSourceData::GetTransformPosition()
+		/*vec3 VirtualSourceData::GetTransformPosition()
 		{
 			CVector3 position = transform.GetPosition();
 			return vec3(position.x, position.y, position.z);
-		}
+		}*/
 
 		void VirtualSourceData::SetTransform(const vec3& vSourcePosition)
 		{
@@ -63,7 +63,7 @@ namespace RAC
 			mPositions.push_back(vSourcePosition);
 		}
 
-		void VirtualSourceData::UpdateTransform(const vec3& vEdgeSourcePosition)
+		/*void VirtualSourceData::UpdateTransform(const vec3& vEdgeSourcePosition)
 		{
 			transform.SetPosition(CVector3(static_cast<float>(vEdgeSourcePosition.x), static_cast<float>(vEdgeSourcePosition.y), static_cast<float>(vEdgeSourcePosition.z)));
 		}
@@ -84,7 +84,7 @@ namespace RAC
 		{
 			transform.SetPosition(CVector3(static_cast<float>(vEdgeSourcePosition.x), static_cast<float>(vEdgeSourcePosition.y), static_cast<float>(vEdgeSourcePosition.z)));
 			mRPositions.push_back(vReceiverPosition);
-		}
+		}*/
 
 		VirtualSourceData VirtualSourceData::Trim(const int i)
 		{
@@ -92,8 +92,8 @@ namespace RAC
 
 			if (mPositions.size() > i)
 				mPositions.erase(mPositions.begin() + order, mPositions.end());
-			if (mRPositions.size() > i)
-				mRPositions.erase(mRPositions.begin() + order, mRPositions.end());
+			/*if (mRPositions.size() > i)
+				mRPositions.erase(mRPositions.begin() + order, mRPositions.end());*/
 			if (pathParts.size() > i)
 				pathParts.erase(pathParts.begin() + order, pathParts.end());
 
@@ -111,12 +111,12 @@ namespace RAC
 				if (part.isReflection)
 				{
 					reflection = true;
-					key = key + IntToStr(part.id) + "r";
+					key = key + std::to_string(part.id) + "r";
 				}
 				else
 				{
 					diffraction = true;
-					key = key + IntToStr(part.id) + "d";
+					key = key + std::to_string(part.id) + "d";
 				}
 				j++;
 			}

@@ -79,7 +79,7 @@ namespace RAC
 
 		vec3 base = vec3(0.0, 0.0, 0.0);
 		vec3 top = vec3(0.0, zW, 0.0);
-		vec3 normal1 = vec3(Round(sin(tW), NUM_PRECISION), 0.0, Round(-cos(tW), NUM_PRECISION));
+		vec3 normal1 = vec3(Round(sin(tW)), 0.0, Round(-cos(tW)));
 		vec3 normal2 = vec3(0.0, 0.0, 1.0);
 
 		Edge e = Edge(base, top, normal1, normal2, 0, 1);
@@ -963,11 +963,11 @@ namespace RAC
 		TEST_METHOD(InitGraphicEQ)
 		{
 			Coefficients fc = Coefficients({ 250.0, 500.0, 1000.0, 2000.0, 4000.0 });
-			Real Q = 0.77;
+			Real Q = 0.98;
 			int fs = 48e3;
 			GraphicEQ eq = GraphicEQ(fc, Q, fs);
 
-			Coefficients gain = Coefficients({ 1.0 - 0.06, 1.0 - 0.15, 1.0 - 0.4, 1.0 - 0.4, 1.0 - 0.6 });
+			Coefficients gain = Coefficients({ 1.0 - 0.1, 1.0 - 0.15, 1.0 - 0.12, 1.0 - 0.2, 1.0 - 0.25 });
 			eq.InitParameters(gain);
 		}
 	};

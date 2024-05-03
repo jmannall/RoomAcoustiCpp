@@ -22,6 +22,7 @@ namespace RAC
 	using namespace Common;
 	namespace Spatialiser
 	{
+		class Edge;
 
 		struct EdgeData
 		{
@@ -29,6 +30,15 @@ namespace RAC
 			size_t id1, id2;
 			EdgeData(const vec3& _base, const vec3& _top, const vec3& _normal1, const vec3& _normal2, const size_t _id1, const size_t _id2)
 				: base(_base), top(_top), normal1(_normal1), normal2(_normal2), id1(_id1), id2(_id2) {};
+
+			EdgeData(const Edge& edge);
+		};
+
+		enum EdgeZone
+		{
+			NonShadowed,
+			CanBeShadowed,
+			Invalid
 		};
 
 		//////////////////// Edge class ////////////////////
@@ -60,6 +70,8 @@ namespace RAC
 					return mWallIds[0];
 			}
 			inline std::vector<size_t> GetWallIDs() const { return mWallIds; }
+			inline vec3 GetFaceNormal(const size_t i) const { return mFaceNormals[i]; }
+
 			inline bool AttachedToPlane(const std::vector<size_t>& ids) const
 			{
 				for (size_t id : ids)
@@ -79,6 +91,11 @@ namespace RAC
 				Update();
 			}
 
+			inline void SetRZone(const EdgeZone zone) { rZone = zone; }
+			inline EdgeZone GetRZone() const { return rZone; }
+
+			EdgeZone FindEdgeZone(const vec3& point) const;
+
 			// Edge parameters
 			Real t;
 			Real zW;
@@ -92,8 +109,11 @@ namespace RAC
 			// Edge data
 			vec3 mBase;
 			vec3 mTop;
-			std::vector <vec3> mFaceNormals;
+			std::vector<vec3> mFaceNormals;
+			std::vector<Real> mDs;
 			std::vector<size_t> mWallIds;
+
+			EdgeZone rZone;
 		};
 	}
 }

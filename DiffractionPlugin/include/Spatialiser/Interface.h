@@ -49,11 +49,18 @@ namespace RAC
 		void UpdateSpatialisationMode(const SPATConfig config);
 		
 		/**
-		 * Updates the configuration for the Image Source Model (ISM).
+		 * Updates the configuration for the Image Edge Model (IEM).
 		 *
-		 * @param config The new configuration for the ISM.
+		 * @param config The new configuration for the IEM.
 		 */
-		void UpdateISMConfig(const ISMConfig& config);
+		void UpdateIEMConfig(const IEMConfig& config);
+
+		/**
+		 * Updates the late reverberation time (T60).
+		 *
+		 * @param rt60 The late reverberation time.
+		 */
+		void UpdateReverbTime(const Coefficients& T60);
 
 		/**
 		 * Updates the model in order to calculate the late reverberation time (T60).

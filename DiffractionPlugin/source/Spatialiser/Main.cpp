@@ -174,7 +174,7 @@ extern "C"
 	}
 
 	/**
-	 * Updates the configuration for the Image Source Model (ISM).
+	 * Updates the configuration for the Image Edge Model (IEM).
 	 * 
 	 * The direct sound is mapped as follows.
 	 * 0 -> none
@@ -186,20 +186,34 @@ extern "C"
 	 * 1 -> shadowZone
 	 * 2 -> allZones
 	 *
-	 * @param order The maximum number of reflections or diffractions to consider in the ISM.
+	 * @param order The maximum number of reflections or diffractions to consider in the IEM.
 	 * @param dir Whether to consider direct sound.
 	 * @param ref Whether to consider reflected sound.
 	 * @param diff Whether to consider diffracted sound.
 	 * @param refDiff Whether to consider combined reflected diffraction sound.
 	 * @param rev Whether to consider late reverberation.
 	 */
-	EXPORT void API RACUpdateISMConfig(int order, int dir, bool ref, int diff, int refDiff, bool rev)
+	EXPORT void API RACUpdateIEMConfig(int order, int dir, bool ref, int diff, int refDiff, bool rev)
 	{
 		DirectSound direct = SelectDirectMode(dir);
 		DiffractionSound diffraction = SelectDiffractionMode(diff);
 		DiffractionSound reflectionDiffraction = SelectDiffractionMode(refDiff);
 
-		UpdateISMConfig(ISMConfig(order, direct, ref, diffraction, reflectionDiffraction, rev));
+		UpdateIEMConfig(IEMConfig(order, direct, ref, diffraction, reflectionDiffraction, rev));
+	}
+
+	/**
+	 * Updates the late reverberation time (T60).
+	 *
+	 * @param t60 The late reverberation time.
+	 */
+	EXPORT void API RACUpdateReverbTime(const float* t60)
+	{
+		Coefficients T60 = Coefficients(static_cast<size_t>(numAbsorptionBands));
+		for (int i = 0; i < numAbsorptionBands; i++)
+			T60[i] = static_cast<Real>(t60[i]);
+
+		UpdateReverbTime(T60);
 	}
 
 	/**
@@ -231,7 +245,7 @@ extern "C"
 	 * 0 -> Householder
 	 * 1 -> Random orthogonal
 	 *
-	 * @param id The ID corresponding to a FDN matrix.
+	 * @param id The ID corresponding to a FDN matrix type.
 	 */
 	EXPORT void API RACUpdateFDNModel(int id)
 	{

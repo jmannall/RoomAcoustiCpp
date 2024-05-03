@@ -70,11 +70,20 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void UpdateISMConfig(const ISMConfig& config)
+		void UpdateIEMConfig(const IEMConfig& config)
 		{
 			auto context = GetContext();
 			if (context)
-				context->UpdateISMConfig(config);
+				context->UpdateIEMConfig(config);
+		}
+
+		////////////////////////////////////////
+
+		void UpdateReverbTime(const Coefficients& T60)
+		{
+			auto context = GetContext();
+			if (context)
+				context->UpdateReverbTime(T60);
 		}
 
 		////////////////////////////////////////

@@ -36,7 +36,7 @@ namespace RAC
 
 		void BackgroundProcessor(Context* context)
 		{
-#ifdef DEBUG_ISM_THREAD
+#ifdef DEBUG_IEM_THREAD
 	Debug::Log("Begin background thread", Colour::Green);
 #endif
 			bool isRunning = context->IsRunning();
@@ -48,10 +48,10 @@ namespace RAC
 #ifdef PROFILE_BACKGROUND_THREAD
 				BeginBackgroundLoop();
 #endif
-				// Update ISM Config
-				// imageEdgeModel->UpdateISMConfig(context->GetISMConfig());
+				// Update IEM Config
+				// imageEdgeModel->UpdateIEMConfig(context->GetIEMConfig());
 
-				// Update ISM
+				// Update IEM
 				imageEdgeModel->RunIEM();
 
 				// Update FDN reflection filters
@@ -63,7 +63,7 @@ namespace RAC
 #endif
 			}
 
-#ifdef DEBUG_ISM_THREAD
+#ifdef DEBUG_IEM_THREAD
 	Debug::Log("End background thread", Colour::Red);
 #endif
 		}
@@ -179,7 +179,7 @@ namespace RAC
 		void Context::UpdateReverbTimeModel(const ReverbTime model)
 		{
 			Coefficients T60 = mRoom->UpdateReverbTimeModel(model);
-			mReverb->UpdateReverbTime(T60);
+			UpdateReverbTime(T60);
 		}
 
 		////////////////////////////////////////

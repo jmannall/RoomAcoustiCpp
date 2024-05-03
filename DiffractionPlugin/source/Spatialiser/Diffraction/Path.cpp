@@ -79,25 +79,30 @@ namespace RAC
 
 			void Path::ValidPath()
 			{
+				valid = true;
 				if ((zA < 0) || (zA > wData.z))	// Config control over allow virtual zA?
+				{
 					zValid = false;
+					valid = false;
+				}
 				else
 					zValid = true;
 
 				if ((sData.t < 0) || (sData.t > wData.t))
+				{
 					sValid = false;
+					valid = false;
+				}
 				else
 					sValid = true;
 
 				if ((rData.t < 0) || (rData.t > wData.t))
+				{
 					rValid = false;
+					valid = false;
+				}
 				else
 					rValid = true;
-
-				if (zValid && sValid && rValid)
-					valid = true;
-				else
-					valid = false;
 			}
 
 			void Path::CalcR()

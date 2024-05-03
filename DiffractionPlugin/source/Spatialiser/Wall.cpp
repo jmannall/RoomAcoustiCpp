@@ -52,11 +52,26 @@ namespace RAC
 			point += -2.0 * mNormal * k;
 		}
 
-		bool Plane::ReflectEdgeInPlane(const Edge& edge) const
+		void Plane::ReflectNormalInPlane(vec3& normal) const
+		{
+			normal += -2.0 * mNormal * Dot(normal, mNormal);
+		}
+
+		bool Plane::ReflectEdgeInPlane(Edge& edge) const
 		{
 			bool valid = ReflectPointInPlane(edge.GetEdgeCoord(EPS)); // Prevents false in case edge base is coplanar
 			if (valid)
 				valid = ReflectPointInPlane(edge.GetEdgeCoord(edge.zW - EPS));
+
+			if (valid)
+			{
+				EdgeData data = EdgeData(edge);
+				ReflectPointInPlaneNoCheck(data.base);
+				ReflectPointInPlaneNoCheck(data.top);
+				ReflectNormalInPlane(data.normal1);
+				ReflectNormalInPlane(data.normal2);
+				edge = Edge(data);
+			}
 			return valid;
 		}
 
@@ -134,9 +149,9 @@ namespace RAC
 			for (int i = 0; i < (int)mNumVertices; i++)
 			{
 				// Round as otherwise comparing identical vertices from unity still returns false
-				Real x = Round(vData[j++], NUM_PRECISION);
-				Real y = Round(vData[j++], NUM_PRECISION);
-				Real z = Round(vData[j++], NUM_PRECISION);
+				Real x = Round(vData[j++]);
+				Real y = Round(vData[j++]);
+				Real z = Round(vData[j++]);
 				mVertices[i] = vec3(x, y, z);
 			}
 

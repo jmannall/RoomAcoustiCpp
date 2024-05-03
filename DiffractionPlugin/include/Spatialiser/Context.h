@@ -85,11 +85,18 @@ namespace RAC
 			bool IsRunning() const { return mIsRunning; }
 
 			/**
-			 * Updates the image source model (ISM) configuration.
+			 * Updates the image edge model (IEM) configuration.
 			 *
-			 * @param config The new ISM configuration.
+			 * @param config The new IEM configuration.
 			 */
-			inline void UpdateISMConfig(const ISMConfig& config) { mImageEdgeModel->UpdateISMConfig(config); }
+			inline void UpdateIEMConfig(const IEMConfig& config) { mImageEdgeModel->UpdateIEMConfig(config); }
+
+			/**
+			 * Updates the reverb time.
+			 *
+			 * @param T60 The new reverb time.
+			 */
+			inline void UpdateReverbTime(const Coefficients& T60) { mReverb->UpdateReverbTime(T60); }
 
 			/**
 			 * Updates the reverb time model.

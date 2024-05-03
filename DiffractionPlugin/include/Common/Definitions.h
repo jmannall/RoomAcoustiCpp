@@ -18,6 +18,8 @@ namespace RAC
 {
 	namespace Common
 	{
+		const constexpr Real ROUND_FACTOR = 1e3;
+		const constexpr int REFLECTION_FILTER_ORDER = 4;
 
 		// Double
 #if DATA_TYPE_DOUBLE
@@ -86,12 +88,6 @@ namespace RAC
 			return cos(x) / sin(x);
 		}
 
-		inline Real Round(Real x, size_t dp)
-		{
-			Real factor = pow(10.0, (Real)dp);
-			return round(x * factor) / factor;
-		}
-
 		inline Real StrToReal(const std::string& str)
 		{
 			return std::stod(str);
@@ -157,20 +153,22 @@ namespace RAC
 			return cosf(x) / sinf(x);
 		}
 
-		inline Real Round(Real x, size_t dp)
-		{
-			Real factor = powf(10.0f, (Real)dp);
-			return round(x * factor) / factor;
-		}
-
 		inline Real StrToReal(const std::string& str)
 		{
 			return std::stof(str);
 		}
 
 #endif
-		const constexpr size_t NUM_PRECISION = 3;
-		const constexpr int REFLECTION_FILTER_ORDER = 4;
+		inline Real Round(Real x)
+		{
+			return round(x * ROUND_FACTOR) / ROUND_FACTOR;
+		}
+
+		inline Real Round(Real x, size_t dp)
+		{
+			Real factor = Pow10(static_cast<Real>(dp));
+			return round(x * factor) / factor;
+		}
 
 		const constexpr Real PI_EPS = PI_1 + EPS;
 		const constexpr Real PI_SQ = PI_1 * PI_1;
