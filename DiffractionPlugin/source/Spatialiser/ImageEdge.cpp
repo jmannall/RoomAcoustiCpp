@@ -146,8 +146,8 @@ namespace RAC
 				{
 					if (itW->second.LineWallIntersection(intersection, start, end))
 					{
-						absorption = itW->second.GetAbsorption();
-						if (start == intersection) // case: point on edge (consecutive inersections are identical)
+						absorption *= itW->second.GetAbsorption();
+						if (start == intersection) // case: point on edge (consecutive intersections are identical)
 							absorption *= 0.5;
 						return true;
 					}
@@ -225,8 +225,8 @@ namespace RAC
 
 		bool ImageEdge::FindIntersections(std::vector<vec3>& intersections, VirtualSourceData& vSource, int bounceIdx, const vec3& start)
 		{
-			Absorption absorption = Absorption(numAbsorptionBands);
 			vSource.ResetAbsorption();
+			Absorption& absorption = vSource.GetAbsorptionRef();
 			bool valid = true;
 			if (vSource.IsReflection(bounceIdx))
 			{
@@ -241,7 +241,7 @@ namespace RAC
 			int idx2 = bounceIdx;
 			while (valid && idx1 >= 0)
 			{
-				vSource.AddAbsorption(absorption);
+				// vSource.AddAbsorption(absorption);
 				// (idx1) Current bounce (idx2) Previous bounce in code and next bounce in path
 
 				if (vSource.IsReflection(idx1))
@@ -265,7 +265,7 @@ namespace RAC
 					}
 				}
 			}
-			vSource.AddAbsorption(absorption);
+			//vSource.AddAbsorption(absorption);
 			return valid;
 		}
 
@@ -308,13 +308,11 @@ namespace RAC
 		void ImageEdge::UpdateLateReverbFilters()
 		{
 			Real k;
-			vec3 normal, point, intersection;
-			Plane plane;
-			Absorption absorption = Absorption(numAbsorptionBands);
+			vec3 point, intersection;
 			for (int j = 0; j < reverbDirections.size(); j++)
 			{
 				std::vector<mypair> ks = std::vector(mPlanes.size(), mypair(0.0, -1));
-				point = mListenerPosition + 100.0 * reverbDirections[j];
+				point = mListenerPosition + reverbDirections[j];
 				int i = 0;
 				for (auto& it : mPlanes)
 				{
@@ -333,15 +331,14 @@ namespace RAC
 						auto itP = mPlanes.find(ks[i].second);
 						if (itP != mPlanes.end()) // case: plane exists
 						{
-							valid = FindIntersection(intersection, absorption, mListenerPosition, point, itP->second);
-							if (valid)
-								reverbAbsorptions[j] = absorption;
+							reverbAbsorptions[j] = 1.0;
+							valid = FindIntersection(intersection, reverbAbsorptions[j], mListenerPosition, point, itP->second);
 						}
 					}
 					i++;
 				}
 				if (!valid)
-					reverbAbsorptions[j] = Absorption(numAbsorptionBands, 0.0);
+					reverbAbsorptions[j] = 0.0;
 			}
 			mReverb->UpdateReflectionFilters(reverbAbsorptions, mIEMConfig.lateReverb);
 		}
@@ -699,42 +696,27 @@ namespace RAC
 				if (mIEMConfig.diffraction == DiffractionSound::shadowZone && zone == EdgeZone::NonShadowed)
 					continue;
 
-				VirtualSourceData vSource = VirtualSourceData(numAbsorptionBands);
+				VirtualSourceData& vSource = sp[0].emplace_back(numAbsorptionBands);
 
 				vSource.Valid();
 				vSource.AddEdgeID(it.first);
 				vSource.UpdateDiffractionPath(point, mListenerPosition, it.second);
 
 				if (mIEMConfig.diffraction == DiffractionSound::none)
-				{
-					sp[0].push_back(vSource);
 					continue;
-				}
 
 				// Receiver checks
 				if (it.second.GetRZone() == EdgeZone::Invalid)
-				{
-					sp[0].push_back(vSource);
 					continue;
-				}
 
 				if (mIEMConfig.diffraction == DiffractionSound::shadowZone && it.second.GetRZone() == EdgeZone::NonShadowed)
-				{
-					sp[0].push_back(vSource);
 					continue;
-				}
 
 				if (!vSource.mDiffractionPath.valid)
-				{
-					sp[0].push_back(vSource);
 					continue;
-				}
 
 				if (!vSource.mDiffractionPath.inShadow && mIEMConfig.diffraction == DiffractionSound::shadowZone)
-				{
-					sp[0].push_back(vSource);
 					continue;
-				}
 
 				bool obstruction = LineRoomObstruction(point, vSource.GetApex());
 				LineRoomObstruction(vSource.GetApex(), mListenerPosition, obstruction);
@@ -745,8 +727,6 @@ namespace RAC
 					vSource.Visible(feedsFDN);
 					vSources.insert_or_assign(vSource.GetKey(), vSource);
 				}
-
-				sp[0].push_back(vSource);
 			}
 		}
 
@@ -754,41 +734,29 @@ namespace RAC
 		void ImageEdge::FirstOrderReflections(const vec3& point, VirtualSourceDataStore& sp, VirtualSourceDataMap& vSources)
 		{
 			bool feedsFDN = mIEMConfig.order == 1;
-			vec3 position, intersection; Absorption absorption;
+			vec3 position, intersection;
 			for (const auto& it : mPlanes)
 			{
-				bool valid = it.second.ReflectPointInPlane(position, point);
-
-				if (!valid)
+				if (!it.second.ReflectPointInPlane(position, point))
 					continue;
 
-				VirtualSourceData vSource = VirtualSourceData(numAbsorptionBands);
+				VirtualSourceData& vSource = sp[0].emplace_back(numAbsorptionBands);
 
 				vSource.Valid();
 				vSource.AddPlaneID(it.first);
 				vSource.SetTransform(position);
 
 				if (!mIEMConfig.reflection)
-				{
-					sp[0].push_back(vSource);
 					continue;
-				}
 
 				if (!it.second.GetRValid())
-				{
-					sp[0].push_back(vSource);
 					continue;
-				}
 
-				valid = FindIntersection(intersection, absorption, mListenerPosition, position, it.second);
+				Absorption& absorption = vSource.GetAbsorptionRef();
 
-				if (!valid)
-				{
-					sp[0].push_back(vSource);
+				if (!FindIntersection(intersection, absorption, mListenerPosition, position, it.second))
 					continue;
-				}
 
-				vSource.AddAbsorption(absorption);
 				bool obstruction = LineRoomObstruction(point, intersection, it.first);
 				LineRoomObstruction(intersection, mListenerPosition, it.first, obstruction);
 				if (!obstruction)
@@ -797,8 +765,6 @@ namespace RAC
 					vSource.Visible(feedsFDN);
 					vSources.insert_or_assign(vSource.GetKey(), vSource);
 				}
-
-				sp[0].push_back(vSource);
 			}
 		}
 
@@ -827,45 +793,33 @@ namespace RAC
 
 				for (const auto& it : mPlanes)
 				{
-					for (VirtualSourceData vSource : sp[prevRefIdx])
+					for (VirtualSourceData& vS : sp[prevRefIdx])
 					{
-						if (!vSource.diffraction)
+						if (!vS.diffraction)
 						{
 							// Can't reflect in same plane twice
-							if (it.first == vSource.GetID(prevRefIdx))
+							if (it.first == vS.GetID(prevRefIdx))
 								continue;
+
+							if (!it.second.ReflectPointInPlane(position, vS.GetPosition(prevRefIdx)))
+								continue;
+
+							VirtualSourceData& vSource = sp[refIdx].emplace_back(vS);
 
 							vSource.Reset();
-
-							bool valid = it.second.ReflectPointInPlane(position, vSource.GetPosition(prevRefIdx));
-
-							if (!valid)
-								continue;
-
 							vSource.Valid();
 							vSource.AddPlaneID(it.first);
 							vSource.SetTransform(position);
 
 							if (!mIEMConfig.reflection)
-							{
-								sp[refIdx].push_back(vSource);
 								continue;
-							}
 
 							if (!it.second.GetRValid())
-							{
-								sp[refIdx].push_back(vSource);
 								continue;
-							}
 
 							// Check valid intersections
-							valid = FindIntersections(intersections, vSource, refIdx);
-
-							if (!valid)
-							{
-								sp[refIdx].push_back(vSource);
+							if (!FindIntersections(intersections, vSource, refIdx))
 								continue;
-							}
 
 							// Check for obstruction
 							bool obstruction = LineRoomObstruction(intersections[refIdx], mListenerPosition, it.first);
@@ -883,17 +837,15 @@ namespace RAC
 								vSource.Visible(feedsFDN);
 								vSources.insert_or_assign(vSource.GetKey(), vSource);
 							}
-
-							sp[refIdx].push_back(vSource);
 						}
 						else if (mIEMConfig.reflectionDiffraction != DiffractionSound::none)
 						{
-							Edge edge = vSource.GetEdge();
+							const Edge& edge = vS.GetEdge();
 
-							if (vSource.IsReflection(prevRefIdx))
+							if (vS.IsReflection(prevRefIdx))
 							{
 								// Can't reflect in same plane twice
-								if (it.first == vSource.GetID(prevRefIdx))
+								if (it.first == vS.GetID(prevRefIdx))
 									continue;
 							}
 							else
@@ -903,61 +855,41 @@ namespace RAC
 									continue;
 							}
 
-							vSource.Reset();
-
-							bool valid = it.second.ReflectEdgeInPlane(edge); // Check edge in front of plane
-
-							if (!valid)
+							// Check edge in front of plane
+							if (!it.second.EdgePlanePosition(edge))
 								continue;
 
+							VirtualSourceData& vSource = sp[refIdx].emplace_back(vS);
+
+							vSource.Reset();
 							vSource.Valid();
 							vSource.AddPlaneID(it.first);
 
 							position = vSource.GetPosition(prevRefIdx);
 							it.second.ReflectPointInPlaneNoCheck(position);
-							vSource.UpdateDiffractionPath(position, mListenerPosition, edge);
+							vSource.UpdateDiffractionPath(position, mListenerPosition, it.second);
 
 							if (!it.second.GetRValid())
-							{
-								sp[refIdx].push_back(vSource);
 								continue;
-							}
 
-							EdgeZone zone = edge.FindEdgeZone(mListenerPosition);
+							EdgeZone zone = vSource.GetEdge().FindEdgeZone(mListenerPosition);
 
 							// Receiver checks
 							if (zone == EdgeZone::Invalid)
-							{
-								sp[refIdx].push_back(vSource);
 								continue;
-							}
 
 							if (mIEMConfig.reflectionDiffraction == DiffractionSound::shadowZone && zone == EdgeZone::NonShadowed)
-							{
-								sp[refIdx].push_back(vSource);
 								continue;
-							}
 
 							if (!vSource.mDiffractionPath.valid)
-							{
-								sp[refIdx].push_back(vSource);
 								continue;
-							}
 
 							if (!vSource.mDiffractionPath.inShadow && mIEMConfig.reflectionDiffraction == DiffractionSound::shadowZone)
-							{
-								sp[refIdx].push_back(vSource);
 								continue;
-							}
 
 							// Check valid intersections
-							valid = FindIntersections(intersections, vSource, refIdx);
-
-							if (!valid)
-							{
-								sp[refIdx].push_back(vSource);
+							if (!FindIntersections(intersections, vSource, refIdx))
 								continue;
-							}
 
 							// Check for obstruction
 							bool obstruction = LineRoomObstruction(mListenerPosition, intersections[refIdx]);
@@ -983,8 +915,6 @@ namespace RAC
 								vSource.Visible(feedsFDN);
 								vSources.insert_or_assign(vSource.GetKey(), vSource);
 							}
-
-							sp[refIdx].push_back(vSource);
 						}
 					}
 				}
@@ -994,13 +924,13 @@ namespace RAC
 
 				for (const auto& it : mEdges)
 				{
-					for (VirtualSourceData vSource : sp[prevRefIdx])
+					for (VirtualSourceData& vS : sp[prevRefIdx])
 					{
-						if (vSource.diffraction)
+						if (vS.diffraction)
 							continue;
 
 						// Source checks
-						EdgeZone zone = it.second.FindEdgeZone(vSource.GetPosition());
+						EdgeZone zone = it.second.FindEdgeZone(vS.GetPosition());
 
 						if (zone == EdgeZone::Invalid)
 							continue;
@@ -1008,43 +938,29 @@ namespace RAC
 						if (mIEMConfig.reflectionDiffraction == DiffractionSound::shadowZone && zone == EdgeZone::NonShadowed)
 							continue;
 
+						VirtualSourceData& vSource = sp[refIdx].emplace_back(vS);
+
+						vSource.Reset();
 						vSource.Valid();
 						vSource.AddEdgeID(it.first);
 						vSource.UpdateDiffractionPath(vSource.GetPosition(), mListenerPosition, it.second);
 
 						// Receiver checks
 						if (it.second.GetRZone() == EdgeZone::Invalid)
-						{
-							sp[refIdx].push_back(vSource);
 							continue;
-						}
 
 						if (mIEMConfig.reflectionDiffraction == DiffractionSound::shadowZone && it.second.GetRZone() == EdgeZone::NonShadowed)
-						{
-							sp[refIdx].push_back(vSource);
 							continue;
-						}
 
 						if (!vSource.mDiffractionPath.valid)
-						{
-							sp[refIdx].push_back(vSource);
 							continue;
-						}
 
 						if (!vSource.mDiffractionPath.inShadow && mIEMConfig.reflectionDiffraction == DiffractionSound::shadowZone)
-						{
-							sp[refIdx].push_back(vSource);
 							continue;
-						}
 
 						// Check valid intersections
-						bool valid = FindIntersections(intersections, vSource, refIdx);
-
-						if (!valid)
-						{
-							sp[refIdx].push_back(vSource);
+						if (!FindIntersections(intersections, vSource, refIdx))
 							continue;
-						}
 
 						// Check for obstruction
 						bool obstruction = LineRoomObstruction(mListenerPosition, intersections[refIdx]);
@@ -1070,15 +986,10 @@ namespace RAC
 							vSource.Visible(feedsFDN);
 							vSources.insert_or_assign(vSource.GetKey(), vSource);
 						}
-
-						sp[refIdx].push_back(vSource);
 					}
 				}
 			}
 		}
-
-
-
 
 		// Reflection
 		//void ImageEdge::FirstOrderReflections(const vec3& point, VirtualSourceDataStore& sp, VirtualSourceDataMap& vSources)

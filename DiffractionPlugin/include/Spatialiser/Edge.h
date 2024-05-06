@@ -17,12 +17,16 @@
 #include "Common/Vec3.h"
 #include "Common/Types.h"
 
+// Spatialiser headers
+#include "Spatialiser/Wall.h"
+
 namespace RAC
 {
 	using namespace Common;
 	namespace Spatialiser
 	{
 		class Edge;
+		class Plane;
 
 		struct EdgeData
 		{
@@ -48,13 +52,14 @@ namespace RAC
 		public:
 
 			// Load and Destroy
-			Edge();
+			Edge() : zW(0.0), t(0.0), mDs(2), rZone(EdgeZone::Invalid) {}
 			Edge(const EdgeData& data);
 			Edge(const vec3& base, const vec3& top, const vec3& normal1, const vec3& normal2, const size_t id1, const size_t id2);
 			~Edge() {};
 
 			// Edge
 			void Update();
+			void ReflectInPlane(const Plane& plane);
 
 			// Getters
 			inline vec3 GetAP(const vec3& point) const { return point - mBase; }

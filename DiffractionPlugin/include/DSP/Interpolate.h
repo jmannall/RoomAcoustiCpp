@@ -74,7 +74,7 @@ namespace RAC
 			return (current > target + EPS || current < target - EPS);
 		}
 
-		inline void Lerp(Real& start, const Real end, const Real factor)
+		inline Real Lerp(Real start, const Real end, const Real factor)
 		{
 #ifdef PROFILE_AUDIO_THREAD
 			BeginLerp();
@@ -84,6 +84,7 @@ namespace RAC
 #ifdef PROFILE_AUDIO_THREAD
 			EndLerp();
 #endif		
+			return start;
 		}
 
 		inline void Lerp(Buffer& start, const Buffer& end, const Real factor)

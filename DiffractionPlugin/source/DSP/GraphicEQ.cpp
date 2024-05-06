@@ -96,7 +96,7 @@ namespace RAC
 			lowShelf.UpdateGain(0.0);
 
 			for (int i = 0; i < out.size(); i++)
-				mat.IncreaseEntry(out[i], j, i);
+				mat[j][i] += out[i];
 
 			j++;
 
@@ -110,7 +110,7 @@ namespace RAC
 					mat.IncreaseEntry(out[i] / counter[fidx[i]], j, fidx[i]);*/
 
 				for (int i = 0; i < out.size(); i++)
-					mat.IncreaseEntry(out[i], j, i);
+					mat[j][i] += out[i];
 				j++;
 			}
 
@@ -119,7 +119,7 @@ namespace RAC
 			highShelf.UpdateGain(0.0);
 
 			for (int i = 0; i < out.size(); i++)
-				mat.IncreaseEntry(out[i], j, i);
+				mat[j][i] += out[i];
 
 			mat.Inverse();
 			mat *= pdb;
@@ -148,13 +148,13 @@ namespace RAC
 			{
 				// when dB is used here. Factors of 20 are cancelled out.
 				Real g = (gain[0] + gain[1]) / 2.0;
-				dbGain.AddEntry(std::max(g, EPS), 0); // Prevent log10(0)
+				dbGain[0] = std::max(g, EPS); // Prevent log10(0)
 
 				for (int i = 1; i < numFilters - 1; i++)
-					dbGain.AddEntry(std::max(gain[i - 1], EPS), i); // Prevent log10(0)
+					dbGain[i] = std::max(gain[i - 1], EPS); // Prevent log10(0)
 
 				g = (gain[numFilters - 4] + gain[numFilters - 3]) / 2.0;
-				dbGain.AddEntry(std::max(g, EPS), numFilters - 1); // Prevent log10(0)
+				dbGain[numFilters - 1] = std::max(g, EPS); // Prevent log10(0)
 
 				dbGain.Log10();
 				Real meandBGain = dbGain.Sum() / dbGain.Cols();
@@ -165,7 +165,7 @@ namespace RAC
 				inputGain.Pow10();
 			}
 			for (int i = 0; i < numFilters; i++)
-				targetGain[i + 1] = inputGain.GetEntry(i);
+				targetGain[i + 1] = inputGain[i];
 		}
 
 		void GraphicEQ::UpdateParameters()

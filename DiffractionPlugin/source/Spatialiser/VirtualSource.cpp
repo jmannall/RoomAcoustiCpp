@@ -302,7 +302,7 @@ namespace RAC
 					for (int i = 0; i < mConfig.numFrames; i++)
 					{
 						bInput[i] = static_cast<float>(bStore[i] * mCurrentGain);
-						Lerp(mCurrentGain, mTargetGain, mConfig.lerpFactor);
+						mCurrentGain = Lerp(mCurrentGain, mTargetGain, mConfig.lerpFactor);
 					}
 				}
 		
@@ -318,7 +318,7 @@ namespace RAC
 						{
 							mSource->ProcessAnechoic(bMonoOutput, bOutput.left, bOutput.right);
 							for (int i = 0; i < mConfig.numFrames; i++)
-								reverbInput.IncreaseEntry(static_cast<Real>(bMonoOutput[i]), i, mFDNChannel);
+								reverbInput[i][mFDNChannel] += static_cast<Real>(bMonoOutput[i]);
 						}
 					}
 					else

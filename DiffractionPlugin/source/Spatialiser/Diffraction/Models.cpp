@@ -44,7 +44,7 @@ namespace RAC
 					outBuffer[i] = inBuffer[i] * currentGain;
 					std::lock_guard<std::mutex> lock(*m);
 					if (currentGain != targetGain)
-						Lerp(currentGain, targetGain, lerpFactor);
+						currentGain = Lerp(currentGain, targetGain, lerpFactor);
 				}
 			}
 
@@ -73,7 +73,7 @@ namespace RAC
 					outBuffer[i] = filter.GetOutput(inBuffer[i]) * currentGain;
 					std::lock_guard<std::mutex> lock(*m);
 					if (currentGain != targetGain)
-						Lerp(currentGain, targetGain, lerpFactor);
+						currentGain = Lerp(currentGain, targetGain, lerpFactor);
 				}
 			}
 
@@ -223,11 +223,11 @@ namespace RAC
 					std::lock_guard<std::mutex> lock(*m);
 					if (current.gain != target.gain || current.fc != target.fc || current.g != target.g)
 					{
-						Lerp(current.gain, target.gain, lerpFactor);
+						current.gain = Lerp(current.gain, target.gain, lerpFactor);
 						for (int j = 0; j < numFilters; j++)
 						{
-							Lerp(current.fc[j], target.fc[j], lerpFactor);
-							Lerp(current.g[j], target.g[j], lerpFactor);
+							current.fc[j] = Lerp(current.fc[j], target.fc[j], lerpFactor);
+							current.g[j] = Lerp(current.g[j], target.g[j], lerpFactor);
 						}
 						UpdateFilterParameters();
 					}
@@ -383,10 +383,10 @@ namespace RAC
 					{
 						for (int j = 0; j < 2; j++)
 						{
-							Lerp(current.z[j], target.z[j], lerpFactor);
-							Lerp(current.p[j], target.p[j], lerpFactor);
+							current.z[j] = Lerp(current.z[j], target.z[j], lerpFactor);
+							current.p[j] = Lerp(current.p[j], target.p[j], lerpFactor);
 						}
-						Lerp(current.k, target.k, lerpFactor);
+						current.k = Lerp(current.k, target.k, lerpFactor);
 						filter.UpdateParameters(current);
 					}
 				}
@@ -513,7 +513,7 @@ namespace RAC
 					if (current != target)
 					{
 						for (int j = 0; j < 4; j++)
-							Lerp(current[j], target[j], lerpFactor);
+							current[j] = Lerp(current[j], target[j], lerpFactor);
 						lrFilter.UpdateParameters(current);
 					}
 				}

@@ -57,8 +57,8 @@ namespace RAC
 		public:
 
 			// Load and Destroy
-			VirtualSourceData(size_t numBands) : valid(false), /*rValid(false),*/ visible(false), feedsFDN(false), mFDNChannel(-1), order(0), reflection(false), diffraction(false), key(""), mAbsorption(numBands), distance(10) {};
-			~VirtualSourceData() { Clear(); };
+			VirtualSourceData(size_t numBands) : valid(false), visible(false), feedsFDN(false), mFDNChannel(-1), order(0), reflection(false), diffraction(false), key(""), mAbsorption(numBands), distance(1.0) {};
+			~VirtualSourceData() { /*Clear();*/ };
 
 			// Plane
 			/*inline void AddPlaneIDs(const std::vector<size_t>& ids)
@@ -73,7 +73,7 @@ namespace RAC
 			}*/
 			inline void AddPlaneID(const size_t id)
 			{
-				pathParts.push_back(Part(id, true));
+				pathParts.emplace_back(id, true);
 				order++;
 				reflection = true;
 				key = key + std::to_string(id) + "r";
@@ -108,20 +108,15 @@ namespace RAC
 			// Absorption
 			inline void AddAbsorption(const Absorption& absorption) { mAbsorption *= absorption; }
 			inline void ResetAbsorption() { mAbsorption.Reset(); }
+			inline Absorption& GetAbsorptionRef() { return mAbsorption; }
 
 			// Edge
 			inline void AddEdgeID(const size_t id)
 			{
-				pathParts.push_back(Part(id, false));
+				pathParts.emplace_back(id, false);
 				order++;
 				diffraction = true;
 				key = key + std::to_string(id) + "d";
-			}
-			inline void UpdateDiffractionPath(const vec3& source, const vec3& receiver, const Edge& edge)
-			{ 
-				mDiffractionPath.UpdateParameters(source, receiver, edge);
-				vec3 position = mDiffractionPath.CalculateVirtualPostion();
-				SetTransform(mDiffractionPath.GetApex(), position);
 			}
 			/*inline void AddEdgeIDToStart(const size_t id, const Diffraction::Path path)
 			{
@@ -167,8 +162,20 @@ namespace RAC
 			// inline std::vector<vec3> GetRPositions() const { return mRPositions; };
 
 			// Diffraction
-			inline void UpdateDiffractionPath(const Diffraction::Path path) { mDiffractionPath = path; }
-			inline Edge GetEdge() const { return mDiffractionPath.GetEdge(); }
+			inline void UpdateDiffractionPath(const vec3& source, const vec3& receiver, const Edge& edge)
+			{
+				mDiffractionPath.UpdateParameters(source, receiver, edge);
+				//vec3 position = mDiffractionPath.CalculateVirtualPostion();
+				SetTransform(mDiffractionPath.GetApex(), mDiffractionPath.CalculateVirtualPostion());
+			}
+			inline void UpdateDiffractionPath(const vec3& source, const vec3& receiver, const Plane& plane)
+			{
+				mDiffractionPath.ReflectEdgeInPlane(plane);
+				mDiffractionPath.UpdateParameters(source, receiver);
+				//vec3 position = mDiffractionPath.CalculateVirtualPostion();
+				SetTransform(mDiffractionPath.GetApex(), mDiffractionPath.CalculateVirtualPostion());
+			}
+			const inline Edge& GetEdge() const { return mDiffractionPath.GetEdge(); }
 			inline vec3 GetApex() const { return mDiffractionPath.GetApex(); }
 			// inline bool GetSValid() const { return mDiffractionPath.sValid; }
 			// inline bool GetRValid() const { return mDiffractionPath.rValid; }

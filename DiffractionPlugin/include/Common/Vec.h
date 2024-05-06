@@ -47,8 +47,8 @@ namespace RAC
 			Real CalculateNormal() const;
 			Real Mean() const;
 
-			inline void AddEntry(const Real in, const int i) { e[i][0] = in; }
-			inline void IncreaseEntry(const Real in, const int i) { e[i][0] += in; }
+			// inline void AddEntry(const Real in, const int i) { e[i][0] = in; }
+			// inline void IncreaseEntry(const Real in, const int i) { e[i][0] += in; }
 
 			inline void Max(const Real min)
 			{ 
@@ -56,7 +56,7 @@ namespace RAC
 					e[i][0] = std::max(min, e[i][0]);
 			}
 
-			inline Real GetEntry(const int i) const { return e[i][0]; }
+			// inline Real GetEntry(const int i) const { return e[i][0]; }
 
 			inline Real Sum() const
 			{
@@ -67,6 +67,9 @@ namespace RAC
 			}
 
 			// Operators
+			inline Real operator[](const int i) const { return e[i][0]; }
+			inline Real& operator[](const int i) { return e[i][0]; }
+
 			inline vec operator=(const matrix& mat)
 			{
 				assert(mat.Cols() == 1);
@@ -103,10 +106,10 @@ namespace RAC
 
 			void Init(const std::vector<Real>& vec);
 
-			inline void AddEntry(const Real in, const int i) { e[0][i] = in; }
-			inline void IncreaseEntry(const Real in, const int i) { e[0][i] += in; }
+			// inline void AddEntry(const Real in, const int i) { e[0][i] = in; }
+			// inline void IncreaseEntry(const Real in, const int i) { e[0][i] += in; }
 
-			inline Real GetEntry(const int i) const { return e[0][i]; }
+			// inline Real GetEntry(const int i) const { return e[0][i]; }
 
 			inline Real Sum() const
 			{
@@ -118,6 +121,9 @@ namespace RAC
 
 
 			// Operators
+			inline Real operator[](const int i) const { return e[0][i]; }
+			inline Real& operator[](const int i) { return e[0][i]; }
+
 			inline rowvec operator=(const matrix& mat)
 			{
 				assert(mat.Rows() == 1);

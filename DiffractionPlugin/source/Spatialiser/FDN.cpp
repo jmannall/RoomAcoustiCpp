@@ -91,7 +91,7 @@ namespace RAC
 			vec t = CalculateTimeDelay(dimensions);
 			mChannels.reserve(mConfig.numFDNChannels);
 			for (int i = 0; i < mConfig.numFDNChannels; i++)
-				mChannels.push_back(Channel(t.GetEntry(i), T60, mConfig));
+				mChannels.push_back(Channel(t[i], T60, mConfig));
 			SetFDNModel(FDNMatrix::householder);
 		}
 
@@ -105,7 +105,7 @@ namespace RAC
 		{
 			vec t = CalculateTimeDelay(dimensions);
 			for (int i = 0; i < mConfig.numFDNChannels; i++)
-				mChannels[i].SetParameters(T60, t.GetEntry(i));
+				mChannels[i].SetParameters(T60, t[i]);
 		}
 
 		vec FDN::CalculateTimeDelay(const vec& dimensions)
@@ -126,7 +126,7 @@ namespace RAC
 				{
 					for (int i = 0; i < idx; i++)
 					{
-						t.IncreaseEntry(dimensions.GetEntry(j), k);
+						t[k] += dimensions[j];
 						k++;
 					}
 				}
@@ -156,7 +156,7 @@ namespace RAC
 					for (int i = 0; i < mConfig.numFDNChannels; i++)
 					{
 						for (int k = 0; k < j; k++)
-							section.AddEntry(mat.GetEntry(i, k), i, k);
+							section[i][k] = mat.GetEntry(i, k);
 					}
 
 					vector -= section * (section.Transpose() * vector);
@@ -238,20 +238,23 @@ namespace RAC
 
 		void FDN::ProcessOutput(const std::vector<Real>& data, const Real gain)
 		{
+#ifdef PROFILE_AUDIO_THREAD
 			BeginFDNChannel();
+#endif
+
 			int i = 0;
 			for (auto& channel : mChannels)
 			{
-				if (isnan(x.GetEntry(i)))
+				if (isnan(x[i]))
 					Debug::Log("X was nan", Colour::Red);
-				y.AddEntry(channel.GetOutput(x.GetEntry(i) + data[i]), i);
+				y[i] = channel.GetOutput(x[i] + data[i]);
 				i++;
-				if (isnan(y.GetEntry(i)))
+				if (isnan(y[i]))
 					Debug::Log("Y was nan", Colour::Red);
 			}
 			y *= gain;
-			EndFDNChannel();
 #ifdef PROFILE_AUDIO_THREAD
+			EndFDNChannel();
 			BeginFDNMatrix();
 #endif
 			ProcessMatrix();

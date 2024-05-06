@@ -57,21 +57,12 @@ namespace RAC
 			normal += -2.0 * mNormal * Dot(normal, mNormal);
 		}
 
-		bool Plane::ReflectEdgeInPlane(Edge& edge) const
+		bool Plane::EdgePlanePosition(const Edge& edge) const
 		{
 			bool valid = ReflectPointInPlane(edge.GetEdgeCoord(EPS)); // Prevents false in case edge base is coplanar
 			if (valid)
 				valid = ReflectPointInPlane(edge.GetEdgeCoord(edge.zW - EPS));
 
-			if (valid)
-			{
-				EdgeData data = EdgeData(edge);
-				ReflectPointInPlaneNoCheck(data.base);
-				ReflectPointInPlaneNoCheck(data.top);
-				ReflectNormalInPlane(data.normal1);
-				ReflectNormalInPlane(data.normal2);
-				edge = Edge(data);
-			}
 			return valid;
 		}
 

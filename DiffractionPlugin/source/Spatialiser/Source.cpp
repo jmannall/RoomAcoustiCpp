@@ -158,7 +158,7 @@ namespace RAC
 					for (int i = 0; i < mConfig.numFrames; i++)
 					{
 						bInput[i] = static_cast<float>(currentGain * bStore[i]);
-						Lerp(currentGain, targetGain, mConfig.lerpFactor);
+						currentGain = Lerp(currentGain, targetGain, mConfig.lerpFactor);
 					}
 				}
 

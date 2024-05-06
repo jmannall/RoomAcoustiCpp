@@ -168,7 +168,7 @@ namespace RAC
 					for (int i = 0; i < mConfig.numFrames; i++)
 					{
 						bInput[i] = static_cast<float>(currentGain * inputBuffer[i]);
-						Lerp(currentGain, targetGain, mConfig.lerpFactor);
+						currentGain = Lerp(currentGain, targetGain, mConfig.lerpFactor);
 					}
 					NoFlushDenormals();
 				}
@@ -310,24 +310,26 @@ namespace RAC
 					FlushDenormals();
 					if (mCurrentGain > mTargetGain + EPS || mCurrentGain < mTargetGain - EPS)
 					{
+						int j = 0;
 						for (int i = 0; i < mConfig.numFrames; i++)
 						{
 							mFDN.ProcessOutput(data.GetRow(i), mCurrentGain);
-							int j = 0;
+							j = 0;
 							for (auto& source : mReverbSources)
 							{
 								source.AddInput(mFDN.GetOutput(j), i);
 								j++;
 							}
-							Lerp(mCurrentGain, mTargetGain, mConfig.lerpFactor);
+							mCurrentGain = Lerp(mCurrentGain, mTargetGain, mConfig.lerpFactor);
 						}
 					}
 					else
 					{
+						int  j = 0;
 						for (int i = 0; i < mConfig.numFrames; i++)
 						{
 							mFDN.ProcessOutput(data.GetRow(i), mTargetGain);
-							int j = 0;
+							j = 0;
 							for (auto& source : mReverbSources)
 							{
 								source.AddInput(mFDN.GetOutput(j), i);

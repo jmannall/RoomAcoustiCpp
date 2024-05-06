@@ -36,19 +36,14 @@ namespace RAC
 
 		//////////////////// Edge class ////////////////////
 
-		Edge::Edge() : zW(0.0), mBase(vec3(0.0, 0.0, 0.0)), mTop(vec3(0.0, 1.0, 0.0)), mFaceNormals{ vec3(0.0, 0.0, 1.0), vec3(1.0, 0.0, 0.0) }, mWallIds{ 0, 0 }, rZone(EdgeZone::Invalid)
-		{
-			Update();
-		}
-
 		Edge::Edge(const EdgeData& data) : zW(0.0), mBase(data.base), mTop(data.top),
-			mFaceNormals{ data.normal1, data.normal2 }, mWallIds{ data.id1, data.id2 }, rZone(EdgeZone::Invalid)
+			mFaceNormals{ data.normal1, data.normal2 }, mWallIds{ data.id1, data.id2 }, mDs(2), rZone(EdgeZone::Invalid)
 		{
 			Update();
 		}
 
 		Edge::Edge(const vec3& base, const vec3& top, const vec3& normal1, const vec3& normal2, const size_t id1, const size_t id2)
-			: zW(0.0f), mBase(base), mTop(top), mFaceNormals{ normal1, normal2 }, mWallIds{ id1, id2 }, rZone(EdgeZone::Invalid)
+			: zW(0.0f), mBase(base), mTop(top), mFaceNormals{ normal1, normal2 }, mWallIds{ id1, id2 }, mDs(2), rZone(EdgeZone::Invalid)
 		{
 			Update();
 		}
@@ -66,9 +61,17 @@ namespace RAC
 
 			zW = (mTop - mBase).Length();
 
-			mDs = std::vector<Real>(2);
 			mDs[0] = Dot(mFaceNormals[0], mBase);
 			mDs[1] = Dot(mFaceNormals[1], mBase);
+		}
+
+		void Edge::ReflectInPlane(const Plane& plane)
+		{
+			plane.ReflectPointInPlaneNoCheck(mBase);
+			plane.ReflectPointInPlaneNoCheck(mTop);
+			plane.ReflectNormalInPlane(mFaceNormals[0]);
+			plane.ReflectNormalInPlane(mFaceNormals[1]);
+			Update();
 		}
 
 		EdgeZone Edge::FindEdgeZone(const vec3& point) const

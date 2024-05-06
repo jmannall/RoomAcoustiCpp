@@ -45,8 +45,8 @@ namespace RAC
 			}
 
 			// Adders
-			virtual inline void AddEntry(const Real in, const int r, const int c) { e[r][c] = in; }
-			virtual inline void IncreaseEntry(const Real in, const int r, const int c) { e[r][c] += in; }
+			// virtual inline void AddEntry(const Real in, const int r, const int c) { e[r][c] = in; }
+			// virtual inline void IncreaseEntry(const Real in, const int r, const int c) { e[r][c] += in; }
 			inline void AddColumn(const std::vector<Real>& v, const int c)
 			{
 				for (int i = 0; i < rows; i++)
@@ -55,7 +55,7 @@ namespace RAC
 			inline void AddRow(const std::vector<Real>& v, const int r) { e[r] = v; }
 
 			// Getters
-			virtual inline Real GetEntry(const int& r, const int& c) const { return e[r][c]; }
+			inline Real GetEntry(const int r, const int c) const { return e[r][c]; }
 			inline const std::vector<Real>& GetRow(int r) const { return e[r];	}
 			inline const std::vector<Real>& GetColumn(int c)
 			{
@@ -90,6 +90,8 @@ namespace RAC
 			}
 
 			// Operators
+			inline std::vector<Real>& operator[](const int r) { return e[r]; }
+
 			inline matrix operator=(const matrix& mat)
 			{
 				rows = mat.Rows();
@@ -198,7 +200,7 @@ namespace RAC
 				for (int j = 0; j < u.Cols(); j++)
 				{
 					Real entry = u.GetEntry(i, j) + v.GetEntry(i, j);
-					out.AddEntry(entry, i, j);
+					out[i][j] = entry;
 				}
 			}
 			return out;
@@ -210,9 +212,7 @@ namespace RAC
 			for (int i = 0; i < mat.Rows(); i++)
 			{
 				for (int j = 0; j < mat.Cols(); j++)
-				{
-					out.AddEntry(-mat.GetEntry(i, j), i, j);
-				}
+					out[i][j] = -mat.GetEntry(i, j);
 			}
 			return out;
 		}
@@ -225,10 +225,7 @@ namespace RAC
 			for (int i = 0; i < u.Rows(); i++)
 			{
 				for (int j = 0; j < u.Cols(); j++)
-				{
-					Real entry = u.GetEntry(i, j) - v.GetEntry(i, j);
-					out.AddEntry(entry, i, j);
-				}
+					out[i][j] = u.GetEntry(i, j) - v.GetEntry(i, j);
 			}
 			return out;
 		}
@@ -247,7 +244,7 @@ namespace RAC
 					sum = 0.0;
 					for (int k = 0; k < u.Cols(); ++k)
 						sum += u.GetEntry(i, k) * v.GetEntry(k, j);
-					out.AddEntry(sum, i, j);
+					out[i][j] = sum;
 				}
 			}
 			return out;
@@ -267,9 +264,7 @@ namespace RAC
 				for (int j = 0; j < mat.Cols(); j++)
 				{
 					for (int k = 0; k < mat.Cols(); k++)
-					{
-						out.AddEntry(a * mat.GetEntry(i, j), i, j);
-					}
+						out[i][j] = a * mat.GetEntry(i, j);
 				}
 			}
 			return out;

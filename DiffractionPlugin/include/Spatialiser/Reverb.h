@@ -105,7 +105,7 @@ namespace RAC
 			{
 				std::vector<vec3> directions;
 				for (ReverbSource& reverbSource : mReverbSources)
-					directions.push_back(reverbSource.GetShift());
+					directions.push_back(100.0 * reverbSource.GetShift());
 				return directions;
 			}
 

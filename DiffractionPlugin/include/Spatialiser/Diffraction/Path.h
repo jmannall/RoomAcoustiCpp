@@ -52,6 +52,7 @@ namespace RAC
 				void UpdateParameters(const vec3& source, const vec3& receiver, const Edge& edge);
 				void UpdateParameters(const vec3& source, const vec3& receiver);
 				void UpdateParameters(const vec3& receiver);
+				void ReflectEdgeInPlane(const Plane& plane) { mEdge.ReflectInPlane(plane); }
 
 				// Getters
 				inline Real GetD(Real z) const
@@ -72,7 +73,7 @@ namespace RAC
 				}
 
 				// Edge
-				inline Edge GetEdge() const { return mEdge; }
+				const inline Edge& GetEdge() const { return mEdge; }
 				inline vec3 CalculateVirtualPostion() const { return rData.point + (sData.d + rData.d) * (mEdge.GetEdgeCoord(zA) - rData.point) / rData.d; }
 				inline vec3 CalculateVirtualRPostion() const { return sData.point + (sData.d + rData.d) * (mEdge.GetEdgeCoord(zA) - sData.point) / sData.d; }
 

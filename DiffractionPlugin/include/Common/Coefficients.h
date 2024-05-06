@@ -230,6 +230,13 @@ namespace RAC
 			void Reset() { std::fill(mCoefficients.begin(), mCoefficients.end(), 1.0); }
 
 			// Operators
+			inline Absorption& operator=(Real x)
+			{
+				for (int i = 0; i < mCoefficients.size(); i++)
+					mCoefficients[i] = x;
+				return *this;
+			}
+
 			inline Absorption& operator-()
 			{
 				for (int i = 0; i < mCoefficients.size(); i++)

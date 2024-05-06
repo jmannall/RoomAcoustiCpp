@@ -274,7 +274,7 @@ extern "C"
 	{
 		vec dimensions = vec(numDimensions);
 		for (int i = 0; i < numDimensions; i++)
-			dimensions.AddEntry(static_cast<Real>(dim[i]), i);
+			dimensions[i] = static_cast<Real>(dim[i]);
 
 		UpdateRoom(static_cast<Real>(volume), dimensions);
 	}

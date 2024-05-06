@@ -140,7 +140,7 @@ namespace RAC
 			bool ReflectPointInPlane(vec3& dest, const vec3& point) const;
 			void ReflectPointInPlaneNoCheck(vec3& point) const;
 			void ReflectNormalInPlane(vec3& normal) const;
-			bool ReflectEdgeInPlane(Edge& edge) const;
+			bool EdgePlanePosition(const Edge& edge) const;
 
 			inline void Update(const Wall& wall) { d = wall.GetD(); mNormal = wall.GetNormal(); };
 		private:

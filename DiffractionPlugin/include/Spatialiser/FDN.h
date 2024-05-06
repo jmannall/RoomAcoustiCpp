@@ -90,7 +90,7 @@ namespace RAC
 
 			// Getters
 			void ProcessOutput(const std::vector<Real>& data, const Real gain);
-			inline Real GetOutput(const int i) const { return y.GetEntry(i); }
+			inline Real GetOutput(const int i) const { return y[i]; }
 
 			// Setters
 			void UpdateT60(const Coefficients& T60);
@@ -140,7 +140,7 @@ namespace RAC
 			{
 				Real entry = houseHolderFactor * y.Sum();
 				for (int i = 0; i < y.Cols(); i++)
-					x.AddEntry(entry - y.GetEntry(i), i);
+					x[i] = entry - y[i];
 			}
 
 			inline void ProcessSquare()
@@ -150,8 +150,8 @@ namespace RAC
 				{
 					sum = 0.0;
 					for (int k = 0; k < mat.Rows(); ++k)
-						sum += y.GetEntry(k) * mat.GetEntry(k, j);
-					x.AddEntry(sum, j);
+						sum += y[k] * mat[k][j];
+					x[j] = sum;
 				}
 			}
 

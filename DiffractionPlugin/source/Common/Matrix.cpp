@@ -51,9 +51,7 @@ namespace RAC
 			for (int i = 0; i < rows; i++)
 			{
 				for (int j = 0; j < cols; j++)
-				{
-					mat.AddEntry(e[i][j], j, i);
-				}
+					mat[j][i] = e[i][j];
 			}
 			return mat;
 		}
