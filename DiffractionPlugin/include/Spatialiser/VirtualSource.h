@@ -107,7 +107,7 @@ namespace RAC
 
 			// Absorption
 			inline void AddAbsorption(const Absorption& absorption) { mAbsorption *= absorption; }
-			inline void ResetAbsorption() { mAbsorption.Reset(); }
+			inline void ResetAbsorption() { mAbsorption = 1.0; }
 			inline Absorption& GetAbsorptionRef() { return mAbsorption; }
 
 			// Edge
@@ -189,8 +189,28 @@ namespace RAC
 			// inline void RInvalid() { rValid = false; }
 
 			// Reset
-			inline void Reset() { Invalid();  Invisible(); /*RInvalid();*/ }
-			inline void Clear() { pathParts.clear(); mPositions.clear(); /*mRPositions.clear();*/ }
+			inline void Reset() { Invalid();  Invisible(); ResetAbsorption(); }
+			inline void Clear()
+			{ 
+				Reset();
+				pathParts.clear();
+				mPositions.clear();
+				reflection = false;
+				diffraction = false;
+				order = 0;
+				key = "";
+			}
+			inline void Update(const VirtualSourceData& vS)
+			{
+				pathParts = vS.pathParts;
+				mPositions = vS.mPositions;
+				reflection = vS.reflection;
+				diffraction = vS.diffraction;
+				if (diffraction)
+					mDiffractionPath = vS.mDiffractionPath;
+				order = vS.order;
+				key = vS.key;
+			}
 
 			void SetDistance(const vec3& listenerPosition);
 

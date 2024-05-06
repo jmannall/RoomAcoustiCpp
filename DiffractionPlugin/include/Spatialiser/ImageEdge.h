@@ -59,9 +59,9 @@ namespace RAC
 			bool LineRoomObstruction(const vec3& start, const vec3& end, size_t currentWallID1, size_t currentWallID2);
 
 			// void HigherOrderSpecularDiffraction(const vec3& point, VirtualSourceDataStore& sp, VirtualSourceDataMap& vSources);
-			void FirstOrderDiffraction(const vec3& point, VirtualSourceDataStore& sp, VirtualSourceDataMap& vSources);
-			void FirstOrderReflections(const vec3& point, VirtualSourceDataStore& sp, VirtualSourceDataMap& vSources);
-			void HigherOrderReflections(const vec3& point, VirtualSourceDataStore& sp, VirtualSourceDataMap& vSources);
+			size_t FirstOrderDiffraction(const vec3& point, VirtualSourceDataMap& vSources);
+			size_t FirstOrderReflections(const vec3& point, VirtualSourceDataMap& vSources, size_t counter);
+			void HigherOrderReflections(const vec3& point, VirtualSourceDataMap& vSources);
 
 			shared_ptr<Room> mRoom;
 			shared_ptr<SourceManager> mSourceManager;
@@ -80,6 +80,8 @@ namespace RAC
 			size_t numAbsorptionBands;
 			std::vector<vec3> reverbDirections;
 			std::vector<Absorption> reverbAbsorptions;
+
+			VirtualSourceDataStore sp;
 
 			std::mutex mMutex;
 		};

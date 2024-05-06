@@ -54,13 +54,13 @@ namespace RAC
 		void VirtualSourceData::SetTransform(const vec3& vSourcePosition)
 		{
 			transform.SetPosition(CVector3(static_cast<float>(vSourcePosition.x), static_cast<float>(vSourcePosition.y), static_cast<float>(vSourcePosition.z)));
-			mPositions.push_back(vSourcePosition);
+			mPositions.emplace_back(vSourcePosition);
 		}
 
 		void VirtualSourceData::SetTransform(const vec3& vSourcePosition, const vec3& vEdgeSourcePosition)
 		{
 			transform.SetPosition(CVector3(static_cast<float>(vEdgeSourcePosition.x), static_cast<float>(vEdgeSourcePosition.y), static_cast<float>(vEdgeSourcePosition.z)));
-			mPositions.push_back(vSourcePosition);
+			mPositions.emplace_back(vSourcePosition);
 		}
 
 		/*void VirtualSourceData::UpdateTransform(const vec3& vEdgeSourcePosition)
@@ -92,8 +92,6 @@ namespace RAC
 
 			if (mPositions.size() > i)
 				mPositions.erase(mPositions.begin() + order, mPositions.end());
-			/*if (mRPositions.size() > i)
-				mRPositions.erase(mRPositions.begin() + order, mRPositions.end());*/
 			if (pathParts.size() > i)
 				pathParts.erase(pathParts.begin() + order, pathParts.end());
 
