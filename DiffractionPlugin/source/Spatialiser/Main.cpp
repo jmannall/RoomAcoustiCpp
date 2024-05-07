@@ -193,13 +193,13 @@ extern "C"
 	 * @param refDiff Whether to consider combined reflected diffraction sound.
 	 * @param rev Whether to consider late reverberation.
 	 */
-	EXPORT void API RACUpdateIEMConfig(int order, int dir, bool ref, int diff, int refDiff, bool rev)
+	EXPORT void API RACUpdateIEMConfig(int order, int dir, bool ref, int diff, int refDiff, bool rev, float edgeLen)
 	{
 		DirectSound direct = SelectDirectMode(dir);
 		DiffractionSound diffraction = SelectDiffractionMode(diff);
 		DiffractionSound reflectionDiffraction = SelectDiffractionMode(refDiff);
 
-		UpdateIEMConfig(IEMConfig(order, direct, ref, diffraction, reflectionDiffraction, rev));
+		UpdateIEMConfig(IEMConfig(order, direct, ref, diffraction, reflectionDiffraction, rev, static_cast<Real>(edgeLen)));
 	}
 
 	/**

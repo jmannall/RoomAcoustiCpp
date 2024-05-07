@@ -698,6 +698,9 @@ namespace RAC
 			vec3 position;
 			for (const auto& it : mEdges)
 			{
+				if (it.second.zW < mIEMConfig.edgeLength)
+					continue;
+
 				// Source checks
 				EdgeZone zone = it.second.FindEdgeZone(point);
 
@@ -961,6 +964,9 @@ namespace RAC
 
 				for (const auto& it : mEdges)
 				{
+					if (it.second.zW < mIEMConfig.edgeLength)
+						continue;
+
 					EdgeZone rZone = it.second.GetRZone();
 					for (VirtualSourceData& vS : sp[prevRefIdx])
 					{

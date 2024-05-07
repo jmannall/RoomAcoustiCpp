@@ -107,9 +107,10 @@ namespace RAC
 			DirectSound direct;
 			DiffractionSound diffraction, reflectionDiffraction;
 			bool reflection, lateReverb;
+			Real edgeLength;
 
-			IEMConfig() : order(0), direct(DirectSound::doCheck), reflection(false), diffraction(DiffractionSound::none), reflectionDiffraction(DiffractionSound::none), lateReverb(false) {};
-			IEMConfig(int _order, DirectSound dir, bool ref, DiffractionSound diff, DiffractionSound refDif, bool rev) : order(_order), direct(dir), reflection(ref), diffraction(diff), reflectionDiffraction(refDif), lateReverb(rev) {};
+			IEMConfig() : order(0), direct(DirectSound::doCheck), reflection(false), diffraction(DiffractionSound::none), reflectionDiffraction(DiffractionSound::none), lateReverb(false), edgeLength(0.0) {};
+			IEMConfig(int _order, DirectSound dir, bool ref, DiffractionSound diff, DiffractionSound refDif, bool rev, Real edgeLen) : order(_order), direct(dir), reflection(ref), diffraction(diff), reflectionDiffraction(refDif), lateReverb(rev), edgeLength(edgeLen) {};
 		};
 
 		class SPATConfig
