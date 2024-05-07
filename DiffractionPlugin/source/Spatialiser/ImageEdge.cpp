@@ -836,7 +836,7 @@ namespace RAC
 							VirtualSourceData& vSource = counter < size ? sp[refIdx][counter] : sp[refIdx].emplace_back(vS);
 
 							if (counter < size)
-								sp[refIdx][counter] = vS;
+								sp[refIdx][counter].Update(vS);
 							counter++;
 
 							vSource.Reset();
@@ -979,7 +979,7 @@ namespace RAC
 						VirtualSourceData& vSource = counter < size ? sp[refIdx][counter] : sp[refIdx].emplace_back(vS);
 
 						if (counter < size)
-							sp[refIdx][counter] = vS;
+							sp[refIdx][counter].Update(vS);
 						counter++;
 
 						vSource.Reset();
