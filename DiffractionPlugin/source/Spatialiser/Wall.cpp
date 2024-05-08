@@ -72,7 +72,7 @@ namespace RAC
 			Real scale = Dot(mNormal, grad);
 			if (scale == 0)
 				return false;
-			intersection = start - grad * k / scale;
+			intersection = start - grad / scale * k; // Division first to prevent nummerical error
 
 			Real test = PointPlanePosition(intersection);
 			if (test != 0)

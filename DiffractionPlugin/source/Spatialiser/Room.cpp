@@ -547,6 +547,5 @@ namespace RAC
 			Real factor = 24.0 * log(10.0) / SPEED_OF_SOUND;
 			return -factor * mVolume / ((1 - absorption / surfaceArea).Log() * surfaceArea);
 		}
-
 	}
 }
