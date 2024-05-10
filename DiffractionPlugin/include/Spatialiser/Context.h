@@ -110,7 +110,14 @@ namespace RAC
 			 *
 			 * @param model The new FDN model.
 			 */
-			inline void UpdateFDNModel(const FDNMatrix& model) { mReverb->UpdateFDNModel(model); }
+			inline void UpdateFDNModel(const FDNMatrix model) { mReverb->UpdateFDNModel(model); }
+
+			/**
+			 * Updates the diffraction model.
+			 *
+			 * @param model The new diffraction model.
+			 */
+			void UpdateDiffractionModel(const DiffractionModel model);
 
 			/**
 			 * Returns a pointer to the room class.

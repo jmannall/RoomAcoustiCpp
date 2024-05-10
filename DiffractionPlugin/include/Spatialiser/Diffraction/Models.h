@@ -39,42 +39,55 @@ namespace RAC
 	{
 		namespace Diffraction
 		{
+			class Model
+			{
+			public:
+				Model(Path* path) : mPath(path) {};
+				virtual ~Model() {};
+
+				virtual void UpdateParameters() = 0;
+				virtual void ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const int numFrames, const Real lerpFactor) = 0;
+				void UpdatePath(Path* path) { mPath = path; };
+
+			protected:
+				Path* mPath;
+			};
+
+
 
 			//////////////////// Attenuate class ////////////////////
 
-			class Attenuate
+			class Attenuate : public Model
 			{
 			public:
-				Attenuate(Path* path) : targetGain(0.0), currentGain(0.0), mPath(path) { m = new std::mutex(); UpdateParameters(); };
+				Attenuate(Path* path) : Model(path), targetGain(0.0), currentGain(0.0) { m = new std::mutex(); UpdateParameters(); };
 				~Attenuate() {};
 
 				void UpdateParameters();
-				void ProcessAudio(Real* inBuffer, Real* outBuffer, int numFrames, Real lerpFactor);
+				void ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const int numFrames, const Real lerpFactor);
 			private:
 				Real targetGain;
 				Real currentGain;
 
-				Path* mPath;
 				std::mutex* m;
 			};
 
 			//////////////////// LPF class ////////////////////
 
-			class LPF
+			class LPF : public Model
 			{
 			public:
 				LPF(Path* path, int fs);
 				~LPF() {};
 
 				void UpdateParameters();
-				void ProcessAudio(Real* inBuffer, Real* outBuffer, int numFrames, Real lerpFactor);
+				void ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const int numFrames, const Real lerpFactor);
 			private:
 				Real fc;
 				Real targetGain;
 				Real currentGain;
 				LowPass filter;
 
-				Path* mPath;
 				std::mutex* m;
 			};
 
@@ -83,21 +96,20 @@ namespace RAC
 			struct UDFAParameters
 			{
 				Real gain;
-				Real fc[4];
-				Real g[4];
-				UDFAParameters() : gain(0.0), fc{ 1000.0, 1000.0, 1000.0, 1000.0 }, g{ 1.0, 1.0, 1.0, 1.0 } {};
-				UDFAParameters(Real _fc, Real _g) : gain(0.0), fc{ _fc, _fc, _fc, _fc }, g{ _g, _g, _g, _g } {};
+				Coefficients fc;
+				Coefficients g;
+				UDFAParameters() : gain(0.0), fc(4, 1000.0), g(4, 1.0) {};
+				UDFAParameters(Real _fc, Real _g) : gain(0.0), fc(4, _fc), g(4, _g) {};
 			};
 
-			class UDFA
+			class UDFA : public Model
 			{
 			public:
 				UDFA(Path* path, int fs);
 				~UDFA() {};
 
 				virtual void UpdateParameters();
-				void ProcessAudio(const Real* inBuffer, Real* outBuffer, int numFrames, Real lerpFactor);
-				void UpdatePath(Path* path) { mPath = path; }
+				void ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const int numFrames, const Real lerpFactor);
 			protected:
 				void CalcF(int fs);
 				void CalcFT(int fs);
@@ -113,19 +125,19 @@ namespace RAC
 
 				int numFilters;
 				std::vector<HighShelf> filters;
-				Real ft[5];
-				Real gt[5];
-				Real fi[4];
-				Real gi[4];
+
+				Coefficients ft;
+				Coefficients gt;
+				Coefficients fi;
+				Coefficients gi;
 				Real t0;
 				Real front;
 				Real v;
 
 				UDFAParameters params;
-				UDFAParameters target;
-				UDFAParameters current;
+				Coefficients target;
+				Coefficients current;
 
-				Path* mPath;
 				std::mutex* m;
 			};
 
@@ -144,32 +156,32 @@ namespace RAC
 
 			//////////////////// NN class ////////////////////
 
-			class NN	// Only accurate at 48kHz
+			class NN : public Model	// Only accurate at 48kHz
 			{
-				using NNParameters = ZPKParameters;
 			public:
 				NN(Path* path);
-				~NN() {};
+				virtual ~NN() {};
 
 				void UpdateParameters();
-				void ProcessAudio(Real* inBuffer, Real* outBuffer, int numFrames, Real lerpFactor);
+				void ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const int numFrames, const Real lerpFactor);
 
 			protected:
 				float mInput[8];
-				NNParameters params;
-				NNParameters target;
+				Coefficients target;
+				Coefficients params;
+
+				std::mutex* m;
 
 			private:
-				virtual inline void RunNN() {};
+				virtual inline void RunNN() = 0;
 				void OrderZP();
 				void CalcInput();
 				void AssignInputRZ(SRData* one, SRData* two);
 
-				NNParameters current;
-				ZPKFilter filter;
+				Coefficients current;
 
-				Path* mPath;
-				std::mutex* m;
+				ZPKFilter filter;
+				bool equal;
 			};
 
 			class NNBest : public NN
@@ -179,15 +191,15 @@ namespace RAC
 				~NNBest() {};
 
 			private:
-				inline void RunNN() override
+				inline void RunNN()
 				{
 					float z[2], p[2], k;
 					myBestNN(mInput, z, p, &k);
-					params.z[0] = static_cast<Real>(z[0]);
-					params.z[1] = static_cast<Real>(z[1]);
-					params.p[0] = static_cast<Real>(z[0]);
-					params.p[1] = static_cast<Real>(z[1]);
-					params.k = static_cast<Real>(k);
+					params[0] = static_cast<Real>(z[0]);
+					params[1] = static_cast<Real>(z[1]);
+					params[2] = static_cast<Real>(p[0]);
+					params[3] = static_cast<Real>(p[1]);
+					params[4] = static_cast<Real>(k);
 				}
 			};
 
@@ -198,28 +210,28 @@ namespace RAC
 				~NNSmall() {};
 
 			private:
-				inline void RunNN() override
+				inline void RunNN()
 				{
 					float z[2], p[2], k;
 					mySmallNN(mInput, z, p, &k);
-					params.z[0] = static_cast<Real>(z[0]);
-					params.z[1] = static_cast<Real>(z[1]);
-					params.p[0] = static_cast<Real>(z[0]);
-					params.p[1] = static_cast<Real>(z[1]);
-					params.k = static_cast<Real>(k);
+					params[0] = static_cast<Real>(z[0]);
+					params[1] = static_cast<Real>(z[1]);
+					params[2] = static_cast<Real>(p[0]);
+					params[3] = static_cast<Real>(p[1]);
+					params[4] = static_cast<Real>(k);
 				}
 			};
 
 			//////////////////// UTD class ////////////////////
 
-			class UTD
+			class UTD : public Model
 			{
 			public:
 				UTD(Path* path, int fs);
 				~UTD() {};
 
 				void UpdateParameters();
-				void ProcessAudio(Real* inBuffer, Real* outBuffer, int numFrames, Real lerpFactor);
+				void ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const int numFrames, const Real lerpFactor);
 
 			private:
 				void CalcUTD();
@@ -230,19 +242,21 @@ namespace RAC
 				Real Apm(Real t, bool plus);
 				Complex FuncF(Real x);
 
-				Real k[4];
+				Coefficients k;
+				//Real k[4];
 				Complex E[4];
 				Real n;
 				Real L;
 				LinkwitzRiley lrFilter;
 
-				Real g[4];
-				Real gSB[4];
+				Coefficients g;
+				Coefficients gSB;
+				/*Real g[4];
+				Real gSB[4];*/
 				Coefficients params;
 				Coefficients target;
 				Coefficients current;
 
-				Path* mPath;
 				std::mutex* m;
 			};
 
@@ -255,7 +269,7 @@ namespace RAC
 				IntegralLimits(Real _p, Real _m) : p(_p), m(_m) {}
 			};
 
-			class BTM
+			class BTM : public Model
 			{
 			public:
 				BTM(Path* path, int fs);
@@ -264,7 +278,6 @@ namespace RAC
 				void UpdateParameters();
 				void InitParameters();
 				void ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const int numFrames, const Real lerpFactor);
-				void UpdatePath(Path* path) { mPath = path; }
 
 #ifdef _TEST
 #pragma optimize("", off)
@@ -322,9 +335,9 @@ namespace RAC
 				Real fifactvec;
 				Real sampleOneVec[4];
 
-				Path* mPath;
 				Path lastPath;
-				std::mutex* m; // Protects currentIr and targetIr
+
+				std::mutex* m;
 			};
 		}
 	}

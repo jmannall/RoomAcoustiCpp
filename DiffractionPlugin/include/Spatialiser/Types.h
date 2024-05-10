@@ -65,10 +65,9 @@ namespace RAC
 			randomOrthogonal			
 		};
 
-		enum class Model
+		enum class DiffractionModel
 		{
 			attenuate,
-			off,
 			lowPass,
 			udfa,
 			udfai,
@@ -142,10 +141,19 @@ namespace RAC
 			Real lerpFactor, Q;
 			Coefficients frequencyBands;
 			SPATConfig spatConfig;
+			DiffractionModel diffractionModel;
 
-			Config() : fs(44100), numFrames(512), numFDNChannels(12), lerpFactor(1.0 / ((Real)numFrames * 2.0)), Q(0.77), frequencyBands({250.0, 500.0, 1000.0, 20000.0}), spatConfig() {};
-			Config(int _fs, int _numFrames, int _numFDNChannels, Real _lerpFactor, Real q, Coefficients fBands) : fs(_fs), numFrames(_numFrames), numFDNChannels(_numFDNChannels), lerpFactor(1.0 / ((Real)numFrames * _lerpFactor)), Q(q), frequencyBands(fBands), spatConfig() {};
-			Config(int _fs, int _numFrames, int _numFDNChannels, Real _lerpFactor, Real q, Coefficients fBands, int quality, int performance) : fs(_fs), numFrames(_numFrames), numFDNChannels(_numFDNChannels), lerpFactor(1.0 / ((Real)numFrames * _lerpFactor)), Q(q), frequencyBands(fBands), spatConfig(quality, performance) {};
+			Config() : 
+				fs(44100), numFrames(512), numFDNChannels(12), lerpFactor(1.0 / ((Real)numFrames * 2.0)), Q(0.77), 
+				frequencyBands({250.0, 500.0, 1000.0, 20000.0}), spatConfig(), diffractionModel(DiffractionModel::btm) {};
+
+			Config(int _fs, int _numFrames, int _numFDNChannels, Real _lerpFactor, Real q, Coefficients fBands) : 
+				fs(_fs), numFrames(_numFrames), numFDNChannels(_numFDNChannels), lerpFactor(1.0 / ((Real)numFrames * _lerpFactor)),
+				Q(q), frequencyBands(fBands), spatConfig(), diffractionModel(DiffractionModel::btm) {};
+
+			Config(int _fs, int _numFrames, int _numFDNChannels, Real _lerpFactor, Real q, Coefficients fBands, int quality, int performance, DiffractionModel model) : 
+				fs(_fs), numFrames(_numFrames), numFDNChannels(_numFDNChannels), lerpFactor(1.0 / ((Real)numFrames * _lerpFactor)), Q(q), 
+				frequencyBands(fBands), spatConfig(quality, performance), diffractionModel(model) {};
 		};
 	}
 }

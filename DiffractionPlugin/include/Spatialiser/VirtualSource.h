@@ -61,16 +61,6 @@ namespace RAC
 			~VirtualSourceData() { /*Clear();*/ };
 
 			// Plane
-			/*inline void AddPlaneIDs(const std::vector<size_t>& ids)
-			{
-				for (size_t id : ids)
-				{
-					pathParts.push_back(Part(id, true));
-					order++;
-					key = key + std::to_string(id) + "r";
-				}
-				reflection = true;
-			}*/
 			inline void AddPlaneID(const size_t id)
 			{
 				pathParts.emplace_back(id, true);
@@ -78,32 +68,6 @@ namespace RAC
 				reflection = true;
 				key = key + std::to_string(id) + "r";
 			}
-			//inline void AddPlaneIDToStart(const size_t id) // IDs are added in reverse order (from listener to source)
-			//{
-			//	pathParts.insert(pathParts.begin(), Part(id, true));
-			//	key = std::to_string(id) + "r" + key;
-			//}
-			/*inline void RemovePlaneIDs()
-			{
-				key = "";
-				mAbsorption.Reset();
-				if (diffraction)
-				{
-					std::vector<Part>::iterator iter;
-					for (iter = pathParts.begin(); iter != pathParts.end(); )
-					{
-						if (iter->isReflection)
-							iter = pathParts.erase(iter);
-						else
-						{
-							key = key + std::to_string(iter->id) + "d";
-							++iter;
-						}
-					}
-				}
-				else
-					pathParts.clear();
-			}*/
 
 			// Absorption
 			inline void AddAbsorption(const Absorption& absorption) { mAbsorption *= absorption; }
@@ -118,21 +82,6 @@ namespace RAC
 				diffraction = true;
 				key = key + std::to_string(id) + "d";
 			}
-			/*inline void AddEdgeIDToStart(const size_t id, const Diffraction::Path path)
-			{
-				pathParts.insert(pathParts.begin(), Part(id, false));
-				order++;
-				mDiffractionPath = path;
-				diffraction = true;
-				key = std::to_string(id) + "d" + key;
-			}*/
-			/*inline void FlipPath()
-			{
-				std::reverse(pathParts.begin(), pathParts.end());
-				key = "";
-				for (Part part : pathParts)
-					key = key + std::to_string(part.id) + "r";
-			}*/
 
 			// Getters
 			size_t GetID() const { return pathParts.back().id; }
@@ -146,21 +95,10 @@ namespace RAC
 			// Transforms
 			void SetTransform(const vec3& vSourcePosition);
 			void SetTransform(const vec3& vSourcePosition, const vec3& vEdgeSourcePosition);
-			// void UpdateTransform(const vec3& vEdgeSourcePosition);
 
 			inline vec3 GetPosition() const { return mPositions.back(); }
 			vec3 GetPosition(int i) const;
-			// vec3 GetTransformPosition();
 			
-			// Receiver position
-			// void SetRPosition(const vec3& vReceiverPosition);
-			// inline void SetRPositions(const std::vector<vec3>& vReceiverPositions) { mRPositions = vReceiverPositions; };
-			// void SetRTransform(const vec3& vReceiverPosition, const vec3& vEdgeSourcePosition);
-			
-			// vec3 GetRPosition() const { return mRPositions.back(); }
-			// vec3 GetRPosition(const int i) const;
-			// inline std::vector<vec3> GetRPositions() const { return mRPositions; };
-
 			// Diffraction
 			inline void UpdateDiffractionPath(const vec3& source, const vec3& receiver, const Edge& edge)
 			{
@@ -177,16 +115,12 @@ namespace RAC
 			}
 			const inline Edge& GetEdge() const { return mDiffractionPath.GetEdge(); }
 			inline vec3 GetApex() const { return mDiffractionPath.GetApex(); }
-			// inline bool GetSValid() const { return mDiffractionPath.sValid; }
-			// inline bool GetRValid() const { return mDiffractionPath.rValid; }
 
 			// Visibility and Validity
 			inline void Visible(const bool fdn) { visible = true; feedsFDN = fdn; }
 			inline void Invisible() { visible = false; }
 			inline void Valid() { valid = true; }
 			inline void Invalid() { valid = false; }
-			// inline void RValid() { rValid = true; }
-			// inline void RInvalid() { rValid = false; }
 
 			// Reset
 			inline void Reset() { Invalid();  Invisible(); ResetAbsorption(); }
@@ -221,7 +155,6 @@ namespace RAC
 			bool diffraction;
 			bool valid;
 			bool visible;
-			// bool rValid;
 			bool feedsFDN;
 
 			// DSP 
@@ -233,9 +166,7 @@ namespace RAC
 		private:
 			std::string key;
 			std::vector<Part> pathParts;
-			// std::vector<size_t> planeIds;
 			std::vector<vec3> mPositions;
-			// std::vector<vec3> mRPositions;
 			size_t order;
 			Absorption mAbsorption;
 		};
@@ -247,12 +178,14 @@ namespace RAC
 		public:
 
 			// Load and Destroy
-			VirtualSource(const Config& config) : mCore(NULL), mSource(NULL), order(0), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(config.frequencyBands, config.Q, config.fs),
-				isInitialised(false), feedsFDN(false), mFDNChannel(-1), btm(&mDiffractionPath, 48000), reflection(false), diffraction(false), mConfig(config), mAirAbsorption(mConfig.fs)
+			VirtualSource(const Config& config) : mCore(NULL), mSource(NULL), order(0), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(config.frequencyBands, config.Q, config.fs), isInitialised(false), feedsFDN(false), mFDNChannel(-1), 
+				attenuate(&mDiffractionPath), lowPass(&mDiffractionPath, config.fs), udfa(&mDiffractionPath, config.fs), udfai(&mDiffractionPath, config.fs), nnSmall(&mDiffractionPath), nnBest(&mDiffractionPath), utd(&mDiffractionPath, config.fs), btm(&mDiffractionPath, config.fs),
+				reflection(false), diffraction(false), mConfig(config), mAirAbsorption(mConfig.fs)
 			{
 				vWallMutex = std::make_shared<std::mutex>();
 				vEdgeMutex = std::make_shared<std::mutex>();
 				audioMutex = std::make_shared<std::mutex>();
+				UpdateDiffractionModel(config.diffractionModel);
 			}
 			VirtualSource(Binaural::CCore* core, const Config& config);
 			VirtualSource(Binaural::CCore* core, const Config& config, const VirtualSourceData& data, const int fdnChannel);
@@ -269,7 +202,8 @@ namespace RAC
 
 			void UpdateSpatialisationMode(const HRTFMode mode);
 			void UpdateSpatialisationMode(const SPATConfig config);
-
+			void UpdateDiffractionModel(const DiffractionModel model);
+			
 			// Updates
 			bool UpdateVirtualSource(const VirtualSourceData& data, int& fdnChannel);
 
@@ -292,6 +226,17 @@ namespace RAC
 
 			void Reset() { mVirtualSources.clear(); mVirtualEdgeSources.clear(); } // mWallIDs.clear(); }
 
+			inline void UpdateDiffraction()
+			{
+				mDiffractionModel->UpdatePath(&mDiffractionPath);
+				mDiffractionModel->UpdateParameters();
+			}
+
+			inline void ProcessDiffraction(const Buffer& inBuffer, Buffer& outBuffer)
+			{
+				mDiffractionModel->ProcessAudio(inBuffer, outBuffer, mConfig.numFrames, mConfig.lerpFactor);
+			}
+
 			// Constants
 			Binaural::CCore* mCore;
 			Config mConfig;
@@ -310,7 +255,17 @@ namespace RAC
 			Real mTargetGain;
 			GraphicEQ mFilter;
 			Diffraction::Path mDiffractionPath;
+			Diffraction::Attenuate attenuate;
+			Diffraction::LPF lowPass;
+			Diffraction::UDFA udfa;
+			Diffraction::UDFAI udfai;
+			Diffraction::NNSmall nnSmall;
+			Diffraction::NNBest nnBest;
+			Diffraction::UTD utd;
 			Diffraction::BTM btm;
+
+			Diffraction::Model* mDiffractionModel;
+
 			AirAbsorption mAirAbsorption;
 
 			bool isInitialised;

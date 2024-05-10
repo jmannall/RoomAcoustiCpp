@@ -46,38 +46,6 @@ namespace RAC
 
 		void GraphicEQ::InitMatrix(const Coefficients& fc)
 		{
-			/*auto idxL = std::lower_bound(thirdOctBands.begin(), thirdOctBands.end(), fc[0]);
-			auto idxH = std::upper_bound(thirdOctBands.begin(), thirdOctBands.end(), fc[numFilters - 1]);
-
-			for (int i = 0; i < 1; i++)
-			{
-				if (idxL != thirdOctBands.begin())
-					idxL--;
-				if (idxH != thirdOctBands.end())
-					idxH++;
-			}
-
-			std::vector<Real> f = std::vector<Real>(idxL, idxH);
-
-
-
-			Real fm;
-			std::vector<int> counter = std::vector<int>(numFilters, 0);
-			std::vector<Real> fidx = std::vector<Real>(f.size(), 0.0);
-			for (int i = 0; i < numFilters - 1; i++)
-			{
-				fm = fc[i] * sqrt(fc[i + 1] / fc[i]);
-				for (int j = 0; j < f.size(); j++)
-				{
-					if (f[j] > fm)
-						fidx[j] = i + 1;
-				}
-			}
-
-			for (auto& i : fidx)
-				counter[i]++;*/
-
-
 			std::vector<Real> f = std::vector<Real>(numFilters, 0.0);;
 
 			f[0] = fc[0] / 2.0;
@@ -105,9 +73,6 @@ namespace RAC
 				filter.UpdateGain(p);
 				out = filter.GetFrequencyResponse(f);
 				filter.UpdateGain(1.0);
-
-				/*for (int i = 0; i < out.size(); i++)
-					mat.IncreaseEntry(out[i] / counter[fidx[i]], j, fidx[i]);*/
 
 				for (int i = 0; i < out.size(); i++)
 					mat[j][i] += out[i];
@@ -166,6 +131,9 @@ namespace RAC
 			}
 			for (int i = 0; i < numFilters; i++)
 				targetGain[i + 1] = inputGain[i];
+
+			if (targetGain != currentGain)
+				equal = false;
 		}
 
 		void GraphicEQ::UpdateParameters()

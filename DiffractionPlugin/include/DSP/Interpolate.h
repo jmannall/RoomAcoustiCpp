@@ -18,12 +18,17 @@
 
 // DSP headers
 #include "DSP/Buffer.h"
+#include "DSP/IIRFilter.h"
+
+// Spatialiser headers
+#include "Spatialiser/Types.h"
 
 // Unity headers
 #include "Unity/UnityInterface.h"
 
 namespace RAC
 {
+	using namespace Spatialiser;
 	namespace DSP
 	{
 
@@ -64,7 +69,7 @@ namespace RAC
 #endif
 		}
 
-		inline bool DoLerp(const Real current, const Real target)
+		/*inline bool DoLerp(const Real current, const Real target)
 		{
 			return (current > target + EPS || current < target - EPS);
 		}
@@ -72,7 +77,7 @@ namespace RAC
 		inline bool DoLerp(const Coefficients& current, const Coefficients& target)
 		{
 			return (current > target + EPS || current < target - EPS);
-		}
+		}*/
 
 		inline Real Lerp(Real start, const Real end, const Real factor)
 		{
@@ -153,6 +158,23 @@ namespace RAC
 #ifdef PROFILE_AUDIO_THREAD
 			EndLerp();
 #endif		
+		}
+
+		inline bool Equals(const Real a, const Real b)
+		{
+			if (a > b + EPS || a < b - EPS)
+				return false;
+			return true;
+		}
+
+		inline bool Equals(const Coefficients& u, const Coefficients& v)
+		{
+			if (u.Length() != v.Length())
+				return false;
+			for (int i = 0; i < u.Length(); i++)
+				if (u[i] > v[i] + EPS || u[i] < v[i] - EPS)
+					return false;
+			return true;
 		}
 	}
 }

@@ -97,11 +97,20 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void UpdateFDNModel(const FDNMatrix& model)
+		void UpdateFDNModel(const FDNMatrix model)
 		{
 			auto context = GetContext();
 			if (context)
 				context->UpdateFDNModel(model);
+		}
+
+		////////////////////////////////////////
+
+		void UpdateDiffractionModel(const DiffractionModel model)
+		{
+			auto context = GetContext();
+			if (context)
+				context->UpdateDiffractionModel(model);
 		}
 
 		////////////////////////////////////////

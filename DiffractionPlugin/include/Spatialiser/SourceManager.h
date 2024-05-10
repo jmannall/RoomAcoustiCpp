@@ -43,6 +43,7 @@ namespace RAC
 			};
 
 			void UpdateSpatialisationMode(const SPATConfig config);
+			void UpdateDiffractionModel(const DiffractionModel model);
 
 			// Sources
 			size_t Init();

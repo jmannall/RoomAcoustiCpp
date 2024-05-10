@@ -78,6 +78,7 @@ namespace RAC
 
 			void UpdateSpatialisationMode(const HRTFMode mode);
 			void UpdateSpatialisationMode(const SPATConfig config);
+			void UpdateDiffractionModel(const DiffractionModel model);
 
 			// Getters
 			inline shared_ptr<Binaural::CSingleSourceDSP>& GetSource() { return mSource; }

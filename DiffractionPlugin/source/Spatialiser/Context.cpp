@@ -33,11 +33,15 @@ namespace RAC
 #endif
 
 		//////////////////// Background Thread ////////////////////
+#pragma optimize("", off)
 
 		void BackgroundProcessor(Context* context)
 		{
 #ifdef DEBUG_IEM_THREAD
 	Debug::Log("Begin background thread", Colour::Green);
+#endif
+#ifdef PROFILE_BACKGROUND_THREAD
+			RegisterBackgroundThread();
 #endif
 			bool isRunning = context->IsRunning();
 			std::shared_ptr<Room> room = context->GetRoom();
@@ -61,12 +65,17 @@ namespace RAC
 #ifdef PROFILE_BACKGROUND_THREAD
 				EndBackgroundLoop();
 #endif
+
 			}
 
+#ifdef PROFILE_BACKGROUND_THREAD
+			UnregisterBackgroundThread();
+#endif
 #ifdef DEBUG_IEM_THREAD
 	Debug::Log("End background thread", Colour::Red);
 #endif
 		}
+#pragma optimize("", on)
 
 		//////////////////// Context ////////////////////
 
@@ -180,6 +189,14 @@ namespace RAC
 		{
 			Coefficients T60 = mRoom->UpdateReverbTimeModel(model);
 			UpdateReverbTime(T60);
+		}
+
+		////////////////////////////////////////
+
+		void Context::UpdateDiffractionModel(const DiffractionModel model)
+		{
+			mConfig.diffractionModel = model;
+			mSources->UpdateDiffractionModel(model);
 		}
 
 		////////////////////////////////////////

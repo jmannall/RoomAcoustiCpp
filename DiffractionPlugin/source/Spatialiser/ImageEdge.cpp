@@ -30,12 +30,18 @@ namespace RAC
 
 		void ImageEdge::RunIEM()
 		{
+#ifdef PROFILE_BACKGROUND_THREAD
+			BeginCopyData();
+#endif
 			mPlanes = mRoom->GetPlanes();
 			mWalls = mRoom->GetWalls();
 			mEdges = mRoom->GetEdges();
 
 			mSources.clear();
 			mSourceManager->GetSourceData(mSources);
+#ifdef PROFILE_BACKGROUND_THREAD
+			EndCopyData();
+#endif
 			{
 				lock_guard<std::mutex> lock(mMutex);
 				UpdateRValid();
@@ -310,6 +316,9 @@ namespace RAC
 
 		void ImageEdge::UpdateLateReverbFilters()
 		{
+#ifdef PROFILE_BACKGROUND_THREAD
+			BeginLateReverb();
+#endif
 			Real k;
 			vec3 point, intersection;
 			for (int j = 0; j < reverbDirections.size(); j++)
@@ -344,6 +353,9 @@ namespace RAC
 					reverbAbsorptions[j] = 0.0;
 			}
 			mReverb->UpdateReflectionFilters(reverbAbsorptions, mIEMConfig.lateReverb);
+#ifdef PROFILE_BACKGROUND_THREAD
+			EndLateReverb();
+#endif
 		}
 
 		bool ImageEdge::ReflectPointInRoom(const vec3& point, VirtualSourceDataMap& vSources)
@@ -351,6 +363,7 @@ namespace RAC
 
 #ifdef PROFILE_BACKGROUND_THREAD
 			BeginIEM();
+			BeginDirect();
 #endif
 
 			bool lineOfSight = false;
@@ -368,6 +381,10 @@ namespace RAC
 					lineOfSight = false;
 			}
 
+#ifdef PROFILE_BACKGROUND_THREAD
+			EndDirect();
+#endif
+
 			if (mIEMConfig.order < 1)
 				return lineOfSight;
 
@@ -375,6 +392,7 @@ namespace RAC
 				sp.resize(mIEMConfig.order, std::vector<VirtualSourceData>());
 
 			size_t counter = 0;
+
 			if ((mIEMConfig.diffraction != DiffractionSound::none || mIEMConfig.reflectionDiffraction != DiffractionSound::none) && mEdges.size() > 0)
 				counter = FirstOrderDiffraction(point, vSources);
 
@@ -691,6 +709,9 @@ namespace RAC
 
 		size_t ImageEdge::FirstOrderDiffraction(const vec3& point, VirtualSourceDataMap& vSources)
 		{
+#ifdef PROFILE_BACKGROUND_THREAD
+			BeginFirstOrderDiff();
+#endif
 			size_t size = sp[0].size();
 			size_t counter = 0;
 
@@ -747,13 +768,18 @@ namespace RAC
 					vSources.insert_or_assign(vSource.GetKey(), vSource);
 				}
 			}
-
+#ifdef PROFILE_BACKGROUND_THREAD
+			EndFirstOrderDiff();
+#endif
 			return counter;
 		}
 
 		// Reflection
 		size_t ImageEdge::FirstOrderReflections(const vec3& point, VirtualSourceDataMap& vSources, size_t counter)
 		{
+#ifdef PROFILE_BACKGROUND_THREAD
+			BeginFirstOrderRef();
+#endif
 			size_t size = sp[0].size();
 
 			bool feedsFDN = mIEMConfig.order == 1;
@@ -793,7 +819,9 @@ namespace RAC
 					vSources.insert_or_assign(vSource.GetKey(), vSource);
 				}
 			}
-
+#ifdef PROFILE_BACKGROUND_THREAD
+			EndFirstOrderRef();
+#endif
 			return counter;
 		}
 
@@ -821,7 +849,22 @@ namespace RAC
 
 				size_t size = sp[refIdx].size();
 				size_t counter = 0;
-
+#ifdef PROFILE_BACKGROUND_THREAD
+				switch (refOrder)
+				{
+				case 2:
+					BeginSecondOrderRef();
+					break;
+				case 3:
+					BeginThirdOrderRef();
+					break;
+				case 4:
+					BeginFourthOrderRef();
+					break;
+				default:
+					BeginHigherOrderRef();
+				}
+#endif
 				for (const auto& it : mPlanes)
 				{
 					bool rValid = it.second.GetRValid();
@@ -959,9 +1002,40 @@ namespace RAC
 					}
 				}
 
+#ifdef PROFILE_BACKGROUND_THREAD
+				switch (refOrder)
+				{
+				case 2:
+					EndSecondOrderRef();
+					break;
+				case 3:
+					EndThirdOrderRef();
+					break;
+				case 4:
+					EndFourthOrderRef();
+					break;
+				default:
+					EndHigherOrderRef();
+				}
+#endif
 				if (mIEMConfig.reflectionDiffraction == DiffractionSound::none)
 					continue;
-
+#ifdef PROFILE_BACKGROUND_THREAD
+				switch (refOrder)
+				{
+				case 2:
+					BeginSecondOrderRefDiff();
+					break;
+				case 3:
+					BeginThirdOrderRefDiff();
+					break;
+				case 4:
+					BeginFourthOrderRefDiff();
+					break;
+				default:
+					BeginHigherOrderRefDiff();
+				}
+#endif
 				for (const auto& it : mEdges)
 				{
 					if (it.second.zW < mIEMConfig.edgeLength)
@@ -1036,7 +1110,22 @@ namespace RAC
 						}
 					}
 				}
-
+#ifdef PROFILE_BACKGROUND_THREAD
+				switch (refOrder)
+				{
+				case 2:
+					EndSecondOrderRefDiff();
+					break;
+				case 3:
+					EndThirdOrderRefDiff();
+					break;
+				case 4:
+					EndFourthOrderRefDiff();
+					break;
+				default:
+					EndHigherOrderRefDiff();
+				}
+#endif
 				sp[refIdx].resize(counter, VirtualSourceData(numAbsorptionBands));
 			}
 		}

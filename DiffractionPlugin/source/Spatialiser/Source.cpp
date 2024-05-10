@@ -111,6 +111,21 @@ namespace RAC
 			}
 		}
 
+		void Source::UpdateDiffractionModel(const DiffractionModel model)
+		{
+			mConfig.diffractionModel = model;
+			{
+				lock_guard<mutex> lock(*vWallMutex);
+				for (auto& it : mVirtualSources)
+					it.second.UpdateDiffractionModel(model);
+			}
+			{
+				lock_guard<mutex> lock(*vEdgeMutex);
+				for (auto& it : mVirtualEdgeSources)
+					it.second.UpdateDiffractionModel(model);
+			}
+		}
+
 		void Source::ResetFDNSlots()
 		{
 			freeFDNChannels.clear();
@@ -281,7 +296,7 @@ namespace RAC
 					unique_lock<mutex> lck(*m, std::defer_lock);
 					if (lck.try_lock())
 					{
-						auto newIt = tempStore->insert_or_assign(data.GetID(i), VirtualSource(mCore, mConfig)); // feedsFDN always the highest order ism
+						auto newIt = tempStore->try_emplace(data.GetID(i), mCore, mConfig); // feedsFDN always the highest order ism
 						it = newIt.first;
 						VirtualSourceData vSource = data;
 						newVSources.push_back(vSource.Trim(i));
@@ -316,15 +331,16 @@ namespace RAC
 					else
 						freeFDNChannels[0]++;
 				}
-				VirtualSource virtualSource = VirtualSource(mCore, mConfig, data, fdnChannel);
+				//VirtualSource virtualSource = VirtualSource(mCore, mConfig, data, fdnChannel);
 
-				assert(!(data.feedsFDN && virtualSource.GetFDNChannel() == -1));
+				//assert(!(data.feedsFDN && virtualSource.GetFDNChannel() == -1));
 				{
 					unique_lock<mutex> lck(*m, std::defer_lock);
 					if (lck.try_lock())
-						tempStore->insert_or_assign(data.GetID(orderIdx), virtualSource);
+						tempStore->try_emplace(data.GetID(orderIdx), mCore, mConfig, data, fdnChannel);
+						// tempStore->insert_or_assign(data.GetID(orderIdx), virtualSource);
 				}
-				virtualSource.Deactivate();
+				//virtualSource.Deactivate();
 			}
 			else
 			{

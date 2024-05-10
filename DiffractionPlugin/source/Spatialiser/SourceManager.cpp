@@ -52,6 +52,14 @@ namespace RAC
 				it.second.UpdateSpatialisationMode(config);
 		}
 
+		void SourceManager::UpdateDiffractionModel(const DiffractionModel model)
+		{
+			mConfig.diffractionModel = model;
+			lock_guard <mutex> lock(updateMutex);
+			for (auto& it : mSources)
+				it.second.UpdateDiffractionModel(model);
+		}
+
 		void SourceManager::GetSourceData(std::vector<SourceData>& data)
 		{
 			lock_guard <mutex> lock(updateMutex);

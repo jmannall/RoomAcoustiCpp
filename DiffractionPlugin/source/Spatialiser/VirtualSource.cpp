@@ -131,8 +131,9 @@ namespace RAC
 
 		//////////////////// VirtualSource class ////////////////////
 
-		VirtualSource::VirtualSource(Binaural::CCore* core, const Config& config) : mCore(core), mSource(NULL), order(0), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(config.frequencyBands, config.Q, config.fs),
-			isInitialised(false), mConfig(config), feedsFDN(false), mFDNChannel(-1), btm(&mDiffractionPath, config.fs), reflection(false), diffraction(false), mAirAbsorption(config.fs), bStore(config.numFrames)
+		VirtualSource::VirtualSource(Binaural::CCore* core, const Config& config) : mCore(core), mSource(NULL), order(0), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(config.frequencyBands, config.Q, config.fs), isInitialised(false), mConfig(config), feedsFDN(false), mFDNChannel(-1),
+			attenuate(&mDiffractionPath), lowPass(&mDiffractionPath, config.fs), udfa(&mDiffractionPath, config.fs), udfai(&mDiffractionPath, config.fs), nnSmall(&mDiffractionPath), nnBest(&mDiffractionPath), utd(&mDiffractionPath, config.fs), btm(&mDiffractionPath, config.fs),
+			reflection(false), diffraction(false), mAirAbsorption(config.fs), bStore(config.numFrames)
 		{
 			vWallMutex = std::make_shared<std::mutex>();
 			vEdgeMutex = std::make_shared<std::mutex>();
@@ -141,10 +142,12 @@ namespace RAC
 			bOutput.left = CMonoBuffer<float>(mConfig.numFrames);
 			bOutput.right = CMonoBuffer<float>(mConfig.numFrames);
 			bMonoOutput = CMonoBuffer<float>(mConfig.numFrames);
+			UpdateDiffractionModel(config.diffractionModel);
 		}
 
-		VirtualSource::VirtualSource(Binaural::CCore* core, const Config& config, const VirtualSourceData& data, int fdnChannel) : mCore(core), mSource(NULL), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(data.GetAbsorption(), config.frequencyBands, config.Q, config.fs),
-			isInitialised(false), mConfig(config), feedsFDN(data.feedsFDN), mFDNChannel(fdnChannel), mDiffractionPath(data.mDiffractionPath), btm(&mDiffractionPath, config.fs), reflection(data.reflection), diffraction(data.diffraction), mAirAbsorption(data.distance, mConfig.fs), bStore(config.numFrames)
+		VirtualSource::VirtualSource(Binaural::CCore* core, const Config& config, const VirtualSourceData& data, int fdnChannel) : mCore(core), mSource(NULL), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(data.GetAbsorption(), config.frequencyBands, config.Q, config.fs), isInitialised(false), mConfig(config), feedsFDN(data.feedsFDN), mFDNChannel(fdnChannel),
+			attenuate(&mDiffractionPath), lowPass(&mDiffractionPath, config.fs), udfa(&mDiffractionPath, config.fs), udfai(&mDiffractionPath, config.fs), nnSmall(&mDiffractionPath), nnBest(&mDiffractionPath), utd(&mDiffractionPath, config.fs), btm(&mDiffractionPath, config.fs),
+			reflection(data.reflection), diffraction(data.diffraction), mAirAbsorption(data.distance, mConfig.fs), bStore(config.numFrames)
 		{
 			vWallMutex = std::make_shared<std::mutex>();
 			vEdgeMutex = std::make_shared<std::mutex>();
@@ -153,6 +156,7 @@ namespace RAC
 			bOutput.left = CMonoBuffer<float>(mConfig.numFrames);
 			bOutput.right = CMonoBuffer<float>(mConfig.numFrames);
 			bMonoOutput = CMonoBuffer<float>(mConfig.numFrames);
+			UpdateDiffractionModel(config.diffractionModel);
 			UpdateVirtualSource(data, fdnChannel);
 		}
 
@@ -232,6 +236,57 @@ namespace RAC
 			}
 		}
 
+		void VirtualSource::UpdateDiffractionModel(const DiffractionModel model)
+		{
+			mConfig.diffractionModel = model;
+			switch (model)
+			{
+			case DiffractionModel::attenuate:
+			{
+				mDiffractionModel = &attenuate;
+				break;
+			}
+			case DiffractionModel::lowPass:
+			{
+				mDiffractionModel = &lowPass;
+				break;
+			}
+			case DiffractionModel::udfa:
+			{
+				mDiffractionModel = &udfa;
+				break;
+			}
+			case DiffractionModel::udfai:
+			{
+				mDiffractionModel = &udfai;
+				break;
+			}
+			case DiffractionModel::nnBest:
+			{
+				mDiffractionModel = &nnBest;
+				break;
+			}
+			case DiffractionModel::nnSmall:
+			{
+				mDiffractionModel = &nnSmall;
+				break;
+			}
+			case DiffractionModel::utd:
+			{
+				mDiffractionModel = &utd;
+				break;
+			}
+			case DiffractionModel::btm:
+			{
+				mDiffractionModel = &btm;
+				break;
+			}
+			default:
+				mDiffractionModel = &btm;
+			}
+			UpdateDiffraction();
+		}
+
 		void VirtualSource::ProcessAudio(const Buffer& data, matrix& reverbInput, Buffer& outputBuffer)
 		{
 			{
@@ -257,7 +312,7 @@ namespace RAC
 #ifdef PROFILE_AUDIO_THREAD
 						BeginDiffraction();
 #endif
-						btm.ProcessAudio(data, bStore, mConfig.numFrames, mConfig.lerpFactor);
+						ProcessDiffraction(data, bStore);
 #ifdef PROFILE_AUDIO_THREAD
 						EndDiffraction();
 #endif
@@ -382,8 +437,7 @@ namespace RAC
 			if (diffraction)
 			{
 				mDiffractionPath = data.mDiffractionPath;
-				btm.UpdatePath(&mDiffractionPath);
-				btm.UpdateParameters();
+				UpdateDiffraction();
 			}
 
 			mAirAbsorption.SetDistance(data.distance);

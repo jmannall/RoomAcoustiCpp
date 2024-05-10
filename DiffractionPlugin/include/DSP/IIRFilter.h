@@ -311,22 +311,13 @@ namespace RAC
 		/**
 		 * Class that implements a 2nd order IIR filter from poles, zeros and gain (used by NN models)
 		 */
-		struct ZPKParameters
-		{
-			Coefficients z;
-			Coefficients p;
-			Real k;
-			ZPKParameters() : z(std::vector<Real>({ 0.25, -0.99 })), p(std::vector<Real>({ 0.99, -0.25 })), k(0.0) {};
-			ZPKParameters(Real _z, Real _p, Real _k) : z(2, _z), p(2, _p), k(_k) {};
-		};
-
 		class ZPKFilter : public IIRFilter
 		{
 		public:
-			ZPKFilter(const int& sampleRate) : IIRFilter(2, sampleRate) { a[0] = 1.0; UpdateParameters(ZPKParameters()); };
-			ZPKFilter(const ZPKParameters& zpk, const int& sampleRate) : IIRFilter(2, sampleRate) { a[0] = 1.0; UpdateParameters(zpk); };
+			ZPKFilter(const int& sampleRate) : IIRFilter(2, sampleRate) { a[0] = 1.0; UpdateParameters(Coefficients(std::vector<Real>({ 0.25, -0.99, 0.99, -0.25, 0.0 }))); };
+			ZPKFilter(const Coefficients& zpk, const int& sampleRate) : IIRFilter(2, sampleRate) { a[0] = 1.0; UpdateParameters(zpk); };
 
-			void UpdateParameters(const ZPKParameters& zpk);
+			void UpdateParameters(const Coefficients& zpk);
 		};
 
 		/**

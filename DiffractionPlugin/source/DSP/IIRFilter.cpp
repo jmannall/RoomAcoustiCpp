@@ -190,14 +190,14 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void ZPKFilter::UpdateParameters(const ZPKParameters& zpk)
+		void ZPKFilter::UpdateParameters(const Coefficients& zpk) // z[0 - 1], p[2 - 3], k[4]
 		{
-			b[0] = zpk.k;
-			b[1] = -zpk.k * (zpk.z[0] + zpk.z[1]);
-			b[2] = zpk.k * zpk.z[0] * zpk.z[1];
+			b[0] = zpk[4];
+			b[1] = -zpk[4] * (zpk[0] + zpk[1]);
+			b[2] = zpk[4] * zpk[0] * zpk[1];
 
-			a[1] = -(zpk.p[0] + zpk.p[1]);
-			a[2] = zpk.p[0] * zpk.p[1];
+			a[1] = -(zpk[2] + zpk[3]);
+			a[2] = zpk[2] * zpk[3];
 		}
 
 		////////////////////////////////////////

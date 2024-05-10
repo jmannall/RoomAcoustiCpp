@@ -261,6 +261,46 @@ extern "C"
 	}
 
 	/**
+	 * Updates the model used to process diffraction.
+	 *
+	 * The mapping is as follows:
+	 * 0 -> Atteuate (1 / r)
+	 * 1 -> Low pass filter (1kHz)
+	 * 2 -> UDFA
+	 * 3 -> UDFA (interpolated)
+	 * 4 -> NN-IIR (best)
+	 * 5 -> NN-IIR (small)
+	 * 6 -> UTD
+	 * 7 -> Btm
+	 *
+	 * @param id The ID corresponding to a FDN matrix type.
+	 */
+	EXPORT void RACUpdateDiffractionModel(int id)
+	{
+		switch (id)
+		{
+		case(0):
+		{ UpdateDiffractionModel(DiffractionModel::attenuate); break; }
+		case(1):
+		{ UpdateDiffractionModel(DiffractionModel::lowPass); break; }
+		case(2):
+		{ UpdateDiffractionModel(DiffractionModel::udfa); break; }
+		case(3):
+		{ UpdateDiffractionModel(DiffractionModel::udfai); break; }
+		case(4):
+		{ UpdateDiffractionModel(DiffractionModel::nnBest); break; }
+		case(5):
+		{ UpdateDiffractionModel(DiffractionModel::nnSmall); break; }
+		case(6):
+		{ UpdateDiffractionModel(DiffractionModel::utd); break; }
+		case(7):
+		{ UpdateDiffractionModel(DiffractionModel::btm); break; }
+		default:
+		{ UpdateDiffractionModel(DiffractionModel::attenuate); break; }
+		}
+	}
+
+	/**
 	 * Updates the volume and dimensions of the room.
 	 *
 	 * This function should be called when the volume or dimensions of the room changes and after all ReverbWalls have been initialised.

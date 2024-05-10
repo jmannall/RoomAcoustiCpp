@@ -48,11 +48,24 @@ namespace RAC
 				return *this;
 			}
 
+			inline Coefficients Sqrt()
+			{
+				for (int i = 0; i < mCoefficients.size(); i++)
+					mCoefficients[i] = sqrt(mCoefficients[i]);
+				return *this;
+			}
+
 			// Operators
 			inline Real& operator[](const int i) { return mCoefficients[i]; };
 			inline Real operator[](const int i) const { return mCoefficients[i]; };
 
-			// Operators
+			inline Coefficients& operator=(Real x)
+			{
+				for (int i = 0; i < mCoefficients.size(); i++)
+					mCoefficients[i] = x;
+				return *this;
+			}
+
 			inline Coefficients& operator-()
 			{
 				for (int i = 0; i < mCoefficients.size(); i++)
@@ -139,25 +152,17 @@ namespace RAC
 			std::vector<Real> mCoefficients;
 		};
 
-		inline bool Equals(const Coefficients& u, const Coefficients& v)
-		{
-			if (u.Length() != v.Length())
-				return false;
-			for (int i = 0; i < u.Length(); i++)
-				if (u[i] > v[i] + EPS || u[i] < v[i] - EPS)
-					return false;
-			return true;
-		}
-
 		inline Coefficients operator+(Coefficients u, const Coefficients& v) { return u += v; }
 		inline Coefficients operator-(Coefficients u, const Coefficients& v) { return u -= v; }
 		inline Coefficients operator*(Coefficients u, const Coefficients& v) { return u *= v; }
 		inline Coefficients operator/(Coefficients u, const Coefficients& v) { return u /= v; }
 
 		inline Coefficients operator+(Coefficients v, const Real a) { return v += a; }
+		inline Coefficients operator+(const Real a, Coefficients v) { return v += a; }
 		inline Coefficients operator-(Coefficients v, const Real a) { return v += (-a); }
 		inline Coefficients operator-(const Real a, Coefficients v) { return -v += a; }
 		inline Coefficients operator*(Coefficients v, const Real a) { return v *= a; }
+		inline Coefficients operator*(const Real a, Coefficients v) { return v *= a; }
 		inline Coefficients operator/(Coefficients v, const Real a) { return v *= (1.0 / a); }
 		inline Coefficients operator/(const Real a, const Coefficients& v) { Coefficients u = Coefficients(v.Length(), a);  return u /= v; }
 
