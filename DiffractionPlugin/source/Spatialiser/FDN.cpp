@@ -55,8 +55,14 @@ namespace RAC
 
 		void Channel::SetAbsorption(const Coefficients& T60)
 		{
-			Coefficients g = (- 3.0 * mT / T60).Pow(10); // 20 * log10(H(f)) = -60 * t / t60(f);
+			Coefficients g = CalcGain(T60);
 			mAbsorptionFilter.InitParameters(g);
+		}
+
+		void Channel::UpdateAbsorption(const Coefficients& T60)
+		{
+			Coefficients g = CalcGain(T60);
+			mAbsorptionFilter.SetGain(g);
 		}
 
 		void Channel::SetDelay()
@@ -98,7 +104,7 @@ namespace RAC
 		void FDN::UpdateT60(const Coefficients& T60)
 		{
 			for (int i = 0; i < mConfig.numFDNChannels; i++)
-				mChannels[i].SetAbsorption(T60);
+				mChannels[i].UpdateAbsorption(T60);
 		}
 
 		void FDN::SetParameters(const Coefficients& T60, const vec& dimensions)

@@ -28,28 +28,11 @@ namespace RAC
 
 		//////////////////// VirtualSourceData class ////////////////////
 
-		/*std::vector<size_t> VirtualSourceData::GetPlaneIDs() const
-		{
-			std::vector<size_t> ret;
-			for (Part part : pathParts)
-			{
-				if (part.isReflection)
-					ret.push_back(part.id);
-			}
-			return ret;
-		}*/
-
 		vec3 VirtualSourceData::GetPosition(const int i) const
 		{
 			assert(i < order);
 			return mPositions[i];
 		}
-
-		/*vec3 VirtualSourceData::GetTransformPosition()
-		{
-			CVector3 position = transform.GetPosition();
-			return vec3(position.x, position.y, position.z);
-		}*/
 
 		void VirtualSourceData::SetTransform(const vec3& vSourcePosition)
 		{
@@ -62,29 +45,6 @@ namespace RAC
 			transform.SetPosition(CVector3(static_cast<float>(vEdgeSourcePosition.x), static_cast<float>(vEdgeSourcePosition.y), static_cast<float>(vEdgeSourcePosition.z)));
 			mPositions.emplace_back(vSourcePosition);
 		}
-
-		/*void VirtualSourceData::UpdateTransform(const vec3& vEdgeSourcePosition)
-		{
-			transform.SetPosition(CVector3(static_cast<float>(vEdgeSourcePosition.x), static_cast<float>(vEdgeSourcePosition.y), static_cast<float>(vEdgeSourcePosition.z)));
-		}
-
-
-		vec3 VirtualSourceData::GetRPosition(const int i) const
-		{
-			assert(i < order);
-			return mRPositions[i];
-		}
-
-		void VirtualSourceData::SetRPosition(const vec3& vReceiverPosition)
-		{
-			mRPositions.push_back(vReceiverPosition);
-		}
-
-		void VirtualSourceData::SetRTransform(const vec3& vReceiverPosition, const vec3& vEdgeSourcePosition)
-		{
-			transform.SetPosition(CVector3(static_cast<float>(vEdgeSourcePosition.x), static_cast<float>(vEdgeSourcePosition.y), static_cast<float>(vEdgeSourcePosition.z)));
-			mRPositions.push_back(vReceiverPosition);
-		}*/
 
 		VirtualSourceData VirtualSourceData::Trim(const int i)
 		{

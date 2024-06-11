@@ -3,14 +3,15 @@
 *
 */
 
-
-#include <vector>
-
-#include "Common/Types.h"
-#include "Common/Vec3.h"
-
 #ifndef Common_SphericalGeometries_h
 #define Common_SphericalGeometries_h
+
+// C++ headers
+#include <vector>
+
+// Common headers
+#include "Common/Types.h"
+#include "Common/Vec3.h"
 
 namespace RAC
 {

@@ -216,7 +216,7 @@ namespace RAC
 
 		//////////////////// Absorption class ////////////////////
 
-		class Absorption : public Coefficients // Stores 1 - sqrt(R). Where R is the absortion property of the material in the pressure domain
+		class Absorption : public Coefficients // Stores 1 - sqrt(R). Where R is the absortion property of the material
 		{
 		public:
 

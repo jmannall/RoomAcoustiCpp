@@ -45,8 +45,6 @@ namespace RAC
 			}
 
 			// Adders
-			// virtual inline void AddEntry(const Real in, const int r, const int c) { e[r][c] = in; }
-			// virtual inline void IncreaseEntry(const Real in, const int r, const int c) { e[r][c] += in; }
 			inline void AddColumn(const std::vector<Real>& v, const int c)
 			{
 				for (int i = 0; i < rows; i++)

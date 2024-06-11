@@ -109,6 +109,8 @@ namespace RAC
 				return directions;
 			}
 
+			inline Coefficients GetReverbTime() { return mT60; }
+
 		private:
 			void InitSources();
 
@@ -120,6 +122,8 @@ namespace RAC
 			bool runFDN;
 			Real mTargetGain;
 			Real mCurrentGain;
+
+			Coefficients mT60;
 
 			FDN mFDN;
 			std::vector<ReverbSource> mReverbSources;

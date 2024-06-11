@@ -303,7 +303,7 @@ extern "C"
 	/**
 	 * Updates the volume and dimensions of the room.
 	 *
-	 * This function should be called when the volume or dimensions of the room changes and after all ReverbWalls have been initialised.
+	 * This function should be called when the volume or dimensions of the room changes and after all walls have been initialised.
 	 * It will reset the Feedback Delay Network (FDN) so should be considered a new room rather than a dynamic change.
 	 * 
 	 * @param volume The volume (m^3) of the room.

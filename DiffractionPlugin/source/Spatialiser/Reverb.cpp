@@ -204,7 +204,7 @@ namespace RAC
 
 		//////////////////// Reverb class ////////////////////
 
-		Reverb::Reverb(Binaural::CCore* core, const Config& config) : mConfig(config), mFDN(config), mCore(core), valid(false), runFDN(false), mTargetGain(0.0), mCurrentGain (0.0)
+		Reverb::Reverb(Binaural::CCore* core, const Config& config) : mConfig(config), mFDN(config), mCore(core), valid(false), runFDN(false), mTargetGain(0.0), mCurrentGain (0.0), mT60(config.frequencyBands.Length())
 		{
 			input = matrix(mConfig.numFDNChannels, mConfig.numFrames);
 			out = rowvec(mConfig.numFDNChannels);
@@ -212,7 +212,7 @@ namespace RAC
 			InitSources();
 		}
 
-		Reverb::Reverb(Binaural::CCore* core, const Config& config, const vec& dimensions, const Coefficients& T60) : mFDN(T60, dimensions, config), mCore(core), mConfig(config), valid(false), runFDN(false), mTargetGain(0.0), mCurrentGain(0.0)
+		Reverb::Reverb(Binaural::CCore* core, const Config& config, const vec& dimensions, const Coefficients& T60) : mFDN(T60, dimensions, config), mCore(core), mConfig(config), valid(false), runFDN(false), mTargetGain(0.0), mCurrentGain(0.0), mT60(T60)
 		{
 			input = matrix(mConfig.numFDNChannels, mConfig.numFrames);
 			col = new Real[mConfig.numFDNChannels];

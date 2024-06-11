@@ -3,6 +3,7 @@
 *
 * @brief Declaration of ParametricEQ, BandFilter, BandSection classes
 *
+* @remarks Superceded by GraphicEQ.h
 */
 
 #ifndef DSP_ParametricEQ_h

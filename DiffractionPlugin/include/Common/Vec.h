@@ -8,9 +8,11 @@
 #ifndef Common_Vec_h
 #define Common_Vec_h
 
+// C++ headers
 #include <cassert>
 #include <random>
 
+// Common headers
 #include "Common/Types.h"
 #include "Common/Matrix.h"
 
@@ -47,16 +49,11 @@ namespace RAC
 			Real CalculateNormal() const;
 			Real Mean() const;
 
-			// inline void AddEntry(const Real in, const int i) { e[i][0] = in; }
-			// inline void IncreaseEntry(const Real in, const int i) { e[i][0] += in; }
-
 			inline void Max(const Real min)
 			{ 
 				for (int i = 0; i < rows; i++)
 					e[i][0] = std::max(min, e[i][0]);
 			}
-
-			// inline Real GetEntry(const int i) const { return e[i][0]; }
 
 			inline Real Sum() const
 			{
@@ -105,11 +102,6 @@ namespace RAC
 			~rowvec() {}
 
 			void Init(const std::vector<Real>& vec);
-
-			// inline void AddEntry(const Real in, const int i) { e[0][i] = in; }
-			// inline void IncreaseEntry(const Real in, const int i) { e[0][i] += in; }
-
-			// inline Real GetEntry(const int i) const { return e[0][i]; }
 
 			inline Real Sum() const
 			{

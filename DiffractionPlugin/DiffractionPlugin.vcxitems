@@ -22,6 +22,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\IIRFilter.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\LinkwitzRileyFilter.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\ParametricEQ.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\AirAbsorption.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Context.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Diffraction\Models.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Diffraction\Path.cpp" />
@@ -43,7 +44,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Coefficients.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Complex.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Definitions.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\HelloWorld.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Matrix.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\SphericalGeometries.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Vec4.h" />

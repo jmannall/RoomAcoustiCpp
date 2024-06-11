@@ -204,6 +204,8 @@ namespace RAC
 		void Context::UpdateRoom(const Real volume, const vec& dimensions)
 		{
 			Coefficients T60 = mRoom->GetReverbTime(volume);
+			if (T60 == 0.0)
+				T60 = mReverb->GetReverbTime();
 			mReverb->SetFDNParameters(T60, dimensions);
 		}
 

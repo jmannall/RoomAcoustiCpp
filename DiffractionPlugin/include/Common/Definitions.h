@@ -1,5 +1,5 @@
 /*
-* @brief Defines constants and some simple mathematicla functions
+* @brief Defines constants and some simple mathematical functions
 *
 */
 
@@ -12,17 +12,15 @@
 // Common headers
 #include "Common/Types.h"
 
-//////////////////// Constants ////////////////////
-
 namespace RAC
 {
 	namespace Common
 	{
-		const constexpr Real ROUND_FACTOR = 1e3;
-		const constexpr int REFLECTION_FILTER_ORDER = 4;
+		//////////////////// Constants ////////////////////
 
-		// Double
-#if DATA_TYPE_DOUBLE
+		const constexpr Real ROUND_FACTOR = 1e3;
+
+#if DATA_TYPE_DOUBLE	// Double
 
 		const constexpr Real T_CELCIUS = 20.0;
 		const constexpr Real SPEED_OF_SOUND = 331.5 + 0.6 * T_CELCIUS;
@@ -48,6 +46,8 @@ namespace RAC
 				400.0, 500.0, 630.0, 800.0, 1.0e3, 1.25e3,
 				1.6e3, 2.0e3, 2.5e3, 3.15e3, 4.0e3, 5.0e3,
 				6.3e3, 8.0e3, 10.0e3, 12.5e3, 16.0e3, 20.0e3 };
+
+		//////////////////// Functions ////////////////////
 
 		inline Real Deg2Rad(Real x)
 		{
@@ -92,8 +92,9 @@ namespace RAC
 			return std::stod(str);
 		}
 
-		// Float
-#else
+#else	// Float
+
+		//////////////////// Constants ////////////////////
 
 		const constexpr Real T_CELCIUS = 20.0f;
 		const constexpr Real SPEED_OF_SOUND = 331.5f + 0.6f * T_CELCIUS;
@@ -113,6 +114,7 @@ namespace RAC
 
 		const constexpr Real MIN_VALUE = 10.0 * FLT_MIN;
 
+		//////////////////// Functions ////////////////////
 
 		inline Real Deg2Rad(Real x)
 		{
@@ -158,6 +160,14 @@ namespace RAC
 		}
 
 #endif
+
+		//////////////////// Constants ////////////////////
+
+		const constexpr Real PI_EPS = PI_1 + EPS;
+		const constexpr Real PI_SQ = PI_1 * PI_1;
+
+		//////////////////// Functions ////////////////////
+
 		inline Real Round(Real x)
 		{
 			return round(x * ROUND_FACTOR) / ROUND_FACTOR;
@@ -168,9 +178,6 @@ namespace RAC
 			Real factor = Pow10(static_cast<Real>(dp));
 			return round(x * factor) / factor;
 		}
-
-		const constexpr Real PI_EPS = PI_1 + EPS;
-		const constexpr Real PI_SQ = PI_1 * PI_1;
 	}
 }
 

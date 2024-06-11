@@ -1,5 +1,5 @@
 /*
-* @brief Linear interpolation functions for various classes. Also handles flushing of denormals.
+* @brief Linear interpolation and approximate equality functions for various classes. Also handles flushing of denormals.
 *
 */
 
@@ -48,6 +48,8 @@ namespace RAC
 		}
 #endif
 
+		//////////////////// Flush denormals ////////////////////
+
 		inline void FlushDenormals()
 		{
 #if(_WINDOWS)
@@ -69,15 +71,7 @@ namespace RAC
 #endif
 		}
 
-		/*inline bool DoLerp(const Real current, const Real target)
-		{
-			return (current > target + EPS || current < target - EPS);
-		}
-
-		inline bool DoLerp(const Coefficients& current, const Coefficients& target)
-		{
-			return (current > target + EPS || current < target - EPS);
-		}*/
+		//////////////////// Interpolation functions ////////////////////
 
 		inline Real Lerp(Real start, const Real end, const Real factor)
 		{
@@ -159,6 +153,8 @@ namespace RAC
 			EndLerp();
 #endif		
 		}
+
+		//////////////////// Equality functions ////////////////////
 
 		inline bool Equals(const Real a, const Real b)
 		{

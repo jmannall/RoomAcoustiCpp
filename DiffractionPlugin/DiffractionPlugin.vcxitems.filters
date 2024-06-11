@@ -111,6 +111,9 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\GraphicEQ.cpp">
       <Filter>Source Files\DSP</Filter>
     </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\AirAbsorption.cpp">
+      <Filter>Source Files\Spatialiser</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Types.h">
@@ -162,9 +165,6 @@
       <Filter>Header Files\Common</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Definitions.h">
-      <Filter>Header Files\Common</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\HelloWorld.h">
       <Filter>Header Files\Common</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Matrix.h">

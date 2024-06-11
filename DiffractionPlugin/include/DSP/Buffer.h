@@ -21,10 +21,8 @@ namespace RAC
 	namespace DSP
 	{
 
-		//////////////////// Buffer class ////////////////////
-
 		/**
-		 * Stores a resizeable buffer of Real values.
+		 * Class that stores a resizeable buffer of Real values.
 		 * 
 		 * @details Used to store audio buffers and impulse responses
 		 */
@@ -154,10 +152,8 @@ namespace RAC
 			return true;
 		}
 
-		//////////////////// BufferF class ////////////////////
-
 		/**
-		 * Stores a resizeable buffer of float values
+		 * Class that stores a resizeable buffer of float values
 		 *
 		 * @details Used to return an audio buffer of float values
 		 */
