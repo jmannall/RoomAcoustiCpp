@@ -88,14 +88,13 @@ namespace RAC
 
 		bool ImageEdge::LineRoomObstruction(const vec3& start, const vec3& end, size_t currentPlaneId)
 		{
-			vec3 intersection;
 			for (auto& itP : mPlanes)
 			{
 				if (itP.first != currentPlaneId)
 				{
-					if (itP.second.LinePlaneObstruction(intersection, start, end))
+					if (itP.second.LinePlaneObstruction(start, end))
 					{
-						if (FindWallIntersection(intersection, start, end, itP.second))
+						if (FindWallObstruction(start, end, itP.second))
 							return true;
 					}
 				}
@@ -108,14 +107,13 @@ namespace RAC
 			if (obstruction)
 				return;
 
-			vec3 intersection;
 			for (auto& itP : mPlanes)
 			{
 				if (itP.first != currentPlaneId)
 				{
-					if (itP.second.LinePlaneObstruction(intersection, start, end))
+					if (itP.second.LinePlaneObstruction(start, end))
 					{
-						obstruction = FindWallIntersection(intersection, start, end, itP.second);
+						obstruction = FindWallObstruction(start, end, itP.second);
 						if (obstruction)
 							return;
 					}
@@ -125,14 +123,13 @@ namespace RAC
 
 		bool ImageEdge::LineRoomObstruction(const vec3& start, const vec3& end, size_t currentPlaneId1, size_t currentPlaneId2)
 		{
-			vec3 intersection;
 			for (auto& itP : mPlanes)
 			{
 				if (itP.first != currentPlaneId1 && itP.first != currentPlaneId2)
 				{
-					if (itP.second.LinePlaneObstruction(intersection, start, end))
+					if (itP.second.LinePlaneObstruction(start, end))
 					{
-						if (FindWallIntersection(intersection, start, end, itP.second))
+						if (FindWallObstruction(start, end, itP.second))
 							return true;
 					}
 				}
@@ -140,13 +137,27 @@ namespace RAC
 			return false;
 		}
 
-		bool ImageEdge::FindWallIntersection(const vec3& intersection, const vec3& start, const vec3& end, const Plane& plane) const
+		bool ImageEdge::FindWallObstruction(const vec3& start, const vec3& end, const Plane& plane) const
+		{
+			for (auto& idW : plane.GetWalls())
+			{
+				auto itW = mWalls.find(idW);
+				if (itW != mWalls.end()) // case: wall exists
+				{
+					if (itW->second.LineWallObstruction(start, end))
+						return true;
+				}
+			}
+			return false;
+		}
+
+		bool ImageEdge::FindWallIntersection(vec3& intersection, const vec3& start, const vec3& end, const Plane& plane) const
 		{
 			Absorption absorption;
 			return FindWallIntersection(absorption, intersection, start, end, plane);
 		}
 
-		bool ImageEdge::FindWallIntersection(Absorption& absorption, const vec3& intersection, const vec3& start, const vec3& end, const Plane& plane) const
+		bool ImageEdge::FindWallIntersection(Absorption& absorption, vec3& intersection, const vec3& start, const vec3& end, const Plane& plane) const
 		{
 			for (auto& idW : plane.GetWalls())
 			{
@@ -167,7 +178,7 @@ namespace RAC
 
 		bool ImageEdge::FindIntersection(vec3& intersection, Absorption& absorption, const vec3& start, const vec3& end, const Plane& plane)
 		{
-			if (plane.LinePlaneIntersection(intersection, start, end))
+			if (plane.LinePlaneIntersection(start, end))
 			{
 				if (FindWallIntersection(absorption, intersection, start, end, plane))
 					return true;
@@ -418,6 +429,8 @@ namespace RAC
 
 				VirtualSourceData& vSource = counter < size ? sp[0][counter] : sp[0].emplace_back(numAbsorptionBands);
 
+				vSource.SetPreviousPlane(vec4(it.second.GetD(), it.second.GetNormal()));
+
 				if (counter < size)
 					vSource.Clear();
 				counter++;
@@ -503,10 +516,23 @@ namespace RAC
 							if (it.first == vS.GetID(prevRefIdx))
 								continue;
 
+							vec4 previousPlaneData = vS.GetPreviousPlane();
+							vec4 planeData = vec4(it.second.GetD(), it.second.GetNormal());
+
+							// Can't reflect in parallel plane
+							if (planeData.x == previousPlaneData.x && planeData.y == previousPlaneData.y && planeData.z == previousPlaneData.z)
+								continue;
+
+							// Can't reflect in coplanar plane
+							if (planeData == -previousPlaneData)
+								continue;
+
 							if (!it.second.ReflectPointInPlane(position, vS.GetPosition(prevRefIdx)))
 								continue;
 
 							VirtualSourceData& vSource = counter < size ? sp[refIdx][counter] : sp[refIdx].emplace_back(vS);
+
+							vSource.SetPreviousPlane(planeData);
 
 							if (counter < size)
 								sp[refIdx][counter].Update(vS);
@@ -548,10 +574,22 @@ namespace RAC
 						{
 							const Edge& edge = vS.GetEdge();
 
+							vec4 planeData = vec4(it.second.GetD(), it.second.GetNormal());
+
 							if (vS.IsReflection(prevRefIdx))
 							{
 								// Can't reflect in same plane twice
 								if (it.first == vS.GetID(prevRefIdx))
+									continue;
+
+								vec4 previousPlaneData = vS.GetPreviousPlane();
+
+								// Can't reflect in parallel plane
+								if (planeData.x == previousPlaneData.x && planeData.y == previousPlaneData.y && planeData.z == previousPlaneData.z)
+									continue;
+
+								// Can't reflect in coplanar plane
+								if (planeData == -previousPlaneData)
 									continue;
 							}
 							else
@@ -566,6 +604,8 @@ namespace RAC
 								continue;
 
 							VirtualSourceData& vSource = counter < size ? sp[refIdx][counter] : sp[refIdx].emplace_back(vS);
+
+							vSource.SetPreviousPlane(planeData);
 
 							if (counter <= size)
 								sp[refIdx][counter].Update(vS);

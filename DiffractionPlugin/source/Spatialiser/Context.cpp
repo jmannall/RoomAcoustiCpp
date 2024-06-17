@@ -270,13 +270,13 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		size_t Context::InitWall(const vec3& normal, const Real* vData, size_t numVertices, Absorption& absorption)
+		size_t Context::InitWall(const vec3& normal, const Real* vData, Absorption& absorption)
 		{
 #ifdef DEBUG_INIT
 	Debug::Log("Init Wall and Edges", Colour::Green);
 #endif
 
-			Wall wall = Wall(normal, vData, numVertices, absorption);
+			Wall wall = Wall(normal, vData, absorption);
 			size_t id = mRoom->AddWall(wall);
 			mRoom->InitEdges(id);
 			return id;
@@ -284,9 +284,9 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Context::UpdateWall(size_t id, const vec3& normal, const Real* vData, size_t numVertices)
+		void Context::UpdateWall(size_t id, const vec3& normal, const Real* vData)
 		{
-			mRoom->UpdateWall(id, normal, vData, numVertices);
+			mRoom->UpdateWall(id, normal, vData);
 		}
 
 		////////////////////////////////////////

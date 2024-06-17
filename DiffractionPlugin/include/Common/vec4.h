@@ -9,6 +9,7 @@
 #define Common_vec4_h
 
 #include "Common/Types.h"
+#include "Common/vec3.h"
 
 namespace RAC
 {
@@ -29,6 +30,7 @@ namespace RAC
 #else
 			vec4(const double w_, const double x_, const double y_, const double z_) : w(static_cast<Real>(w_)), x(static_cast<Real>(x_)), y(static_cast<Real>(y_)), z(static_cast<Real>(z_)) {}
 #endif
+			vec4(const Real w_, const vec3 vec) : w(w_), x(vec.x), y(vec.y), z(vec.z) {}
 			~vec4() {}
 
 			// Member variables
@@ -39,6 +41,36 @@ namespace RAC
 
 		private:
 		};
+
+		//////////////////// Operators ////////////////////
+
+		inline bool operator==(const vec4& u, const vec4& v)
+		{
+			if (u.w == v.w)
+			{
+				if (u.x == v.x)
+				{
+					if (u.y == v.y)
+					{
+						if (u.z == v.z)
+							return true;
+					}
+				}
+			}
+			return false;
+		}
+
+		inline bool operator!=(const vec4& u, const vec4& v)
+		{
+			if (u == v)
+				return false;
+			return true;
+		}
+
+		inline vec4 operator-(const vec4& v)
+		{
+			return vec4(-v.w, -v.x, -v.y, -v.z);
+		}
 	}
 }
 

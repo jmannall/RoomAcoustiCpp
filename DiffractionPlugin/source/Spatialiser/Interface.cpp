@@ -171,22 +171,22 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		int InitWall(const vec3& normal, const Real* vData, size_t numVertices, Absorption& absorption)
+		int InitWall(const vec3& normal, const Real* vData, Absorption& absorption)
 		{
 			auto context = GetContext();
 			if (context)
-				return (int)context->InitWall(normal, vData, numVertices, absorption);
+				return (int)context->InitWall(normal, vData, absorption);
 			else
 				return -1;
 		}
 
 		////////////////////////////////////////
 
-		void UpdateWall(size_t id, const vec3& normal, const Real* vData, size_t numVertices)
+		void UpdateWall(size_t id, const vec3& normal, const Real* vData)
 		{
 			auto context = GetContext();
 			if (context)
-				context->UpdateWall(id, normal, vData, numVertices);
+				context->UpdateWall(id, normal, vData);
 		}
 
 		////////////////////////////////////////

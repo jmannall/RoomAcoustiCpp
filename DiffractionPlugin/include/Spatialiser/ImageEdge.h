@@ -41,16 +41,14 @@ namespace RAC
 			void UpdateRValid();
 			// EdgeZone FindEdgeZone(const vec3& point, const std::vector<size_t> planeIDs);
 
-			bool FindWallIntersection(const vec3& intersection, const vec3& start, const vec3& end, const Plane& plane) const;
-			bool FindWallIntersection(Absorption& absorption, const vec3& intersection, const vec3& start, const vec3& end, const Plane& plane) const;
+			bool FindWallIntersection(vec3& intersection, const vec3& start, const vec3& end, const Plane& plane) const;
+			bool FindWallIntersection(Absorption& absorption, vec3& intersection, const vec3& start, const vec3& end, const Plane& plane) const;
 
 			bool FindIntersection(vec3& intersection, Absorption& absorption, const vec3& start, const vec3& end, const Plane& plane);
 			bool FindIntersections(std::vector<vec3>& intersections, VirtualSourceData& vSource, int bounceIdx);
-			//bool FindIntersectionsSpEd(std::vector<vec3>& intersections, VirtualSourceData& vSource, int bounceIdx);
-			//bool FindIntersectionsEdSp(std::vector<vec3>& intersections, VirtualSourceData& vSource, int bounceIdx);
-			//bool FindIntersectionsSpEdSp(std::vector<vec3>& intersections, VirtualSourceData& vSource, int bounceIdx, int edgeIdx);
 			bool FindIntersections(std::vector<vec3>& intersections, VirtualSourceData& vSource, int bounceIdx, const vec3& start);
-			//bool FindRIntersections(std::vector<vec3>& intersections, VirtualSourceData& vSource, int bounceIdx, const vec3& start);
+
+			bool FindWallObstruction(const vec3& start, const vec3& end, const Plane& plane) const;
 
 			bool LineRoomObstruction(const vec3& start, const vec3& end);
 			void LineRoomObstruction(const vec3& start, const vec3& end, bool& obstruction);
@@ -58,7 +56,6 @@ namespace RAC
 			void LineRoomObstruction(const vec3& start, const vec3& end, size_t currentWallID, bool& obstruction);
 			bool LineRoomObstruction(const vec3& start, const vec3& end, size_t currentWallID1, size_t currentWallID2);
 
-			// void HigherOrderSpecularDiffraction(const vec3& point, VirtualSourceDataStore& sp, VirtualSourceDataMap& vSources);
 			size_t FirstOrderDiffraction(const vec3& point, VirtualSourceDataMap& vSources);
 			size_t FirstOrderReflections(const vec3& point, VirtualSourceDataMap& vSources, size_t counter);
 			void HigherOrderReflections(const vec3& point, VirtualSourceDataMap& vSources);

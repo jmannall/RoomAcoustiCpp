@@ -16,6 +16,7 @@
 
 // Common headers
 #include "Common/Vec3.h"
+#include "Common/Vec4.h"
 #include "Common/Matrix.h"
 
 // Spatialiser headers
@@ -148,6 +149,9 @@ namespace RAC
 
 			void SetDistance(const vec3& listenerPosition);
 
+			inline vec4 GetPreviousPlane() const { return previousPlane; }
+			inline void SetPreviousPlane(const vec4& plane) { previousPlane = plane; }
+
 			VirtualSourceData Trim(const int i);
 
 			// Status data
@@ -169,6 +173,7 @@ namespace RAC
 			std::vector<vec3> mPositions;
 			size_t order;
 			Absorption mAbsorption;
+			vec4 previousPlane;
 		};
 
 		//////////////////// VirtualSource class ////////////////////

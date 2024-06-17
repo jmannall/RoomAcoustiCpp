@@ -34,8 +34,8 @@ namespace RAC
 		public:
 
 			// Load and Destroy
-			Wall() : mNumVertices(0), mAbsorption(1), mPlaneId(0), d(0.0) {}
-			Wall(const vec3& normal, const Real* vData, size_t numVertices, const Absorption& absorption);
+			Wall() : mAbsorption(1), mPlaneId(0), d(0.0) {}
+			Wall(const vec3& normal, const Real* vData, const Absorption& absorption);
 			~Wall() {}
 
 			// Edges
@@ -72,21 +72,22 @@ namespace RAC
 			// Geometry
 			inline Real PointWallPosition(const vec3& point) const { return Dot(point, mNormal) - d; }
 			bool LineWallIntersection(const vec3& start, const vec3& end) const;
-			bool LineWallIntersection(const vec3& intersection, const vec3& start, const vec3& end) const;
+			bool LineWallIntersection(vec3& intersection, const vec3& start, const vec3& end) const;
+			bool LineWallObstruction(const vec3& start, const vec3& end) const;
 
 			// Absorption
-			void Update(const vec3& normal, const Real* vData, size_t numVertices);
+			void Update(const vec3& normal, const Real* vData);
 			inline Absorption GetAbsorption() const { return mAbsorption; }
 			inline Real GetArea() const { return mAbsorption.mArea; }
 
 		private:
 
 			// Update
-			void Update(const Real* vData);
+			// void Update(const Real* vData);
 
 			// Area
-			void CalculateArea();
-			Real AreaOfTriangle(const vec3& v, const vec3& u, const vec3& w) const;
+			inline void CalculateArea() { mAbsorption.mArea = TriangleArea(mVertices[0], mVertices[1], mVertices[2]); }
+			inline Real TriangleArea(const vec3& v, const vec3& u, const vec3& w) const { return 0.5 * (Cross(v - u, v - w).Length()); }
 
 			// Member variables
 			Real d;
@@ -96,7 +97,6 @@ namespace RAC
 			vec3 min;
 			vec3 max;
 			std::vector<float> mFVertices;
-			size_t mNumVertices;
 			Absorption mAbsorption;
 			std::vector<Real> triangleAreas;
 			std::vector<size_t> mEdges;
@@ -134,8 +134,8 @@ namespace RAC
 			bool IsCoplanar(const Wall& wall) const { return mNormal == wall.GetNormal() && d == wall.GetD(); }
 			Real PointPlanePosition(const vec3& point) const { return Dot(point, mNormal) - d; }
 			bool FindIntersectionPoint(vec3& intersection, const vec3& start, const vec3& end, const Real k) const;
-			bool LinePlaneObstruction(vec3& intersection, const vec3& start, const vec3& end) const;
-			bool LinePlaneIntersection(vec3& intersection, const vec3& start, const vec3& end) const;
+			bool LinePlaneObstruction(const vec3& start, const vec3& end) const;
+			bool LinePlaneIntersection(const vec3& start, const vec3& end) const;
 			bool ReflectPointInPlane(const vec3& point) const;
 			bool ReflectPointInPlane(vec3& dest, const vec3& point) const;
 			void ReflectPointInPlaneNoCheck(vec3& point) const;

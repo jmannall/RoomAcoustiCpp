@@ -132,12 +132,11 @@ namespace RAC
 		 *
 		 * @param normal The normal vector of the wall.
 		 * @param vData The vertices of the wall.
-		 * @param numVertices The number of vertices provided in the vData parameter.
 		 * @param absorption The frequency absorption coefficients.
 		 * @param reverbWall The reverb wall.
 		 * @return The ID of the new wall.
 		 */
-		int InitWall(const vec3& normal, const Real* vData, size_t numVertices, Absorption& absorption);
+		int InitWall(const vec3& normal, const Real* vData, Absorption& absorption);
 		
 		/**
 		 * Updates the position and orientation of the wall with the given ID.
@@ -145,9 +144,8 @@ namespace RAC
 		 * @param id The ID of the wall to update.
 		 * @param normal The new normal vector of the wall.
 		 * @param vData The new vertices of the wall.
-		 * @param numVertices The number of vertices provided in the vData parameter.
 		 */
-		void UpdateWall(size_t id, const vec3& normal, const Real* vData, size_t numVertices);
+		void UpdateWall(size_t id, const vec3& normal, const Real* vData);
 
 		/**
 		 * Removes the wall with the given ID.

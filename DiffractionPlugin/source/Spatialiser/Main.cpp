@@ -389,31 +389,30 @@ extern "C"
 	/**
 	 * Initializes a new wall with the given parameters and returns its ID.
 	 *
-	 * This function should be called when a new wall is created.
+	 * This function should be called when a new wall is created. A wall must have 3 vertices.
 	 * It will allocate resources for the new wall and return an ID that can be used to reference the wall in future calls.
 	 *
 	 * @param nX The x-coordinate of the wall's normal vector.
 	 * @param nY The y-coordinate of the wall's normal vector.
 	 * @param nZ The z-coordinate of the wall's normal vector.
 	 * @param vData The vertices of the wall.
-	 * @param numVertices The number of vertices provided in the vData parameter.
 	 * @param absorption The frequency absorption coefficients.
 	 *
 	 * @return The ID of the new wall.
 	 */
-	EXPORT int API RACInitWall(float nX, float nY, float nZ, const float* vData, int numVertices, const float* absorption)
+	EXPORT int API RACInitWall(float nX, float nY, float nZ, const float* vData, const float* absorption)
 	{
 		std::vector<Real> a = std::vector<Real>(numAbsorptionBands);
 		for (int i = 0; i < numAbsorptionBands; i++)
 			a[i] = static_cast<Real>(absorption[i]);
 		Absorption abs = Absorption(a);
 
-		int numCoords = 3 * numVertices;
+		size_t numCoords = 9;
 		Buffer in = Buffer(numCoords);
 		for (int i = 0; i < numCoords; i++)
 			in[i] = static_cast<Real>(vData[i]);
 
-		return InitWall(vec3(nX, nY, nZ), &in[0], static_cast<size_t>(numVertices), abs);
+		return InitWall(vec3(nX, nY, nZ), &in[0], abs);
 	}
 
 	/**
@@ -427,16 +426,15 @@ extern "C"
 	 * @param nY The y-coordinate of the wall's normal vector.
 	 * @param nZ The z-coordinate of the wall's normal vector.
 	 * @param vData The vertices of the wall.
-	 * @param numVertices The number of vertices provided in the vData parameter.
 	 */
-	EXPORT void API RACUpdateWall(int id, float nX, float nY, float nZ, const float* vData, int numVertices)
+	EXPORT void API RACUpdateWall(int id, float nX, float nY, float nZ, const float* vData)
 	{
-		int numCoords = 3 * numVertices;
+		size_t numCoords = 9;
 		Buffer in = Buffer(numCoords);
 		for (int i = 0; i < numCoords; i++)
 			in[i] = static_cast<Real>(vData[i]);
 
-		UpdateWall(static_cast<size_t>(id), vec3(nX, nY, nZ), &in[0], static_cast<size_t>(numVertices));
+		UpdateWall(static_cast<size_t>(id), vec3(nX, nY, nZ), &in[0]);
 	}
 
 	/**

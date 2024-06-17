@@ -47,12 +47,12 @@ namespace RAC
 			// Wall
 			size_t AddWall(Wall& wall);
 
-			inline void UpdateWall(const size_t id, const vec3& normal, const Real* vData, size_t numVertices)
+			inline void UpdateWall(const size_t id, const vec3& normal, const Real* vData)
 			{
 				lock_guard<std::mutex> lock(mWallMutex);
 				auto it = mWalls.find(id);
 				if (it == mWalls.end()) { return; } // case: wall does not exist
-				else { it->second.Update(normal, vData, numVertices); } // case: wall does exist
+				else { it->second.Update(normal, vData); } // case: wall does exist
 			}
 
 			inline void RemoveWall(const size_t id)

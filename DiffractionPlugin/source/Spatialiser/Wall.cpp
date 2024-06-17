@@ -81,18 +81,20 @@ namespace RAC
 			return true;
 		}
 
-		bool Plane::LinePlaneObstruction(vec3& intersection, const vec3& start, const vec3& end) const
+		bool Plane::LinePlaneObstruction(const vec3& start, const vec3& end) const
 		{
 			Real kS = PointPlanePosition(start);
 			Real kE = PointPlanePosition(end);
 
-			if (kS * kE < 0)	// point lies on plane when kS || kE == 0. Therefore, not obstructed
-				return FindIntersectionPoint(intersection, start, end, kS);
-			else
-				return false;
+			return kS * kE < 0;	// point lies on plane when kS || kE == 0. Therefore, not obstructed
+			//if (kS * kE < 0)	// point lies on plane when kS || kE == 0. Therefore, not obstructed
+			//	return true;
+			//	// return FindIntersectionPoint(intersection, start, end, kS);
+			//else
+			//	return false;
 		}
 
-		bool Plane::LinePlaneIntersection(vec3& intersection, const vec3& start, const vec3& end) const
+		bool Plane::LinePlaneIntersection(const vec3& start, const vec3& end) const
 		{
 			Real kS = PointPlanePosition(start);
 			Real kE = PointPlanePosition(end);
@@ -102,21 +104,23 @@ namespace RAC
 			* case to be a valid reflection a point lying on a plane must be considered as intersecting
 			* with the plane.
 			*/
-			if (kS * kE <= 0)	// point lies on plane when kS || kE == 0.
-				return FindIntersectionPoint(intersection, start, end, kS);
-			else
-				return false;
+			return kS * kE <= 0;	// point lies on plane when kS || kE == 0.
+			//if (kS * kE <= 0)	// point lies on plane when kS || kE == 0.
+			//	return true;
+			//	// return FindIntersectionPoint(intersection, start, end, kS);
+			//else
+			//	return false;
 		}
 
 		//////////////////// Wall class ////////////////////
 
-		Wall::Wall(const vec3& normal, const Real* vData, size_t numVertices, const Absorption& absorption) : mNormal(normal), mPlaneId(0), mNumVertices(numVertices), mAbsorption(absorption)
+		Wall::Wall(const vec3& normal, const Real* vData, const Absorption& absorption) : mNormal(normal), mPlaneId(0), mAbsorption(absorption)
 		{
-			mNormal = UnitVectorRound(normal);
+			mVertices = std::vector<vec3>(3);
 
-			mVertices = std::vector<vec3>(mNumVertices);
-			triangleAreas = std::vector<Real>(mNumVertices - 2, 0);
-			Update(vData);
+			Update(normal, vData);
+			// mNormal = UnitVectorRound(normal);
+			// Update(vData);
 
 #ifdef DEBUG_INIT
 	Debug::Log("Vertices: " + VecArrayToStr(mVertices), Colour::Orange);
@@ -125,19 +129,12 @@ namespace RAC
 		}
 
 		// Update
-		void Wall::Update(const vec3& normal, const Real* vData, size_t numVertices)
+		void Wall::Update(const vec3& normal, const Real* vData)
 		{
 			mNormal = UnitVectorRound(normal);
-			if (mNumVertices == numVertices)
-				Update(vData);
-			else
-				Debug::Log("Cannot update wall because the number of vertices has changed", Colour::Red);
-		}
 
-		void Wall::Update(const Real* vData)
-		{
 			int j = 0;
-			for (int i = 0; i < (int)mNumVertices; i++)
+			for (int i = 0; i < mVertices.size(); i++)
 			{
 				// Round as otherwise comparing identical vertices from unity still returns false
 				Real x = Round(vData[j++]);
@@ -147,37 +144,38 @@ namespace RAC
 			}
 
 			d = Dot(mNormal, mVertices[0]);
+
 			CalculateArea();
-
-			min = mVertices[0];
-			max = mVertices[0];
-
-			// create bounding box of mVertices
-			for (int i = 1; i < mNumVertices; i++)
-			{
-				min.Min(mVertices[i]);
-				max.Max(mVertices[i]);
-			}
-			vec3 shift = vec3(EPS, EPS, EPS);
-			min -= shift;
-			max += shift;
 		}
 
-		// Area
-		void Wall::CalculateArea()
-		{
-			mAbsorption.mArea = 0;
-			for (int i = 0; i < mNumVertices - 2; i++)
-			{
-				triangleAreas[i] = AreaOfTriangle(mVertices[0], mVertices[i + 1], mVertices[i + 2]);
-				mAbsorption.mArea += triangleAreas[i];
-			}
-		}
+		//void Wall::Update(const Real* vData)
+		//{
+		//	int j = 0;
+		//	for (int i = 0; i < (int)mNumVertices; i++)
+		//	{
+		//		// Round as otherwise comparing identical vertices from unity still returns false
+		//		Real x = Round(vData[j++]);
+		//		Real y = Round(vData[j++]);
+		//		Real z = Round(vData[j++]);
+		//		mVertices[i] = vec3(x, y, z);
+		//	}
 
-		Real Wall::AreaOfTriangle(const vec3& v, const vec3& u, const vec3& w) const
-		{
-			return 0.5 * (Cross(v - u, v - w).Length());
-		}
+		//	d = Dot(mNormal, mVertices[0]);
+		//	CalculateArea();
+
+		//	min = mVertices[0];
+		//	max = mVertices[0];
+
+		//	// create bounding box of mVertices
+		//	for (int i = 1; i < mNumVertices; i++)
+		//	{
+		//		min.Min(mVertices[i]);
+		//		max.Max(mVertices[i]);
+		//	}
+		//	vec3 shift = vec3(EPS, EPS, EPS);
+		//	min -= shift;
+		//	max += shift;
+		//}
 
 		// Geometry
 		bool Wall::LineWallIntersection(const vec3& start, const vec3& end) const
@@ -186,62 +184,85 @@ namespace RAC
 			return LineWallIntersection(intersection, start, end);
 		}
 
-		bool Wall::LineWallIntersection(const vec3& intersection, const vec3& start, const vec3& end) const
+		// Fast, minimum storage ray/triangle intersection. Möller, Trumbore. 2005
+		bool IntersectTriangle(const vec3& v1, const vec3& v2, const vec3& v3, const vec3& origin, const vec3& dir)
 		{
-			//vec3 grad = start - end;
-			//Real scale = Dot(mNormal, grad);
-			//if (scale == 0)
-			//	return false;
-			//Real k = Dot(start, mNormal) - d;
-			//intersection = start - grad * k / scale;
+			vec3 E1 = v2 - v1;
+			vec3 E2 = v3 - v1;
+			vec3 pVec = Cross(dir, E2);
+			Real det = Dot(E1, pVec);
 
-			//// Check intersection lies in line segment
-			//vec3 grad2 = start - intersection;
-			//Real scale2 = Dot(mNormal, grad2);
-			//if (scale2 > scale)
-			//{
-			//	if (scale2 > 0)
-			//		return false;
-			//}
-			//else if (scale2 < 0)
-			//	return false;
+			if (det > -MIN_VALUE && det < MIN_VALUE)
+				return false;    // This ray is parallel to this triangle.
 
+			Real invdet = 1.0 / det;
 
+			vec3 tVec = origin - v1;
+			Real u = Dot(tVec, pVec) * invdet;
 
-			// Check intersection lies within wall
-			//Real angleRot = 0.0;
-			//for (int i = 0; i < mNumVertices; i++)
-			//{
-			//	int idx = (i + 1) % mNumVertices;
-			//	vec3 one = intersection - mVertices[i];
-			//	vec3 two = intersection - mVertices[idx];
-			//	Real dotProduct = Dot(mNormal, Cross(one, two));
-			//	angleRot += Sign(dotProduct) * acos(Dot(one, two) / (one.Length() * two.Length()));
-			//}
-
-			//bool ret = false;
-			//Real eps = 0.0001;
-			//if (angleRot < PI_2 + eps && angleRot > PI_2 - eps)
-			//	ret = true;
-			//if (angleRot < PI_1 + eps && angleRot > PI_1 - eps) // lies on edge of wall
-			//	ret = true;
-
-			//return ret;
-
-			/*if (angleRot > PI_2 + eps)
+			if (u < 0.0 || u > 1.0)
 				return false;
-			else if (angleRot < PI_2 - eps)
+
+			vec3 qVec = Cross(tVec, E1);
+			Real v = Dot(dir, qVec) * invdet;
+
+			if (v < 0.0 || u + v > 1.0)
 				return false;
-			else
-				return true;*/
+
+			return true;
+		}
+
+		bool IntersectTriangle(const vec3& v1, const vec3& v2, const vec3& v3, const vec3& origin, const vec3& dir, Real t)
+		{
+			vec3 E1 = v2 - v1;
+			vec3 E2 = v3 - v1;
+			vec3 pVec = Cross(dir, E2);
+			Real det = Dot(E1, pVec);
+
+			if (det > -MIN_VALUE && det < MIN_VALUE)
+				return false;    // This ray is parallel to this triangle.
+
+			Real invdet = 1.0 / det;
+
+			vec3 tVec = origin - v1;
+			Real u = Dot(tVec, pVec) * invdet;
+
+			if (u < 0.0 || u > 1.0)
+				return false;
+
+			vec3 qVec = Cross(tVec, E1);
+			Real v = Dot(dir, qVec) * invdet;
+
+			if (v < 0.0 || u + v > 1.0)
+				return false;
+
+			t = Dot(E2, qVec) * invdet;
+			return true;
+		}
+
+		bool IntersectTriangle(const vec3& v1, const vec3& v2, const vec3& v3, const vec3& origin, const vec3& dir, vec3& intersection)
+		{
+			Real t = 0.0;
+			if (IntersectTriangle(v1, v2, v3, origin, dir, t))
+			{
+				// intersection = v1 + E1 * u + E2 * v;
+				intersection = origin + dir * t;
+				return true;
+			}
+			return false;
+		}
+
+		bool Wall::LineWallIntersection(vec3& intersection, const vec3& start, const vec3& end) const
+		{
+			return IntersectTriangle(mVertices[0], mVertices[1], mVertices[2], start, start - end, intersection);
 
 			// Check intersection lies within bounding box
-			if (intersection.x < min.x || intersection.y < min.y || intersection.z < min.z)
+			/*if (intersection.x < min.x || intersection.y < min.y || intersection.z < min.z)
 				return false;
 			if (intersection.x > max.x || intersection.y > max.y || intersection.z > max.z)
-				return false;
+				return false;*/
 
-			Real area = 0;
+			/*Real area = 0;
 			for (int i = 0, j = 1; i < mNumVertices; i++, j++)
 			{
 				if (j >= mNumVertices)
@@ -249,33 +270,17 @@ namespace RAC
 				area += AreaOfTriangle(intersection, mVertices[i], mVertices[j]);
 			}
 
+			bool test = IntersectTriangle(mVertices[0], mVertices[1], mVertices[2], start, end - start);
+
 			if (Round(area, 4) == Round(mAbsorption.mArea, 4))
 				return true;
 
-			return false;
-			// Check intersection lies within wall
-			//int i = 0;
-			//while (!ret3 && i < triangleAreas.size())
-			//{
-			//	alpha = AreaOfTriangle(intersection, mVertices[0], mVertices[i + 1]);
-			//	beta = AreaOfTriangle(intersection, mVertices[i + 1], mVertices[i + 2]);
-			//	gamma = AreaOfTriangle(intersection, mVertices[i + 2], mVertices[0]);
-			//	if (Round(alpha + beta + gamma, 8) == Round(triangleAreas[i], 8))
-			//	{
-			//		area = triangleAreas[i];
-			//		ret3 = true;
-			//	}
-			//	i++;
-			//}
+			return false;*/
+		}
 
-			/*Debug::Log("Intersection: angle " + BoolToStr(ret) + " bounding " + BoolToStr(ret2) + " triangle " + BoolToStr(ret3), Colour::Orange);
-
-			if (!ret && !ret2 && !ret3)
-				Debug::Log("Vertices: " + VecArrayToStr(mVertices) + " Intersection: " + VecToStr(intersection) + " Area: " + RealToStr(mAbsorption.area) + " Check: " + RealToStr(area) + " Angle: " + RealToStr(angleRot), Colour::Yellow);*/
-
-			/*if (!ret && ret2 && ret3)
-				Debug::Log("Vertices: " + VecArrayToStr(mVertices) + " Intersection: " + VecToStr(intersection) + " Area: " + RealToStr(area) + " Check: " + RealToStr(alpha + beta + gamma) + " Angle: " + RealToStr(angleRot), Colour::Green);*/
-
+		bool Wall::LineWallObstruction(const vec3& start, const vec3& end) const
+		{
+			return IntersectTriangle(mVertices[0], mVertices[1], mVertices[2], start, start - end);
 		}
 	}
 }
