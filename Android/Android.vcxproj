@@ -90,7 +90,7 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings" />
   <ImportGroup Label="Shared">
-    <Import Project="..\DiffractionPlugin\DiffractionPlugin.vcxitems" Label="Shared" />
+    <Import Project="..\RoomAcoustiCpp\RoomAcoustiCpp.vcxitems" Label="Shared" />
     <Import Project="..\3dti_AudioToolkit\3DTI_NoSofa.vcxitems" Label="Shared" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" />
@@ -119,7 +119,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\Android\include;D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include;D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\codegen\lib\myNN\include;%(AdditionalIncludeDirectories);D:\Joshua Mannall\VisualStudio\mcl-main\butter\include;D:\Joshua Mannall\VisualStudio\mcl-main\kissfft\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\Joshua Mannall\VisualStudio\RoomAcoustiCpp\Android\include;D:\Joshua Mannall\VisualStudio\RoomAcoustiCpp\RoomAcoustiCpp\include;D:\Joshua Mannall\VisualStudio\RoomAcoustiCpp\RoomAcoustiCpp\codegen\lib\myNN\include;%(AdditionalIncludeDirectories);D:\Joshua Mannall\VisualStudio\mcl-main\butter\include;D:\Joshua Mannall\VisualStudio\mcl-main\kissfft\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
@@ -129,7 +129,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include;D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\codegen\lib\myNN\include;$(ProjectDir)\include;%(AdditionalIncludeDirectories);D:\Joshua Mannall\VisualStudio\mcl-main\butter\include;D:\Joshua Mannall\VisualStudio\mcl-main\kissfft\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\Joshua Mannall\VisualStudio\RoomAcoustiCpp\RoomAcoustiCpp\include;D:\Joshua Mannall\VisualStudio\RoomAcoustiCpp\RoomAcoustiCpp\codegen\lib\myNN\include;$(ProjectDir)\include;%(AdditionalIncludeDirectories);D:\Joshua Mannall\VisualStudio\mcl-main\butter\include;D:\Joshua Mannall\VisualStudio\mcl-main\kissfft\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_ANDROID;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
@@ -151,7 +151,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <PreprocessorDefinitions>_ANDROID;_3DTI_AXIS_CONVENTION_UNITY;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <CppLanguageStandard>c++1z</CppLanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)$(PathTo3DTI)3dti_Toolkit;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\cereal\include;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\boost_circular_buffer;$(SolutionDir)DiffractionPlugin\include;$(SolutionDir)DiffractionPlugin\codegen\lib\myNN\include;$(SolutionDir)DiffractionPlugin\include\Spatialiser;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)$(PathTo3DTI)3dti_Toolkit;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\cereal\include;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\boost_circular_buffer;$(SolutionDir)RoomAcoustiCpp\include;$(SolutionDir)RoomAcoustiCpp\codegen\lib\myNN\include;$(SolutionDir)RoomAcoustiCpp\include\Spatialiser;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ExceptionHandling>Enabled</ExceptionHandling>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <AdditionalOptions>-fdeclspec %(AdditionalOptions)</AdditionalOptions>
@@ -167,7 +167,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <PreprocessorDefinitions>_ANDROID;_3DTI_AXIS_CONVENTION_UNITY;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)$(PathTo3DTI)3dti_Toolkit;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\cereal\include;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\boost_circular_buffer;$(SolutionDir)DiffractionPlugin\include;$(SolutionDir)DiffractionPlugin\codegen\lib\myNN\include;$(SolutionDir)DiffractionPlugin\include\Spatialiser;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)$(PathTo3DTI)3dti_Toolkit;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\cereal\include;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\boost_circular_buffer;$(SolutionDir)RoomAcoustiCpp\include;$(SolutionDir)RoomAcoustiCpp\codegen\lib\myNN\include;$(SolutionDir)RoomAcoustiCpp\include\Spatialiser;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>c++1z</CppLanguageStandard>
       <ExceptionHandling>Enabled</ExceptionHandling>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -187,14 +187,14 @@
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\codegen\lib\myNN\include;D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\Joshua Mannall\VisualStudio\RoomAcoustiCpp\RoomAcoustiCpp\codegen\lib\myNN\include;D:\Joshua Mannall\VisualStudio\RoomAcoustiCpp\RoomAcoustiCpp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\codegen\lib\myNN\include;D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\Joshua Mannall\VisualStudio\RoomAcoustiCpp\RoomAcoustiCpp\codegen\lib\myNN\include;D:\Joshua Mannall\VisualStudio\RoomAcoustiCpp\RoomAcoustiCpp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -27,13 +27,13 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\DiffractionPlugin\codegen\lib\myNN\source\elementwiseOperationInPlace.cpp" />
-    <ClCompile Include="..\DiffractionPlugin\codegen\lib\myNN\source\myBestNN.cpp" />
-    <ClCompile Include="..\DiffractionPlugin\codegen\lib\myNN\source\myNN_data.cpp" />
-    <ClCompile Include="..\DiffractionPlugin\codegen\lib\myNN\source\myNN_initialize.cpp" />
-    <ClCompile Include="..\DiffractionPlugin\codegen\lib\myNN\source\myNN_terminate.cpp" />
-    <ClCompile Include="..\DiffractionPlugin\codegen\lib\myNN\source\mySmallNN.cpp" />
-    <ClCompile Include="..\DiffractionPlugin\codegen\lib\myNN\source\predict.cpp" />
+    <ClCompile Include="..\RoomAcoustiCpp\codegen\lib\myNN\source\elementwiseOperationInPlace.cpp" />
+    <ClCompile Include="..\RoomAcoustiCpp\codegen\lib\myNN\source\myBestNN.cpp" />
+    <ClCompile Include="..\RoomAcoustiCpp\codegen\lib\myNN\source\myNN_data.cpp" />
+    <ClCompile Include="..\RoomAcoustiCpp\codegen\lib\myNN\source\myNN_initialize.cpp" />
+    <ClCompile Include="..\RoomAcoustiCpp\codegen\lib\myNN\source\myNN_terminate.cpp" />
+    <ClCompile Include="..\RoomAcoustiCpp\codegen\lib\myNN\source\mySmallNN.cpp" />
+    <ClCompile Include="..\RoomAcoustiCpp\codegen\lib\myNN\source\predict.cpp" />
     <ClCompile Include="source\dllmain.cpp" />
     <ClCompile Include="source\FirstDLL.cpp" />
     <ClCompile Include="Test.cpp">
@@ -41,18 +41,18 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\DiffractionPlugin\codegen\lib\myNN\include\anonymous_function.h" />
-    <ClInclude Include="..\DiffractionPlugin\codegen\lib\myNN\include\elementwiseOperationInPlace.h" />
-    <ClInclude Include="..\DiffractionPlugin\codegen\lib\myNN\include\myBestNN.h" />
-    <ClInclude Include="..\DiffractionPlugin\codegen\lib\myNN\include\myNN_data.h" />
-    <ClInclude Include="..\DiffractionPlugin\codegen\lib\myNN\include\myNN_initialize.h" />
-    <ClInclude Include="..\DiffractionPlugin\codegen\lib\myNN\include\myNN_internal_types.h" />
-    <ClInclude Include="..\DiffractionPlugin\codegen\lib\myNN\include\myNN_terminate.h" />
-    <ClInclude Include="..\DiffractionPlugin\codegen\lib\myNN\include\myNN_types.h" />
-    <ClInclude Include="..\DiffractionPlugin\codegen\lib\myNN\include\mySmallNN.h" />
-    <ClInclude Include="..\DiffractionPlugin\codegen\lib\myNN\include\predict.h" />
-    <ClInclude Include="..\DiffractionPlugin\codegen\lib\myNN\include\rtwtypes.h" />
-    <ClInclude Include="..\DiffractionPlugin\codegen\lib\myNN\include\tmwtypes.h" />
+    <ClInclude Include="..\RoomAcoustiCpp\codegen\lib\myNN\include\anonymous_function.h" />
+    <ClInclude Include="..\RoomAcoustiCpp\codegen\lib\myNN\include\elementwiseOperationInPlace.h" />
+    <ClInclude Include="..\RoomAcoustiCpp\codegen\lib\myNN\include\myBestNN.h" />
+    <ClInclude Include="..\RoomAcoustiCpp\codegen\lib\myNN\include\myNN_data.h" />
+    <ClInclude Include="..\RoomAcoustiCpp\codegen\lib\myNN\include\myNN_initialize.h" />
+    <ClInclude Include="..\RoomAcoustiCpp\codegen\lib\myNN\include\myNN_internal_types.h" />
+    <ClInclude Include="..\RoomAcoustiCpp\codegen\lib\myNN\include\myNN_terminate.h" />
+    <ClInclude Include="..\RoomAcoustiCpp\codegen\lib\myNN\include\myNN_types.h" />
+    <ClInclude Include="..\RoomAcoustiCpp\codegen\lib\myNN\include\mySmallNN.h" />
+    <ClInclude Include="..\RoomAcoustiCpp\codegen\lib\myNN\include\predict.h" />
+    <ClInclude Include="..\RoomAcoustiCpp\codegen\lib\myNN\include\rtwtypes.h" />
+    <ClInclude Include="..\RoomAcoustiCpp\codegen\lib\myNN\include\tmwtypes.h" />
     <ClInclude Include="include\FirstDLL.h" />
     <ClInclude Include="include\framework.h" />
   </ItemGroup>
@@ -108,7 +108,7 @@
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
   <ImportGroup Label="Shared">
-    <Import Project="..\DiffractionPlugin\DiffractionPlugin.vcxitems" Label="Shared" />
+    <Import Project="..\RoomAcoustiCpp\RoomAcoustiCpp.vcxitems" Label="Shared" />
     <Import Project="..\3dti_AudioToolkit\3DTI_NoSofa.vcxitems" Label="Shared" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -165,7 +165,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\codegen\lib\myNN\include;D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\Joshua Mannall\VisualStudio\RoomAcoustiCpp\RoomAcoustiCpp\codegen\lib\myNN\include;D:\Joshua Mannall\VisualStudio\RoomAcoustiCpp\RoomAcoustiCpp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp14</LanguageStandard>
     </ClCompile>
     <Link>
@@ -184,7 +184,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\codegen\lib\myNN\include;D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\Joshua Mannall\VisualStudio\RoomAcoustiCpp\RoomAcoustiCpp\codegen\lib\myNN\include;D:\Joshua Mannall\VisualStudio\RoomAcoustiCpp\RoomAcoustiCpp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
@@ -205,7 +205,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\codegen\lib\myNN\include;D:\Joshua Mannall\VisualStudio\DiffractionPlugin\DiffractionPlugin\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\Joshua Mannall\VisualStudio\RoomAcoustiCpp\RoomAcoustiCpp\codegen\lib\myNN\include;D:\Joshua Mannall\VisualStudio\RoomAcoustiCpp\RoomAcoustiCpp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp14</LanguageStandard>
     </ClCompile>
     <Link>
@@ -224,7 +224,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)$(PathTo3DTI)3dti_Toolkit;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\boost_circular_buffer;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\cereal\include;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src;$(ProjectDir)include;$(SolutionDir)DiffractionPlugin\codegen\lib\myNN\include;$(SolutionDir)DiffractionPlugin\include;$(SolutionDir)DiffractionPlugin\include\Spatialiser;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)$(PathTo3DTI)3dti_Toolkit;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\boost_circular_buffer;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\cereal\include;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src;$(ProjectDir)include;$(SolutionDir)RoomAcoustiCpp\codegen\lib\myNN\include;$(SolutionDir)RoomAcoustiCpp\include;$(SolutionDir)RoomAcoustiCpp\include\Spatialiser;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <IntrinsicFunctions>false</IntrinsicFunctions>
       <OpenMPSupport>true</OpenMPSupport>
@@ -248,7 +248,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)$(PathTo3DTI)3dti_Toolkit;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\boost_circular_buffer;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\cereal\include;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src;$(ProjectDir)include;$(SolutionDir)DiffractionPlugin\codegen\lib\myNN\include;$(SolutionDir)DiffractionPlugin\include;$(SolutionDir)DiffractionPlugin\include\Spatialiser;C:\Documents\GitHub\mcl\include;C:\Documents\GitHub\mcl\butter\include;C:\Documents\GitHub\mcl\kissfft\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)$(PathTo3DTI)3dti_Toolkit;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\boost_circular_buffer;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\cereal\include;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src;$(ProjectDir)include;$(SolutionDir)RoomAcoustiCpp\codegen\lib\myNN\include;$(SolutionDir)RoomAcoustiCpp\include;$(SolutionDir)RoomAcoustiCpp\include\Spatialiser;C:\Documents\GitHub\mcl\include;C:\Documents\GitHub\mcl\butter\include;C:\Documents\GitHub\mcl\kissfft\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions</EnableEnhancedInstructionSet>
       <Optimization>MaxSpeed</Optimization>
@@ -278,7 +278,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)$(PathTo3DTI)3dti_Toolkit;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\boost_circular_buffer;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\cereal\include;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src;$(ProjectDir)include;$(SolutionDir)DiffractionPlugin\codegen\lib\myNN\include;$(SolutionDir)DiffractionPlugin\include;$(SolutionDir)DiffractionPlugin\include\Spatialiser;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)$(PathTo3DTI)3dti_Toolkit;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\boost_circular_buffer;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\cereal\include;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src;$(ProjectDir)include;$(SolutionDir)RoomAcoustiCpp\codegen\lib\myNN\include;$(SolutionDir)RoomAcoustiCpp\include;$(SolutionDir)RoomAcoustiCpp\include\Spatialiser;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <Optimization>MaxSpeed</Optimization>
     </ClCompile>
