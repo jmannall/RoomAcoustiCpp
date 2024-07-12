@@ -28,5 +28,7 @@ The full acoustic model can be controlled through these functions.
 
 ## Aknowledgements
 The project utilises the 3D Tune-in toolbox for binaural processing.
+The forked 3dti_AudioToolkit repository includes all the required files for use with RAC.
+Some small changes have been made for the purposes of compatibility between the source files.
 
 ## License
