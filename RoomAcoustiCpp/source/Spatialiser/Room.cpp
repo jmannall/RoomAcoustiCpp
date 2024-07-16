@@ -165,7 +165,7 @@ namespace RAC
 
 		void Room::FindParallelEdges(const Wall& wallA, const Wall& wallB, const size_t idA, const size_t idB, std::vector<EdgeData>& data)
 		{
-			if (wallA.GetD() == wallB.GetD())
+			if (wallA.GetD() == -wallB.GetD())
 			{
 				std::vector<vec3> verticesA = wallA.GetVertices();
 				std::vector<vec3> verticesB = wallB.GetVertices();

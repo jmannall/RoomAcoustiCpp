@@ -54,7 +54,7 @@ namespace RAC
 			mEdgeVector = UnitVectorRound(mTop - mBase);
 			mEdgeNormal = UnitVectorRound(mFaceNormals[0] + mFaceNormals[1]);
 
-			if (Dot(Cross(mFaceNormals[0], mFaceNormals[1]), mEdgeVector) > 0) // case true: angle is reflex
+			if (Dot(Cross(mFaceNormals[0], mFaceNormals[1]), mEdgeVector) >= 0) // case true: angle is reflex
 				t = PI_1 + acos(Dot(mFaceNormals[0], mFaceNormals[1]));
 			else
 				t = PI_1 - acos(Dot(mFaceNormals[0], mFaceNormals[1]));

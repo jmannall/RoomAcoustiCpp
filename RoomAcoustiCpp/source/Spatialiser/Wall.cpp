@@ -212,7 +212,7 @@ namespace RAC
 			return true;
 		}
 
-		bool IntersectTriangle(const vec3& v1, const vec3& v2, const vec3& v3, const vec3& origin, const vec3& dir, Real t)
+		bool IntersectTriangle(const vec3& v1, const vec3& v2, const vec3& v3, const vec3& origin, const vec3& dir, Real& t)
 		{
 			vec3 E1 = v2 - v1;
 			vec3 E2 = v3 - v1;
