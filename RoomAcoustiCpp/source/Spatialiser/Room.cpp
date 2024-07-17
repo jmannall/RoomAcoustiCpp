@@ -87,6 +87,10 @@ namespace RAC
 #endif
 			size_t id;
 			lock_guard<std::mutex> lock(mEdgeMutex);
+
+			if (IsCoplanarEdge(data))
+				return;
+
 			if (!mEmptyEdgeSlots.empty()) // Assign edge to an existing ID
 			{
 				id = mEmptyEdgeSlots.back();
@@ -173,7 +177,6 @@ namespace RAC
 				int numA = static_cast<int>(verticesA.size());
 				int numB = static_cast<int>(verticesB.size());
 
-				bool evenNum = numA % 2 == 0;
 				for (int i = 0; i < numA; i += 2)
 				{
 					bool match = false;
@@ -186,30 +189,33 @@ namespace RAC
 					if (match)
 					{
 						j--;
-						int idxA[2] = { i, (i + 1) % numA };
-						if (idxA[1] == numA)
-							idxA[1] = 0;
-						int idxB[2] = { j - 1, j + 1 };
-						if (idxB[0] < 0)
-							idxB[0] = numB - 1;
-						if (idxB[1] == numB)
-							idxB[1] = 0;
-						bool validEdge = verticesA[idxA[1]] == verticesB[idxB[0]];
+						int idxA = i + 1;
+						if (idxA == numA)
+							idxA = 0;
+						int idxB = j - 1;
+						if (idxB < 0)
+							idxB = numB - 1;
+						bool validEdge = verticesA[idxA] == verticesB[idxB]; // Must be this way to ensure normals not twisted. (right hand rule) therefore one rotated up the edge one rotates down
 
-						if (validEdge)
+						if (validEdge) // Planes not twisted
 						{
-							EdgeData edge = EdgeData(verticesA[idxA[0]], verticesA[idxA[1]], wallA.GetNormal(), wallB.GetNormal(), idA, idB);
+							EdgeData edge = EdgeData(verticesA[i], verticesA[idxA], wallA.GetNormal(), wallB.GetNormal(), idA, idB);
 							data.push_back(edge);
 						}
 
-						if (i > 0 || evenNum)
+						if (i > 0)
 						{
-							idxA[1] = (i - 1) % numA;
-							validEdge = verticesA[idxA[1]] == verticesB[idxB[1]];
+							idxA = i - 1;
+							if (idxA < 0)
+								idxA = numA - 1;
+							int idxB = j + 1;
+							if (idxB == numB)
+								idxB = 0;
+							bool validEdge = verticesA[idxA] == verticesB[idxB]; // Must be this way to ensure normals not twisted. (right hand rule) therefore one rotated up the edge one rotates down
 
-							if (validEdge)
+							if (validEdge) // Planes not twisted
 							{
-								EdgeData edge = EdgeData(verticesA[idxA[0]], verticesA[idxA[1]], wallA.GetNormal(), wallB.GetNormal(), idA, idB);
+								EdgeData edge = EdgeData(verticesA[i], verticesA[idxA], wallB.GetNormal(), wallA.GetNormal(), idB, idA);
 								data.push_back(edge);
 							}
 						}
@@ -236,15 +242,15 @@ namespace RAC
 				int j = 0;
 				while (!match && j < numB)
 				{
-					if (verticesA[i].x == verticesB[j].x)
+					/*if (verticesA[i].x == verticesB[j].x)
 					{
 						if (verticesA[i].y == verticesB[j].y)
 						{
 							if (verticesA[i].z == verticesB[j].z)
 								match = true;
 						}
-					}
-
+					}*/
+					match = verticesA[i] == verticesB[j];
 					j++;
 				}
 				if (match)
@@ -352,12 +358,7 @@ namespace RAC
 					else if (data.size() > 1)
 						UpdateEdges(IDs, data);
 					else
-					{
-						auto it = mWalls.find(ids[0]);
-						if (it != mWalls.end()) // case: wall exists
-							it->second.RemoveEdge(itE.first);
-						RemoveEdge(itE.first, ids[1]);
-					}
+						RemoveEdge(itE.first);
 				}
 			}
 			for (auto& itW : mWalls)

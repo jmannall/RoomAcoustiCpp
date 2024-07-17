@@ -16,7 +16,6 @@ namespace RAC
 	{
 		namespace Diffraction
 		{
-
 			Path::Path(const vec3& source, const vec3& receiver, const Edge& edge) : zValid(false), sValid(false), rValid(false), valid(false), inShadow(false), mEdge(edge)
 			{
 				UpdateParameters(source, receiver);

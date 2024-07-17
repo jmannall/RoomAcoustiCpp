@@ -33,7 +33,6 @@ namespace RAC
 #endif
 
 		//////////////////// Background Thread ////////////////////
-#pragma optimize("", off)
 
 		void BackgroundProcessor(Context* context)
 		{
@@ -75,7 +74,6 @@ namespace RAC
 	Debug::Log("End background thread", Colour::Red);
 #endif
 		}
-#pragma optimize("", on)
 
 		//////////////////// Context ////////////////////
 

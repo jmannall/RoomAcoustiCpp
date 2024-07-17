@@ -273,7 +273,7 @@ extern "C"
 	 * 6 -> UTD
 	 * 7 -> Btm
 	 *
-	 * @param id The ID corresponding to a FDN matrix type.
+	 * @param id The ID corresponding to a diffraction model.
 	 */
 	EXPORT void RACUpdateDiffractionModel(int id)
 	{

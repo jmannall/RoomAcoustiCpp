@@ -52,7 +52,11 @@ namespace RAC
 		{
 			midPoint = (mTop + mBase) / 2;
 			mEdgeVector = UnitVectorRound(mTop - mBase);
-			mEdgeNormal = UnitVectorRound(mFaceNormals[0] + mFaceNormals[1]);
+
+			if (mFaceNormals[0] == -mFaceNormals[1])
+				mEdgeNormal = Cross(mEdgeVector, mFaceNormals[0]);
+			else
+				mEdgeNormal = UnitVectorRound(mFaceNormals[0] + mFaceNormals[1]);
 
 			if (Dot(Cross(mFaceNormals[0], mFaceNormals[1]), mEdgeVector) >= 0) // case true: angle is reflex
 				t = PI_1 + acos(Dot(mFaceNormals[0], mFaceNormals[1]));

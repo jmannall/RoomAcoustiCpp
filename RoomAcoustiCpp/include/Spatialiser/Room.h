@@ -126,6 +126,12 @@ namespace RAC
 
 			inline void UpdateEdge(const size_t id, const EdgeData& edge)
 			{ 
+				if (IsCoplanarEdge(edge))
+				{
+					RemoveEdge(id);
+					return;
+				}
+
 				auto it = mEdges.find(id);
 				if (it == mEdges.end()) { return; } // case: edge does not exist
 				else { it->second.Update(edge); } // case: edge does exist
@@ -139,6 +145,26 @@ namespace RAC
 					UpdateEdge(IDs[i], edge);
 					i++;
 				}
+			}
+
+			inline bool IsCoplanarEdge(const EdgeData& data)
+			{
+				vec3 midPoint = (data.top + data.base) / 2.0;
+				{
+					lock_guard<std::mutex> lock(mPlaneMutex);
+					for (auto& itP : mPlanes)
+					{
+						if (itP.second.GetNormal() == data.normal1 || itP.second.GetNormal() == data.normal2)
+							continue;
+
+						if (itP.second.GetNormal() == -data.normal1 || itP.second.GetNormal() == -data.normal2)
+							continue;
+
+						if (itP.second.PointPlanePosition(midPoint) == 0.0)
+							return true;
+					}
+				}
+				return false;
 			}
 
 			inline void RemoveEdges(const std::vector<size_t>& IDsE, const size_t idW)
@@ -155,7 +181,31 @@ namespace RAC
 				{
 					size_t id = itE->second.GetWallID(idW);
 					auto itW = mWalls.find(id);
-					if (itW != mWalls.end())
+					if (itW != mWalls.end()) // case: wall exists
+						itW->second.RemoveEdge(idE);
+
+					mEdges.erase(idE);
+					while (!mEdgeTimers.empty() && difftime(time(NULL), mEdgeTimers.front().time) > 60)
+					{
+						mEmptyEdgeSlots.push_back(mEdgeTimers.front().id);
+						mEdgeTimers.erase(mEdgeTimers.begin());
+					}
+					mEdgeTimers.push_back(TimerPair(idE, time(NULL)));
+				}
+			}
+
+			inline void RemoveEdge(const size_t idE)
+			{
+				auto itE = mEdges.find(idE);
+				if (itE != mEdges.end())
+				{
+					std::vector<size_t> id = itE->second.GetWallIDs();
+					auto itW = mWalls.find(id[0]);
+					if (itW != mWalls.end()) // case: wall exists
+						itW->second.RemoveEdge(idE);
+
+					itW = mWalls.find(id[1]);
+					if (itW != mWalls.end()) // case: wall exists
 						itW->second.RemoveEdge(idE);
 
 					mEdges.erase(idE);
@@ -192,8 +242,8 @@ namespace RAC
 			EdgeIDMap oldEdgeIDs;
 
 			std::mutex mWallMutex; // Must always be locked before Plane and Edge
-			std::mutex mPlaneMutex; // Cannot be locked with Edge
-			std::mutex mEdgeMutex; // Cannot be locked with Plane
+			std::mutex mPlaneMutex; // Can be locked after Edge (Not before)
+			std::mutex mEdgeMutex; // Cannot be locked after Plane
 		};
 	}
 }
