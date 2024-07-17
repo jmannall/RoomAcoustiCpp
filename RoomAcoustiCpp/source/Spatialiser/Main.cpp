@@ -275,7 +275,7 @@ extern "C"
 	 *
 	 * @param id The ID corresponding to a diffraction model.
 	 */
-	EXPORT void RACUpdateDiffractionModel(int id)
+	EXPORT void API RACUpdateDiffractionModel(int id)
 	{
 		switch (id)
 		{
