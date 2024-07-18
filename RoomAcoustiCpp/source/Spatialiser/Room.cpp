@@ -82,9 +82,6 @@ namespace RAC
 
 		void Room::AddEdge(const EdgeData& data)
 		{
-#ifdef DEBUG_INIT
-			Debug::Log("Init Edge", Colour::Green);
-#endif
 			size_t id;
 			lock_guard<std::mutex> lock(mEdgeMutex);
 
@@ -106,6 +103,10 @@ namespace RAC
 			it = mWalls.find(data.id2);
 			if (it == mWalls.end()) { return; } // case: wall does not exist
 			else { it->second.AddEdge(id); } // case: wall does exist
+
+#ifdef DEBUG_INIT
+			Debug::Log("Init Edge", Colour::Green);
+#endif
 
 			mEdges.insert_or_assign(id, Edge(data));
 		}

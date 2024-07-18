@@ -860,16 +860,43 @@ namespace RAC
 			{
 				Real mid = (zn1 + zn2) / 2.0;
 
+				// Quadstep simpson's rule
+				/*Real h = 0.13579 * (zn2 - zn1);
+
+				Real x1 = zn1;
+				Real x2 = zn1 + h;
+				Real x3 = zn1 + 2.0 * h;
+				Real x4 = (zn1 + zn2) * 0.5;
+				Real x5 = zn2 - 2.0 * h;
+				Real x6 = zn2 - h;
+				Real x7 = zn2;
+
+				Real y1 = CalcIntegrand(x1);
+				Real y2 = CalcIntegrand(x2);
+				Real y3 = CalcIntegrand(x3);
+				Real y4 = CalcIntegrand(x4);
+				Real y5 = CalcIntegrand(x5);
+				Real y6 = CalcIntegrand(x6);
+				Real y7 = CalcIntegrand(x7);
+
+				Real output = (x3 - x1) / 6.0 * (y1 + 4.0 * y2 + y3);
+				output += (x5 - x3) / 6.0 * (y3 + 4.0 * y4 + y5);
+				output += (x7 - x5) / 6.0 * (y5 + 4.0 * y6 + y7);
+				return output;*/
+
 				// Quadrature rule
-				//Real n = 6.0;
-				//Real output = (CalcIntegrand(zn1) + CalcIntegrand(zn2)) / 2.0;
-				//for (int i = 1; i < n; i++)
-				//{
-				//	output += CalcIntegrand(zn1 + i * (zn2 - zn1) / n);
-				//}
-				//return (zn2 - zn1) / n * output;
+				/*Real n = 6.0;
+				Real output = (CalcIntegrand(zn1) + CalcIntegrand(zn2)) / 2.0;
+				for (int i = 1; i < n; i++)
+				{
+					output += CalcIntegrand(zn1 + i * (zn2 - zn1) / n);
+				}
+				return (zn2 - zn1) / n * output;*/
 
 				// Simpson's rule
+				Real fa = CalcIntegrand(zn1);
+				Real fc = CalcIntegrand(mid);
+				Real fb = CalcIntegrand(zn2);
 				return (zn2 - zn1) / 6.0 * (CalcIntegrand(zn1) + 4.0 * CalcIntegrand(mid) + CalcIntegrand(zn2));
 			}
 
