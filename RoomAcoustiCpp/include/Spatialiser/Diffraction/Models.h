@@ -173,7 +173,7 @@ namespace RAC
 				std::mutex* m;
 
 			private:
-				virtual inline void RunNN() = 0;
+				virtual inline void RunNN() { /* Do nothing*/ };
 				void OrderZP();
 				void CalcInput();
 				void AssignInputRZ(SRData* one, SRData* two);

@@ -24,7 +24,7 @@ void b_elementwiseOperationInPlace(const anonymous_function elementwiseFunction,
 {
   float f;
   float maxval;
-#pragma omp parallel for num_threads(omp_get_max_threads()) private(f, maxval)
+// #pragma omp parallel for num_threads(omp_get_max_threads()) private(f, maxval)
 
   for (int iElem = 0; iElem < 20; iElem++) {
     f = X[iElem];
@@ -43,7 +43,7 @@ void elementwiseOperationInPlace(const anonymous_function elementwiseFunction,
 {
   float f;
   float maxval;
-#pragma omp parallel for num_threads(omp_get_max_threads()) private(f, maxval)
+// #pragma omp parallel for num_threads(omp_get_max_threads()) private(f, maxval)
 
   for (int iElem = 0; iElem < 36; iElem++) {
     f = X[iElem];

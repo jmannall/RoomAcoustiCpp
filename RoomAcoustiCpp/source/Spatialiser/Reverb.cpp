@@ -301,13 +301,15 @@ namespace RAC
 				BeginReverb();
 #endif
 				// Process FDN and save to buffer
+				
+#ifdef PROFILE_AUDIO_THREAD
+				BeginFDN();
+#endif					
+				FlushDenormals();
+
 				{
 					lock_guard <mutex> lock(mFDNMutex);
 
-#ifdef PROFILE_AUDIO_THREAD
-					BeginFDN();
-#endif					
-					FlushDenormals();
 					if (mCurrentGain > mTargetGain + EPS || mCurrentGain < mTargetGain - EPS)
 					{
 						int j = 0;
@@ -337,11 +339,13 @@ namespace RAC
 							}
 						}
 					}
-					NoFlushDenormals();
-#ifdef PROFILE_AUDIO_THREAD
-					EndFDN();
-#endif
 				}
+
+				NoFlushDenormals();
+#ifdef PROFILE_AUDIO_THREAD
+				EndFDN();
+#endif
+
 				// Process buffer of each channel
 				for (auto& source : mReverbSources)
 					source.ProcessAudio(outputBuffer);

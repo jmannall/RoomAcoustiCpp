@@ -96,6 +96,9 @@ namespace RAC
 			mSources = std::make_shared<SourceManager>(&mCore, mConfig);
 			mImageEdgeModel = std::make_shared<ImageEdge>(mRoom, mSources, mReverb, mConfig.frequencyBands.Length());
 			
+			// Initialize NNs
+			myNN_initialize();
+
 			// Start background thread after all systems are initialized
 			IEMThread = std::thread(BackgroundProcessor, this);
 
@@ -120,6 +123,9 @@ namespace RAC
 			mSources.reset();
 			mRoom.reset();
 			mReverb.reset();
+
+			// Terminate NNs
+			myNN_terminate();
 
 			lock_guard<mutex> audioLock(tuneInMutex);
 			mCore.RemoveListener();

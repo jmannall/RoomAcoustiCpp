@@ -348,8 +348,6 @@ namespace RAC
 				return g * CalcUDFA(f, fc, g);
 			}
 
-// #ifndef _ANDROID
-
 			//////////////////// NN class ////////////////////
 
 			NN::NN(Path* path) : Model(path), mInput{ 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f }, filter(48000), equal(false), current(5), target(5), params(5)
@@ -449,8 +447,6 @@ namespace RAC
 					}
 				}
 			}
-
-// #endif
 
 			//////////////////// UTD class ////////////////////
 
@@ -860,8 +856,18 @@ namespace RAC
 			{
 				Real mid = (zn1 + zn2) / 2.0;
 
+				// Quadrature rule
+				/*Real n = 6.0;
+				Real output = (CalcIntegrand(zn1) + CalcIntegrand(zn2)) / 2.0;
+				for (int i = 1; i < n; i++)
+				{
+					output += CalcIntegrand(zn1 + i * (zn2 - zn1) / n);
+				}
+				return (zn2 - zn1) / n * output;*/
+
+#ifdef _TEST
 				// Quadstep simpson's rule
-				/*Real h = 0.13579 * (zn2 - zn1);
+				Real h = 0.13579 * (zn2 - zn1);
 
 				Real x1 = zn1;
 				Real x2 = zn1 + h;
@@ -882,22 +888,14 @@ namespace RAC
 				Real output = (x3 - x1) / 6.0 * (y1 + 4.0 * y2 + y3);
 				output += (x5 - x3) / 6.0 * (y3 + 4.0 * y4 + y5);
 				output += (x7 - x5) / 6.0 * (y5 + 4.0 * y6 + y7);
-				return output;*/
-
-				// Quadrature rule
-				/*Real n = 6.0;
-				Real output = (CalcIntegrand(zn1) + CalcIntegrand(zn2)) / 2.0;
-				for (int i = 1; i < n; i++)
-				{
-					output += CalcIntegrand(zn1 + i * (zn2 - zn1) / n);
-				}
-				return (zn2 - zn1) / n * output;*/
-
+				return output;
+#else
 				// Simpson's rule
 				Real fa = CalcIntegrand(zn1);
 				Real fc = CalcIntegrand(mid);
 				Real fb = CalcIntegrand(zn2);
 				return (zn2 - zn1) / 6.0 * (CalcIntegrand(zn1) + 4.0 * CalcIntegrand(mid) + CalcIntegrand(zn2));
+#endif	
 			}
 
 			Real BTM::CalcIntegrand(Real z)

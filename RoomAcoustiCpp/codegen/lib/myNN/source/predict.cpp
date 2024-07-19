@@ -159,7 +159,7 @@ static void matrixMultiply(int M, int K, int blockSizeM, const float *A,
       K2 = 144;
     }
     B_ptr = &B[k];
-#pragma omp parallel for num_threads(omp_get_max_threads()) private(i, b_i)
+// #pragma omp parallel for num_threads(omp_get_max_threads()) private(i, b_i)
 
     for (int i0 = 1; i0 <= i0_ub; i0++) {
       i = (i0 - 1) * blockSizeM;
