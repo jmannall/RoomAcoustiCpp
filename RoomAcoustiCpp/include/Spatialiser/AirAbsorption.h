@@ -25,16 +25,16 @@ namespace RAC
 	namespace Spatialiser
 	{
 		/**
-		 * Class that implements an air absorption filter
-		 */
+		* Class that implements an air absorption filter
+		*/
 		class AirAbsorption
 		{
 		public:
 			/**
-			 * Constructor that initialises the AirAbsorption with a given sample rate
-			 *
-			 * @param sampleRate The sample rate for calculating the filter coefficients
-			 */
+			* Constructor that initialises the AirAbsorption with a given sample rate
+			*
+			* @param sampleRate The sample rate for calculating the filter coefficients
+			*/
 			AirAbsorption(const int sampleRate) : x(0), y(0), currentD(0.0), targetD(0.0), a(0.0), b(0.0)
 			{
 				constant = static_cast<Real>(sampleRate) / (SPEED_OF_SOUND * 7782.0);
@@ -42,11 +42,11 @@ namespace RAC
 			}
 
 			/**
-			 * Constructor that initialises the AirAbsorption with a given distance and sample rate
-			 *
-			 * @param distance The distance for calculating the filter coefficients
-			 * @param sampleRate The sample rate for calculating the filter coefficients
-			 */
+			* Constructor that initialises the AirAbsorption with a given distance and sample rate
+			*
+			* @param distance The distance for calculating the filter coefficients
+			* @param sampleRate The sample rate for calculating the filter coefficients
+			*/
 			AirAbsorption(const Real distance, const int sampleRate) : x(0), y(0), currentD(distance), targetD(distance), a(0.0), b(0.0)
 			{
 				constant = static_cast<Real>(sampleRate) / (SPEED_OF_SOUND * 7782.0);
@@ -54,20 +54,20 @@ namespace RAC
 			}
 
 			/**
-			 * Default deconstructor
-			 */
+			* Default deconstructor
+			*/
 			~AirAbsorption() {}
 
 			/**
-			 * Updates the target distance
-			 *
-			 * @param distance The new target distance
-			 */
+			* Updates the target distance
+			*
+			* @param distance The new target distance
+			*/
 			inline void SetDistance(const Real distance) { targetD = distance; }
 
 			/**
-			 * Updates the filter coefficients
-			 */
+			* Updates the filter coefficients
+			*/
 			inline void UpdateParameters()
 			{
 				b = exp(-currentD * constant);
@@ -75,51 +75,51 @@ namespace RAC
 			}
 
 			/**
-			 * Gets the current distance
-			 *
-			 * @return The current distance
-			 */
+			* Gets the current distance
+			*
+			* @return The current distance
+			*/
 			inline Real GetDistance() const { return currentD; }
 
 			/**
-			 * Returns the output of the GraphicEQ given an input
-			 *
-			 * @param input The input to the GraphicEQ
-			 * @return The output of the GraphicEQ
-			 */
+			* Returns the output of the GraphicEQ given an input
+			*
+			* @param input The input to the GraphicEQ
+			* @return The output of the GraphicEQ
+			*/
 			Real GetOutput(const Real input);
 
 			/**
-			 * Processes an input buffer and updates the output buffer
-			 *
-			 * @param inBuffer The input buffer
-			 * @param outBuffer The output buffer
-			 * @param numFrames The number of frames in the buffer
-			 * @param lerpFactor The linear interpolation factor
-			 */
+			* Processes an input buffer and updates the output buffer
+			*
+			* @param inBuffer The input buffer
+			* @param outBuffer The output buffer
+			* @param numFrames The number of frames in the buffer
+			* @param lerpFactor The linear interpolation factor
+			*/
 			void ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const int numFrames, const Real lerpFactor);
 						
 		private:
 			/**
-			 * Air absorption constant
-			 */
+			* Air absorption constant
+			*/
 			Real constant;
 
 			/**
-			 * Previous input and output values
-			 */
+			* Previous input and output values
+			*/
 			Real x;
 			Real y;
 
 			/**
-			 * Filter coefficients
-			 */
+			* Filter coefficients
+			*/
 			Real b;
 			Real a;
 
 			/**
-			 * Current and target distances
-			 */
+			* Current and target distances
+			*/
 			Real currentD;
 			Real targetD;;
 		};

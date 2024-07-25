@@ -52,51 +52,51 @@ namespace RAC
 		//////////////////// Edge class ////////////////////
 
 		/**
-		 * Class that describes an edge
-		 */
+		* Class that describes an edge
+		*/
 		class Edge
 		{
 		public:
 
 			/**
-			 * Default constructor
-			 */
+			* Default constructor
+			*/
 			Edge() : zW(0.0), t(0.0), mDs(2), rZone(EdgeZone::Invalid) {}
 
 			/**
-			 * Constructor that initialises the Edge from an EdgeData struct
-			 *
-			 * @param data The input EdgeData struct
-			 */
+			* Constructor that initialises the Edge from an EdgeData struct
+			*
+			* @param data The input EdgeData struct
+			*/
 			Edge(const EdgeData& data);
 
 			/**
-			 * Constructor that initialises the Edge from the given parameters
-			 * 
-			 * @param base The base coordinate of the edge
-			 * @param top The top coordinate of the edge
-			 * @param normal1 The normal of the first face
-			 * @param normal2 The normal of the second face
-			 * @param id1 The ID of the first wall
-			 * @param id2 The ID of the second wall
-			 */
+			* Constructor that initialises the Edge from the given parameters
+			* 
+			* @param base The base coordinate of the edge
+			* @param top The top coordinate of the edge
+			* @param normal1 The normal of the first face
+			* @param normal2 The normal of the second face
+			* @param id1 The ID of the first wall
+			* @param id2 The ID of the second wall
+			*/
 			Edge(const vec3& base, const vec3& top, const vec3& normal1, const vec3& normal2, const size_t id1, const size_t id2);
 
 			/**
-			 * Default deconstructor
-			 */
+			* Default deconstructor
+			*/
 			~Edge() {};
 
 			/**
-			 * Calculates the edge parameters
-			 */
+			* Calculates the edge parameters
+			*/
 			void Update();
 
 			/**
-			 * Updates the edge data from an EdgeData struct and updates the edge parameters
-			 *
-			 * @param data The input EdgeData struct
-			 */
+			* Updates the edge data from an EdgeData struct and updates the edge parameters
+			*
+			* @param data The input EdgeData struct
+			*/
 			inline void Update(const EdgeData& data)
 			{
 				mBase = data.base;
@@ -107,55 +107,55 @@ namespace RAC
 			}
 
 			/**
-			 * Reflects the edge in a plane
-			 *
-			 * @param plane The input plane
-			 */
+			* Reflects the edge in a plane
+			*
+			* @param plane The input plane
+			*/
 			void ReflectInPlane(const Plane& plane);
 
 			/**
-			 * Finds the vector between a point and the edge base
-			 *
-			 * @param point The input coordinate
-			 * @return The vector between the point and the edge base
-			 */
+			* Finds the vector between a point and the edge base
+			*
+			* @param point The input coordinate
+			* @return The vector between the point and the edge base
+			*/
 			inline vec3 GetAP(const vec3& point) const { return point - mBase; }
 
 			/**
-			 * Finds the coordinate of a point given the z value along the edge
-			 *
-			 * @param z The z value along the edge
-			 * @return The coordinate at the z value along the edge
-			 */
-			inline vec3 GetEdgeCoord(Real z) const { return mBase + z * mEdgeVector; }
+			* Finds the coordinate of a point given the z value along the edge
+			*
+			* @param z The z value along the edge
+			* @return The coordinate at the z value along the edge
+			*/
+			inline vec3 GetEdgeCoord(Real z) const { return mBase + z* mEdgeVector; }
 
 			/**
-			 * Gets the base coordinates
-			 *
-			 * @return The base coordinate of the edge
-			 */
+			* Gets the base coordinates
+			*
+			* @return The base coordinate of the edge
+			*/
 			inline vec3 GetBase() const { return mBase; }
 
 			/**
-			 * Gets the top coordinates
-			 *
-			 * @return The top coordinate of the edge
-			 */
+			* Gets the top coordinates
+			*
+			* @return The top coordinate of the edge
+			*/
 			inline vec3 GetTop() const { return mTop; }
 
 			/**
-			 * Gets the mid coordinates
-			 *
-			 * @return The mid coordinate of the edge
-			 */
+			* Gets the mid coordinates
+			*
+			* @return The mid coordinate of the edge
+			*/
 			inline vec3 GetMidPoint() const { return midPoint; }
 
 			/**
-			 * Gets the second wall ID
-			 *
-			 * @param id The first wall ID
-			 * @return The wall ID that does not match the input ID
-			 */
+			* Gets the second wall ID
+			*
+			* @param id The first wall ID
+			* @return The wall ID that does not match the input ID
+			*/
 			inline size_t GetWallID(const size_t id) const
 			{
 				if (id == mWallIds[0])
@@ -165,26 +165,26 @@ namespace RAC
 			}
 
 			/**
-			 * Gets the wall IDs
-			 *
-			 * @return The wall IDs as a vector
-			 */
+			* Gets the wall IDs
+			*
+			* @return The wall IDs as a vector
+			*/
 			inline std::vector<size_t> GetWallIDs() const { return mWallIds; }
 
 			/**
-			 * Gets the face normal at the given index
-			 *
-			 * @param i The index of the face normal
-			 * @return The face normal at the given index
-			 */
+			* Gets the face normal at the given index
+			*
+			* @param i The index of the face normal
+			* @return The face normal at the given index
+			*/
 			inline vec3 GetFaceNormal(const size_t i) const { return mFaceNormals[i]; }
 
 			/**
-			 * Iterates through a vector of IDs and returns true if the edge is attached to any of the IDs
-			 *
-			 * @param ids The vector of IDs to check
-			 * @return True if the edge is attached to any of the IDs, else false
-			 */
+			* Iterates through a vector of IDs and returns true if the edge is attached to any of the IDs
+			*
+			* @param ids The vector of IDs to check
+			* @return True if the edge is attached to any of the IDs, else false
+			*/
 			inline bool AttachedToPlane(const std::vector<size_t>& ids) const
 			{
 				for (size_t id : ids)
@@ -196,81 +196,81 @@ namespace RAC
 			}
 
 			/**
-			 * Sets the receiver edge zone
-			 * 
-			 * @param zone The new receiver edge zone
-			 */
+			* Sets the receiver edge zone
+			* 
+			* @param zone The new receiver edge zone
+			*/
 			inline void SetRZone(const EdgeZone zone) { rZone = zone; }
 
 			/**
-			 * Gets the receiver edge zone
-			 * 
- 			 * @return The receiver edge zone
-			 */
+			* Gets the receiver edge zone
+			* 
+ 			* @return The receiver edge zone
+			*/
 			inline EdgeZone GetRZone() const { return rZone; }
 
 			/**
-			 * Finds the edge zone of a given point
-			 * 
-			 * @param point The input point
-			 * @return The edge zone where the point is located
-			 */
+			* Finds the edge zone of a given point
+			* 
+			* @param point The input point
+			* @return The edge zone where the point is located
+			*/
 			EdgeZone FindEdgeZone(const vec3& point) const;
 
 			/**
-			 * The exterior angle of the edge
-			 */
+			* The exterior angle of the edge
+			*/
 			Real t;
 
 			/**
-			 * The length of the edge
-			 */
+			* The length of the edge
+			*/
 			Real zW;
 
 			/**
-			 * The vector between the base and top of the edge
-			 */
+			* The vector between the base and top of the edge
+			*/
 			vec3 mEdgeVector;
 
 			/**
-			 * The vector that lies between the face normals
- 			 */
+			* The vector that lies between the face normals
+ 			*/
 			vec3 mEdgeNormal;
 
 		private:
 			/**
-			 * The midpoint along the edge
-			 */
+			* The midpoint along the edge
+			*/
 			vec3 midPoint;
 
 			/**
-			 * The base coordinate of the edge
-			 */
+			* The base coordinate of the edge
+			*/
 			vec3 mBase;
 
 			/**
-			 * The top coordinate of the edge
-			 */
+			* The top coordinate of the edge
+			*/
 			vec3 mTop;
 
 			/**
-			 * The face normals of the edge
-			 */
+			* The face normals of the edge
+			*/
 			std::vector<vec3> mFaceNormals;
 
 			/**
-			 * The D values describing the planes wherein the walls connected to the edge lie
-			 */
+			* The D values describing the planes wherein the walls connected to the edge lie
+			*/
 			std::vector<Real> mDs;
 
 			/**
-			 * The wall IDs of the walls connected to the edge
-			 */
+			* The wall IDs of the walls connected to the edge
+			*/
 			std::vector<size_t> mWallIds;
 
 			/**
-			 * The receiver edge zone
-			 */
+			* The receiver edge zone
+			*/
 			EdgeZone rZone;
 		};
 	}
