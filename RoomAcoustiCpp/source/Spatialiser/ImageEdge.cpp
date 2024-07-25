@@ -25,7 +25,7 @@ namespace RAC
 			sp.push_back(std::vector<VirtualSourceData>());
 
 			reverbDirections = mReverb->GetReverbSourceDirections();
-			reverbAbsorptions = std::vector<Absorption>(reverbDirections.size(), Absorption(numAbsorptionBands, 0.0));
+			reverbAbsorptions = std::vector<Absorption>(reverbDirections.size(), Absorption(numAbsorptionBands));
 		}
 
 		void ImageEdge::RunIEM()

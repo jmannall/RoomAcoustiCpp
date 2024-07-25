@@ -216,20 +216,18 @@ namespace RAC
 
 		//////////////////// Absorption class ////////////////////
 
-		class Absorption : public Coefficients // Stores 1 - sqrt(R). Where R is the absortion property of the material
+		class Absorption : public Coefficients // Stores reflectance -> sqrt(1 - R). Where R is the absortion property of the material
 		{
 		public:
 
 			// Load and Destroy
 			Absorption() : Coefficients(1, 1.0), mArea(0.0) {}
 			Absorption(size_t len) : Coefficients(len, 1.0), mArea(0.0) {}
-			Absorption(size_t len, const Real x) : Coefficients(len, x), mArea(0.0) {}
 			Absorption(const std::vector<Real>& coefficients) : Coefficients(coefficients.size()), mArea(0.0)
 			{
 				for (int i = 0; i < mCoefficients.size(); i++)
 					mCoefficients[i] = sqrt(1.0 - coefficients[i]);
 			}
-			Absorption(const std::vector<Real>& coefficients, Real area) : Coefficients(coefficients), mArea(area) {}
 			~Absorption() {}
 
 			void Reset() { std::fill(mCoefficients.begin(), mCoefficients.end(), 1.0); }
