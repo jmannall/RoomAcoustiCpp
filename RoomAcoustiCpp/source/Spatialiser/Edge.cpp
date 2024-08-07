@@ -75,6 +75,10 @@ namespace RAC
 			plane.ReflectPointInPlaneNoCheck(mTop);
 			plane.ReflectNormalInPlane(mFaceNormals[0]);
 			plane.ReflectNormalInPlane(mFaceNormals[1]);
+			// Swap the normal order so that the external still travels from planeA to planeB (right hand rule)
+			vec3 store = mFaceNormals[0];
+			mFaceNormals[0] = mFaceNormals[1];
+			mFaceNormals[1] = store;
 			Update();
 		}
 

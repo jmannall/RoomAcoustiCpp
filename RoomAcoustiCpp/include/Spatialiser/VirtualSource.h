@@ -105,14 +105,14 @@ namespace RAC
 			{
 				mDiffractionPath.UpdateParameters(source, receiver, edge);
 				//vec3 position = mDiffractionPath.CalculateVirtualPostion();
-				SetTransform(mDiffractionPath.GetApex(), mDiffractionPath.CalculateVirtualPostion());
+				SetTransform(source, mDiffractionPath.CalculateVirtualPostion());
 			}
 			inline void UpdateDiffractionPath(const vec3& source, const vec3& receiver, const Plane& plane)
 			{
 				mDiffractionPath.ReflectEdgeInPlane(plane);
 				mDiffractionPath.UpdateParameters(source, receiver);
 				//vec3 position = mDiffractionPath.CalculateVirtualPostion();
-				SetTransform(mDiffractionPath.GetApex(), mDiffractionPath.CalculateVirtualPostion());
+				SetTransform(source, mDiffractionPath.CalculateVirtualPostion());
 			}
 			const inline Edge& GetEdge() const { return mDiffractionPath.GetEdge(); }
 			inline vec3 GetApex() const { return mDiffractionPath.GetApex(); }

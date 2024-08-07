@@ -344,7 +344,7 @@ namespace RAC
 #endif
 			return lineOfSight;
 		}
-
+#pragma optimize( "", off )
 		size_t ImageEdge::FirstOrderDiffraction(const vec3& point, VirtualSourceDataMap& vSources)
 		{
 #ifdef PROFILE_BACKGROUND_THREAD
@@ -796,5 +796,6 @@ namespace RAC
 				sp[refIdx].resize(counter, VirtualSourceData(numAbsorptionBands));
 			}
 		}
+#pragma optimize( "", on )
 	}
 }

@@ -228,7 +228,7 @@ namespace RAC
 		// Coordinates defined using right hand rule.
 		// Vertices are defined using a right hand curl around the direction of the normal
 		// Edge face normals are defined using right hand curl rule around the direction of the edge (from base to top) that rotates from plane A to plane B through the exterior of the wedge.
-
+		// Walls defined as triangles (can only have one valid edge)
 		void Room::FindEdge(const Wall& wallA, const Wall& wallB, const size_t idA, const size_t idB, std::vector<EdgeData>& data)
 		{
 			std::vector<vec3> verticesA = wallA.GetVertices();
@@ -257,22 +257,22 @@ namespace RAC
 				if (match)
 				{
 					j--;
-					int idxA = i + 1;
-					if (idxA == numA)
-						idxA = 0;
-					int idxB = j - 1;
-					if (idxB < 0)
-						idxB = numB - 1;
+					int idxA = i - 1;
+					if (idxA < 0)
+						idxA = numA - 1;
+					int idxB = j + 1;
+					if (idxB == numB)
+						idxB = 0;
 					bool validEdge = verticesA[idxA] == verticesB[idxB]; // Must be this way to ensure normals not twisted. (right hand rule) therefore one rotated up the edge one rotates down
-
+					
 					if (!validEdge)
 					{
-						idxA = i - 1;
-						if (idxA < 0)
-							idxA = numA - 1;
-						idxB = j + 1;
-						if (idxB == numB)
-							idxB = 0;
+						idxA = i + 1;
+						if (idxA == numA)
+							idxA = 0;
+						idxB = j - 1;
+						if (idxB < 0)
+							idxB = numB - 1;
 						validEdge = verticesA[idxA] == verticesB[idxB];
 					}
 					if (validEdge) // Planes not twisted
@@ -293,11 +293,13 @@ namespace RAC
 							{
 								EdgeData edge = EdgeData(verticesA[i], verticesA[idxA], wallA.GetNormal(), wallB.GetNormal(), idA, idB);
 								data.push_back(edge);
+								return;
 							}
 							else
 							{
 								EdgeData edge = EdgeData(verticesA[i], verticesA[idxA], wallB.GetNormal(), wallA.GetNormal(), idB, idA);
 								data.push_back(edge);
+								return;
 							}
 						}
 					}

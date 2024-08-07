@@ -461,6 +461,8 @@ namespace RAC
 				for (int i = 0; i < 4; i++)
 					E[i] = exp(-1.0 * imUnit * PI_1 / 4.0) / (2.0 * sqrt(PI_2 * k[i]));
 				UpdateParameters();
+				current = target;
+				lrFilter.UpdateParameters(current);
 			}
 
 			void UTD::UpdateParameters()
