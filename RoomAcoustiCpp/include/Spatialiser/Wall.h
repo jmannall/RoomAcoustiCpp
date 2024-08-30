@@ -27,6 +27,8 @@ namespace RAC
 	namespace Spatialiser
 	{
 
+		const constexpr Real NUM_VERTICES = 3;
+
 		/**
 		* Class that represents a Wall in the room
 		*
@@ -79,7 +81,7 @@ namespace RAC
 			* 
 			* @return True if the wall has less connectd edges than the maximum possible, false otherwise
 			*/
-			inline bool EmptyEdges() const { return mEdges.size() < mVertices.size(); }
+			inline bool EmptyEdges() const { return mEdges.size() < NUM_VERTICES; }
 
 			/**
 			* @brief Returns the normal of the wall
@@ -101,6 +103,8 @@ namespace RAC
 			* @return The vertices of the wall
 			*/
 			inline std::vector<vec3> GetVertices() const { return mVertices; }
+
+			inline bool VertexMatch(const vec3& x) const { return mVertices[0] == x || mVertices[1] == x || mVertices[2] == x; }
 
 			/**
 			* @brief Returns the material absorption properties of the wall
@@ -186,6 +190,13 @@ namespace RAC
 			* @param vData The new vertices of the wall
 			*/
 			void Update(const vec3& normal, const Real* vData);
+
+			/**
+			* @brief Updates the wall absorption
+			*
+			* @param absorption The new absorption of the wall
+			*/
+			inline void Update(const Absorption& absorption) { float area = GetArea(); mAbsorption = absorption; mAbsorption.mArea = area; }
 
 		private:
 

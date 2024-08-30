@@ -179,12 +179,11 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Context::UpdateSpatialisationMode(const SPATConfig config)
+		void Context::UpdateSpatialisationMode(const SpatMode mode)
 		{
-			mConfig.spatConfig = config;
-
-			mReverb->UpdateSpatialisationMode(config.GetMode(-1));
-			mSources->UpdateSpatialisationMode(config);
+			mConfig.spatMode = mode;
+			mReverb->UpdateSpatialisationMode(mode);
+			mSources->UpdateSpatialisationMode(mode);
 		}
 
 		////////////////////////////////////////
@@ -274,7 +273,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		size_t Context::InitWall(const vec3& normal, const Real* vData, Absorption& absorption)
+		size_t Context::InitWall(const vec3& normal, const Real* vData, const Absorption& absorption)
 		{
 #ifdef DEBUG_INIT
 	Debug::Log("Init Wall and Edges", Colour::Green);
@@ -291,6 +290,14 @@ namespace RAC
 		void Context::UpdateWall(size_t id, const vec3& normal, const Real* vData)
 		{
 			mRoom->UpdateWall(id, normal, vData);
+		}
+
+		////////////////////////////////////////
+
+		void Context::UpdateWallAbsorption(size_t id, const Absorption& absorption)
+		{
+			mRoom->UpdateWallAbsorption(id, absorption);
+			UpdateReverbTime(mRoom->GetReverbTime());
 		}
 
 		////////////////////////////////////////

@@ -45,7 +45,7 @@ namespace RAC
 			ReverbSource(Binaural::CCore* core, const Config& config, const vec3& shift);
 			~ReverbSource();
 
-			void UpdateSpatialisationMode(const HRTFMode mode);
+			void UpdateSpatialisationMode(const SpatMode mode);
 			inline void SetShift(const vec3& shift) { mShift = shift; }
 			inline vec3 GetShift() const { return mShift; }
 			void UpdatePosition(const vec3& position);
@@ -92,7 +92,7 @@ namespace RAC
 			Reverb(Binaural::CCore* core, const Config& config);
 			Reverb(Binaural::CCore* core, const Config& config, const vec& dimensions, const Coefficients& T60);
 
-			void UpdateSpatialisationMode(const HRTFMode mode);
+			void UpdateSpatialisationMode(const SpatMode mode);
 
 			void UpdateReverb(const vec3& position);
 			void UpdateReflectionFilters(const std::vector<Absorption>& absorptions, bool running);

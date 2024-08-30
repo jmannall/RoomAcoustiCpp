@@ -44,12 +44,12 @@ namespace RAC
 			return id;
 		}
 
-		void SourceManager::UpdateSpatialisationMode(const SPATConfig config)
+		void SourceManager::UpdateSpatialisationMode(const SpatMode mode)
 		{
-			mConfig.spatConfig = config;
+			mConfig.spatMode = mode;
 			lock_guard <mutex> lock(updateMutex);
 			for (auto& it : mSources)
-				it.second.UpdateSpatialisationMode(config);
+				it.second.UpdateSpatialisationMode(mode);
 		}
 
 		void SourceManager::UpdateDiffractionModel(const DiffractionModel model)

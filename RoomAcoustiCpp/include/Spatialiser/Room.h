@@ -55,6 +55,14 @@ namespace RAC
 				else { it->second.Update(normal, vData); } // case: wall does exist
 			}
 
+			inline void UpdateWallAbsorption(const size_t id, const Absorption& absorption)
+			{
+				lock_guard<std::mutex> lock(mWallMutex);
+				auto it = mWalls.find(id);
+				if (it == mWalls.end()) { return; } // case: wall does not exist
+				else { it->second.Update(absorption); } // case: wall does exist
+			}
+
 			inline void RemoveWall(const size_t id)
 			{
 				lock_guard<std::mutex> lock(mWallMutex);
@@ -114,17 +122,17 @@ namespace RAC
 			}
 
 			// Edge
-			void AddEdge(const EdgeData& data);
+			void AddEdge(const Edge& edge);
 
 			void InitEdges(const size_t id, const std::vector<size_t>& IDsW);
 
-			void FindEdges(const size_t idA, const size_t idB, std::vector<EdgeData>& data, std::vector<size_t>& IDs);
-			void FindEdges(const Wall& wallA, const Wall& wallB, const size_t idA, const size_t idB, std::vector<EdgeData>& data);
+			void FindEdges(const size_t idA, const size_t idB, std::vector<Edge>& edges, std::vector<size_t>& IDs);
+			void FindEdges(const Wall& wallA, const Wall& wallB, const size_t idA, const size_t idB, std::vector<Edge>& edges);
 
-			void FindParallelEdges(const Wall& wallA, const Wall& wallB, const size_t idA, const size_t idB, std::vector<EdgeData>& data);
-			void FindEdge(const Wall& wallA, const Wall& wallB, const size_t idA, const size_t idB, std::vector<EdgeData>& data);
+			void FindParallelEdges(const Wall& wallA, const Wall& wallB, const size_t idA, const size_t idB, std::vector<Edge>& edges);
+			void FindEdge(const Wall& wallA, const Wall& wallB, const size_t idA, const size_t idB, std::vector<Edge>& edges);
 
-			inline void UpdateEdge(const size_t id, const EdgeData& edge)
+			inline void UpdateEdge(const size_t id, const Edge& edge)
 			{ 
 				if (IsCoplanarEdge(edge))
 				{
@@ -137,30 +145,30 @@ namespace RAC
 				else { it->second.Update(edge); } // case: edge does exist
 			}
 
-			inline void UpdateEdges(const std::vector<size_t>& IDs, const std::vector<EdgeData>& data)
+			inline void UpdateEdges(const std::vector<size_t>& IDs, const std::vector<Edge>& edges)
 			{
 				int i = 0;
-				for (auto& edge : data)
+				for (auto& edge : edges)
 				{
 					UpdateEdge(IDs[i], edge);
 					i++;
 				}
 			}
 
-			inline bool IsCoplanarEdge(const EdgeData& data)
+			inline bool IsCoplanarEdge(const Edge& edge)
 			{
-				vec3 midPoint = (data.top + data.base) / 2.0;
+				IDPair planeIds = edge.GetPlaneIDs();
 				{
 					lock_guard<std::mutex> lock(mPlaneMutex);
 					for (auto& itP : mPlanes)
 					{
-						if (itP.second.GetNormal() == data.normal1 || itP.second.GetNormal() == data.normal2)
+						if (itP.first == planeIds.first || itP.first == planeIds.second)
 							continue;
 
-						if (itP.second.GetNormal() == -data.normal1 || itP.second.GetNormal() == -data.normal2)
+						if (itP.second.PointPlanePosition(edge.GetMidPoint()) != 0.0)
 							continue;
 
-						if (itP.second.PointPlanePosition(midPoint) == 0.0)
+						if (itP.second.PointPlanePosition(edge.GetEdgeCoord(EPS)) == 0.0)
 							return true;
 					}
 				}
@@ -199,12 +207,12 @@ namespace RAC
 				auto itE = mEdges.find(idE);
 				if (itE != mEdges.end())
 				{
-					std::vector<size_t> id = itE->second.GetWallIDs();
-					auto itW = mWalls.find(id[0]);
+					IDPair ids = itE->second.GetWallIDs();
+					auto itW = mWalls.find(ids.first);
 					if (itW != mWalls.end()) // case: wall exists
 						itW->second.RemoveEdge(idE);
 
-					itW = mWalls.find(id[1]);
+					itW = mWalls.find(ids.second);
 					if (itW != mWalls.end()) // case: wall exists
 						itW->second.RemoveEdge(idE);
 

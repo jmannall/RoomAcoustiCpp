@@ -226,7 +226,10 @@ namespace RAC
 			Absorption(const std::vector<Real>& coefficients) : Coefficients(coefficients.size()), mArea(0.0)
 			{
 				for (int i = 0; i < mCoefficients.size(); i++)
+				{
+					assert(coefficients[i] <= 1.0);
 					mCoefficients[i] = sqrt(1.0 - coefficients[i]);
+				}
 			}
 			~Absorption() {}
 

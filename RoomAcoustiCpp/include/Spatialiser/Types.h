@@ -80,7 +80,7 @@ namespace RAC
 		static const int NUM_ABSORPTION_FREQ = 5;
 		static const Real ABSORPTION_FREQ[] = { 250.0, 500.0, 1000.0, 2000.0, 4000.0 };
 
-		enum class HRTFMode { quality, performance, none };
+		enum class SpatMode { quality, performance, none };
 
 		enum class ReverbWall
 		{
@@ -112,25 +112,6 @@ namespace RAC
 			IEMConfig(int _order, DirectSound dir, bool ref, DiffractionSound diff, DiffractionSound refDif, bool rev, Real edgeLen) : order(_order), direct(dir), reflection(ref), diffraction(diff), reflectionDiffraction(refDif), lateReverb(rev), edgeLength(edgeLen) {};
 		};
 
-		class SPATConfig
-		{
-		public:
-			SPATConfig() : quality(-2), performance(-2) {};
-			SPATConfig(int qualityOrder, int performanceOrder) : quality(qualityOrder), performance(performanceOrder) {};
-		
-			inline HRTFMode GetMode(const int& order) const
-			{
-				if (quality == -1 || order <= quality)
-					return HRTFMode::quality;
-				if (performance == -1 || order <= performance)
-					return HRTFMode::performance;
-				return HRTFMode::none;
-			}
-		private:
-			int quality, performance;
-		};
-
-
 		struct Config
 		{
 			// DSP parameters
@@ -140,20 +121,20 @@ namespace RAC
 			// must be greater than 0
 			Real lerpFactor, Q;
 			Coefficients frequencyBands;
-			SPATConfig spatConfig;
 			DiffractionModel diffractionModel;
+			SpatMode spatMode;
 
 			Config() : 
 				fs(44100), numFrames(512), numFDNChannels(12), lerpFactor(1.0 / ((Real)numFrames * 2.0)), Q(0.77), 
-				frequencyBands({250.0, 500.0, 1000.0, 20000.0}), spatConfig(), diffractionModel(DiffractionModel::btm) {};
+				frequencyBands({250.0, 500.0, 1000.0, 20000.0}), diffractionModel(DiffractionModel::btm), spatMode(SpatMode::none) {};
 
 			Config(int _fs, int _numFrames, int _numFDNChannels, Real _lerpFactor, Real q, Coefficients fBands) : 
 				fs(_fs), numFrames(_numFrames), numFDNChannels(_numFDNChannels), lerpFactor(1.0 / ((Real)numFrames * _lerpFactor)),
-				Q(q), frequencyBands(fBands), spatConfig(), diffractionModel(DiffractionModel::btm) {};
+				Q(q), frequencyBands(fBands), diffractionModel(DiffractionModel::btm), spatMode(SpatMode::none) {};
 
-			Config(int _fs, int _numFrames, int _numFDNChannels, Real _lerpFactor, Real q, Coefficients fBands, int quality, int performance, DiffractionModel model) : 
+			Config(int _fs, int _numFrames, int _numFDNChannels, Real _lerpFactor, Real q, Coefficients fBands, DiffractionModel model, SpatMode mode) : 
 				fs(_fs), numFrames(_numFrames), numFDNChannels(_numFDNChannels), lerpFactor(1.0 / ((Real)numFrames * _lerpFactor)), Q(q), 
-				frequencyBands(fBands), spatConfig(quality, performance), diffractionModel(model) {};
+				frequencyBands(fBands), diffractionModel(model), spatMode(mode) {};
 		};
 	}
 }

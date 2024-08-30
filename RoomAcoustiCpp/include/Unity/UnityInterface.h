@@ -5,8 +5,8 @@
 
 #include "Unity/IUnityProfiler.h"
 
-#define PROFILE_AUDIO_THREAD
-#define PROFILE_BACKGROUND_THREAD
+// #define PROFILE_AUDIO_THREAD
+// #define PROFILE_BACKGROUND_THREAD
 
 IUnityProfiler* GetUnityProfiler();
 bool* GetDevBuild();

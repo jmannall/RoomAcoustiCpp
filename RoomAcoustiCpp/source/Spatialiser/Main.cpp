@@ -123,23 +123,26 @@ extern "C"
 	/**
 	* Sets the spatialisation mode (high quality, high performance or none).
 	*
-	* The depth values are mapped as follows.
-	* -2 -> none
-	* -1 -> direct + reflection and diffraction components + late reverberation
-	* 0 -> direct component
-	* 1 -> direct + 1st-order components
-	* 2 -> direct + 1st and 2nd-order components
-	* 3 -> direct + 1st, 2nd and 3rd-order components
-	* etc
-	* If the quality depth is set higher than the performance depth then the quality processing will be used.
+	* The mapping is as follows:
+	* 0 -> none
+	* 1 -> high performance (ILD only)
+	* 2 -> high quality (HRTF)
 	*
-	* @param qualityDepth The depth up to which to use high quality HRTF processing. -2 for none, -1 for all (including late reverberation) and 0 for direct sound and 1, 2, 3 etc for the corresponding reflection/diffraction order.
-	* @param performanceDepth The depth up to which to use high performance ILD processing. -2 for none, -1 for all (including late reverberation) and 0 for direct sound and 1, 2, 3 etc for the corresponding reflection/diffraction order.
+	* @param id The ID corresponding to a spatialisation mode.
 	*/
-	EXPORT void API RACUpdateSpatialisationMode(int qualityDepth, int performanceDepth)
+	EXPORT void API RACUpdateSpatialisationMode(int id)
 	{
-		SPATConfig config = SPATConfig(qualityDepth, performanceDepth);
-		UpdateSpatialisationMode(config);
+		switch (id)
+		{
+		case(0):
+		{ UpdateSpatialisationMode(SpatMode::none); break; }
+		case(1):
+		{ UpdateSpatialisationMode(SpatMode::performance); break; }
+		case(2):
+		{ UpdateSpatialisationMode(SpatMode::quality); break; }
+		default:
+		{ UpdateSpatialisationMode(SpatMode::none); break; }
+		}
 	}
 
 
@@ -435,6 +438,25 @@ extern "C"
 			in[i] = static_cast<Real>(vData[i]);
 
 		UpdateWall(static_cast<size_t>(id), vec3(nX, nY, nZ), &in[0]);
+	}
+
+	/**
+	* Updates the absorption of the wall with the given ID.
+	*
+	* This function should be called when the absorption of a wall changes.
+	* It will update the internal representation of the wall to match the new absorption and update the late reverberation time.
+	*
+	* @param id The ID of the wall to update.
+	* @param absorption The frequency absorption coefficients.
+	*/
+	EXPORT void API RACUpdateWallAbsorption(int id, const float* absorption)
+	{
+		std::vector<Real> a = std::vector<Real>(numAbsorptionBands);
+		for (int i = 0; i < numAbsorptionBands; i++)
+			a[i] = static_cast<Real>(absorption[i]);
+		Absorption abs = Absorption(a);
+
+		UpdateWallAbsorption(static_cast<size_t>(id), abs);
 	}
 
 	/**

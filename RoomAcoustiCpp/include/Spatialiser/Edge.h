@@ -32,15 +32,9 @@ namespace RAC
 
 		//////////////////// Data structures ////////////////////
 
-		struct EdgeData
-		{
-			vec3 base, top, normal1, normal2;
-			size_t id1, id2;
-			EdgeData(const vec3& _base, const vec3& _top, const vec3& _normal1, const vec3& _normal2, const size_t _id1, const size_t _id2)
-				: base(_base), top(_top), normal1(_normal1), normal2(_normal2), id1(_id1), id2(_id2) {};
-
-			EdgeData(const Edge& edge);
-		};
+		typedef std::pair<size_t, size_t> IDPair;
+		typedef std::pair<vec3, vec3> Vec3Pair;
+		typedef std::pair<Real, Real> RealPair;
 
 		enum EdgeZone
 		{
@@ -61,14 +55,7 @@ namespace RAC
 			/**
 			* Default constructor
 			*/
-			Edge() : zW(0.0), t(0.0), mDs(2), rZone(EdgeZone::Invalid) {}
-
-			/**
-			* Constructor that initialises the Edge from an EdgeData struct
-			*
-			* @param data The input EdgeData struct
-			*/
-			Edge(const EdgeData& data);
+			Edge() : zW(0.0), t(0.0), mDs(0.0, 0.0), rZone(EdgeZone::Invalid) {}
 
 			/**
 			* Constructor that initialises the Edge from the given parameters
@@ -77,10 +64,12 @@ namespace RAC
 			* @param top The top coordinate of the edge
 			* @param normal1 The normal of the first face
 			* @param normal2 The normal of the second face
-			* @param id1 The ID of the first wall
-			* @param id2 The ID of the second wall
+			* @param wallId1 The ID of the first wall
+			* @param wallId2 The ID of the second wall
+			* @param planeId1 The ID of the first plane
+			* @param planeId2 The ID of the second plane
 			*/
-			Edge(const vec3& base, const vec3& top, const vec3& normal1, const vec3& normal2, const size_t id1, const size_t id2);
+			Edge(const vec3& base, const vec3& top, const vec3& normal1, const vec3& normal2, const size_t wallId1, const size_t wallId2, const size_t planeId1, const size_t planeId2);
 
 			/**
 			* Default deconstructor
@@ -97,12 +86,11 @@ namespace RAC
 			*
 			* @param data The input EdgeData struct
 			*/
-			inline void Update(const EdgeData& data)
+			inline void Update(const Edge& edge)
 			{
-				mBase = data.base;
-				mTop = data.top;
-				mFaceNormals[0] = data.normal1;
-				mFaceNormals[1] = data.normal2;
+				mBase = edge.GetBase();
+				mTop = edge.GetTop();
+				mFaceNormals = edge.GetFaceNormals();
 				Update();
 			}
 
@@ -127,7 +115,7 @@ namespace RAC
 			* @param z The z value along the edge
 			* @return The coordinate at the z value along the edge
 			*/
-			inline vec3 GetEdgeCoord(Real z) const { return mBase + z* mEdgeVector; }
+			inline vec3 GetEdgeCoord(Real z) const { return mBase + z * mEdgeVector; }
 
 			/**
 			* Gets the base coordinates
@@ -158,40 +146,43 @@ namespace RAC
 			*/
 			inline size_t GetWallID(const size_t id) const
 			{
-				if (id == mWallIds[0])
-					return mWallIds[1];
+				if (id == mWallIds.first)
+					return mWallIds.second;
 				else
-					return mWallIds[0];
+					return mWallIds.first;
 			}
+
+			/**
+			* Gets the plane IDs
+			*
+			* @return The plane IDs as an ID pair
+			*/
+			inline IDPair GetPlaneIDs() const { return mPlaneIds; }
 
 			/**
 			* Gets the wall IDs
 			*
-			* @return The wall IDs as a vector
+			* @return The wall IDs as an ID pair
 			*/
-			inline std::vector<size_t> GetWallIDs() const { return mWallIds; }
+			inline IDPair GetWallIDs() const { return mWallIds; }
 
 			/**
-			* Gets the face normal at the given index
+			* Gets the face normals
 			*
-			* @param i The index of the face normal
-			* @return The face normal at the given index
+			* @return The face normals as a vector pair
 			*/
-			inline vec3 GetFaceNormal(const size_t i) const { return mFaceNormals[i]; }
+			inline Vec3Pair GetFaceNormals() const { return mFaceNormals; }
 
 			/**
-			* Iterates through a vector of IDs and returns true if the edge is attached to any of the IDs
+			* Returns true if the edge includes the given plane ID
 			*
-			* @param ids The vector of IDs to check
-			* @return True if the edge is attached to any of the IDs, else false
+			* @param id The plane ID to check
+			* @return True if the edge includes any of the IDs, else false
 			*/
-			inline bool AttachedToPlane(const std::vector<size_t>& ids) const
+			inline bool IncludesPlane(const size_t id) const
 			{
-				for (size_t id : ids)
-				{
-					if (id == mWallIds[0] || id == mWallIds[1])
-						return true;
-				}
+				if (id == mPlaneIds.first || id == mPlaneIds.second)
+					return true;
 				return false;
 			}
 
@@ -256,17 +247,22 @@ namespace RAC
 			/**
 			* The face normals of the edge
 			*/
-			std::vector<vec3> mFaceNormals;
+			Vec3Pair mFaceNormals;
 
 			/**
 			* The D values describing the planes wherein the walls connected to the edge lie
 			*/
-			std::vector<Real> mDs;
+			RealPair mDs;
+
+			/**
+			* The plane IDs of the planes making up the edge
+			*/
+			IDPair mPlaneIds;
 
 			/**
 			* The wall IDs of the walls connected to the edge
 			*/
-			std::vector<size_t> mWallIds;
+			IDPair mWallIds;
 
 			/**
 			* The receiver edge zone

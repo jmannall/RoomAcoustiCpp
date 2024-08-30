@@ -44,9 +44,9 @@ namespace RAC
 		/**
 		* Sets the spatialisation mode for the HRTF processing.
 		*
-		* @param config The configuration of the spatialisation mode.
+		* @param mode The new spatialisation mode.
 		*/
-		void UpdateSpatialisationMode(const SPATConfig config);
+		void UpdateSpatialisationMode(const SpatMode mode);
 		
 		/**
 		* Updates the configuration for the Image Edge Model (IEM).
@@ -136,7 +136,7 @@ namespace RAC
 		* @param reverbWall The reverb wall.
 		* @return The ID of the new wall.
 		*/
-		int InitWall(const vec3& normal, const Real* vData, Absorption& absorption);
+		int InitWall(const vec3& normal, const Real* vData, const Absorption& absorption);
 		
 		/**
 		* Updates the position and orientation of the wall with the given ID.
@@ -146,6 +146,14 @@ namespace RAC
 		* @param vData The new vertices of the wall.
 		*/
 		void UpdateWall(size_t id, const vec3& normal, const Real* vData);
+
+		/**
+		* Updates the absorption of the wall with the given ID.
+		*
+		* @param id The ID of the wall to update.
+		* @param absorption The new absortion of the wall.
+		*/
+		void UpdateWallAbsorption(size_t id, const Absorption& absorption);
 
 		/**
 		* Removes the wall with the given ID.

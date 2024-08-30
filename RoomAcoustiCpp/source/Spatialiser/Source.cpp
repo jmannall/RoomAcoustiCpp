@@ -49,7 +49,7 @@ namespace RAC
 				mSource->EnablePropagationDelay();
 
 				//Select spatialisation mode
-				UpdateSpatialisationMode(config.spatConfig.GetMode(0));
+				UpdateSpatialisationMode(config.spatMode);
 			}
 
 			ResetFDNSlots();
@@ -68,21 +68,22 @@ namespace RAC
 			Reset();
 		}
 
-		void Source::UpdateSpatialisationMode(const HRTFMode mode)
+		void Source::UpdateSpatialisationMode(const SpatMode mode)
 		{
+			mConfig.spatMode = mode;
 			switch (mode)
 			{
-			case HRTFMode::quality:
+			case SpatMode::quality:
 			{
 				mSource->SetSpatializationMode(Binaural::TSpatializationMode::HighQuality);
 				break;
 			}
-			case HRTFMode::performance:
+			case SpatMode::performance:
 			{
 				mSource->SetSpatializationMode(Binaural::TSpatializationMode::HighPerformance);
 				break;
 			}
-			case HRTFMode::none:
+			case SpatMode::none:
 			{
 				mSource->SetSpatializationMode(Binaural::TSpatializationMode::NoSpatialization);
 				break;
@@ -93,21 +94,16 @@ namespace RAC
 				break;
 			}
 			}
-		}
 
-		void Source::UpdateSpatialisationMode(const SPATConfig config)
-		{
-			mConfig.spatConfig = config;
-			UpdateSpatialisationMode(config.GetMode(0));
 			{
 				lock_guard<mutex> lock(*vWallMutex);
 				for (auto& it : mVirtualSources)
-					it.second.UpdateSpatialisationMode(config);
+					it.second.UpdateSpatialisationMode(mode);
 			}
 			{
 				lock_guard<mutex> lock(*vEdgeMutex);
 				for (auto& it : mVirtualEdgeSources)
-					it.second.UpdateSpatialisationMode(config);
+					it.second.UpdateSpatialisationMode(mode);
 			}
 		}
 
@@ -135,6 +131,145 @@ namespace RAC
 		void ProcessVirtualSource(VirtualSource& vS, const Buffer& data, matrix& reverbInput, Buffer& outputBuffer)
 		{
 			vS.ProcessAudio(data, reverbInput, outputBuffer);
+		}
+
+		void Source::ProcessAudioParallel(const Buffer& data, matrix& reverbInput, Buffer& outputBuffer)
+		{
+			std::vector<VirtualSource> vSources;
+			{
+				lock_guard<mutex> lock(*vWallMutex);
+				for (auto& it : mVirtualSources)
+					it.second.GetVirtualSources(vSources);
+			}
+			{
+				lock_guard<mutex> lock(*vEdgeMutex);
+				for (auto& it : mVirtualEdgeSources)
+					it.second.GetVirtualSources(vSources);
+			}
+
+			const int N = 100'000'000;
+			vector<double> vec(N);
+
+//#pragma omp parallel for
+//			for (int i = 0; i < vec.size(); ++i) {
+//				vec[i] = sin(M_PI * float(i) / N);
+//			}
+//
+//			double sum = 0.;
+//#pragma omp barrier
+//
+//#pragma omp parallel for reduction(+:sum)
+//			for (int i = 0; i < vec.size(); ++i) {
+//				sum += vec[i];
+//			}
+//
+//#pragma omp barrier
+//			std::cout << "Result: " << M_PI * sum / N << '\n';
+//			
+#pragma omp parallel for
+				for (int i = 0; i < 10; i++)
+				{
+					//int thread_id = omp_get_thread_num();
+					//std::cout << "Hello from thread " << thread_id << std::endl;
+					int num = vSources[i].mVirtualSources.size();
+					//std::cout << "vSources " << num << thread_id << std::endl;
+				}
+
+//
+//
+//			int sum1 = 0;
+//			//omp_set_num_threads(1);
+//#pragma omp parallel
+//			{
+//				int localSum1(sum1);
+//				// Create thread-local copies
+//				//matrix localReverbInput(reverbInput);
+//				//Buffer localOutputBuffer(outputBuffer);
+//				//Buffer localData(data);
+//
+//#pragma omp for
+//				for (int i = 0; i < vSources.size(); i++)
+//				{
+//					localSum1++;
+//					//vSources[i].ProcessAudioParallel(localData, localReverbInput, localOutputBuffer);
+//				}
+//
+//				// Combine the local results into the shared variables
+//#pragma omp critical
+//				{
+//					sum1 += localSum1;
+////					reverbInput += localReverbInput;  // Assuming operator+= is defined for matrix
+////					outputBuffer += localOutputBuffer;  // Assuming operator+= is defined for Buffer
+//				}
+//			}
+//
+//#pragma omp barrier
+
+			/*matrix rI = reverbInput;
+			Buffer oB = outputBuffer;
+			int sum1 = 0;
+			#pragma omp parallel for num_threads(omp_get_max_threads())
+			for (int i = 0; i < vSources.size(); i++)
+			{
+				vSources[i].ProcessAudioParallel(data, rI, oB);
+			}*/
+			/*for (auto& vSource : vSources)
+			{				
+				vSource.ProcessAudioParallel(data, reverbInput, outputBuffer);
+			}*/
+
+			/*reverbInput = rI;
+			outputBuffer = oB;*/
+#ifdef DEBUG_AUDIO_THREAD
+			// Debug::Log("Total audio vSources: " + std::to_string(counter), Colour::Orange);
+#endif
+			lock_guard<std::mutex> lock(*dataMutex);
+			if (mData.visible || currentGain != 0.0f)
+			{
+#ifdef PROFILE_AUDIO_THREAD
+				BeginSource();
+				BeginAirAbsorption();
+#endif
+				mAirAbsorption.ProcessAudio(data, bStore, mConfig.numFrames, mConfig.lerpFactor);
+#ifdef PROFILE_AUDIO_THREAD
+				EndAirAbsorption();
+#endif
+				if (currentGain == targetGain)
+				{
+					for (int i = 0; i < mConfig.numFrames; i++)
+						bInput[i] = static_cast<float>(currentGain * bStore[i]);
+				}
+				else
+				{
+					for (int i = 0; i < mConfig.numFrames; i++)
+					{
+						bInput[i] = static_cast<float>(currentGain * bStore[i]);
+						currentGain = Lerp(currentGain, targetGain, mConfig.lerpFactor);
+					}
+				}
+
+#ifdef PROFILE_AUDIO_THREAD
+				Begin3DTI();
+#endif
+				{
+					lock_guard<mutex> lock(tuneInMutex);
+					mSource->SetBuffer(bInput);
+					mSource->ProcessAnechoic(bOutput.left, bOutput.right);
+				}
+#ifdef PROFILE_AUDIO_THREAD
+				End3DTI();
+#endif
+
+				int j = 0;
+				for (int i = 0; i < mConfig.numFrames; i++)
+				{
+					outputBuffer[j++] += static_cast<Real>(bOutput.left[i]);
+					outputBuffer[j++] += static_cast<Real>(bOutput.right[i]);
+				}
+#ifdef PROFILE_AUDIO_THREAD
+				EndSource();
+#endif
+			}
 		}
 
 		void Source::ProcessAudio(const Buffer& data, matrix& reverbInput, Buffer& outputBuffer)

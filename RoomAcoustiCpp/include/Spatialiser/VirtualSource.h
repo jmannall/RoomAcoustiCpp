@@ -205,15 +205,16 @@ namespace RAC
 			}
 			inline int GetFDNChannel() const { return mFDNChannel; }
 
-			void UpdateSpatialisationMode(const HRTFMode mode);
-			void UpdateSpatialisationMode(const SPATConfig config);
+			void UpdateSpatialisationMode(const SpatMode mode);
 			void UpdateDiffractionModel(const DiffractionModel model);
 			
 			// Updates
 			bool UpdateVirtualSource(const VirtualSourceData& data, int& fdnChannel);
 
 			// Audio
+			void GetVirtualSources(std::vector<VirtualSource>& vSources);
 			void ProcessAudio(const Buffer& data, matrix& reverbInput, Buffer& outputBuffer);
+			void ProcessAudioParallel(const Buffer& data, matrix& reverbInput, Buffer& outputBuffer);
 
 			// Deactivate
 			inline void Deactivate() { mSource = NULL; }

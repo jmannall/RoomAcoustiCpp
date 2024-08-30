@@ -82,26 +82,27 @@ namespace RAC
 				mSource->DisableFarDistanceEffect();
 
 				//Select spatialisation mode
-				UpdateSpatialisationMode(mConfig.spatConfig.GetMode(-1));
+				UpdateSpatialisationMode(SpatMode::none);
 			}
 			
 		}
 
-		void ReverbSource::UpdateSpatialisationMode(const HRTFMode mode)
+		void ReverbSource::UpdateSpatialisationMode(const SpatMode mode)
 		{
+			mConfig.spatMode = mode;
 			switch (mode)
 			{
-			case HRTFMode::quality:
+			case SpatMode::quality:
 			{
 				mSource->SetSpatializationMode(Binaural::TSpatializationMode::HighQuality);
 				break;
 			}
-			case HRTFMode::performance:
+			case SpatMode::performance:
 			{
 				mSource->SetSpatializationMode(Binaural::TSpatializationMode::HighPerformance);
 				break;
 			}
-			case HRTFMode::none:
+			case SpatMode::none:
 			{
 				mSource->SetSpatializationMode(Binaural::TSpatializationMode::NoSpatialization);
 				break;
@@ -219,8 +220,9 @@ namespace RAC
 			InitSources();
 		}
 
-		void Reverb::UpdateSpatialisationMode(const HRTFMode mode)
+		void Reverb::UpdateSpatialisationMode(const SpatMode mode)
 		{
+			mConfig.spatMode = mode;
 			lock_guard<mutex> lock(tuneInMutex);
 			for (ReverbSource& source : mReverbSources)
 				source.UpdateSpatialisationMode(mode);

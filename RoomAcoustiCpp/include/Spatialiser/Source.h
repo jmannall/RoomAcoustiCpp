@@ -76,8 +76,7 @@ namespace RAC
 			Source(Binaural::CCore* core, const Config& config);
 			~Source();
 
-			void UpdateSpatialisationMode(const HRTFMode mode);
-			void UpdateSpatialisationMode(const SPATConfig config);
+			void UpdateSpatialisationMode(const SpatMode mode);
 			void UpdateDiffractionModel(const DiffractionModel model);
 
 			// Getters
@@ -92,6 +91,7 @@ namespace RAC
 			inline void UpdateData(const SourceData& data) { lock_guard<std::mutex> lock(*dataMutex); mData.visible = data.visible; mData.vSources = data.vSources; }
 
 			// Audio
+			void ProcessAudioParallel(const Buffer& data, matrix& reverbInput, Buffer& outputBuffer);
 			void ProcessAudio(const Buffer& data, matrix& reverbInput, Buffer& outputBuffer);
 
 			// Reset

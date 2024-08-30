@@ -151,48 +151,46 @@ namespace RAC
 			return false;
 		}
 
-		void VirtualSource::UpdateSpatialisationMode(const HRTFMode mode)
+		void VirtualSource::UpdateSpatialisationMode(const SpatMode mode)
 		{
-			lock_guard<mutex> lock(tuneInMutex);
-			switch (mode)
-			{
-			case HRTFMode::quality:
-			{
-				mSource->SetSpatializationMode(Binaural::TSpatializationMode::HighQuality);
-				break;
-			}
-			case HRTFMode::performance:
-			{
-				mSource->SetSpatializationMode(Binaural::TSpatializationMode::HighPerformance);
-				break;
-			}
-			case HRTFMode::none:
-			{
-				mSource->SetSpatializationMode(Binaural::TSpatializationMode::NoSpatialization);
-				break;
-			}
-			default:
-			{
-				mSource->SetSpatializationMode(Binaural::TSpatializationMode::NoSpatialization);
-				break;
-			}
-			}
-		}
-
-		void VirtualSource::UpdateSpatialisationMode(const SPATConfig config)
-		{
-			mConfig.spatConfig = config;
+			mConfig.spatMode = mode;
 			if (isInitialised)
-				UpdateSpatialisationMode(config.GetMode(order));
+			{
+				lock_guard<mutex> lock(tuneInMutex);
+				switch (mode)
+				{
+				case SpatMode::quality:
+				{
+					mSource->SetSpatializationMode(Binaural::TSpatializationMode::HighQuality);
+					break;
+				}
+				case SpatMode::performance:
+				{
+					mSource->SetSpatializationMode(Binaural::TSpatializationMode::HighPerformance);
+					break;
+				}
+				case SpatMode::none:
+				{
+					mSource->SetSpatializationMode(Binaural::TSpatializationMode::NoSpatialization);
+					break;
+				}
+				default:
+				{
+					mSource->SetSpatializationMode(Binaural::TSpatializationMode::NoSpatialization);
+					break;
+				}
+				}
+			}
+
 			{
 				lock_guard<mutex> lock(*vWallMutex);
 				for (auto& it : mVirtualSources)
-					it.second.UpdateSpatialisationMode(config);
+					it.second.UpdateSpatialisationMode(mode);
 			}
 			{
 				lock_guard<mutex> lock(*vEdgeMutex);
 				for (auto& it : mVirtualEdgeSources)
-					it.second.UpdateSpatialisationMode(config);
+					it.second.UpdateSpatialisationMode(mode);
 			}
 		}
 
@@ -245,6 +243,21 @@ namespace RAC
 				mDiffractionModel = &btm;
 			}
 			UpdateDiffraction();
+		}
+
+		void VirtualSource::GetVirtualSources(std::vector<VirtualSource>& vSources)
+		{
+			{
+				lock_guard<mutex> lock(*vWallMutex);
+				for (auto& it : mVirtualSources)
+					it.second.GetVirtualSources(vSources);
+			}
+			{
+				lock_guard<mutex> lock(*vEdgeMutex);
+				for (auto& it : mVirtualEdgeSources)
+					it.second.GetVirtualSources(vSources);
+			}
+			vSources.push_back(*this);
 		}
 
 		void VirtualSource::ProcessAudio(const Buffer& data, matrix& reverbInput, Buffer& outputBuffer)
@@ -352,6 +365,101 @@ namespace RAC
 			}
 		}
 
+		void VirtualSource::ProcessAudioParallel(const Buffer& data, matrix& reverbInput, Buffer& outputBuffer)
+		{
+
+			//lock_guard<mutex> lock(*audioMutex);
+			if (isInitialised)
+			{
+#ifdef PROFILE_AUDIO_THREAD
+				BeginVirtualSource();
+#endif
+				if (diffraction)
+				{
+					{
+#ifdef PROFILE_AUDIO_THREAD
+						BeginDiffraction();
+#endif
+						ProcessDiffraction(data, bStore);
+#ifdef PROFILE_AUDIO_THREAD
+						EndDiffraction();
+#endif
+						if (reflection)
+						{
+#ifdef PROFILE_AUDIO_THREAD
+							BeginReflection();
+#endif
+							mFilter.ProcessAudio(bStore, bStore, mConfig.numFrames, mConfig.lerpFactor);
+#ifdef PROFILE_AUDIO_THREAD
+							EndReflection();
+#endif
+						}
+					}
+				}
+				else if (reflection)
+				{
+#ifdef PROFILE_AUDIO_THREAD
+					BeginReflection();
+#endif
+					mFilter.ProcessAudio(data, bStore, mConfig.numFrames, mConfig.lerpFactor);
+#ifdef PROFILE_AUDIO_THREAD
+					EndReflection();
+#endif
+				}
+#ifdef PROFILE_AUDIO_THREAD
+				BeginAirAbsorption();
+#endif
+				mAirAbsorption.ProcessAudio(bStore, bStore, mConfig.numFrames, mConfig.lerpFactor);
+#ifdef PROFILE_AUDIO_THREAD
+				EndAirAbsorption();
+#endif
+				if (mCurrentGain == mTargetGain)
+				{
+					for (int i = 0; i < mConfig.numFrames; i++)
+						bInput[i] = static_cast<float>(bStore[i] * mCurrentGain);
+				}
+				else
+				{
+					for (int i = 0; i < mConfig.numFrames; i++)
+					{
+						bInput[i] = static_cast<float>(bStore[i] * mCurrentGain);
+						mCurrentGain = Lerp(mCurrentGain, mTargetGain, mConfig.lerpFactor);
+					}
+				}
+
+#ifdef PROFILE_AUDIO_THREAD
+				Begin3DTI();
+#endif
+				{
+					lock_guard<mutex> lock(tuneInMutex);
+					mSource->SetBuffer(bInput);
+
+					if (feedsFDN)
+					{
+						{
+							mSource->ProcessAnechoic(bMonoOutput, bOutput.left, bOutput.right);
+							for (int i = 0; i < mConfig.numFrames; i++)
+								reverbInput[i][mFDNChannel] += static_cast<Real>(bMonoOutput[i]);
+						}
+					}
+					else
+						mSource->ProcessAnechoic(bOutput.left, bOutput.right);
+				}
+#ifdef PROFILE_AUDIO_THREAD
+				End3DTI();
+#endif
+				int j = 0;
+				for (int i = 0; i < mConfig.numFrames; i++)
+				{
+					outputBuffer[j++] += static_cast<Real>(bOutput.left[i]);
+					outputBuffer[j++] += static_cast<Real>(bOutput.right[i]);
+				}
+#ifdef PROFILE_AUDIO_THREAD
+				EndVirtualSource();
+#endif
+			}
+		}
+
 		void VirtualSource::Init(const VirtualSourceData& data)
 		{
 			// audioMutex already locked
@@ -381,11 +489,10 @@ namespace RAC
 				mSource->EnablePropagationDelay();
 			}
 
-			//Select spatialisation mode
-			HRTFMode mode = mConfig.spatConfig.GetMode(order);
-			UpdateSpatialisationMode(mode);
-
 			isInitialised = true;
+
+			//Select spatialisation mode
+			UpdateSpatialisationMode(mConfig.spatMode);
 		}
 
 		void VirtualSource::Update(const VirtualSourceData& data, int& fdnChannel)

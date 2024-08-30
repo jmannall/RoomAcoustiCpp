@@ -26,29 +26,29 @@
     <ClCompile Include="source\FirstDLL.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\DiffractionPlugin\codegen\lib\myNN\source\elementwiseOperationInPlace.cpp">
-      <Filter>Source Files\NN</Filter>
-    </ClCompile>
-    <ClCompile Include="..\DiffractionPlugin\codegen\lib\myNN\source\myBestNN.cpp">
-      <Filter>Source Files\NN</Filter>
-    </ClCompile>
-    <ClCompile Include="..\DiffractionPlugin\codegen\lib\myNN\source\myNN_data.cpp">
-      <Filter>Source Files\NN</Filter>
-    </ClCompile>
-    <ClCompile Include="..\DiffractionPlugin\codegen\lib\myNN\source\myNN_initialize.cpp">
-      <Filter>Source Files\NN</Filter>
-    </ClCompile>
-    <ClCompile Include="..\DiffractionPlugin\codegen\lib\myNN\source\myNN_terminate.cpp">
-      <Filter>Source Files\NN</Filter>
-    </ClCompile>
-    <ClCompile Include="..\DiffractionPlugin\codegen\lib\myNN\source\mySmallNN.cpp">
-      <Filter>Source Files\NN</Filter>
-    </ClCompile>
-    <ClCompile Include="..\DiffractionPlugin\codegen\lib\myNN\source\predict.cpp">
-      <Filter>Source Files\NN</Filter>
-    </ClCompile>
     <ClCompile Include="Test.cpp">
       <Filter>UnitTest</Filter>
+    </ClCompile>
+    <ClCompile Include="..\RoomAcoustiCpp\codegen\lib\myNN\source\elementwiseOperationInPlace.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\RoomAcoustiCpp\codegen\lib\myNN\source\myBestNN.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\RoomAcoustiCpp\codegen\lib\myNN\source\myNN_data.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\RoomAcoustiCpp\codegen\lib\myNN\source\myNN_initialize.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\RoomAcoustiCpp\codegen\lib\myNN\source\myNN_terminate.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\RoomAcoustiCpp\codegen\lib\myNN\source\mySmallNN.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\RoomAcoustiCpp\codegen\lib\myNN\source\predict.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -58,41 +58,41 @@
     <ClInclude Include="include\FirstDLL.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\DiffractionPlugin\codegen\lib\myNN\include\anonymous_function.h">
-      <Filter>Header Files\NN</Filter>
+    <ClInclude Include="..\RoomAcoustiCpp\codegen\lib\myNN\include\anonymous_function.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\DiffractionPlugin\codegen\lib\myNN\include\elementwiseOperationInPlace.h">
-      <Filter>Header Files\NN</Filter>
+    <ClInclude Include="..\RoomAcoustiCpp\codegen\lib\myNN\include\elementwiseOperationInPlace.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\DiffractionPlugin\codegen\lib\myNN\include\myBestNN.h">
-      <Filter>Header Files\NN</Filter>
+    <ClInclude Include="..\RoomAcoustiCpp\codegen\lib\myNN\include\myBestNN.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\DiffractionPlugin\codegen\lib\myNN\include\myNN_data.h">
-      <Filter>Header Files\NN</Filter>
+    <ClInclude Include="..\RoomAcoustiCpp\codegen\lib\myNN\include\myNN_data.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\DiffractionPlugin\codegen\lib\myNN\include\myNN_initialize.h">
-      <Filter>Header Files\NN</Filter>
+    <ClInclude Include="..\RoomAcoustiCpp\codegen\lib\myNN\include\myNN_initialize.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\DiffractionPlugin\codegen\lib\myNN\include\myNN_internal_types.h">
-      <Filter>Header Files\NN</Filter>
+    <ClInclude Include="..\RoomAcoustiCpp\codegen\lib\myNN\include\myNN_internal_types.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\DiffractionPlugin\codegen\lib\myNN\include\myNN_terminate.h">
-      <Filter>Header Files\NN</Filter>
+    <ClInclude Include="..\RoomAcoustiCpp\codegen\lib\myNN\include\myNN_terminate.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\DiffractionPlugin\codegen\lib\myNN\include\myNN_types.h">
-      <Filter>Header Files\NN</Filter>
+    <ClInclude Include="..\RoomAcoustiCpp\codegen\lib\myNN\include\myNN_types.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\DiffractionPlugin\codegen\lib\myNN\include\mySmallNN.h">
-      <Filter>Header Files\NN</Filter>
+    <ClInclude Include="..\RoomAcoustiCpp\codegen\lib\myNN\include\mySmallNN.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\DiffractionPlugin\codegen\lib\myNN\include\predict.h">
-      <Filter>Header Files\NN</Filter>
+    <ClInclude Include="..\RoomAcoustiCpp\codegen\lib\myNN\include\predict.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\DiffractionPlugin\codegen\lib\myNN\include\rtwtypes.h">
-      <Filter>Header Files\NN</Filter>
+    <ClInclude Include="..\RoomAcoustiCpp\codegen\lib\myNN\include\rtwtypes.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\DiffractionPlugin\codegen\lib\myNN\include\tmwtypes.h">
-      <Filter>Header Files\NN</Filter>
+    <ClInclude Include="..\RoomAcoustiCpp\codegen\lib\myNN\include\tmwtypes.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

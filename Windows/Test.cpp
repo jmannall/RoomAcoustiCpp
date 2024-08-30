@@ -13,6 +13,7 @@
 #include "Spatialiser/Wall.h"
 #include "Spatialiser/Reverb.h"
 #include "Spatialiser/VirtualSource.h"
+#include "Spatialiser/Source.h"
 
 #include "Unity/Debug.h"
 
@@ -530,6 +531,180 @@ namespace RAC
 		}
 	}
 
+#include <omp.h>
+#include <iostream>
+
+	TEST_CLASS(Test_OMP)
+	{
+	public:
+
+		void test_openmp() {
+#pragma omp parallel
+			{
+				int thread_id = omp_get_thread_num();
+				std::cout << "Hello from thread " << thread_id << std::endl;
+			}
+		}
+
+		TEST_METHOD(OMP)
+		{
+			std::ofstream out("OMP.txt");
+			std::streambuf* coutbuf = std::cout.rdbuf(); //save old buf
+			std::cout.rdbuf(out.rdbuf()); //redirect std::cout to out.txt!
+
+			// Test with multiple threads
+			omp_set_num_threads(8);
+			test_openmp();
+
+			// Test with a single thread
+			omp_set_num_threads(1);
+			test_openmp();
+
+			std::cout.rdbuf(out.rdbuf()); //redirect std::cout to out.txt!
+		}
+
+
+	};
+
+	TEST_CLASS(Test_ProcessAudio)
+	{
+	public:
+
+		Source CreateSource(Binaural::CCore core, Config config)
+		{
+			vec3 sPosition = vec3(1.0, 1.6, 1.0);
+			vec3 lPosition = vec3(0.0, 1.6, 0.0);
+
+			vec3 normal = vec3(0.0, 1.0, 0.0);
+			std::vector<Real> in = { 0.3, 0.15, 0.2, 0.18, 0.1 };
+			std::vector<Real> vData = { -10.0, 0.0, -10.0, 0.0, 0.0, 10.0, 10.0, 0.0, -10.0 };
+			Absorption absorption = Absorption(in);
+			Wall wall = Wall(normal, &vData[0], absorption);
+			Plane plane = Plane(0, wall);
+
+			core.CreateListener();
+			CTransform lTransform;
+			lTransform.SetPosition(CVector3(lPosition.x, lPosition.y, lPosition.z));
+			core.GetListener()->SetListenerTransform(lTransform);
+
+			Source source = Source(&core, config);
+
+			VirtualSourceDataMap vSources;
+			VirtualSourceData vSource = VirtualSourceData(5);
+			vSource.SetPreviousPlane(vec4(plane.GetD(), plane.GetNormal()));
+
+			vSource.Valid();
+			vSource.AddPlaneID(0);
+
+			vec3 position;
+			plane.ReflectPointInPlane(position, sPosition);
+			vSource.SetTransform(position);
+
+			Absorption& abs = vSource.GetAbsorptionRef();
+			abs = absorption;
+
+			vSource.SetDistance(lPosition);
+			vSource.Visible(false);
+
+			for (int i = 0; i < 10; i++)
+			{
+				VirtualSourceData v = vSource;
+				v.AddPlaneID(i);
+				vSources.insert_or_assign(v.GetKey(), v);
+			}
+
+			SourceData data = SourceData(0, vec3(1.0, 1.6, 1.0));
+			data.visible = true;
+			data.vSources = vSources;
+
+			source.UpdateData(data);
+			source.Update(sPosition, vec4(0.0, 0.0, 0.0, 1.0), (sPosition - lPosition).Length());
+
+			return source;
+		}
+
+		TEST_METHOD(Tree)
+		{
+			Config config;
+			config.fs = 48000;
+			Binaural::CCore core = CreateCore(config.fs);
+
+			Source source = CreateSource(core, config);
+
+			size_t numFrames = 2048;
+			size_t numFDNChannels = 12;
+			Buffer mInputBuffer = Buffer(numFrames);
+			Buffer mOutputBuffer = Buffer(2 * numFrames); // Stereo output buffer
+			matrix mReverbInput = matrix(numFrames, numFDNChannels);
+
+			mInputBuffer[0] = 1.0;
+
+			source.ProcessAudio(mInputBuffer, mReverbInput, mOutputBuffer);
+			source.ProcessAudio(mInputBuffer, mReverbInput, mOutputBuffer);
+		}
+
+		// Seems to be an issue with the omp and test environment.
+		TEST_METHOD(Parallel)
+		{
+			std::ofstream out("Parallel.txt");
+			std::streambuf* coutbuf = std::cout.rdbuf(); //save old buf
+			std::cout.rdbuf(out.rdbuf()); //redirect std::cout to out.txt!
+
+			Config config;
+			config.fs = 48000;
+			Binaural::CCore core = CreateCore(config.fs);
+
+			Source source = CreateSource(core, config);
+
+			size_t numFrames = 2048;
+			size_t numFDNChannels = 12;
+			Buffer mInputBuffer = Buffer(numFrames);
+			Buffer mOutputBuffer = Buffer(2 * numFrames); // Stereo output buffer
+			matrix mReverbInput = matrix(numFrames, numFDNChannels);
+
+			mInputBuffer[0] = 1.0;
+
+			source.ProcessAudioParallel(mInputBuffer, mReverbInput, mOutputBuffer);
+			source.ProcessAudioParallel(mInputBuffer, mReverbInput, mOutputBuffer);
+
+			std::cout.rdbuf(out.rdbuf()); //redirect std::cout to out.txt!
+		}
+
+		TEST_METHOD(Compare)
+		{
+			Config config;
+			config.fs = 48000;
+			Binaural::CCore core = CreateCore(config.fs);
+
+			Source source = CreateSource(core, config);
+
+			size_t numFrames = 2048;
+			size_t numFDNChannels = 12;
+			Buffer mInputBuffer = Buffer(numFrames);
+			Buffer mOutputBuffer = Buffer(2 * numFrames); // Stereo output buffer
+			matrix mReverbInput = matrix(numFrames, numFDNChannels);
+
+			mInputBuffer[0] = 1.0;
+
+			source.ProcessAudioParallel(mInputBuffer, mReverbInput, mOutputBuffer);
+			source.ProcessAudio(mInputBuffer, mReverbInput, mOutputBuffer);
+
+			Source source2 = CreateSource(core, config);
+
+			Buffer mOutputBuffer2 = Buffer(2 * numFrames); // Stereo output buffer
+
+			source2.ProcessAudio(mInputBuffer, mReverbInput, mOutputBuffer2);
+			source2.ProcessAudio(mInputBuffer, mReverbInput, mOutputBuffer2);
+			
+			for (int i = 0; i < mOutputBuffer.Length(); i++)
+			{
+				std::string error = "Incorrect Sample: " + Unity::IntToStr(i);
+				std::wstring werror = std::wstring(error.begin(), error.end());
+				const wchar_t* werrorchar = werror.c_str();
+				Assert::AreEqual(mOutputBuffer[i], mOutputBuffer2[i], 0.0001, werrorchar);
+			}
+		}
+	};
 	
 	TEST_CLASS(Test_Coefficients)
 	{
@@ -586,48 +761,51 @@ namespace RAC
 
 		TEST_METHOD(Operators)
 		{
-			std::vector<Real> a = { 2.0, 3.0 };
-			std::vector<Real> b = { 5.0, 2.0 };
+			std::vector<Real> a = { 0.5, 0.7 };
+			std::vector<Real> b = { 0.5, 0.8 };
 
-			Absorption c1 = Absorption(a, 2.0);
-			Absorption c2 = Absorption(b, 5.0);
+			Absorption c1 = Absorption(a);
+			Absorption c2 = Absorption(b);
+			c1.mArea = 2.0;
+			c2.mArea = 5.0;
 
 			Absorption out = Absorption(c1.Length());
-			out[0] = 7.0;
-			out[1] = 5.0;
+			out[0] = sqrt(1.0 - a[0]) + sqrt(1.0 - b[0]);
+			out[1] = sqrt(1.0 - a[1]) + sqrt(1.0 - b[1]);
 			out.mArea = 7.0;
+			Absorption c = c1 + c2;
 			Assert::AreEqual(out, c1 + c2, L"Error: Incorrect addition");
 
-			out[0] = -3.0;
-			out[1] = 1.0;
+			out[0] = sqrt(1.0 - a[0]) - sqrt(1.0 - b[0]);
+			out[1] = sqrt(1.0 - a[1]) - sqrt(1.0 - b[1]);
 			out.mArea = -3.0;
 			Assert::AreEqual(out, c1 - c2, L"Error: Incorrect subtraction");
 
-			out[0] = 10.0;
-			out[1] = 6.0;
+			out[0] = sqrt(1.0 - a[0]) * sqrt(1.0 - b[0]);
+			out[1] = sqrt(1.0 - a[1]) * sqrt(1.0 - b[1]);
 			out.mArea = 2.0;
 			Assert::AreEqual(out, c1 * c2, L"Error: Incorrect multiplication");
 
-			out[0] = 0.4;
-			out[1] = 1.5;
+			out[0] = sqrt(1.0 - a[0]) / sqrt(1.0 - b[0]);
+			out[1] = sqrt(1.0 - a[1]) / sqrt(1.0 - b[1]);
 			Assert::AreEqual(out, c1 / c2, L"Error: Incorrect division");
 
 			Real x = 2.0;
 
-			out[0] = 4.0;
-			out[1] = 5.0;
+			out[0] = sqrt(1.0 - a[0]) + x;
+			out[1] = sqrt(1.0 - a[1]) + x;
 			Assert::AreEqual(out, c1 + x, L"Error: Incorrect factor addition");
 
-			out[0] = 0.0;
-			out[1] = -1.0;
+			out[0] = x - sqrt(1.0 - a[0]);
+			out[1] = x - sqrt(1.0 - a[1]);
 			Assert::AreEqual(out, x - c1, L"Error: Incorrect factor subtraction");
 
-			out[0] = 4.0;
-			out[1] = 6.0;
+			out[0] = sqrt(1.0 - a[0]) * x;
+			out[1] = sqrt(1.0 - a[1]) * x;
 			Assert::AreEqual(out, c1 * x, L"Error: Incorrect factor multiplication");
 
-			out[0] = 1.0;
-			out[1] = 1.5;
+			out[0] = sqrt(1.0 - a[0]) / x;
+			out[1] = sqrt(1.0 - a[1]) / x;
 			Assert::AreEqual(out, c1 / x, L"Error: Incorrect factor division");
 		}
 	};
@@ -646,29 +824,41 @@ namespace RAC
 			Binaural::CCore core = CreateCore(config.fs);
 
 			ReverbSource reverbSource(&core, config);
-			std::vector<Real> in = { 0.7, 0.7, 0.7, 0.7, 0.7 };
-			Absorption absorption1(in, 5.0);
-			in = { 0.5, 0.5, 0.3, 0.3, 0.4 };
-			Absorption absorption2(in, 2.0);
-			in = { 0.1, 0.2, 0.25, 0.1, 0.2 };
-			Absorption absorption3(in, 3.0);
 
-			Absorption test = absorption2;
+			std::vector<Real> in = { 0.7, 0.7, 0.7, 0.7, 0.7 };
+			Absorption absorption1(in);
+			absorption1.mArea = 5.0;
+
+			in = { 0.5, 0.5, 0.3, 0.3, 0.4 };
+			Absorption absorption2(in);
+			absorption2.mArea = 2.0;
+
+			in = { 0.1, 0.2, 0.25, 0.1, 0.2 };
+			Absorption absorption3(in);
+			absorption3.mArea = 3.0;
+
+			//Absorption test = absorption2;
 			reverbSource.UpdateReflectionFilter(absorption1);
 			TestReverbSource(reverbSource, absorption1);
 
 			reverbSource.UpdateReflectionFilter(absorption2);
 			in = { 9.0 / 14.0, 9.0 / 14.0, 41.0 / 70.0, 41.0 / 70.0, 43.0 / 70.0 };
-			TestReverbSource(reverbSource, Absorption(in, 7.0));
+			Absorption test(in);
+			test.mArea = 7.0;
+			TestReverbSource(reverbSource, test);
 
 			reverbSource.UpdateReflectionFilter(absorption3);
 			in = { 0.48, 0.51, 0.485, 0.44, 0.49 };
-			TestReverbSource(reverbSource, Absorption(in, 10.0));
+			test.Update(in);
+			test.mArea = 10.0;
+			TestReverbSource(reverbSource, test);
 
 			absorption1.mArea = -absorption1.mArea;
 			reverbSource.UpdateReflectionFilter(absorption1);
 			in = { 0.26, 0.32, 0.27, 0.18, 0.28 };
-			TestReverbSource(reverbSource, Absorption(in, 5.0));
+			test.Update(in);
+			test.mArea = 5.0;
+			TestReverbSource(reverbSource, test);
 
 			absorption2.mArea = -absorption2.mArea;
 			reverbSource.UpdateReflectionFilter(absorption2);
@@ -677,7 +867,9 @@ namespace RAC
 			absorption3.mArea = -absorption3.mArea;
 			reverbSource.UpdateReflectionFilter(absorption3);
 			in = { 0.0, 0.0, 0.0, 0.0, 0.0 };
-			TestReverbSource(reverbSource, Absorption(in, 0.0));
+			test.Update(in);
+			test.mArea = 0.0;
+			TestReverbSource(reverbSource, test);
 
 			RemoveCore(core);
 		}
@@ -1110,7 +1302,7 @@ namespace RAC
 			}
 		}
 
-		TEST_METHOD(ParalleliseInterpolateBuffer)
+		/*TEST_METHOD(ParalleliseInterpolateBuffer)
 		{
 			Buffer current = Buffer(1e3);
 			Buffer target = Buffer(1e3);
@@ -1125,7 +1317,7 @@ namespace RAC
 
 			for (int i = 0; i < 1e4; i++)
 				Lerp(current, target, lerpFactor);
-		}
+		}*/
 
 		TEST_METHOD(InterpolateCoefficients)
 		{

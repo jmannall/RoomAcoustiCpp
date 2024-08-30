@@ -52,9 +52,10 @@ namespace RAC
 
 			bool LineRoomObstruction(const vec3& start, const vec3& end);
 			void LineRoomObstruction(const vec3& start, const vec3& end, bool& obstruction);
-			bool LineRoomObstruction(const vec3& start, const vec3& end, size_t currentWallID);
-			void LineRoomObstruction(const vec3& start, const vec3& end, size_t currentWallID, bool& obstruction);
-			bool LineRoomObstruction(const vec3& start, const vec3& end, size_t currentWallID1, size_t currentWallID2);
+			bool LineRoomObstruction(const vec3& start, const vec3& end, int currentPlaneID);
+			void LineRoomObstruction(const vec3& start, const vec3& end, int currentPlaneID, bool& obstruction);
+			bool LineRoomObstruction(const vec3& start, const vec3& end, int currentPlaneId1, int currentPlaneId2);
+			void LineRoomObstruction(const vec3& start, const vec3& end, int currentPlaneId1, int currentPlaneId2, bool& obstruction);
 
 			size_t FirstOrderDiffraction(const vec3& point, VirtualSourceDataMap& vSources);
 			size_t FirstOrderReflections(const vec3& point, VirtualSourceDataMap& vSources, size_t counter);

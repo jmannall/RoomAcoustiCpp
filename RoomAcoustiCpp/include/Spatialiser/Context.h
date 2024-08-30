@@ -66,9 +66,9 @@ namespace RAC
 			/**
 			* Updates the spatialisation mode for each component of the spatialiser.
 			*
-			* @param config The new spatialisation configuration.
+			* @param mode The new spatialisation mode.
 			*/
-			void UpdateSpatialisationMode(const SPATConfig config);
+			void UpdateSpatialisationMode(const SpatMode mode);
 
 			/**
 			* Stop the spatialiser running.
@@ -182,7 +182,7 @@ namespace RAC
 			* 
 			* @return The ID of the new wall.
 			*/
-			size_t InitWall(const vec3& normal, const Real* vData, Absorption& absorption);
+			size_t InitWall(const vec3& normal, const Real* vData, const Absorption& absorption);
 			
 			/**
 			* Updates the position of a wall.
@@ -193,6 +193,14 @@ namespace RAC
 			* @param numVertices The number of vertices in the wall.
 			*/
 			void UpdateWall(size_t id, const vec3& normal, const Real* vData);
+
+			/**
+			* Updates the absorption of a wall.
+			*
+			* @param id The ID of the wall to update.
+			* @param absorption The new absorption of the wall.
+			*/
+			void UpdateWallAbsorption(size_t id, const Absorption& absorption);
 
 			/**
 			* Removes a wall from the spatialiser.

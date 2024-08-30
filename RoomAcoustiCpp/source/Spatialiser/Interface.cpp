@@ -61,11 +61,11 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void UpdateSpatialisationMode(const SPATConfig config)
+		void UpdateSpatialisationMode(const SpatMode mode)
 		{
 			auto context = GetContext();
 			if (context)
-				context->UpdateSpatialisationMode(config);
+				context->UpdateSpatialisationMode(mode);
 		}
 
 		////////////////////////////////////////
@@ -171,7 +171,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		int InitWall(const vec3& normal, const Real* vData, Absorption& absorption)
+		int InitWall(const vec3& normal, const Real* vData, const Absorption& absorption)
 		{
 			auto context = GetContext();
 			if (context)
@@ -187,6 +187,15 @@ namespace RAC
 			auto context = GetContext();
 			if (context)
 				context->UpdateWall(id, normal, vData);
+		}
+
+		////////////////////////////////////////
+
+		void UpdateWallAbsorption(size_t id, const Absorption& absorption)
+		{
+			auto context = GetContext();
+			if (context)
+				context->UpdateWallAbsorption(id, absorption);
 		}
 
 		////////////////////////////////////////

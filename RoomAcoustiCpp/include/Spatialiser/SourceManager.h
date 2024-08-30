@@ -42,7 +42,7 @@ namespace RAC
 				Reset();
 			};
 
-			void UpdateSpatialisationMode(const SPATConfig config);
+			void UpdateSpatialisationMode(const SpatMode mode);
 			void UpdateDiffractionModel(const DiffractionModel model);
 
 			// Sources

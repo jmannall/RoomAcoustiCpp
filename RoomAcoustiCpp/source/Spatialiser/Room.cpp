@@ -80,12 +80,12 @@ namespace RAC
 			return;
 		}
 
-		void Room::AddEdge(const EdgeData& data)
+		void Room::AddEdge(const Edge& edge)
 		{
 			size_t id;
 			lock_guard<std::mutex> lock(mEdgeMutex);
 
-			if (IsCoplanarEdge(data))
+			if (IsCoplanarEdge(edge))
 				return;
 
 			if (!mEmptyEdgeSlots.empty()) // Assign edge to an existing ID
@@ -96,11 +96,12 @@ namespace RAC
 			else // Create a new ID
 				id = nextEdge++;
 
-			auto it = mWalls.find(data.id1);
+			IDPair ids = edge.GetWallIDs();
+			auto it = mWalls.find(ids.first);
 			if (it == mWalls.end()) { return; } // case: wall does not exist
 			else { it->second.AddEdge(id); } // case: wall does exist
 
-			it = mWalls.find(data.id2);
+			it = mWalls.find(ids.second);
 			if (it == mWalls.end()) { return; } // case: wall does not exist
 			else { it->second.AddEdge(id); } // case: wall does exist
 
@@ -108,40 +109,40 @@ namespace RAC
 			Debug::Log("Init Edge", Colour::Green);
 #endif
 
-			mEdges.insert_or_assign(id, Edge(data));
+			mEdges.insert_or_assign(id, edge);
 		}
 
 		void Room::InitEdges(const size_t id)
 		{
-			std::vector<EdgeData> data;
+			std::vector<Edge> edges;
 			lock_guard<std::mutex> lock(mWallMutex);
 			auto itA = mWalls.find(id);
 			if (itA != mWalls.end())
 			{
 				for (auto& itB : mWalls)
-					FindEdges(itA->second, itB.second, itA->first, itB.first, data);
-				for (auto& edge : data)
+					FindEdges(itA->second, itB.second, itA->first, itB.first, edges);
+				for (auto& edge : edges)
 					AddEdge(edge);
 			}
 		}
 
 		void Room::InitEdges(const size_t id, const std::vector<size_t>& IDsW)
 		{
-			std::vector<EdgeData> data;
+			std::vector<Edge> edges;
 			auto itA = mWalls.find(id);
 			if (itA != mWalls.end())
 			{
 				for (auto& itB : mWalls)
 				{
 					if (std::find(IDsW.begin(), IDsW.end(), itB.first) == IDsW.end())
-						FindEdges(itA->second, itB.second, itA->first, itB.first, data);
+						FindEdges(itA->second, itB.second, itA->first, itB.first, edges);
 				}
-				for (auto& edge : data)
+				for (auto& edge : edges)
 					AddEdge(edge);
 			}
 		}
 
-		void Room::FindEdges(const size_t idA, const size_t idB, std::vector<EdgeData>& data, std::vector<size_t>& IDs)
+		void Room::FindEdges(const size_t idA, const size_t idB, std::vector<Edge>& edges, std::vector<size_t>& IDs)
 		{
 			auto itA = mWalls.find(idA);
 			auto itB = mWalls.find(idB);
@@ -149,10 +150,10 @@ namespace RAC
 			std::vector<size_t> IDsB = itB->second.GetEdges();
 			std::set_intersection(IDsA.begin(), IDsA.end(), IDsB.begin(), IDsB.end(), std::back_inserter(IDs));
 			if (itA != mWalls.end() && itB != mWalls.end()) // case: walls exist
-				FindEdges(itA->second, itB->second, idA, idB, data);
+				FindEdges(itA->second, itB->second, idA, idB, edges);
 		}
 
-		void Room::FindEdges(const Wall& wallA, const Wall& wallB, const size_t idA, const size_t idB, std::vector<EdgeData>& data)
+		void Room::FindEdges(const Wall& wallA, const Wall& wallB, const size_t idA, const size_t idB, std::vector<Edge>& edges)
 		{
 			if (idA != idB)
 			{
@@ -161,14 +162,14 @@ namespace RAC
 				if (normalA != normalB)
 				{
 					if (normalA == -normalB)
-						FindParallelEdges(wallA, wallB, idA, idB, data);
+						FindParallelEdges(wallA, wallB, idA, idB, edges);
 					else
-						FindEdge(wallA, wallB, idA, idB, data);
+						FindEdge(wallA, wallB, idA, idB, edges);
 				}
 			}
 		}
 
-		void Room::FindParallelEdges(const Wall& wallA, const Wall& wallB, const size_t idA, const size_t idB, std::vector<EdgeData>& data)
+		void Room::FindParallelEdges(const Wall& wallA, const Wall& wallB, const size_t idA, const size_t idB, std::vector<Edge>& edges)
 		{
 			if (wallA.GetD() == -wallB.GetD())
 			{
@@ -199,10 +200,7 @@ namespace RAC
 						bool validEdge = verticesA[idxA] == verticesB[idxB]; // Must be this way to ensure normals not twisted. (right hand rule) therefore one rotated up the edge one rotates down
 
 						if (validEdge) // Planes not twisted
-						{
-							EdgeData edge = EdgeData(verticesA[i], verticesA[idxA], wallA.GetNormal(), wallB.GetNormal(), idA, idB);
-							data.push_back(edge);
-						}
+							edges.emplace_back(verticesA[i], verticesA[idxA], wallA.GetNormal(), wallB.GetNormal(), idA, idB, wallA.GetPlaneID(), wallB.GetPlaneID());
 
 						if (i > 0)
 						{
@@ -215,10 +213,7 @@ namespace RAC
 							bool validEdge = verticesA[idxA] == verticesB[idxB]; // Must be this way to ensure normals not twisted. (right hand rule) therefore one rotated up the edge one rotates down
 
 							if (validEdge) // Planes not twisted
-							{
-								EdgeData edge = EdgeData(verticesA[i], verticesA[idxA], wallB.GetNormal(), wallA.GetNormal(), idB, idA);
-								data.push_back(edge);
-							}
+								edges.emplace_back(verticesA[i], verticesA[idxA], wallB.GetNormal(), wallA.GetNormal(), idB, idA, wallB.GetPlaneID(), wallA.GetPlaneID());
 						}
 					}
 				}
@@ -229,7 +224,7 @@ namespace RAC
 		// Vertices are defined using a right hand curl around the direction of the normal
 		// Edge face normals are defined using right hand curl rule around the direction of the edge (from base to top) that rotates from plane A to plane B through the exterior of the wedge.
 		// Walls defined as triangles (can only have one valid edge)
-		void Room::FindEdge(const Wall& wallA, const Wall& wallB, const size_t idA, const size_t idB, std::vector<EdgeData>& data)
+		void Room::FindEdge(const Wall& wallA, const Wall& wallB, const size_t idA, const size_t idB, std::vector<Edge>& edges)
 		{
 			std::vector<vec3> verticesA = wallA.GetVertices();
 			std::vector<vec3> verticesB = wallB.GetVertices();
@@ -291,14 +286,12 @@ namespace RAC
 
 							if (reflexAngle) // Check returns correct angle type
 							{
-								EdgeData edge = EdgeData(verticesA[i], verticesA[idxA], wallA.GetNormal(), wallB.GetNormal(), idA, idB);
-								data.push_back(edge);
+								edges.emplace_back(verticesA[i], verticesA[idxA], wallA.GetNormal(), wallB.GetNormal(), idA, idB, wallA.GetPlaneID(), wallB.GetPlaneID());
 								return;
 							}
 							else
 							{
-								EdgeData edge = EdgeData(verticesA[i], verticesA[idxA], wallB.GetNormal(), wallA.GetNormal(), idB, idA);
-								data.push_back(edge);
+								edges.emplace_back(verticesA[i], verticesA[idxA], wallB.GetNormal(), wallA.GetNormal(), idB, idA, wallB.GetPlaneID(), wallA.GetPlaneID());
 								return;
 							}
 						}
@@ -351,15 +344,15 @@ namespace RAC
 				lock_guard<std::mutex> lock(mEdgeMutex);
 				for (auto& itE : mEdges)
 				{
-					std::vector<size_t> ids = itE.second.GetWallIDs();
-					std::vector<EdgeData> data;
+					IDPair ids = itE.second.GetWallIDs();
+					std::vector<Edge> edges;
 					std::vector<size_t> IDs;
-					FindEdges(ids[0], ids[1], data, IDs);
+					FindEdges(ids.first, ids.second, edges, IDs);
 
-					if (data.size() == 1)
-						UpdateEdge(IDs[0], data[0]);
-					else if (data.size() > 1)
-						UpdateEdges(IDs, data);
+					if (edges.size() == 1)
+						UpdateEdge(IDs[0], edges[0]);
+					else if (edges.size() > 1)
+						UpdateEdges(IDs, edges);
 					else
 						RemoveEdge(itE.first);
 				}
