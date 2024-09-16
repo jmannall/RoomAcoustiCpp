@@ -58,7 +58,7 @@ namespace RAC
 		public:
 
 			// Load and Destroy
-			VirtualSourceData(size_t numBands) : valid(false), visible(false), feedsFDN(false), mFDNChannel(-1), order(0), reflection(false), diffraction(false), key(""), mAbsorption(numBands), distance(1.0) {};
+			VirtualSourceData(size_t numBands) : valid(false), visible(false), feedsFDN(false), mFDNChannel(-1), order(0), reflection(false), diffraction(false), key(""), mAbsorption(numBands), distance(0.0) {};
 			~VirtualSourceData() { /*Clear();*/ };
 
 			// Plane

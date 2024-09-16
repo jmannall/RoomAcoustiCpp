@@ -144,7 +144,6 @@ namespace RAC
 
 		////////////////////////////////////////
 
-#pragma optimize("", off)
 		// Fast, minimum storage ray/triangle intersection. Möller, Trumbore. 2005
 		bool IntersectTriangle(const vec3& v1, const vec3& v2, const vec3& v3, const vec3& origin, const vec3& dir)
 		{
@@ -230,6 +229,5 @@ namespace RAC
 		{
 			return IntersectTriangle(mVertices[0], mVertices[1], mVertices[2], start, start - end);
 		}
-#pragma optimise("", on)
 	}
 }

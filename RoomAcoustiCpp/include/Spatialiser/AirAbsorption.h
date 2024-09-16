@@ -75,6 +75,18 @@ namespace RAC
 			}
 
 			/**
+			* Updates the filter coefficients
+			* 
+			* @param distance The new distance
+			*/
+			inline void UpdateParameters(const Real distance)
+			{
+				targetD = distance;
+				currentD = distance;
+				UpdateParameters();
+			}
+
+			/**
 			* Gets the current distance
 			*
 			* @return The current distance
@@ -99,6 +111,11 @@ namespace RAC
 			*/
 			void ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const int numFrames, const Real lerpFactor);
 						
+			/**
+			* Resets the filter buffers
+			*/
+			inline void ClearBuffers() { x = 0.0; y = 0.0; }
+
 		private:
 			/**
 			* Air absorption constant

@@ -15,6 +15,7 @@
 // Spatialiser headers
 #include "Spatialiser/Types.h"
 #include "Spatialiser/Wall.h"
+#include "Spatialiser/AirAbsorption.h"
 
 // Unity headers
 #include "Unity/Profiler.h"
@@ -60,6 +61,7 @@ namespace RAC
 				idx = 0; 
 				mBuffer.ResetBuffer();
 				mAbsorptionFilter.ClearBuffers();
+				mAirAbsorption.ClearBuffers();
 			}
 
 			// Getters
@@ -74,6 +76,7 @@ namespace RAC
 			Config mConfig;
 			Buffer mBuffer;
 			GraphicEQ mAbsorptionFilter;
+			AirAbsorption mAirAbsorption;
 			
 			//std::mutex* mBufferMutex;
 			std::shared_ptr<std::mutex> mBufferMutex;

@@ -7,6 +7,9 @@
 // C++ headers
 #include <algorithm>
 
+// Common headers
+#include "Common/Vec3.h"
+
 // Spatialiser headers
 #include "Spatialiser/ImageEdge.h"
 
@@ -28,7 +31,6 @@ namespace RAC
 			reverbAbsorptions = std::vector<Absorption>(reverbDirections.size(), Absorption(numAbsorptionBands));
 		}
 
-#pragma optimize( "", off )
 		void ImageEdge::RunIEM()
 		{
 #ifdef PROFILE_BACKGROUND_THREAD
@@ -164,7 +166,7 @@ namespace RAC
 						if (start != intersection) // case: point on edge (consecutive intersections are identical)
 							return true;
 
-						if (itW->second.VertexMatch(intersection))  // case: point on corner (will be trigger twice)
+						if (itW->second.VertexMatch(intersection))  // case: point on corner (will be triggered twice)
 							absorption *= INV_SQRT_3;
 						else
 							absorption *= 0.5;					
@@ -218,7 +220,7 @@ namespace RAC
 						idx1--; idx2--;
 					}
 					else
-						valid = false;
+						return false;
 				}
 				else
 				{
@@ -229,9 +231,28 @@ namespace RAC
 						idx1--; idx2--;
 					}
 					else
-						valid = false;
+						return false;
 				}
 			}
+
+			if (!valid)
+				return false;
+
+			if (intersections.size() < 4)
+				return valid;
+
+			int count = 0;
+			for (int i = 0; i < intersections.size() - 1; i++)
+			{
+				if (intersections[i] == intersections[i + 1])
+					count++;
+				else
+					count = 0;
+
+				if (count > 2)
+					return false;
+			}
+
 			return valid;
 		}
 
@@ -510,7 +531,7 @@ namespace RAC
 				for (const auto& it : mPlanes)
 				{
 					bool rValid = it.second.GetRValid();
-					for (VirtualSourceData& vS : sp[prevRefIdx])
+					for (const VirtualSourceData& vS : sp[prevRefIdx])
 					{
 						// HOD reflections
 						if (!vS.diffraction)
@@ -555,27 +576,6 @@ namespace RAC
 							// Check valid intersections
 							if (!FindIntersections(intersections, vSource, refIdx))
 								continue;
-
-							auto match = std::adjacent_find(intersections.begin(), intersections.end());
-							while (match != intersections.end())
-							{
-								// is edge or corner
-								match++;
-								auto matchTemp = std::adjacent_find(match, intersections.end());
-
-								if (match == matchTemp)
-								{
-									// is corner
-									// vSource.ThirdAbsorption();
-								}
-								else
-								{
-									// is edge
-									// vSource.HalveAbsorotion();
-								}
-							}
-
-
 
 							// Check for obstruction
 							bool obstruction = LineRoomObstruction(intersections[refIdx], mListenerPosition, it.first);
@@ -711,7 +711,10 @@ namespace RAC
 				}
 #endif
 				if (mIEMConfig.reflectionDiffraction == DiffractionSound::none)
+				{
+					sp[refIdx].resize(counter, VirtualSourceData(numAbsorptionBands));
 					continue;
+				}
 #ifdef PROFILE_BACKGROUND_THREAD
 				switch (refOrder)
 				{
@@ -734,7 +737,7 @@ namespace RAC
 						continue;
 
 					EdgeZone rZone = it.second.GetRZone();
-					for (VirtualSourceData& vS : sp[prevRefIdx])
+					for (const VirtualSourceData& vS : sp[prevRefIdx])
 					{
 						if (vS.diffraction)
 							continue;
@@ -825,6 +828,5 @@ namespace RAC
 				sp[refIdx].resize(counter, VirtualSourceData(numAbsorptionBands));
 			}
 		}
-#pragma optimize( "", on )
 	}
 }
