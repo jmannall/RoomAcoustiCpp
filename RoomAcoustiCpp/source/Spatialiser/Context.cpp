@@ -250,14 +250,29 @@ namespace RAC
 #ifdef DEBUG_UPDATE
 			Debug::Log("Update Source", Colour::Yellow);
 #endif
-			Real distance;
+			Real distance, radius;
 			{
 				lock_guard<mutex> lock(tuneInMutex);
 				distance = (position - listenerPosition).Length();
+				radius = mListener->GetHeadRadius();
 			}
 
-			// Update source position, orientation and virtual sources
-			mSources->Update(id, position, orientation, distance);
+			// Ensure source is outside listener head radius
+			if (distance < radius)
+			{
+				vec3 newPosition = position;
+				if (distance == 0.0)
+					newPosition = mSources->GetSourcePosition(id);
+
+				newPosition = listenerPosition + UnitVector(newPosition - listenerPosition) * radius;
+
+				// Update source position, orientation and virtual sources
+				mSources->Update(id, newPosition, orientation, radius);
+			}
+			else
+				// Update source position, orientation and virtual sources
+				mSources->Update(id, position, orientation, distance);
+			
 		}
 
 		////////////////////////////////////////

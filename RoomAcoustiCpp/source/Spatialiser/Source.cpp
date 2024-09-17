@@ -528,5 +528,12 @@ namespace RAC
 			}
 			return false;
 		}
+
+		vec3 Source::GetPosition()
+		{
+			lock_guard<mutex> lock(tuneInMutex);
+			CTransform transform = mSource->GetCurrentSourceTransform();
+			return vec3(transform.GetPosition().x, transform.GetPosition().y, transform.GetPosition().z);
+		}
 	}
 }

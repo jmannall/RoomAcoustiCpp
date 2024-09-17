@@ -71,6 +71,13 @@ namespace RAC
 			}
 
 			void GetSourceData(std::vector<SourceData>& data);
+			inline vec3 GetSourcePosition(const size_t id)
+			{
+				lock_guard <mutex> lock(updateMutex); // Lock before locate to ensure not deleted between found and mutex lock
+				auto it = mSources.find(id);
+				if (it != mSources.end()) { return it->second.GetPosition(); } // case: source does exist
+				return vec3();
+			}
 
 			void UpdateSourceData(const SourceData& data);
 

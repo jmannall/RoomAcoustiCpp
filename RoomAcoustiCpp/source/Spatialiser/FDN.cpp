@@ -24,14 +24,14 @@ namespace RAC
 
 		//////////////////// FDN Channel class ////////////////////
 
-		Channel::Channel(const Config& config) : mT(1.0 / config.fs), mConfig(config), mAirAbsorption(config.fs), mAbsorptionFilter(mConfig.frequencyBands, mConfig.Q, mConfig.fs), idx(0)
+		Channel::Channel(const Config& config) : mT(1.0 / config.fs), mConfig(config), mAbsorptionFilter(mConfig.frequencyBands, mConfig.Q, mConfig.fs), idx(0)
 		{
 			mBufferMutex = std::make_shared<std::mutex>();
 			SetDelay();
 			SetAbsorption();
 		}
 
-		Channel::Channel(Real t, const Coefficients& T60, const Config& config) : mT(t), mConfig(config), mAirAbsorption(config.fs), mAbsorptionFilter(mConfig.frequencyBands, mConfig.Q, mConfig.fs), idx(0)
+		Channel::Channel(Real t, const Coefficients& T60, const Config& config) : mT(t), mConfig(config), mAbsorptionFilter(mConfig.frequencyBands, mConfig.Q, mConfig.fs), idx(0)
 		{
 			mBufferMutex = std::make_shared<std::mutex>();
 			SetDelay();
@@ -69,7 +69,6 @@ namespace RAC
 		{
 			std::lock_guard<std::mutex> lock(*mBufferMutex);
 			mBuffer.ResizeBuffer(round(mT * mConfig.fs));
-			mAirAbsorption.UpdateParameters(mT * SPEED_OF_SOUND);
 		}
 
 		Real Channel::GetOutput(const Real input)
@@ -79,7 +78,6 @@ namespace RAC
 			if (idx >= mBuffer.Length())
 				idx = 0;
 			Real out = mAbsorptionFilter.GetOutput(mBuffer[idx]);
-			out = mAirAbsorption.GetOutput(out);
 			mAbsorptionFilter.UpdateParameters(mConfig.lerpFactor);
 			mBuffer[idx] = input;
 			idx++;

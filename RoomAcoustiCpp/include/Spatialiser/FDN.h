@@ -61,7 +61,6 @@ namespace RAC
 				idx = 0; 
 				mBuffer.ResetBuffer();
 				mAbsorptionFilter.ClearBuffers();
-				mAirAbsorption.ClearBuffers();
 			}
 
 			// Getters
@@ -76,7 +75,6 @@ namespace RAC
 			Config mConfig;
 			Buffer mBuffer;
 			GraphicEQ mAbsorptionFilter;
-			AirAbsorption mAirAbsorption;
 			
 			//std::mutex* mBufferMutex;
 			std::shared_ptr<std::mutex> mBufferMutex;
