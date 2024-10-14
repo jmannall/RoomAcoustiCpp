@@ -68,7 +68,7 @@ namespace RAC
 
 			LPF::LPF(Path* path, int fs) : Model(path), fc(1000.0), targetGain(0.0), currentGain(0.0), filter(fc, fs)
 			{
-				m = new std::mutex();
+				m = std::make_shared<std::mutex>();
 				UpdateParameters();
 			}
 
@@ -113,7 +113,7 @@ namespace RAC
 
 			UDFA::UDFA(Path* path, int fs) : Model(path), numFilters(4), ft(numFilters + 1), gt(numFilters + 1), fi(numFilters), gi(numFilters), current(2 * numFilters + 1), target(2 * numFilters + 1)
 			{
-				m = new std::mutex();
+				m = std::make_shared<std::mutex>();
 				filters = std::vector<HighShelf>(numFilters, HighShelf(fs));
 				CalcF(fs);
 				UpdateParameters();
@@ -352,7 +352,7 @@ namespace RAC
 
 			NN::NN(Path* path) : Model(path), mInput{ 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f }, filter(48000), equal(false), current(5), target(5), params(5)
 			{
-				m = new std::mutex();
+				m = std::make_shared<std::mutex>();
 				UpdateParameters();
 			};
 
@@ -452,7 +452,7 @@ namespace RAC
 
 			UTD::UTD(Path* path, int fs) : Model(path), lrFilter(fs), k(4), g(4), gSB(4), target(4), current(4), params(4)
 			{
-				m = new std::mutex();
+				m = std::make_shared<std::mutex>();
 				auto test1 = lrFilter.fm / SPEED_OF_SOUND;
 				auto test2 = test1 * PI_2;
 				auto test3 = lrFilter.fm * PI_2 / SPEED_OF_SOUND;
@@ -591,7 +591,7 @@ namespace RAC
 
 			BTM::BTM(Path* path, int fs) : Model(path), firFilter(currentIr), lastPath()
 			{
-				m = new std::mutex();
+				m = std::make_shared<std::mutex>();
 				samplesPerMetre = fs * INV_SPEED_OF_SOUND;
 				UpdateParameters();
 			};

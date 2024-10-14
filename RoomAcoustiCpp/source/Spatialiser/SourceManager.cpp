@@ -40,6 +40,7 @@ namespace RAC
 				id = nextSource++;
 
 			mSources.insert_or_assign(id, source);
+			sourceData.emplace_back();
 			source.Deactivate();
 			return id;
 		}
@@ -60,19 +61,26 @@ namespace RAC
 				it.second.UpdateDiffractionModel(model);
 		}
 
-		void SourceManager::GetSourceData(std::vector<SourceData>& data)
+		std::vector<IDPositionPair> SourceManager::GetSourceData()
 		{
 			lock_guard <mutex> lock(updateMutex);
+			assert(sourceData.size() == mSources.size()); // Ensure sourceData is up to date (size matches mSources)
+			int i = 0;
 			for (auto& it : mSources)
-				data.push_back(it.second.GetData(it.first));
+			{
+				sourceData[i].first = it.first;
+				sourceData[i].second = it.second.GetPosition();
+				i++;
+			}
+			return sourceData;
 		}
 
-		void SourceManager::UpdateSourceData(const SourceData& data)
+		void SourceManager::UpdateSourceData(const size_t id, const bool visible, const VirtualSourceDataMap& vSources)
 		{
 			lock_guard <mutex> lock(updateMutex);
-			auto it = mSources.find(data.id);
+			auto it = mSources.find(id);
 			if (it != mSources.end()) // case: source does exist
-			{ it->second.UpdateData(data); }
+			{ it->second.UpdateData(visible, vSources); }
 		}
 
 		void SourceManager::ProcessAudio(const size_t id, const Buffer& data, matrix& reverbInput, Buffer& outputBuffer)

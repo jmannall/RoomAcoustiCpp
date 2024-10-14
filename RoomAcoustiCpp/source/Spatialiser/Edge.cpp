@@ -41,6 +41,9 @@ namespace RAC
 			else
 				mEdgeNormal = UnitVectorRound(mFaceNormals.first + mFaceNormals.second);
 
+			Real test1 = Dot(mFaceNormals.first, mFaceNormals.second);
+			Real test2 = acos(test1);
+
 			if (Dot(Cross(mFaceNormals.first, mFaceNormals.second), mEdgeVector) >= 0) // case true: angle is reflex
 				t = PI_1 + acos(Dot(mFaceNormals.first, mFaceNormals.second));
 			else

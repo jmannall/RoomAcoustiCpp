@@ -209,14 +209,12 @@ namespace RAC
 		{
 			input = matrix(mConfig.numFDNChannels, mConfig.numFrames);
 			out = rowvec(mConfig.numFDNChannels);
-			col = new Real[mConfig.numFrames];
 			InitSources();
 		}
 
 		Reverb::Reverb(Binaural::CCore* core, const Config& config, const vec& dimensions, const Coefficients& T60) : mFDN(T60, dimensions, config), mCore(core), mConfig(config), valid(false), runFDN(false), mTargetGain(0.0), mCurrentGain(0.0), mT60(T60)
 		{
 			input = matrix(mConfig.numFDNChannels, mConfig.numFrames);
-			col = new Real[mConfig.numFDNChannels];
 			InitSources();
 		}
 
@@ -273,7 +271,6 @@ namespace RAC
 		void Reverb::UpdateReflectionFilters(const std::vector<Absorption>& absorptions, const bool running)
 		{
 			{
-				lock_guard<mutex> lock(mFDNMutex);
 				if (valid && running)
 					mTargetGain = 1.0;
 				else
@@ -282,7 +279,10 @@ namespace RAC
 					if (mCurrentGain < EPS)
 					{
 						runFDN = false;
-						mFDN.Reset();
+						{
+							std::lock_guard<std::mutex> lock(mFDNMutex);
+							mFDN.Reset();
+						}
 						for (ReverbSource& source : mReverbSources)
 							source.Reset();
 						return;
@@ -309,36 +309,34 @@ namespace RAC
 #endif					
 				FlushDenormals();
 
+				if (mCurrentGain > mTargetGain + EPS || mCurrentGain < mTargetGain - EPS)
 				{
+					int j = 0;
 					lock_guard <mutex> lock(mFDNMutex);
-
-					if (mCurrentGain > mTargetGain + EPS || mCurrentGain < mTargetGain - EPS)
+					for (int i = 0; i < mConfig.numFrames; i++)
 					{
-						int j = 0;
-						for (int i = 0; i < mConfig.numFrames; i++)
+						mFDN.ProcessOutput(data.GetRow(i), mCurrentGain);
+						j = 0;
+						for (auto& source : mReverbSources)
 						{
-							mFDN.ProcessOutput(data.GetRow(i), mCurrentGain);
-							j = 0;
-							for (auto& source : mReverbSources)
-							{
-								source.AddInput(mFDN.GetOutput(j), i);
-								j++;
-							}
-							mCurrentGain = Lerp(mCurrentGain, mTargetGain, mConfig.lerpFactor);
+							source.AddInput(mFDN.GetOutput(j), i);
+							j++;
 						}
+						mCurrentGain = Lerp(mCurrentGain, mTargetGain, mConfig.lerpFactor);
 					}
-					else
+				}
+				else
+				{
+					int  j = 0;
+					lock_guard <mutex> lock(mFDNMutex);
+					for (int i = 0; i < mConfig.numFrames; i++)
 					{
-						int  j = 0;
-						for (int i = 0; i < mConfig.numFrames; i++)
+						mFDN.ProcessOutput(data.GetRow(i), mTargetGain);
+						j = 0;
+						for (auto& source : mReverbSources)
 						{
-							mFDN.ProcessOutput(data.GetRow(i), mTargetGain);
-							j = 0;
-							for (auto& source : mReverbSources)
-							{
-								source.AddInput(mFDN.GetOutput(j), i);
-								j++;
-							}
+							source.AddInput(mFDN.GetOutput(j), i);
+							j++;
 						}
 					}
 				}

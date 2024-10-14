@@ -22,12 +22,13 @@ namespace RAC
 	{
 
 		ImageEdge::ImageEdge(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const size_t numBands) :
-			mRoom(room), mSourceManager(sourceManager), mReverb(reverb), numAbsorptionBands(numBands)
+			mRoom(room), mSourceManager(sourceManager), mReverb(reverb), numAbsorptionBands(numBands), currentCycle(false)
 		{
 			sp = std::vector<std::vector<VirtualSourceData>>();
 			sp.push_back(std::vector<VirtualSourceData>());
 
-			reverbDirections = mReverb->GetReverbSourceDirections();
+			shared_ptr<Reverb> sharedReverb = mReverb.lock();
+			reverbDirections = sharedReverb->GetReverbSourceDirections();
 			reverbAbsorptions = std::vector<Absorption>(reverbDirections.size(), Absorption(numAbsorptionBands));
 		}
 
@@ -36,14 +37,23 @@ namespace RAC
 #ifdef PROFILE_BACKGROUND_THREAD
 			BeginCopyData();
 #endif
-			mPlanes = mRoom->GetPlanes();
-			mWalls = mRoom->GetWalls();
-			mEdges = mRoom->GetEdges();
+			shared_ptr<Room> sharedRoom = mRoom.lock();
+			if (sharedRoom->HasChanged())
+			{
+				// Recopy room data (planes, walls, edges
+				mPlanes = sharedRoom->GetPlanes();
+				mWalls = sharedRoom->GetWalls();
+				mEdges = sharedRoom->GetEdges();
+			}
 
-			mSources.clear();
-			mSourceManager->GetSourceData(mSources);
+			// mSources.clear();
+			shared_ptr<SourceManager> sharedSource = mSourceManager.lock();
+			mSources = sharedSource->GetSourceData();
 #ifdef PROFILE_BACKGROUND_THREAD
 			EndCopyData();
+#endif
+#ifdef PROFILE_BACKGROUND_THREAD
+			BeginIEM();
 #endif
 			{
 				lock_guard<std::mutex> lock(mMutex);
@@ -51,17 +61,32 @@ namespace RAC
 				mListenerPosition = mListenerPositionStore;
 				mIEMConfig = mIEMConfigStore;
 			}
+#ifdef PROFILE_BACKGROUND_THREAD
+			EndIEM();
+#endif
 
-			for (SourceData& source : mSources)
+			if (mVSources.size() != mSources.size())
+				mVSources.resize(mSources.size());
+			currentCycle = !currentCycle;
+
+			bool visible = false;
+			int i = 0;
+			for (IDPositionPair& source : mSources)
 			{
-				source.vSources.clear();
-				source.visible = ReflectPointInRoom(source.mPosition, source.vSources);
+				// source.vSources.clear();
+				visible = ReflectPointInRoom(source.second, mVSources[i]);
 
 #ifdef DEBUG_IEM_THREAD
 				Debug::Log("Source visible: " + BoolToStr(visible), Colour::White);
 				Debug::Log("Source " + std::to_string((int)it->first) + " has " + std::to_string(vSources.size()) + " visible virtual sources", Colour::White);
 #endif
-				mSourceManager->UpdateSourceData(source);
+#ifdef PROFILE_BACKGROUND_THREAD
+				BeginCopyData();
+#endif
+				sharedSource->UpdateSourceData(source.first, visible, mVSources[i]);
+#ifdef PROFILE_BACKGROUND_THREAD
+				EndCopyData();
+#endif
 			}
 		}
 
@@ -302,9 +327,17 @@ namespace RAC
 				if (!valid)
 					reverbAbsorptions[j] = 0.0;
 			}
-			mReverb->UpdateReflectionFilters(reverbAbsorptions, mIEMConfig.lateReverb);
+
 #ifdef PROFILE_BACKGROUND_THREAD
 			EndLateReverb();
+#endif
+#ifdef PROFILE_BACKGROUND_THREAD
+			BeginCopyData();
+#endif
+			std::shared_ptr<Reverb> sharedReverb = mReverb.lock();
+			sharedReverb->UpdateReflectionFilters(reverbAbsorptions, mIEMConfig.lateReverb);
+#ifdef PROFILE_BACKGROUND_THREAD
+			EndCopyData();
 #endif
 		}
 
@@ -336,7 +369,12 @@ namespace RAC
 #endif
 
 			if (mIEMConfig.order < 1)
+			{
+#ifdef PROFILE_BACKGROUND_THREAD
+				EndIEM();
+#endif
 				return lineOfSight;
+			}
 
 			if (sp.size() != mIEMConfig.order)
 				sp.resize(mIEMConfig.order, std::vector<VirtualSourceData>());
@@ -354,13 +392,19 @@ namespace RAC
 				sp[0].resize(counter, VirtualSourceData(numAbsorptionBands));
 
 				if (mIEMConfig.order < 2)
+				{
+#ifdef PROFILE_BACKGROUND_THREAD
+					EndIEM();
+#endif
 					return lineOfSight;
+				}
 
 				HigherOrderReflections(point, vSources);
 			}
 			else
 				sp[0].resize(counter, VirtualSourceData(numAbsorptionBands));
 
+			EraseOldEntries(vSources);
 #ifdef PROFILE_BACKGROUND_THREAD
 			EndIEM();
 #endif
@@ -426,6 +470,7 @@ namespace RAC
 				{
 					vSource.SetDistance(mListenerPosition);
 					vSource.Visible(feedsFDN);
+					vSource.lastUpdatedCycle = currentCycle;
 					vSources.insert_or_assign(vSource.GetKey(), vSource);
 				}
 			}
@@ -479,6 +524,7 @@ namespace RAC
 				{
 					vSource.SetDistance(mListenerPosition);
 					vSource.Visible(feedsFDN);
+					vSource.lastUpdatedCycle = currentCycle;
 					vSources.insert_or_assign(vSource.GetKey(), vSource);
 				}
 			}
@@ -591,6 +637,7 @@ namespace RAC
 							{
 								vSource.SetDistance(mListenerPosition);
 								vSource.Visible(feedsFDN);
+								vSource.lastUpdatedCycle = currentCycle;
 								vSources.insert_or_assign(vSource.GetKey(), vSource);
 							}
 						}
@@ -688,6 +735,7 @@ namespace RAC
 							{
 								vSource.SetDistance(mListenerPosition);
 								vSource.Visible(feedsFDN);
+								vSource.lastUpdatedCycle = currentCycle;
 								vSources.insert_or_assign(vSource.GetKey(), vSource);
 							}
 						}
@@ -805,6 +853,7 @@ namespace RAC
 						{
 							vSource.SetDistance(mListenerPosition);
 							vSource.Visible(feedsFDN);
+							vSource.lastUpdatedCycle = currentCycle;
 							vSources.insert_or_assign(vSource.GetKey(), vSource);
 						}
 					}
@@ -826,6 +875,17 @@ namespace RAC
 				}
 #endif
 				sp[refIdx].resize(counter, VirtualSourceData(numAbsorptionBands));
+			}
+		}
+
+		void ImageEdge::EraseOldEntries(VirtualSourceDataMap& vSources)
+		{
+			for (auto it = vSources.begin(); it != vSources.end();)
+			{
+				if (it->second.lastUpdatedCycle != currentCycle)
+					it = vSources.erase(it);
+				else
+					++it;
 			}
 		}
 	}

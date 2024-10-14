@@ -41,6 +41,7 @@ namespace RAC
 			vWallMutex = std::make_shared<std::mutex>();
 			vEdgeMutex = std::make_shared<std::mutex>();
 			dataMutex = std::make_shared<std::mutex>();
+			vSourcesMutex = std::make_shared<std::mutex>();
 
 			// Initialise source to core
 			{
@@ -224,7 +225,7 @@ namespace RAC
 			// Debug::Log("Total audio vSources: " + std::to_string(counter), Colour::Orange);
 #endif
 			lock_guard<std::mutex> lock(*dataMutex);
-			if (mData.visible || currentGain != 0.0f)
+			if (isVisible || currentGain != 0.0f)
 			{
 #ifdef PROFILE_AUDIO_THREAD
 				BeginSource();
@@ -288,7 +289,7 @@ namespace RAC
 	// Debug::Log("Total audio vSources: " + std::to_string(counter), Colour::Orange);
 #endif
 			lock_guard<std::mutex> lock(*dataMutex);
-			if (mData.visible || currentGain != 0.0f)
+			if (isVisible || currentGain != 0.0f)
 			{
 #ifdef PROFILE_AUDIO_THREAD
 				BeginSource();
@@ -351,18 +352,19 @@ namespace RAC
 #endif
 			}
 
-			VirtualSourceDataMap vSources;	
 			{
 				lock_guard<std::mutex>lock(*dataMutex);
 				mAirAbsorption.SetDistance(distance);
-				mData.mPosition = position;
-				if (mData.visible)
+				if (isVisible)
 					targetGain = 1.0f;
 				else
 					targetGain = 0.0f;
-				vSources = mData.vSources;
 			}
-			UpdateVirtualSources(vSources);
+			{
+				lock_guard<std::mutex>lock(*vSourcesMutex);
+				UpdateVirtualSources(mVSources);
+			}
+
 		}
 
 		void Source::UpdateVirtualSources(const VirtualSourceDataMap& data)

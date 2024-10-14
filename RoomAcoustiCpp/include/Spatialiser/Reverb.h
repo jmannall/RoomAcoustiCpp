@@ -55,7 +55,7 @@ namespace RAC
 			void ProcessAudio(Buffer& outputBuffer);
 
 			inline void Deactivate() { mSource = NULL; }
-			inline void Reset() { mReflectionFilter.ClearBuffers(); }
+			inline void Reset() { lock_guard<mutex> lock(*mMutex); mReflectionFilter.ClearBuffers(); }
 
 #ifdef _TEST
 #pragma optimize("", off)
@@ -116,12 +116,12 @@ namespace RAC
 
 			matrix input;
 			rowvec out;
-			Real* col;
 
-			bool valid;
-			bool runFDN;
-			Real mTargetGain;
-			Real mCurrentGain;
+			std::atomic<bool> valid;
+			std::atomic<bool> runFDN;
+			// bool runFDN;
+			std::atomic<Real> mTargetGain;
+			std::atomic<Real> mCurrentGain;
 
 			Coefficients mT60;
 

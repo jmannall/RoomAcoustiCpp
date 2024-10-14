@@ -38,33 +38,33 @@ namespace RAC
 
 		//////////////////// SourceData class ////////////////////
 
-		class SourceData
-		{
-		public:
+		//class SourceData
+		//{
+		//public:
 
-			// Load and Destroy
-			SourceData() : id(0), mPosition(vec3()), visible(false), vSources() {}
-			SourceData(const size_t ID, vec3 position) : id(ID), mPosition(position), visible(false), vSources() {}
-			SourceData(const SourceData& data) : id(data.id), mPosition(data.mPosition), visible(data.visible), vSources(data.vSources) {}
+		//	// Load and Destroy
+		//	SourceData() : id(0), mPosition(vec3()), visible(false) {}
+		//	SourceData(const size_t ID, vec3 position) : id(ID), mPosition(position), visible(false) {}
+		//	SourceData(const SourceData& data) : id(data.id), mPosition(data.mPosition), visible(data.visible) {}
 
-			// Operators
-			inline SourceData operator=(const SourceData& data)
-			{
-				id = data.id;
-				mPosition = data.mPosition;
-				visible = data.visible;
-				vSources = data.vSources;
-				return *this;
-			}
+		//	// Operators
+		//	/*inline SourceData operator=(const SourceData& data)
+		//	{
+		//		id = data.id;
+		//		mPosition = data.mPosition;
+		//		visible = data.visible;
+		//		vSources = data.vSources;
+		//		return *this;
+		//	}*/
 
-			// Member variables
-			size_t id;
-			vec3 mPosition;
-			bool visible;
-			VirtualSourceDataMap vSources;
+		//	// Member variables
+		//	size_t id;
+		//	vec3 mPosition;
+		//	bool visible;
 
-		private:
-		};
+		//private:
+		//};
+		typedef std::pair<size_t, vec3> IDPositionPair;
 
 		//////////////////// Source class ////////////////////
 
@@ -87,8 +87,11 @@ namespace RAC
 			void UpdateVirtualSources(const VirtualSourceDataMap& data);
 			bool UpdateVirtualSource(const VirtualSourceData& data, std::vector<VirtualSourceData>& newVSources);
 
-			inline SourceData GetData(const size_t& id) { lock_guard<std::mutex> lock(*dataMutex); mData.id = id; return mData; }
-			inline void UpdateData(const SourceData& data) { lock_guard<std::mutex> lock(*dataMutex); mData.visible = data.visible; mData.vSources = data.vSources; }
+			inline void UpdateData(const bool visible, const VirtualSourceDataMap& vSources)
+			{ 
+				{ lock_guard<std::mutex> lock(*dataMutex); isVisible = visible; }
+				{ lock_guard<std::mutex> lock(*vSourcesMutex); mVSources = vSources; }
+			}
 			vec3 GetPosition();
 			
 			// Audio
@@ -101,7 +104,6 @@ namespace RAC
 			void ResetFDNSlots();
 
 		private:
-			// void RemoveVirtualSources();
 
 			// Constants
 			Binaural::CCore* mCore;
@@ -123,12 +125,14 @@ namespace RAC
 
 			std::vector<int> freeFDNChannels;
 			
-			SourceData mData;
+			bool isVisible;
+			VirtualSourceDataMap mVSources;
 
 			// Mutexes
 			shared_ptr<std::mutex> vWallMutex; // Protects mVirtualSources
 			shared_ptr<std::mutex> vEdgeMutex; // Protects mVirtualEdgeSources
-			shared_ptr<std::mutex> dataMutex; // Protects mData and current/target Gain
+			shared_ptr<std::mutex> dataMutex; // Protects isVisible, targetGain, currentGain
+			shared_ptr<std::mutex> vSourcesMutex; // Protects vSources
 		};
 	}
 }

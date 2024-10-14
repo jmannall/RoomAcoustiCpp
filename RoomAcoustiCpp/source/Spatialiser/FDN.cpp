@@ -244,7 +244,7 @@ namespace RAC
 
 		void FDN::ProcessOutput(const std::vector<Real>& data, const Real gain)
 		{
-#ifdef PROFILE_AUDIO_THREAD
+#ifdef PROFILE_DETAILED
 			BeginFDNChannel();
 #endif
 
@@ -259,12 +259,12 @@ namespace RAC
 					Debug::Log("Y was nan", Colour::Red);
 			}
 			y *= gain;
-#ifdef PROFILE_AUDIO_THREAD
+#ifdef PROFILE_DETAILED
 			EndFDNChannel();
 			BeginFDNMatrix();
 #endif
 			ProcessMatrix();
-#ifdef PROFILE_AUDIO_THREAD
+#ifdef PROFILE_DETAILED
 			EndFDNMatrix();
 #endif
 		}

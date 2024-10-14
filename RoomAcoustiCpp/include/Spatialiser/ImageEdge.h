@@ -61,15 +61,18 @@ namespace RAC
 			size_t FirstOrderReflections(const vec3& point, VirtualSourceDataMap& vSources, size_t counter);
 			void HigherOrderReflections(const vec3& point, VirtualSourceDataMap& vSources);
 
-			shared_ptr<Room> mRoom;
-			shared_ptr<SourceManager> mSourceManager;
-			shared_ptr<Reverb> mReverb;
+			void EraseOldEntries(VirtualSourceDataMap& vSources);
+
+			weak_ptr<Room> mRoom;
+			weak_ptr<SourceManager> mSourceManager;
+			weak_ptr<Reverb> mReverb;
 
 			// Only accessed from background thread
 			PlaneMap mPlanes;
 			WallMap mWalls;
 			EdgeMap mEdges;
-			std::vector<SourceData> mSources;
+			std::vector<IDPositionPair> mSources;
+			std::vector<VirtualSourceDataMap> mVSources;
 			IEMConfig mIEMConfig;
 			vec3 mListenerPosition;
 			IEMConfig mIEMConfigStore;
@@ -80,6 +83,8 @@ namespace RAC
 			std::vector<Absorption> reverbAbsorptions;
 
 			VirtualSourceDataStore sp;
+
+			bool currentCycle;
 
 			std::mutex mMutex;
 		};

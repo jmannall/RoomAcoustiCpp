@@ -60,7 +60,7 @@ namespace RAC
 			class Attenuate : public Model
 			{
 			public:
-				Attenuate(Path* path) : Model(path), targetGain(0.0), currentGain(0.0) { m = new std::mutex(); UpdateParameters(); };
+				Attenuate(Path* path) : Model(path), targetGain(0.0), currentGain(0.0) { m = std::make_shared<std::mutex>(); UpdateParameters(); };
 				~Attenuate() {};
 
 				void UpdateParameters();
@@ -69,7 +69,7 @@ namespace RAC
 				Real targetGain;
 				Real currentGain;
 
-				std::mutex* m;
+				std::shared_ptr<std::mutex> m;
 			};
 
 			//////////////////// LPF class ////////////////////
@@ -88,7 +88,7 @@ namespace RAC
 				Real currentGain;
 				LowPass filter;
 
-				std::mutex* m;
+				std::shared_ptr<std::mutex> m;
 			};
 
 			//////////////////// UDFA class ////////////////////
@@ -138,7 +138,7 @@ namespace RAC
 				Coefficients target;
 				Coefficients current;
 
-				std::mutex* m;
+				std::shared_ptr<std::mutex> m;
 			};
 
 			//////////////////// UDFA-I class ////////////////////
@@ -170,7 +170,7 @@ namespace RAC
 				Coefficients target;
 				Coefficients params;
 
-				std::mutex* m;
+				std::shared_ptr<std::mutex> m;
 
 			private:
 				virtual inline void RunNN() { /* Do nothing*/ };
@@ -257,7 +257,7 @@ namespace RAC
 				Coefficients target;
 				Coefficients current;
 
-				std::mutex* m;
+				std::shared_ptr<std::mutex> m;
 			};
 
 			//////////////////// BTM class ////////////////////
@@ -337,7 +337,7 @@ namespace RAC
 
 				Path lastPath;
 
-				std::mutex* m;
+				std::shared_ptr<std::mutex> m;
 			};
 		}
 	}

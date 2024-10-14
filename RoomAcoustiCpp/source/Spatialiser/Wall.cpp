@@ -129,9 +129,9 @@ namespace RAC
 				mVertices[i] = vec3(x, y, z);
 			}
 
-			d = Dot(mNormal, mVertices[0]);
+			d = Round(Dot(normal, vec3(vData[0], vData[1], vData[2])));
 
-			CalculateArea();
+			CalculateArea();	
 		}
 
 		////////////////////////////////////////

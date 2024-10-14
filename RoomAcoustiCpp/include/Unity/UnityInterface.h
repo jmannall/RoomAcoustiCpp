@@ -5,8 +5,11 @@
 
 #include "Unity/IUnityProfiler.h"
 
-// #define PROFILE_AUDIO_THREAD
-// #define PROFILE_BACKGROUND_THREAD
+#define PROFILE_AUDIO_THREAD
+#ifdef PROFILE_AUDIO_THREAD
+// #define PROFILE_DETAILED
+#endif
+#define PROFILE_BACKGROUND_THREAD
 
 IUnityProfiler* GetUnityProfiler();
 bool* GetDevBuild();
@@ -38,7 +41,7 @@ void EndDiffraction();
 
 void Begin3DTI();
 void End3DTI();
-
+#ifdef PROFILE_DETAILED
 void BeginFIR();
 void EndFIR();
 
@@ -50,7 +53,8 @@ void EndFDNChannel();
 
 void BeginFDNMatrix();
 void EndFDNMatrix();
-#endif
+#endif // PROFILE_DETAILED
+#endif // PROFILE_AUDIO_THREAD
 
 #ifdef PROFILE_BACKGROUND_THREAD
 

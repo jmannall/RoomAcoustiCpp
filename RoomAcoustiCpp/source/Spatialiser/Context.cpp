@@ -46,8 +46,12 @@ namespace RAC
 			std::shared_ptr<Room> room = context->GetRoom();
 			std::shared_ptr<ImageEdge> imageEdgeModel = context->GetImageEdgeModel();
 
+			const int loop_interval_ms = 10;
+
 			while (isRunning)
 			{
+				auto start_time = std::chrono::steady_clock::now();
+
 #ifdef PROFILE_BACKGROUND_THREAD
 				BeginBackgroundLoop();
 #endif
@@ -64,7 +68,11 @@ namespace RAC
 #ifdef PROFILE_BACKGROUND_THREAD
 				EndBackgroundLoop();
 #endif
-
+				auto end_time = std::chrono::steady_clock::now();
+				auto elapsed_time = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+				if (elapsed_time < loop_interval_ms) {
+					std::this_thread::sleep_for(std::chrono::milliseconds(loop_interval_ms - elapsed_time));
+				}
 			}
 
 #ifdef PROFILE_BACKGROUND_THREAD
@@ -92,7 +100,7 @@ namespace RAC
 			mListener = mCore.CreateListener();
 
 			mReverb = std::make_shared<Reverb>(&mCore, mConfig);
-			mRoom = std::make_shared<Room>(mConfig.frequencyBands.Length(), mReverb->GetReverbSourceDirections());
+			mRoom = std::make_shared<Room>(mConfig.frequencyBands.Length());
 			mSources = std::make_shared<SourceManager>(&mCore, mConfig);
 			mImageEdgeModel = std::make_shared<ImageEdge>(mRoom, mSources, mReverb, mConfig.frequencyBands.Length());
 			
@@ -337,12 +345,13 @@ namespace RAC
 
 		void Context::SubmitAudio(size_t id, const float* data)
 		{
-			for (int i = 0; i < mConfig.numFrames; i++)
-				mInputBuffer[i] = static_cast<Real>(data[i]);
-
 			unique_lock<mutex> lock(audioMutex, std::defer_lock);
 			if (lock.try_lock())
+			{
+				for (int i = 0; i < mConfig.numFrames; i++)
+					mInputBuffer[i] = static_cast<Real>(data[i]);
 				mSources->ProcessAudio(id, mInputBuffer, mReverbInput, mOutputBuffer);
+			}
 		}
 
 		////////////////////////////////////////
@@ -356,7 +365,10 @@ namespace RAC
 				mReverb->ProcessAudio(mReverbInput, mOutputBuffer);
 				mReverbInput.Reset();
 			}
-
+			if (!lock.owns_lock())
+			{
+				while (lock.try_lock() == false) { std::this_thread::yield(); }
+			}
 			// Copy output to send and set pointer
 			mSendBuffer = mOutputBuffer;
 			*bufferPtr = &mSendBuffer[0];

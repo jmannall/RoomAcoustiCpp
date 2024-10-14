@@ -75,12 +75,12 @@ namespace RAC
 
 		inline Real Lerp(Real start, const Real end, const Real factor)
 		{
-#ifdef PROFILE_AUDIO_THREAD
+#ifdef PROFILE_DETAILED
 			BeginLerp();
 #endif			
 			start *= 1.0 - factor;
 			start += end * factor;
-#ifdef PROFILE_AUDIO_THREAD
+#ifdef PROFILE_DETAILED
 			EndLerp();
 #endif		
 			return start;
@@ -88,7 +88,7 @@ namespace RAC
 
 		inline void Lerp(Buffer& start, const Buffer& end, const Real factor)
 		{
-#ifdef PROFILE_AUDIO_THREAD
+#ifdef PROFILE_DETAILED
 			BeginLerp();
 #endif
 
@@ -133,14 +133,14 @@ namespace RAC
 					i++;
 				}
 			}
-#ifdef PROFILE_AUDIO_THREAD
+#ifdef PROFILE_DETAILED
 			EndLerp();
 #endif		
 		}
 
 		inline void Lerp(Coefficients& start, const Coefficients& end, const Real factor)
 		{
-#ifdef PROFILE_AUDIO_THREAD
+#ifdef PROFILE_DETAILED
 			BeginLerp();
 #endif			
 			size_t len = start.Length();
@@ -149,7 +149,7 @@ namespace RAC
 				start[i] *= (1.0 - factor);
 				start[i] += factor * end[i];
 			}
-#ifdef PROFILE_AUDIO_THREAD
+#ifdef PROFILE_DETAILED
 			EndLerp();
 #endif		
 		}

@@ -62,6 +62,7 @@ namespace RAC
 				std::lock_guard<std::mutex> lk2(processAudioMutex, std::adopt_lock);
 
 				mSources.erase(id);
+				sourceData.pop_back();
 				while (!mTimers.empty() && difftime(time(NULL), mTimers.front().time) > 60)
 				{
 					mEmptySlots.push_back(mTimers.front().id);
@@ -70,7 +71,7 @@ namespace RAC
 				mTimers.push_back(TimerPair(id, time(NULL)));
 			}
 
-			void GetSourceData(std::vector<SourceData>& data);
+			std::vector<IDPositionPair> GetSourceData();
 			inline vec3 GetSourcePosition(const size_t id)
 			{
 				lock_guard <mutex> lock(updateMutex); // Lock before locate to ensure not deleted between found and mutex lock
@@ -79,7 +80,7 @@ namespace RAC
 				return vec3();
 			}
 
-			void UpdateSourceData(const SourceData& data);
+			void UpdateSourceData(const size_t id, const bool visible, const VirtualSourceDataMap& vSources);
 
 			// Audio
 			void ProcessAudio(const size_t id, const Buffer& data, matrix& reverbInput, Buffer& outputBuffer);
@@ -92,6 +93,7 @@ namespace RAC
 			std::vector<size_t> mEmptySlots;
 			std::vector<TimerPair> mTimers;
 			size_t nextSource;
+			std::vector<IDPositionPair> sourceData;
 
 			// Mutexes
 			std::mutex updateMutex; // Locks during update step

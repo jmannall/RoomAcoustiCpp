@@ -46,7 +46,7 @@ namespace RAC
 
 		void GraphicEQ::InitMatrix(const Coefficients& fc)
 		{
-			std::vector<Real> f = std::vector<Real>(numFilters, 0.0);;
+			std::vector<Real> f = std::vector<Real>(numFilters, 0.0);
 
 			f[0] = fc[0] / 2.0;
 			for (int i = 1; i < numFilters - 1; i++)

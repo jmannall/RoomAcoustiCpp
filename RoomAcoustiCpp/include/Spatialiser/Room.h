@@ -32,13 +32,12 @@ namespace RAC
 	{
 
 		//////////////////// Room class ////////////////////
-
 		class Room
 		{
 		public:
 
 			// Load and Destroy
-			Room(const size_t numBands, const std::vector<vec3>& reverbSourceDirections) : nextPlane(0), nextWall(0), nextEdge(0), reverbTime(ReverbTime::Sabine), mVolume(0.0), numAbsorptionBands(numBands) {}
+			Room(const size_t numBands) : nextPlane(0), nextWall(0), nextEdge(0), reverbTime(ReverbTime::Sabine), mVolume(0.0), numAbsorptionBands(numBands), hasChanged(true) {}
 			~Room() {};
 
 			// Image source model
@@ -52,7 +51,7 @@ namespace RAC
 				lock_guard<std::mutex> lock(mWallMutex);
 				auto it = mWalls.find(id);
 				if (it == mWalls.end()) { return; } // case: wall does not exist
-				else { it->second.Update(normal, vData); } // case: wall does exist
+				else { it->second.Update(normal, vData); RecordChange(); } // case: wall does exist
 			}
 
 			inline void UpdateWallAbsorption(const size_t id, const Absorption& absorption)
@@ -60,7 +59,7 @@ namespace RAC
 				lock_guard<std::mutex> lock(mWallMutex);
 				auto it = mWalls.find(id);
 				if (it == mWalls.end()) { return; } // case: wall does not exist
-				else { it->second.Update(absorption); } // case: wall does exist
+				else { it->second.Update(absorption); RecordChange(); } // case: wall does exist
 			}
 
 			inline void RemoveWall(const size_t id)
@@ -81,6 +80,7 @@ namespace RAC
 						mWallTimers.erase(mWallTimers.begin());
 					}
 					mWallTimers.push_back(TimerPair(id, time(NULL)));
+					RecordChange();
 				}
 			}
 
@@ -92,6 +92,13 @@ namespace RAC
 
 			Coefficients GetReverbTime();
 			Coefficients GetReverbTime(const Real volume) { mVolume = volume; return GetReverbTime(); }
+
+			void RecordChange() { lock_guard<std::mutex> lock(mChangeMutex); hasChanged = true; }
+			bool HasChanged() {
+				lock_guard<std::mutex> lock(mChangeMutex);
+				if (hasChanged) { hasChanged = false; return true; }
+				else { return false; }
+			}
 
 			PlaneMap GetPlanes() { lock_guard<std::mutex> lock(mPlaneMutex); return mPlanes; }
 			WallMap GetWalls() { lock_guard<std::mutex> lock(mWallMutex); return mWalls; }
@@ -158,12 +165,20 @@ namespace RAC
 			inline bool IsCoplanarEdge(const Edge& edge)
 			{
 				IDPair planeIds = edge.GetPlaneIDs();
+				// Vec3Pair edgeNormals = edge.GetFaceNormals();
 				{
 					lock_guard<std::mutex> lock(mPlaneMutex);
 					for (auto& itP : mPlanes)
 					{
 						if (itP.first == planeIds.first || itP.first == planeIds.second)
 							continue;
+
+						/*vec3 planeNormal = itP.second.GetNormal();
+						if (planeNormal == edgeNormals.first || planeNormal == edgeNormals.second)
+							continue;
+
+						if (planeNormal == -edgeNormals.first || planeNormal == -edgeNormals.second)
+							continue;*/
 
 						if (itP.second.PointPlanePosition(edge.GetMidPoint()) != 0.0)
 							continue;
@@ -229,6 +244,8 @@ namespace RAC
 			Coefficients Sabine(const Coefficients& absorption);
 			Coefficients Eyring(const Coefficients& absorption, const Real& surfaceArea);
 
+			bool hasChanged;
+
 			Real mVolume;
 			ReverbTime reverbTime;
 			size_t numAbsorptionBands;
@@ -252,6 +269,7 @@ namespace RAC
 			std::mutex mWallMutex; // Must always be locked before Plane and Edge
 			std::mutex mPlaneMutex; // Can be locked after Edge (Not before)
 			std::mutex mEdgeMutex; // Cannot be locked after Plane
+			std::mutex mChangeMutex;
 		};
 	}
 }

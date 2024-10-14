@@ -27,7 +27,6 @@ namespace RAC
 	{
 
 		//////////////////// Room class ////////////////////
-
 		size_t Room::AddWall(Wall& wall)
 		{
 			size_t id;
@@ -42,6 +41,7 @@ namespace RAC
 
 			AssignWallToPlane(id, wall);
 			mWalls.insert_or_assign(id, wall);
+			RecordChange();
 			return id;
 		}
 
@@ -110,6 +110,7 @@ namespace RAC
 #endif
 
 			mEdges.insert_or_assign(id, edge);
+			RecordChange();
 		}
 
 		void Room::InitEdges(const size_t id)
@@ -334,6 +335,7 @@ namespace RAC
 				RemoveWallFromPlane(it.first, it.second);
 				AssignWallToPlane(it.second);
 			}
+			RecordChange();
 		}
 
 		void Room::UpdateEdges()
@@ -376,6 +378,7 @@ namespace RAC
 					InitEdges(itW.first, IDsW);
 				}
 			}
+			RecordChange();
 		}
 
 		// Reverb

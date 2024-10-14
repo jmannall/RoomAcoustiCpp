@@ -198,7 +198,7 @@ void End3DTI()
 	if (GetDevBuild())
 		GetUnityProfiler()->EndSample(threedtiMarker);
 }
-
+#ifdef PROFILE_DETAILED
 void BeginFIR()
 {
 	if (GetDevBuild())
@@ -246,13 +246,7 @@ void EndFDNMatrix()
 	if (GetDevBuild())
 		GetUnityProfiler()->EndSample(fdnMatrixMarker);
 }
-
-void BeginBackgroundLoop()
-{
-	if (GetDevBuild())
-		GetUnityProfiler()->BeginSample(backgroundLoopMarker);
-}
-
+#endif
 #endif
 
 #ifdef PROFILE_BACKGROUND_THREAD
@@ -267,6 +261,12 @@ void UnregisterBackgroundThread()
 {
 	if (GetDevBuild())
 		GetUnityProfiler()->UnregisterThread(backgroundThreadID);
+}
+
+void BeginBackgroundLoop()
+{
+	if (GetDevBuild())
+		GetUnityProfiler()->BeginSample(backgroundLoopMarker);
 }
 
 void EndBackgroundLoop()
