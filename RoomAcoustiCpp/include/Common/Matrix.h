@@ -40,7 +40,7 @@ namespace RAC
 				for (int i = 0; i < rows; i++)
 				{
 					for (int j = 0; j < cols; j++)
-						e[i][j] = 0.0;
+						data[i][j] = 0.0;
 				}
 			}
 
@@ -48,23 +48,23 @@ namespace RAC
 			inline void AddColumn(const std::vector<Real>& v, const int c)
 			{
 				for (int i = 0; i < rows; i++)
-					e[i][c] = v[i];
+					data[i][c] = v[i];
 			}
-			inline void AddRow(const std::vector<Real>& v, const int r) { e[r] = v; }
+			inline void AddRow(const std::vector<Real>& v, const int r) { data[r] = v; }
 
 			// Getters
-			inline Real GetEntry(const int r, const int c) const { return e[r][c]; }
-			inline const std::vector<Real>& GetRow(int r) const { return e[r];	}
+			inline Real GetEntry(const int r, const int c) const { return data[r][c]; }
+			inline const std::vector<Real>& GetRow(int r) const { return data[r];	}
 			inline const std::vector<Real>& GetColumn(int c)
 			{
 				for (int i = 0; i < rows; i++)
-					column[i] = e[i][c];
+					column[i] = data[i][c];
 				return column;
 			}
 
 			inline int Rows() const { return rows; }
 			inline int Cols() const { return cols; }
-			inline const std::vector<std::vector<Real>>& Data() const { return e; }
+			inline const std::vector<std::vector<Real>>& Data() const { return data; }
 			matrix Transpose();
 
 			void Inverse();
@@ -74,7 +74,7 @@ namespace RAC
 				for (int i = 0; i < rows; i++)
 				{
 					for (int j = 0; j < cols; j++)
-						this->e[i][j] = RAC::Common::Log10(e[i][j]);
+						this->data[i][j] = RAC::Common::Log10(data[i][j]);
 				}
 			}
 
@@ -83,12 +83,12 @@ namespace RAC
 				for (int i = 0; i < rows; i++)
 				{
 					for (int j = 0; j < cols; j++)
-						this->e[i][j] = RAC::Common::Pow10(e[i][j]);
+						this->data[i][j] = RAC::Common::Pow10(data[i][j]);
 				}
 			}
 
 			// Operators
-			inline std::vector<Real>& operator[](const int r) { return e[r]; }
+			inline std::vector<Real>& operator[](const int r) { return data[r]; }
 
 			inline matrix operator=(const matrix& mat)
 			{
@@ -103,7 +103,7 @@ namespace RAC
 				for (int i = 0; i < rows; i++)
 				{
 					for (int j = 0; j < cols; j++)
-						this->e[i][j] += mat.GetEntry(i, j);
+						this->data[i][j] += mat.GetEntry(i, j);
 				}
 				return *this;
 			}
@@ -113,7 +113,7 @@ namespace RAC
 				for (int i = 0; i < rows; i++)
 				{
 					for (int j = 0; j < cols; j++)
-						this->e[i][j] -= mat.GetEntry(i, j);
+						this->data[i][j] -= mat.GetEntry(i, j);
 				}
 				return *this;
 			}
@@ -123,7 +123,7 @@ namespace RAC
 				for (int i = 0; i < rows; i++)
 				{
 					for (int j = 0; j < cols; j++)
-						this->e[i][j] *= a;
+						this->data[i][j] *= a;
 				}
 				return *this;
 			}
@@ -133,7 +133,7 @@ namespace RAC
 				for (int i = 0; i < rows; i++)
 				{
 					for (int j = 0; j < cols; j++)
-						this->e[i][j] /= a;
+						this->data[i][j] /= a;
 				}
 				return *this;
 			}
@@ -143,7 +143,7 @@ namespace RAC
 				for (int i = 0; i < rows; i++)
 				{
 					for (int j = 0; j < cols; j++)
-						this->e[i][j] += a;
+						this->data[i][j] += a;
 				}
 				return *this;
 			}
@@ -153,7 +153,7 @@ namespace RAC
 				for (int i = 0; i < rows; i++)
 				{
 					for (int j = 0; j < cols; j++)
-						this->e[i][j] -= a;
+						this->data[i][j] -= a;
 				}
 				return *this;
 			}
@@ -166,7 +166,7 @@ namespace RAC
 
 			// Member variables
 			int rows, cols;
-			std::vector<std::vector<Real>> e;
+			std::vector<std::vector<Real>> data;
 			std::vector<Real> column;
 		};
 

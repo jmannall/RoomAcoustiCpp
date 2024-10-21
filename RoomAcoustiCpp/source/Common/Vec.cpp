@@ -24,7 +24,7 @@ namespace RAC
 		{
 			assert(rows == vec.size());
 			for (int i = 0; i < rows; i++)
-				e[i][0] = vec[i];
+				data[i][0] = vec[i];
 		}
 
 		// Distributions
@@ -33,7 +33,7 @@ namespace RAC
 			std::normal_distribution<Real> distribution; // mean 0, standard deviation 1
 			for (int i = 0; i < rows; i++)
 			{
-				e[i][0] = distribution(generator);
+				data[i][0] = distribution(generator);
 			}
 		}
 
@@ -42,7 +42,7 @@ namespace RAC
 			std::uniform_real_distribution<Real> distribution; // a 0, b 1
 			for (int i = 0; i < rows; i++)
 			{
-				e[i][0] = distribution(generator);
+				data[i][0] = distribution(generator);
 			}
 		}
 
@@ -51,7 +51,7 @@ namespace RAC
 			std::uniform_real_distribution<Real> distribution(a, b);
 			for (int i = 0; i < rows; i++)
 			{
-				e[i][0] = distribution(generator);
+				data[i][0] = distribution(generator);
 			}
 		}
 
@@ -60,7 +60,7 @@ namespace RAC
 			Real norm = CalculateNormal();
 			for (int i = 0; i < rows; i++)
 			{
-				e[i][0] = e[i][0] / norm;
+				data[i][0] = data[i][0] / norm;
 			}
 		}
 
@@ -70,7 +70,7 @@ namespace RAC
 			Real mag = 0.0;
 			for (int i = 0; i < rows; i++)
 			{
-				mag += e[i][0] * e[i][0];
+				mag += data[i][0] * data[i][0];
 			}
 			return sqrt(mag);
 		}
@@ -80,7 +80,7 @@ namespace RAC
 			Real out = 0;
 			for (int i = 0; i < rows; i++)
 			{
-				out += e[i][0];
+				out += data[i][0];
 			}
 			return out / rows;
 		}
@@ -96,7 +96,7 @@ namespace RAC
 		void rowvec::Init(const std::vector<Real>& vec)
 		{
 			assert(cols == vec.size());
-			e[0] = vec;
+			data[0] = vec;
 		}
 	}
 }

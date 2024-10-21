@@ -83,7 +83,7 @@ namespace RAC
 		vec3 normal1 = vec3(sin(tW), 0.0, -cos(tW));
 		vec3 normal2 = vec3(0.0, 0.0, 1.0);
 
-		Edge e = Edge(base, top, normal1, normal2, 0, 1);
+		Edge e = Edge(base, top, normal1, normal2, 0, 1, 0, 1);
 
 		vec3 s = vec3(rS * cos(tS), zS, rS * sin(tS));
 		vec3 r = vec3(rR * cos(tR), zR, rR * sin(tR));
@@ -259,6 +259,36 @@ namespace RAC
 			parsedCsv.push_back(parsedRow);
 		}
 		return parsedCsv;
+	}
+
+	void AppendBufferToCSV(const std::string& filename, const Buffer& data) {
+		// Open the file in append mode
+		std::ofstream file(filename, std::ios::app);
+
+		// Check if the file is open
+		if (!file.is_open()) {
+			std::cerr << "Error: Could not open file " << filename << std::endl;
+			return;
+		}
+
+		int decimalPlaces = 18;
+
+		// Set the decimal precision for floating point numbers
+		file << std::fixed << std::setprecision(decimalPlaces);
+
+		// Write the vector data to the file as a CSV row
+		for (size_t i = 0; i < data.Length(); ++i) {
+			file << data[i];
+			// Add a comma after every element except the last one
+			if (i != data.Length() - 1) {
+				file << ",";
+			}
+		}
+		// End the row by adding a newline
+		file << "\n";
+
+		// Close the file
+		file.close();
 	}
 
 	//////////////////// Diffraction Model Tests ////////////////////
@@ -613,11 +643,7 @@ namespace RAC
 				vSources.insert_or_assign(v.GetKey(), v);
 			}
 
-			SourceData data = SourceData(0, vec3(1.0, 1.6, 1.0));
-			data.visible = true;
-			data.vSources = vSources;
-
-			source.UpdateData(data);
+			source.UpdateData(true, vSources);
 			source.Update(sPosition, vec4(0.0, 0.0, 0.0, 1.0), (sPosition - lPosition).Length());
 
 			return source;
@@ -1364,15 +1390,45 @@ namespace RAC
 	{
 	public:
 
-		TEST_METHOD(InitGraphicEQ)
+		TEST_METHOD(ProcessGraphicEQ)
 		{
+			std::string filePath = _SOLUTIONDIR;
+			auto inputData = Parse2Dcsv(filePath + "UnitTestData\\graphicEQInput.csv");
+			auto outputData = Parse2Dcsv(filePath + "UnitTestData\\graphicEQOutput.csv");
+
+			std::vector<Real> f0(inputData[0]);
+			std::vector<Real> f1(inputData[1]);
+			std::vector<Real> f2(inputData[2]);
+			std::vector<Real> f3(inputData[3]);
+			std::vector<Real> f4(inputData[4]);
+
 			Coefficients fc = Coefficients({ 250.0, 500.0, 1000.0, 2000.0, 4000.0 });
 			Real Q = 0.98;
 			int fs = 48e3;
-			GraphicEQ eq = GraphicEQ(fc, Q, fs);
+			int numFrames = 256;
+			Real lerpFactor = 0.0;
+			Buffer out = Buffer(numFrames);
+			Buffer in = Buffer(numFrames);
+			in[0] = 1.0;
 
-			Coefficients gain = Coefficients({ 1.0 - 0.1, 1.0 - 0.15, 1.0 - 0.12, 1.0 - 0.2, 1.0 - 0.25 });
-			eq.InitParameters(gain);
+			int numTests = f0.size();
+			std::vector<Coefficients> gains = std::vector<Coefficients>(numTests, Coefficients(5));
+			for (int i = 0; i < numTests; i++)
+			{
+				Coefficients gain = Coefficients({ f0[i], f1[i], f2[i], f3[i], f4[i] });
+				GraphicEQ eq = GraphicEQ(gain, fc, Q, fs);
+				eq.ProcessAudio(in, out, numFrames, lerpFactor);
+
+				// AppendBufferToCSV(filePath + "UnitTestData\\graphicEQOutput.csv", out);
+
+				for (int j = 0; j < numFrames; j++)
+				{
+					std::string error = "Test: " + Unity::IntToStr(i) + ", Incorrect Sample : " + Unity::IntToStr(j);
+					std::wstring werror = std::wstring(error.begin(), error.end());
+					const wchar_t* werrorchar = werror.c_str();
+					Assert::AreEqual(outputData[i][j], out[j], 10e-16, werrorchar);
+				}
+			}			
 		}
 	};
 #pragma optimize("", on)

@@ -143,7 +143,7 @@ namespace RAC
 			/**
 			* Number of filters
 			*/
-			Real numFilters;
+			size_t numFilters;
 
 			/**
 			* Filters

@@ -36,6 +36,7 @@ namespace RAC
 		{
 			InitFilters(fc, Q, sampleRate);
 			InitMatrix(fc);
+			InitParameters(gain);
 		}
 
 		void GraphicEQ::InitFilters(const Coefficients& fc, const Real Q, const int sampleRate)

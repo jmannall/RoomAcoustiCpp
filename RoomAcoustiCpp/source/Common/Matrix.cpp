@@ -16,7 +16,7 @@ namespace RAC
 			if (rows > 0)
 			{
 				cols = mat[0].size();
-				e = mat;
+				data = mat;
 			}
 			else
 				cols = 0;
@@ -27,13 +27,13 @@ namespace RAC
 		{
 			int r = rows;
 			for (int i = 0; i < r; i++)
-				e.push_back(std::vector<Real>(cols, 0.0));
+				data.push_back(std::vector<Real>(cols, 0.0));
 			column = std::vector<Real>(rows);
 		}
 
 		void matrix::DeallocateSpace()
 		{
-			e.clear();
+			data.clear();
 			/*for (int i = 0; i < rows; i++)
 				e[i].clear();
 			e.clear();*/
@@ -42,7 +42,7 @@ namespace RAC
 		void matrix::Init(const const std::vector<std::vector<Real>>& mat)
 		{
 			AllocateSpace();
-			e = mat;
+			data = mat;
 		}
 
 		matrix matrix::Transpose()
@@ -51,39 +51,39 @@ namespace RAC
 			for (int i = 0; i < rows; i++)
 			{
 				for (int j = 0; j < cols; j++)
-					mat[j][i] = e[i][j];
+					mat[j][i] = data[i][j];
 			}
 			return mat;
 		}
 
 		void matrix::Inverse()
 		{
-			if (rows != cols) // Matrix must be square
-				return;
+
+			assert(rows == cols); // Matrix must be square
 
 			// Create the augmented matrix [A|I]
 			for (int i = 0; i < rows; i++)
 			{
-				e[i].resize(2 * cols, 0.0);
-				e[i][cols + i] = 1.0;
+				data[i].resize(2 * cols, 0.0);
+				data[i][cols + i] = 1.0;
 			}
 
 			// Perform row operations
 			for (int i = 0; i < rows; i++)
 			{
 				// Divide row by pivot
-				Real pivot = e[i][i];
+				Real pivot = data[i][i];
 				for (int j = 0; j < 2 * cols; j++)
-					e[i][j] /= pivot;
+					data[i][j] /= pivot;
 
 				// Eliminate other rows
 				for (int j = 0; j < rows; j++)
 				{
 					if (j != i)
 					{
-						Real factor = e[j][i];
+						Real factor = data[j][i];
 						for (int k = 0; k < 2 * cols; k++)
-							e[j][k] -= factor * e[i][k];
+							data[j][k] -= factor * data[i][k];
 					}
 				}
 			}
@@ -91,8 +91,8 @@ namespace RAC
 			// Remove the identity matrix
 			for (int i = 0; i < rows; i++)
 			{
-				e[i].erase(e[i].begin(), e[i].begin() + cols);
-				e[i].shrink_to_fit();
+				data[i].erase(data[i].begin(), data[i].begin() + cols);
+				data[i].shrink_to_fit();
 			}
 		}
 	}

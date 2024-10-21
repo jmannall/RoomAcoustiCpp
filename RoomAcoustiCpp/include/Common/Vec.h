@@ -52,20 +52,20 @@ namespace RAC
 			inline void Max(const Real min)
 			{ 
 				for (int i = 0; i < rows; i++)
-					e[i][0] = std::max(min, e[i][0]);
+					data[i][0] = std::max(min, data[i][0]);
 			}
 
 			inline Real Sum() const
 			{
 				Real sum = 0.0;
 				for (int i = 0; i < cols; i++)
-					sum += e[i][0];
+					sum += data[i][0];
 				return sum;
 			}
 
 			// Operators
-			inline Real operator[](const int i) const { return e[i][0]; }
-			inline Real& operator[](const int i) { return e[i][0]; }
+			inline Real operator[](const int i) const { return data[i][0]; }
+			inline Real& operator[](const int i) { return data[i][0]; }
 
 			inline vec operator=(const matrix& mat)
 			{
@@ -73,13 +73,13 @@ namespace RAC
 				cols = mat.Cols();
 
 				if (rows != mat.Rows())
-					e.resize(mat.Cols(), std::vector<Real>(1, 0.0));
+					data.resize(mat.Cols(), std::vector<Real>(1, 0.0));
 
 				for (int i = 0; i < rows; i++)
 				{
 					for (int j = 0; j < cols; j++)
 					{
-						e[i][j] = mat.GetEntry(i, j);
+						data[i][j] = mat.GetEntry(i, j);
 					}
 				}
 				return *this;
@@ -97,7 +97,7 @@ namespace RAC
 			// Load and Destroy
 			rowvec() : matrix() {}
 			rowvec(const int& c) : matrix(1, c) {}
-			rowvec(const std::vector<Real>& vec, const int& c) : matrix(1, c) { Init(vec); }
+			rowvec(const std::vector<Real>& vec) : matrix(1, vec.size()) { Init(vec); }
 			rowvec(const matrix& mat);
 			~rowvec() {}
 
@@ -107,14 +107,14 @@ namespace RAC
 			{
 				Real sum = 0.0;
 				for (int i = 0; i < cols; i++)
-					sum += e[0][i];
+					sum += data[0][i];
 				return sum;
 			}
 
 
 			// Operators
-			inline Real operator[](const int i) const { return e[0][i]; }
-			inline Real& operator[](const int i) { return e[0][i]; }
+			inline Real operator[](const int i) const { return data[0][i]; }
+			inline Real& operator[](const int i) { return data[0][i]; }
 
 			inline rowvec operator=(const matrix& mat)
 			{
@@ -122,13 +122,13 @@ namespace RAC
 				rows = mat.Rows();
 
 				if (cols != mat.Cols())
-					e[0].resize(mat.Cols());
+					data[0].resize(mat.Cols());
 				
 				for (int i = 0; i < rows; i++)
 				{
 					for (int j = 0; j < cols; j++)
 					{
-						e[i][j] = mat.GetEntry(i, j);
+						data[i][j] = mat.GetEntry(i, j);
 					}
 				}
 				return *this;
