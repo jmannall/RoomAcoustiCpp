@@ -160,22 +160,22 @@ namespace RAC
 
 		Real GraphicEQ::GetOutput(const Real input)
 		{
-			if (valid)
-			{
-				Real out = input;
-				out = lowShelf.GetOutput(out);
-				for (PeakingFilter& filter : peakingFilters)
-					out = filter.GetOutput(out);
-				out = highShelf.GetOutput(out);
-				out *= currentGain[0];
-				return out;
-			}
-			else
+			if (!valid)
 				return 0.0;
+
+			Real out = lowShelf.GetOutput(input);
+			for (PeakingFilter& filter : peakingFilters)
+				out = filter.GetOutput(out);
+			out = highShelf.GetOutput(out);
+			out *= currentGain[0];
+			return out;
 		}
 
 		void GraphicEQ::ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const int numFrames, const Real lerpFactor)
 		{
+			if (!valid)
+				return;
+
 			if (equal)
 			{
 				for (int i = 0; i < numFrames; i++)

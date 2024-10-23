@@ -199,6 +199,11 @@ namespace RAC
 				return *this;
 			}
 
+			/**
+			* Returns the length of the buffer.
+			*/
+			inline size_t Length() const { return mBuffer.size(); }
+
 		private:
 
 			/**

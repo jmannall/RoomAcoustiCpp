@@ -80,7 +80,7 @@ namespace RAC
 			Real out = mAbsorptionFilter.GetOutput(mBuffer[idx]);
 			mAbsorptionFilter.UpdateParameters(mConfig.lerpFactor);
 			mBuffer[idx] = input;
-			idx++;
+			++idx;
 			return out;
 		}
 
@@ -128,12 +128,12 @@ namespace RAC
 				t *= dimensions.Mean();
 
 				int k = 0;
-				for (int j = 0; j < mConfig.numFDNChannels / idx; j++)
+				for (int j = 0; j < mConfig.numFDNChannels / idx; ++j)
 				{
-					for (int i = 0; i < idx; i++)
+					for (int i = 0; i < idx; ++i)
 					{
 						t[k] += dimensions[j];
-						k++;
+						++k;
 					}
 				}
 				t *= INV_SPEED_OF_SOUND;
@@ -150,7 +150,7 @@ namespace RAC
 			mat.AddColumn(vector.GetColumn(0), 0);
 
 			Real tol = 0.000001;
-			for (int j = 1; j < mConfig.numFDNChannels; j++)
+			for (int j = 1; j < mConfig.numFDNChannels; ++j)
 			{
 				Real norm = 0;
 				while (norm < tol)
@@ -159,7 +159,7 @@ namespace RAC
 
 					matrix section = matrix(mConfig.numFDNChannels, j);
 
-					for (int i = 0; i < mConfig.numFDNChannels; i++)
+					for (int i = 0; i < mConfig.numFDNChannels; ++i)
 					{
 						for (int k = 0; k < j; k++)
 							section[i][k] = mat.GetEntry(i, k);
@@ -254,9 +254,9 @@ namespace RAC
 				if (isnan(x[i]))
 					Debug::Log("X was nan", Colour::Red);
 				y[i] = channel.GetOutput(x[i] + data[i]);
-				i++;
 				if (isnan(y[i]))
 					Debug::Log("Y was nan", Colour::Red);
+				++i;
 			}
 			y *= gain;
 #ifdef PROFILE_DETAILED

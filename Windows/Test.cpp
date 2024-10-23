@@ -26,6 +26,8 @@
 #include "DSP/ParametricEQ.h"
 #include "DSP/GraphicEQ.h"
 
+#include "Spatialiser/Interface.h"
+
 #include <iostream>
 #include <chrono>
 #include "omp.h"
@@ -91,11 +93,8 @@ namespace RAC
 		return Path(s, r, e);
 	}
 
-	Binaural::CCore CreateCore(int fs)
+	Binaural::CCore CreateCore(int fs, int numFrames, int hrtfResamplingStep)
 	{
-		int numFrames = 1024;
-		int hrtfResamplingStep = 5;
-
 		Binaural::CCore core = Binaural::CCore();
 
 		// Set dsp settings
@@ -112,60 +111,102 @@ namespace RAC
 		core.RemoveListener();
 	}
 
-	//void CreateShoebox()
-	//{
-	//	Absorption absorbtion = Absorption(0.7f, 0.7f, 0.7f, 0.7f, 0.7f);
-	//	vec3 pos = vec3(7.0f, 3.0f, 5.0f);
-	//	
-	//	CreateShoebox(pos, absorbtion);
-	//}
-	//	
-	//void CreateShoebox(const vec3& pos, Absorption absorbtion)
-	//{
-	//	int numVert = 4;
-	//	
-	//	float vert1[] = { 0.0f, pos.y, 0.0f,
-	//					pos.x, pos.y, 0.0f,
-	//					pos.x, pos.y, pos.z,
-	//					0.0f, pos.y, pos.z };
-	//	vec3 normal1 = vec3(0.0f, -1.0f, 0.0f);
-	//	size_t wID1 = InitWall(normal1, &vert1[0], (size_t)numVert, absorbtion, ReverbWall::posZ);
-	//	
-	//	float vert2[] = { pos.x, 0.0f, 0.0f,
-	//					0.0f, 0.0f, 0.0f,
-	//					0.0f, 0.0f, pos.z,
-	//					pos.x, 0.0f, pos.z };
-	//	vec3 normal2 = vec3(0.0f, 1.0f, 0.0f);
-	//	size_t wID2 = InitWall(normal2, &vert2[0], (size_t)numVert, absorbtion, ReverbWall::negZ);
-	//	
-	//	float vert3[] = { pos.x, 0.0f, pos.z,
-	//					pos.x, pos.y, pos.z,
-	//					pos.x, pos.y, 0.0f,
-	//					pos.x, 0.0f, 0.0f };
-	//	vec3 normal3 = vec3(-1.0f, 0.0f, 0.0f);
-	//	size_t wID3 = InitWall(normal3, &vert3[0], (size_t)numVert, absorbtion, ReverbWall::posX);
-	//	
-	//	float vert4[] = { 0.0f, 0.0f, 0.0f,
-	//					0.0f, pos.y, 0.0f,
-	//					0.0f, pos.y, pos.z,
-	//					0.0f, 0.0f, pos.z };
-	//	vec3 normal4 = vec3(1.0f, 0.0f, 0.0f);
-	//	size_t wID4 = InitWall(normal4, &vert4[0], (size_t)numVert, absorbtion, ReverbWall::negX);
-	//	
-	//	float vert5[] = { 0.0f, 0.0f, 0.0f,
-	//					pos.x, 0.0f, 0.0f,
-	//					pos.x, pos.y, 0.0f,
-	//					0.0f, pos.y, 0.0f };
-	//	vec3 normal5 = vec3(0.0f, 0.0f, 1.0f);
-	//	size_t wID5 = InitWall(normal5, &vert5[0], (size_t)numVert, absorbtion, ReverbWall::negY);
-	//	
-	//	float vert6[] = { 0.0f, pos.y, pos.z,
-	//					pos.x, pos.y, pos.z,
-	//					pos.x, 0.0f, pos.z,
-	//					0.0f, 0.0f, pos.z };
-	//	vec3 normal6 = vec3(0.0f, 0.0f, -1.0f);
-	//	size_t wID6 = InitWall(normal6, &vert6[0], (size_t)numVert, absorbtion, ReverbWall::posY);
-	//}
+	/*void CreateShoebox()
+	{
+		Absorption absorbtion = Absorption(0.7f, 0.7f, 0.7f, 0.7f, 0.7f);
+		vec3 pos = vec3(7.0f, 3.0f, 5.0f);
+		
+		CreateShoebox(pos, absorbtion);
+	}*/
+		
+	void CreateShoebox(const vec3& pos, Absorption absorbtion)
+	{
+		int numVert = 4;
+		
+		Real vert1[] = { 0.0, pos.y, 0.0,
+						pos.x, pos.y, 0.0,
+						pos.x, pos.y, pos.z };
+		Real vert2[] = { 0.0, pos.y, 0.0,
+						pos.x, pos.y, pos.z,
+						0.0, pos.y, pos.z };
+		vec3 normal = vec3(0.0, -1.0, 0.0);
+
+
+
+		InitWall(normal, &vert1[0], absorbtion);
+		InitWall(normal, &vert2[0], absorbtion);
+		
+		Real vert3[] = { pos.x, 0.0, 0.0,
+						0.0, 0.0, 0.0,
+						0.0, 0.0, pos.z };
+		Real vert4[] = { pos.x, 0.0, 0.0,
+						0.0, 0.0, pos.z,
+						pos.x, 0.0, pos.z };
+		normal = vec3(0.0, 1.0, 0.0);
+
+		InitWall(normal, &vert3[0], absorbtion);
+		InitWall(normal, &vert4[0], absorbtion);
+
+		
+		Real vert5[] = { pos.x, 0.0, pos.z,
+						pos.x, pos.y, pos.z,
+						pos.x, pos.y, 0.0 };
+		Real vert6[] = { pos.x, 0.0, pos.z,
+						pos.x, pos.y, 0.0,
+						pos.x, 0.0, 0.0 };
+		normal = vec3(-1.0, 0.0, 0.0);
+		InitWall(normal, &vert5[0], absorbtion);
+		InitWall(normal, &vert6[0], absorbtion);
+
+		Real vert7[] = { 0.0, 0.0, 0.0,
+						0.0, pos.y, 0.0,
+						0.0, pos.y, pos.z };
+		Real vert8[] = { 0.0, 0.0, 0.0,
+						0.0, pos.y, pos.z,
+						0.0, 0.0, pos.z };
+		normal = vec3(1.0, 0.0, 0.0);
+		InitWall(normal, &vert7[0], absorbtion);
+		InitWall(normal, &vert8[0], absorbtion);
+
+		Real vert9[] = { 0.0, 0.0, 0.0,
+						pos.x, 0.0, 0.0,
+						pos.x, pos.y, 0.0 };
+		Real vert10[] = { 0.0, 0.0, 0.0,
+						pos.x, pos.y, 0.0,
+						0.0, pos.y, 0.0 };
+		normal = vec3(0.0, 0.0, 1.0);
+		InitWall(normal, &vert9[0], absorbtion);
+		InitWall(normal, &vert10[0], absorbtion);
+
+		Real vert11[] = { 0.0, pos.y, pos.z,
+						pos.x, pos.y, pos.z,
+						pos.x, 0.0, pos.z };
+		Real vert12[] = { 0.0, pos.y, pos.z,
+						pos.x, 0.0, pos.z,
+						0.0, 0.0, pos.z };
+		normal = vec3(0.0, 0.0, -1.0);
+		InitWall(normal, &vert11[0], absorbtion);
+		InitWall(normal, &vert12[0], absorbtion);
+	}
+
+	vec4 AzimuthElevationToQuaternion(Real azimuth, Real elevation)
+	{
+		Real azimuthRad = Deg2Rad(azimuth);
+		Real elevationRad = Deg2Rad(elevation);
+
+		Real cosAzimuth = cos(azimuthRad * 0.5);
+		Real sinAzimuth = sin(azimuthRad * 0.5);
+		Real cosElevation = cos(elevationRad * 0.5);
+		Real sinElevation = sin(elevationRad * 0.5);
+
+		Real x = cosAzimuth * sinElevation;
+		Real y = sinAzimuth * cosElevation;
+		Real z = sinAzimuth * sinElevation;
+		Real w = cosAzimuth * cosElevation;
+
+		return vec4(w, x, y, z);
+	}
+
 	//	
 	//void CreateLaboratory()
 	//{
@@ -290,6 +331,212 @@ namespace RAC
 		// Close the file
 		file.close();
 	}
+
+	void WriteDataEntry(std::string filename, const BufferF& data, Real position, Real rotation) {
+
+		// Open the file in append mode
+		std::ofstream file(filename, std::ios::app);
+
+		// Check if the file is open
+		if (!file.is_open()) {
+			std::cerr << "Error: Could not open file " << filename << std::endl;
+			return;
+		}
+
+		int pos = position * 100;
+		int rot = ceil(rotation);
+		file << pos;
+		file << "_";
+		file << rot;
+		file << ",";
+
+		// Write the vector data to the file as a CSV row
+		for (size_t i = 0; i < data.Length(); ++i) {
+			file << data[i] * 8388607;
+			// Add a comma after every element except the last one
+			if (i != data.Length() - 1) {
+				file << ",";
+			}
+		}
+		// End the row by adding a newline
+		file << "\n";
+		// Close the file
+		file.close();
+	}
+
+	//////////////////// Shoebox Tests ////////////////////
+
+	TEST_CLASS(AR_Scenes)
+	{
+	public:
+
+		TEST_METHOD(LTC)
+		{
+
+			int fs = 48000;
+			int numFrames = 4096;
+			int numFDNChannels = 12;
+			Real lerpFactor = 0;
+			Real q = 0.98;
+			Coefficients fBands = Coefficients({ 125.0, 250.0, 500.0, 1000.0, 2000.0, 4000.0, 8000.0 });
+
+			Config config = Config(fs, numFrames, numFDNChannels, lerpFactor, q, fBands);
+
+			bool init = Init(config);
+
+			Assert::IsTrue(init, L"Failed to initialise RAC");
+
+			int hrtfResamplingStep = 1;
+			const std::vector<std::string> filePaths = { "C:/Documents/GitHub/jmannall/RoomAcoustiCpp/Resources/Kemar_HRTF_ITD_48000Hz.3dti-hrtf",
+														"C:/Documents/GitHub/jmannall/RoomAcoustiCpp/Resources/NearFieldCompensation_ILD_48000.3dti-ild",
+														"C:/Documents/GitHub/jmannall/RoomAcoustiCpp/Resources/HRTF_ILD_48000.3dti-ild" };
+
+			bool success = LoadSpatialisationFiles(hrtfResamplingStep, filePaths);
+
+			Assert::IsTrue(success, L"Failed to load spatialisation files");
+
+			IEMConfig iemConfig = IEMConfig(3, DirectSound::doCheck, true, DiffractionSound::none, DiffractionSound::none, true, 0.0);
+			UpdateIEMConfig(iemConfig);
+			UpdateSpatialisationMode(SpatMode::quality);
+			UpdateReverbTimeModel(ReverbTime::Sabine);
+			UpdateFDNModel(FDNMatrix::randomOrthogonal);
+			UpdateDiffractionModel(DiffractionModel::attenuate);
+
+			Absorption absorption = Absorption({ 0.222, 0.258, 0.405, 0.378, 0.284, 0.270, 0.277 });
+			vec3 roomSize = vec3(7.0, 2.5, 6.0);
+			CreateShoebox(roomSize, absorption);
+
+			Real volume = 105.0;
+			vec dimensions = vec({ 7.0, 2.5, 6.0 });
+			UpdateRoom(volume, dimensions);
+
+			vec3 sourcePosition = vec3(5.47, 1.62, 4.5);
+			vec4 sourceOrientation = vec4({ 0.0, 0.0, 0.0, 1.0 });
+
+			BufferF in = BufferF(numFrames);
+			BufferF out = BufferF(2 * numFrames);
+			BufferF left = BufferF(fs);
+			BufferF right = BufferF(fs);
+
+			float* outPtr = &out[0];
+
+			Real listenerStepPostition = 0.25;
+			Real listenerStepRotation = 2.5;
+			int numBuffers = fs / numFrames;
+			for (int i = 0; i < 8; i++)
+			{
+				vec3 listenerPosition = vec3(4.22 - listenerStepPostition * i, 1.62, 4.5);
+
+				for (int j = 0; j < 360.0 / listenerStepRotation; j++)
+				{
+					vec4 listenerOrientation = AzimuthElevationToQuaternion(90.0 - j * listenerStepRotation, 0.0);
+					UpdateListener(listenerPosition, listenerOrientation);
+					size_t sourceID = InitSource();
+					UpdateSource(sourceID, sourcePosition, sourceOrientation);
+					Sleep(20);
+					UpdateSource(sourceID, sourcePosition, sourceOrientation);
+
+					in[0] = 1.0;
+					SubmitAudio(sourceID, &in[0]);
+					GetOutput(&outPtr);
+					for (int k = 0; k < numFrames; k++)
+					{
+						left[k] = outPtr[2 * k];
+						right[k] = outPtr[2 * k + 1];
+					}
+
+					in[0] = 0.0;
+					for (int n = 1; n < numBuffers; n++)
+					{
+						SubmitAudio(sourceID, &in[0]);
+						GetOutput(&outPtr);
+						for (int k = 0; k < numFrames; k++)
+						{
+							left[k + n * numFrames] = outPtr[2 * k];
+							right[k + n * numFrames] = outPtr[2 * k + 1];
+						}
+					}
+
+					ResetFDN();
+					RemoveSource(sourceID);
+
+					WriteDataEntry("C:/Documents/GitHub/jmannall/RoomAcoustiCpp/UnitTestData/ltc.csv", left, i * listenerStepPostition, j * listenerStepRotation);
+					WriteDataEntry("C:/Documents/GitHub/jmannall/RoomAcoustiCpp/UnitTestData/ltc.csv", right, i * listenerStepPostition, j * listenerStepRotation);
+				}
+			}
+
+			Exit();
+		}
+
+		TEST_METHOD(Shoebox)
+		{
+			int fs = 48000;
+			int numFrames = 4096;
+			int numFDNChannels = 12;
+			Real lerpFactor = 0;
+			Real q = 0.98;
+			Coefficients fBands = Coefficients({ 125.0, 250.0, 500.0, 1000.0, 2000.0, 4000.0, 8000.0 });
+
+			Config config = Config(fs, numFrames, numFDNChannels, lerpFactor, q, fBands);
+
+			bool init = Init(config);
+
+			Assert::IsTrue(init, L"Failed to initialise RAC");
+
+			int hrtfResamplingStep = 5;
+			const std::vector<std::string> filePaths = { "C:/Documents/GitHub/jmannall/RoomAcoustiCpp/Resources/Kemar_HRTF_ITD_48000Hz.3dti-hrtf",
+														"C:/Documents/GitHub/jmannall/RoomAcoustiCpp/Resources/NearFieldCompensation_ILD_48000.3dti-ild",
+														"C:/Documents/GitHub/jmannall/RoomAcoustiCpp/Resources/HRTF_ILD_48000.3dti-ild" };
+
+			bool success = LoadSpatialisationFiles(hrtfResamplingStep, filePaths);
+
+			Assert::IsTrue(success, L"Failed to load spatialisation files");
+
+			IEMConfig iemConfig = IEMConfig(3, DirectSound::doCheck, true, DiffractionSound::none, DiffractionSound::none, true, 0.0);
+			UpdateIEMConfig(iemConfig);
+			UpdateSpatialisationMode(SpatMode::quality);
+			UpdateReverbTimeModel(ReverbTime::Sabine);
+			UpdateFDNModel(FDNMatrix::randomOrthogonal);
+			UpdateDiffractionModel(DiffractionModel::attenuate);
+
+			Absorption absorption = Absorption({ 0.222, 0.258, 0.405, 0.378, 0.284, 0.270, 0.277 });
+			vec3 roomSize = vec3(7.0, 2.5, 6.0);
+			CreateShoebox(roomSize, absorption);
+
+			Real volume = 105.0;
+			vec dimensions = vec({ 7.0, 2.5, 6.0 });
+			UpdateRoom(volume, dimensions);
+
+			vec3 sourcePosition = vec3(5.47, 1.62, 4.5);
+			vec4 sourceOrientation = vec4({ 0.0, 0.0, 0.0, 1.0 });
+
+			vec3 listenerPosition = vec3(4.22, 1.62, 4.5);
+			vec4 listenerOrientation = AzimuthElevationToQuaternion(90.0, 0.0);
+
+			UpdateListener(listenerPosition, listenerOrientation);
+			size_t sourceID = InitSource();
+			UpdateSource(sourceID, sourcePosition, sourceOrientation);
+			Sleep(20);
+			UpdateSource(sourceID, sourcePosition, sourceOrientation);
+
+			BufferF in = BufferF(numFrames);
+			BufferF out = BufferF(2 * numFrames);
+			BufferF left = BufferF(fs);
+			BufferF right = BufferF(fs);
+
+			float* outPtr = &out[0];
+
+			in[0] = 1.0;
+
+			for (int i = 0; i < 10; i++)
+			{
+				SubmitAudio(sourceID, &in[0]);
+				GetOutput(&outPtr);
+			}
+			RemoveSource(sourceID);
+			Exit();
+		}
+	};
 
 	//////////////////// Diffraction Model Tests ////////////////////
 
@@ -652,8 +899,7 @@ namespace RAC
 		TEST_METHOD(Tree)
 		{
 			Config config;
-			config.fs = 48000;
-			Binaural::CCore core = CreateCore(config.fs);
+			Binaural::CCore core = CreateCore(config.fs, config.numFrames, 5);
 
 			Source source = CreateSource(core, config);
 
@@ -677,8 +923,7 @@ namespace RAC
 			std::cout.rdbuf(out.rdbuf()); //redirect std::cout to out.txt!
 
 			Config config;
-			config.fs = 48000;
-			Binaural::CCore core = CreateCore(config.fs);
+			Binaural::CCore core = CreateCore(config.fs, config.numFrames, 5);
 
 			Source source = CreateSource(core, config);
 
@@ -699,8 +944,7 @@ namespace RAC
 		TEST_METHOD(Compare)
 		{
 			Config config;
-			config.fs = 48000;
-			Binaural::CCore core = CreateCore(config.fs);
+			Binaural::CCore core = CreateCore(config.fs, config.numFrames, 5);
 
 			Source source = CreateSource(core, config);
 
@@ -845,9 +1089,8 @@ namespace RAC
 		TEST_METHOD(ReflectionFilters)
 		{
 			Config config;
-			config.fs = 48000;
 
-			Binaural::CCore core = CreateCore(config.fs);
+			Binaural::CCore core = CreateCore(config.fs, config.numFrames, 5);
 
 			ReverbSource reverbSource(&core, config);
 
@@ -1396,26 +1639,27 @@ namespace RAC
 			auto inputData = Parse2Dcsv(filePath + "UnitTestData\\graphicEQInput.csv");
 			auto outputData = Parse2Dcsv(filePath + "UnitTestData\\graphicEQOutput.csv");
 
-			std::vector<Real> f0(inputData[0]);
-			std::vector<Real> f1(inputData[1]);
-			std::vector<Real> f2(inputData[2]);
-			std::vector<Real> f3(inputData[3]);
-			std::vector<Real> f4(inputData[4]);
+			std::vector<Real> g0(inputData[0]);
+			std::vector<Real> g1(inputData[1]);
+			std::vector<Real> g2(inputData[2]);
+			std::vector<Real> g3(inputData[3]);
+			std::vector<Real> g4(inputData[4]);
 
 			Coefficients fc = Coefficients({ 250.0, 500.0, 1000.0, 2000.0, 4000.0 });
 			Real Q = 0.98;
 			int fs = 48e3;
 			int numFrames = 256;
 			Real lerpFactor = 0.0;
-			Buffer out = Buffer(numFrames);
 			Buffer in = Buffer(numFrames);
 			in[0] = 1.0;
 
-			int numTests = f0.size();
+			int numTests = g0.size();
 			std::vector<Coefficients> gains = std::vector<Coefficients>(numTests, Coefficients(5));
 			for (int i = 0; i < numTests; i++)
 			{
-				Coefficients gain = Coefficients({ f0[i], f1[i], f2[i], f3[i], f4[i] });
+				Buffer out = Buffer(numFrames);
+
+				Coefficients gain = Coefficients({ g0[i], g1[i], g2[i], g3[i], g4[i] });
 				GraphicEQ eq = GraphicEQ(gain, fc, Q, fs);
 				eq.ProcessAudio(in, out, numFrames, lerpFactor);
 
@@ -1429,6 +1673,117 @@ namespace RAC
 					Assert::AreEqual(outputData[i][j], out[j], 10e-16, werrorchar);
 				}
 			}			
+		}
+
+		TEST_METHOD(ProcessPeakingFilter)
+		{
+			std::string filePath = _SOLUTIONDIR;
+			auto inputData = Parse2Dcsv(filePath + "UnitTestData\\peakingFilterInput.csv");
+			auto outputData = Parse2Dcsv(filePath + "UnitTestData\\peakingFilterOutput.csv");
+
+			std::vector<Real> fc(inputData[0]);
+			std::vector<Real> g(inputData[1]);
+
+			Real Q = 0.98;
+			int fs = 48e3;
+			int numFrames = 256;
+			Buffer out = Buffer(numFrames);
+			Buffer in = Buffer(numFrames);
+			in[0] = 1.0;
+
+			int numTests = fc.size();
+			std::vector<Coefficients> gains = std::vector<Coefficients>(numTests, Coefficients(5));
+			for (int i = 0; i < numTests; i++)
+			{
+				PeakingFilter peakingFilter = PeakingFilter(fc[i], g[i], Q, fs);
+
+				for (int i = 0; i < numFrames; ++i)
+					out[i] = peakingFilter.GetOutput(in[i]);
+
+				// AppendBufferToCSV(filePath + "UnitTestData\\peakingFilterOutput.csv", out);
+
+				for (int j = 0; j < numFrames; j++)
+				{
+					std::string error = "Test: " + Unity::IntToStr(i) + ", Incorrect Sample : " + Unity::IntToStr(j);
+					std::wstring werror = std::wstring(error.begin(), error.end());
+					const wchar_t* werrorchar = werror.c_str();
+					Assert::AreEqual(outputData[i][j], out[j], 10e-16, werrorchar);
+				}
+			}
+		}
+
+		TEST_METHOD(ProcessLowShelfFilter)
+		{
+			std::string filePath = _SOLUTIONDIR;
+			auto inputData = Parse2Dcsv(filePath + "UnitTestData\\peakingFilterInput.csv");
+			auto outputData = Parse2Dcsv(filePath + "UnitTestData\\lowShelfFilterOutput.csv");
+
+			std::vector<Real> fc(inputData[0]);
+			std::vector<Real> g(inputData[1]);
+
+			Real Q = 0.98;
+			int fs = 48e3;
+			int numFrames = 256;
+			Buffer out = Buffer(numFrames);
+			Buffer in = Buffer(numFrames);
+			in[0] = 1.0;
+
+			int numTests = fc.size();
+			std::vector<Coefficients> gains = std::vector<Coefficients>(numTests, Coefficients(5));
+			for (int i = 0; i < numTests; i++)
+			{
+				PeakLowShelf lowShelfFilter = PeakLowShelf(fc[i], g[i], Q, fs);
+
+				for (int i = 0; i < numFrames; ++i)
+					out[i] = lowShelfFilter.GetOutput(in[i]);
+
+				// AppendBufferToCSV(filePath + "UnitTestData\\lowShelfFilterOutput.csv", out);
+
+				for (int j = 0; j < numFrames; j++)
+				{
+					std::string error = "Test: " + Unity::IntToStr(i) + ", Incorrect Sample : " + Unity::IntToStr(j);
+					std::wstring werror = std::wstring(error.begin(), error.end());
+					const wchar_t* werrorchar = werror.c_str();
+					Assert::AreEqual(outputData[i][j], out[j], 10e-16, werrorchar);
+				}
+			}
+		}
+
+		TEST_METHOD(ProcessHighShelfFilter)
+		{
+			std::string filePath = _SOLUTIONDIR;
+			auto inputData = Parse2Dcsv(filePath + "UnitTestData\\peakingFilterInput.csv");
+			auto outputData = Parse2Dcsv(filePath + "UnitTestData\\highShelfFilterOutput.csv");
+
+			std::vector<Real> fc(inputData[0]);
+			std::vector<Real> g(inputData[1]);
+
+			Real Q = 0.98;
+			int fs = 48e3;
+			int numFrames = 256;
+			Buffer out = Buffer(numFrames);
+			Buffer in = Buffer(numFrames);
+			in[0] = 1.0;
+
+			int numTests = fc.size();
+			std::vector<Coefficients> gains = std::vector<Coefficients>(numTests, Coefficients(5));
+			for (int i = 0; i < numTests; i++)
+			{
+				PeakHighShelf highShelfFilter = PeakHighShelf(fc[i], g[i], Q, fs);
+
+				for (int i = 0; i < numFrames; ++i)
+					out[i] = highShelfFilter.GetOutput(in[i]);
+
+				// AppendBufferToCSV(filePath + "UnitTestData\\highShelfFilterOutput.csv", out);
+
+				for (int j = 0; j < numFrames; j++)
+				{
+					std::string error = "Test: " + Unity::IntToStr(i) + ", Incorrect Sample : " + Unity::IntToStr(j);
+					std::wstring werror = std::wstring(error.begin(), error.end());
+					const wchar_t* werrorchar = werror.c_str();
+					Assert::AreEqual(outputData[i][j], out[j], 10e-16, werrorchar);
+				}
+			}
 		}
 	};
 #pragma optimize("", on)

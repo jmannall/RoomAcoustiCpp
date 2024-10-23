@@ -94,10 +94,10 @@ namespace RAC
 			inline Real GetDistance() const { return currentD; }
 
 			/**
-			* Returns the output of the GraphicEQ given an input
+			* Returns the output of the AirAbsorption filter given an input
 			*
-			* @param input The input to the GraphicEQ
-			* @return The output of the GraphicEQ
+			* @param input The input to the AirAbsorption filter
+			* @return The output of the AirAbsorption filter
 			*/
 			Real GetOutput(const Real input);
 

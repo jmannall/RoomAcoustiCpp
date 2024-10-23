@@ -487,6 +487,7 @@ namespace RAC
 				// Initialise source to core
 				mSource = mCore->CreateSingleSourceDSP();
 				mSource->EnablePropagationDelay();
+				// mSource->DisableInterpolation();
 			}
 
 			isInitialised = true;

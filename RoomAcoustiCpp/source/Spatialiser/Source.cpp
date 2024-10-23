@@ -48,6 +48,7 @@ namespace RAC
 				lock_guard<mutex> lock(tuneInMutex);
 				mSource = mCore->CreateSingleSourceDSP();
 				mSource->EnablePropagationDelay();
+				// mSource->DisableInterpolation();
 
 				//Select spatialisation mode
 				UpdateSpatialisationMode(config.spatMode);

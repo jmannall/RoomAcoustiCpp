@@ -125,15 +125,15 @@ namespace RAC
 			SpatMode spatMode;
 
 			Config() : 
-				fs(44100), numFrames(512), numFDNChannels(12), lerpFactor(1.0 / ((Real)numFrames * 2.0)), Q(0.77), 
+				fs(44100), numFrames(512), numFDNChannels(12), lerpFactor(1.0 / ((Real)numFrames * 2.0)), Q(0.98), 
 				frequencyBands({250.0, 500.0, 1000.0, 20000.0}), diffractionModel(DiffractionModel::btm), spatMode(SpatMode::none) {};
 
 			Config(int _fs, int _numFrames, int _numFDNChannels, Real _lerpFactor, Real q, Coefficients fBands) : 
-				fs(_fs), numFrames(_numFrames), numFDNChannels(_numFDNChannels), lerpFactor(1.0 / ((Real)numFrames * _lerpFactor)),
+				fs(_fs), numFrames(_numFrames), numFDNChannels(_numFDNChannels), lerpFactor(1.0 / ((Real)numFrames * std::max(_lerpFactor, 1.0 / (Real)numFrames))),
 				Q(q), frequencyBands(fBands), diffractionModel(DiffractionModel::btm), spatMode(SpatMode::none) {};
 
 			Config(int _fs, int _numFrames, int _numFDNChannels, Real _lerpFactor, Real q, Coefficients fBands, DiffractionModel model, SpatMode mode) : 
-				fs(_fs), numFrames(_numFrames), numFDNChannels(_numFDNChannels), lerpFactor(1.0 / ((Real)numFrames * _lerpFactor)), Q(q), 
+				fs(_fs), numFrames(_numFrames), numFDNChannels(_numFDNChannels), lerpFactor(1.0 / ((Real)numFrames * std::max(_lerpFactor, 1.0 / (Real)numFrames))), Q(q),
 				frequencyBands(fBands), diffractionModel(model), spatMode(mode) {};
 		};
 	}

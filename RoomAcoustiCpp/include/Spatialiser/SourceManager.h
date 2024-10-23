@@ -61,13 +61,17 @@ namespace RAC
 				std::lock_guard<std::mutex> lk1(updateMutex, std::adopt_lock);
 				std::lock_guard<std::mutex> lk2(processAudioMutex, std::adopt_lock);
 
-				mSources.erase(id);
-				sourceData.pop_back();
+				size_t removed = mSources.erase(id);
 				while (!mTimers.empty() && difftime(time(NULL), mTimers.front().time) > 60)
 				{
 					mEmptySlots.push_back(mTimers.front().id);
 					mTimers.erase(mTimers.begin());
 				}
+
+				if (removed == 0)
+					return;
+
+				sourceData.pop_back();
 				mTimers.push_back(TimerPair(id, time(NULL)));
 			}
 

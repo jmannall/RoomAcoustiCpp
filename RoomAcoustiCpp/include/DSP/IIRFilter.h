@@ -89,9 +89,154 @@ namespace RAC
 		};
 
 		/**
+		* Class that implements a second order Infinite Impulse Response filter
+		*
+		* @details Uses the Direct-Form-II implementation
+		*/
+		class IIRFilter1
+		{
+		public:
+			/**
+			* Constructor that initialises a second order IIRFilter with a given sample rate
+			*
+			* @param sampleRate The sample rate for calculating filter coefficients
+			*/
+			IIRFilter1(const int sampleRate) : order(1),
+				T(1.0 / static_cast<Real>(sampleRate)), y0(0.0), y1(0.0),
+				a0(0.0), a1(0.0), b0(0.0), b1(0.0) {};
+
+			/**
+			* Default deconstructor
+			*/
+			~IIRFilter1() {};
+
+			/**
+			* Returns the output of the IIRFilter given an input
+			*
+			* @param input The input to the IIRFilter
+			* @return The output of the IIRFilter
+			*/
+			Real GetOutput(const Real input);
+
+			/**
+			* Resets the output buffers to zeros.
+			*/
+			inline void ClearBuffers() { y0 = 0.0; y1 = 0.0; }
+
+			/**
+			* Returns the filter response at given frequencies
+			*
+			* @param frequencies The frequencies at which to calculate the response
+			* @return The frequency response of the filter
+			*/
+			std::vector<Real> GetFrequencyResponse(const std::vector<Real>& frequencies) const;
+
+		protected:
+
+			/**
+			* Filter order
+			*/
+			size_t order;
+
+			/**
+			* Sample rate time period
+			*/
+			Real T;
+
+			/**
+			* Filter coefficients
+			*/
+			Real a0;
+			Real a1;
+
+			Real b0;
+			Real b1;
+
+			/**
+			* Output (y) buffers
+			*/
+			Real y0;
+			Real y1;
+		};
+
+		/**
+		* Class that implements a second order Infinite Impulse Response filter
+		*
+		* @details Uses the Direct-Form-II implementation
+		*/
+		class IIRFilter2
+		{
+		public:
+			/**
+			* Constructor that initialises a second order IIRFilter with a given sample rate
+			*
+			* @param sampleRate The sample rate for calculating filter coefficients
+			*/
+			IIRFilter2(const int sampleRate) : order(2),
+				T(1.0 / static_cast<Real>(sampleRate)), y0(0.0), y1(0.0), y2(0.0),
+				a0(0.0), a1(0.0), a2(0.0), b0(0.0), b1(0.0), b2(0.0) {};
+
+			/**
+			* Default deconstructor
+			*/
+			~IIRFilter2() {};
+
+			/**
+			* Returns the output of the IIRFilter given an input
+			*
+			* @param input The input to the IIRFilter
+			* @return The output of the IIRFilter
+			*/
+			Real GetOutput(const Real input);
+
+			/**
+			* Resets the output buffers to zeros.
+			*/
+			inline void ClearBuffers() { y0 = 0.0; y1 = 0.0; y2 = 0.0; }
+
+			/**
+			* Returns the filter response at given frequencies
+			*
+			* @param frequencies The frequencies at which to calculate the response
+			* @return The frequency response of the filter
+			*/
+			std::vector<Real> GetFrequencyResponse(const std::vector<Real>& frequencies) const;
+
+		protected:
+
+			/**
+			* Filter order
+			*/
+			size_t order;
+
+			/**
+			* Sample rate time period
+			*/
+			Real T;
+
+			/**
+			* Filter coefficients
+			*/
+			Real a0;
+			Real a1;
+			Real a2;
+
+			Real b0;
+			Real b1;
+			Real b2;
+
+			/**
+			* Output (y) buffers
+			*/
+			Real y0;
+			Real y1;
+			Real y2;
+		};
+
+		/**
 		* Class that implements a 1st order high shelf IIR filter
 		*/
-		class HighShelf : public IIRFilter
+		class HighShelf : public IIRFilter1
 		{
 		public:
 			/**
@@ -99,7 +244,7 @@ namespace RAC
 			*
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
-			HighShelf(const int sampleRate) : IIRFilter(1, sampleRate) { UpdateParameters(1000.0, 1.0); };
+			HighShelf(const int sampleRate) : IIRFilter1(sampleRate) { UpdateParameters(1000.0, 1.0); };
 
 			/**
 			* Constructor that initialises an 1st order high shelf filter with a given cut off frequency and shelf gain
@@ -108,7 +253,7 @@ namespace RAC
 			* @param g The shelf gain of the filter (linear)
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
-			HighShelf(const Real fc, const Real g, const int sampleRate) : IIRFilter(1, sampleRate) { UpdateParameters(fc, g); };
+			HighShelf(const Real fc, const Real g, const int sampleRate) : IIRFilter1(sampleRate) { UpdateParameters(fc, g); };
 
 			/**
 			* Default deconstructor
@@ -127,7 +272,7 @@ namespace RAC
 		/**
 		* Class that implements a 1st order low pass IIR filter
 		*/
-		class LowPass : public IIRFilter
+		class LowPass : public IIRFilter1
 		{
 		public:
 			/**
@@ -135,7 +280,7 @@ namespace RAC
 			*
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
-			LowPass(const int sampleRate) : IIRFilter(1, sampleRate) { UpdateParameters(1000.0); };
+			LowPass(const int sampleRate) : IIRFilter1(sampleRate) { UpdateParameters(1000.0); };
 			
 			/**
 			* Constructor that initialises an 1st order low pass filter with a given cut off frequency
@@ -143,7 +288,7 @@ namespace RAC
 			* @param fc The cut off frequency of the filter
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
-			LowPass(const Real fc, const int sampleRate) : IIRFilter(1, sampleRate) { UpdateParameters(fc); };
+			LowPass(const Real fc, const int sampleRate) : IIRFilter1(sampleRate) { UpdateParameters(fc); };
 
 			/**
 			* Default deconstructor
@@ -161,7 +306,7 @@ namespace RAC
 		/**
 		* Class that implements a 2nd order high shelf IIR filter (used by GraphicEQ)
 		*/
-		class PeakHighShelf : public IIRFilter
+		class PeakHighShelf : public IIRFilter2
 		{
 		public:
 			/**
@@ -171,7 +316,7 @@ namespace RAC
 			* @param Q The quality factor of the filter
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
-			PeakHighShelf(const Real fc, const Real Q, const int sampleRate) : IIRFilter(2, sampleRate) { SetParameters(fc, Q); }
+			PeakHighShelf(const Real fc, const Real Q, const int sampleRate) : IIRFilter2(sampleRate) { SetParameters(fc, Q); }
 
 			/**
 			* Constructor that initialises an 2nd order high shelf filter with a given cut off frequency and shelf gain
@@ -181,7 +326,7 @@ namespace RAC
 			* @param Q The quality factor of the filter
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
-			PeakHighShelf(const Real fc, const Real g, const Real Q, const int sampleRate) : IIRFilter(2, sampleRate) { SetParameters(fc, Q); UpdateGain(g); }
+			PeakHighShelf(const Real fc, const Real g, const Real Q, const int sampleRate) : IIRFilter2(sampleRate) { SetParameters(fc, Q); UpdateGain(g); }
 
 			/**
 			* Default deconstructor
@@ -211,7 +356,7 @@ namespace RAC
 		/**
 		* Class that implements a 2nd order low shelf IIR filter (used by GraphicEQ)
 		*/
-		class PeakLowShelf : public IIRFilter
+		class PeakLowShelf : public IIRFilter2
 		{
 		public:
 			/**
@@ -221,7 +366,7 @@ namespace RAC
 			* @param Q The quality factor of the filter
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
-			PeakLowShelf(const Real fc, const Real Q, const int sampleRate) : IIRFilter(2, sampleRate) { SetParameters(fc, Q); }
+			PeakLowShelf(const Real fc, const Real Q, const int sampleRate) : IIRFilter2(sampleRate) { SetParameters(fc, Q); }
 
 			/**
 			* Constructor that initialises an 2nd order low shelf filter with a given cut off frequency and shelf gain
@@ -231,7 +376,7 @@ namespace RAC
 			* @param Q The quality factor of the filter
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
-			PeakLowShelf(const Real fc, const Real g, const Real Q, const int sampleRate) : IIRFilter(2, sampleRate) { SetParameters(fc, Q); UpdateGain(g); }
+			PeakLowShelf(const Real fc, const Real g, const Real Q, const int sampleRate) : IIRFilter2(sampleRate) { SetParameters(fc, Q); UpdateGain(g); }
 
 			/**
 			* Default deconstructor
@@ -261,7 +406,7 @@ namespace RAC
 		/**
 		* Class that implements a 2nd order peaking IIR filter (used by GraphicEQ)
 		*/
-		class PeakingFilter : public IIRFilter
+		class PeakingFilter : public IIRFilter2
 		{
 		public:
 			/**
@@ -271,7 +416,7 @@ namespace RAC
 			* @param Q The quality factor of the filter
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
-			PeakingFilter(const Real fc, const Real Q, const int sampleRate) : IIRFilter(2, sampleRate) { SetParameters(fc, Q); }
+			PeakingFilter(const Real fc, const Real Q, const int sampleRate) : IIRFilter2(sampleRate) { SetParameters(fc, Q); }
 
 			/**
 			* Constructor that initialises an 2nd order peaking filter with a given cut off frequency and gain
@@ -281,7 +426,7 @@ namespace RAC
 			* @param Q The quality factor of the filter
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
-			PeakingFilter(const Real fc, const Real g, const Real Q, const int sampleRate) : IIRFilter(2, sampleRate) { SetParameters(fc, Q); UpdateGain(g); }
+			PeakingFilter(const Real fc, const Real g, const Real Q, const int sampleRate) : IIRFilter2(sampleRate) { SetParameters(fc, Q); UpdateGain(g); }
 
 			/**
 			* Default deconstructor
@@ -311,11 +456,11 @@ namespace RAC
 		/**
 		* Class that implements a 2nd order IIR filter from poles, zeros and gain (used by NN models)
 		*/
-		class ZPKFilter : public IIRFilter
+		class ZPKFilter : public IIRFilter2
 		{
 		public:
-			ZPKFilter(const int& sampleRate) : IIRFilter(2, sampleRate) { a[0] = 1.0; UpdateParameters(Coefficients(std::vector<Real>({ 0.25, -0.99, 0.99, -0.25, 0.0 }))); };
-			ZPKFilter(const Coefficients& zpk, const int& sampleRate) : IIRFilter(2, sampleRate) { a[0] = 1.0; UpdateParameters(zpk); };
+			ZPKFilter(const int& sampleRate) : IIRFilter2(sampleRate) { a0 = 1.0; UpdateParameters(Coefficients(std::vector<Real>({ 0.25, -0.99, 0.99, -0.25, 0.0 }))); };
+			ZPKFilter(const Coefficients& zpk, const int& sampleRate) : IIRFilter2(sampleRate) { a0 = 1.0; UpdateParameters(zpk); };
 
 			void UpdateParameters(const Coefficients& zpk);
 		};
@@ -323,13 +468,13 @@ namespace RAC
 		/**
 		* Class that implements a low or high pass IIR filter (used by LinkwitzRiley filter)
 		*/
-		class PassFilter : public IIRFilter
+		class PassFilter : public IIRFilter2
 		{
 		public:
-			PassFilter(const bool isLowPass, const int sampleRate) : IIRFilter(2, sampleRate) { a[0] = 1.0; SetUpdatePointer(isLowPass); };
-			PassFilter(const Real fc, const bool isLowPass, const int sampleRate) : IIRFilter(2, sampleRate)
+			PassFilter(const bool isLowPass, const int sampleRate) : IIRFilter2(sampleRate) { a0 = 1.0; SetUpdatePointer(isLowPass); };
+			PassFilter(const Real fc, const bool isLowPass, const int sampleRate) : IIRFilter2(sampleRate)
 			{ 
-				a[0] = 1.0;
+				a0 = 1.0;
 				SetUpdatePointer(isLowPass);
 				UpdateParameters(fc);
 			};
