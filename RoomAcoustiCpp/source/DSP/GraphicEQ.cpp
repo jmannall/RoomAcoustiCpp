@@ -176,6 +176,7 @@ namespace RAC
 			if (!valid)
 				return;
 
+			FlushDenormals();
 			if (equal)
 			{
 				for (int i = 0; i < numFrames; i++)
@@ -198,6 +199,7 @@ namespace RAC
 					UpdateParameters();
 				}
 			}
+			NoFlushDenormals();
 		}
 	}
 }

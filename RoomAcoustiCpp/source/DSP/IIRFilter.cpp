@@ -31,8 +31,6 @@ namespace RAC
 
 		Real IIRFilter::GetOutput(const Real input)
 		{
-			FlushDenormals();
-
 			Real v = input;
 			Real output = 0.0;
 			for (size_t i = 1; i <= order; ++i)
@@ -46,8 +44,6 @@ namespace RAC
 
 			y[0] = v;
 			output += v * b[0];
-
-			NoFlushDenormals();
 
 			return output;
 		}
@@ -79,8 +75,6 @@ namespace RAC
 
 		Real IIRFilter2::GetOutput(const Real input)
 		{
-			FlushDenormals();
-
 			Real v = input;
 			Real output = 0.0;
 
@@ -95,8 +89,6 @@ namespace RAC
 			y0 = v;
 
 			output += v * b0;
-
-			NoFlushDenormals();
 
 			return output;
 		}
@@ -129,8 +121,6 @@ namespace RAC
 
 		Real IIRFilter1::GetOutput(const Real input)
 		{
-			FlushDenormals();
-
 			Real v = input;
 			Real output = 0.0;
 
@@ -141,8 +131,6 @@ namespace RAC
 			y0 = v;
 
 			output += v * b0;
-
-			NoFlushDenormals();
 
 			return output;
 		}

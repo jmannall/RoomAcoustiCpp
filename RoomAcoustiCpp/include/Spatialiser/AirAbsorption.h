@@ -35,7 +35,7 @@ namespace RAC
 			*
 			* @param sampleRate The sample rate for calculating the filter coefficients
 			*/
-			AirAbsorption(const int sampleRate) : x(0), y(0), currentD(0.0), targetD(0.0), a(0.0), b(0.0)
+			AirAbsorption(const int sampleRate) : x(0), y(0), currentD(0.0), targetD(0.0), a(0.0), b(0.0), equal(true)
 			{
 				constant = static_cast<Real>(sampleRate) / (SPEED_OF_SOUND * 7782.0);
 				UpdateParameters();
@@ -47,7 +47,7 @@ namespace RAC
 			* @param distance The distance for calculating the filter coefficients
 			* @param sampleRate The sample rate for calculating the filter coefficients
 			*/
-			AirAbsorption(const Real distance, const int sampleRate) : x(0), y(0), currentD(distance), targetD(distance), a(0.0), b(0.0)
+			AirAbsorption(const Real distance, const int sampleRate) : x(0), y(0), currentD(distance), targetD(distance), a(0.0), b(0.0), equal(true)
 			{
 				constant = static_cast<Real>(sampleRate) / (SPEED_OF_SOUND * 7782.0);
 				UpdateParameters();
@@ -63,7 +63,12 @@ namespace RAC
 			*
 			* @param distance The new target distance
 			*/
-			inline void SetDistance(const Real distance) { targetD = distance; }
+			inline void SetDistance(const Real distance)
+			{ 
+				targetD = distance;
+				if (currentD != targetD)
+					equal = false;
+			}
 
 			/**
 			* Updates the filter coefficients
@@ -72,18 +77,6 @@ namespace RAC
 			{
 				b = exp(-currentD * constant);
 				a = 1 - b;
-			}
-
-			/**
-			* Updates the filter coefficients
-			* 
-			* @param distance The new distance
-			*/
-			inline void UpdateParameters(const Real distance)
-			{
-				targetD = distance;
-				currentD = distance;
-				UpdateParameters();
 			}
 
 			/**
@@ -138,7 +131,12 @@ namespace RAC
 			* Current and target distances
 			*/
 			Real currentD;
-			Real targetD;;
+			Real targetD;
+
+			/**
+			* Boolean to skip unnecessary update and audio calculations
+			*/
+			bool equal;
 		};
 	}
 }

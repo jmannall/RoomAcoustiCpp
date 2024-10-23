@@ -22,7 +22,6 @@ namespace RAC
 
 		Real AirAbsorption::GetOutput(const Real input)
 		{
-			FlushDenormals();
 			Real v = input;
 			Real output = 0.0;
 
@@ -30,7 +29,6 @@ namespace RAC
 			y = v;
 			output += v * b;
 
-			NoFlushDenormals();
 			return output;
 		}
 
@@ -38,8 +36,17 @@ namespace RAC
 
 		void AirAbsorption::ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const int numFrames, const Real lerpFactor)
 		{
-			if (currentD == targetD)
+			FlushDenormals();
+			if (equal)
 			{
+				for (int i = 0; i < numFrames; i++)
+					outBuffer[i] = GetOutput(inBuffer[i]);
+			}
+			else if (Equals(currentD, targetD))
+			{
+				currentD = targetD;
+				equal = true;
+				UpdateParameters();
 				for (int i = 0; i < numFrames; i++)
 					outBuffer[i] = GetOutput(inBuffer[i]);
 			}
@@ -48,10 +55,11 @@ namespace RAC
 				for (int i = 0; i < numFrames; i++)
 				{
 					outBuffer[i] = GetOutput(inBuffer[i]);
-					currentD = Lerp(currentD, targetD, lerpFactor);
+					Lerp(currentD, targetD, lerpFactor);
 					UpdateParameters();
 				}
 			}
+			NoFlushDenormals();
 		}
 	}
 }

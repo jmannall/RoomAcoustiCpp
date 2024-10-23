@@ -83,6 +83,7 @@ namespace RAC
 
 			void LPF::ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const int numFrames, const Real lerpFactor)
 			{
+				FlushDenormals();
 				// Apply filter
 				if (currentGain == targetGain)
 				{
@@ -107,6 +108,7 @@ namespace RAC
 						currentGain = Lerp(currentGain, targetGain, lerpFactor);
 					}
 				}
+				NoFlushDenormals();
 			}
 
 			//////////////////// UDFA class ////////////////////
@@ -242,6 +244,7 @@ namespace RAC
 
 			void UDFA::ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const int numFrames, const Real lerpFactor)
 			{
+				FlushDenormals();
 				// Apply filter
 				if (current == target)
 				{
@@ -282,6 +285,7 @@ namespace RAC
 						UpdateFilterParameters();
 					}
 				}
+				NoFlushDenormals();
 			}
 
 			//////////////////// UDFA-I class ////////////////////
@@ -421,6 +425,7 @@ namespace RAC
 
 			void NN::ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const int numFrames, const Real lerpFactor)
 			{
+				FlushDenormals();
 				if (current == target)
 				{
 					for (int i = 0; i < numFrames; i++)
@@ -446,6 +451,7 @@ namespace RAC
 						filter.UpdateParameters(current);
 					}
 				}
+				NoFlushDenormals();
 			}
 
 			//////////////////// UTD class ////////////////////
@@ -560,6 +566,7 @@ namespace RAC
 
 			void UTD::ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const int numFrames, const Real lerpFactor)
 			{
+				FlushDenormals();
 				if (current == target)
 				{
 					for (int i = 0; i < numFrames; i++)
@@ -585,6 +592,7 @@ namespace RAC
 						lrFilter.UpdateParameters(current);
 					}
 				}
+				NoFlushDenormals();
 			}
 
 			//////////////////// BTM class ////////////////////
