@@ -1,7 +1,7 @@
 /*
-* @class LinkwitzRileyFilter
+* @class LinkwitzRiley
 *
-* @brief Declaration of LinkwitzRileyFilter class
+* @brief Declaration of LinkwitzRiley filter class
 *
 */
 
@@ -53,8 +53,8 @@ namespace RAC
 			/**
 			* Returns the output of the LinkwitzRiley filter given an input
 			*
-			* @param input The input to the FIRFilter
-			* @return The output of the FIRFilter
+			* @param input The input to the LinkwitzRiley Filter
+			* @return The output of the LinkwitzRiley Filter
 			*/
 			Real GetOutput(const Real input);
 
@@ -75,7 +75,16 @@ namespace RAC
 			Coefficients fm;
 
 		private:
+			/**
+			* Intialises the PassFilter sections
+			*
+			* @param fs The samplerate for calculating filter coefficients
+			*/
 			void InitFilters(const int fs);
+
+			/**
+			* Calculate the pass band center frequencies 
+			*/
 			void CalcMidFrequencies();
 
 			/**
@@ -85,7 +94,7 @@ namespace RAC
 			Coefficients g;
 
 			/**
-			* Pass filters sections
+			* PassFilter sections
 			*/
 			std::vector<PassFilter> filters;
 		};

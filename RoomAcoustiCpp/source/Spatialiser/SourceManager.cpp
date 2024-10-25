@@ -77,7 +77,9 @@ namespace RAC
 
 		void SourceManager::UpdateSourceData(const size_t id, const bool visible, const VirtualSourceDataMap& vSources)
 		{
+			BeginReverb();
 			lock_guard <mutex> lock(updateMutex);
+			EndReverb();
 			auto it = mSources.find(id);
 			if (it != mSources.end()) // case: source does exist
 			{ it->second.UpdateData(visible, vSources); }

@@ -354,16 +354,22 @@ namespace RAC
 			}
 
 			{
+				BeginDiffraction();
 				lock_guard<std::mutex>lock(*dataMutex);
 				mAirAbsorption.SetDistance(distance);
 				if (isVisible)
 					targetGain = 1.0f;
 				else
 					targetGain = 0.0f;
+				EndDiffraction();
 			}
 			{
+				BeginFDN();
 				lock_guard<std::mutex>lock(*vSourcesMutex);
+				EndFDN();
+				BeginLateReverb();
 				UpdateVirtualSources(mVSources);
+				EndLateReverb();
 			}
 
 		}
@@ -410,6 +416,7 @@ namespace RAC
 
 		bool Source::UpdateVirtualSource(const VirtualSourceData& data, std::vector<VirtualSourceData>& newVSources)
 		{
+			BeginFirstOrderDiff();
 			int orderIdx = data.GetOrder() - 1;
 
 			VirtualSourceMap* tempStore;
@@ -440,7 +447,10 @@ namespace RAC
 						newVSources.push_back(vSource.Trim(i));
 					}
 					else
+					{
+						EndFirstOrderDiff();
 						return false;
+					}
 				}
 
 				if (data.IsReflection(i + 1))
@@ -454,7 +464,7 @@ namespace RAC
 					m = it->second.vEdgeMutex;
 				}
 			}
-
+			BeginHigherOrderRef();
 			auto it = tempStore->find(data.GetID(orderIdx));
 			if (it == tempStore->end())		// case: virtual source does not exist
 			{
@@ -513,7 +523,11 @@ namespace RAC
 						}
 
 						if (n == 1) // Check vSource has been successfully erased
+						{
+							EndHigherOrderRef();
+							EndFirstOrderDiff();
 							return true;
+						}
 					}
 					else if (!(it->second.mVirtualSources.size() > 0 || it->second.mVirtualEdgeSources.size() > 0))
 					{
@@ -525,10 +539,16 @@ namespace RAC
 						}
 
 						if (n == 1) // Check vSource has been successfully erased
+						{
+							EndHigherOrderRef();
+							EndFirstOrderDiff();
 							return true;
+						}
 					}
 				}
 			}
+			EndHigherOrderRef();
+			EndFirstOrderDiff();
 			return false;
 		}
 

@@ -366,3 +366,5 @@ FodyWeavers.xsd
 /Windows
 /Resources
 UnitTestData/LTC_3rdOrderISM_FDN.csv
+UnitTestData/LTC_3rdOrderISM_FDN_Eyring.csv
+UnitTestData/ltc_Testing.csv

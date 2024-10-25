@@ -518,8 +518,10 @@ namespace RAC
 				fdnChannel = oldChannel;
 			}
 			{
+				BeginIEM();
 				lock_guard<mutex> lock(tuneInMutex);
 				mSource->SetSourceTransform(data.transform);
+				EndIEM();
 			}
 		}
 

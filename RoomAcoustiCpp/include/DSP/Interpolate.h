@@ -8,7 +8,6 @@
 
 // C++ headers
 #if defined(_WINDOWS)
-/* Microsoft C/C++-compatible compiler */
 #include <intrin.h>
 #endif
 #include <omp.h>
@@ -50,6 +49,9 @@ namespace RAC
 
 		//////////////////// Flush denormals ////////////////////
 
+		/**
+		* Forces the CPU to flush denormals (cause performance issues in recursive filter structures)
+		*/
 		inline void FlushDenormals()
 		{
 #if(_WINDOWS)
@@ -61,6 +63,9 @@ namespace RAC
 #endif
 		}
 
+		/**
+		* Resets the CPU to use denormals
+		*/
 		inline void NoFlushDenormals()
 		{
 #if(_WINDOWS)
@@ -73,8 +78,18 @@ namespace RAC
 
 		//////////////////// Interpolation functions ////////////////////
 
+		/**
+		* Performs a linear interpolation of two real values
+		* 
+		* @params start The current value
+		* @params end The target value
+		* @params factor The interpolation factor (must be between 0 and 1)
+		* @return The result of the interpolation
+		*/
 		inline Real Lerp(Real start, const Real end, const Real factor)
 		{
+			assert(0.0 < factor && factor <= 1.0);
+
 #ifdef PROFILE_DETAILED
 			BeginLerp();
 #endif			
@@ -86,12 +101,20 @@ namespace RAC
 			return start;
 		}
 
+		/**
+		* Performs a linear interpolation of two buffers classes
+		*
+		* @params start The current buffer to be interpolated
+		* @params end The target buffer
+		* @params factor The interpolation factor (must be between 0 and 1)
+		*/
 		inline void Lerp(Buffer& start, const Buffer& end, const Real factor)
 		{
+			assert(0.0 < factor && factor <= 1.0);
+
 #ifdef PROFILE_DETAILED
 			BeginLerp();
 #endif
-
 			size_t len = start.Length();
 
 			if (len % 8 != 0)
@@ -138,8 +161,17 @@ namespace RAC
 #endif		
 		}
 
+		/**
+		* Performs a linear interpolation of two coefficient classes
+		*
+		* @params start The current coefficients to be interpolated
+		* @params end The target coefficients
+		* @params factor The interpolation factor (must be between 0 and 1)
+		*/
 		inline void Lerp(Coefficients& start, const Coefficients& end, const Real factor)
 		{
+			assert(0.0 < factor && factor <= 1.0);
+
 #ifdef PROFILE_DETAILED
 			BeginLerp();
 #endif			
@@ -156,6 +188,13 @@ namespace RAC
 
 		//////////////////// Equality functions ////////////////////
 
+		/**
+		* Checks for equality between two real values
+		* 
+		* @params a Value 1
+		* @params b Value 2
+		* @returns True if equal within the threshold EPS, false otherwise
+		*/
 		inline bool Equals(const Real a, const Real b)
 		{
 			if (a > b + EPS || a < b - EPS)
@@ -163,6 +202,13 @@ namespace RAC
 			return true;
 		}
 
+		/**
+		* Checks for equality between two coefficient classes
+		*
+		* @params u Coefficients 1
+		* @params v Coefficients 2
+		* @returns True if equal within the threshold EPS, false otherwise
+		*/
 		inline bool Equals(const Coefficients& u, const Coefficients& v)
 		{
 			if (u.Length() != v.Length())

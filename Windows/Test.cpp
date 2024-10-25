@@ -23,7 +23,6 @@
 #include "Common/ScopedTimer.h"
 
 #include "DSP/Interpolate.h"
-#include "DSP/ParametricEQ.h"
 #include "DSP/GraphicEQ.h"
 
 #include "Spatialiser/Interface.h"
@@ -352,7 +351,7 @@ namespace RAC
 
 		// Write the vector data to the file as a CSV row
 		for (size_t i = 0; i < data.Length(); ++i) {
-			file << data[i] * 8388607;
+			file << (int)(data[i] * 8388607.0);
 			// Add a comma after every element except the last one
 			if (i != data.Length() - 1) {
 				file << ",";
@@ -398,14 +397,15 @@ namespace RAC
 			IEMConfig iemConfig = IEMConfig(3, DirectSound::doCheck, true, DiffractionSound::none, DiffractionSound::none, true, 0.0);
 			UpdateIEMConfig(iemConfig);
 			UpdateSpatialisationMode(SpatMode::quality);
-			UpdateReverbTimeModel(ReverbTime::Sabine);
+			UpdateReverbTimeModel(ReverbTime::Eyring);
 			UpdateFDNModel(FDNMatrix::randomOrthogonal);
 			UpdateDiffractionModel(DiffractionModel::attenuate);
 
-			Absorption absorption = Absorption({ 0.222, 0.258, 0.405, 0.378, 0.284, 0.270, 0.277 });
+			// Absorption absorption = Absorption({ 0.222, 0.258, 0.405, 0.378, 0.284, 0.270, 0.277 });
+			Absorption absorption = Absorption({ 0.200, 0.227, 0.333, 0.315, 0.247, 0.237, 0.242 });
 			vec3 roomSize = vec3(7.0, 2.5, 6.0);
 			CreateShoebox(roomSize, absorption);
-
+				
 			Real volume = 105.0;
 			vec dimensions = vec({ 7.0, 2.5, 6.0 });
 			UpdateRoom(volume, dimensions);
@@ -423,7 +423,8 @@ namespace RAC
 			Real listenerStepPostition = 0.25;
 			Real listenerStepRotation = 2.5;
 			int numBuffers = fs / numFrames;
-			for (int i = 0; i < 8; i++)
+			std::string file = "C:/Documents/GitHub/jmannall/RoomAcoustiCpp/UnitTestData/LTC_3rdOrderISM_FDN_Eyring.csv";
+			for (int i = 0; i < 9; i++)
 			{
 				vec3 listenerPosition = vec3(4.22 - listenerStepPostition * i, 1.62, 4.5);
 
@@ -435,6 +436,7 @@ namespace RAC
 					UpdateSource(sourceID, sourcePosition, sourceOrientation);
 					Sleep(20);
 					UpdateSource(sourceID, sourcePosition, sourceOrientation);
+					SubmitAudio(sourceID, &in[0]);
 
 					in[0] = 1.0;
 					SubmitAudio(sourceID, &in[0]);
@@ -460,8 +462,8 @@ namespace RAC
 					ResetFDN();
 					RemoveSource(sourceID);
 
-					WriteDataEntry("C:/Documents/GitHub/jmannall/RoomAcoustiCpp/UnitTestData/ltc.csv", left, i * listenerStepPostition, j * listenerStepRotation);
-					WriteDataEntry("C:/Documents/GitHub/jmannall/RoomAcoustiCpp/UnitTestData/ltc.csv", right, i * listenerStepPostition, j * listenerStepRotation);
+					WriteDataEntry(file, left, i * listenerStepPostition, j * listenerStepRotation);
+					WriteDataEntry(file, right, i * listenerStepPostition, j * listenerStepRotation);
 				}
 			}
 
@@ -1609,23 +1611,6 @@ namespace RAC
 				for (int i = 0; i < 4; i++)
 					Assert::AreEqual(output[i], current[i], EPS, L"Wrong output");
 			}
-		}
-
-		TEST_METHOD(LowBandFilter)
-		{
-			int fs = 48000;
-			int order = 4;
-			std::vector<Real> f = { 250.0, 500.0, 1000.0, 2000.0, 4000.0 };
-			std::vector<Real> gain = { 0.06, 0.15, 0.4, 0.4, 0.6 };
-			Coefficients fc = Coefficients(f);
-			Coefficients g = Coefficients(gain);
-			ParametricEQ eq = ParametricEQ(g, order, fc, fs);
-
-
-			std::vector<Real> in = { 1.0, 0.2, 0.3, 0.5, -0.4, 0.1, 0.0, -0.2, 0.7 };
-			std::vector<Real> out = std::vector<Real>(in.size());
-			for (int i = 0; i < in.size(); i++)
-				out[i] = eq.GetOutput(in[i]);
 		}
 	};
 

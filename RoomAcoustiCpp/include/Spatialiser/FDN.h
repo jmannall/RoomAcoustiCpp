@@ -54,7 +54,7 @@ namespace RAC
 			void SetAbsorption();
 			void SetAbsorption(const Coefficients& T60);
 			void UpdateAbsorption(const Coefficients& T60);
-			inline Coefficients CalcGain(const Coefficients& T60) { return (-3.0 * mT / T60).Pow(10); } // 20 * log10(H(f)) = -60 * t / t60(f);
+			inline Coefficients CalcGain(const Coefficients& T60) { return (-3.0 * mT / T60).Pow10(); } // 20 * log10(H(f)) = -60 * t / t60(f);
 			inline void SetDelay(const Real t) { mT = t; SetDelay(); }
 			inline void Reset()
 			{ 

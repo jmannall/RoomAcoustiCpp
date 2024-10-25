@@ -61,6 +61,8 @@ namespace RAC
 
 			/**
 			* Returns the length of the buffer.
+			* 
+			* @return The length of the buffer
 			*/
 			inline size_t Length() const { return mBuffer.size(); }
 
@@ -77,6 +79,8 @@ namespace RAC
 			* Checks if the buffer is valid.
 			* 
 			* @details A buffer is valid if none of the values are nan.
+			* 
+			* @return False if the buffer contains nan values, true otherwise
 			*/
 			bool Valid();
 
@@ -141,6 +145,8 @@ namespace RAC
 		* Compares two buffers to check if they are equal.
 		*
 		* @details Two buffers are equal if they have the same length and all of their samples are equal.
+		* 
+		* @return True if the buffer are equal, false otherwise
 		*/
 		inline bool operator==(const Buffer& a, const Buffer& b)
 		{

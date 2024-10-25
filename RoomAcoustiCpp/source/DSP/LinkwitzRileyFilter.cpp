@@ -45,21 +45,10 @@ namespace RAC
 
 		void LinkwitzRiley::CalcMidFrequencies()
 		{
-			Real fMin;
-			Real fMax;
-			for (int i = 0; i < 4; i++)
-			{
-				if (i == 0)
-					fMin = 20.0;
-				else
-					fMin = fc[i - 1];
-				if (i == 3)
-					fMax = 20000.0;
-				else
-					fMax = fc[i];
-
-				fm[i] = sqrt(fMin * fMax);
-			}
+			fm[0] = sqrt(20.0 * fc[0]);
+			fm[1] = sqrt(fc[0] * fc[1]);
+			fm[2] = sqrt(fc[1] * fc[2]);
+			fm[3] = sqrt(fc[2] * 20000.0);
 		}
 
 		////////////////////////////////////////

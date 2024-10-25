@@ -89,8 +89,12 @@ namespace RAC
 
 			inline void UpdateData(const bool visible, const VirtualSourceDataMap& vSources)
 			{ 
+				BeginAirAbsorption();
 				{ lock_guard<std::mutex> lock(*dataMutex); isVisible = visible; }
+				EndAirAbsorption();
+				Begin3DTI();
 				{ lock_guard<std::mutex> lock(*vSourcesMutex); mVSources = vSources; }
+				End3DTI();
 			}
 			vec3 GetPosition();
 			
