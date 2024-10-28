@@ -185,12 +185,10 @@ namespace RAC
 		public:
 
 			// Load and Destroy
-			VirtualSource(const Config& config) : mCore(NULL), mSource(NULL), order(0), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(config.frequencyBands, config.Q, config.fs), isInitialised(false), feedsFDN(false), mFDNChannel(-1), 
+			VirtualSource(const Config& config) : mCore(NULL), mSource(NULL), order(0), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(config.frequencyBands, config.Q, config.fs), isInitialised(false), feedsFDN(false), mFDNChannel(-1),
 				attenuate(&mDiffractionPath), lowPass(&mDiffractionPath, config.fs), udfa(&mDiffractionPath, config.fs), udfai(&mDiffractionPath, config.fs), nnSmall(&mDiffractionPath), nnBest(&mDiffractionPath), utd(&mDiffractionPath, config.fs), btm(&mDiffractionPath, config.fs),
-				reflection(false), diffraction(false), mConfig(config), mAirAbsorption(mConfig.fs)
+				reflection(false), diffraction(false), updateTransform(false), mConfig(config), mAirAbsorption(mConfig.fs)
 			{
-				vWallMutex = std::make_shared<std::mutex>();
-				vEdgeMutex = std::make_shared<std::mutex>();
 				audioMutex = std::make_shared<std::mutex>();
 				UpdateDiffractionModel(config.diffractionModel);
 			}
@@ -209,30 +207,21 @@ namespace RAC
 
 			void UpdateSpatialisationMode(const SpatMode mode);
 			void UpdateDiffractionModel(const DiffractionModel model);
-			
+
 			// Updates
 			bool UpdateVirtualSource(const VirtualSourceData& data, int& fdnChannel);
+			inline void UpdateTransform() { if (updateTransform) { mSource->SetSourceTransform(transform); } }
 
 			// Audio
-			void GetVirtualSources(std::vector<VirtualSource>& vSources);
 			void ProcessAudio(const Buffer& data, matrix& reverbInput, Buffer& outputBuffer);
-			void ProcessAudioParallel(const Buffer& data, matrix& reverbInput, Buffer& outputBuffer);
 
 			// Deactivate
 			inline void Deactivate() { mSource = NULL; }
-
-			VirtualSourceMap mVirtualSources;
-			VirtualSourceMap mVirtualEdgeSources;
-
-			shared_ptr<std::mutex> vWallMutex;
-			shared_ptr<std::mutex> vEdgeMutex;
 
 		private:
 			void Init(const VirtualSourceData& data);
 			void Remove();
 			void Update(const VirtualSourceData& data, int& fdnChannel);
-
-			void Reset() { mVirtualSources.clear(); mVirtualEdgeSources.clear(); } // mWallIDs.clear(); }
 
 			inline void UpdateDiffraction()
 			{
@@ -275,10 +264,12 @@ namespace RAC
 			Diffraction::Model* mDiffractionModel;
 
 			AirAbsorption mAirAbsorption;
+			CTransform transform;
 
 			bool isInitialised;
 			bool reflection;
 			bool diffraction;
+			bool updateTransform;
 
 			// Mutexes
 			shared_ptr<std::mutex> audioMutex;

@@ -47,7 +47,7 @@ namespace RAC
 		typedef std::unordered_map<size_t, Edge> EdgeMap;
 		typedef std::unordered_map<size_t, Source> SourceMap;
 		typedef std::unordered_map<size_t, SourceData> SourceDataMap;
-		typedef std::unordered_map<size_t, VirtualSource> VirtualSourceMap;
+		typedef std::unordered_map<std::string, VirtualSource> VirtualSourceMap;
 		typedef std::unordered_map<std::string, VirtualSourceData> VirtualSourceDataMap;
 		typedef std::vector<std::vector<VirtualSourceData>> VirtualSourceDataStore;
 

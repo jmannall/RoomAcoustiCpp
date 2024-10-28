@@ -249,6 +249,7 @@ namespace RAC
 			*/
 			Binaural::CCore mCore;							// 3DTI core
 			std::shared_ptr<Binaural::CListener> mListener;	// 3DTI listener
+			Real headRadius;
 
 			/**
 			* Audio buffers

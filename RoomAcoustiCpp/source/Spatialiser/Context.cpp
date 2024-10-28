@@ -98,6 +98,7 @@ namespace RAC
 
 			// Create listener
 			mListener = mCore.CreateListener();
+			headRadius = mListener->GetHeadRadius();
 
 			mReverb = std::make_shared<Reverb>(&mCore, mConfig);
 			mRoom = std::make_shared<Room>(mConfig.frequencyBands.Length());
@@ -227,17 +228,19 @@ namespace RAC
 #if DEBUG_UPDATE
 	Debug::Log("Update Listener", Colour::Yellow);
 #endif
+			listenerPosition = position;
+
 			// Set listener position and orientation
 			CTransform transform;
 			transform.SetOrientation(CQuaternion(static_cast<float>(orientation.w), static_cast<float>(orientation.x), static_cast<float>(orientation.y), static_cast<float>(orientation.z)));
 			transform.SetPosition(CVector3(static_cast<float>(position.x), static_cast<float>(position.y), static_cast<float>(position.z)));
+			
 			{
 				lock_guard<mutex> lock(tuneInMutex);
 				mListener->SetListenerTransform(transform);
-				listenerPosition = position;
+				mReverb->UpdateReverb(position);
 			}
 			mImageEdgeModel->SetListenerPosition(position);
-			mReverb->UpdateReverb(position);
 		}
 
 		////////////////////////////////////////
@@ -258,29 +261,23 @@ namespace RAC
 #ifdef DEBUG_UPDATE
 			Debug::Log("Update Source", Colour::Yellow);
 #endif
-			Real distance, radius;
-			{
-				lock_guard<mutex> lock(tuneInMutex);
-				distance = (position - listenerPosition).Length();
-				radius = mListener->GetHeadRadius();
-			}
+			Real distance = (position - listenerPosition).Length();
 
 			// Ensure source is outside listener head radius
-			if (distance < radius)
+			if (distance < headRadius)
 			{
 				vec3 newPosition = position;
 				if (distance == 0.0)
 					newPosition = mSources->GetSourcePosition(id);
 
-				newPosition = listenerPosition + UnitVector(newPosition - listenerPosition) * radius;
+				newPosition = listenerPosition + UnitVector(newPosition - listenerPosition) * headRadius;
 
 				// Update source position, orientation and virtual sources
-				mSources->Update(id, newPosition, orientation, radius);
+				mSources->Update(id, newPosition, orientation, headRadius);
 			}
 			else
 				// Update source position, orientation and virtual sources
 				mSources->Update(id, position, orientation, distance);
-			
 		}
 
 		////////////////////////////////////////

@@ -36,34 +36,6 @@ namespace RAC
 	namespace Spatialiser
 	{
 
-		//////////////////// SourceData class ////////////////////
-
-		//class SourceData
-		//{
-		//public:
-
-		//	// Load and Destroy
-		//	SourceData() : id(0), mPosition(vec3()), visible(false) {}
-		//	SourceData(const size_t ID, vec3 position) : id(ID), mPosition(position), visible(false) {}
-		//	SourceData(const SourceData& data) : id(data.id), mPosition(data.mPosition), visible(data.visible) {}
-
-		//	// Operators
-		//	/*inline SourceData operator=(const SourceData& data)
-		//	{
-		//		id = data.id;
-		//		mPosition = data.mPosition;
-		//		visible = data.visible;
-		//		vSources = data.vSources;
-		//		return *this;
-		//	}*/
-
-		//	// Member variables
-		//	size_t id;
-		//	vec3 mPosition;
-		//	bool visible;
-
-		//private:
-		//};
 		typedef std::pair<size_t, vec3> IDPositionPair;
 
 		//////////////////// Source class ////////////////////
@@ -84,8 +56,6 @@ namespace RAC
 
 			// Updates
 			void Update(const vec3& position, const vec4& orientation, const Real distance);
-			void UpdateVirtualSources(const VirtualSourceDataMap& data);
-			bool UpdateVirtualSource(const VirtualSourceData& data, std::vector<VirtualSourceData>& newVSources);
 
 			inline void UpdateData(const bool visible, const VirtualSourceDataMap& vSources)
 			{ 
@@ -93,21 +63,30 @@ namespace RAC
 				{ lock_guard<std::mutex> lock(*dataMutex); isVisible = visible; }
 				EndAirAbsorption();
 				Begin3DTI();
-				{ lock_guard<std::mutex> lock(*vSourcesMutex); mVSources = vSources; }
+				{ lock_guard<std::mutex> lock(*vSourceDataMutex); targetVSources = vSources; }
 				End3DTI();
 			}
 			vec3 GetPosition();
 			
 			// Audio
-			void ProcessAudioParallel(const Buffer& data, matrix& reverbInput, Buffer& outputBuffer);
 			void ProcessAudio(const Buffer& data, matrix& reverbInput, Buffer& outputBuffer);
 
 			// Reset
 			inline void Deactivate() { mSource = NULL; }
-			inline void Reset() { mVirtualSources.clear(); ResetFDNSlots(); }
-			void ResetFDNSlots();
+			inline void Reset()
+			{ 
+				{ lock_guard<std::mutex> lock(*vSourcesMutex); mVSources.clear(); }
+				ResetFDNSlots();
+			}
 
 		private:
+
+			void UpdateVirtualSourceDataMap();
+			void UpdateVirtualSources();
+			bool UpdateVirtualSource(const VirtualSourceData& data);
+			int AssignFDNChannel();
+
+			void ResetFDNSlots();
 
 			// Constants
 			Binaural::CCore* mCore;
@@ -121,22 +100,21 @@ namespace RAC
 			AirAbsorption mAirAbsorption;
 			Real targetGain;
 			Real currentGain;
-			VirtualSourceDataMap oldData;
-
-			// IEM tree structure
-			VirtualSourceMap mVirtualSources;
-			VirtualSourceMap mVirtualEdgeSources;
 
 			std::vector<int> freeFDNChannels;
 			
 			bool isVisible;
-			VirtualSourceDataMap mVSources;
+			VirtualSourceMap mVSources;
+
+			VirtualSourceDataMap currentVSources;
+			VirtualSourceDataMap targetVSources;
 
 			// Mutexes
 			shared_ptr<std::mutex> vWallMutex; // Protects mVirtualSources
 			shared_ptr<std::mutex> vEdgeMutex; // Protects mVirtualEdgeSources
 			shared_ptr<std::mutex> dataMutex; // Protects isVisible, targetGain, currentGain
-			shared_ptr<std::mutex> vSourcesMutex; // Protects vSources
+			shared_ptr<std::mutex> vSourceDataMutex; // Protects currentVSources, targetVSources
+			shared_ptr<std::mutex> vSourcesMutex; // Protects mVSources
 		};
 	}
 }

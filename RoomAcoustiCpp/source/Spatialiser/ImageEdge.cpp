@@ -87,6 +87,7 @@ namespace RAC
 #ifdef PROFILE_BACKGROUND_THREAD
 				EndCopyData();
 #endif
+				++i;
 			}
 		}
 

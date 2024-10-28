@@ -93,10 +93,8 @@ namespace RAC
 
 		VirtualSource::VirtualSource(Binaural::CCore* core, const Config& config) : mCore(core), mSource(NULL), order(0), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(config.frequencyBands, config.Q, config.fs), isInitialised(false), mConfig(config), feedsFDN(false), mFDNChannel(-1),
 			attenuate(&mDiffractionPath), lowPass(&mDiffractionPath, config.fs), udfa(&mDiffractionPath, config.fs), udfai(&mDiffractionPath, config.fs), nnSmall(&mDiffractionPath), nnBest(&mDiffractionPath), utd(&mDiffractionPath, config.fs), btm(&mDiffractionPath, config.fs),
-			reflection(false), diffraction(false), mAirAbsorption(config.fs), bStore(config.numFrames)
+			reflection(false), diffraction(false), updateTransform(false), mAirAbsorption(config.fs), bStore(config.numFrames)
 		{
-			vWallMutex = std::make_shared<std::mutex>();
-			vEdgeMutex = std::make_shared<std::mutex>();
 			audioMutex = std::make_shared<std::mutex>();
 			bInput = CMonoBuffer<float>(mConfig.numFrames);
 			bOutput.left = CMonoBuffer<float>(mConfig.numFrames);
@@ -107,10 +105,8 @@ namespace RAC
 
 		VirtualSource::VirtualSource(Binaural::CCore* core, const Config& config, const VirtualSourceData& data, int fdnChannel) : mCore(core), mSource(NULL), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(data.GetAbsorption(), config.frequencyBands, config.Q, config.fs), isInitialised(false), mConfig(config), feedsFDN(data.feedsFDN), mFDNChannel(fdnChannel),
 			attenuate(&mDiffractionPath), lowPass(&mDiffractionPath, config.fs), udfa(&mDiffractionPath, config.fs), udfai(&mDiffractionPath, config.fs), nnSmall(&mDiffractionPath), nnBest(&mDiffractionPath), utd(&mDiffractionPath, config.fs), btm(&mDiffractionPath, config.fs),
-			reflection(data.reflection), diffraction(data.diffraction), mAirAbsorption(data.distance, mConfig.fs), bStore(config.numFrames)
+			reflection(data.reflection), diffraction(data.diffraction), updateTransform(false), mAirAbsorption(data.distance, mConfig.fs), bStore(config.numFrames), transform(data.transform)
 		{
-			vWallMutex = std::make_shared<std::mutex>();
-			vEdgeMutex = std::make_shared<std::mutex>();
 			audioMutex = std::make_shared<std::mutex>();
 			bInput = CMonoBuffer<float>(mConfig.numFrames);
 			bOutput.left = CMonoBuffer<float>(mConfig.numFrames);
@@ -123,29 +119,36 @@ namespace RAC
 		VirtualSource::~VirtualSource()
 		{
 			mCore->RemoveSingleSourceDSP(mSource);
-			Reset();
 		};
 
+		// Return value depending on removed, not removed and source busy (so try again later)?
+		// if is Init() so do later all in one go (less locking of mutex)
 		bool VirtualSource::UpdateVirtualSource(const VirtualSourceData& data, int& fdnChannel)
 		{
 			if (data.visible) // Process virtual source - Init if doesn't exist
 			{
-				lock_guard<mutex> lock(*audioMutex);
-				mTargetGain = 1.0f;
-				if (!isInitialised)
-					Init(data);
-				Update(data, fdnChannel);
+				unique_lock<mutex> lck(*audioMutex, std::defer_lock);
+				if (lck.try_lock())
+				{
+					mTargetGain = 1.0f;
+					if (!isInitialised)
+						Init(data);
+					Update(data, fdnChannel);
+				}
 			}
 			else
 			{
-				std::unique_lock<mutex> lock(*audioMutex);
-				mTargetGain = 0.0f;
-				if (mCurrentGain < 0.0001)
+				unique_lock<mutex> lck(*audioMutex, std::defer_lock);
+				if (lck.try_lock())
 				{
-					if (isInitialised)
-						Remove();
-					lock.unlock();
-					return true;
+					mTargetGain = 0.0f;
+					if (mCurrentGain < 0.0001)
+					{
+						if (isInitialised)
+							Remove();
+						lck.unlock();
+						return true;
+					}
 				}
 			}
 			return false;
@@ -180,17 +183,6 @@ namespace RAC
 					break;
 				}
 				}
-			}
-
-			{
-				lock_guard<mutex> lock(*vWallMutex);
-				for (auto& it : mVirtualSources)
-					it.second.UpdateSpatialisationMode(mode);
-			}
-			{
-				lock_guard<mutex> lock(*vEdgeMutex);
-				for (auto& it : mVirtualEdgeSources)
-					it.second.UpdateSpatialisationMode(mode);
 			}
 		}
 
@@ -245,34 +237,8 @@ namespace RAC
 			UpdateDiffraction();
 		}
 
-		void VirtualSource::GetVirtualSources(std::vector<VirtualSource>& vSources)
-		{
-			{
-				lock_guard<mutex> lock(*vWallMutex);
-				for (auto& it : mVirtualSources)
-					it.second.GetVirtualSources(vSources);
-			}
-			{
-				lock_guard<mutex> lock(*vEdgeMutex);
-				for (auto& it : mVirtualEdgeSources)
-					it.second.GetVirtualSources(vSources);
-			}
-			vSources.push_back(*this);
-		}
-
 		void VirtualSource::ProcessAudio(const Buffer& data, matrix& reverbInput, Buffer& outputBuffer)
 		{
-			{
-				lock_guard<mutex> lock(*vWallMutex);
-				for (auto& it : mVirtualSources)
-					it.second.ProcessAudio(data, reverbInput, outputBuffer);
-			}
-			{
-				lock_guard<mutex> lock(*vEdgeMutex);
-				for (auto& it : mVirtualEdgeSources)
-					it.second.ProcessAudio(data, reverbInput, outputBuffer);
-			}
-
 			lock_guard<mutex> lock(*audioMutex);
 			if (isInitialised)
 			{
@@ -365,101 +331,6 @@ namespace RAC
 			}
 		}
 
-		void VirtualSource::ProcessAudioParallel(const Buffer& data, matrix& reverbInput, Buffer& outputBuffer)
-		{
-
-			//lock_guard<mutex> lock(*audioMutex);
-			if (isInitialised)
-			{
-#ifdef PROFILE_AUDIO_THREAD
-				BeginVirtualSource();
-#endif
-				if (diffraction)
-				{
-					{
-#ifdef PROFILE_AUDIO_THREAD
-						BeginDiffraction();
-#endif
-						ProcessDiffraction(data, bStore);
-#ifdef PROFILE_AUDIO_THREAD
-						EndDiffraction();
-#endif
-						if (reflection)
-						{
-#ifdef PROFILE_AUDIO_THREAD
-							BeginReflection();
-#endif
-							mFilter.ProcessAudio(bStore, bStore, mConfig.numFrames, mConfig.lerpFactor);
-#ifdef PROFILE_AUDIO_THREAD
-							EndReflection();
-#endif
-						}
-					}
-				}
-				else if (reflection)
-				{
-#ifdef PROFILE_AUDIO_THREAD
-					BeginReflection();
-#endif
-					mFilter.ProcessAudio(data, bStore, mConfig.numFrames, mConfig.lerpFactor);
-#ifdef PROFILE_AUDIO_THREAD
-					EndReflection();
-#endif
-				}
-#ifdef PROFILE_AUDIO_THREAD
-				BeginAirAbsorption();
-#endif
-				mAirAbsorption.ProcessAudio(bStore, bStore, mConfig.numFrames, mConfig.lerpFactor);
-#ifdef PROFILE_AUDIO_THREAD
-				EndAirAbsorption();
-#endif
-				if (mCurrentGain == mTargetGain)
-				{
-					for (int i = 0; i < mConfig.numFrames; i++)
-						bInput[i] = static_cast<float>(bStore[i] * mCurrentGain);
-				}
-				else
-				{
-					for (int i = 0; i < mConfig.numFrames; i++)
-					{
-						bInput[i] = static_cast<float>(bStore[i] * mCurrentGain);
-						mCurrentGain = Lerp(mCurrentGain, mTargetGain, mConfig.lerpFactor);
-					}
-				}
-
-#ifdef PROFILE_AUDIO_THREAD
-				Begin3DTI();
-#endif
-				{
-					lock_guard<mutex> lock(tuneInMutex);
-					mSource->SetBuffer(bInput);
-
-					if (feedsFDN)
-					{
-						{
-							mSource->ProcessAnechoic(bMonoOutput, bOutput.left, bOutput.right);
-							for (int i = 0; i < mConfig.numFrames; i++)
-								reverbInput[i][mFDNChannel] += static_cast<Real>(bMonoOutput[i]);
-						}
-					}
-					else
-						mSource->ProcessAnechoic(bOutput.left, bOutput.right);
-				}
-#ifdef PROFILE_AUDIO_THREAD
-				End3DTI();
-#endif
-				int j = 0;
-				for (int i = 0; i < mConfig.numFrames; i++)
-				{
-					outputBuffer[j++] += static_cast<Real>(bOutput.left[i]);
-					outputBuffer[j++] += static_cast<Real>(bOutput.right[i]);
-				}
-#ifdef PROFILE_AUDIO_THREAD
-				EndVirtualSource();
-#endif
-			}
-		}
-
 		void VirtualSource::Init(const VirtualSourceData& data)
 		{
 			// audioMutex already locked
@@ -487,9 +358,10 @@ namespace RAC
 				// Initialise source to core
 				mSource = mCore->CreateSingleSourceDSP();
 				mSource->EnablePropagationDelay();
+				mSource->SetSourceTransform(data.transform);
 				// mSource->DisableInterpolation();
 			}
-
+			updateTransform = true;
 			isInitialised = true;
 
 			//Select spatialisation mode
@@ -517,12 +389,8 @@ namespace RAC
 				mFDNChannel = fdnChannel;
 				fdnChannel = oldChannel;
 			}
-			{
-				BeginIEM();
-				lock_guard<mutex> lock(tuneInMutex);
-				mSource->SetSourceTransform(data.transform);
-				EndIEM();
-			}
+
+			transform = data.transform;
 		}
 
 		void VirtualSource::Remove()
@@ -534,6 +402,7 @@ namespace RAC
 				lock_guard<mutex> lock(tuneInMutex);
 				mCore->RemoveSingleSourceDSP(mSource);
 			}
+			updateTransform = false;
 			isInitialised = false;
 		}
 	}

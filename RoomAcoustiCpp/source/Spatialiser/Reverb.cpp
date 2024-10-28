@@ -118,12 +118,10 @@ namespace RAC
 
 		void ReverbSource::UpdatePosition(const vec3& position)
 		{
+			// tuneInMutex already locked by context
 			CTransform transform;
 			transform.SetPosition(CVector3(static_cast<float>(position.x + mShift.x), static_cast<float>(position.y + mShift.y), static_cast<float>(position.z + mShift.z)));
-			{
-				lock_guard<mutex> lock(tuneInMutex);
-				mSource->SetSourceTransform(transform);
-			}
+			mSource->SetSourceTransform(transform);
 		}
 
 		void ReverbSource::UpdateReflectionFilter(const Absorption& absorption)
@@ -265,6 +263,7 @@ namespace RAC
 
 		void Reverb::UpdateReverb(const vec3& position)
 		{
+			// tuneInMutex already locked by context
 			for (int i = 0; i < mConfig.numFDNChannels; i++)
 				mReverbSources[i].UpdatePosition(position);
 		}

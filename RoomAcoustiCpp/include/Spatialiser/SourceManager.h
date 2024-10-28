@@ -12,10 +12,12 @@
 #include <unordered_map>
 #include <mutex>
 #include <ctime>
+#include <shared_mutex>
 
 // Spatialiser headers
 #include "Spatialiser/Types.h"
 #include "Spatialiser/Source.h"
+#include "Spatialiser/Mutexes.h"
 
 // 3DTI headers
 #include "BinauralSpatializer/Core.h"
@@ -36,9 +38,9 @@ namespace RAC
 			SourceManager(Binaural::CCore* core, const Config& config) : mSources(), mEmptySlots(), mCore(core), mConfig(config), nextSource(0) {};
 			~SourceManager()
 			{ 
-				std::lock(updateMutex, processAudioMutex);
-				std::lock_guard<std::mutex> lk1(updateMutex, std::adopt_lock);
-				std::lock_guard<std::mutex> lk2(processAudioMutex, std::adopt_lock); 
+				lock(updateMutex, processAudioMutex);
+				unique_lock<shared_mutex> lk1(updateMutex, std::adopt_lock);
+				lock_guard<mutex> lk2(processAudioMutex, std::adopt_lock); 
 				Reset();
 			};
 
@@ -50,16 +52,16 @@ namespace RAC
 
 			inline void Update(const size_t id, const vec3& position, const vec4& orientation, Real& distance)
 			{
-				lock_guard <mutex> lock(updateMutex); // Lock before locate to ensure not deleted between found and mutex lock
+				shared_lock<shared_mutex> lock(updateMutex); // Lock before locate to ensure not deleted between found and mutex lock
 				auto it = mSources.find(id);
 				if (it != mSources.end()) { it->second.Update(position, orientation, distance); } // case: source does exist
 			}
 
 			inline void Remove(const size_t id)
 			{
-				std::lock(updateMutex, processAudioMutex);
-				std::lock_guard<std::mutex> lk1(updateMutex, std::adopt_lock);
-				std::lock_guard<std::mutex> lk2(processAudioMutex, std::adopt_lock);
+				lock(updateMutex, processAudioMutex);
+				unique_lock<shared_mutex> lk1(updateMutex, std::adopt_lock);
+				lock_guard<std::mutex> lk2(processAudioMutex, std::adopt_lock);
 
 				size_t removed = mSources.erase(id);
 				while (!mTimers.empty() && difftime(time(NULL), mTimers.front().time) > 60)
@@ -78,7 +80,8 @@ namespace RAC
 			std::vector<IDPositionPair> GetSourceData();
 			inline vec3 GetSourcePosition(const size_t id)
 			{
-				lock_guard <mutex> lock(updateMutex); // Lock before locate to ensure not deleted between found and mutex lock
+				shared_lock<shared_mutex> shared_lock(updateMutex); // Lock before locate to ensure not deleted between found and mutex lock
+				lock_guard<mutex> lock(tuneInMutex);
 				auto it = mSources.find(id);
 				if (it != mSources.end()) { return it->second.GetPosition(); } // case: source does exist
 				return vec3();
@@ -100,7 +103,7 @@ namespace RAC
 			std::vector<IDPositionPair> sourceData;
 
 			// Mutexes
-			std::mutex updateMutex; // Locks during update step
+			std::shared_mutex updateMutex; // Locks during update step
 			std::mutex processAudioMutex; // Locks during process audio step
 
 			// Variables
