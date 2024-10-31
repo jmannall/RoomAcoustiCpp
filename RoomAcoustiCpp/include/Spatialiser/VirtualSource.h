@@ -13,6 +13,8 @@
 // C++ headers
 #include <vector>
 #include <unordered_map>
+#include <charconv>
+#include <array>
 
 // Common headers
 #include "Common/Vec3.h"
@@ -58,7 +60,8 @@ namespace RAC
 		public:
 
 			// Load and Destroy
-			VirtualSourceData(size_t numBands) : valid(false), visible(false), feedsFDN(false), mFDNChannel(-1), order(0), reflection(false), diffraction(false), key(""), mAbsorption(numBands), distance(0.0), lastUpdatedCycle(false) {};
+			VirtualSourceData(size_t numBands) : valid(false), visible(false), feedsFDN(false), mFDNChannel(-1), order(0), reflection(false), diffraction(false), key(""), mAbsorption(numBands),
+				distance(0.0), lastUpdatedCycle(false), idKey{'0'}, reflectionKey{'r'}, diffractionKey{'d'} {};
 			~VirtualSourceData() { /*Clear();*/ };
 
 			// Plane
@@ -67,7 +70,17 @@ namespace RAC
 				pathParts.emplace_back(id, true);
 				order++;
 				reflection = true;
-				key = key + std::to_string(id) + "r";
+				auto [ptr, ec] = std::to_chars(idKey.data(), idKey.data() + idKey.size(), id);
+				if (ec == std::errc()) // Null-terminate manually if conversion is successful
+					*ptr = '\0';
+				else// Failed to convert id to char array
+				{
+					key += reflectionKey[0];
+					return;
+				}
+
+				key += idKey.data();
+				key += reflectionKey[0];
 			}
 
 			// Absorption
@@ -81,7 +94,16 @@ namespace RAC
 				pathParts.emplace_back(id, false);
 				order++;
 				diffraction = true;
-				key = key + std::to_string(id) + "d";
+				auto [ptr, ec] = std::to_chars(idKey.data(), idKey.data() + idKey.size(), id);
+				if (ec == std::errc()) // Null-terminate manually if conversion is successful
+					*ptr = '\0';
+				else// Failed to convert id to char array
+				{
+					key += diffractionKey[0];
+					return;
+				}
+				key += idKey.data();
+				key += diffractionKey[0];
 			}
 
 			// Getters
@@ -171,6 +193,9 @@ namespace RAC
 
 		private:
 			std::string key;
+			std::array<char, 21> idKey;
+			std::array<char, 1> reflectionKey;
+			std::array<char, 1> diffractionKey;
 			std::vector<Part> pathParts;
 			std::vector<vec3> mPositions;
 			size_t order;
@@ -185,14 +210,6 @@ namespace RAC
 		public:
 
 			// Load and Destroy
-			VirtualSource(const Config& config) : mCore(NULL), mSource(NULL), order(0), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(config.frequencyBands, config.Q, config.fs), isInitialised(false), feedsFDN(false), mFDNChannel(-1),
-				attenuate(&mDiffractionPath), lowPass(&mDiffractionPath, config.fs), udfa(&mDiffractionPath, config.fs), udfai(&mDiffractionPath, config.fs), nnSmall(&mDiffractionPath), nnBest(&mDiffractionPath), utd(&mDiffractionPath, config.fs), btm(&mDiffractionPath, config.fs),
-				reflection(false), diffraction(false), updateTransform(false), mConfig(config), mAirAbsorption(mConfig.fs)
-			{
-				audioMutex = std::make_shared<std::mutex>();
-				UpdateDiffractionModel(config.diffractionModel);
-			}
-			VirtualSource(Binaural::CCore* core, const Config& config);
 			VirtualSource(Binaural::CCore* core, const Config& config, const VirtualSourceData& data, const int fdnChannel);
 			~VirtualSource();
 
@@ -223,15 +240,45 @@ namespace RAC
 			void Remove();
 			void Update(const VirtualSourceData& data, int& fdnChannel);
 
+			void InitAudioData();
+
 			inline void UpdateDiffraction()
 			{
 				mDiffractionModel->UpdatePath(&mDiffractionPath);
 				mDiffractionModel->UpdateParameters();
 			}
 
-			inline void ProcessDiffraction(const Buffer& inBuffer, Buffer& outBuffer)
+			/*inline void ProcessDiffraction(const Buffer& inBuffer, Buffer& outBuffer)
 			{
 				mDiffractionModel->ProcessAudio(inBuffer, outBuffer, mConfig.numFrames, mConfig.lerpFactor);
+			}*/
+
+			inline void ProcessDiffraction(const Buffer& inBuffer, Buffer& outBuffer)
+			{
+				if (isCrossFading)
+				{
+					assert(mOldDiffractionModel != nullptr);
+
+					mOldDiffractionModel->ProcessAudio(inBuffer, bDiffStore, bDiffStore.Length(), mConfig.lerpFactor);
+					mDiffractionModel->ProcessAudio(inBuffer, outBuffer, mConfig.numFrames, mConfig.lerpFactor);
+
+					for (int i = 0; i < bDiffStore.Length(); ++i)
+					{
+						crossfadeFactor = static_cast<float>(crossfadeCounter) / crossfadeLengthSamples;
+						outBuffer[i] *= crossfadeFactor;
+						outBuffer[i] += bDiffStore[i] * (1.0f - crossfadeFactor);
+						++crossfadeCounter;
+
+						if (crossfadeCounter >= crossfadeLengthSamples)
+						{
+							isCrossFading = false;
+							mOldDiffractionModel = nullptr;
+							return;
+						}
+					}
+				}
+				else
+					mDiffractionModel->ProcessAudio(inBuffer, outBuffer, mConfig.numFrames, mConfig.lerpFactor);
 			}
 
 			// Constants
@@ -244,6 +291,7 @@ namespace RAC
 			shared_ptr<Binaural::CSingleSourceDSP> mSource;
 
 			Buffer bStore;
+			Buffer bDiffStore;
 			CMonoBuffer<float> bInput;
 			CEarPair<CMonoBuffer<float>> bOutput;
 			CMonoBuffer<float> bMonoOutput;
@@ -262,6 +310,12 @@ namespace RAC
 			Diffraction::BTM btm;
 
 			Diffraction::Model* mDiffractionModel;
+			Diffraction::Model* mOldDiffractionModel;
+
+			bool isCrossFading;
+			int crossfadeLengthSamples;
+			int crossfadeCounter;
+			float crossfadeFactor;
 
 			AirAbsorption mAirAbsorption;
 			CTransform transform;

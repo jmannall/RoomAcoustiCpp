@@ -55,7 +55,7 @@ namespace RAC
 				for (int i = 0; i < numFrames; i++)
 				{
 					outBuffer[i] = GetOutput(inBuffer[i]);
-					Lerp(currentD, targetD, lerpFactor);
+					currentD = Lerp(currentD, targetD, lerpFactor);
 					UpdateParameters();
 				}
 			}

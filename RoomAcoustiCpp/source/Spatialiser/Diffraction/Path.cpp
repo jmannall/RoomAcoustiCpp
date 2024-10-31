@@ -161,9 +161,8 @@ namespace RAC
 			void Path::CalcT(SRData* data)
 			{
 				vec3 k = UnitVector(data->point - mEdge.GetEdgeCoord(data->z));
-				vec3 edgeNorm = mEdge.mEdgeNormal;
-				data->t = acos(Dot(k, edgeNorm));
-				data->rot = signbit(Dot(Cross(k, edgeNorm), mEdge.mEdgeVector));
+				data->t = acos(Dot(k, mEdge.mEdgeNormal));
+				data->rot = signbit(Dot(Cross(k, mEdge.mEdgeNormal), mEdge.mEdgeVector));
 			}
 
 			void Path::CalcApex()

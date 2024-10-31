@@ -371,6 +371,7 @@ namespace RAC
 
 			if (mIEMConfig.order < 1)
 			{
+				EraseOldEntries(vSources);
 #ifdef PROFILE_BACKGROUND_THREAD
 				EndIEM();
 #endif
@@ -394,6 +395,7 @@ namespace RAC
 
 				if (mIEMConfig.order < 2)
 				{
+					EraseOldEntries(vSources);
 #ifdef PROFILE_BACKGROUND_THREAD
 					EndIEM();
 #endif
@@ -680,7 +682,7 @@ namespace RAC
 
 							vSource.SetPreviousPlane(planeData);
 
-							if (counter <= size)
+							if (counter < size)
 								sp[refIdx][counter].Update(vS);
 							counter++;
 

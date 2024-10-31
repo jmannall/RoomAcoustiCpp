@@ -218,7 +218,17 @@ namespace RAC
 			Coefficients T60 = mRoom->GetReverbTime(volume);
 			if (T60 == 0.0)
 				T60 = mReverb->GetReverbTime();
-			mReverb->SetFDNParameters(T60, dimensions);
+			if (dimensions.Rows() == 0)
+			{
+				Debug::Log("No dimensions provided for room", Colour::Red);
+				vec defaultDimensions = vec(3); // Assume a shoebox
+				defaultDimensions[0] = 2.5; // Assume height
+				defaultDimensions[1] = 4.0; // Assume width
+				defaultDimensions[2] = volume / 10.0; // Calculate depth
+				mReverb->SetFDNParameters(T60, defaultDimensions);
+			}
+			else
+				mReverb->SetFDNParameters(T60, dimensions);
 		}
 
 		////////////////////////////////////////

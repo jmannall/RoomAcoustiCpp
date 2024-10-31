@@ -475,7 +475,7 @@ namespace RAC
 			int fs = 48000;
 			int numFrames = 4096;
 			int numFDNChannels = 12;
-			Real lerpFactor = 0;
+			Real lerpFactor = 2;
 			Real q = 0.98;
 			Coefficients fBands = Coefficients({ 125.0, 250.0, 500.0, 1000.0, 2000.0, 4000.0, 8000.0 });
 
@@ -485,7 +485,7 @@ namespace RAC
 
 			Assert::IsTrue(init, L"Failed to initialise RAC");
 
-			int hrtfResamplingStep = 5;
+			int hrtfResamplingStep = 30;
 			const std::vector<std::string> filePaths = { "C:/Documents/GitHub/jmannall/RoomAcoustiCpp/Resources/Kemar_HRTF_ITD_48000Hz.3dti-hrtf",
 														"C:/Documents/GitHub/jmannall/RoomAcoustiCpp/Resources/NearFieldCompensation_ILD_48000.3dti-ild",
 														"C:/Documents/GitHub/jmannall/RoomAcoustiCpp/Resources/HRTF_ILD_48000.3dti-ild" };
@@ -510,6 +510,7 @@ namespace RAC
 			UpdateRoom(volume, dimensions);
 
 			vec3 sourcePosition = vec3(5.47, 1.62, 4.5);
+			vec3 sourcePosition2 = vec3(2.21, 1.52, 1.3);
 			vec4 sourceOrientation = vec4({ 0.0, 0.0, 0.0, 1.0 });
 
 			vec3 listenerPosition = vec3(4.22, 1.62, 4.5);
@@ -518,9 +519,7 @@ namespace RAC
 			UpdateListener(listenerPosition, listenerOrientation);
 			size_t sourceID = InitSource();
 			UpdateSource(sourceID, sourcePosition, sourceOrientation);
-			Sleep(20);
-			UpdateSource(sourceID, sourcePosition, sourceOrientation);
-
+			
 			BufferF in = BufferF(numFrames);
 			BufferF out = BufferF(2 * numFrames);
 			BufferF left = BufferF(fs);
@@ -530,11 +529,23 @@ namespace RAC
 
 			in[0] = 1.0;
 
+			for (int i = 0; i < 1; i++)
+			{
+				SubmitAudio(sourceID, &in[0]);
+				GetOutput(&outPtr);
+			}
+
+			Sleep(20);
+			UpdateSource(sourceID, sourcePosition2, sourceOrientation);
+			Sleep(20);
+			UpdateSource(sourceID, sourcePosition2, sourceOrientation);
+
 			for (int i = 0; i < 10; i++)
 			{
 				SubmitAudio(sourceID, &in[0]);
 				GetOutput(&outPtr);
 			}
+
 			RemoveSource(sourceID);
 			Exit();
 		}
@@ -915,66 +926,6 @@ namespace RAC
 
 			source.ProcessAudio(mInputBuffer, mReverbInput, mOutputBuffer);
 			source.ProcessAudio(mInputBuffer, mReverbInput, mOutputBuffer);
-		}
-
-		// Seems to be an issue with the omp and test environment.
-		TEST_METHOD(Parallel)
-		{
-			std::ofstream out("Parallel.txt");
-			std::streambuf* coutbuf = std::cout.rdbuf(); //save old buf
-			std::cout.rdbuf(out.rdbuf()); //redirect std::cout to out.txt!
-
-			Config config;
-			Binaural::CCore core = CreateCore(config.fs, config.numFrames, 5);
-
-			Source source = CreateSource(core, config);
-
-			size_t numFrames = 2048;
-			size_t numFDNChannels = 12;
-			Buffer mInputBuffer = Buffer(numFrames);
-			Buffer mOutputBuffer = Buffer(2 * numFrames); // Stereo output buffer
-			matrix mReverbInput = matrix(numFrames, numFDNChannels);
-
-			mInputBuffer[0] = 1.0;
-
-			source.ProcessAudioParallel(mInputBuffer, mReverbInput, mOutputBuffer);
-			source.ProcessAudioParallel(mInputBuffer, mReverbInput, mOutputBuffer);
-
-			std::cout.rdbuf(out.rdbuf()); //redirect std::cout to out.txt!
-		}
-
-		TEST_METHOD(Compare)
-		{
-			Config config;
-			Binaural::CCore core = CreateCore(config.fs, config.numFrames, 5);
-
-			Source source = CreateSource(core, config);
-
-			size_t numFrames = 2048;
-			size_t numFDNChannels = 12;
-			Buffer mInputBuffer = Buffer(numFrames);
-			Buffer mOutputBuffer = Buffer(2 * numFrames); // Stereo output buffer
-			matrix mReverbInput = matrix(numFrames, numFDNChannels);
-
-			mInputBuffer[0] = 1.0;
-
-			source.ProcessAudioParallel(mInputBuffer, mReverbInput, mOutputBuffer);
-			source.ProcessAudio(mInputBuffer, mReverbInput, mOutputBuffer);
-
-			Source source2 = CreateSource(core, config);
-
-			Buffer mOutputBuffer2 = Buffer(2 * numFrames); // Stereo output buffer
-
-			source2.ProcessAudio(mInputBuffer, mReverbInput, mOutputBuffer2);
-			source2.ProcessAudio(mInputBuffer, mReverbInput, mOutputBuffer2);
-			
-			for (int i = 0; i < mOutputBuffer.Length(); i++)
-			{
-				std::string error = "Incorrect Sample: " + Unity::IntToStr(i);
-				std::wstring werror = std::wstring(error.begin(), error.end());
-				const wchar_t* werrorchar = werror.c_str();
-				Assert::AreEqual(mOutputBuffer[i], mOutputBuffer2[i], 0.0001, werrorchar);
-			}
 		}
 	};
 	

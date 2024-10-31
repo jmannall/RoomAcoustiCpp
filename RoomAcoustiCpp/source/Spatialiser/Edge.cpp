@@ -34,12 +34,12 @@ namespace RAC
 		void Edge::Update()
 		{
 			midPoint = (mTop + mBase) / 2;
-			mEdgeVector = UnitVectorRound(mTop - mBase);
+			mEdgeVector = UnitVector(mTop - mBase);
 
 			if (mFaceNormals.first == -mFaceNormals.second)
 				mEdgeNormal = Cross(mEdgeVector, mFaceNormals.first);
 			else
-				mEdgeNormal = UnitVectorRound(mFaceNormals.first + mFaceNormals.second);
+				mEdgeNormal = UnitVector(mFaceNormals.first + mFaceNormals.second);
 
 			Real test1 = Dot(mFaceNormals.first, mFaceNormals.second);
 			Real test2 = acos(test1);

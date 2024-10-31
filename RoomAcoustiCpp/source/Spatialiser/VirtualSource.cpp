@@ -91,28 +91,14 @@ namespace RAC
 
 		//////////////////// VirtualSource class ////////////////////
 
-		VirtualSource::VirtualSource(Binaural::CCore* core, const Config& config) : mCore(core), mSource(NULL), order(0), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(config.frequencyBands, config.Q, config.fs), isInitialised(false), mConfig(config), feedsFDN(false), mFDNChannel(-1),
+		VirtualSource::VirtualSource(Binaural::CCore* core, const Config& config, const VirtualSourceData& data, int fdnChannel) : mCore(core), mSource(nullptr), mConfig(config), mFDNChannel(fdnChannel),
+			mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(data.GetAbsorption(), config.frequencyBands, config.Q, config.fs), mAirAbsorption(data.distance, mConfig.fs), feedsFDN(data.feedsFDN), bStore(config.numFrames), bDiffStore(config.numFrames),
 			attenuate(&mDiffractionPath), lowPass(&mDiffractionPath, config.fs), udfa(&mDiffractionPath, config.fs), udfai(&mDiffractionPath, config.fs), nnSmall(&mDiffractionPath), nnBest(&mDiffractionPath), utd(&mDiffractionPath, config.fs), btm(&mDiffractionPath, config.fs),
-			reflection(false), diffraction(false), updateTransform(false), mAirAbsorption(config.fs), bStore(config.numFrames)
+			reflection(data.reflection), diffraction(data.diffraction), transform(data.transform), updateTransform(false), isInitialised(false), isCrossFading(false), mDiffractionModel(nullptr), mOldDiffractionModel(nullptr),
+			crossfadeCounter(0), crossfadeFactor(0.0f), crossfadeLengthSamples(mConfig.fs * 0.01)
 		{
-			audioMutex = std::make_shared<std::mutex>();
-			bInput = CMonoBuffer<float>(mConfig.numFrames);
-			bOutput.left = CMonoBuffer<float>(mConfig.numFrames);
-			bOutput.right = CMonoBuffer<float>(mConfig.numFrames);
-			bMonoOutput = CMonoBuffer<float>(mConfig.numFrames);
 			UpdateDiffractionModel(config.diffractionModel);
-		}
-
-		VirtualSource::VirtualSource(Binaural::CCore* core, const Config& config, const VirtualSourceData& data, int fdnChannel) : mCore(core), mSource(NULL), mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(data.GetAbsorption(), config.frequencyBands, config.Q, config.fs), isInitialised(false), mConfig(config), feedsFDN(data.feedsFDN), mFDNChannel(fdnChannel),
-			attenuate(&mDiffractionPath), lowPass(&mDiffractionPath, config.fs), udfa(&mDiffractionPath, config.fs), udfai(&mDiffractionPath, config.fs), nnSmall(&mDiffractionPath), nnBest(&mDiffractionPath), utd(&mDiffractionPath, config.fs), btm(&mDiffractionPath, config.fs),
-			reflection(data.reflection), diffraction(data.diffraction), updateTransform(false), mAirAbsorption(data.distance, mConfig.fs), bStore(config.numFrames), transform(data.transform)
-		{
-			audioMutex = std::make_shared<std::mutex>();
-			bInput = CMonoBuffer<float>(mConfig.numFrames);
-			bOutput.left = CMonoBuffer<float>(mConfig.numFrames);
-			bOutput.right = CMonoBuffer<float>(mConfig.numFrames);
-			bMonoOutput = CMonoBuffer<float>(mConfig.numFrames);
-			UpdateDiffractionModel(config.diffractionModel);
+			InitAudioData();
 			UpdateVirtualSource(data, fdnChannel);
 		}
 
@@ -120,6 +106,17 @@ namespace RAC
 		{
 			mCore->RemoveSingleSourceDSP(mSource);
 		};
+
+		void VirtualSource::InitAudioData()
+		{
+			audioMutex = std::make_shared<std::mutex>();
+
+			bInput = CMonoBuffer<float>(mConfig.numFrames);
+			bOutput.left = CMonoBuffer<float>(mConfig.numFrames);
+			bOutput.right = CMonoBuffer<float>(mConfig.numFrames);
+			bMonoOutput = CMonoBuffer<float>(mConfig.numFrames);
+			bDiffStore.ResizeBuffer(std::min(mConfig.numFrames, crossfadeLengthSamples));
+		}
 
 		// Return value depending on removed, not removed and source busy (so try again later)?
 		// if is Init() so do later all in one go (less locking of mutex)
@@ -188,6 +185,7 @@ namespace RAC
 
 		void VirtualSource::UpdateDiffractionModel(const DiffractionModel model)
 		{
+			mOldDiffractionModel = mDiffractionModel;
 			mConfig.diffractionModel = model;
 			switch (model)
 			{
@@ -235,6 +233,15 @@ namespace RAC
 				mDiffractionModel = &btm;
 			}
 			UpdateDiffraction();
+
+			if (mOldDiffractionModel == mDiffractionModel)
+				return;
+
+			if (mOldDiffractionModel == nullptr)
+				return;
+
+			isCrossFading = true;
+			crossfadeCounter = 0;
 		}
 
 		void VirtualSource::ProcessAudio(const Buffer& data, matrix& reverbInput, Buffer& outputBuffer)
