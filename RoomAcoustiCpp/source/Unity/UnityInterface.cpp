@@ -4,42 +4,42 @@
 #include "Unity/IUnityInterface.h"
 #include "Unity/IUnityProfiler.h"
 
-static IUnityProfiler* unityProfiler = NULL;
+static IUnityProfiler* unityProfiler = nullptr;
 static bool* isDevelopmentBuild = nullptr;
 
 IUnityProfiler* GetUnityProfiler() { return unityProfiler; }
 bool* GetDevBuild() { return isDevelopmentBuild; }
 
 #ifdef PROFILE_AUDIO_THREAD
-static const UnityProfilerMarkerDesc* sourceMarker = NULL;
-static const UnityProfilerMarkerDesc* virtualSourceMarker = NULL;
-static const UnityProfilerMarkerDesc* fdnMarker = NULL;
-static const UnityProfilerMarkerDesc* reverbMarker = NULL;
-static const UnityProfilerMarkerDesc* reverbSourceMarker = NULL;
-static const UnityProfilerMarkerDesc* reflectionMarker = NULL;
-static const UnityProfilerMarkerDesc* airAbsorptionMarker = NULL;
-static const UnityProfilerMarkerDesc* diffractionMarker = NULL;
-static const UnityProfilerMarkerDesc* threedtiMarker = NULL;
-static const UnityProfilerMarkerDesc* firMarker = NULL;
-static const UnityProfilerMarkerDesc* lerpMarker = NULL;
-static const UnityProfilerMarkerDesc* fdnChannelMarker = NULL;
-static const UnityProfilerMarkerDesc* fdnMatrixMarker = NULL;
+static const UnityProfilerMarkerDesc* sourceMarker = nullptr;
+static const UnityProfilerMarkerDesc* virtualSourceMarker = nullptr;
+static const UnityProfilerMarkerDesc* fdnMarker = nullptr;
+static const UnityProfilerMarkerDesc* reverbMarker = nullptr;
+static const UnityProfilerMarkerDesc* reverbSourceMarker = nullptr;
+static const UnityProfilerMarkerDesc* reflectionMarker = nullptr;
+static const UnityProfilerMarkerDesc* airAbsorptionMarker = nullptr;
+static const UnityProfilerMarkerDesc* diffractionMarker = nullptr;
+static const UnityProfilerMarkerDesc* threedtiMarker = nullptr;
+static const UnityProfilerMarkerDesc* firMarker = nullptr;
+static const UnityProfilerMarkerDesc* lerpMarker = nullptr;
+static const UnityProfilerMarkerDesc* fdnChannelMarker = nullptr;
+static const UnityProfilerMarkerDesc* fdnMatrixMarker = nullptr;
 
-static const UnityProfilerMarkerDesc* backgroundLoopMarker = NULL;
-static const UnityProfilerMarkerDesc* iemMarker = NULL;
-static const UnityProfilerMarkerDesc* directMarker = NULL;
-static const UnityProfilerMarkerDesc* firstOrderRefMarker = NULL;
-static const UnityProfilerMarkerDesc* secondOrderRefMarker = NULL;
-static const UnityProfilerMarkerDesc* thirdOrderRefMarker = NULL;
-static const UnityProfilerMarkerDesc* fourthOrderRefMarker = NULL;
-static const UnityProfilerMarkerDesc* higherOrderRefMarker = NULL;
-static const UnityProfilerMarkerDesc* firstOrderDiffMarker = NULL;
-static const UnityProfilerMarkerDesc* secondOrderRefDiffMarker = NULL;
-static const UnityProfilerMarkerDesc* thirdOrderRefDiffMarker = NULL;
-static const UnityProfilerMarkerDesc* fourthOrderRefDiffMarker = NULL;
-static const UnityProfilerMarkerDesc* higherOrderRefDiffMarker = NULL;
-static const UnityProfilerMarkerDesc* lateReverbMarker = NULL;
-static const UnityProfilerMarkerDesc* copyDataMarker = NULL;
+static const UnityProfilerMarkerDesc* backgroundLoopMarker = nullptr;
+static const UnityProfilerMarkerDesc* iemMarker = nullptr;
+static const UnityProfilerMarkerDesc* directMarker = nullptr;
+static const UnityProfilerMarkerDesc* firstOrderRefMarker = nullptr;
+static const UnityProfilerMarkerDesc* secondOrderRefMarker = nullptr;
+static const UnityProfilerMarkerDesc* thirdOrderRefMarker = nullptr;
+static const UnityProfilerMarkerDesc* fourthOrderRefMarker = nullptr;
+static const UnityProfilerMarkerDesc* higherOrderRefMarker = nullptr;
+static const UnityProfilerMarkerDesc* firstOrderDiffMarker = nullptr;
+static const UnityProfilerMarkerDesc* secondOrderRefDiffMarker = nullptr;
+static const UnityProfilerMarkerDesc* thirdOrderRefDiffMarker = nullptr;
+static const UnityProfilerMarkerDesc* fourthOrderRefDiffMarker = nullptr;
+static const UnityProfilerMarkerDesc* higherOrderRefDiffMarker = nullptr;
+static const UnityProfilerMarkerDesc* lateReverbMarker = nullptr;
+static const UnityProfilerMarkerDesc* copyDataMarker = nullptr;
 
 static UnityProfilerThreadId backgroundThreadID = 999;
 #endif
@@ -47,7 +47,7 @@ static UnityProfilerThreadId backgroundThreadID = 999;
 extern "C" void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API UnityPluginLoad(IUnityInterfaces * unityInterfaces)
 {
 	unityProfiler = unityInterfaces->Get<IUnityProfiler>();
-	if (unityProfiler == NULL)
+	if (unityProfiler == nullptr)
 		return;
 	isDevelopmentBuild = new bool(unityProfiler->IsAvailable() != 0);
 
@@ -87,7 +87,7 @@ extern "C" void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API UnityPluginLoad(IUnit
 
 extern "C" void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API UnityPluginUnload()
 {
-	unityProfiler = NULL;
+	unityProfiler = nullptr;
 }
 
 #ifdef PROFILE_AUDIO_THREAD

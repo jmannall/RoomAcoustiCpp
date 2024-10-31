@@ -72,7 +72,7 @@ namespace RAC
 			void ProcessAudio(const Buffer& data, matrix& reverbInput, Buffer& outputBuffer);
 
 			// Reset
-			inline void Deactivate() { mSource = NULL; }
+			inline void Deactivate() { mSource = nullptr; }
 			inline void Reset()
 			{ 
 				{ lock_guard<std::mutex> lock(*vSourcesMutex); mVSources.clear(); }

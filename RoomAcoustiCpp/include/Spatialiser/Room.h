@@ -74,12 +74,12 @@ namespace RAC
 					RemoveWallFromPlane(it->second.GetPlaneID(), id);
 
 					mWalls.erase(it);
-					while (!mWallTimers.empty() && difftime(time(NULL), mWallTimers.front().time) > 60)
+					while (!mWallTimers.empty() && difftime(time(nullptr), mWallTimers.front().time) > 60)
 					{
 						mEmptyWallSlots.push_back(mWallTimers.front().id);
 						mWallTimers.erase(mWallTimers.begin());
 					}
-					mWallTimers.push_back(TimerPair(id, time(NULL)));
+					mWallTimers.push_back(TimerPair(id, time(nullptr)));
 					RecordChange();
 				}
 			}
@@ -118,12 +118,12 @@ namespace RAC
 					if (itP->second.RemoveWall(idW)) // If plane contains no other walls
 					{
 						mPlanes.erase(itP);
-						while (!mPlaneTimers.empty() && difftime(time(NULL), mPlaneTimers.front().time) > 60)
+						while (!mPlaneTimers.empty() && difftime(time(nullptr), mPlaneTimers.front().time) > 60)
 						{
 							mEmptyPlaneSlots.push_back(mPlaneTimers.front().id);
 							mPlaneTimers.erase(mPlaneTimers.begin());
 						}
-						mPlaneTimers.push_back(TimerPair(idP, time(NULL)));
+						mPlaneTimers.push_back(TimerPair(idP, time(nullptr)));
 					}
 				}
 			}
@@ -208,12 +208,12 @@ namespace RAC
 						itW->second.RemoveEdge(idE);
 
 					mEdges.erase(idE);
-					while (!mEdgeTimers.empty() && difftime(time(NULL), mEdgeTimers.front().time) > 60)
+					while (!mEdgeTimers.empty() && difftime(time(nullptr), mEdgeTimers.front().time) > 60)
 					{
 						mEmptyEdgeSlots.push_back(mEdgeTimers.front().id);
 						mEdgeTimers.erase(mEdgeTimers.begin());
 					}
-					mEdgeTimers.push_back(TimerPair(idE, time(NULL)));
+					mEdgeTimers.push_back(TimerPair(idE, time(nullptr)));
 				}
 			}
 
@@ -232,12 +232,12 @@ namespace RAC
 						itW->second.RemoveEdge(idE);
 
 					mEdges.erase(idE);
-					while (!mEdgeTimers.empty() && difftime(time(NULL), mEdgeTimers.front().time) > 60)
+					while (!mEdgeTimers.empty() && difftime(time(nullptr), mEdgeTimers.front().time) > 60)
 					{
 						mEmptyEdgeSlots.push_back(mEdgeTimers.front().id);
 						mEdgeTimers.erase(mEdgeTimers.begin());
 					}
-					mEdgeTimers.push_back(TimerPair(idE, time(NULL)));
+					mEdgeTimers.push_back(TimerPair(idE, time(nullptr)));
 				}
 			}
 

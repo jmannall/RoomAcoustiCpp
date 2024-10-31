@@ -216,7 +216,7 @@ namespace RAC
 			inline bool IsInit() const { return isInitialised; }
 			inline bool Exists() const
 			{
-				if (mCore == NULL)
+				if (mCore == nullptr)
 					return false;
 				return true;
 			}
@@ -233,7 +233,7 @@ namespace RAC
 			void ProcessAudio(const Buffer& data, matrix& reverbInput, Buffer& outputBuffer);
 
 			// Deactivate
-			inline void Deactivate() { mSource = NULL; }
+			inline void Deactivate() { mSource = nullptr; }
 
 		private:
 			void Init(const VirtualSourceData& data);

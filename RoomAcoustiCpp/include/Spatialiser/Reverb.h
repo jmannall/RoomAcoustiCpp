@@ -54,7 +54,7 @@ namespace RAC
 			void AddInput(const Real in, const int& i) { inputBuffer[i] = in; }
 			void ProcessAudio(Buffer& outputBuffer);
 
-			inline void Deactivate() { mSource = NULL; }
+			inline void Deactivate() { mSource = nullptr; }
 			inline void Reset() { lock_guard<mutex> lock(*mMutex); mReflectionFilter.ClearBuffers(); }
 
 #ifdef _TEST

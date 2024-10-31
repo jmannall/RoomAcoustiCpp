@@ -64,7 +64,7 @@ namespace RAC
 				lock_guard<std::mutex> lk2(processAudioMutex, std::adopt_lock);
 
 				size_t removed = mSources.erase(id);
-				while (!mTimers.empty() && difftime(time(NULL), mTimers.front().time) > 60)
+				while (!mTimers.empty() && difftime(time(nullptr), mTimers.front().time) > 60)
 				{
 					mEmptySlots.push_back(mTimers.front().id);
 					mTimers.erase(mTimers.begin());
@@ -74,7 +74,7 @@ namespace RAC
 					return;
 
 				sourceData.pop_back();
-				mTimers.push_back(TimerPair(id, time(NULL)));
+				mTimers.push_back(TimerPair(id, time(nullptr)));
 			}
 
 			std::vector<IDPositionPair> GetSourceData();
