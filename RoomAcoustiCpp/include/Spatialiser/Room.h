@@ -79,7 +79,7 @@ namespace RAC
 						mEmptyWallSlots.push_back(mWallTimers.front().id);
 						mWallTimers.erase(mWallTimers.begin());
 					}
-					mWallTimers.push_back(TimerPair(id, time(nullptr)));
+					mWallTimers.push_back(TimerPair(id));
 					RecordChange();
 				}
 			}
@@ -123,7 +123,7 @@ namespace RAC
 							mEmptyPlaneSlots.push_back(mPlaneTimers.front().id);
 							mPlaneTimers.erase(mPlaneTimers.begin());
 						}
-						mPlaneTimers.push_back(TimerPair(idP, time(nullptr)));
+						mPlaneTimers.push_back(TimerPair(idP));
 					}
 				}
 			}
@@ -213,7 +213,7 @@ namespace RAC
 						mEmptyEdgeSlots.push_back(mEdgeTimers.front().id);
 						mEdgeTimers.erase(mEdgeTimers.begin());
 					}
-					mEdgeTimers.push_back(TimerPair(idE, time(nullptr)));
+					mEdgeTimers.push_back(TimerPair(idE));
 				}
 			}
 
@@ -237,7 +237,7 @@ namespace RAC
 						mEmptyEdgeSlots.push_back(mEdgeTimers.front().id);
 						mEdgeTimers.erase(mEdgeTimers.begin());
 					}
-					mEdgeTimers.push_back(TimerPair(idE, time(nullptr)));
+					mEdgeTimers.push_back(TimerPair(idE));
 				}
 			}
 

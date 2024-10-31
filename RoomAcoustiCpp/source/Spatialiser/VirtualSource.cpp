@@ -95,7 +95,7 @@ namespace RAC
 			mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(data.GetAbsorption(), config.frequencyBands, config.Q, config.fs), mAirAbsorption(data.distance, mConfig.fs), feedsFDN(data.feedsFDN), bStore(config.numFrames), bDiffStore(config.numFrames),
 			attenuate(&mDiffractionPath), lowPass(&mDiffractionPath, config.fs), udfa(&mDiffractionPath, config.fs), udfai(&mDiffractionPath, config.fs), nnSmall(&mDiffractionPath), nnBest(&mDiffractionPath), utd(&mDiffractionPath, config.fs), btm(&mDiffractionPath, config.fs),
 			reflection(data.reflection), diffraction(data.diffraction), transform(data.transform), updateTransform(false), isInitialised(false), isCrossFading(false), mDiffractionModel(nullptr), mOldDiffractionModel(nullptr),
-			crossfadeCounter(0), crossfadeFactor(0.0f), crossfadeLengthSamples(mConfig.fs * 0.01)
+			crossfadeCounter(0), crossfadeLengthSamples(mConfig.fs * 0.01)
 		{
 			UpdateDiffractionModel(config.diffractionModel);
 			InitAudioData();

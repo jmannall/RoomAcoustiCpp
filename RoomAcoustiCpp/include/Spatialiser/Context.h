@@ -239,17 +239,17 @@ namespace RAC
 			/**
 			* Spatialiser
 			*/
-			Config mConfig;			// Configuration for the spatialiser
+			Config mConfig;			// RAC Config
 			bool mIsRunning;		// Flag to check if the spatialiser is running
 			std::thread IEMThread;	// Background thread to run the image edge model
 			vec3 listenerPosition;	// Stored listener position
+			Real headRadius;		// Stored head radius from 3DTI
 
 			/**
 			* 3DTI components
 			*/
 			Binaural::CCore mCore;							// 3DTI core
 			std::shared_ptr<Binaural::CListener> mListener;	// 3DTI listener
-			Real headRadius;
 
 			/**
 			* Audio buffers

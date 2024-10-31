@@ -248,11 +248,6 @@ namespace RAC
 				mDiffractionModel->UpdateParameters();
 			}
 
-			/*inline void ProcessDiffraction(const Buffer& inBuffer, Buffer& outBuffer)
-			{
-				mDiffractionModel->ProcessAudio(inBuffer, outBuffer, mConfig.numFrames, mConfig.lerpFactor);
-			}*/
-
 			inline void ProcessDiffraction(const Buffer& inBuffer, Buffer& outBuffer)
 			{
 				if (isCrossFading)
@@ -264,7 +259,7 @@ namespace RAC
 
 					for (int i = 0; i < bDiffStore.Length(); ++i)
 					{
-						crossfadeFactor = static_cast<float>(crossfadeCounter) / crossfadeLengthSamples;
+						float crossfadeFactor = static_cast<float>(crossfadeCounter) / crossfadeLengthSamples;
 						outBuffer[i] *= crossfadeFactor;
 						outBuffer[i] += bDiffStore[i] * (1.0f - crossfadeFactor);
 						++crossfadeCounter;
@@ -281,41 +276,52 @@ namespace RAC
 					mDiffractionModel->ProcessAudio(inBuffer, outBuffer, mConfig.numFrames, mConfig.lerpFactor);
 			}
 
-			// Constants
+			/**
+			* 3DTI components
+			*/
 			Binaural::CCore* mCore;
+			shared_ptr<Binaural::CSingleSourceDSP> mSource;
+
 			Config mConfig;
 			bool feedsFDN;
 			int mFDNChannel;
 			int order;
 
-			shared_ptr<Binaural::CSingleSourceDSP> mSource;
-
-			Buffer bStore;
-			Buffer bDiffStore;
-			CMonoBuffer<float> bInput;
-			CEarPair<CMonoBuffer<float>> bOutput;
-			CMonoBuffer<float> bMonoOutput;
+			/**
+			* Audio Buffers
+			*/
+			Buffer bStore;							// Internal working buffer
+			Buffer bDiffStore;						// Internal diffraction crossfade buffer
+			CMonoBuffer<float> bInput;				// 3DTI Input buffer
+			CEarPair<CMonoBuffer<float>> bOutput;	// 3DTI Stero Output buffer
+			CMonoBuffer<float> bMonoOutput;			// 3DTI Mono output buffer
 
 			Real mCurrentGain;
 			Real mTargetGain;
 			GraphicEQ mFilter;
-			Diffraction::Path mDiffractionPath;
-			Diffraction::Attenuate attenuate;
-			Diffraction::LPF lowPass;
-			Diffraction::UDFA udfa;
-			Diffraction::UDFAI udfai;
-			Diffraction::NNSmall nnSmall;
-			Diffraction::NNBest nnBest;
-			Diffraction::UTD utd;
-			Diffraction::BTM btm;
+			Diffraction::Path mDiffractionPath;	// Diffraction path
 
-			Diffraction::Model* mDiffractionModel;
-			Diffraction::Model* mOldDiffractionModel;
+			/**
+			* Diffraction Models
+			*/
+			Diffraction::Attenuate attenuate;	// Diffraction model: Attenuate
+			Diffraction::LPF lowPass;			// Diffraction model: LPF
+			Diffraction::UDFA udfa;				// Diffraction model: UDFA
+			Diffraction::UDFAI udfai;			// Diffraction model: UDFAI
+			Diffraction::NNSmall nnSmall;		// Diffraction model: NNSmall
+			Diffraction::NNBest nnBest;			// Diffraction model: NNBest
+			Diffraction::UTD utd;				// Diffraction model: UTD
+			Diffraction::BTM btm;				// Diffraction model: BTM
+
+			/**
+			* Diffraction Model Pointers
+			*/
+			Diffraction::Model* mDiffractionModel;		// Current diffraction model
+			Diffraction::Model* mOldDiffractionModel;	// Previous diffraction model
 
 			bool isCrossFading;
 			int crossfadeLengthSamples;
 			int crossfadeCounter;
-			float crossfadeFactor;
 
 			AirAbsorption mAirAbsorption;
 			CTransform transform;
@@ -325,8 +331,7 @@ namespace RAC
 			bool diffraction;
 			bool updateTransform;
 
-			// Mutexes
-			shared_ptr<std::mutex> audioMutex;
+			shared_ptr<std::mutex> audioMutex; // Prevents concurrent audio and update operations
 		};
 	}
 }

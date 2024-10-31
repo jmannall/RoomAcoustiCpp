@@ -41,12 +41,11 @@ namespace RAC
 			void UpdateRValid();
 			// EdgeZone FindEdgeZone(const vec3& point, const std::vector<size_t> planeIDs);
 
-			bool FindWallIntersection(vec3& intersection, const vec3& start, const vec3& end, const Plane& plane) const;
 			bool FindWallIntersection(Absorption& absorption, vec3& intersection, const vec3& start, const vec3& end, const Plane& plane) const;
 
-			bool FindIntersection(vec3& intersection, Absorption& absorption, const vec3& start, const vec3& end, const Plane& plane);
-			bool FindIntersections(std::vector<vec3>& intersections, VirtualSourceData& vSource, int bounceIdx);
-			bool FindIntersections(std::vector<vec3>& intersections, VirtualSourceData& vSource, int bounceIdx, const vec3& start);
+			bool FindIntersection(vec3& intersection, Absorption& absorption, const vec3& start, const vec3& end, const Plane& plane) const;
+			bool FindIntersections(std::vector<vec3>& intersections, VirtualSourceData& vSource, int bounceIdx) const;
+			bool FindIntersections(std::vector<vec3>& intersections, VirtualSourceData& vSource, int bounceIdx, const vec3& start) const;
 
 			bool FindWallObstruction(const vec3& start, const vec3& end, const Plane& plane) const;
 

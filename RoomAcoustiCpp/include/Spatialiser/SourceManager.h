@@ -74,7 +74,7 @@ namespace RAC
 					return;
 
 				sourceData.pop_back();
-				mTimers.push_back(TimerPair(id, time(nullptr)));
+				mTimers.push_back(TimerPair(id));
 			}
 
 			std::vector<IDPositionPair> GetSourceData();

@@ -173,12 +173,6 @@ namespace RAC
 			return false;
 		}
 
-		bool ImageEdge::FindWallIntersection(vec3& intersection, const vec3& start, const vec3& end, const Plane& plane) const
-		{
-			Absorption absorption;
-			return FindWallIntersection(absorption, intersection, start, end, plane);
-		}
-
 		bool ImageEdge::FindWallIntersection(Absorption& absorption, vec3& intersection, const vec3& start, const vec3& end, const Plane& plane) const
 		{
 			for (auto& idW : plane.GetWalls())
@@ -203,7 +197,7 @@ namespace RAC
 			return false;
 		}
 
-		bool ImageEdge::FindIntersection(vec3& intersection, Absorption& absorption, const vec3& start, const vec3& end, const Plane& plane)
+		bool ImageEdge::FindIntersection(vec3& intersection, Absorption& absorption, const vec3& start, const vec3& end, const Plane& plane) const
 		{
 			if (plane.LinePlaneIntersection(start, end))
 			{
@@ -213,12 +207,12 @@ namespace RAC
 			return false;
 		}
 
-		bool ImageEdge::FindIntersections(std::vector<vec3>& intersections, VirtualSourceData& vSource, int bounceIdx)
+		bool ImageEdge::FindIntersections(std::vector<vec3>& intersections, VirtualSourceData& vSource, int bounceIdx) const
 		{
 			return FindIntersections(intersections, vSource, bounceIdx, mListenerPosition);
 		}
 
-		bool ImageEdge::FindIntersections(std::vector<vec3>& intersections, VirtualSourceData& vSource, int bounceIdx, const vec3& start)
+		bool ImageEdge::FindIntersections(std::vector<vec3>& intersections, VirtualSourceData& vSource, int bounceIdx, const vec3& start) const
 		{
 			vSource.ResetAbsorption();
 			Absorption& absorption = vSource.GetAbsorptionRef();

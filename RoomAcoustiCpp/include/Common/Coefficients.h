@@ -32,7 +32,7 @@ namespace RAC
 			*
 			* @param len The number of coefficients
 			*/
-			Coefficients(const size_t len) : mCoefficients(len, 0.0) {}
+			Coefficients(const size_t len) : Coefficients(len, 0.0) {}
 
 			/**
 			* @brief Constructor that initialises the Coefficients with a given value
@@ -43,7 +43,7 @@ namespace RAC
 			Coefficients(const size_t len, const Real in) : mCoefficients(len, in) {}
 
 			/**
-			* @brief Constructor that initialises the Coefficients for a std::vector
+			* @brief Constructor that initialises the Coefficients from a std::vector
 			*
 			* @param coefficients The vector of coefficients
 			*/
@@ -79,7 +79,7 @@ namespace RAC
 			}
 
 			/**
-			* @brief Calculates 10 to the power of the coefficients
+			* @brief Calculates 10 raised to the power of the coefficients
 			*/
 			inline Coefficients Pow10()
 			{
@@ -99,15 +99,23 @@ namespace RAC
 			}
 
 			/**
-			* @brief Returns the coefficient at a specified index
+			* @brief Access the coefficient at a specified index
 			*
 			* @param i The index of the coefficient to return
+			* @return A reference to the coefficient at the specified index
 			*/
-			inline Real& operator[](const int i) { assert(0 <= i && i < mCoefficients.size()); return mCoefficients[i]; };
-			inline Real operator[](const int i) const { assert(0 <= i && i < mCoefficients.size()); return mCoefficients[i]; };
+			inline Real& operator[](const size_t i) { assert(i < mCoefficients.size()); return mCoefficients[i]; };
+			
+			/**
+			* @brief Access the coefficient at a specified index
+			*
+			* @param i The index of the coefficient to return
+			* @return The value of the coefficient at the specified index
+			*/
+			inline Real operator[](const size_t i) const { assert(i < mCoefficients.size()); return mCoefficients[i]; };
 
 			/**
-			* @brief Sets all coefficeint entries to a single value
+			* @brief Sets all coefficient entries to a single value
 			*
 			* @param x The new value
 			*/
@@ -128,6 +136,9 @@ namespace RAC
 				return *this;
 			}
 
+			/**
+			* @brief Adds a set of coefficients to the current coefficients
+			*/
 			inline Coefficients& operator+=(const Coefficients& v)
 			{
 				assert(mCoefficients.size() == v.Length());
@@ -136,6 +147,9 @@ namespace RAC
 				return *this;
 			}
 
+			/**
+			* @brief Subtracts a set of coefficients from the current coefficients
+			*/
 			inline Coefficients& operator-=(const Coefficients& v)
 			{
 				assert(mCoefficients.size() == v.Length());
@@ -144,26 +158,30 @@ namespace RAC
 				return *this;
 			}
 
-			inline Coefficients& operator*=(const Coefficients& v)
-			{
+            /**
+            * @brief Multiplies coefficient entries by a given set of coefficient
+            */
+            inline Coefficients& operator*=(const Coefficients& v)
+            {
 				assert(mCoefficients.size() == v.Length());
 				for (int i = 0; i < mCoefficients.size(); i++)
-					mCoefficients[i] *= v[i];
+				mCoefficients[i] *= v[i];
 				return *this;
-			}
+            }
 
-			inline Coefficients& operator/=(const Coefficients& v)
-			{
+            /**
+            * @brief Divides coefficient entries by a given set of coefficients
+            */
+            inline Coefficients& operator/=(const Coefficients& v)
+            {
 				assert(mCoefficients.size() == v.Length());
 				for (int i = 0; i < mCoefficients.size(); i++)
-					mCoefficients[i] /= v[i];
+				mCoefficients[i] /= v[i];
 				return *this;
-			}
+            }
 
 			/**
-			* @brief Adds a single value all coefficient entries
-			* 
-			* @param a The value to increase by
+			* @brief Adds a single value to all coefficient entries
 			*/
 			inline Coefficients& operator+=(const Real a)
 			{
@@ -174,8 +192,6 @@ namespace RAC
 
 			/**
 			* @brief Multiplies coefficient entries by a given value
-			*
-			* @param a The value to multiply by
 			*/
 			inline Coefficients& operator*=(const Real a)
 			{
@@ -186,8 +202,6 @@ namespace RAC
 
 			/**
 			* @brief Divides coefficient entries by a given value
-			*
-			* @param a The value to divide by
 			*/
 			inline Coefficients& operator/=(const Real a)
 			{
@@ -251,8 +265,6 @@ namespace RAC
 		inline Coefficients operator/(const Real a, const Coefficients& v) { Coefficients u = Coefficients(v.Length(), a);  return u /= v; }
 
 		/**
-		* @param v Coefficients to compare
-		* @param a Real value to compare
 		* @return True if all coefficient entries are equal to a, false otherwise
 		*/
 		inline bool operator==(const Coefficients& v, const Real a)
@@ -264,8 +276,6 @@ namespace RAC
 		}
 
 		/**
-		* @param v Coefficients to compare
-		* @param a Real value to compare
 		* @return True if any coefficient entries are not equal to a, false otherwise
 		*/
 		inline bool operator!=(const Coefficients& v, const Real a)
@@ -274,7 +284,7 @@ namespace RAC
 		}
 
 		/**
-		* @brief Elementwise comparison
+		* @brief Performs an elementwise comparison
 		* @return True if all element pairs are equal, false otherwise
 		*/
 		inline bool operator==(const Coefficients& u, const Coefficients& v)
@@ -288,7 +298,7 @@ namespace RAC
 		}
 
 		/**
-		* @brief Elementwise comparison
+		* @brief Performs an elementwise comparison
 		* @return True if any element pairs are unequal, false otherwise
 		*/
 		inline bool operator!=(const Coefficients& u, const Coefficients& v)
@@ -297,13 +307,12 @@ namespace RAC
 		}
 
 		/**
-		* @brief Elementwise comparison
+		* @brief Performs an elementwise comparison
 		* @return True if all element pairs satisfy the condition, false otherwise
 		*/
 		inline bool operator>(const Coefficients& u, const Coefficients& v)
 		{
-			if (u.Length() != v.Length())
-				return false;
+			assert(u.Length() == v.Length());
 			for (int i = 0; i < u.Length(); i++)
 				if (u[i] <= v[i])
 					return false;
@@ -311,13 +320,12 @@ namespace RAC
 		}
 
 		/**
-		* @brief Elementwise comparison
+		* @brief Performs an elementwise comparison
 		* @return True if all element pairs satisfy the condition, false otherwise
 		*/
 		inline bool operator<(const Coefficients& u, const Coefficients& v)
 		{
-			if (u.Length() != v.Length())
-				return false;
+			assert(u.Length() == v.Length());
 			for (int i = 0; i < u.Length(); i++)
 				if (u[i] >= v[i])
 					return false;
@@ -329,28 +337,47 @@ namespace RAC
 		/**
 		* @brief Class that stores absorption coefficients
 		* 
-		* @detials Stores reflectance -> sqrt(1 - R). Where R is the absortion property of the material
+		* @details Stores reflectance -> sqrt(1 - R). Where R is the absortion property of the material
 		*/
 		class Absorption : public Coefficients
 		{
 		public:
-
-			// Load and Destroy
-			Absorption() : Coefficients(1, 1.0), mArea(0.0) {}
+			/**
+			* Constructor that initialises the Absorption with ones
+			*
+			* @param len The number of coefficients
+			*/
 			Absorption(size_t len) : Coefficients(len, 1.0), mArea(0.0) {}
-			Absorption(const std::vector<Real>& coefficients) : Coefficients(coefficients.size()), mArea(0.0)
+
+			/**
+			* Constructor that initialises the Absorption from a std::vector
+			*
+			* @param R The material absorption
+			*/
+			Absorption(const std::vector<Real>& R) : Coefficients(R.size()), mArea(0.0)
 			{
 				for (int i = 0; i < mCoefficients.size(); i++)
 				{
 					assert(coefficients[i] <= 1.0);
-					mCoefficients[i] = sqrt(1.0 - coefficients[i]);
+					mCoefficients[i] = sqrt(1.0 - R[i]);
 				}
 			}
+
+			/**
+			* @brief Default deconstructor
+			*/
 			~Absorption() {}
 
+			/**
+			* @brief Resets the coefficients to ones
+			*/
 			void Reset() { std::fill(mCoefficients.begin(), mCoefficients.end(), 1.0); }
 
-			// Operators
+			/**
+			* @brief Sets all absorption entries to a single value
+			*
+			* @param x The new value
+			*/
 			inline Absorption& operator=(Real x)
 			{
 				for (int i = 0; i < mCoefficients.size(); i++)
@@ -358,6 +385,9 @@ namespace RAC
 				return *this;
 			}
 
+			/**
+			* @brief Inverts the sign of all absorption entries
+			*/
 			inline Absorption& operator-()
 			{
 				for (int i = 0; i < mCoefficients.size(); i++)
@@ -365,6 +395,9 @@ namespace RAC
 				return *this;
 			}
 
+			/**
+			* @brief Adds a set of absorption coefficients to the current absorption. The areas are added together
+			*/
 			inline Absorption& operator+=(const Absorption& v)
 			{
 				assert(mCoefficients.size() == v.Length());
@@ -374,6 +407,9 @@ namespace RAC
 				return *this;
 			}
 
+			/**
+			* @brief Subtracts a set of absorption coefficients to the current absorption. The input area is subtracted
+			*/
 			inline Absorption& operator-=(const Absorption& v)
 			{
 				assert(mCoefficients.size() == v.Length());
@@ -383,6 +419,9 @@ namespace RAC
 				return *this;
 			}
 
+			/**
+			* @brief Multiplies absorption entries by a given set of absorption coefficients. No change to area
+			*/
 			inline Absorption& operator*=(const Absorption& v)
 			{
 				assert(mCoefficients.size() == v.Length());
@@ -391,6 +430,9 @@ namespace RAC
 				return *this;
 			}
 
+			/**
+			* @brief Divides absorption entries by a given set of absorption coefficients. No change to area
+			*/
 			inline Absorption& operator/=(const Absorption& v)
 			{
 				assert(mCoefficients.size() == v.Length());
@@ -399,6 +441,9 @@ namespace RAC
 				return *this;
 			}
 
+			/**
+			* @brief Adds a single value to all absorption entries. No change to area
+			*/
 			inline Absorption& operator+=(const Real a)
 			{
 				for (int i = 0; i < mCoefficients.size(); i++)
@@ -406,11 +451,9 @@ namespace RAC
 				return *this;
 			}
 
-			inline Absorption& operator-=(const Real a)
-			{
-				return *this += -a;
-			}
-
+			/**
+			* @brief Multiplies absorption entries by a given value. No change to area
+			*/
 			inline Absorption& operator*=(const Real a)
 			{
 				for (int i = 0; i < mCoefficients.size(); i++)
@@ -418,16 +461,12 @@ namespace RAC
 				return *this;
 			}
 
-			inline Absorption& operator/=(const Real a)
-			{
-				return *this *= (1 / a);
-			}
-
-			// Member variables
-			Real mArea;
+			Real mArea;		// Area covered by the absorption coefficients
 
 		private:
 		};
+
+		//////////////////// Absorption operator overloads ////////////////////
 
 		inline Absorption operator+(Absorption u, const Absorption& v) { return u += v; }
 		inline Absorption operator-(Absorption u, const Absorption& v) { return u -= v; }
@@ -438,8 +477,12 @@ namespace RAC
 		inline Absorption operator-(Absorption v, const Real a) { return v += (-a); }
 		inline Absorption operator-(const Real a, Absorption v) { return -v += a; }
 		inline Absorption operator*(Absorption v, const Real a) { return v *= a; }
-		inline Absorption operator/(Absorption v, const Real a) { return v /= a; }
+		inline Absorption operator/(Absorption v, const Real a) { return v *= (1.0 / a); }
 
+		/**
+		* @brief Performs an elementwise comparison
+		* @return True if all element pairs and the areas are equal, false otherwise
+		*/
 		inline bool operator==(const Absorption& u, const Absorption& v)
 		{
 			if (u.Length() != v.Length())
@@ -452,16 +495,13 @@ namespace RAC
 			return true;
 		}
 
+		/**
+		* @brief Performs an elementwise comparison
+		* @return True if any element pairs or the areas are unequal, false otherwise
+		*/
 		inline bool operator!=(const Absorption& u, const Absorption& v)
 		{
 			return !(u == v);
-		}
-
-		inline Absorption Sqrt(Absorption v)
-		{
-			for (int i = 0; i < v.Length(); i++)
-				v[i] = sqrt(v[i]);
-			return v;
 		}
 	}
 }
