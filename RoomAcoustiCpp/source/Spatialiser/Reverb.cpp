@@ -43,7 +43,7 @@ namespace RAC
 			Init();
 		}
 
-		ReverbSource::ReverbSource(Binaural::CCore* core, const Config& config, const vec3& shift) : mCore(core), mConfig(config), mReflectionFilter(config.frequencyBands, config.Q, config.fs),
+		ReverbSource::ReverbSource(Binaural::CCore* core, const Config& config, const Vec3& shift) : mCore(core), mConfig(config), mReflectionFilter(config.frequencyBands, config.Q, config.fs),
 			mAbsorption(config.frequencyBands.Length()), mShift(shift), filterInitialised(false), targetGain(0.0), currentGain(0.0), inputBuffer(mConfig.numFrames)
 		{
 			mMutex = std::make_shared<std::mutex>();
@@ -116,7 +116,7 @@ namespace RAC
 			}
 		}
 
-		void ReverbSource::UpdatePosition(const vec3& position)
+		void ReverbSource::UpdatePosition(const Vec3& position)
 		{
 			// tuneInMutex already locked by context
 			CTransform transform;
@@ -206,14 +206,14 @@ namespace RAC
 
 		Reverb::Reverb(Binaural::CCore* core, const Config& config) : mConfig(config), mFDN(config), mCore(core), valid(false), runFDN(false), mTargetGain(0.0), mCurrentGain (0.0), mT60(config.frequencyBands.Length())
 		{
-			input = matrix(mConfig.numFDNChannels, mConfig.numFrames);
-			out = rowvec(mConfig.numFDNChannels);
+			input = Matrix(mConfig.numFDNChannels, mConfig.numFrames);
+			out = Rowvec(mConfig.numFDNChannels);
 			InitSources();
 		}
 
-		Reverb::Reverb(Binaural::CCore* core, const Config& config, const vec& dimensions, const Coefficients& T60) : mFDN(T60, dimensions, config), mCore(core), mConfig(config), valid(false), runFDN(false), mTargetGain(0.0), mCurrentGain(0.0), mT60(T60)
+		Reverb::Reverb(Binaural::CCore* core, const Config& config, const Vec& dimensions, const Coefficients& T60) : mFDN(T60, dimensions, config), mCore(core), mConfig(config), valid(false), runFDN(false), mTargetGain(0.0), mCurrentGain(0.0), mT60(T60)
 		{
-			input = matrix(mConfig.numFDNChannels, mConfig.numFrames);
+			input = Matrix(mConfig.numFDNChannels, mConfig.numFrames);
 			InitSources();
 		}
 
@@ -229,7 +229,7 @@ namespace RAC
 		{
 			lock_guard<mutex> lock(mCoreMutex);
 
-			std::vector<vec3> points;
+			std::vector<Vec3> points;
 			switch (mConfig.numFDNChannels)
 			{
 			case 4:
@@ -261,7 +261,7 @@ namespace RAC
 			}
 		}
 
-		void Reverb::UpdateReverb(const vec3& position)
+		void Reverb::UpdateReverb(const Vec3& position)
 		{
 			// tuneInMutex already locked by context
 			for (int i = 0; i < mConfig.numFDNChannels; i++)
@@ -295,7 +295,7 @@ namespace RAC
 				mReverbSources[i].UpdateReflectionFilter(absorptions[i]);
 		}
 
-		void Reverb::ProcessAudio(const matrix& data, Buffer& outputBuffer)
+		void Reverb::ProcessAudio(const Matrix& data, Buffer& outputBuffer)
 		{
 			if (runFDN)
 			{
@@ -365,7 +365,7 @@ namespace RAC
 			mFDN.UpdateT60(T60);
 		}
 
-		void Reverb::SetFDNParameters(const Coefficients& T60, const vec& dimensions)
+		void Reverb::SetFDNParameters(const Coefficients& T60, const Vec& dimensions)
 		{
 			{
 				lock_guard <mutex> lock(mFDNMutex);

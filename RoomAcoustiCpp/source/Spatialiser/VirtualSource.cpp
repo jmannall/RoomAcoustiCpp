@@ -28,19 +28,19 @@ namespace RAC
 
 		//////////////////// VirtualSourceData class ////////////////////
 
-		vec3 VirtualSourceData::GetPosition(const int i) const
+		Vec3 VirtualSourceData::GetPosition(const int i) const
 		{
 			assert(i < order);
 			return mPositions[i];
 		}
 
-		void VirtualSourceData::SetTransform(const vec3& vSourcePosition)
+		void VirtualSourceData::SetTransform(const Vec3& vSourcePosition)
 		{
 			transform.SetPosition(CVector3(static_cast<float>(vSourcePosition.x), static_cast<float>(vSourcePosition.y), static_cast<float>(vSourcePosition.z)));
 			mPositions.emplace_back(vSourcePosition);
 		}
 
-		void VirtualSourceData::SetTransform(const vec3& vSourcePosition, const vec3& vEdgeSourcePosition)
+		void VirtualSourceData::SetTransform(const Vec3& vSourcePosition, const Vec3& vEdgeSourcePosition)
 		{
 			transform.SetPosition(CVector3(static_cast<float>(vEdgeSourcePosition.x), static_cast<float>(vEdgeSourcePosition.y), static_cast<float>(vEdgeSourcePosition.z)));
 			mPositions.emplace_back(vSourcePosition);
@@ -81,7 +81,7 @@ namespace RAC
 			return *this;
 		}
 
-		void VirtualSourceData::SetDistance(const vec3& listenerPosition)
+		void VirtualSourceData::SetDistance(const Vec3& listenerPosition)
 		{
 			if (diffraction)
 				distance = mDiffractionPath.rData.d + mDiffractionPath.sData.d;
@@ -244,7 +244,7 @@ namespace RAC
 			crossfadeCounter = 0;
 		}
 
-		void VirtualSource::ProcessAudio(const Buffer& data, matrix& reverbInput, Buffer& outputBuffer)
+		void VirtualSource::ProcessAudio(const Buffer& data, Matrix& reverbInput, Buffer& outputBuffer)
 		{
 			lock_guard<mutex> lock(*audioMutex);
 			if (isInitialised)

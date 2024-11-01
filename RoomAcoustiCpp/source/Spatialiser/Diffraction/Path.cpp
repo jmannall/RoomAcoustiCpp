@@ -16,12 +16,12 @@ namespace RAC
 	{
 		namespace Diffraction
 		{
-			Path::Path(const vec3& source, const vec3& receiver, const Edge& edge) : zValid(false), sValid(false), rValid(false), valid(false), inShadow(false), mEdge(edge)
+			Path::Path(const Vec3& source, const Vec3& receiver, const Edge& edge) : zValid(false), sValid(false), rValid(false), valid(false), inShadow(false), mEdge(edge)
 			{
 				UpdateParameters(source, receiver);
 			}
 
-			void Path::UpdateParameters(const vec3& source, const vec3& receiver, const Edge& edge)
+			void Path::UpdateParameters(const Vec3& source, const Vec3& receiver, const Edge& edge)
 			{
 				sData.point = source;
 				rData.point = receiver;
@@ -29,14 +29,14 @@ namespace RAC
 				UpdateParameters();
 			}
 
-			void Path::UpdateParameters(const vec3& source, const vec3& receiver)
+			void Path::UpdateParameters(const Vec3& source, const Vec3& receiver)
 			{
 				sData.point = source;
 				rData.point = receiver;
 				UpdateParameters();
 			}
 
-			void Path::UpdateParameters(const vec3& receiver)
+			void Path::UpdateParameters(const Vec3& receiver)
 			{
 				rData.point = receiver;
 				CalcR(&rData);
@@ -123,7 +123,7 @@ namespace RAC
 
 			void Path::CalcZ(SRData* data)
 			{
-				vec3 AP = mEdge.GetAP(data->point);
+				Vec3 AP = mEdge.GetAP(data->point);
 				data->z = AP.Length() * Dot(UnitVector(AP), mEdge.mEdgeVector);
 			}
 
@@ -160,7 +160,7 @@ namespace RAC
 
 			void Path::CalcT(SRData* data)
 			{
-				vec3 k = UnitVector(data->point - mEdge.GetEdgeCoord(data->z));
+				Vec3 k = UnitVector(data->point - mEdge.GetEdgeCoord(data->z));
 				data->t = acos(Dot(k, mEdge.mEdgeNormal));
 				data->rot = signbit(Dot(Cross(k, mEdge.mEdgeNormal), mEdge.mEdgeVector));
 			}
@@ -183,7 +183,7 @@ namespace RAC
 
 			void Path::CalcD(SRData* data)
 			{
-				vec3 apex = mEdge.GetEdgeCoord(zA);
+				Vec3 apex = mEdge.GetEdgeCoord(zA);
 				data->d = (data->point - mEdge.GetEdgeCoord(zA)).Length();
 			}
 		}

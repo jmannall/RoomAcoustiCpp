@@ -29,36 +29,36 @@ namespace RAC
 			~ImageEdge() {}
 
 			inline void UpdateIEMConfig(const IEMConfig& config) { lock_guard<std::mutex> lock(mMutex); mIEMConfigStore = config; }
-			inline void SetListenerPosition(const vec3& position) { lock_guard<std::mutex> lock(mMutex); mListenerPositionStore = position; }
-			inline vec3 GetListenerPosition() { lock_guard<std::mutex> lock(mMutex); return mListenerPositionStore; }
+			inline void SetListenerPosition(const Vec3& position) { lock_guard<std::mutex> lock(mMutex); mListenerPositionStore = position; }
+			inline Vec3 GetListenerPosition() { lock_guard<std::mutex> lock(mMutex); return mListenerPositionStore; }
 			
 			void RunIEM();
 			void UpdateLateReverbFilters();
 
 		private:
-			bool ReflectPointInRoom(const vec3& point, VirtualSourceDataMap& vSources);
+			bool ReflectPointInRoom(const Vec3& point, VirtualSourceDataMap& vSources);
 
 			void UpdateRValid();
 			// EdgeZone FindEdgeZone(const vec3& point, const std::vector<size_t> planeIDs);
 
-			bool FindWallIntersection(Absorption& absorption, vec3& intersection, const vec3& start, const vec3& end, const Plane& plane) const;
+			bool FindWallIntersection(Absorption& absorption, Vec3& intersection, const Vec3& start, const Vec3& end, const Plane& plane) const;
 
-			bool FindIntersection(vec3& intersection, Absorption& absorption, const vec3& start, const vec3& end, const Plane& plane) const;
-			bool FindIntersections(std::vector<vec3>& intersections, VirtualSourceData& vSource, int bounceIdx) const;
-			bool FindIntersections(std::vector<vec3>& intersections, VirtualSourceData& vSource, int bounceIdx, const vec3& start) const;
+			bool FindIntersection(Vec3& intersection, Absorption& absorption, const Vec3& start, const Vec3& end, const Plane& plane) const;
+			bool FindIntersections(std::vector<Vec3>& intersections, VirtualSourceData& vSource, int bounceIdx) const;
+			bool FindIntersections(std::vector<Vec3>& intersections, VirtualSourceData& vSource, int bounceIdx, const Vec3& start) const;
 
-			bool FindWallObstruction(const vec3& start, const vec3& end, const Plane& plane) const;
+			bool FindWallObstruction(const Vec3& start, const Vec3& end, const Plane& plane) const;
 
-			bool LineRoomObstruction(const vec3& start, const vec3& end);
-			void LineRoomObstruction(const vec3& start, const vec3& end, bool& obstruction);
-			bool LineRoomObstruction(const vec3& start, const vec3& end, int currentPlaneID);
-			void LineRoomObstruction(const vec3& start, const vec3& end, int currentPlaneID, bool& obstruction);
-			bool LineRoomObstruction(const vec3& start, const vec3& end, int currentPlaneId1, int currentPlaneId2);
-			void LineRoomObstruction(const vec3& start, const vec3& end, int currentPlaneId1, int currentPlaneId2, bool& obstruction);
+			bool LineRoomObstruction(const Vec3& start, const Vec3& end);
+			void LineRoomObstruction(const Vec3& start, const Vec3& end, bool& obstruction);
+			bool LineRoomObstruction(const Vec3& start, const Vec3& end, int currentPlaneID);
+			void LineRoomObstruction(const Vec3& start, const Vec3& end, int currentPlaneID, bool& obstruction);
+			bool LineRoomObstruction(const Vec3& start, const Vec3& end, int currentPlaneId1, int currentPlaneId2);
+			void LineRoomObstruction(const Vec3& start, const Vec3& end, int currentPlaneId1, int currentPlaneId2, bool& obstruction);
 
-			size_t FirstOrderDiffraction(const vec3& point, VirtualSourceDataMap& vSources);
-			size_t FirstOrderReflections(const vec3& point, VirtualSourceDataMap& vSources, size_t counter);
-			void HigherOrderReflections(const vec3& point, VirtualSourceDataMap& vSources);
+			size_t FirstOrderDiffraction(const Vec3& point, VirtualSourceDataMap& vSources);
+			size_t FirstOrderReflections(const Vec3& point, VirtualSourceDataMap& vSources, size_t counter);
+			void HigherOrderReflections(const Vec3& point, VirtualSourceDataMap& vSources);
 
 			void EraseOldEntries(VirtualSourceDataMap& vSources);
 
@@ -73,12 +73,12 @@ namespace RAC
 			std::vector<IDPositionPair> mSources;
 			std::vector<VirtualSourceDataMap> mVSources;
 			IEMConfig mIEMConfig;
-			vec3 mListenerPosition;
+			Vec3 mListenerPosition;
 			IEMConfig mIEMConfigStore;
-			vec3 mListenerPositionStore;
+			Vec3 mListenerPositionStore;
 
 			size_t numAbsorptionBands;
-			std::vector<vec3> reverbDirections;
+			std::vector<Vec3> reverbDirections;
 			std::vector<Absorption> reverbAbsorptions;
 
 			VirtualSourceDataStore sp;

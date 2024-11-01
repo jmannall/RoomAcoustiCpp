@@ -114,7 +114,7 @@ namespace RAC
 			mInputBuffer = Buffer(mConfig.numFrames);
 			mOutputBuffer = Buffer(2 * mConfig.numFrames); // Stereo output buffer
 			mSendBuffer = BufferF(2 * mConfig.numFrames);
-			mReverbInput = matrix(mConfig.numFrames, mConfig.numFDNChannels);
+			mReverbInput = Matrix(mConfig.numFrames, mConfig.numFDNChannels);
 		}
 
 		////////////////////////////////////////
@@ -213,7 +213,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Context::UpdateRoom(const Real volume, const vec& dimensions)
+		void Context::UpdateRoom(const Real volume, const Vec& dimensions)
 		{
 			Coefficients T60 = mRoom->GetReverbTime(volume);
 			if (T60 == 0.0)
@@ -221,7 +221,7 @@ namespace RAC
 			if (dimensions.Rows() == 0)
 			{
 				Debug::Log("No dimensions provided for room", Colour::Red);
-				vec defaultDimensions = vec(3); // Assume a shoebox
+				Vec defaultDimensions = Vec(3); // Assume a shoebox
 				defaultDimensions[0] = 2.5; // Assume height
 				defaultDimensions[1] = 4.0; // Assume width
 				defaultDimensions[2] = volume / 10.0; // Calculate depth
@@ -233,7 +233,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Context::UpdateListener(const vec3& position, const vec4& orientation)
+		void Context::UpdateListener(const Vec3& position, const Vec4& orientation)
 		{
 #if DEBUG_UPDATE
 	Debug::Log("Update Listener", Colour::Yellow);
@@ -266,7 +266,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Context::UpdateSource(size_t id, const vec3& position, const vec4& orientation)
+		void Context::UpdateSource(size_t id, const Vec3& position, const Vec4& orientation)
 		{
 #ifdef DEBUG_UPDATE
 			Debug::Log("Update Source", Colour::Yellow);
@@ -276,7 +276,7 @@ namespace RAC
 			// Ensure source is outside listener head radius
 			if (distance < headRadius)
 			{
-				vec3 newPosition = position;
+				Vec3 newPosition = position;
 				if (distance == 0.0)
 					newPosition = mSources->GetSourcePosition(id);
 
@@ -303,7 +303,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		size_t Context::InitWall(const vec3& normal, const Real* vData, const Absorption& absorption)
+		size_t Context::InitWall(const Vec3& normal, const Real* vData, const Absorption& absorption)
 		{
 #ifdef DEBUG_INIT
 	Debug::Log("Init Wall and Edges", Colour::Green);
@@ -317,7 +317,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Context::UpdateWall(size_t id, const vec3& normal, const Real* vData)
+		void Context::UpdateWall(size_t id, const Vec3& normal, const Real* vData)
 		{
 			mRoom->UpdateWall(id, normal, vData);
 		}

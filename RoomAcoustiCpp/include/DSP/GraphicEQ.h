@@ -155,7 +155,7 @@ namespace RAC
 			/**
 			* Gain matrix
 			*/
-			matrix mat;
+			Matrix mat;
 
 			/**
 			* The stored input, target and current gains
@@ -167,8 +167,8 @@ namespace RAC
 			/**
 			* Rowvecs used to store dB and gain values during SetGain()
 			*/
-			rowvec dbGain;
-			rowvec inputGain;
+			Rowvec dbGain;
+			Rowvec inputGain;
 
 			/**
 			* Booleans to skip unnecessary update and audio calculations

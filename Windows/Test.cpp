@@ -79,15 +79,15 @@ namespace RAC
 		tR = Deg2Rad(tR);
 		tW = Deg2Rad(tW);
 
-		vec3 base = vec3(0.0, 0.0, 0.0);
-		vec3 top = vec3(0.0, zW, 0.0);
-		vec3 normal1 = vec3(sin(tW), 0.0, -cos(tW));
-		vec3 normal2 = vec3(0.0, 0.0, 1.0);
+		Vec3 base = Vec3(0.0, 0.0, 0.0);
+		Vec3 top = Vec3(0.0, zW, 0.0);
+		Vec3 normal1 = Vec3(sin(tW), 0.0, -cos(tW));
+		Vec3 normal2 = Vec3(0.0, 0.0, 1.0);
 
 		Edge e = Edge(base, top, normal1, normal2, 0, 1, 0, 1);
 
-		vec3 s = vec3(rS * cos(tS), zS, rS * sin(tS));
-		vec3 r = vec3(rR * cos(tR), zR, rR * sin(tR));
+		Vec3 s = Vec3(rS * cos(tS), zS, rS * sin(tS));
+		Vec3 r = Vec3(rR * cos(tR), zR, rR * sin(tR));
 
 		return Path(s, r, e);
 	}
@@ -118,7 +118,7 @@ namespace RAC
 		CreateShoebox(pos, absorbtion);
 	}*/
 		
-	void CreateShoebox(const vec3& pos, Absorption absorbtion)
+	void CreateShoebox(const Vec3& pos, Absorption absorbtion)
 	{
 		int numVert = 4;
 		
@@ -128,7 +128,7 @@ namespace RAC
 		Real vert2[] = { 0.0, pos.y, 0.0,
 						pos.x, pos.y, pos.z,
 						0.0, pos.y, pos.z };
-		vec3 normal = vec3(0.0, -1.0, 0.0);
+		Vec3 normal = Vec3(0.0, -1.0, 0.0);
 
 
 
@@ -141,7 +141,7 @@ namespace RAC
 		Real vert4[] = { pos.x, 0.0, 0.0,
 						0.0, 0.0, pos.z,
 						pos.x, 0.0, pos.z };
-		normal = vec3(0.0, 1.0, 0.0);
+		normal = Vec3(0.0, 1.0, 0.0);
 
 		InitWall(normal, &vert3[0], absorbtion);
 		InitWall(normal, &vert4[0], absorbtion);
@@ -153,7 +153,7 @@ namespace RAC
 		Real vert6[] = { pos.x, 0.0, pos.z,
 						pos.x, pos.y, 0.0,
 						pos.x, 0.0, 0.0 };
-		normal = vec3(-1.0, 0.0, 0.0);
+		normal = Vec3(-1.0, 0.0, 0.0);
 		InitWall(normal, &vert5[0], absorbtion);
 		InitWall(normal, &vert6[0], absorbtion);
 
@@ -163,7 +163,7 @@ namespace RAC
 		Real vert8[] = { 0.0, 0.0, 0.0,
 						0.0, pos.y, pos.z,
 						0.0, 0.0, pos.z };
-		normal = vec3(1.0, 0.0, 0.0);
+		normal = Vec3(1.0, 0.0, 0.0);
 		InitWall(normal, &vert7[0], absorbtion);
 		InitWall(normal, &vert8[0], absorbtion);
 
@@ -173,7 +173,7 @@ namespace RAC
 		Real vert10[] = { 0.0, 0.0, 0.0,
 						pos.x, pos.y, 0.0,
 						0.0, pos.y, 0.0 };
-		normal = vec3(0.0, 0.0, 1.0);
+		normal = Vec3(0.0, 0.0, 1.0);
 		InitWall(normal, &vert9[0], absorbtion);
 		InitWall(normal, &vert10[0], absorbtion);
 
@@ -183,12 +183,12 @@ namespace RAC
 		Real vert12[] = { 0.0, pos.y, pos.z,
 						pos.x, 0.0, pos.z,
 						0.0, 0.0, pos.z };
-		normal = vec3(0.0, 0.0, -1.0);
+		normal = Vec3(0.0, 0.0, -1.0);
 		InitWall(normal, &vert11[0], absorbtion);
 		InitWall(normal, &vert12[0], absorbtion);
 	}
 
-	vec4 AzimuthElevationToQuaternion(Real azimuth, Real elevation)
+	Vec4 AzimuthElevationToQuaternion(Real azimuth, Real elevation)
 	{
 		Real azimuthRad = Deg2Rad(azimuth);
 		Real elevationRad = Deg2Rad(elevation);
@@ -203,7 +203,7 @@ namespace RAC
 		Real z = sinAzimuth * sinElevation;
 		Real w = cosAzimuth * cosElevation;
 
-		return vec4(w, x, y, z);
+		return Vec4(w, x, y, z);
 	}
 
 	//	
@@ -264,6 +264,8 @@ namespace RAC
 	//}
 
 	//////////////////// Parse csv files ////////////////////
+
+	Real StrToReal(const std::string& str) { return std::stod(str); }
 
 	std::vector<Real> Parse1Dcsv(std::string filePath)
 	{
@@ -403,15 +405,15 @@ namespace RAC
 
 			// Absorption absorption = Absorption({ 0.222, 0.258, 0.405, 0.378, 0.284, 0.270, 0.277 });
 			Absorption absorption = Absorption({ 0.200, 0.227, 0.333, 0.315, 0.247, 0.237, 0.242 });
-			vec3 roomSize = vec3(7.0, 2.5, 6.0);
+			Vec3 roomSize = Vec3(7.0, 2.5, 6.0);
 			CreateShoebox(roomSize, absorption);
 				
 			Real volume = 105.0;
-			vec dimensions = vec({ 7.0, 2.5, 6.0 });
+			Vec dimensions = Vec({ 7.0, 2.5, 6.0 });
 			UpdateRoom(volume, dimensions);
 
-			vec3 sourcePosition = vec3(5.47, 1.62, 4.5);
-			vec4 sourceOrientation = vec4({ 0.0, 0.0, 0.0, 1.0 });
+			Vec3 sourcePosition = Vec3(5.47, 1.62, 4.5);
+			Vec4 sourceOrientation = Vec4({ 0.0, 0.0, 0.0, 1.0 });
 
 			BufferF in = BufferF(numFrames);
 			BufferF out = BufferF(2 * numFrames);
@@ -423,14 +425,14 @@ namespace RAC
 			Real listenerStepPostition = 0.25;
 			Real listenerStepRotation = 2.5;
 			int numBuffers = fs / numFrames;
-			std::string file = "C:/Documents/GitHub/jmannall/RoomAcoustiCpp/UnitTestData/LTC_3rdOrderISM_FDN_Eyring.csv";
+			std::string file = "C:/Documents/GitHub/jmannall/RoomAcoustiCpp/UnitTestData/LTC_3rdOrderISM_FDN_Eyring_Directivity.csv";
 			for (int i = 0; i < 9; i++)
 			{
-				vec3 listenerPosition = vec3(4.22 - listenerStepPostition * i, 1.62, 4.5);
+				Vec3 listenerPosition = Vec3(4.22 - listenerStepPostition * i, 1.62, 4.5);
 
 				for (int j = 0; j < 360.0 / listenerStepRotation; j++)
 				{
-					vec4 listenerOrientation = AzimuthElevationToQuaternion(90.0 - j * listenerStepRotation, 0.0);
+					Vec4 listenerOrientation = AzimuthElevationToQuaternion(90.0 - j * listenerStepRotation, 0.0);
 					UpdateListener(listenerPosition, listenerOrientation);
 					size_t sourceID = InitSource();
 					UpdateSource(sourceID, sourcePosition, sourceOrientation);
@@ -502,24 +504,25 @@ namespace RAC
 			UpdateDiffractionModel(DiffractionModel::attenuate);
 
 			Absorption absorption = Absorption({ 0.222, 0.258, 0.405, 0.378, 0.284, 0.270, 0.277 });
-			vec3 roomSize = vec3(7.0, 2.5, 6.0);
+			Vec3 roomSize = Vec3(7.0, 2.5, 6.0);
 			CreateShoebox(roomSize, absorption);
 
 			Real volume = 105.0;
-			vec dimensions = vec({ 7.0, 2.5, 6.0 });
+			Vec dimensions = Vec({ 7.0, 2.5, 6.0 });
 			UpdateRoom(volume, dimensions);
 
-			vec3 sourcePosition = vec3(5.47, 1.62, 4.5);
-			vec3 sourcePosition2 = vec3(2.21, 1.52, 1.3);
-			vec4 sourceOrientation = vec4({ 0.0, 0.0, 0.0, 1.0 });
+			Vec3 sourcePosition = Vec3(5.47, 1.62, 4.5);
+			Vec3 sourcePosition2 = Vec3(2.21, 1.52, 1.3);
+			Vec4 sourceOrientation = Vec4({ 0.0, 0.0, 0.0, 1.0 });
 
-			vec3 listenerPosition = vec3(4.22, 1.62, 4.5);
-			vec4 listenerOrientation = AzimuthElevationToQuaternion(90.0, 0.0);
+			Vec3 listenerPosition = Vec3(4.22, 1.62, 4.5);
+			Vec4 listenerOrientation = AzimuthElevationToQuaternion(90.0, 0.0);
 
 			UpdateListener(listenerPosition, listenerOrientation);
 			size_t sourceID = InitSource();
 			UpdateSource(sourceID, sourcePosition, sourceOrientation);
 			
+			Sleep(1000);
 			BufferF in = BufferF(numFrames);
 			BufferF out = BufferF(2 * numFrames);
 			BufferF left = BufferF(fs);
@@ -862,10 +865,10 @@ namespace RAC
 
 		Source CreateSource(Binaural::CCore core, Config config)
 		{
-			vec3 sPosition = vec3(1.0, 1.6, 1.0);
-			vec3 lPosition = vec3(0.0, 1.6, 0.0);
+			Vec3 sPosition = Vec3(1.0, 1.6, 1.0);
+			Vec3 lPosition = Vec3(0.0, 1.6, 0.0);
 
-			vec3 normal = vec3(0.0, 1.0, 0.0);
+			Vec3 normal = Vec3(0.0, 1.0, 0.0);
 			std::vector<Real> in = { 0.3, 0.15, 0.2, 0.18, 0.1 };
 			std::vector<Real> vData = { -10.0, 0.0, -10.0, 0.0, 0.0, 10.0, 10.0, 0.0, -10.0 };
 			Absorption absorption = Absorption(in);
@@ -881,12 +884,12 @@ namespace RAC
 
 			VirtualSourceDataMap vSources;
 			VirtualSourceData vSource = VirtualSourceData(5);
-			vSource.SetPreviousPlane(vec4(plane.GetD(), plane.GetNormal()));
+			vSource.SetPreviousPlane(Vec4(plane.GetD(), plane.GetNormal()));
 
 			vSource.Valid();
 			vSource.AddPlaneID(0);
 
-			vec3 position;
+			Vec3 position;
 			plane.ReflectPointInPlane(position, sPosition);
 			vSource.SetTransform(position);
 
@@ -904,7 +907,7 @@ namespace RAC
 			}
 
 			source.UpdateData(true, vSources);
-			source.Update(sPosition, vec4(0.0, 0.0, 0.0, 1.0), (sPosition - lPosition).Length());
+			source.Update(sPosition, Vec4(0.0, 0.0, 0.0, 1.0), (sPosition - lPosition).Length());
 
 			return source;
 		}
@@ -920,7 +923,7 @@ namespace RAC
 			size_t numFDNChannels = 12;
 			Buffer mInputBuffer = Buffer(numFrames);
 			Buffer mOutputBuffer = Buffer(2 * numFrames); // Stereo output buffer
-			matrix mReverbInput = matrix(numFrames, numFDNChannels);
+			Matrix mReverbInput = Matrix(numFrames, numFDNChannels);
 
 			mInputBuffer[0] = 1.0;
 
@@ -1190,7 +1193,7 @@ namespace RAC
 			const int rows = 5;
 			const int cols = 4;
 
-			matrix m = matrix(rows, cols);
+			Matrix m = Matrix(rows, cols);
 
 			Real x = 1.0;
 
@@ -1206,7 +1209,7 @@ namespace RAC
 				}
 			}
 
-			matrix mat = matrix(m.Data());
+			Matrix mat = Matrix(m.Data());
 
 			for (int i = 0; i < rows; i++)
 			{
@@ -1311,8 +1314,8 @@ namespace RAC
 			const int a = 2;
 			const int b = 3;
 
-			matrix x = matrix(a, b);
-			matrix y = matrix(b, a);
+			Matrix x = Matrix(a, b);
+			Matrix y = Matrix(b, a);
 
 			for (int i = 0; i < a; i++)
 			{
@@ -1329,7 +1332,7 @@ namespace RAC
 			y[1][0] = 4.0;
 			y[0][1] = 3.0;
 
-			matrix z = x * y;
+			Matrix z = x * y;
 
 			Assert::AreEqual(11.0, z.GetEntry(0, 0), L"Error (0, 0)");
 			Assert::AreEqual(12.0, z.GetEntry(0, 1), L"Error (0, 1)");
@@ -1343,7 +1346,7 @@ namespace RAC
 			Assert::AreEqual(28.0, z.GetEntry(1, 0), L"Error 2 (1, 0)");
 			Assert::AreEqual(14.0, z.GetEntry(1, 1), L"Error 2 (1, 1)");
 
-			matrix w = z * 2.0;
+			Matrix w = z * 2.0;
 
 			Assert::AreEqual(44.0, w.GetEntry(0, 0), L"Error 3 (0, 0)");
 			Assert::AreEqual(48.0, w.GetEntry(0, 1), L"Error 3 (0, 1)");
@@ -1356,8 +1359,8 @@ namespace RAC
 			const int a = 2;
 			const int b = 3;
 
-			matrix x = matrix(a, b);
-			matrix y = matrix(a, b);
+			Matrix x = Matrix(a, b);
+			Matrix y = Matrix(a, b);
 
 			for (int i = 0; i < a; i++)
 			{
@@ -1375,7 +1378,7 @@ namespace RAC
 			y[0][1] = 3.0;
 			y[0][0] = 7.0;
 
-			matrix z = x + y;
+			Matrix z = x + y;
 
 			Assert::AreEqual(9.0, z.GetEntry(0, 0), L"Error (0, 0)");
 			Assert::AreEqual(4.0, z.GetEntry(0, 1), L"Error (0, 1)");
@@ -1390,7 +1393,7 @@ namespace RAC
 			const int a = 2;
 			const int b = 3;
 
-			matrix x = matrix(a, b);
+			Matrix x = Matrix(a, b);
 
 			for (int i = 0; i < a; i++)
 			{
@@ -1400,7 +1403,7 @@ namespace RAC
 				}
 			}
 
-			matrix y = -x;
+			Matrix y = -x;
 
 			Assert::AreEqual(-1.0, y.GetEntry(0, 0), L"Error (0, 0)");
 			Assert::AreEqual(-1.0, y.GetEntry(0, 1), L"Error (0, 1)");
@@ -1415,8 +1418,8 @@ namespace RAC
 			const int a = 2;
 			const int b = 3;
 
-			matrix x = matrix(a, b);
-			matrix y = matrix(a, b);
+			Matrix x = Matrix(a, b);
+			Matrix y = Matrix(a, b);
 
 			Assert::AreEqual(true, x == y, L"Match");
 

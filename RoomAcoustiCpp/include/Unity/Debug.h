@@ -101,14 +101,14 @@ namespace RAC
                 return "false;";
         }
 
-        inline string VecToStr(const vec3& x)
+        inline string VecToStr(const Vec3& x)
         {
             stringstream ss;
             ss << x;
             return ss.str();
         }
 
-        inline string VecArrayToStr(const std::vector<vec3>& x)
+        inline string VecArrayToStr(const std::vector<Vec3>& x)
         {
             stringstream ss;
             string output;

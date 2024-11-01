@@ -11,7 +11,7 @@ namespace RAC
 {
 	namespace Common
 	{
-		matrix::matrix(const std::vector<std::vector<Real>>& mat) : rows(mat.size())
+		Matrix::Matrix(const std::vector<std::vector<Real>>& mat) : rows(mat.size())
 		{
 			if (rows > 0)
 			{
@@ -23,7 +23,7 @@ namespace RAC
 			column = std::vector<Real>(rows);
 		}
 
-		void matrix::AllocateSpace()
+		void Matrix::AllocateSpace()
 		{
 			int r = rows;
 			for (int i = 0; i < r; i++)
@@ -31,7 +31,7 @@ namespace RAC
 			column = std::vector<Real>(rows);
 		}
 
-		void matrix::DeallocateSpace()
+		void Matrix::DeallocateSpace()
 		{
 			data.clear();
 			/*for (int i = 0; i < rows; i++)
@@ -39,15 +39,15 @@ namespace RAC
 			e.clear();*/
 		}
 
-		void matrix::Init(const const std::vector<std::vector<Real>>& mat)
+		void Matrix::Init(const const std::vector<std::vector<Real>>& mat)
 		{
 			AllocateSpace();
 			data = mat;
 		}
 
-		matrix matrix::Transpose()
+		Matrix Matrix::Transpose()
 		{
-			matrix mat = matrix(cols, rows);
+			Matrix mat = Matrix(cols, rows);
 			for (int i = 0; i < rows; i++)
 			{
 				for (int j = 0; j < cols; j++)
@@ -56,7 +56,7 @@ namespace RAC
 			return mat;
 		}
 
-		void matrix::Inverse()
+		void Matrix::Inverse()
 		{
 
 			assert(rows == cols); // Matrix must be square

@@ -158,8 +158,8 @@ namespace RAC
 		{
 			if (idA != idB)
 			{
-				vec3 normalA = wallA.GetNormal();
-				vec3 normalB = wallB.GetNormal();
+				Vec3 normalA = wallA.GetNormal();
+				Vec3 normalB = wallB.GetNormal();
 				if (normalA != normalB)
 				{
 					if (normalA == -normalB)
@@ -174,8 +174,8 @@ namespace RAC
 		{
 			if (wallA.GetD() == -wallB.GetD())
 			{
-				std::vector<vec3> verticesA = wallA.GetVertices();
-				std::vector<vec3> verticesB = wallB.GetVertices();
+				std::vector<Vec3> verticesA = wallA.GetVertices();
+				std::vector<Vec3> verticesB = wallB.GetVertices();
 
 				int numA = static_cast<int>(verticesA.size());
 				int numB = static_cast<int>(verticesB.size());
@@ -227,8 +227,8 @@ namespace RAC
 		// Walls defined as triangles (can only have one valid edge)
 		void Room::FindEdge(const Wall& wallA, const Wall& wallB, const size_t idA, const size_t idB, std::vector<Edge>& edges)
 		{
-			std::vector<vec3> verticesA = wallA.GetVertices();
-			std::vector<vec3> verticesB = wallB.GetVertices();
+			std::vector<Vec3> verticesA = wallA.GetVertices();
+			std::vector<Vec3> verticesB = wallB.GetVertices();
 
 			int numA = static_cast<int>(verticesA.size());
 			int numB = static_cast<int>(verticesB.size());

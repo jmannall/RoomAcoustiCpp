@@ -12,6 +12,7 @@
 // C++ headers
 #include <cmath>
 #include <string>
+#include <ctime>
 
 namespace RAC
 {
@@ -47,7 +48,7 @@ namespace RAC
 			*
 			* @param _id The id
 			*/
-			TimerPair(const size_t _id) : TimerPair(_id, ::time(nullptr)) {};
+			TimerPair(const size_t _id) : id(_id), time(::time(nullptr)) {};
 
 			size_t id;		// Stored ID
 			time_t time;	// Stored time

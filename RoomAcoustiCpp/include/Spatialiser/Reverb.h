@@ -42,13 +42,13 @@ namespace RAC
 		{
 		public:
 			ReverbSource(Binaural::CCore* core, const Config& config);
-			ReverbSource(Binaural::CCore* core, const Config& config, const vec3& shift);
+			ReverbSource(Binaural::CCore* core, const Config& config, const Vec3& shift);
 			~ReverbSource();
 
 			void UpdateSpatialisationMode(const SpatMode mode);
-			inline void SetShift(const vec3& shift) { mShift = shift; }
-			inline vec3 GetShift() const { return mShift; }
-			void UpdatePosition(const vec3& position);
+			inline void SetShift(const Vec3& shift) { mShift = shift; }
+			inline Vec3 GetShift() const { return mShift; }
+			void UpdatePosition(const Vec3& position);
 			void UpdateReflectionFilter(const Absorption& absorption);
 
 			void AddInput(const Real in, const int& i) { inputBuffer[i] = in; }
@@ -67,7 +67,7 @@ namespace RAC
 			void Init();
 
 			bool filterInitialised;
-			vec3 mShift;
+			Vec3 mShift;
 			Coefficients mAbsorption;
 			GraphicEQ mReflectionFilter;
 			shared_ptr<Binaural::CSingleSourceDSP> mSource;
@@ -90,20 +90,20 @@ namespace RAC
 		{
 		public:
 			Reverb(Binaural::CCore* core, const Config& config);
-			Reverb(Binaural::CCore* core, const Config& config, const vec& dimensions, const Coefficients& T60);
+			Reverb(Binaural::CCore* core, const Config& config, const Vec& dimensions, const Coefficients& T60);
 
 			void UpdateSpatialisationMode(const SpatMode mode);
 
-			void UpdateReverb(const vec3& position);
+			void UpdateReverb(const Vec3& position);
 			void UpdateReflectionFilters(const std::vector<Absorption>& absorptions, bool running);
-			void ProcessAudio(const matrix& data, Buffer& outputBuffer);
+			void ProcessAudio(const Matrix& data, Buffer& outputBuffer);
 			void UpdateReverbTime(const Coefficients& T60);
 			inline void UpdateFDNModel(const FDNMatrix& model) { mFDN.SetFDNModel(model); }
-			void SetFDNParameters(const Coefficients& T60, const vec& dimensions);
+			void SetFDNParameters(const Coefficients& T60, const Vec& dimensions);
 			inline void ResetFDN() { mFDN.Reset(); }
-			inline std::vector<vec3> GetReverbSourceDirections()
+			inline std::vector<Vec3> GetReverbSourceDirections()
 			{
-				std::vector<vec3> directions;
+				std::vector<Vec3> directions;
 				for (ReverbSource& reverbSource : mReverbSources)
 					directions.push_back(100.0 * reverbSource.GetShift());
 				return directions;
@@ -114,8 +114,8 @@ namespace RAC
 		private:
 			void InitSources();
 
-			matrix input;
-			rowvec out;
+			Matrix input;
+			Rowvec out;
 
 			std::atomic<bool> valid;
 			std::atomic<bool> runFDN;

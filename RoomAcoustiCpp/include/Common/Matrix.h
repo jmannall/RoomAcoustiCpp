@@ -23,15 +23,15 @@ namespace RAC
 
 		//////////////////// matrix class ////////////////////
 
-		class matrix
+		class Matrix
 		{
 		public:
 
 			// Load and Destroy
-			matrix() : rows(0), cols(0) { AllocateSpace(); };
-			matrix(const int r, const int c) : rows(r), cols(c) { AllocateSpace(); };
-			matrix(const std::vector<std::vector<Real>>& mat);
-			~matrix() { /*DeallocateSpace(); */ };
+			Matrix() : rows(0), cols(0) { AllocateSpace(); };
+			Matrix(const int r, const int c) : rows(r), cols(c) { AllocateSpace(); };
+			Matrix(const std::vector<std::vector<Real>>& mat);
+			~Matrix() { /*DeallocateSpace(); */ };
 
 			// Init
 			void Init(const std::vector<std::vector<Real>>& mat);
@@ -65,7 +65,7 @@ namespace RAC
 			inline int Rows() const { return rows; }
 			inline int Cols() const { return cols; }
 			inline const std::vector<std::vector<Real>>& Data() const { return data; }
-			matrix Transpose();
+			Matrix Transpose();
 
 			void Inverse();
 
@@ -90,7 +90,7 @@ namespace RAC
 			// Operators
 			inline std::vector<Real>& operator[](const int r) { return data[r]; }
 
-			inline matrix operator=(const matrix& mat)
+			inline Matrix operator=(const Matrix& mat)
 			{
 				rows = mat.Rows();
 				cols = mat.Cols();
@@ -98,7 +98,7 @@ namespace RAC
 				return *this;
 			}
 
-			inline matrix operator+=(const matrix& mat)
+			inline Matrix operator+=(const Matrix& mat)
 			{
 				for (int i = 0; i < rows; i++)
 				{
@@ -108,7 +108,7 @@ namespace RAC
 				return *this;
 			}
 
-			inline matrix operator-=(const matrix& mat)
+			inline Matrix operator-=(const Matrix& mat)
 			{
 				for (int i = 0; i < rows; i++)
 				{
@@ -118,7 +118,7 @@ namespace RAC
 				return *this;
 			}
 
-			inline matrix operator*=(const Real a)
+			inline Matrix operator*=(const Real a)
 			{
 				for (int i = 0; i < rows; i++)
 				{
@@ -128,7 +128,7 @@ namespace RAC
 				return *this;
 			}
 
-			inline matrix operator/=(const Real a)
+			inline Matrix operator/=(const Real a)
 			{
 				for (int i = 0; i < rows; i++)
 				{
@@ -138,7 +138,7 @@ namespace RAC
 				return *this;
 			}
 
-			inline matrix operator+=(const Real a)
+			inline Matrix operator+=(const Real a)
 			{
 				for (int i = 0; i < rows; i++)
 				{
@@ -148,7 +148,7 @@ namespace RAC
 				return *this;
 			}
 
-			inline matrix operator-=(const Real a)
+			inline Matrix operator-=(const Real a)
 			{
 				for (int i = 0; i < rows; i++)
 				{
@@ -172,7 +172,7 @@ namespace RAC
 
 		//////////////////// Operators ////////////////////
 
-		inline bool operator==(const matrix& u, const matrix& v)
+		inline bool operator==(const Matrix& u, const Matrix& v)
 		{
 			assert(u.Rows() == v.Rows());
 			assert(u.Cols() == v.Cols());
@@ -187,12 +187,12 @@ namespace RAC
 			return equal;
 		}
 
-		inline matrix operator+(const matrix& u, const matrix& v)
+		inline Matrix operator+(const Matrix& u, const Matrix& v)
 		{
 			assert(u.Rows() == v.Rows());
 			assert(u.Cols() == v.Cols());
 
-			matrix out = matrix(u.Rows(), u.Cols());
+			Matrix out = Matrix(u.Rows(), u.Cols());
 			for (int i = 0; i < u.Rows(); i++)
 			{
 				for (int j = 0; j < u.Cols(); j++)
@@ -204,9 +204,9 @@ namespace RAC
 			return out;
 		}
 
-		inline matrix operator-(const matrix& mat)
+		inline Matrix operator-(const Matrix& mat)
 		{
-			matrix out = matrix(mat.Rows(), mat.Cols());
+			Matrix out = Matrix(mat.Rows(), mat.Cols());
 			for (int i = 0; i < mat.Rows(); i++)
 			{
 				for (int j = 0; j < mat.Cols(); j++)
@@ -215,11 +215,11 @@ namespace RAC
 			return out;
 		}
 
-		inline matrix operator-(const matrix& u, const matrix& v)
+		inline Matrix operator-(const Matrix& u, const Matrix& v)
 		{
 			assert(u.Rows() == v.Rows());
 			assert(u.Cols() == v.Cols());
-			matrix out = matrix(u.Rows(), u.Cols());
+			Matrix out = Matrix(u.Rows(), u.Cols());
 			for (int i = 0; i < u.Rows(); i++)
 			{
 				for (int j = 0; j < u.Cols(); j++)
@@ -228,7 +228,7 @@ namespace RAC
 			return out;
 		}
 
-		inline matrix Mulitply(matrix& out, const matrix& u, const matrix& v)
+		inline Matrix Mulitply(Matrix& out, const Matrix& u, const Matrix& v)
 		{
 			assert(u.Cols() == v.Rows());
 			assert(out.Rows() == u.Rows());
@@ -248,15 +248,15 @@ namespace RAC
 			return out;
 		}
 
-		inline matrix operator*(const matrix& u, const matrix& v)
+		inline Matrix operator*(const Matrix& u, const Matrix& v)
 		{
-			matrix out = matrix(u.Rows(), v.Cols());
+			Matrix out = Matrix(u.Rows(), v.Cols());
 			return Mulitply(out, u, v);
 		}
 
-		inline matrix operator*(const Real a, const matrix& mat)
+		inline Matrix operator*(const Real a, const Matrix& mat)
 		{
-			matrix out = matrix(mat.Rows(), mat.Cols());
+			Matrix out = Matrix(mat.Rows(), mat.Cols());
 			for (int i = 0; i < mat.Rows(); i++)
 			{
 				for (int j = 0; j < mat.Cols(); j++)
@@ -268,12 +268,12 @@ namespace RAC
 			return out;
 		}
 
-		inline matrix operator*(const matrix& mat, const Real a)
+		inline Matrix operator*(const Matrix& mat, const Real a)
 		{
 			return a * mat;
 		}
 
-		inline matrix operator/(const matrix& mat, const Real& a)
+		inline Matrix operator/(const Matrix& mat, const Real& a)
 		{
 			return (1.0 / a) * mat;
 		}

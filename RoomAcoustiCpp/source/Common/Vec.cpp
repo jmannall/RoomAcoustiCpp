@@ -14,13 +14,13 @@ namespace RAC
 	{
 		//////////////////// vec class ////////////////////
 
-		vec::vec(matrix& mat)
+		Vec::Vec(Matrix& mat)
 		{
 			assert(mat.Cols() == 1);
 			Init(mat.GetColumn(0));
 		}
 
-		void vec::Init(const std::vector<Real>& vec)
+		void Vec::Init(const std::vector<Real>& vec)
 		{
 			assert(rows == vec.size());
 			for (int i = 0; i < rows; i++)
@@ -28,7 +28,7 @@ namespace RAC
 		}
 
 		// Distributions
-		void vec::RandomNormalDistribution()
+		void Vec::RandomNormalDistribution()
 		{
 			std::normal_distribution<Real> distribution; // mean 0, standard deviation 1
 			for (int i = 0; i < rows; i++)
@@ -37,7 +37,7 @@ namespace RAC
 			}
 		}
 
-		void vec::RandomUniformDistribution()
+		void Vec::RandomUniformDistribution()
 		{
 			std::uniform_real_distribution<Real> distribution; // a 0, b 1
 			for (int i = 0; i < rows; i++)
@@ -46,7 +46,7 @@ namespace RAC
 			}
 		}
 
-		void vec::RandomUniformDistribution(Real a, Real b)
+		void Vec::RandomUniformDistribution(Real a, Real b)
 		{
 			std::uniform_real_distribution<Real> distribution(a, b);
 			for (int i = 0; i < rows; i++)
@@ -55,7 +55,7 @@ namespace RAC
 			}
 		}
 
-		void vec::Normalise()
+		void Vec::Normalise()
 		{
 			Real norm = CalculateNormal();
 			for (int i = 0; i < rows; i++)
@@ -65,7 +65,7 @@ namespace RAC
 		}
 
 		// Getters
-		Real vec::CalculateNormal() const
+		Real Vec::CalculateNormal() const
 		{
 			Real mag = 0.0;
 			for (int i = 0; i < rows; i++)
@@ -75,7 +75,7 @@ namespace RAC
 			return sqrt(mag);
 		}
 
-		Real vec::Mean() const
+		Real Vec::Mean() const
 		{
 			Real out = 0;
 			for (int i = 0; i < rows; i++)
@@ -87,13 +87,13 @@ namespace RAC
 
 		//////////////////// rowvec class ////////////////////
 
-		rowvec::rowvec(const matrix& mat)
+		Rowvec::Rowvec(const Matrix& mat)
 		{
 			assert(mat.Rows() == 1);
 			Init(mat.GetRow(0));
 		}
 
-		void rowvec::Init(const std::vector<Real>& vec)
+		void Rowvec::Init(const std::vector<Real>& vec)
 		{
 			assert(cols == vec.size());
 			data[0] = vec;

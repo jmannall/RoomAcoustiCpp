@@ -105,17 +105,17 @@ namespace RAC
 			}
 		}
 
-		bool ImageEdge::LineRoomObstruction(const vec3& start, const vec3& end)
+		bool ImageEdge::LineRoomObstruction(const Vec3& start, const Vec3& end)
 		{
 			return LineRoomObstruction(start, end, -1);
 		}
 
-		void ImageEdge::LineRoomObstruction(const vec3& start, const vec3& end, bool& obstruction)
+		void ImageEdge::LineRoomObstruction(const Vec3& start, const Vec3& end, bool& obstruction)
 		{
 			obstruction = LineRoomObstruction(start, end, -1);
 		}
 
-		bool ImageEdge::LineRoomObstruction(const vec3& start, const vec3& end, int currentPlaneId)
+		bool ImageEdge::LineRoomObstruction(const Vec3& start, const Vec3& end, int currentPlaneId)
 		{
 			for (auto& itP : mPlanes)
 			{
@@ -131,13 +131,13 @@ namespace RAC
 			return false;
 		}
 
-		void ImageEdge::LineRoomObstruction(const vec3& start, const vec3& end, int currentPlaneId, bool& obstruction)
+		void ImageEdge::LineRoomObstruction(const Vec3& start, const Vec3& end, int currentPlaneId, bool& obstruction)
 		{
 			if (!obstruction)
 				obstruction = LineRoomObstruction(start, end, currentPlaneId);
 		}
 
-		bool ImageEdge::LineRoomObstruction(const vec3& start, const vec3& end, int currentPlaneId1, int currentPlaneId2)
+		bool ImageEdge::LineRoomObstruction(const Vec3& start, const Vec3& end, int currentPlaneId1, int currentPlaneId2)
 		{
 			for (auto& itP : mPlanes)
 			{
@@ -153,13 +153,13 @@ namespace RAC
 			return false;
 		}
 
-		void ImageEdge::LineRoomObstruction(const vec3& start, const vec3& end, int currentPlaneId1, int currentPlaneId2, bool& obstruction)
+		void ImageEdge::LineRoomObstruction(const Vec3& start, const Vec3& end, int currentPlaneId1, int currentPlaneId2, bool& obstruction)
 		{
 			if (!obstruction)
 				obstruction = LineRoomObstruction(start, end, currentPlaneId1, currentPlaneId2);
 		}
 
-		bool ImageEdge::FindWallObstruction(const vec3& start, const vec3& end, const Plane& plane) const
+		bool ImageEdge::FindWallObstruction(const Vec3& start, const Vec3& end, const Plane& plane) const
 		{
 			for (auto& idW : plane.GetWalls())
 			{
@@ -173,7 +173,7 @@ namespace RAC
 			return false;
 		}
 
-		bool ImageEdge::FindWallIntersection(Absorption& absorption, vec3& intersection, const vec3& start, const vec3& end, const Plane& plane) const
+		bool ImageEdge::FindWallIntersection(Absorption& absorption, Vec3& intersection, const Vec3& start, const Vec3& end, const Plane& plane) const
 		{
 			for (auto& idW : plane.GetWalls())
 			{
@@ -197,7 +197,7 @@ namespace RAC
 			return false;
 		}
 
-		bool ImageEdge::FindIntersection(vec3& intersection, Absorption& absorption, const vec3& start, const vec3& end, const Plane& plane) const
+		bool ImageEdge::FindIntersection(Vec3& intersection, Absorption& absorption, const Vec3& start, const Vec3& end, const Plane& plane) const
 		{
 			if (plane.LinePlaneIntersection(start, end))
 			{
@@ -207,12 +207,12 @@ namespace RAC
 			return false;
 		}
 
-		bool ImageEdge::FindIntersections(std::vector<vec3>& intersections, VirtualSourceData& vSource, int bounceIdx) const
+		bool ImageEdge::FindIntersections(std::vector<Vec3>& intersections, VirtualSourceData& vSource, int bounceIdx) const
 		{
 			return FindIntersections(intersections, vSource, bounceIdx, mListenerPosition);
 		}
 
-		bool ImageEdge::FindIntersections(std::vector<vec3>& intersections, VirtualSourceData& vSource, int bounceIdx, const vec3& start) const
+		bool ImageEdge::FindIntersections(std::vector<Vec3>& intersections, VirtualSourceData& vSource, int bounceIdx, const Vec3& start) const
 		{
 			vSource.ResetAbsorption();
 			Absorption& absorption = vSource.GetAbsorptionRef();
@@ -290,7 +290,7 @@ namespace RAC
 			BeginLateReverb();
 #endif
 			Real k;
-			vec3 point, intersection;
+			Vec3 point, intersection;
 			for (int j = 0; j < reverbDirections.size(); j++)
 			{
 				std::vector<PlaneDistanceID> ks = std::vector(mPlanes.size(), PlaneDistanceID(0.0, -1));
@@ -336,7 +336,7 @@ namespace RAC
 #endif
 		}
 
-		bool ImageEdge::ReflectPointInRoom(const vec3& point, VirtualSourceDataMap& vSources)
+		bool ImageEdge::ReflectPointInRoom(const Vec3& point, VirtualSourceDataMap& vSources)
 		{
 
 #ifdef PROFILE_BACKGROUND_THREAD
@@ -408,7 +408,7 @@ namespace RAC
 			return lineOfSight;
 		}
 
-		size_t ImageEdge::FirstOrderDiffraction(const vec3& point, VirtualSourceDataMap& vSources)
+		size_t ImageEdge::FirstOrderDiffraction(const Vec3& point, VirtualSourceDataMap& vSources)
 		{
 #ifdef PROFILE_BACKGROUND_THREAD
 			BeginFirstOrderDiff();
@@ -417,7 +417,7 @@ namespace RAC
 			size_t counter = 0;
 
 			bool feedsFDN = mIEMConfig.order == 1;
-			vec3 position;
+			Vec3 position;
 			for (const auto& it : mEdges)
 			{
 				if (it.second.zW < mIEMConfig.edgeLength)
@@ -465,6 +465,14 @@ namespace RAC
 
 				if (!obstruction)
 				{
+					Vec3 facingDir = mListenerPosition - point;
+					Vec3 dir = vSource.GetApex() - point;
+					Real angle = acos(Dot(facingDir, dir) / (facingDir.Length() * dir.Length()));
+
+					Absorption directivity = Absorption(numAbsorptionBands);
+					directivity = 0.5 * (1 + cos(angle));
+					vSource.AddAbsorption(directivity);
+
 					vSource.SetDistance(mListenerPosition);
 					vSource.Visible(feedsFDN);
 					vSource.lastUpdatedCycle = currentCycle;
@@ -478,7 +486,7 @@ namespace RAC
 		}
 
 		// Reflection
-		size_t ImageEdge::FirstOrderReflections(const vec3& point, VirtualSourceDataMap& vSources, size_t counter)
+		size_t ImageEdge::FirstOrderReflections(const Vec3& point, VirtualSourceDataMap& vSources, size_t counter)
 		{
 #ifdef PROFILE_BACKGROUND_THREAD
 			BeginFirstOrderRef();
@@ -486,7 +494,7 @@ namespace RAC
 			size_t size = sp[0].size();
 
 			bool feedsFDN = mIEMConfig.order == 1;
-			vec3 position, intersection;
+			Vec3 position, intersection;
 			for (const auto& it : mPlanes)
 			{
 				if (!it.second.ReflectPointInPlane(position, point))
@@ -494,7 +502,7 @@ namespace RAC
 
 				VirtualSourceData& vSource = counter < size ? sp[0][counter] : sp[0].emplace_back(numAbsorptionBands);
 
-				vSource.SetPreviousPlane(vec4(it.second.GetD(), it.second.GetNormal()));
+				vSource.SetPreviousPlane(Vec4(it.second.GetD(), it.second.GetNormal()));
 
 				if (counter < size)
 					vSource.Clear();
@@ -519,6 +527,14 @@ namespace RAC
 				LineRoomObstruction(intersection, mListenerPosition, it.first, obstruction);
 				if (!obstruction)
 				{
+					Vec3 facingDir = mListenerPosition - point;
+					Vec3 dir = intersection - point;
+					Real angle = acos(Dot(facingDir, dir) / (facingDir.Length() * dir.Length()));
+
+					Absorption directivity = Absorption(numAbsorptionBands);
+					directivity = 0.5 * (1 + cos(angle));
+					vSource.AddAbsorption(directivity);
+
 					vSource.SetDistance(mListenerPosition);
 					vSource.Visible(feedsFDN);
 					vSource.lastUpdatedCycle = currentCycle;
@@ -531,23 +547,23 @@ namespace RAC
 			return counter;
 		}
 
-		void ImageEdge::HigherOrderReflections(const vec3& point, VirtualSourceDataMap& vSources)
+		void ImageEdge::HigherOrderReflections(const Vec3& point, VirtualSourceDataMap& vSources)
 		{
 			// Check for first order reflections in sp
 			if (sp[0].size() == 0)
 				return;
 
-			vec3 position;
+			Vec3 position;
 			for (int refIdx = 1; refIdx < mIEMConfig.order; refIdx++)
 			{
 				int refOrder = refIdx + 1;
 				int prevRefIdx = refIdx - 1;
 				bool feedsFDN = mIEMConfig.order == refOrder;
 
-				std::vector<vec3> intersections;
+				std::vector<Vec3> intersections;
 				size_t capacity = intersections.capacity();
 				intersections.reserve(refOrder);
-				std::fill_n(std::back_inserter(intersections), refOrder - capacity, vec3());
+				std::fill_n(std::back_inserter(intersections), refOrder - capacity, Vec3());
 
 				// Check m is not null
 				if (sp[prevRefIdx].size() == 0)
@@ -583,8 +599,8 @@ namespace RAC
 							if (it.first == vS.GetID(prevRefIdx))
 								continue;
 
-							vec4 previousPlaneData = vS.GetPreviousPlane();
-							vec4 planeData = vec4(it.second.GetD(), it.second.GetNormal());
+							Vec4 previousPlaneData = vS.GetPreviousPlane();
+							Vec4 planeData = Vec4(it.second.GetD(), it.second.GetNormal());
 
 							// Can't reflect in parallel plane
 							if (planeData.x == previousPlaneData.x && planeData.y == previousPlaneData.y && planeData.z == previousPlaneData.z)
@@ -632,6 +648,14 @@ namespace RAC
 							}
 							if (!obstruction)
 							{
+								Vec3 facingDir = mListenerPosition - point;
+								Vec3 dir = intersections[0] - point;
+								Real angle = acos(Dot(facingDir, dir) / (facingDir.Length() * dir.Length()));
+
+								Absorption directivity = Absorption(numAbsorptionBands);
+								directivity = 0.5 * (1 + cos(angle));
+								vSource.AddAbsorption(directivity);
+
 								vSource.SetDistance(mListenerPosition);
 								vSource.Visible(feedsFDN);
 								vSource.lastUpdatedCycle = currentCycle;
@@ -643,7 +667,7 @@ namespace RAC
 						{
 							const Edge& edge = vS.GetEdge();
 
-							vec4 planeData = vec4(it.second.GetD(), it.second.GetNormal());
+							Vec4 planeData = Vec4(it.second.GetD(), it.second.GetNormal());
 
 							if (vS.IsReflection(prevRefIdx))
 							{
@@ -651,7 +675,7 @@ namespace RAC
 								if (it.first == vS.GetID(prevRefIdx))
 									continue;
 
-								vec4 previousPlaneData = vS.GetPreviousPlane();
+								Vec4 previousPlaneData = vS.GetPreviousPlane();
 
 								// Can't reflect in parallel plane
 								if (planeData.x == previousPlaneData.x && planeData.y == previousPlaneData.y && planeData.z == previousPlaneData.z)
@@ -730,6 +754,14 @@ namespace RAC
 							}
 							if (!obstruction)
 							{
+								Vec3 facingDir = mListenerPosition - point;
+								Vec3 dir = intersections[0] - point;
+								Real angle = acos(Dot(facingDir, dir) / (facingDir.Length() * dir.Length()));
+
+								Absorption directivity = Absorption(numAbsorptionBands);
+								directivity = 0.5 * (1 + cos(angle));
+								vSource.AddAbsorption(directivity);
+
 								vSource.SetDistance(mListenerPosition);
 								vSource.Visible(feedsFDN);
 								vSource.lastUpdatedCycle = currentCycle;
@@ -848,6 +880,14 @@ namespace RAC
 						}
 						if (!obstruction)
 						{
+							Vec3 facingDir = mListenerPosition - point;
+							Vec3 dir = intersections[0] - point;
+							Real angle = acos(Dot(facingDir, dir) / (facingDir.Length() * dir.Length()));
+
+							Absorption directivity = Absorption(numAbsorptionBands);
+							directivity = 0.5 * (1 + cos(angle));
+							vSource.AddAbsorption(directivity);
+
 							vSource.SetDistance(mListenerPosition);
 							vSource.Visible(feedsFDN);
 							vSource.lastUpdatedCycle = currentCycle;

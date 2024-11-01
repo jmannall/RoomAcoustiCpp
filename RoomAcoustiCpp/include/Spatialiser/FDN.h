@@ -88,7 +88,7 @@ namespace RAC
 		public:
 			// Load and Destroy
 			FDN(const Config& config);
-			FDN(const Coefficients& T60, const vec& dimensions, const Config& config);
+			FDN(const Coefficients& T60, const Vec& dimensions, const Config& config);
 			~FDN() {}
 
 			// Getters
@@ -97,7 +97,7 @@ namespace RAC
 
 			// Setters
 			void UpdateT60(const Coefficients& T60);
-			void SetParameters(const Coefficients& T60, const vec& dimensions);
+			void SetParameters(const Coefficients& T60, const Vec& dimensions);
 			inline void Reset()
 			{ 
 				x.Reset(); y.Reset();  
@@ -110,14 +110,14 @@ namespace RAC
 				{
 				case FDNMatrix::householder:
 				{ 
-					mat = matrix(mConfig.numFDNChannels, 1);
+					mat = Matrix(mConfig.numFDNChannels, 1);
 					Init = &FDN::InitHouseHolder;
 					Process = &FDN::ProcessHouseholder;
 					break;
 				}
 				case FDNMatrix::randomOrthogonal:
 				{ 
-					mat = matrix(mConfig.numFDNChannels, mConfig.numFDNChannels);
+					mat = Matrix(mConfig.numFDNChannels, mConfig.numFDNChannels);
 					Init = &FDN::InitRandomOrthogonal;
 					Process = &FDN::ProcessSquare;
 					break;
@@ -130,7 +130,7 @@ namespace RAC
 			// Init
 			void InitMatrix() { (this->*Init)(); };
 			void (FDN::* Init)();
-			vec CalculateTimeDelay(const vec& dimensions);
+			Vec CalculateTimeDelay(const Vec& dimensions);
 
 			// Process
 			inline void ProcessMatrix() { (this->*Process)(); };
@@ -161,9 +161,9 @@ namespace RAC
 			// Member variables
 			Config mConfig;
 			std::vector<Channel> mChannels;
-			rowvec x;
-			rowvec y;
-			matrix mat;
+			Rowvec x;
+			Rowvec y;
+			Matrix mat;
 
 			FDNMatrix mModel;
 			Real houseHolderFactor;

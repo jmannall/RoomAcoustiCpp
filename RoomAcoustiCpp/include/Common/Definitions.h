@@ -1,5 +1,5 @@
 /*
-* @brief Defines constants (Speed of sound, PI, SQRT_2, LOG_10) and some simple mathematical functions
+* @brief Defines constants (speed of sound, PI, SQRT_2, LOG_10) and some simple mathematical functions
 *
 */
 

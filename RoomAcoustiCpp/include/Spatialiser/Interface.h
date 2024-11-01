@@ -56,9 +56,9 @@ namespace RAC
 		void UpdateIEMConfig(const IEMConfig& config);
 
 		/**
-		* Updates the late reverberation time (T60).
+		* Overrides the current late reverberation time (T60).
 		*
-		* @param rt60 The late reverberation time.
+		* @param T60 The late reverberation time.
 		*/
 		void UpdateReverbTime(const Coefficients& T60);
 
@@ -89,7 +89,7 @@ namespace RAC
 		* @param volume The volume of the room.
 		* @param dimensions The dimensions of the room for the delay lines.
 		*/
-		void UpdateRoom(const Real volume, const vec& dimensions);
+		void UpdateRoom(const Real volume, const Vec& dimensions);
 
 		/**
 		* Clears the internal FDN buffers.
@@ -102,7 +102,7 @@ namespace RAC
 		* @param position The new position of the listener.
 		* @param orientation The new orientation of the listener.
 		*/
-		void UpdateListener(const vec3& position, const vec4& orientation);
+		void UpdateListener(const Vec3& position, const Vec4& orientation);
 
 		/**
 		* Initializes a new audio source and returns its ID.
@@ -118,7 +118,7 @@ namespace RAC
 		* @param position The new position of the source.
 		* @param orientation The new orientation of the source.
 		*/
-		void UpdateSource(size_t id, const vec3& position, const vec4& orientation);
+		void UpdateSource(size_t id, const Vec3& position, const Vec4& orientation);
 
 		/**
 		* Removes the audio source with the given ID.
@@ -136,7 +136,7 @@ namespace RAC
 		* @param reverbWall The reverb wall.
 		* @return The ID of the new wall.
 		*/
-		int InitWall(const vec3& normal, const Real* vData, const Absorption& absorption);
+		int InitWall(const Vec3& normal, const Real* vData, const Absorption& absorption);
 		
 		/**
 		* Updates the position and orientation of the wall with the given ID.
@@ -145,7 +145,7 @@ namespace RAC
 		* @param normal The new normal vector of the wall.
 		* @param vData The new vertices of the wall.
 		*/
-		void UpdateWall(size_t id, const vec3& normal, const Real* vData);
+		void UpdateWall(size_t id, const Vec3& normal, const Real* vData);
 
 		/**
 		* Updates the absorption of the wall with the given ID.

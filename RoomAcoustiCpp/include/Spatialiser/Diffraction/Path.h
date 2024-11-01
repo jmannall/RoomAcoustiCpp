@@ -22,7 +22,7 @@ namespace RAC
 
 			struct SRData
 			{
-				vec3 point;
+				Vec3 point;
 				Real r;
 				Real z;
 				Real t;
@@ -45,13 +45,13 @@ namespace RAC
 			public:
 				// Load and Destroy
 				Path() : zValid(false), sValid(false), rValid(false), valid(false), inShadow(false), bA(0.0), mA(0.0), zA(0.0), phi(0.0) {};
-				Path(const vec3& source, const vec3& receiver, const Edge& edge);
+				Path(const Vec3& source, const Vec3& receiver, const Edge& edge);
 				~Path() {};
 
 				// Updates
-				void UpdateParameters(const vec3& source, const vec3& receiver, const Edge& edge);
-				void UpdateParameters(const vec3& source, const vec3& receiver);
-				void UpdateParameters(const vec3& receiver);
+				void UpdateParameters(const Vec3& source, const Vec3& receiver, const Edge& edge);
+				void UpdateParameters(const Vec3& source, const Vec3& receiver);
+				void UpdateParameters(const Vec3& receiver);
 				void ReflectEdgeInPlane(const Plane& plane) { mEdge.ReflectInPlane(plane); }
 
 				// Getters
@@ -62,7 +62,7 @@ namespace RAC
 					return sqrt(sData.r * sData.r + sZ * sZ) + sqrt(rData.r * rData.r + rZ * rZ);
 				}
 				inline Real GetMaxD() const { return std::max(GetD(0), GetD(wData.z)); }
-				inline vec3 GetApex() const
+				inline Vec3 GetApex() const
 				{
 					if (zA < 0)
 						return mEdge.GetEdgeCoord(0);
@@ -74,8 +74,8 @@ namespace RAC
 
 				// Edge
 				const inline Edge& GetEdge() const { return mEdge; }
-				inline vec3 CalculateVirtualPostion() const { return rData.point + (sData.d + rData.d) * (mEdge.GetEdgeCoord(zA) - rData.point) / rData.d; }
-				inline vec3 CalculateVirtualRPostion() const { return sData.point + (sData.d + rData.d) * (mEdge.GetEdgeCoord(zA) - sData.point) / sData.d; }
+				inline Vec3 CalculateVirtualPostion() const { return rData.point + (sData.d + rData.d) * (mEdge.GetEdgeCoord(zA) - rData.point) / rData.d; }
+				inline Vec3 CalculateVirtualRPostion() const { return sData.point + (sData.d + rData.d) * (mEdge.GetEdgeCoord(zA) - sData.point) / sData.d; }
 
 				// Booleans
 				bool zValid;

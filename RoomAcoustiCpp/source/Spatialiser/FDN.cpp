@@ -92,9 +92,9 @@ namespace RAC
 			SetFDNModel(FDNMatrix::householder);
 		}
 
-		FDN::FDN(const Coefficients& T60, const vec& dimensions, const Config& config) : mConfig(config), x(config.numFDNChannels), y(config.numFDNChannels), mat(config.numFDNChannels, config.numFDNChannels)
+		FDN::FDN(const Coefficients& T60, const Vec& dimensions, const Config& config) : mConfig(config), x(config.numFDNChannels), y(config.numFDNChannels), mat(config.numFDNChannels, config.numFDNChannels)
 		{
-			vec t = CalculateTimeDelay(dimensions);
+			Vec t = CalculateTimeDelay(dimensions);
 			mChannels.reserve(mConfig.numFDNChannels);
 			for (int i = 0; i < mConfig.numFDNChannels; i++)
 				mChannels.push_back(Channel(t[i], T60, mConfig));
@@ -107,16 +107,16 @@ namespace RAC
 				mChannels[i].UpdateAbsorption(T60);
 		}
 
-		void FDN::SetParameters(const Coefficients& T60, const vec& dimensions)
+		void FDN::SetParameters(const Coefficients& T60, const Vec& dimensions)
 		{
-			vec t = CalculateTimeDelay(dimensions);
+			Vec t = CalculateTimeDelay(dimensions);
 			for (int i = 0; i < mConfig.numFDNChannels; i++)
 				mChannels[i].SetParameters(T60, t[i]);
 		}
 
-		vec FDN::CalculateTimeDelay(const vec& dimensions)
+		Vec FDN::CalculateTimeDelay(const Vec& dimensions)
 		{
-			vec t = vec(mConfig.numFDNChannels);
+			Vec t = Vec(mConfig.numFDNChannels);
 			if (dimensions.Rows() > 0)
 			{
 				Real idx = static_cast<Real>(mConfig.numFDNChannels) / static_cast<Real>(dimensions.Rows());
@@ -144,7 +144,7 @@ namespace RAC
 
 		void FDN::InitRandomOrthogonal()
 		{
-			vec vector = vec(mConfig.numFDNChannels);
+			Vec vector = Vec(mConfig.numFDNChannels);
 			vector.RandomUniformDistribution(-1.0, 1.0);
 			vector.Normalise();
 			mat.AddColumn(vector.GetColumn(0), 0);
@@ -157,7 +157,7 @@ namespace RAC
 				{
 					vector.RandomUniformDistribution(-1.0, 1.0);
 
-					matrix section = matrix(mConfig.numFDNChannels, j);
+					Matrix section = Matrix(mConfig.numFDNChannels, j);
 
 					for (int i = 0; i < mConfig.numFDNChannels; ++i)
 					{

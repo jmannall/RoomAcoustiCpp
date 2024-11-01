@@ -137,7 +137,7 @@ namespace RAC
 			* @param volume The volume of the room used to predict the reverberation time.
 			* @param dimensions The dimensions of the room used to set the FDN delay lines.
 			*/
-			void UpdateRoom(const Real volume, const vec& dimensions);
+			void UpdateRoom(const Real volume, const Vec& dimensions);
 
 			inline void ResetFDN() { mReverb->ResetFDN(); }
 
@@ -147,7 +147,7 @@ namespace RAC
 			* @param position The new position of the listener.
 			* @param orientation The new orientation of the listener.
 			*/
-			void UpdateListener(const vec3& position, const vec4& orientation);
+			void UpdateListener(const Vec3& position, const Vec4& orientation);
 
 			/**
 			* Initialises a new source in the spatialsier.
@@ -163,7 +163,7 @@ namespace RAC
 			* @param position The new position of the source.
 			* @param orientation The new orientation of the source.
 			*/
-			void UpdateSource(size_t id, const vec3& position, const vec4& orientation);
+			void UpdateSource(size_t id, const Vec3& position, const Vec4& orientation);
 
 			/**
 			* Removes a source from the spatialiser.
@@ -182,7 +182,7 @@ namespace RAC
 			* 
 			* @return The ID of the new wall.
 			*/
-			size_t InitWall(const vec3& normal, const Real* vData, const Absorption& absorption);
+			size_t InitWall(const Vec3& normal, const Real* vData, const Absorption& absorption);
 			
 			/**
 			* Updates the position of a wall.
@@ -192,7 +192,7 @@ namespace RAC
 			* @param vData The new vertices of the wall.
 			* @param numVertices The number of vertices in the wall.
 			*/
-			void UpdateWall(size_t id, const vec3& normal, const Real* vData);
+			void UpdateWall(size_t id, const Vec3& normal, const Real* vData);
 
 			/**
 			* Updates the absorption of a wall.
@@ -242,7 +242,7 @@ namespace RAC
 			Config mConfig;			// RAC Config
 			bool mIsRunning;		// Flag to check if the spatialiser is running
 			std::thread IEMThread;	// Background thread to run the image edge model
-			vec3 listenerPosition;	// Stored listener position
+			Vec3 listenerPosition;	// Stored listener position
 			Real headRadius;		// Stored head radius from 3DTI
 
 			/**
@@ -256,7 +256,7 @@ namespace RAC
 			*/
 			Buffer mInputBuffer;	// Audio input buffer
 			Buffer mOutputBuffer;	// Audio output buffer
-			matrix mReverbInput;	// Audio reverb input matrix
+			Matrix mReverbInput;	// Audio reverb input matrix
 			BufferF mSendBuffer;	// Audio send buffer (float)
 
 			/**

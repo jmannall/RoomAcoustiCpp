@@ -116,20 +116,20 @@ namespace RAC
 			inline size_t GetOrder() const { return order; }
 
 			// Transforms
-			void SetTransform(const vec3& vSourcePosition);
-			void SetTransform(const vec3& vSourcePosition, const vec3& vEdgeSourcePosition);
+			void SetTransform(const Vec3& vSourcePosition);
+			void SetTransform(const Vec3& vSourcePosition, const Vec3& vEdgeSourcePosition);
 
-			inline vec3 GetPosition() const { return mPositions.back(); }
-			vec3 GetPosition(int i) const;
+			inline Vec3 GetPosition() const { return mPositions.back(); }
+			Vec3 GetPosition(int i) const;
 			
 			// Diffraction
-			inline void UpdateDiffractionPath(const vec3& source, const vec3& receiver, const Edge& edge)
+			inline void UpdateDiffractionPath(const Vec3& source, const Vec3& receiver, const Edge& edge)
 			{
 				mDiffractionPath.UpdateParameters(source, receiver, edge);
 				//vec3 position = mDiffractionPath.CalculateVirtualPostion();
 				SetTransform(source, mDiffractionPath.CalculateVirtualPostion());
 			}
-			inline void UpdateDiffractionPath(const vec3& source, const vec3& receiver, const Plane& plane)
+			inline void UpdateDiffractionPath(const Vec3& source, const Vec3& receiver, const Plane& plane)
 			{
 				mDiffractionPath.ReflectEdgeInPlane(plane);
 				mDiffractionPath.UpdateParameters(source, receiver);
@@ -137,7 +137,7 @@ namespace RAC
 				SetTransform(source, mDiffractionPath.CalculateVirtualPostion());
 			}
 			const inline Edge& GetEdge() const { return mDiffractionPath.GetEdge(); }
-			inline vec3 GetApex() const { return mDiffractionPath.GetApex(); }
+			inline Vec3 GetApex() const { return mDiffractionPath.GetApex(); }
 
 			// Visibility and Validity
 			inline void Visible(const bool fdn) { visible = true; feedsFDN = fdn; }
@@ -169,10 +169,10 @@ namespace RAC
 				key = vS.key;
 			}
 
-			void SetDistance(const vec3& listenerPosition);
+			void SetDistance(const Vec3& listenerPosition);
 
-			inline vec4 GetPreviousPlane() const { return previousPlane; }
-			inline void SetPreviousPlane(const vec4& plane) { previousPlane = plane; }
+			inline Vec4 GetPreviousPlane() const { return previousPlane; }
+			inline void SetPreviousPlane(const Vec4& plane) { previousPlane = plane; }
 
 			VirtualSourceData Trim(const int i);
 
@@ -197,10 +197,10 @@ namespace RAC
 			std::array<char, 1> reflectionKey;
 			std::array<char, 1> diffractionKey;
 			std::vector<Part> pathParts;
-			std::vector<vec3> mPositions;
+			std::vector<Vec3> mPositions;
 			size_t order;
 			Absorption mAbsorption;
-			vec4 previousPlane;
+			Vec4 previousPlane;
 		};
 
 		//////////////////// VirtualSource class ////////////////////
@@ -230,7 +230,7 @@ namespace RAC
 			inline void UpdateTransform() { if (updateTransform) { mSource->SetSourceTransform(transform); } }
 
 			// Audio
-			void ProcessAudio(const Buffer& data, matrix& reverbInput, Buffer& outputBuffer);
+			void ProcessAudio(const Buffer& data, Matrix& reverbInput, Buffer& outputBuffer);
 
 			// Deactivate
 			inline void Deactivate() { mSource = nullptr; }

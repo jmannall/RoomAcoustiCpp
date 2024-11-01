@@ -36,7 +36,7 @@ namespace RAC
 	namespace Spatialiser
 	{
 
-		typedef std::pair<size_t, vec3> IDPositionPair;
+		typedef std::pair<size_t, Vec3> IDPositionPair;
 
 		//////////////////// Source class ////////////////////
 
@@ -55,7 +55,7 @@ namespace RAC
 			inline shared_ptr<Binaural::CSingleSourceDSP>& GetSource() { return mSource; }
 
 			// Updates
-			void Update(const vec3& position, const vec4& orientation, const Real distance);
+			void Update(const Vec3& position, const Vec4& orientation, const Real distance);
 
 			inline void UpdateData(const bool visible, const VirtualSourceDataMap& vSources)
 			{ 
@@ -66,10 +66,10 @@ namespace RAC
 				{ lock_guard<std::mutex> lock(*vSourceDataMutex); targetVSources = vSources; }
 				End3DTI();
 			}
-			vec3 GetPosition();
+			Vec3 GetPosition();
 			
 			// Audio
-			void ProcessAudio(const Buffer& data, matrix& reverbInput, Buffer& outputBuffer);
+			void ProcessAudio(const Buffer& data, Matrix& reverbInput, Buffer& outputBuffer);
 
 			// Reset
 			inline void Deactivate() { mSource = nullptr; }

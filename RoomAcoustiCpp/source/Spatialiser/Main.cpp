@@ -315,7 +315,7 @@ extern "C"
 	*/
 	EXPORT void API RACUpdateRoom(float volume, const float* dim, int numDimensions)
 	{
-		vec dimensions = vec(numDimensions);
+		Vec dimensions = Vec(numDimensions);
 		for (int i = 0; i < numDimensions; i++)
 			dimensions[i] = static_cast<Real>(dim[i]);
 
@@ -343,7 +343,7 @@ extern "C"
 	*/
 	EXPORT void API RACUpdateListener(float posX, float posY, float posZ, float oriW, float oriX, float oriY, float oriZ)
 	{
-		UpdateListener(vec3(posX, posY, posZ), vec4(oriW, oriX, oriY, oriZ));
+		UpdateListener(Vec3(posX, posY, posZ), Vec4(oriW, oriX, oriY, oriZ));
 	}
 
 	/**
@@ -373,7 +373,7 @@ extern "C"
 	*/
 	EXPORT void API RACUpdateSource(int id, float posX, float posY, float posZ, float oriW, float oriX, float oriY, float oriZ)
 	{
-		UpdateSource(static_cast<size_t>(id), vec3(posX, posY, posZ), vec4(oriW, oriX, oriY, oriZ));
+		UpdateSource(static_cast<size_t>(id), Vec3(posX, posY, posZ), Vec4(oriW, oriX, oriY, oriZ));
 	}
 
 	/**
@@ -415,7 +415,7 @@ extern "C"
 		for (int i = 0; i < numCoords; i++)
 			in[i] = static_cast<Real>(vData[i]);
 
-		return InitWall(vec3(nX, nY, nZ), &in[0], abs);
+		return InitWall(Vec3(nX, nY, nZ), &in[0], abs);
 	}
 
 	/**
@@ -437,7 +437,7 @@ extern "C"
 		for (int i = 0; i < numCoords; i++)
 			in[i] = static_cast<Real>(vData[i]);
 
-		UpdateWall(static_cast<size_t>(id), vec3(nX, nY, nZ), &in[0]);
+		UpdateWall(static_cast<size_t>(id), Vec3(nX, nY, nZ), &in[0]);
 	}
 
 	/**

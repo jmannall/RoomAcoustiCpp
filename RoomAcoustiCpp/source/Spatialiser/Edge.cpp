@@ -25,7 +25,7 @@ namespace RAC
 
 		//////////////////// Edge class ////////////////////
 
-		Edge::Edge(const vec3& base, const vec3& top, const vec3& normal1, const vec3& normal2, const size_t wallId1, const size_t wallId2, const size_t planeId1, const size_t planeId2)
+		Edge::Edge(const Vec3& base, const Vec3& top, const Vec3& normal1, const Vec3& normal2, const size_t wallId1, const size_t wallId2, const size_t planeId1, const size_t planeId2)
 			: zW(0.0f), mBase(base), mTop(top), mFaceNormals(normal1, normal2), mWallIds(wallId1, wallId2), mPlaneIds(planeId1, planeId2), mDs(0.0, 0.0), rZone(EdgeZone::Invalid)
 		{
 			Update();
@@ -62,13 +62,13 @@ namespace RAC
 			plane.ReflectNormalInPlane(mFaceNormals.first);
 			plane.ReflectNormalInPlane(mFaceNormals.second);
 			// Swap the normal order so that the external still travels from planeA to planeB (right hand rule)
-			vec3 store = mFaceNormals.first;
+			Vec3 store = mFaceNormals.first;
 			mFaceNormals.first = mFaceNormals.second;
 			mFaceNormals.second = store;
 			Update();
 		}
 
-		EdgeZone Edge::FindEdgeZone(const vec3& point) const
+		EdgeZone Edge::FindEdgeZone(const Vec3& point) const
 		{
 			bool valid1 = Dot(point, mFaceNormals.first) - mDs.first > 0;
 			bool valid2 = Dot(point, mFaceNormals.second) - mDs.second > 0;

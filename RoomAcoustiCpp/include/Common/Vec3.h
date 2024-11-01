@@ -24,19 +24,19 @@ namespace RAC
 
 		//////////////////// vec3 class ////////////////////
 
-		class vec3
+		class Vec3
 		{
 		public:
 
 			// Load and Destroy
-			vec3() : x(0.0), y(0.0), z(0.0) {}
-			vec3(const Real x_, const Real y_, const Real z_) : x(x_), y(y_), z(z_) {}
+			Vec3() : x(0.0), y(0.0), z(0.0) {}
+			Vec3(const Real x_, const Real y_, const Real z_) : x(x_), y(y_), z(z_) {}
 #if DATA_TYPE_DOUBLE
-			vec3(const float x_, const float y_, const float z_) : x(static_cast<Real>(x_)), y(static_cast<Real>(y_)), z(static_cast<Real>(z_)) {}
+			Vec3(const float x_, const float y_, const float z_) : x(static_cast<Real>(x_)), y(static_cast<Real>(y_)), z(static_cast<Real>(z_)) {}
 #else
-			vec3(const double x_, const double y_, const double z_) : x(static_cast<Real>(x_)), y(static_cast<Real>(y_)), z(static_cast<Real>(z_)) {}
+			Vec3(const double x_, const double y_, const double z_) : x(static_cast<Real>(x_)), y(static_cast<Real>(y_)), z(static_cast<Real>(z_)) {}
 #endif
-			~vec3() {}
+			~Vec3() {}
 
 			Real Length() { return sqrt(x * x + y * y + z * z); }
 
@@ -47,7 +47,7 @@ namespace RAC
 				z = Round(z);
 			}
 
-			inline vec3 Min(const vec3& v)
+			inline Vec3 Min(const Vec3& v)
 			{
 				this->x = std::min(this->x, v.x);
 				this->y = std::min(this->y, v.y);
@@ -55,7 +55,7 @@ namespace RAC
 				return *this;
 			}
 
-			inline vec3 Max(const vec3& v)
+			inline Vec3 Max(const Vec3& v)
 			{
 				this->x = std::max(this->x, v.x);
 				this->y = std::max(this->y, v.y);
@@ -64,7 +64,7 @@ namespace RAC
 			}
 
 			// Operators
-			inline vec3 operator+=(const vec3& v)
+			inline Vec3 operator+=(const Vec3& v)
 			{
 				this->x += v.x;
 				this->y += v.y;
@@ -72,7 +72,7 @@ namespace RAC
 				return *this;
 			}
 
-			inline vec3 operator-=(const vec3& v)
+			inline Vec3 operator-=(const Vec3& v)
 			{
 				this->x -= v.x;
 				this->y -= v.y;
@@ -90,7 +90,7 @@ namespace RAC
 
 		//////////////////// Operators ////////////////////
 
-		inline bool operator==(const vec3& u, const vec3& v)
+		inline bool operator==(const Vec3& u, const Vec3& v)
 		{
 			if (u.x == v.x)
 			{
@@ -103,51 +103,51 @@ namespace RAC
 			return false;
 		}
 
-		inline bool operator!=(const vec3& u, const vec3& v)
+		inline bool operator!=(const Vec3& u, const Vec3& v)
 		{
 			if (u == v)
 				return false;
 			return true;
 		}
 
-		inline vec3 operator+(const vec3& u, const vec3& v)
+		inline Vec3 operator+(const Vec3& u, const Vec3& v)
 		{
-			return vec3(u.x + v.x, u.y + v.y, u.z + v.z);
+			return Vec3(u.x + v.x, u.y + v.y, u.z + v.z);
 		}
 
-		inline vec3 operator-(const vec3& v)
+		inline Vec3 operator-(const Vec3& v)
 		{
-			return vec3(-v.x, -v.y, -v.z);
+			return Vec3(-v.x, -v.y, -v.z);
 		}
 
-		inline vec3 operator-(const vec3& u, const vec3& v)
+		inline Vec3 operator-(const Vec3& u, const Vec3& v)
 		{
 			return -v + u;
 		}
 
-		inline vec3 operator*(const Real a, const vec3& v)
+		inline Vec3 operator*(const Real a, const Vec3& v)
 		{
-			return vec3(a * v.x, a * v.y, a * v.z);
+			return Vec3(a * v.x, a * v.y, a * v.z);
 		}
 
-		inline vec3 operator*(const vec3& v, const Real a)
+		inline Vec3 operator*(const Vec3& v, const Real a)
 		{
 			return a * v;
 		}
 
-		inline vec3 operator/(const vec3& v, const Real a)
+		inline Vec3 operator/(const Vec3& v, const Real a)
 		{
 			// return (1.0 / a) * v;
-			return vec3(v.x / a, v.y / a, v.z / a);
+			return Vec3(v.x / a, v.y / a, v.z / a);
 		}
 
-		inline vec3 operator/(const Real a, const vec3& v)
+		inline Vec3 operator/(const Real a, const Vec3& v)
 		{
-			return vec3(a / v.x, a / v.y, a / v.z);
+			return Vec3(a / v.x, a / v.y, a / v.z);
 		}
 
 		// print the vec3 directly using std::cout << vec3 << std::endl;
-		inline std::ostream& operator<<(std::ostream& os, const vec3& v)
+		inline std::ostream& operator<<(std::ostream& os, const Vec3& v)
 		{
 			os << "[ " << v.x << " , " << v.y << " , " << v.z << " ]";
 			return os;
@@ -155,30 +155,30 @@ namespace RAC
 
 		//////////////////// Functions ////////////////////
 
-		inline vec3 UnitVector(vec3 v)
+		inline Vec3 UnitVector(Vec3 v)
 		{
 			Real len = v.Length();
 			if (len == 0.0)
 			{
-				return vec3(0.0, 0.0, 0.0);
+				return Vec3(0.0, 0.0, 0.0);
 			}
 			return v / len;
 		}
 
-		inline vec3 UnitVectorRound(vec3 v)
+		inline Vec3 UnitVectorRound(Vec3 v)
 		{
 			v.RoundVec();
 			return UnitVector(v);
 		}
 
-		inline Real Dot(const vec3& u, const vec3& v)
+		inline Real Dot(const Vec3& u, const Vec3& v)
 		{
 			return u.x * v.x + u.y * v.y + u.z * v.z;
 		}
 
-		inline vec3 Cross(const vec3& u, const vec3& v)
+		inline Vec3 Cross(const Vec3& u, const Vec3& v)
 		{
-			return vec3(u.y * v.z - u.z * v.y,
+			return Vec3(u.y * v.z - u.z * v.y,
 				u.z * v.x - u.x * v.z,
 				u.x * v.y - u.y * v.x);
 		}

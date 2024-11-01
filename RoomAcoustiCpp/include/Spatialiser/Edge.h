@@ -33,7 +33,7 @@ namespace RAC
 		//////////////////// Data structures ////////////////////
 
 		typedef std::pair<size_t, size_t> IDPair;
-		typedef std::pair<vec3, vec3> Vec3Pair;
+		typedef std::pair<Vec3, Vec3> Vec3Pair;
 		typedef std::pair<Real, Real> RealPair;
 
 		enum EdgeZone
@@ -69,7 +69,7 @@ namespace RAC
 			* @param planeId1 The ID of the first plane
 			* @param planeId2 The ID of the second plane
 			*/
-			Edge(const vec3& base, const vec3& top, const vec3& normal1, const vec3& normal2, const size_t wallId1, const size_t wallId2, const size_t planeId1, const size_t planeId2);
+			Edge(const Vec3& base, const Vec3& top, const Vec3& normal1, const Vec3& normal2, const size_t wallId1, const size_t wallId2, const size_t planeId1, const size_t planeId2);
 
 			/**
 			* Default deconstructor
@@ -107,7 +107,7 @@ namespace RAC
 			* @param point The input coordinate
 			* @return The vector between the point and the edge base
 			*/
-			inline vec3 GetAP(const vec3& point) const { return point - mBase; }
+			inline Vec3 GetAP(const Vec3& point) const { return point - mBase; }
 
 			/**
 			* Finds the coordinate of a point given the z value along the edge
@@ -115,28 +115,28 @@ namespace RAC
 			* @param z The z value along the edge
 			* @return The coordinate at the z value along the edge
 			*/
-			inline vec3 GetEdgeCoord(Real z) const { return mBase + z * mEdgeVector; }
+			inline Vec3 GetEdgeCoord(Real z) const { return mBase + z * mEdgeVector; }
 
 			/**
 			* Gets the base coordinates
 			*
 			* @return The base coordinate of the edge
 			*/
-			inline vec3 GetBase() const { return mBase; }
+			inline Vec3 GetBase() const { return mBase; }
 
 			/**
 			* Gets the top coordinates
 			*
 			* @return The top coordinate of the edge
 			*/
-			inline vec3 GetTop() const { return mTop; }
+			inline Vec3 GetTop() const { return mTop; }
 
 			/**
 			* Gets the mid coordinates
 			*
 			* @return The mid coordinate of the edge
 			*/
-			inline vec3 GetMidPoint() const { return midPoint; }
+			inline Vec3 GetMidPoint() const { return midPoint; }
 
 			/**
 			* Gets the second wall ID
@@ -206,7 +206,7 @@ namespace RAC
 			* @param point The input point
 			* @return The edge zone where the point is located
 			*/
-			EdgeZone FindEdgeZone(const vec3& point) const;
+			EdgeZone FindEdgeZone(const Vec3& point) const;
 
 			/**
 			* The exterior angle of the edge
@@ -221,28 +221,28 @@ namespace RAC
 			/**
 			* The vector between the base and top of the edge
 			*/
-			vec3 mEdgeVector;
+			Vec3 mEdgeVector;
 
 			/**
 			* The vector that lies between the face normals
  			*/
-			vec3 mEdgeNormal;
+			Vec3 mEdgeNormal;
 
 		private:
 			/**
 			* The midpoint along the edge
 			*/
-			vec3 midPoint;
+			Vec3 midPoint;
 
 			/**
 			* The base coordinate of the edge
 			*/
-			vec3 mBase;
+			Vec3 mBase;
 
 			/**
 			* The top coordinate of the edge
 			*/
-			vec3 mTop;
+			Vec3 mTop;
 
 			/**
 			* The face normals of the edge

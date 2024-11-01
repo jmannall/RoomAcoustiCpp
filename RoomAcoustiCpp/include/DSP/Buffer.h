@@ -47,7 +47,7 @@ namespace RAC
 			*
 			* @param vec The vector of Real values to initialise the buffer with.
 			*/
-			Buffer(const std::vector<Real>& vec) : mBuffer(vec) {};
+			Buffer(const std::vector<Real>& Vec) : mBuffer(Vec) {};
 
 			/**
 			* Default deconstructor.

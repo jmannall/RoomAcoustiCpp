@@ -46,7 +46,7 @@ namespace RAC
 			// Wall
 			size_t AddWall(Wall& wall);
 
-			inline void UpdateWall(const size_t id, const vec3& normal, const Real* vData)
+			inline void UpdateWall(const size_t id, const Vec3& normal, const Real* vData)
 			{
 				lock_guard<std::mutex> lock(mWallMutex);
 				auto it = mWalls.find(id);

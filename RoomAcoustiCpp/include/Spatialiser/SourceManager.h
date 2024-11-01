@@ -38,9 +38,10 @@ namespace RAC
 			SourceManager(Binaural::CCore* core, const Config& config) : mSources(), mEmptySlots(), mCore(core), mConfig(config), nextSource(0) {};
 			~SourceManager()
 			{ 
-				lock(updateMutex, processAudioMutex);
+				/*lock(updateMutex, processAudioMutex);
 				unique_lock<shared_mutex> lk1(updateMutex, std::adopt_lock);
-				lock_guard<mutex> lk2(processAudioMutex, std::adopt_lock); 
+				lock_guard<mutex> lk2(processAudioMutex, std::adopt_lock); */
+				scoped_lock lock(updateMutex, processAudioMutex);
 				Reset();
 			};
 
@@ -50,7 +51,7 @@ namespace RAC
 			// Sources
 			size_t Init();
 
-			inline void Update(const size_t id, const vec3& position, const vec4& orientation, Real& distance)
+			inline void Update(const size_t id, const Vec3& position, const Vec4& orientation, Real& distance)
 			{
 				shared_lock<shared_mutex> lock(updateMutex); // Lock before locate to ensure not deleted between found and mutex lock
 				auto it = mSources.find(id);
@@ -59,9 +60,10 @@ namespace RAC
 
 			inline void Remove(const size_t id)
 			{
-				lock(updateMutex, processAudioMutex);
-				unique_lock<shared_mutex> lk1(updateMutex, std::adopt_lock);
-				lock_guard<std::mutex> lk2(processAudioMutex, std::adopt_lock);
+				/*lock(updateMutex, processAudioMutex);
+				unique_lock<shared_mutex> lock1(updateMutex, adopt_lock);
+				lock_guard<mutex> lock2(processAudioMutex, adopt_lock);*/
+				scoped_lock lock(updateMutex, processAudioMutex);
 
 				size_t removed = mSources.erase(id);
 				while (!mTimers.empty() && difftime(time(nullptr), mTimers.front().time) > 60)
@@ -78,19 +80,19 @@ namespace RAC
 			}
 
 			std::vector<IDPositionPair> GetSourceData();
-			inline vec3 GetSourcePosition(const size_t id)
+			inline Vec3 GetSourcePosition(const size_t id)
 			{
 				shared_lock<shared_mutex> shared_lock(updateMutex); // Lock before locate to ensure not deleted between found and mutex lock
 				lock_guard<mutex> lock(tuneInMutex);
 				auto it = mSources.find(id);
 				if (it != mSources.end()) { return it->second.GetPosition(); } // case: source does exist
-				return vec3();
+				return Vec3();
 			}
 
 			void UpdateSourceData(const size_t id, const bool visible, const VirtualSourceDataMap& vSources);
 
 			// Audio
-			void ProcessAudio(const size_t id, const Buffer& data, matrix& reverbInput, Buffer& outputBuffer);
+			void ProcessAudio(const size_t id, const Buffer& data, Matrix& reverbInput, Buffer& outputBuffer);
 
 		private:
 			inline void Reset() { mSources.clear(); mEmptySlots.clear(); }

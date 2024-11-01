@@ -85,7 +85,7 @@ namespace RAC
 			{ it->second.UpdateData(visible, vSources); }
 		}
 
-		void SourceManager::ProcessAudio(const size_t id, const Buffer& data, matrix& reverbInput, Buffer& outputBuffer)
+		void SourceManager::ProcessAudio(const size_t id, const Buffer& data, Matrix& reverbInput, Buffer& outputBuffer)
 		{
 			lock_guard <mutex> lock(processAudioMutex);
 			auto it = mSources.find(id);

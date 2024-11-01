@@ -121,12 +121,12 @@ namespace RAC
 			freeFDNChannels.push_back(0);
 		}
 
-		void ProcessVirtualSource(VirtualSource& vS, const Buffer& data, matrix& reverbInput, Buffer& outputBuffer)
+		void ProcessVirtualSource(VirtualSource& vS, const Buffer& data, Matrix& reverbInput, Buffer& outputBuffer)
 		{
 			vS.ProcessAudio(data, reverbInput, outputBuffer);
 		}
 
-		void Source::ProcessAudio(const Buffer& data, matrix& reverbInput, Buffer& outputBuffer)
+		void Source::ProcessAudio(const Buffer& data, Matrix& reverbInput, Buffer& outputBuffer)
 		{
 			{
 				lock_guard<mutex> lock(*vSourcesMutex);
@@ -186,7 +186,7 @@ namespace RAC
 			}
 		}
 
-		void Source::Update(const vec3& position, const vec4& orientation, const Real distance)
+		void Source::Update(const Vec3& position, const Vec4& orientation, const Real distance)
 		{
 			{
 				lock_guard<std::mutex>lock(*dataMutex);
@@ -257,8 +257,8 @@ namespace RAC
 				if (data.feedsFDN)
 					fdnChannel = AssignFDNChannel();
 				{
-					unique_lock<mutex> lck(*vSourcesMutex, std::defer_lock);
-					if (lck.try_lock())
+					unique_lock<mutex> lock(*vSourcesMutex, defer_lock);
+					if (lock.try_lock())
 						mVSources.try_emplace(data.GetKey(), mCore, mConfig, data, fdnChannel);
 				}
 			}
@@ -281,16 +281,13 @@ namespace RAC
 
 					int n = 0;
 					{
-						unique_lock<mutex> lck(*vSourcesMutex, std::defer_lock);
-						if (lck.try_lock())
+						unique_lock<mutex> lock(*vSourcesMutex, defer_lock);
+						if (lock.try_lock())
 							n = mVSources.erase(data.GetKey());
 					}
 
 					if (n == 1) // Check vSource has been successfully erased
-					{
-						EndFirstOrderDiff();
 						return true;
-					}
 				}
 			}
 			return false;
@@ -308,10 +305,10 @@ namespace RAC
 			return fdnChannel;
 		}
 
-		vec3 Source::GetPosition()
+		Vec3 Source::GetPosition()
 		{
 			CTransform transform = mSource->GetCurrentSourceTransform();
-			return vec3(transform.GetPosition().x, transform.GetPosition().y, transform.GetPosition().z);
+			return Vec3(transform.GetPosition().x, transform.GetPosition().y, transform.GetPosition().z);
 		}
 	}
 }

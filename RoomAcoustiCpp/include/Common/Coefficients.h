@@ -358,7 +358,7 @@ namespace RAC
 			{
 				for (int i = 0; i < mCoefficients.size(); i++)
 				{
-					assert(coefficients[i] <= 1.0);
+					assert(mCoefficients[i] <= 1.0);
 					mCoefficients[i] = sqrt(1.0 - R[i]);
 				}
 			}

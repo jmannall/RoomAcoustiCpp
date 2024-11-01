@@ -25,16 +25,16 @@ namespace RAC
 
 		//////////////////// vec class ////////////////////
 		
-		class vec : public matrix
+		class Vec : public Matrix
 		{
 		public:
 
 			// Load and Destroy
-			vec() : matrix() {}
-			vec(const int& len) : matrix(len, 1) {}
-			vec(const std::vector<Real>& vec) : matrix(static_cast<int>(vec.size()), 1) { Init(vec); }
-			vec(matrix& mat);
-			~vec() {};
+			Vec() : Matrix() {}
+			Vec(const int& len) : Matrix(len, 1) {}
+			Vec(const std::vector<Real>& vec) : Matrix(static_cast<int>(vec.size()), 1) { Init(vec); }
+			Vec(Matrix& mat);
+			~Vec() {};
 
 			void Init(const std::vector<Real>& vec);
 
@@ -67,7 +67,7 @@ namespace RAC
 			inline Real operator[](const int i) const { return data[i][0]; }
 			inline Real& operator[](const int i) { return data[i][0]; }
 
-			inline vec operator=(const matrix& mat)
+			inline Vec operator=(const Matrix& mat)
 			{
 				assert(mat.Cols() == 1);
 				cols = mat.Cols();
@@ -90,16 +90,16 @@ namespace RAC
 
 		//////////////////// rowvec class ////////////////////
 
-		class rowvec : public matrix
+		class Rowvec : public Matrix
 		{
 		public:
 
 			// Load and Destroy
-			rowvec() : matrix() {}
-			rowvec(const int& c) : matrix(1, c) {}
-			rowvec(const std::vector<Real>& vec) : matrix(1, vec.size()) { Init(vec); }
-			rowvec(const matrix& mat);
-			~rowvec() {}
+			Rowvec() : Matrix() {}
+			Rowvec(const int& c) : Matrix(1, c) {}
+			Rowvec(const std::vector<Real>& vec) : Matrix(1, vec.size()) { Init(vec); }
+			Rowvec(const Matrix& mat);
+			~Rowvec() {}
 
 			void Init(const std::vector<Real>& vec);
 
@@ -116,7 +116,7 @@ namespace RAC
 			inline Real operator[](const int i) const { return data[0][i]; }
 			inline Real& operator[](const int i) { return data[0][i]; }
 
-			inline rowvec operator=(const matrix& mat)
+			inline Rowvec operator=(const Matrix& mat)
 			{
 				assert(mat.Rows() == 1);
 				rows = mat.Rows();

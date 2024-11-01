@@ -115,7 +115,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void UpdateRoom(const Real volume, const vec& dimensions)
+		void UpdateRoom(const Real volume, const Vec& dimensions)
 		{
 			auto context = GetContext();
 			if (context)
@@ -133,7 +133,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void UpdateListener(const vec3& position, const vec4& orientation)
+		void UpdateListener(const Vec3& position, const Vec4& orientation)
 		{
 			auto context = GetContext();
 			if (context)
@@ -153,7 +153,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void UpdateSource(size_t id, const vec3& position, const vec4& orientation)
+		void UpdateSource(size_t id, const Vec3& position, const Vec4& orientation)
 		{
 			auto context = GetContext();
 			if (context)
@@ -171,7 +171,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		int InitWall(const vec3& normal, const Real* vData, const Absorption& absorption)
+		int InitWall(const Vec3& normal, const Real* vData, const Absorption& absorption)
 		{
 			auto context = GetContext();
 			if (context)
@@ -182,7 +182,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void UpdateWall(size_t id, const vec3& normal, const Real* vData)
+		void UpdateWall(size_t id, const Vec3& normal, const Real* vData)
 		{
 			auto context = GetContext();
 			if (context)

@@ -50,7 +50,7 @@ namespace RAC
 			* @param vData The vertices of the wall.
 			* @param absorption The material absorption property of the wall.
 			*/
-			Wall(const vec3& normal, const Real* vData, const Absorption& absorption);
+			Wall(const Vec3& normal, const Real* vData, const Absorption& absorption);
 
 			/**
 			* Default deconstructor.
@@ -88,7 +88,7 @@ namespace RAC
 			* 
 			* @return The normal of the wall
 			*/
-			inline vec3 GetNormal() const { return mNormal; }
+			inline Vec3 GetNormal() const { return mNormal; }
 
 			/**
 			* @brief Returns the distance of the wall from the origin along the normal direction
@@ -102,9 +102,9 @@ namespace RAC
 			* 
 			* @return The vertices of the wall
 			*/
-			inline std::vector<vec3> GetVertices() const { return mVertices; }
+			inline std::vector<Vec3> GetVertices() const { return mVertices; }
 
-			inline bool VertexMatch(const vec3& x) const { return mVertices[0] == x || mVertices[1] == x || mVertices[2] == x; }
+			inline bool VertexMatch(const Vec3& x) const { return mVertices[0] == x || mVertices[1] == x || mVertices[2] == x; }
 
 			/**
 			* @brief Returns the material absorption properties of the wall
@@ -150,7 +150,7 @@ namespace RAC
 			* 
 			* @return The distance of the point from the wall in the direction of the normal
 			*/
-			inline Real PointWallPosition(const vec3& point) const { return Dot(point, mNormal) - d; }
+			inline Real PointWallPosition(const Vec3& point) const { return Dot(point, mNormal) - d; }
 
 			/**
 			* @brief Determines if a given line intersects the wall
@@ -160,7 +160,7 @@ namespace RAC
 			*
 			* @return True if the line intersects the wall, false otherwise
 			*/
-			bool LineWallIntersection(const vec3& start, const vec3& end) const;
+			bool LineWallIntersection(const Vec3& start, const Vec3& end) const;
 
 			/**
 			* @brief Determines if a given line intersects the wall and stores the intersection point
@@ -171,7 +171,7 @@ namespace RAC
 			*
 			* @return True if the line intersects the wall, false otherwise
 			*/
-			bool LineWallIntersection(vec3& intersection, const vec3& start, const vec3& end) const;
+			bool LineWallIntersection(Vec3& intersection, const Vec3& start, const Vec3& end) const;
 
 			/**
 			* @brief Determines if the wall obstructs a given line
@@ -181,7 +181,7 @@ namespace RAC
 			*
 			* @return True if the wall obstructs the line, false otherwise
 			*/
-			bool LineWallObstruction(const vec3& start, const vec3& end) const;
+			bool LineWallObstruction(const Vec3& start, const Vec3& end) const;
 
 			/**
 			* @brief Updates the wall normal, vertices, area and d value
@@ -189,7 +189,7 @@ namespace RAC
 			* @param normal The new normal of the wall
 			* @param vData The new vertices of the wall
 			*/
-			void Update(const vec3& normal, const Real* vData);
+			void Update(const Vec3& normal, const Real* vData);
 
 			/**
 			* @brief Updates the wall absorption
@@ -210,7 +210,7 @@ namespace RAC
 			* 
 			* @return The area of the triangle
 			*/
-			inline Real TriangleArea(const vec3& v, const vec3& u, const vec3& w) const { return 0.5* (Cross(v - u, v - w).Length()); }
+			inline Real TriangleArea(const Vec3& v, const Vec3& u, const Vec3& w) const { return 0.5* (Cross(v - u, v - w).Length()); }
 
 			/**
 			* @brief Calculates the area of the wall
@@ -222,8 +222,8 @@ namespace RAC
 			/**
 			* Wall parameters
 			*/
-			std::vector<vec3> mVertices;	// Vertices of the wall
-			vec3 mNormal;					// Normal of the wall
+			std::vector<Vec3> mVertices;	// Vertices of the wall
+			Vec3 mNormal;					// Normal of the wall
 			Real d;							// Distance of the wall from the origin along the normal direction
 			Absorption mAbsorption;			// Material absorption of the wall
 
@@ -286,7 +286,7 @@ namespace RAC
 			* 
 			* @return The normal of the plane
 			*/
-			inline vec3 GetNormal() const { return mNormal; }
+			inline Vec3 GetNormal() const { return mNormal; }
 
 			/**
 			* @brief Returns the distance of the plane from the origin along the normal direction
@@ -333,7 +333,7 @@ namespace RAC
 			* 
 			* @return The distance of the point from the plane in the direction of the normal
 			*/
-			Real PointPlanePosition(const vec3& point) const { return Dot(point, mNormal) - d; }
+			Real PointPlanePosition(const Vec3& point) const { return Dot(point, mNormal) - d; }
 
 			/**
 			* @brief Determines if the plane obstruct a given line
@@ -343,7 +343,7 @@ namespace RAC
 			* 
 			* @return True if the plane obstructs the line, false otherwise
 			*/
-			bool LinePlaneObstruction(const vec3& start, const vec3& end) const;
+			bool LinePlaneObstruction(const Vec3& start, const Vec3& end) const;
 
 			/**
 			* @brief Determines if a given line intersects the plane
@@ -353,7 +353,7 @@ namespace RAC
 			* 
 			* @return True if the line intersects the plane, false otherwise
 			*/
-			bool LinePlaneIntersection(const vec3& start, const vec3& end) const;
+			bool LinePlaneIntersection(const Vec3& start, const Vec3& end) const;
 
 			/**
 			* @brief Reflects a point in the plane
@@ -362,7 +362,7 @@ namespace RAC
 			* 
 			* @return True if the point is in front of the plane, false otherwise
 			*/
-			bool ReflectPointInPlane(const vec3& point) const;
+			bool ReflectPointInPlane(const Vec3& point) const;
 
 			/**
 			* @brief Reflects a point in the plane and stores the end position
@@ -372,21 +372,21 @@ namespace RAC
 			* 
 			* @return True if the point is in front of the plane, false otherwise
 			*/
-			bool ReflectPointInPlane(vec3& dest, const vec3& point) const;
+			bool ReflectPointInPlane(Vec3& dest, const Vec3& point) const;
 
 			/**
 			* @brief Reflects a point in the plane without checking if the point is in front of the plane
 			* 
 			* @param point The point to reflect and store the new position
 			*/
-			void ReflectPointInPlaneNoCheck(vec3& point) const;
+			void ReflectPointInPlaneNoCheck(Vec3& point) const;
 
 			/**
 			* @brief Reflects a normal in the plane
 			* 
 			* @param normal The normal to reflect and store the new normal
 			*/
-			void ReflectNormalInPlane(vec3& normal) const;
+			void ReflectNormalInPlane(Vec3& normal) const;
 
 			/**
 			* @brief Determines if a given edge lies in front of the plane
@@ -411,7 +411,7 @@ namespace RAC
 			* Plane parameters
 			*/
 			Real d;			// Distance of the plane from the origin along the normal direction
-			vec3 mNormal;	// Normal of the plane
+			Vec3 mNormal;	// Normal of the plane
 			bool rValid;	// True if the listener is in front of the plane
 
 			/**

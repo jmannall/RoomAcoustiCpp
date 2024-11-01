@@ -18,20 +18,20 @@ namespace RAC
 
 		//////////////////// vec4 class ////////////////////
 
-		class vec4
+		class Vec4
 		{
 		public:
 			
 			// Load and Destroy
-			vec4() : w(0.0), x(0.0), y(0.0), z(0.0) {}
-			vec4(const Real w_, const Real x_, const Real y_, const Real z_) : w(w_), x(x_), y(y_), z(z_) {}
+			Vec4() : w(0.0), x(0.0), y(0.0), z(0.0) {}
+			Vec4(const Real w_, const Real x_, const Real y_, const Real z_) : w(w_), x(x_), y(y_), z(z_) {}
 #if DATA_TYPE_DOUBLE
-			vec4(const float w_, const float x_, const float y_, const float z_) : w(static_cast<Real>(w_)), x(static_cast<Real>(x_)), y(static_cast<Real>(y_)), z(static_cast<Real>(z_)) {}
+			Vec4(const float w_, const float x_, const float y_, const float z_) : w(static_cast<Real>(w_)), x(static_cast<Real>(x_)), y(static_cast<Real>(y_)), z(static_cast<Real>(z_)) {}
 #else
-			vec4(const double w_, const double x_, const double y_, const double z_) : w(static_cast<Real>(w_)), x(static_cast<Real>(x_)), y(static_cast<Real>(y_)), z(static_cast<Real>(z_)) {}
+			Vec4(const double w_, const double x_, const double y_, const double z_) : w(static_cast<Real>(w_)), x(static_cast<Real>(x_)), y(static_cast<Real>(y_)), z(static_cast<Real>(z_)) {}
 #endif
-			vec4(const Real w_, const vec3 vec) : w(w_), x(vec.x), y(vec.y), z(vec.z) {}
-			~vec4() {}
+			Vec4(const Real w_, const Vec3 vec) : w(w_), x(vec.x), y(vec.y), z(vec.z) {}
+			~Vec4() {}
 
 			// Member variables
 			Real w;
@@ -44,7 +44,7 @@ namespace RAC
 
 		//////////////////// Operators ////////////////////
 
-		inline bool operator==(const vec4& u, const vec4& v)
+		inline bool operator==(const Vec4& u, const Vec4& v)
 		{
 			if (u.w == v.w)
 			{
@@ -60,16 +60,16 @@ namespace RAC
 			return false;
 		}
 
-		inline bool operator!=(const vec4& u, const vec4& v)
+		inline bool operator!=(const Vec4& u, const Vec4& v)
 		{
 			if (u == v)
 				return false;
 			return true;
 		}
 
-		inline vec4 operator-(const vec4& v)
+		inline Vec4 operator-(const Vec4& v)
 		{
-			return vec4(-v.w, -v.x, -v.y, -v.z);
+			return Vec4(-v.w, -v.x, -v.y, -v.z);
 		}
 	}
 }
