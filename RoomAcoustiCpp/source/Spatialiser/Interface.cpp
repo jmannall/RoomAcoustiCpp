@@ -142,18 +142,18 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		int InitSource()
+		size_t InitSource()
 		{
 			auto context = GetContext();
 			if (context)
-				return (int)context->InitSource();
+				return context->InitSource();
 			else
 				return -1;
 		}
 
 		////////////////////////////////////////
 
-		void UpdateSource(size_t id, const Vec3& position, const Vec4& orientation)
+		void UpdateSource(const size_t id, const Vec3& position, const Vec4& orientation)
 		{
 			auto context = GetContext();
 			if (context)
@@ -162,7 +162,16 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void RemoveSource(size_t id)
+		void UpdateSourceDirectivity(const size_t id, const SourceDirectivity directivity)
+		{
+			auto context = GetContext();
+			if (context)
+				context->UpdateSourceDirectivity(id, directivity);
+		}
+
+		////////////////////////////////////////
+
+		void RemoveSource(const size_t id)
 		{
 			auto context = GetContext();
 			if (context)
@@ -171,22 +180,22 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		int InitWall(const Vec3& normal, const Real* vData, const Absorption& absorption)
+		size_t InitWall(const Vertices& vData, const Absorption& absorption)
 		{
 			auto context = GetContext();
 			if (context)
-				return (int)context->InitWall(normal, vData, absorption);
+				return context->InitWall(vData, absorption);
 			else
 				return -1;
 		}
 
 		////////////////////////////////////////
 
-		void UpdateWall(size_t id, const Vec3& normal, const Real* vData)
+		void UpdateWall(size_t id, const Vertices& vData)
 		{
 			auto context = GetContext();
 			if (context)
-				context->UpdateWall(id, normal, vData);
+				context->UpdateWall(id, vData);
 		}
 
 		////////////////////////////////////////

@@ -31,6 +31,8 @@
 #include <chrono>
 #include "omp.h"
 
+#include "UtilityFunctions.h"
+
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -114,78 +116,73 @@ namespace RAC
 	{
 		Absorption absorbtion = Absorption(0.7f, 0.7f, 0.7f, 0.7f, 0.7f);
 		vec3 pos = vec3(7.0f, 3.0f, 5.0f);
-		
+
 		CreateShoebox(pos, absorbtion);
 	}*/
-		
+
 	void CreateShoebox(const Vec3& pos, Absorption absorbtion)
 	{
 		int numVert = 4;
-		
-		Real vert1[] = { 0.0, pos.y, 0.0,
-						pos.x, pos.y, 0.0,
-						pos.x, pos.y, pos.z };
-		Real vert2[] = { 0.0, pos.y, 0.0,
-						pos.x, pos.y, pos.z,
-						0.0, pos.y, pos.z };
-		Vec3 normal = Vec3(0.0, -1.0, 0.0);
 
+		Vertices vert1 = { Vec3(0.0, pos.y, 0.0),
+						Vec3(pos.x, pos.y, 0.0),
+						Vec3(pos.x, pos.y, pos.z) };
+		Vertices vert2 = { Vec3(0.0, pos.y, 0.0),
+						Vec3(pos.x, pos.y, pos.z),
+						Vec3(0.0, pos.y, pos.z) };
 
+		InitWall(vert1, absorbtion);
+		InitWall(vert2, absorbtion);
 
-		InitWall(normal, &vert1[0], absorbtion);
-		InitWall(normal, &vert2[0], absorbtion);
-		
-		Real vert3[] = { pos.x, 0.0, 0.0,
-						0.0, 0.0, 0.0,
-						0.0, 0.0, pos.z };
-		Real vert4[] = { pos.x, 0.0, 0.0,
-						0.0, 0.0, pos.z,
-						pos.x, 0.0, pos.z };
-		normal = Vec3(0.0, 1.0, 0.0);
+		Vertices vert3 = { Vec3(pos.x, 0.0, 0.0),
+						Vec3(0.0, 0.0, 0.0),
+						Vec3(0.0, 0.0, pos.z) };
+		Vertices vert4 = { Vec3(pos.x, 0.0, 0.0),
+						Vec3(0.0, 0.0, pos.z),
+						Vec3(pos.x, 0.0, pos.z) };
 
-		InitWall(normal, &vert3[0], absorbtion);
-		InitWall(normal, &vert4[0], absorbtion);
+		InitWall(vert3, absorbtion);
+		InitWall(vert4, absorbtion);
 
-		
-		Real vert5[] = { pos.x, 0.0, pos.z,
-						pos.x, pos.y, pos.z,
-						pos.x, pos.y, 0.0 };
-		Real vert6[] = { pos.x, 0.0, pos.z,
-						pos.x, pos.y, 0.0,
-						pos.x, 0.0, 0.0 };
-		normal = Vec3(-1.0, 0.0, 0.0);
-		InitWall(normal, &vert5[0], absorbtion);
-		InitWall(normal, &vert6[0], absorbtion);
+		Vertices vert5 = { Vec3(pos.x, 0.0, pos.z),
+						Vec3(pos.x, pos.y, pos.z),
+						Vec3(pos.x, pos.y, 0.0) };
+		Vertices vert6 = { Vec3(pos.x, 0.0, pos.z),
+						Vec3(pos.x, pos.y, 0.0),
+						Vec3(pos.x, 0.0, 0.0) };
 
-		Real vert7[] = { 0.0, 0.0, 0.0,
-						0.0, pos.y, 0.0,
-						0.0, pos.y, pos.z };
-		Real vert8[] = { 0.0, 0.0, 0.0,
-						0.0, pos.y, pos.z,
-						0.0, 0.0, pos.z };
-		normal = Vec3(1.0, 0.0, 0.0);
-		InitWall(normal, &vert7[0], absorbtion);
-		InitWall(normal, &vert8[0], absorbtion);
+		InitWall(vert5, absorbtion);
+		InitWall(vert6, absorbtion);
 
-		Real vert9[] = { 0.0, 0.0, 0.0,
-						pos.x, 0.0, 0.0,
-						pos.x, pos.y, 0.0 };
-		Real vert10[] = { 0.0, 0.0, 0.0,
-						pos.x, pos.y, 0.0,
-						0.0, pos.y, 0.0 };
-		normal = Vec3(0.0, 0.0, 1.0);
-		InitWall(normal, &vert9[0], absorbtion);
-		InitWall(normal, &vert10[0], absorbtion);
+		Vertices vert7 = { Vec3(0.0, 0.0, 0.0),
+						Vec3(0.0, pos.y, 0.0),
+						Vec3(0.0, pos.y, pos.z) };
+		Vertices vert8 = { Vec3(0.0, 0.0, 0.0),
+						Vec3(0.0, pos.y, pos.z),
+						Vec3(0.0, 0.0, pos.z) };
 
-		Real vert11[] = { 0.0, pos.y, pos.z,
-						pos.x, pos.y, pos.z,
-						pos.x, 0.0, pos.z };
-		Real vert12[] = { 0.0, pos.y, pos.z,
-						pos.x, 0.0, pos.z,
-						0.0, 0.0, pos.z };
-		normal = Vec3(0.0, 0.0, -1.0);
-		InitWall(normal, &vert11[0], absorbtion);
-		InitWall(normal, &vert12[0], absorbtion);
+		InitWall(vert7, absorbtion);
+		InitWall(vert8, absorbtion);
+
+		Vertices vert9 = { Vec3(0.0, 0.0, 0.0),
+						Vec3(pos.x, 0.0, 0.0),
+						Vec3(pos.x, pos.y, 0.0) };
+		Vertices vert10 = { Vec3(0.0, 0.0, 0.0),
+						Vec3(pos.x, pos.y, 0.0),
+						Vec3(0.0, pos.y, 0.0) };
+
+		InitWall(vert9, absorbtion);
+		InitWall(vert10, absorbtion);
+
+		Vertices vert11 = { Vec3(0.0, pos.y, pos.z),
+						Vec3(pos.x, pos.y, pos.z),
+						Vec3(pos.x, 0.0, pos.z) };
+		Vertices vert12 = { Vec3(0.0, pos.y, pos.z),
+						Vec3(pos.x, 0.0, pos.z),
+						Vec3(0.0, 0.0, pos.z) };
+
+		InitWall(vert11, absorbtion);
+		InitWall(vert12, absorbtion);
 	}
 
 	Vec4 AzimuthElevationToQuaternion(Real azimuth, Real elevation)
@@ -263,108 +260,6 @@ namespace RAC
 	//	size_t wID6 = InitWall(normal6, &vert6[0], (size_t)numVert, plasterSprayed, ReverbWall::posY);
 	//}
 
-	//////////////////// Parse csv files ////////////////////
-
-	Real StrToReal(const std::string& str) { return std::stod(str); }
-
-	std::vector<Real> Parse1Dcsv(std::string filePath)
-	{
-		std::ifstream  data(filePath);
-		std::string line;
-		std::vector<Real> parsedCsv;
-		while (std::getline(data, line))
-		{
-			std::stringstream lineStream(line);
-			std::string cell;
-			std::vector<Real> parsedRow;
-			std::getline(lineStream, cell, ',');
-			parsedCsv.push_back(StrToReal(cell));
-		}
-		return parsedCsv;
-	}
-
-	std::vector<std::vector<Real> > Parse2Dcsv(std::string filePath)
-	{
-		std::ifstream  data(filePath);
-		std::string line;
-		std::vector<std::vector<Real> > parsedCsv;
-		while (std::getline(data, line))
-		{
-			std::stringstream lineStream(line);
-			std::string cell;
-			std::vector<Real> parsedRow;
-			while (std::getline(lineStream, cell, ','))
-			{
-				parsedRow.push_back(StrToReal(cell));
-			}
-
-			parsedCsv.push_back(parsedRow);
-		}
-		return parsedCsv;
-	}
-
-	void AppendBufferToCSV(const std::string& filename, const Buffer& data) {
-		// Open the file in append mode
-		std::ofstream file(filename, std::ios::app);
-
-		// Check if the file is open
-		if (!file.is_open()) {
-			std::cerr << "Error: Could not open file " << filename << std::endl;
-			return;
-		}
-
-		int decimalPlaces = 18;
-
-		// Set the decimal precision for floating point numbers
-		file << std::fixed << std::setprecision(decimalPlaces);
-
-		// Write the vector data to the file as a CSV row
-		for (size_t i = 0; i < data.Length(); ++i) {
-			file << data[i];
-			// Add a comma after every element except the last one
-			if (i != data.Length() - 1) {
-				file << ",";
-			}
-		}
-		// End the row by adding a newline
-		file << "\n";
-
-		// Close the file
-		file.close();
-	}
-
-	void WriteDataEntry(std::string filename, const BufferF& data, Real position, Real rotation) {
-
-		// Open the file in append mode
-		std::ofstream file(filename, std::ios::app);
-
-		// Check if the file is open
-		if (!file.is_open()) {
-			std::cerr << "Error: Could not open file " << filename << std::endl;
-			return;
-		}
-
-		int pos = position * 100;
-		int rot = ceil(rotation);
-		file << pos;
-		file << "_";
-		file << rot;
-		file << ",";
-
-		// Write the vector data to the file as a CSV row
-		for (size_t i = 0; i < data.Length(); ++i) {
-			file << (int)(data[i] * 8388607.0);
-			// Add a comma after every element except the last one
-			if (i != data.Length() - 1) {
-				file << ",";
-			}
-		}
-		// End the row by adding a newline
-		file << "\n";
-		// Close the file
-		file.close();
-	}
-
 	//////////////////// Shoebox Tests ////////////////////
 
 	TEST_CLASS(AR_Scenes)
@@ -403,17 +298,17 @@ namespace RAC
 			UpdateFDNModel(FDNMatrix::randomOrthogonal);
 			UpdateDiffractionModel(DiffractionModel::attenuate);
 
-			// Absorption absorption = Absorption({ 0.222, 0.258, 0.405, 0.378, 0.284, 0.270, 0.277 });
-			Absorption absorption = Absorption({ 0.200, 0.227, 0.333, 0.315, 0.247, 0.237, 0.242 });
+			// Absorption absorption = Absorption({ 0.222, 0.258, 0.405, 0.378, 0.284, 0.270, 0.277 }); // Sabine
+			Absorption absorption = Absorption({ 0.200, 0.227, 0.333, 0.315, 0.247, 0.237, 0.242 }); // Eyring
 			Vec3 roomSize = Vec3(7.0, 2.5, 6.0);
 			CreateShoebox(roomSize, absorption);
-				
+
 			Real volume = 105.0;
 			Vec dimensions = Vec({ 7.0, 2.5, 6.0 });
 			UpdateRoom(volume, dimensions);
 
-			Vec3 sourcePosition = Vec3(5.47, 1.62, 4.5);
-			Vec4 sourceOrientation = Vec4({ 0.0, 0.0, 0.0, 1.0 });
+			std::vector<Vec3> sourcePositions = { Vec3(5.47, 1.62, 4.5), Vec3(3.72, 1.62, 3.25) };
+			std::vector<Vec4> sourceOrientations = { AzimuthElevationToQuaternion(270.0, 0.0), AzimuthElevationToQuaternion(0.0, 0.0) };
 
 			BufferF in = BufferF(numFrames);
 			BufferF out = BufferF(2 * numFrames);
@@ -423,49 +318,67 @@ namespace RAC
 			float* outPtr = &out[0];
 
 			Real listenerStepPostition = 0.25;
-			Real listenerStepRotation = 2.5;
+			Real listenerStepRotation = 90.0;
 			int numBuffers = fs / numFrames;
-			std::string file = "C:/Documents/GitHub/jmannall/RoomAcoustiCpp/UnitTestData/LTC_3rdOrderISM_FDN_Eyring_Directivity.csv";
-			for (int i = 0; i < 9; i++)
+			std::vector<std::string> files = { "C:/Documents/GitHub/jmannall/RoomAcoustiCpp/SimulationData/LTC_3rdOrderISM_FDN_Front_Omni.csv",
+				"C:/Documents/GitHub/jmannall/RoomAcoustiCpp/SimulationData/LTC_3rdOrderISM_FDN_Side_Omni.csv",
+				"C:/Documents/GitHub/jmannall/RoomAcoustiCpp/SimulationData/LTC_3rdOrderFDN_Front_Omni.csv",
+				"C:/Documents/GitHub/jmannall/RoomAcoustiCpp/SimulationData/LTC_3rdOrderFDN_Side_Omni.csv" };
+
+			std::vector<IEMConfig> iemConfigs = { IEMConfig(3, DirectSound::doCheck, true, DiffractionSound::none, DiffractionSound::none, true, 0.0),
+				IEMConfig(0, DirectSound::doCheck, false, DiffractionSound::none, DiffractionSound::none, true, 0.0) };
+
+			for (int t = 0; t < 2; t++)
 			{
-				Vec3 listenerPosition = Vec3(4.22 - listenerStepPostition * i, 1.62, 4.5);
-
-				for (int j = 0; j < 360.0 / listenerStepRotation; j++)
+				UpdateIEMConfig(iemConfigs[t]);
+				for (int k = 0; k < 2; k++)
 				{
-					Vec4 listenerOrientation = AzimuthElevationToQuaternion(90.0 - j * listenerStepRotation, 0.0);
-					UpdateListener(listenerPosition, listenerOrientation);
-					size_t sourceID = InitSource();
-					UpdateSource(sourceID, sourcePosition, sourceOrientation);
-					Sleep(20);
-					UpdateSource(sourceID, sourcePosition, sourceOrientation);
-					SubmitAudio(sourceID, &in[0]);
-
-					in[0] = 1.0;
-					SubmitAudio(sourceID, &in[0]);
-					GetOutput(&outPtr);
-					for (int k = 0; k < numFrames; k++)
+					std::string file = files[k + 2 * t];
+					Vec3 sourcePosition = sourcePositions[k];
+					Vec4 sourceOrientation = sourceOrientations[k];
+					for (int i = 0; i < 9; i++)
 					{
-						left[k] = outPtr[2 * k];
-						right[k] = outPtr[2 * k + 1];
-					}
+						Vec3 listenerPosition = Vec3(4.22 - listenerStepPostition * i, 1.62, 4.5);
 
-					in[0] = 0.0;
-					for (int n = 1; n < numBuffers; n++)
-					{
-						SubmitAudio(sourceID, &in[0]);
-						GetOutput(&outPtr);
-						for (int k = 0; k < numFrames; k++)
+						for (int j = 0; j < 360.0 / listenerStepRotation; j++)
 						{
-							left[k + n * numFrames] = outPtr[2 * k];
-							right[k + n * numFrames] = outPtr[2 * k + 1];
+							Vec4 listenerOrientation = AzimuthElevationToQuaternion(90.0 - j * listenerStepRotation, 0.0);
+							UpdateListener(listenerPosition, listenerOrientation);
+							size_t sourceID = InitSource();
+							UpdateSourceDirectivity(sourceID, SourceDirectivity::omni);
+							UpdateSource(sourceID, sourcePosition, sourceOrientation);
+							Sleep(50);
+							// UpdateSource(sourceID, sourcePosition, sourceOrientation);
+							SubmitAudio(sourceID, &in[0]);
+
+							in[0] = 1.0;
+							SubmitAudio(sourceID, &in[0]);
+							GetOutput(&outPtr);
+							for (int k = 0; k < numFrames; k++)
+							{
+								left[k] = outPtr[2 * k];
+								right[k] = outPtr[2 * k + 1];
+							}
+
+							in[0] = 0.0;
+							for (int n = 1; n < numBuffers; n++)
+							{
+								SubmitAudio(sourceID, &in[0]);
+								GetOutput(&outPtr);
+								for (int k = 0; k < numFrames; k++)
+								{
+									left[k + n * numFrames] = outPtr[2 * k];
+									right[k + n * numFrames] = outPtr[2 * k + 1];
+								}
+							}
+
+							ResetFDN();
+							RemoveSource(sourceID);
+
+							WriteDataEntry(file, &left[0], left.Length(), i * listenerStepPostition, j * listenerStepRotation);
+							WriteDataEntry(file, &right[0], right.Length(), i * listenerStepPostition, j * listenerStepRotation);
 						}
 					}
-
-					ResetFDN();
-					RemoveSource(sourceID);
-
-					WriteDataEntry(file, left, i * listenerStepPostition, j * listenerStepRotation);
-					WriteDataEntry(file, right, i * listenerStepPostition, j * listenerStepRotation);
 				}
 			}
 
@@ -521,7 +434,8 @@ namespace RAC
 			UpdateListener(listenerPosition, listenerOrientation);
 			size_t sourceID = InitSource();
 			UpdateSource(sourceID, sourcePosition, sourceOrientation);
-			
+			UpdateSourceDirectivity(sourceID, SourceDirectivity::speaker);
+
 			Sleep(1000);
 			BufferF in = BufferF(numFrames);
 			BufferF out = BufferF(2 * numFrames);
@@ -623,8 +537,8 @@ namespace RAC
 			switch (model)
 			{
 			case DiffractionModel::attenuate:
-					m = new Attenuate(&paths[1]);
-					break;
+				m = new Attenuate(&paths[1]);
+				break;
 			case DiffractionModel::lowPass:
 				m = new LPF(&paths[1], fs);
 				break;
@@ -870,9 +784,9 @@ namespace RAC
 
 			Vec3 normal = Vec3(0.0, 1.0, 0.0);
 			std::vector<Real> in = { 0.3, 0.15, 0.2, 0.18, 0.1 };
-			std::vector<Real> vData = { -10.0, 0.0, -10.0, 0.0, 0.0, 10.0, 10.0, 0.0, -10.0 };
+			Vertices vData = { Vec3(-10.0, 0.0, -10.0), Vec3(0.0, 0.0, 10.0), Vec3(10.0, 0.0, -10.0) };
 			Absorption absorption = Absorption(in);
-			Wall wall = Wall(normal, &vData[0], absorption);
+			Wall wall = Wall(vData, absorption);
 			Plane plane = Plane(0, wall);
 
 			core.CreateListener();
@@ -906,7 +820,7 @@ namespace RAC
 				vSources.insert_or_assign(v.GetKey(), v);
 			}
 
-			source.UpdateData(true, vSources);
+			source.UpdateData({ 1.0, true }, vSources);
 			source.Update(sPosition, Vec4(0.0, 0.0, 0.0, 1.0), (sPosition - lPosition).Length());
 
 			return source;
@@ -931,7 +845,7 @@ namespace RAC
 			source.ProcessAudio(mInputBuffer, mReverbInput, mOutputBuffer);
 		}
 	};
-	
+
 	TEST_CLASS(Test_Coefficients)
 	{
 	public:
@@ -1182,258 +1096,6 @@ namespace RAC
 
 	};
 
-	//////////////////// Matrix Tests ////////////////////
-
-	TEST_CLASS(MatrixTests)
-	{
-	public:
-
-		TEST_METHOD(Init)
-		{
-			const int rows = 5;
-			const int cols = 4;
-
-			Matrix m = Matrix(rows, cols);
-
-			Real x = 1.0;
-
-			for (int i = 0; i < rows; i++)
-			{
-				for (int j = 0; j < cols; j++)
-				{
-					m[i][j] = x;
-					Assert::AreEqual(x, m.GetEntry(i, j), L"Error: Add entry");
-					m[i][j] += 1.0;
-					x += 1.0;
-					Assert::AreEqual(x, m.GetEntry(i, j), L"Error: Increase entry");
-				}
-			}
-
-			Matrix mat = Matrix(m.Data());
-
-			for (int i = 0; i < rows; i++)
-			{
-				for (int j = 0; j < cols; j++)
-				{
-					Assert::AreEqual(m.GetEntry(i, j), mat.GetEntry(i, j), L"Error: Init from vectors");
-				}
-			}
-
-			m.Reset();
-
-			for (int i = 0; i < rows; i++)
-			{
-				for (int j = 0; j < cols; j++)
-				{
-					Real test = m.GetEntry(i, j);
-					Assert::AreEqual(0.0, test, L"Error: Reset");
-				}
-			}
-		}
-
-//		TEST_METHOD(Parellise)
-//		{
-//			const int a = 2000;
-//			const int b = 2000;
-//
-//			matrix mat = matrix(a, b);
-//			rowvec x1 = rowvec(a);
-//			rowvec x2 = rowvec(a);
-//			rowvec y = rowvec(a);
-//
-//			std::default_random_engine gen(50);
-//			std::uniform_real_distribution<Real> distribution(-1.0, 1.0);
-//			for (int i = 0; i < a; i++)
-//			{
-//				y.AddEntry(distribution(gen), i);
-//			}
-//
-//			for (int i = 0; i < a; i++)
-//			{
-//				for (int j = 0; j < b; j++)
-//				{
-//					mat.AddEntry(distribution(gen), i, j);
-//				}
-//			}
-//
-//			std::ofstream out("RunTime4.txt");
-//			std::streambuf *coutbuf = std::cout.rdbuf(); //save old buf
-//			std::cout.rdbuf(out.rdbuf()); //redirect std::cout to out.txt!
-//
-//			int maxThreads = omp_get_max_threads();
-//
-//			cout << "Max threads: " << maxThreads << "\n";
-//			ScopedTimer timer;
-//
-//			for (int i = 0; i < 10; i++)
-//			{
-//				Real sum = 0.0;
-//
-//				x1.Reset();
-//				timer.Start();
-//
-//				for (int j = 0; j < a; ++j)
-//				{
-//					sum = 0.0;
-//					for (int k = 0; k < b; ++k)
-//					{
-//						sum += y.GetEntry(k) * mat.GetEntry(k, j);
-//						//x1.IncreaseEntry(y.GetEntry(k) * mat.GetEntry(k, j), j);
-//					}
-//					x1.AddEntry(sum, j);
-//				}
-//
-//				timer.Stop("Serial");
-//				sum = 0.0;
-//
-//				x2.Reset();
-//				timer.Start();
-//
-//#pragma omp parallel for num_threads(omp_get_max_threads()) private (sum)
-//				for (int j = 0; j < a; ++j)
-//				{
-//					sum = 0.0;
-//					for (int k = 0; k < b; ++k)
-//					{
-//						sum += y.GetEntry(k) * mat.GetEntry(k, j);
-//						//x2.IncreaseEntry(y.GetEntry(k) * mat.GetEntry(k, j), j);
-//					}
-//					x2.AddEntry(sum, j);
-//				}
-//
-//				timer.Stop("Parallel");
-//			}
-//			std::cout.rdbuf(coutbuf); //reset to standard output again
-//
-//			for (int i = 0; i < a; i++)
-//				Assert::AreEqual(x1.GetEntry(i), x2.GetEntry(i), L"Mismatch results");
-//		}
-
-		TEST_METHOD(Multiply)
-		{
-			const int a = 2;
-			const int b = 3;
-
-			Matrix x = Matrix(a, b);
-			Matrix y = Matrix(b, a);
-
-			for (int i = 0; i < a; i++)
-			{
-				for (int j = 0; j < b; j++)
-				{
-					x[i][j] = 1.0;
-					y[j][i] = 1.0;
-				}
-			}
-
-			x[0][0] = 2.0;
-			x[0][2] = 5.0;
-			x[1][1] = 3.0;
-			y[1][0] = 4.0;
-			y[0][1] = 3.0;
-
-			Matrix z = x * y;
-
-			Assert::AreEqual(11.0, z.GetEntry(0, 0), L"Error (0, 0)");
-			Assert::AreEqual(12.0, z.GetEntry(0, 1), L"Error (0, 1)");
-			Assert::AreEqual(14.0, z.GetEntry(1, 0), L"Error (1, 0)");
-			Assert::AreEqual(7.0, z.GetEntry(1, 1), L"Error (1, 1)");
-
-			z *= 2.0;
-
-			Assert::AreEqual(22.0, z.GetEntry(0, 0), L"Error 2 (0, 0)");
-			Assert::AreEqual(24.0, z.GetEntry(0, 1), L"Error 2 (0, 1)");
-			Assert::AreEqual(28.0, z.GetEntry(1, 0), L"Error 2 (1, 0)");
-			Assert::AreEqual(14.0, z.GetEntry(1, 1), L"Error 2 (1, 1)");
-
-			Matrix w = z * 2.0;
-
-			Assert::AreEqual(44.0, w.GetEntry(0, 0), L"Error 3 (0, 0)");
-			Assert::AreEqual(48.0, w.GetEntry(0, 1), L"Error 3 (0, 1)");
-			Assert::AreEqual(56.0, w.GetEntry(1, 0), L"Error 3 (1, 0)");
-			Assert::AreEqual(28.0, w.GetEntry(1, 1), L"Error 3 (1, 1)");
-		}
-
-		TEST_METHOD(Add)
-		{
-			const int a = 2;
-			const int b = 3;
-
-			Matrix x = Matrix(a, b);
-			Matrix y = Matrix(a, b);
-
-			for (int i = 0; i < a; i++)
-			{
-				for (int j = 0; j < b; j++)
-				{
-					x[i][j] = 1.0;
-					y[i][j] = 1.0;
-				}
-			}
-
-			x[0][0] = 2.0;
-			x[0][2] = 5.0;
-			x[1][1] = 3.0;
-			y[1][0] = 4.0;
-			y[0][1] = 3.0;
-			y[0][0] = 7.0;
-
-			Matrix z = x + y;
-
-			Assert::AreEqual(9.0, z.GetEntry(0, 0), L"Error (0, 0)");
-			Assert::AreEqual(4.0, z.GetEntry(0, 1), L"Error (0, 1)");
-			Assert::AreEqual(6.0, z.GetEntry(0, 2), L"Error (0, 2)");
-			Assert::AreEqual(5.0, z.GetEntry(1, 0), L"Error (1, 0)");
-			Assert::AreEqual(4.0, z.GetEntry(1, 1), L"Error (1, 1)");
-			Assert::AreEqual(2.0, z.GetEntry(1, 2), L"Error (1, 2)");
-		}
-
-		TEST_METHOD(Negative)
-		{
-			const int a = 2;
-			const int b = 3;
-
-			Matrix x = Matrix(a, b);
-
-			for (int i = 0; i < a; i++)
-			{
-				for (int j = 0; j < b; j++)
-				{
-					x[i][j] = 1.0;
-				}
-			}
-
-			Matrix y = -x;
-
-			Assert::AreEqual(-1.0, y.GetEntry(0, 0), L"Error (0, 0)");
-			Assert::AreEqual(-1.0, y.GetEntry(0, 1), L"Error (0, 1)");
-			Assert::AreEqual(-1.0, y.GetEntry(0, 2), L"Error (0, 2)");
-			Assert::AreEqual(-1.0, y.GetEntry(1, 0), L"Error (1, 0)");
-			Assert::AreEqual(-1.0, y.GetEntry(1, 1), L"Error (1, 1)");
-			Assert::AreEqual(-1.0, y.GetEntry(1, 2), L"Error (1, 2)");
-		}
-
-		TEST_METHOD(Comparison)
-		{
-			const int a = 2;
-			const int b = 3;
-
-			Matrix x = Matrix(a, b);
-			Matrix y = Matrix(a, b);
-
-			Assert::AreEqual(true, x == y, L"Match");
-
-			for (int i = 0; i < a; i++)
-			{
-				for (int j = 0; j < b; j++)
-				{
-					x[i][j] = 1.0;
-				}
-			}
-
-			Assert::AreEqual(false, x == y, L"No match");
-		}
-	};
 
 	//////////////////// DSP Tests ////////////////////
 
@@ -1515,15 +1177,15 @@ namespace RAC
 			Lerp(current, target, lerpFactor);
 
 			{
-			std::vector<Real> output = { 0.8, 3.6, 3.2, 2.0 };
-			for (int i = 0; i < 4; i++)
-				Assert::AreEqual(output[i], current[i], EPS, L"Wrong output");
+				std::vector<Real> output = { 0.8, 3.6, 3.2, 2.0 };
+				for (int i = 0; i < 4; i++)
+					Assert::AreEqual(output[i], current[i], EPS, L"Wrong output");
 			}
 			{
-			std::vector<Real> output = { 0.64, 3.28, 3.36, 2.0 };
-			Lerp(current, target, lerpFactor);
-			for (int i = 0; i < 4; i++)
-				Assert::AreEqual(output[i], current[i], EPS, L"Wrong output");
+				std::vector<Real> output = { 0.64, 3.28, 3.36, 2.0 };
+				Lerp(current, target, lerpFactor);
+				for (int i = 0; i < 4; i++)
+					Assert::AreEqual(output[i], current[i], EPS, L"Wrong output");
 			}
 		}
 
@@ -1564,164 +1226,6 @@ namespace RAC
 				Lerp(current, target, lerpFactor);
 				for (int i = 0; i < 4; i++)
 					Assert::AreEqual(output[i], current[i], EPS, L"Wrong output");
-			}
-		}
-	};
-
-	TEST_CLASS(GraphicEQTests)
-	{
-	public:
-
-		TEST_METHOD(ProcessGraphicEQ)
-		{
-			std::string filePath = _SOLUTIONDIR;
-			auto inputData = Parse2Dcsv(filePath + "UnitTestData\\graphicEQInput.csv");
-			auto outputData = Parse2Dcsv(filePath + "UnitTestData\\graphicEQOutput.csv");
-
-			std::vector<Real> g0(inputData[0]);
-			std::vector<Real> g1(inputData[1]);
-			std::vector<Real> g2(inputData[2]);
-			std::vector<Real> g3(inputData[3]);
-			std::vector<Real> g4(inputData[4]);
-
-			Coefficients fc = Coefficients({ 250.0, 500.0, 1000.0, 2000.0, 4000.0 });
-			Real Q = 0.98;
-			int fs = 48e3;
-			int numFrames = 256;
-			Real lerpFactor = 0.0;
-			Buffer in = Buffer(numFrames);
-			in[0] = 1.0;
-
-			int numTests = g0.size();
-			std::vector<Coefficients> gains = std::vector<Coefficients>(numTests, Coefficients(5));
-			for (int i = 0; i < numTests; i++)
-			{
-				Buffer out = Buffer(numFrames);
-
-				Coefficients gain = Coefficients({ g0[i], g1[i], g2[i], g3[i], g4[i] });
-				GraphicEQ eq = GraphicEQ(gain, fc, Q, fs);
-				eq.ProcessAudio(in, out, numFrames, lerpFactor);
-
-				// AppendBufferToCSV(filePath + "UnitTestData\\graphicEQOutput.csv", out);
-
-				for (int j = 0; j < numFrames; j++)
-				{
-					std::string error = "Test: " + Unity::IntToStr(i) + ", Incorrect Sample : " + Unity::IntToStr(j);
-					std::wstring werror = std::wstring(error.begin(), error.end());
-					const wchar_t* werrorchar = werror.c_str();
-					Assert::AreEqual(outputData[i][j], out[j], 10e-16, werrorchar);
-				}
-			}			
-		}
-
-		TEST_METHOD(ProcessPeakingFilter)
-		{
-			std::string filePath = _SOLUTIONDIR;
-			auto inputData = Parse2Dcsv(filePath + "UnitTestData\\peakingFilterInput.csv");
-			auto outputData = Parse2Dcsv(filePath + "UnitTestData\\peakingFilterOutput.csv");
-
-			std::vector<Real> fc(inputData[0]);
-			std::vector<Real> g(inputData[1]);
-
-			Real Q = 0.98;
-			int fs = 48e3;
-			int numFrames = 256;
-			Buffer out = Buffer(numFrames);
-			Buffer in = Buffer(numFrames);
-			in[0] = 1.0;
-
-			int numTests = fc.size();
-			std::vector<Coefficients> gains = std::vector<Coefficients>(numTests, Coefficients(5));
-			for (int i = 0; i < numTests; i++)
-			{
-				PeakingFilter peakingFilter = PeakingFilter(fc[i], g[i], Q, fs);
-
-				for (int i = 0; i < numFrames; ++i)
-					out[i] = peakingFilter.GetOutput(in[i]);
-
-				// AppendBufferToCSV(filePath + "UnitTestData\\peakingFilterOutput.csv", out);
-
-				for (int j = 0; j < numFrames; j++)
-				{
-					std::string error = "Test: " + Unity::IntToStr(i) + ", Incorrect Sample : " + Unity::IntToStr(j);
-					std::wstring werror = std::wstring(error.begin(), error.end());
-					const wchar_t* werrorchar = werror.c_str();
-					Assert::AreEqual(outputData[i][j], out[j], 10e-16, werrorchar);
-				}
-			}
-		}
-
-		TEST_METHOD(ProcessLowShelfFilter)
-		{
-			std::string filePath = _SOLUTIONDIR;
-			auto inputData = Parse2Dcsv(filePath + "UnitTestData\\peakingFilterInput.csv");
-			auto outputData = Parse2Dcsv(filePath + "UnitTestData\\lowShelfFilterOutput.csv");
-
-			std::vector<Real> fc(inputData[0]);
-			std::vector<Real> g(inputData[1]);
-
-			Real Q = 0.98;
-			int fs = 48e3;
-			int numFrames = 256;
-			Buffer out = Buffer(numFrames);
-			Buffer in = Buffer(numFrames);
-			in[0] = 1.0;
-
-			int numTests = fc.size();
-			std::vector<Coefficients> gains = std::vector<Coefficients>(numTests, Coefficients(5));
-			for (int i = 0; i < numTests; i++)
-			{
-				PeakLowShelf lowShelfFilter = PeakLowShelf(fc[i], g[i], Q, fs);
-
-				for (int i = 0; i < numFrames; ++i)
-					out[i] = lowShelfFilter.GetOutput(in[i]);
-
-				// AppendBufferToCSV(filePath + "UnitTestData\\lowShelfFilterOutput.csv", out);
-
-				for (int j = 0; j < numFrames; j++)
-				{
-					std::string error = "Test: " + Unity::IntToStr(i) + ", Incorrect Sample : " + Unity::IntToStr(j);
-					std::wstring werror = std::wstring(error.begin(), error.end());
-					const wchar_t* werrorchar = werror.c_str();
-					Assert::AreEqual(outputData[i][j], out[j], 10e-16, werrorchar);
-				}
-			}
-		}
-
-		TEST_METHOD(ProcessHighShelfFilter)
-		{
-			std::string filePath = _SOLUTIONDIR;
-			auto inputData = Parse2Dcsv(filePath + "UnitTestData\\peakingFilterInput.csv");
-			auto outputData = Parse2Dcsv(filePath + "UnitTestData\\highShelfFilterOutput.csv");
-
-			std::vector<Real> fc(inputData[0]);
-			std::vector<Real> g(inputData[1]);
-
-			Real Q = 0.98;
-			int fs = 48e3;
-			int numFrames = 256;
-			Buffer out = Buffer(numFrames);
-			Buffer in = Buffer(numFrames);
-			in[0] = 1.0;
-
-			int numTests = fc.size();
-			std::vector<Coefficients> gains = std::vector<Coefficients>(numTests, Coefficients(5));
-			for (int i = 0; i < numTests; i++)
-			{
-				PeakHighShelf highShelfFilter = PeakHighShelf(fc[i], g[i], Q, fs);
-
-				for (int i = 0; i < numFrames; ++i)
-					out[i] = highShelfFilter.GetOutput(in[i]);
-
-				// AppendBufferToCSV(filePath + "UnitTestData\\highShelfFilterOutput.csv", out);
-
-				for (int j = 0; j < numFrames; j++)
-				{
-					std::string error = "Test: " + Unity::IntToStr(i) + ", Incorrect Sample : " + Unity::IntToStr(j);
-					std::wstring werror = std::wstring(error.begin(), error.end());
-					const wchar_t* werrorchar = werror.c_str();
-					Assert::AreEqual(outputData[i][j], out[j], 10e-16, werrorchar);
-				}
 			}
 		}
 	};

@@ -103,8 +103,8 @@ void EndHigherOrderRefDiff();
 void BeginLateReverb();
 void EndLateReverb();
 
-void BeginCopyData();
-void EndCopyData();
+void BeginUpdateAudioData();
+void EndUpdateAudioData();
 
 #endif
 #endif

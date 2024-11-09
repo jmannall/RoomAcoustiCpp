@@ -80,7 +80,7 @@ namespace RAC
 				mSource->DisableDistanceAttenuationAnechoic();
 				mSource->DisableNearFieldEffect();
 				mSource->DisableFarDistanceEffect();
-				// mSource->DisableInterpolation();
+				mSource->DisableInterpolation();
 
 				//Select spatialisation mode
 				UpdateSpatialisationMode(SpatMode::none);

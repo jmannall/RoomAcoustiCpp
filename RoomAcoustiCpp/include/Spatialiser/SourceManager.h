@@ -47,6 +47,7 @@ namespace RAC
 
 			void UpdateSpatialisationMode(const SpatMode mode);
 			void UpdateDiffractionModel(const DiffractionModel model);
+			void UpdateSourceDirectivity(const size_t id, const SourceDirectivity directivity);
 
 			// Sources
 			size_t Init();
@@ -79,7 +80,7 @@ namespace RAC
 				mTimers.push_back(TimerPair(id));
 			}
 
-			std::vector<IDPositionPair> GetSourceData();
+			std::vector<SourceData> GetSourceData();
 			inline Vec3 GetSourcePosition(const size_t id)
 			{
 				shared_lock<shared_mutex> shared_lock(updateMutex); // Lock before locate to ensure not deleted between found and mutex lock
@@ -89,7 +90,12 @@ namespace RAC
 				return Vec3();
 			}
 
-			void UpdateSourceData(const size_t id, const bool visible, const VirtualSourceDataMap& vSources);
+			inline void UpdateSourceData(const size_t id, const SourceAudioData source, const VirtualSourceDataMap& vSources)
+			{
+				shared_lock<shared_mutex> lock(updateMutex);
+				auto it = mSources.find(id);
+				if (it != mSources.end()) { it->second.UpdateData(source, vSources); } // case: source does exist
+			}
 
 			// Audio
 			void ProcessAudio(const size_t id, const Buffer& data, Matrix& reverbInput, Buffer& outputBuffer);
@@ -102,7 +108,7 @@ namespace RAC
 			std::vector<size_t> mEmptySlots;
 			std::vector<TimerPair> mTimers;
 			size_t nextSource;
-			std::vector<IDPositionPair> sourceData;
+			std::vector<SourceData> sourceData;
 
 			// Mutexes
 			std::shared_mutex updateMutex; // Locks during update step

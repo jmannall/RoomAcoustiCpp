@@ -26,13 +26,10 @@ namespace RAC
 	using namespace Common;
 	namespace Spatialiser
 	{
-
-		const constexpr Real NUM_VERTICES = 3;
-
 		/**
 		* Class that represents a Wall in the room
 		*
-		* @details All walls are expected to be triangles
+		* @details All walls are stored as triangles
 		*/
 		class Wall
 		{
@@ -46,11 +43,10 @@ namespace RAC
 			/**
 			* Constructor that initialises a wall.
 			*
-			* @param normal The normal of the wall face.
 			* @param vData The vertices of the wall.
 			* @param absorption The material absorption property of the wall.
 			*/
-			Wall(const Vec3& normal, const Real* vData, const Absorption& absorption);
+			Wall(const Vertices& vData, const Absorption& absorption);
 
 			/**
 			* Default deconstructor.
@@ -81,7 +77,7 @@ namespace RAC
 			* 
 			* @return True if the wall has less connectd edges than the maximum possible, false otherwise
 			*/
-			inline bool EmptyEdges() const { return mEdges.size() < NUM_VERTICES; }
+			inline bool EmptyEdges() const { return mEdges.size() < mVertices.size(); }
 
 			/**
 			* @brief Returns the normal of the wall
@@ -102,7 +98,7 @@ namespace RAC
 			* 
 			* @return The vertices of the wall
 			*/
-			inline std::vector<Vec3> GetVertices() const { return mVertices; }
+			inline Vertices GetVertices() const { return mVertices; }
 
 			inline bool VertexMatch(const Vec3& x) const { return mVertices[0] == x || mVertices[1] == x || mVertices[2] == x; }
 
@@ -186,17 +182,16 @@ namespace RAC
 			/**
 			* @brief Updates the wall normal, vertices, area and d value
 			* 
-			* @param normal The new normal of the wall
 			* @param vData The new vertices of the wall
 			*/
-			void Update(const Vec3& normal, const Real* vData);
+			void Update(const Vertices& vData);
 
 			/**
 			* @brief Updates the wall absorption
 			*
 			* @param absorption The new absorption of the wall
 			*/
-			inline void Update(const Absorption& absorption) { float area = GetArea(); mAbsorption = absorption; mAbsorption.mArea = area; }
+			inline void Update(const Absorption& absorption) { Real area = GetArea(); mAbsorption = absorption; mAbsorption.mArea = area; }
 
 		private:
 
@@ -222,7 +217,7 @@ namespace RAC
 			/**
 			* Wall parameters
 			*/
-			std::vector<Vec3> mVertices;	// Vertices of the wall
+			Vertices mVertices;				// Vertices of the wall
 			Vec3 mNormal;					// Normal of the wall
 			Real d;							// Distance of the wall from the origin along the normal direction
 			Absorption mAbsorption;			// Material absorption of the wall

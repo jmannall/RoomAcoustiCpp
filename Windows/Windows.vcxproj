@@ -39,6 +39,8 @@
     <ClCompile Include="Test.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="UnitTest_GraphicEQ.cpp" />
+    <ClCompile Include="UnitTest_Matrix.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\RoomAcoustiCpp\codegen\lib\myNN\include\anonymous_function.h" />
@@ -55,6 +57,7 @@
     <ClInclude Include="..\RoomAcoustiCpp\codegen\lib\myNN\include\tmwtypes.h" />
     <ClInclude Include="include\FirstDLL.h" />
     <ClInclude Include="include\framework.h" />
+    <ClInclude Include="include\UtilityFunctions.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
@@ -250,7 +253,6 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>$(SolutionDir)$(PathTo3DTI)3dti_Toolkit;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\boost_circular_buffer;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\cereal\include;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src;$(ProjectDir)include;$(SolutionDir)RoomAcoustiCpp\codegen\lib\myNN\include;$(SolutionDir)RoomAcoustiCpp\include;$(SolutionDir)RoomAcoustiCpp\include\Spatialiser;C:\Documents\GitHub\mcl\include;C:\Documents\GitHub\mcl\butter\include;C:\Documents\GitHub\mcl\kissfft\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <EnableEnhancedInstructionSet>StreamingSIMDExtensions</EnableEnhancedInstructionSet>
       <Optimization>MaxSpeed</Optimization>
       <EnableParallelCodeGeneration>false</EnableParallelCodeGeneration>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -265,7 +267,6 @@
       <AdditionalLibraryDirectories>$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\lib\win;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>netcdf_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AssemblyDebug>true</AssemblyDebug>
-      <AdditionalOptions>-fopenmp %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseTest|x64'">

@@ -32,7 +32,7 @@ namespace RAC
 			*
 			* @param len The number of coefficients
 			*/
-			Coefficients(const size_t len) : Coefficients(len, 0.0) {}
+			Coefficients(const int len) : Coefficients(len, 0.0) {}
 
 			/**
 			* @brief Constructor that initialises the Coefficients with a given value
@@ -40,7 +40,7 @@ namespace RAC
 			* @param len The number of coefficients
 			* @param in The initialisation value
 			*/
-			Coefficients(const size_t len, const Real in) : mCoefficients(len, in) {}
+			Coefficients(const int len, const Real in) : mCoefficients(len, in) {}
 
 			/**
 			* @brief Constructor that initialises the Coefficients from a std::vector
@@ -66,7 +66,7 @@ namespace RAC
 			*
 			* @return The number of coefficients
 			*/
-			inline size_t Length() const { return mCoefficients.size(); }
+			inline int Length() const { return static_cast<int>(mCoefficients.size()); }
 
 			/**
 			* @brief Calculates the natural (base e) logarithm of the coefficients
@@ -284,7 +284,7 @@ namespace RAC
 		}
 
 		/**
-		* @brief Performs an elementwise comparison
+		* @brief Performs an element-wise comparison
 		* @return True if all element pairs are equal, false otherwise
 		*/
 		inline bool operator==(const Coefficients& u, const Coefficients& v)
@@ -298,7 +298,7 @@ namespace RAC
 		}
 
 		/**
-		* @brief Performs an elementwise comparison
+		* @brief Performs an element-wise comparison
 		* @return True if any element pairs are unequal, false otherwise
 		*/
 		inline bool operator!=(const Coefficients& u, const Coefficients& v)
@@ -307,7 +307,7 @@ namespace RAC
 		}
 
 		/**
-		* @brief Performs an elementwise comparison
+		* @brief Performs an element-wise comparison
 		* @return True if all element pairs satisfy the condition, false otherwise
 		*/
 		inline bool operator>(const Coefficients& u, const Coefficients& v)
@@ -320,7 +320,7 @@ namespace RAC
 		}
 
 		/**
-		* @brief Performs an elementwise comparison
+		* @brief Performs an element-wise comparison
 		* @return True if all element pairs satisfy the condition, false otherwise
 		*/
 		inline bool operator<(const Coefficients& u, const Coefficients& v)
@@ -347,14 +347,14 @@ namespace RAC
 			*
 			* @param len The number of coefficients
 			*/
-			Absorption(size_t len) : Coefficients(len, 1.0), mArea(0.0) {}
+			Absorption(int len) : Coefficients(len, 1.0), mArea(0.0) {}
 
 			/**
 			* Constructor that initialises the Absorption from a std::vector
 			*
 			* @param R The material absorption
 			*/
-			Absorption(const std::vector<Real>& R) : Coefficients(R.size()), mArea(0.0)
+			Absorption(const std::vector<Real>& R) : Coefficients(static_cast<int>(R.size())), mArea(0.0)
 			{
 				for (int i = 0; i < mCoefficients.size(); i++)
 				{
@@ -480,7 +480,7 @@ namespace RAC
 		inline Absorption operator/(Absorption v, const Real a) { return v *= (1.0 / a); }
 
 		/**
-		* @brief Performs an elementwise comparison
+		* @brief Performs an element-wise comparison
 		* @return True if all element pairs and the areas are equal, false otherwise
 		*/
 		inline bool operator==(const Absorption& u, const Absorption& v)
@@ -496,7 +496,7 @@ namespace RAC
 		}
 
 		/**
-		* @brief Performs an elementwise comparison
+		* @brief Performs an element-wise comparison
 		* @return True if any element pairs or the areas are unequal, false otherwise
 		*/
 		inline bool operator!=(const Absorption& u, const Absorption& v)

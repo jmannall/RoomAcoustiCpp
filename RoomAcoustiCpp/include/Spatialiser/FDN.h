@@ -45,17 +45,22 @@ namespace RAC
 		public:
 			// Load and Destroy
 			Channel(const Config& config);
-			Channel(Real t, const Coefficients& T60, const Config& config);
+			Channel(const int delayLength, const Coefficients& T60, const Config& config);
 			~Channel() { /*delete mBufferMutex;*/ };
 
 			// Setters
 			// void UpdateT60(const Coefficients& T60);
-			void SetParameters(const Coefficients& T60, const Real t);
+			void SetParameters(const Coefficients& T60, const int delayLength);
 			void SetAbsorption();
 			void SetAbsorption(const Coefficients& T60);
 			void UpdateAbsorption(const Coefficients& T60);
 			inline Coefficients CalcGain(const Coefficients& T60) { return (-3.0 * mT / T60).Pow10(); } // 20 * log10(H(f)) = -60 * t / t60(f);
-			inline void SetDelay(const Real t) { mT = t; SetDelay(); }
+			inline void SetDelay(const int delayLength)
+			{ 
+				mT = static_cast<Real>(delayLength) / mConfig.fs;
+				std::lock_guard<std::mutex> lock(*mBufferMutex);
+				mBuffer.ResizeBuffer(delayLength);
+			}
 			inline void Reset()
 			{ 
 				idx = 0; 
@@ -67,8 +72,6 @@ namespace RAC
 			Real GetOutput(const Real input);
 
 		private:
-			// Setters
-			void SetDelay();
 
 			// Member variables
 			Real mT;
@@ -130,7 +133,7 @@ namespace RAC
 			// Init
 			void InitMatrix() { (this->*Init)(); };
 			void (FDN::* Init)();
-			Vec CalculateTimeDelay(const Vec& dimensions);
+			std::vector<int> CalculateTimeDelay(const Vec& dimensions);
 
 			// Process
 			inline void ProcessMatrix() { (this->*Process)(); };

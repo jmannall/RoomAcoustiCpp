@@ -59,9 +59,10 @@ namespace RAC
 				// imageEdgeModel->UpdateIEMConfig(context->GetIEMConfig());
 
 				// Update IEM
-				imageEdgeModel->RunIEM();
+				bool hasChanged = imageEdgeModel->RunIEM();
 
 				// Update FDN reflection filters
+				// if (hasChanged)
 				imageEdgeModel->UpdateLateReverbFilters();
 
 				isRunning = context->IsRunning();
@@ -303,13 +304,13 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		size_t Context::InitWall(const Vec3& normal, const Real* vData, const Absorption& absorption)
+		size_t Context::InitWall(const Vertices& vData, const Absorption& absorption)
 		{
 #ifdef DEBUG_INIT
 	Debug::Log("Init Wall and Edges", Colour::Green);
 #endif
 
-			Wall wall = Wall(normal, vData, absorption);
+			Wall wall = Wall(vData, absorption);
 			size_t id = mRoom->AddWall(wall);
 			mRoom->InitEdges(id);
 			return id;
@@ -317,9 +318,9 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Context::UpdateWall(size_t id, const Vec3& normal, const Real* vData)
+		void Context::UpdateWall(size_t id, const Vertices& vData)
 		{
-			mRoom->UpdateWall(id, normal, vData);
+			mRoom->UpdateWall(id, vData);
 		}
 
 		////////////////////////////////////////

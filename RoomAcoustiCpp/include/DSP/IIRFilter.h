@@ -33,7 +33,7 @@ namespace RAC
 			* @param filterOrder The order of the filter
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
-			IIRFilter(const size_t filterOrder, const int sampleRate) : order(filterOrder),
+			IIRFilter(const int filterOrder, const int sampleRate) : order(filterOrder),
 				T(1.0 / static_cast<Real>(sampleRate)), b(filterOrder + 1),
 				a(filterOrder + 1), x(filterOrder + 1), y(filterOrder + 1) {};
 			
@@ -68,7 +68,7 @@ namespace RAC
 			/**
 			* Filter order
 			*/
-			size_t order;
+			int order;
 
 			/**
 			* Sample rate time period

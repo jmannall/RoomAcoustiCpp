@@ -617,8 +617,8 @@ namespace RAC
 					std::lock_guard<std::mutex> lock(*m);
 					if (ir.Valid())
 						targetIr = ir;
-					size_t currentLen = currentIr.Length();
-					size_t targetLen = targetIr.Length();
+					int currentLen = currentIr.Length();
+					int targetLen = targetIr.Length();
 
 					if (currentLen % 8 != 0)
 					{

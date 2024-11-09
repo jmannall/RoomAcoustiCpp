@@ -166,6 +166,14 @@ namespace RAC
 			void UpdateSource(size_t id, const Vec3& position, const Vec4& orientation);
 
 			/**
+			* Updates the directivity of a source.
+			* 
+			* @param id The ID of the source to update.
+			* @param directivity The new directivity of the source.
+			*/
+			inline void UpdateSourceDirectivity(size_t id, const SourceDirectivity& directivity) { mSources->UpdateSourceDirectivity(id, directivity); }
+
+			/**
 			* Removes a source from the spatialiser.
 			* 
 			* @param id The ID of the source to remove.
@@ -175,24 +183,20 @@ namespace RAC
 			/**
 			* Initialises a new wall in the spatialsier.
 			* 
-			* @param normal The normal of the wall.
 			* @param vData The vertices of the wall.
-			* @param numVertices The number of vertices in the wall.
 			* @param absorption The absorption of the wall.
 			* 
 			* @return The ID of the new wall.
 			*/
-			size_t InitWall(const Vec3& normal, const Real* vData, const Absorption& absorption);
+			size_t InitWall(const Vertices& vData, const Absorption& absorption);
 			
 			/**
 			* Updates the position of a wall.
 			* 
 			* @param id The ID of the wall to update.
-			* @param normal The new normal of the wall.
 			* @param vData The new vertices of the wall.
-			* @param numVertices The number of vertices in the wall.
 			*/
-			void UpdateWall(size_t id, const Vec3& normal, const Real* vData);
+			void UpdateWall(size_t id, const Vertices& vData);
 
 			/**
 			* Updates the absorption of a wall.

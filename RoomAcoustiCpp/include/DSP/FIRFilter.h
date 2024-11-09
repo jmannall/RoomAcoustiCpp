@@ -52,7 +52,7 @@ namespace RAC
 			* 
 			* @param len The new length of the impulse response
 			*/
-			inline void Resize(size_t len)
+			inline void Resize(int len)
 			{
 				if (len % 8 != 0)
 					len += (8 - len % 8);
@@ -97,7 +97,7 @@ namespace RAC
 			*
 			* @param len The new length of the impulse response
 			*/
-			inline void IncreaseSize(const size_t len)
+			inline void IncreaseSize(const int len)
 			{
 				inputLine.ResizeBuffer(len);
 				mIr.ResizeBuffer(len);
@@ -110,7 +110,7 @@ namespace RAC
 			*
 			* @param len The new length of the impulse response
 			*/
-			inline void DecreaseSize(const size_t len)
+			inline void DecreaseSize(const int len)
 			{
 				Buffer store = inputLine;
 				int index = count;
@@ -133,7 +133,7 @@ namespace RAC
 			/**
 			* The length of the impulse response and input line buffers
 			*/
-			size_t irLen;
+			int irLen;
 
 			/**
 			* The index for the next sample entry to the input line buffer
