@@ -127,7 +127,7 @@ namespace RAC
 				unique_lock<mutex> lck(*audioMutex, std::defer_lock);
 				if (lck.try_lock())
 				{
-					mTargetGain = 1.0f;
+					mTargetGain = data.GetDirectivity();
 					if (!isInitialised)
 						Init(data);
 					Update(data, fdnChannel);
@@ -244,7 +244,7 @@ namespace RAC
 			crossfadeCounter = 0;
 		}
 
-		void VirtualSource::ProcessAudio(const Buffer& data, Matrix& reverbInput, Buffer& outputBuffer)
+		void VirtualSource::ProcessAudio(const Buffer& data, Matrix& reverbInput, Buffer& outputBuffer, Real reverbEnergy)
 		{
 			lock_guard<mutex> lock(*audioMutex);
 
@@ -301,6 +301,12 @@ namespace RAC
 				for (int i = 0; i < mConfig.numFrames; i++)
 					bInput[i] = static_cast<float>(bStore[i] * mCurrentGain);
 			}
+			else if (Equals(mCurrentGain, mTargetGain))
+			{
+				mCurrentGain = mTargetGain;
+				for (int i = 0; i < mConfig.numFrames; i++)
+					bInput[i] = static_cast<float>(bStore[i] * mCurrentGain);
+			}
 			else
 			{
 				for (int i = 0; i < mConfig.numFrames; i++)
@@ -321,9 +327,10 @@ namespace RAC
 				if (feedsFDN)
 				{
 					{
+						Real factor = reverbEnergy / mCurrentGain;
 						mSource->ProcessAnechoic(bMonoOutput, bOutput.left, bOutput.right);
 						for (int i = 0; i < mConfig.numFrames; i++)
-							reverbInput[i][mFDNChannel] += static_cast<Real>(bMonoOutput[i]);
+							reverbInput[i][mFDNChannel] += static_cast<Real>(bMonoOutput[i]) * factor;
 					}
 				}
 				else

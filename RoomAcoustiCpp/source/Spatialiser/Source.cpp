@@ -123,17 +123,12 @@ namespace RAC
 			freeFDNChannels.push_back(0);
 		}
 
-		void ProcessVirtualSource(VirtualSource& vS, const Buffer& data, Matrix& reverbInput, Buffer& outputBuffer)
-		{
-			vS.ProcessAudio(data, reverbInput, outputBuffer);
-		}
-
 		void Source::ProcessAudio(const Buffer& data, Matrix& reverbInput, Buffer& outputBuffer)
 		{
 			{
 				lock_guard<mutex> lock(*vSourcesMutex);
 				for (auto& it : mVSources)
-					it.second.ProcessAudio(data, reverbInput, outputBuffer);
+					it.second.ProcessAudio(data, reverbInput, outputBuffer, reverbEnergy);
 			}
 
 #ifdef DEBUG_AUDIO_THREAD
@@ -153,6 +148,12 @@ namespace RAC
 #endif
 			if (currentGain == targetGain)
 			{
+				for (int i = 0; i < mConfig.numFrames; i++)
+					bInput[i] = static_cast<float>(currentGain * bStore[i]);
+			}
+			else if (Equals(currentGain, targetGain))
+			{
+				currentGain = targetGain;
 				for (int i = 0; i < mConfig.numFrames; i++)
 					bInput[i] = static_cast<float>(currentGain * bStore[i]);
 			}
@@ -176,11 +177,16 @@ namespace RAC
 				if (feedsFDN)
 				{
 					{
+						Real factor = 1.1 * mAirAbsorption.GetDistance() * reverbEnergy / currentGain; // Adjusted gain
+						factor /= static_cast<Real>(mConfig.numFDNChannels);
+
 						mSource->ProcessAnechoic(bMonoOutput, bOutput.left, bOutput.right);
 						for (int i = 0; i < mConfig.numFrames; i++)
+						{
+							Real in = static_cast<Real>(bMonoOutput[i]) * factor;
 							for (int j = 0; j < mConfig.numFDNChannels; j++)
-								reverbInput[i][j] += static_cast<Real>(bMonoOutput[i]);
-						reverbInput /= static_cast<Real>(mConfig.numFDNChannels);
+								reverbInput[i][j] += in;
+						}
 					}
 				}
 				else
@@ -206,19 +212,20 @@ namespace RAC
 
 			/*UpdateVirtualSourceDataMap();
 			UpdateVirtualSources();*/
+
+			{
+				lock_guard<std::mutex>lock(*dataMutex);
+				mAirAbsorption.SetDistance(distance);
+			}
 			{
 				lock_guard<std::mutex>lock(*currentDataMutex);
 				if (position == currentPosition && orientation == currentOrientation)
 					return;
-
 				hasChanged = true;
 				currentPosition = position;
 				currentOrientation = orientation;
 			}
-
 			lock_guard<std::mutex>lock(*dataMutex);
-			mAirAbsorption.SetDistance(distance);
-
 			transform.SetOrientation(CQuaternion(static_cast<float>(orientation.w), static_cast<float>(orientation.x), static_cast<float>(orientation.y), static_cast<float>(orientation.z)));
 			transform.SetPosition(CVector3(static_cast<float>(position.x), static_cast<float>(position.y), static_cast<float>(position.z)));
 		}

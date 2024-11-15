@@ -39,8 +39,12 @@
     <ClCompile Include="Test.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="UnitTest_GraphicEQ.cpp" />
-    <ClCompile Include="UnitTest_Matrix.cpp" />
+    <ClCompile Include="UnitTest_GraphicEQ.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="UnitTest_Matrix.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\RoomAcoustiCpp\codegen\lib\myNN\include\anonymous_function.h" />
@@ -57,7 +61,9 @@
     <ClInclude Include="..\RoomAcoustiCpp\codegen\lib\myNN\include\tmwtypes.h" />
     <ClInclude Include="include\FirstDLL.h" />
     <ClInclude Include="include\framework.h" />
-    <ClInclude Include="include\UtilityFunctions.h" />
+    <ClInclude Include="include\UtilityFunctions.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

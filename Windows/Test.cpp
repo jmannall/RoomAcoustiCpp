@@ -318,17 +318,17 @@ namespace RAC
 			float* outPtr = &out[0];
 
 			Real listenerStepPostition = 0.25;
-			Real listenerStepRotation = 90.0;
+			Real listenerStepRotation = 2.5;
 			int numBuffers = fs / numFrames;
-			std::vector<std::string> files = { "C:/Documents/GitHub/jmannall/RoomAcoustiCpp/SimulationData/LTC_3rdOrderISM_FDN_Front_Omni.csv",
-				"C:/Documents/GitHub/jmannall/RoomAcoustiCpp/SimulationData/LTC_3rdOrderISM_FDN_Side_Omni.csv",
-				"C:/Documents/GitHub/jmannall/RoomAcoustiCpp/SimulationData/LTC_3rdOrderFDN_Front_Omni.csv",
-				"C:/Documents/GitHub/jmannall/RoomAcoustiCpp/SimulationData/LTC_3rdOrderFDN_Side_Omni.csv" };
+			std::vector<std::string> files = { "C:/Documents/GitHub/jmannall/RoomAcoustiCpp/SimulationData/LTC_3rdOrderISM_FDN_Front.csv",
+				"C:/Documents/GitHub/jmannall/RoomAcoustiCpp/SimulationData/LTC_3rdOrderISM_FDN_Side.csv",
+				"C:/Documents/GitHub/jmannall/RoomAcoustiCpp/SimulationData/LTC_FDN_Front.csv",
+				"C:/Documents/GitHub/jmannall/RoomAcoustiCpp/SimulationData/LTC_FDN_Side.csv" };
 
 			std::vector<IEMConfig> iemConfigs = { IEMConfig(3, DirectSound::doCheck, true, DiffractionSound::none, DiffractionSound::none, true, 0.0),
 				IEMConfig(0, DirectSound::doCheck, false, DiffractionSound::none, DiffractionSound::none, true, 0.0) };
 
-			for (int t = 0; t < 2; t++)
+			for (int t = 1; t < 2; t++)
 			{
 				UpdateIEMConfig(iemConfigs[t]);
 				for (int k = 0; k < 2; k++)
@@ -345,9 +345,9 @@ namespace RAC
 							Vec4 listenerOrientation = AzimuthElevationToQuaternion(90.0 - j * listenerStepRotation, 0.0);
 							UpdateListener(listenerPosition, listenerOrientation);
 							size_t sourceID = InitSource();
-							UpdateSourceDirectivity(sourceID, SourceDirectivity::omni);
+							UpdateSourceDirectivity(sourceID, SourceDirectivity::cardioid);
 							UpdateSource(sourceID, sourcePosition, sourceOrientation);
-							Sleep(50);
+							Sleep(20);
 							// UpdateSource(sourceID, sourcePosition, sourceOrientation);
 							SubmitAudio(sourceID, &in[0]);
 
@@ -417,7 +417,7 @@ namespace RAC
 			UpdateDiffractionModel(DiffractionModel::attenuate);
 
 			Absorption absorption = Absorption({ 0.222, 0.258, 0.405, 0.378, 0.284, 0.270, 0.277 });
-			Vec3 roomSize = Vec3(7.0, 2.5, 6.0);
+			Vec3 roomSize = Vec3(7.0 / 8.0, 2.5 / 8.0, 6.0 / 8.0);
 			CreateShoebox(roomSize, absorption);
 
 			Real volume = 105.0;

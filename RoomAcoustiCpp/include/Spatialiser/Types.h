@@ -87,35 +87,11 @@ namespace RAC
 			speaker
 		};
 
-		enum class ReturnState
-		{
-			failed,
-			updated,
-			remove
-		};
-
-		static const int NUM_ABSORPTION_FREQ = 5;
-		static const Real ABSORPTION_FREQ[] = { 250.0, 500.0, 1000.0, 2000.0, 4000.0 };
-
 		enum class SpatMode { quality, performance, none };
 
-		enum class ReverbWall
-		{
-			posZ, negZ,
-			posX, negX,
-			posY, negY,
-			none
-		};
+		enum class DirectSound { none, doCheck, alwaysTrue };
 
-		enum class DirectSound
-		{
-			none, doCheck, alwaysTrue
-		};
-
-		enum class DiffractionSound
-		{
-			none, shadowZone, allZones
-		};
+		enum class DiffractionSound { none, shadowZone, allZones };
 
 		struct IEMConfig
 		{

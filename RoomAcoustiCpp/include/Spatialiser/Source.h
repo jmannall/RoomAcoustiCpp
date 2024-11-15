@@ -60,8 +60,24 @@ namespace RAC
 
 			void UpdateSpatialisationMode(const SpatMode mode);
 			void UpdateDiffractionModel(const DiffractionModel model);
-			void UpdateDirectivity(const SourceDirectivity directivity) {
-				{ lock_guard<mutex> lock(*dataMutex); mDirectivity = directivity; }
+			inline void UpdateDirectivity(const SourceDirectivity directivity)
+			{
+				{ 
+					lock_guard<mutex> lock(*dataMutex);
+					mDirectivity = directivity;
+					switch (mDirectivity)
+					{
+					case SourceDirectivity::omni:
+						reverbEnergy = 1.0;
+						break;
+					case SourceDirectivity::cardioid:
+						reverbEnergy = 0.5;
+						break;
+					default:
+						reverbEnergy = 1.0;
+						break;
+					}
+				}
 				{ lock_guard<mutex> lock(*currentDataMutex); hasChanged = true; }
 			}
 			
@@ -127,6 +143,8 @@ namespace RAC
 			AirAbsorption mAirAbsorption;
 			Real targetGain;
 			Real currentGain;
+
+			Real reverbEnergy;
 			SourceDirectivity mDirectivity;
 			bool feedsFDN;
 

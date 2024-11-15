@@ -892,7 +892,10 @@ namespace RAC
 			case SourceDirectivity::cardioid:
 			{
 				Real angle = acos(Dot(source.forward, UnitVector(intersection - source.position)));
-				return 0.5 * (1 + cos(angle));
+				Real ret = 0.5 * (1 + cos(angle));
+				if (ret < EPS)
+					return EPS;
+				return ret;
 			}
 			case SourceDirectivity::speaker:
 			{

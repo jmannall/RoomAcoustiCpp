@@ -84,10 +84,11 @@ namespace RAC
 			}
 
 			// Absorption
-			inline void AddDirectivity(const Real directivity) { mAbsorption *= directivity; }
+			inline void AddDirectivity(const Real directivity) { mDirectivity = directivity; }
 			inline void AddAbsorption(const Absorption& absorption) { mAbsorption *= absorption; }
 			inline void ResetAbsorption() { mAbsorption = 1.0; }
 			inline Absorption& GetAbsorptionRef() { return mAbsorption; }
+			inline Real GetDirectivity() const { return mDirectivity; }
 
 			// Edge
 			inline void AddEdgeID(const size_t id)
@@ -201,6 +202,7 @@ namespace RAC
 			std::vector<Vec3> mPositions;
 			int order;
 			Absorption mAbsorption;
+			Real mDirectivity;
 			Vec4 previousPlane;
 		};
 
@@ -231,7 +233,7 @@ namespace RAC
 			// inline void UpdateTransform() { if (updateTransform) { mSource->SetSourceTransform(transform); } }
 
 			// Audio
-			void ProcessAudio(const Buffer& data, Matrix& reverbInput, Buffer& outputBuffer);
+			void ProcessAudio(const Buffer& data, Matrix& reverbInput, Buffer& outputBuffer, Real reverbEnergy);
 
 			// Deactivate
 			inline void Deactivate() { mSource = nullptr; }

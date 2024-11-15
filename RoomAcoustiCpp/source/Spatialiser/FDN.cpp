@@ -185,7 +185,7 @@ namespace RAC
 					}
 				}
 				t *= INV_SPEED_OF_SOUND;
-				t.Max(0.0);
+				t.Max(1.0 / mConfig.fs);
 
 				for (int i = 0; i < mConfig.numFDNChannels; i++)
 					delays[i] = static_cast<int>(round(t[i] * mConfig.fs));
