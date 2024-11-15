@@ -37,11 +37,11 @@ namespace RAC
 		public:
 
 			// Load and Destroy
-			Room(const int numBands) : nextPlane(0), nextWall(0), nextEdge(0), reverbTime(ReverbTime::Sabine), mVolume(0.0), numAbsorptionBands(numBands), hasChanged(true) {}
+			Room(const int numBands) : nextPlane(0), nextWall(0), nextEdge(0), reverbTime(ReverbFormula::Sabine), mVolume(0.0), numAbsorptionBands(numBands), hasChanged(true) {}
 			~Room() {};
 
 			// Image source model
-			inline Coefficients UpdateReverbTimeModel(const ReverbTime model) { reverbTime = model; return GetReverbTime(); }
+			inline Coefficients UpdateReverbTimeModel(const ReverbFormula model) { reverbTime = model; return GetReverbTime(); }
 
 			// Wall
 			size_t AddWall(Wall& wall);
@@ -247,7 +247,7 @@ namespace RAC
 			bool hasChanged;
 
 			Real mVolume;
-			ReverbTime reverbTime;
+			ReverbFormula reverbTime;
 			int numAbsorptionBands;
 
 			WallMap mWalls;

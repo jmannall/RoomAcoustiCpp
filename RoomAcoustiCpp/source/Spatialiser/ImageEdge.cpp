@@ -384,7 +384,7 @@ namespace RAC
 			EndDirect();
 #endif
 
-			if (mIEMConfig.order < 1 || (!mIEMConfig.reflection && mIEMConfig.diffraction == DiffractionSound::none && mIEMConfig.reflectionDiffraction == DiffractionSound::none))
+			if (mIEMConfig.order < 1 || (!mIEMConfig.reflections && mIEMConfig.diffraction == DiffractionSound::none && mIEMConfig.diffractedReflections == DiffractionSound::none))
 			{
 				direct.second = mIEMConfig.lateReverb;
 				EraseOldEntries(vSources);
@@ -399,11 +399,11 @@ namespace RAC
 
 			size_t counter = 0;
 
-			if ((mIEMConfig.diffraction != DiffractionSound::none || mIEMConfig.reflectionDiffraction != DiffractionSound::none) && mEdges.size() > 0)
+			if ((mIEMConfig.diffraction != DiffractionSound::none || mIEMConfig.diffractedReflections != DiffractionSound::none) && mEdges.size() > 0)
 				counter = FirstOrderDiffraction(source, vSources);
 
 			// Reflections
-			if ((mIEMConfig.reflection || mIEMConfig.reflectionDiffraction != DiffractionSound::none) && mWalls.size() > 0)
+			if ((mIEMConfig.reflections || mIEMConfig.diffractedReflections != DiffractionSound::none) && mWalls.size() > 0)
 			{
 				counter = FirstOrderReflections(source, vSources, counter);
 
@@ -442,7 +442,7 @@ namespace RAC
 			Vec3 position;
 			for (const auto& it : mEdges)
 			{
-				if (it.second.zW < mIEMConfig.edgeLength)
+				if (it.second.zW < mIEMConfig.minEdgeLength)
 					continue;
 
 				// Source checks
@@ -521,7 +521,7 @@ namespace RAC
 				vSource.AddPlaneID(it.first);
 				vSource.SetTransform(position);
 
-				if (!mIEMConfig.reflection)
+				if (!mIEMConfig.reflections)
 					continue;
 
 				if (!it.second.GetRValid())
@@ -622,7 +622,7 @@ namespace RAC
 							vSource.AddPlaneID(it.first);
 							vSource.SetTransform(position);
 
-							if (!mIEMConfig.reflection)
+							if (!mIEMConfig.reflections)
 								continue;
 
 							if (!rValid)
@@ -646,7 +646,7 @@ namespace RAC
 								InitVSource(source, intersections[0], vSource, vSources, feedsFDN);
 						}
 						// HOD reflections (post diffraction)
-						else if (mIEMConfig.reflectionDiffraction != DiffractionSound::none)
+						else if (mIEMConfig.diffractedReflections != DiffractionSound::none)
 						{
 							const Edge& edge = vS.GetEdge();
 
@@ -704,13 +704,13 @@ namespace RAC
 							if (zone == EdgeZone::Invalid)
 								continue;
 
-							if (mIEMConfig.reflectionDiffraction == DiffractionSound::shadowZone && zone == EdgeZone::NonShadowed)
+							if (mIEMConfig.diffractedReflections == DiffractionSound::shadowZone && zone == EdgeZone::NonShadowed)
 								continue;
 
 							if (!vSource.mDiffractionPath.valid)
 								continue;
 
-							if (!vSource.mDiffractionPath.inShadow && mIEMConfig.reflectionDiffraction == DiffractionSound::shadowZone)
+							if (!vSource.mDiffractionPath.inShadow && mIEMConfig.diffractedReflections == DiffractionSound::shadowZone)
 								continue;
 
 							// Check valid intersections
@@ -757,7 +757,7 @@ namespace RAC
 					EndHigherOrderRef();
 				}
 #endif
-				if (mIEMConfig.reflectionDiffraction == DiffractionSound::none)
+				if (mIEMConfig.diffractedReflections == DiffractionSound::none)
 				{
 					sp[refIdx].resize(counter, VirtualSourceData(numAbsorptionBands));
 					continue;
@@ -780,7 +780,7 @@ namespace RAC
 #endif
 				for (const auto& it : mEdges)
 				{
-					if (it.second.zW < mIEMConfig.edgeLength)
+					if (it.second.zW < mIEMConfig.minEdgeLength)
 						continue;
 
 					EdgeZone rZone = it.second.GetRZone();
@@ -799,7 +799,7 @@ namespace RAC
 						if (zone == EdgeZone::Invalid)
 							continue;
 
-						if (mIEMConfig.reflectionDiffraction == DiffractionSound::shadowZone && zone == EdgeZone::NonShadowed)
+						if (mIEMConfig.diffractedReflections == DiffractionSound::shadowZone && zone == EdgeZone::NonShadowed)
 							continue;
 
 						VirtualSourceData& vSource = counter < size ? sp[refIdx][counter] : sp[refIdx].emplace_back(vS);
@@ -817,13 +817,13 @@ namespace RAC
 						if (rZone == EdgeZone::Invalid)
 							continue;
 
-						if (mIEMConfig.reflectionDiffraction == DiffractionSound::shadowZone && it.second.GetRZone() == EdgeZone::NonShadowed)
+						if (mIEMConfig.diffractedReflections == DiffractionSound::shadowZone && it.second.GetRZone() == EdgeZone::NonShadowed)
 							continue;
 
 						if (!vSource.mDiffractionPath.valid)
 							continue;
 
-						if (!vSource.mDiffractionPath.inShadow && mIEMConfig.reflectionDiffraction == DiffractionSound::shadowZone)
+						if (!vSource.mDiffractionPath.inShadow && mIEMConfig.diffractedReflections == DiffractionSound::shadowZone)
 							continue;
 
 						// Check valid intersections

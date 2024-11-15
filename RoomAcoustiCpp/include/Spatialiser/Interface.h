@@ -46,7 +46,7 @@ namespace RAC
 		*
 		* @param mode The new spatialisation mode.
 		*/
-		void UpdateSpatialisationMode(const SpatMode mode);
+		void UpdateSpatialisationMode(const SpatialisationMode mode);
 		
 		/**
 		* Updates the configuration for the Image Edge Model (IEM).
@@ -67,7 +67,7 @@ namespace RAC
 		*
 		* @param model The model used to calculate the late reverberation time.
 		*/
-		void UpdateReverbTimeModel(const ReverbTime model);
+		void UpdateReverbTimeModel(const ReverbFormula model);
 
 		/**
 		* Updates the FDN matrix used to process the late reverberation.

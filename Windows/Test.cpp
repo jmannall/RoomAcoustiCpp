@@ -293,8 +293,8 @@ namespace RAC
 
 			IEMConfig iemConfig = IEMConfig(3, DirectSound::doCheck, true, DiffractionSound::none, DiffractionSound::none, true, 0.0);
 			UpdateIEMConfig(iemConfig);
-			UpdateSpatialisationMode(SpatMode::quality);
-			UpdateReverbTimeModel(ReverbTime::Eyring);
+			UpdateSpatialisationMode(SpatialisationMode::quality);
+			UpdateReverbTimeModel(ReverbFormula::Eyring);
 			UpdateFDNModel(FDNMatrix::randomOrthogonal);
 			UpdateDiffractionModel(DiffractionModel::attenuate);
 
@@ -411,8 +411,8 @@ namespace RAC
 
 			IEMConfig iemConfig = IEMConfig(3, DirectSound::doCheck, true, DiffractionSound::none, DiffractionSound::none, true, 0.0);
 			UpdateIEMConfig(iemConfig);
-			UpdateSpatialisationMode(SpatMode::quality);
-			UpdateReverbTimeModel(ReverbTime::Sabine);
+			UpdateSpatialisationMode(SpatialisationMode::quality);
+			UpdateReverbTimeModel(ReverbFormula::Sabine);
 			UpdateFDNModel(FDNMatrix::randomOrthogonal);
 			UpdateDiffractionModel(DiffractionModel::attenuate);
 

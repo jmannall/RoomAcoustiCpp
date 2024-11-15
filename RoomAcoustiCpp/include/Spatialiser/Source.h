@@ -58,7 +58,7 @@ namespace RAC
 			Source(Binaural::CCore* core, const Config& config);
 			~Source();
 
-			void UpdateSpatialisationMode(const SpatMode mode);
+			void UpdateSpatialisationMode(const SpatialisationMode mode);
 			void UpdateDiffractionModel(const DiffractionModel model);
 			inline void UpdateDirectivity(const SourceDirectivity directivity)
 			{

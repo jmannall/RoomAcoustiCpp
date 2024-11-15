@@ -83,27 +83,27 @@ namespace RAC
 				mSource->DisableInterpolation();
 
 				//Select spatialisation mode
-				UpdateSpatialisationMode(SpatMode::none);
+				UpdateSpatialisationMode(SpatialisationMode::none);
 			}
 			
 		}
 
-		void ReverbSource::UpdateSpatialisationMode(const SpatMode mode)
+		void ReverbSource::UpdateSpatialisationMode(const SpatialisationMode mode)
 		{
-			mConfig.spatMode = mode;
+			mConfig.spatialisationMode = mode;
 			switch (mode)
 			{
-			case SpatMode::quality:
+			case SpatialisationMode::quality:
 			{
 				mSource->SetSpatializationMode(Binaural::TSpatializationMode::HighQuality);
 				break;
 			}
-			case SpatMode::performance:
+			case SpatialisationMode::performance:
 			{
 				mSource->SetSpatializationMode(Binaural::TSpatializationMode::HighPerformance);
 				break;
 			}
-			case SpatMode::none:
+			case SpatialisationMode::none:
 			{
 				mSource->SetSpatializationMode(Binaural::TSpatializationMode::NoSpatialization);
 				break;
@@ -217,9 +217,9 @@ namespace RAC
 			InitSources();
 		}
 
-		void Reverb::UpdateSpatialisationMode(const SpatMode mode)
+		void Reverb::UpdateSpatialisationMode(const SpatialisationMode mode)
 		{
-			mConfig.spatMode = mode;
+			mConfig.spatialisationMode = mode;
 			lock_guard<mutex> lock(tuneInMutex);
 			for (ReverbSource& source : mReverbSources)
 				source.UpdateSpatialisationMode(mode);

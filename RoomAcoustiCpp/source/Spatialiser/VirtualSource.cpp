@@ -151,25 +151,25 @@ namespace RAC
 			return false;
 		}
 
-		void VirtualSource::UpdateSpatialisationMode(const SpatMode mode)
+		void VirtualSource::UpdateSpatialisationMode(const SpatialisationMode mode)
 		{
-			mConfig.spatMode = mode;
+			mConfig.spatialisationMode = mode;
 			if (isInitialised)
 			{
 				lock_guard<mutex> lock(tuneInMutex);
 				switch (mode)
 				{
-				case SpatMode::quality:
+				case SpatialisationMode::quality:
 				{
 					mSource->SetSpatializationMode(Binaural::TSpatializationMode::HighQuality);
 					break;
 				}
-				case SpatMode::performance:
+				case SpatialisationMode::performance:
 				{
 					mSource->SetSpatializationMode(Binaural::TSpatializationMode::HighPerformance);
 					break;
 				}
-				case SpatMode::none:
+				case SpatialisationMode::none:
 				{
 					mSource->SetSpatializationMode(Binaural::TSpatializationMode::NoSpatialization);
 					break;
@@ -384,7 +384,7 @@ namespace RAC
 			isInitialised = true;
 
 			//Select spatialisation mode
-			UpdateSpatialisationMode(mConfig.spatMode);
+			UpdateSpatialisationMode(mConfig.spatialisationMode);
 		}
 
 		void VirtualSource::Update(const VirtualSourceData& data, int& fdnChannel)

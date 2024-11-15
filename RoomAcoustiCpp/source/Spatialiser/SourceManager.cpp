@@ -45,9 +45,9 @@ namespace RAC
 			return id;
 		}
 
-		void SourceManager::UpdateSpatialisationMode(const SpatMode mode)
+		void SourceManager::UpdateSpatialisationMode(const SpatialisationMode mode)
 		{
-			mConfig.spatMode = mode;
+			mConfig.spatialisationMode = mode;
 			shared_lock<shared_mutex> lock(updateMutex);
 			for (auto& it : mSources)
 				it.second.UpdateSpatialisationMode(mode);

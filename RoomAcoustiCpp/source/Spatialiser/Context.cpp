@@ -189,16 +189,16 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Context::UpdateSpatialisationMode(const SpatMode mode)
+		void Context::UpdateSpatialisationMode(const SpatialisationMode mode)
 		{
-			mConfig.spatMode = mode;
+			mConfig.spatialisationMode = mode;
 			mReverb->UpdateSpatialisationMode(mode);
 			mSources->UpdateSpatialisationMode(mode);
 		}
 
 		////////////////////////////////////////
 
-		void Context::UpdateReverbTimeModel(const ReverbTime model)
+		void Context::UpdateReverbTimeModel(const ReverbFormula model)
 		{
 			Coefficients T60 = mRoom->UpdateReverbTimeModel(model);
 			UpdateReverbTime(T60);

@@ -135,13 +135,13 @@ extern "C"
 		switch (id)
 		{
 		case(0):
-		{ UpdateSpatialisationMode(SpatMode::none); break; }
+		{ UpdateSpatialisationMode(SpatialisationMode::none); break; }
 		case(1):
-		{ UpdateSpatialisationMode(SpatMode::performance); break; }
+		{ UpdateSpatialisationMode(SpatialisationMode::performance); break; }
 		case(2):
-		{ UpdateSpatialisationMode(SpatMode::quality); break; }
+		{ UpdateSpatialisationMode(SpatialisationMode::quality); break; }
 		default:
-		{ UpdateSpatialisationMode(SpatMode::none); break; }
+		{ UpdateSpatialisationMode(SpatialisationMode::none); break; }
 		}
 	}
 
@@ -233,11 +233,11 @@ extern "C"
 		switch (id)
 		{
 			case(0):
-			{ UpdateReverbTimeModel(ReverbTime::Sabine); break; }
+			{ UpdateReverbTimeModel(ReverbFormula::Sabine); break; }
 			case(1):
-			{ UpdateReverbTimeModel(ReverbTime::Eyring); break; }
+			{ UpdateReverbTimeModel(ReverbFormula::Eyring); break; }
 			default:
-			{ UpdateReverbTimeModel(ReverbTime::Sabine); break; }
+			{ UpdateReverbTimeModel(ReverbFormula::Sabine); break; }
 		}
 	}
 

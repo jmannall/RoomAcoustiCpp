@@ -53,7 +53,7 @@ namespace RAC
 				mSource->DisableInterpolation();
 
 				//Select spatialisation mode
-				UpdateSpatialisationMode(config.spatMode);
+				UpdateSpatialisationMode(config.spatialisationMode);
 			}
 
 			ResetFDNSlots();
@@ -73,22 +73,22 @@ namespace RAC
 			Reset();
 		}
 
-		void Source::UpdateSpatialisationMode(const SpatMode mode)
+		void Source::UpdateSpatialisationMode(const SpatialisationMode mode)
 		{
-			mConfig.spatMode = mode;
+			mConfig.spatialisationMode = mode;
 			switch (mode)
 			{
-			case SpatMode::quality:
+			case SpatialisationMode::quality:
 			{
 				mSource->SetSpatializationMode(Binaural::TSpatializationMode::HighQuality);
 				break;
 			}
-			case SpatMode::performance:
+			case SpatialisationMode::performance:
 			{
 				mSource->SetSpatializationMode(Binaural::TSpatializationMode::HighPerformance);
 				break;
 			}
-			case SpatMode::none:
+			case SpatialisationMode::none:
 			{
 				mSource->SetSpatializationMode(Binaural::TSpatializationMode::NoSpatialization);
 				break;

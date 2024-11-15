@@ -225,7 +225,7 @@ namespace RAC
 			}
 			inline int GetFDNChannel() const { return mFDNChannel; }
 
-			void UpdateSpatialisationMode(const SpatMode mode);
+			void UpdateSpatialisationMode(const SpatialisationMode mode);
 			void UpdateDiffractionModel(const DiffractionModel model);
 
 			// Updates

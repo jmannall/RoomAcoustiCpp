@@ -61,7 +61,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void UpdateSpatialisationMode(const SpatMode mode)
+		void UpdateSpatialisationMode(const SpatialisationMode mode)
 		{
 			auto context = GetContext();
 			if (context)
@@ -88,7 +88,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void UpdateReverbTimeModel(const ReverbTime model)
+		void UpdateReverbTimeModel(const ReverbFormula model)
 		{
 			auto context = GetContext();
 			if (context)

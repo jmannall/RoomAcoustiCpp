@@ -401,9 +401,9 @@ namespace RAC
 
 			switch (reverbTime)
 			{
-				case(ReverbTime::Sabine):
+				case(ReverbFormula::Sabine):
 					return Sabine(absorption);
-				case(ReverbTime::Eyring):
+				case(ReverbFormula::Eyring):
 					return Eyring(absorption, surfaceArea);
 				default:
 					return Coefficients(numAbsorptionBands);

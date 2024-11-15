@@ -45,7 +45,7 @@ namespace RAC
 				Reset();
 			};
 
-			void UpdateSpatialisationMode(const SpatMode mode);
+			void UpdateSpatialisationMode(const SpatialisationMode mode);
 			void UpdateDiffractionModel(const DiffractionModel model);
 			void UpdateSourceDirectivity(const size_t id, const SourceDirectivity directivity);
 
