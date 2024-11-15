@@ -5,34 +5,22 @@
 *
 */
 
-// C++ headers
-#include <vector> 
-
 // DSP headers
 #include "DSP/GraphicEQ.h"
-#include "DSP/Interpolate.h"
-
-// Common headers
-#include "Common/Coefficients.h"
-#include "Common/Matrix.h"
-#include "Common/Vec.h"
-
-// Unity headers
-#include "Unity/UnityInterface.h"
 
 namespace RAC
 {
 	namespace DSP
 	{
 		GraphicEQ::GraphicEQ(const Coefficients& fc, const Real Q, const int sampleRate) : numFilters(fc.Length() + 2), lowShelf((fc[0] / 2.0) * sqrt(fc[0] / (fc[0] / 2.0)), Q, sampleRate), highShelf(fc[numFilters - 3] * sqrt((2.0 * fc[numFilters - 3]) / fc[numFilters - 3]), Q, sampleRate),
-			dbGain(numFilters), inputGain(numFilters), targetGain(numFilters + 1), currentGain(numFilters + 1), lastInput(fc.Length()), mat(numFilters, numFilters), equal(false), valid(false)
+			dbGains(numFilters), inputGains(numFilters), targetFilterGains(numFilters + 1), currentFilterGains(numFilters + 1), lastInput(fc.Length()), filterResponseMatrix(numFilters, numFilters), equal(false), valid(false)
 		{
 			InitFilters(fc, Q, sampleRate);
 			InitMatrix(fc);
 		}
 
 		GraphicEQ::GraphicEQ(const Coefficients& gain, const Coefficients& fc, const Real Q, const int sampleRate) : numFilters(fc.Length() + 2), lowShelf((fc[0] / 2.0)* sqrt(fc[0] / (fc[0] / 2.0)), Q, sampleRate), highShelf(fc[numFilters - 3] * sqrt((2.0 * fc[numFilters - 3]) / fc[numFilters - 3]), Q, sampleRate),
-			dbGain(numFilters), inputGain(numFilters), targetGain(numFilters + 1), currentGain(numFilters + 1), lastInput(fc.Length()), mat(numFilters, numFilters), equal(false), valid(false)
+			dbGains(numFilters), inputGains(numFilters), targetFilterGains(numFilters + 1), currentFilterGains(numFilters + 1), lastInput(fc.Length()), filterResponseMatrix(numFilters, numFilters), equal(false), valid(false)
 		{
 			InitFilters(fc, Q, sampleRate);
 			InitMatrix(fc);
@@ -65,7 +53,7 @@ namespace RAC
 			lowShelf.UpdateGain(0.0);
 
 			for (int i = 0; i < out.size(); i++)
-				mat[j][i] += out[i];
+				filterResponseMatrix[j][i] += out[i];
 
 			j++;
 
@@ -76,7 +64,7 @@ namespace RAC
 				filter.UpdateGain(1.0);
 
 				for (int i = 0; i < out.size(); i++)
-					mat[j][i] += out[i];
+					filterResponseMatrix[j][i] += out[i];
 				j++;
 			}
 
@@ -85,55 +73,55 @@ namespace RAC
 			highShelf.UpdateGain(0.0);
 
 			for (int i = 0; i < out.size(); i++)
-				mat[j][i] += out[i];
+				filterResponseMatrix[j][i] += out[i];
 
-			mat.Inverse();
-			mat *= pdb;
+			filterResponseMatrix.Inverse();
+			filterResponseMatrix *= pdb;
 		}
 
-		void GraphicEQ::InitParameters(const Coefficients& gain)
+		void GraphicEQ::InitParameters(const Coefficients& targetBandGains)
 		{
-			SetGain(gain);
-			currentGain = targetGain;
+			SetGain(targetBandGains);
+			currentFilterGains = targetFilterGains;
 			equal = true;
 			UpdateParameters();
 		}
 
-		void GraphicEQ::SetGain(const Coefficients& gain)
+		void GraphicEQ::SetGain(const Coefficients& targetBandGains)
 		{
-			if (gain == lastInput)
+			if (targetBandGains == lastInput)
 				return;
 
-			lastInput = gain;
-			if (gain == 0)
+			lastInput = targetBandGains;
+			if (targetBandGains == 0)
 			{
-				inputGain.Reset();
-				targetGain[0] = 0;
+				inputGains.Reset();
+				targetFilterGains[0] = 0;
 			}
 			else
 			{
 				// when dB is used here. Factors of 20 are cancelled out.
-				Real g = (gain[0] + gain[1]) / 2.0;
-				dbGain[0] = std::max(g, EPS); // Prevent log10(0)
+				Real g = (targetBandGains[0] + targetBandGains[1]) / 2.0;
+				dbGains[0] = std::max(g, EPS); // Prevent log10(0)
 
 				for (int i = 1; i < numFilters - 1; i++)
-					dbGain[i] = std::max(gain[i - 1], EPS); // Prevent log10(0)
+					dbGains[i] = std::max(targetBandGains[i - 1], EPS); // Prevent log10(0)
 
-				g = (gain[numFilters - 4] + gain[numFilters - 3]) / 2.0;
-				dbGain[numFilters - 1] = std::max(g, EPS); // Prevent log10(0)
+				g = (targetBandGains[numFilters - 4] + targetBandGains[numFilters - 3]) / 2.0;
+				dbGains[numFilters - 1] = std::max(g, EPS); // Prevent log10(0)
 
-				dbGain.Log10();
-				Real meandBGain = dbGain.Sum() / dbGain.Cols();
-				targetGain[0] = Pow10(meandBGain); // 10 ^ mean(dbGain);
-				dbGain -= meandBGain; // dbGain - mean(dbGain);
+				dbGains.Log10();
+				Real meandBGain = dbGains.Sum() / dbGains.Cols();
+				targetFilterGains[0] = Pow10(meandBGain); // 10 ^ mean(dbGains);
+				dbGains -= meandBGain; // dbGains - mean(dbGains);
 
-				Mulitply(inputGain, dbGain, mat);
-				inputGain.Pow10();
+				Mulitply(inputGains, dbGains, filterResponseMatrix);
+				inputGains.Pow10();
 			}
 			for (int i = 0; i < numFilters; i++)
-				targetGain[i + 1] = inputGain[i];
+				targetFilterGains[i + 1] = inputGains[i];
 
-			if (targetGain != currentGain)
+			if (targetFilterGains != currentFilterGains)
 				equal = false;
 		}
 
@@ -141,18 +129,18 @@ namespace RAC
 		{
 			int i = 1;
 
-			lowShelf.UpdateGain(currentGain[i]);
+			lowShelf.UpdateGain(currentFilterGains[i]);
 			i++;
 
 			for (PeakingFilter& filter : peakingFilters)
 			{
-				filter.UpdateGain(currentGain[i]);
+				filter.UpdateGain(currentFilterGains[i]);
 				i++;
 			}
 
-			highShelf.UpdateGain(currentGain[i]);
+			highShelf.UpdateGain(currentFilterGains[i]);
 
-			if (currentGain[0] == 0)
+			if (currentFilterGains[0] == 0)
 				valid = false;
 			else
 				valid = true;
@@ -167,7 +155,7 @@ namespace RAC
 			for (PeakingFilter& filter : peakingFilters)
 				out = filter.GetOutput(out);
 			out = highShelf.GetOutput(out);
-			out *= currentGain[0];
+			out *= currentFilterGains[0];
 			return out;
 		}
 
@@ -182,9 +170,9 @@ namespace RAC
 				for (int i = 0; i < numFrames; i++)
 					outBuffer[i] = GetOutput(inBuffer[i]);
 			}
-			else if (Equals(currentGain, targetGain))
+			else if (Equals(currentFilterGains, targetFilterGains))
 			{
-				currentGain = targetGain;
+				currentFilterGains = targetFilterGains;
 				equal = true;
 				UpdateParameters();
 				for (int i = 0; i < numFrames; i++)
@@ -195,7 +183,7 @@ namespace RAC
 				for (int i = 0; i < numFrames; i++)
 				{
 					outBuffer[i] = GetOutput(inBuffer[i]);
-					Lerp(currentGain, targetGain, lerpFactor);
+					Lerp(currentFilterGains, targetFilterGains, lerpFactor);
 					UpdateParameters();
 				}
 			}
