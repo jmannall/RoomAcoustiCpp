@@ -3,7 +3,7 @@
 *
 * @brief Declaration of ScopedTimer class
 * 
-* @remark Used in unit tests to measure the time taken to execute a block of code
+* @remark No longer used
 *
 */
 

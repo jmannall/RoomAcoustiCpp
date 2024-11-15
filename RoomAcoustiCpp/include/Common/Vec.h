@@ -1,7 +1,7 @@
 /*
-* @class vec, rowvec
+* @class Vec, Rowvec
 *
-* @brief Declaration of vec and rowvec classes
+* @brief Declaration of Vec and Rowvec classes
 *
 */
 
@@ -10,131 +10,206 @@
 
 // C++ headers
 #include <cassert>
-#include <random>
 
 // Common headers
 #include "Common/Types.h"
 #include "Common/Matrix.h"
-
-static std::default_random_engine generator (100);
 
 namespace RAC
 {
 	namespace Common
 	{
 
-		//////////////////// vec class ////////////////////
-		
+		/**
+		* Class that implements a column vector (n x 1)
+		*
+		* @details Inherits from Matrix
+		*/
 		class Vec : public Matrix
 		{
 		public:
 
-			// Load and Destroy
+			/**
+			* Default constructor that initialises an empty Vec
+			*/
 			Vec() : Matrix() {}
-			Vec(const int& len) : Matrix(len, 1) {}
-			Vec(const std::vector<Real>& vec) : Matrix(static_cast<int>(vec.size()), 1) { Init(vec); }
-			Vec(Matrix& mat);
+
+			/**
+			* Constructor that initialises a Vec of zeros
+			* 
+			* @param length The length of the vector
+			*/
+			Vec(const int& length) : Matrix(length, 1) {}
+
+			/**
+			* Constructor that initialises a Vec with data
+			*
+			* @param vector The input data to initialise the vector
+			*/
+			Vec(const std::vector<Real>& vector) : Matrix(static_cast<int>(vector.size()), 1) { Init(vector); }
+
+			/**
+			* @brief Default deconstructor
+			*/
 			~Vec() {};
 
-			void Init(const std::vector<Real>& vec);
-
-			// Distributions
+			/**
+			* @brief Randomly fills the vector with values from a normal distribution
+			*/
 			void RandomNormalDistribution();
+
+			/**
+			* @brief Randomly fills the vector with values from a uniform distribution between 0 and 1
+			*/
 			void RandomUniformDistribution();
+
+			/**
+			* @brief Randomly fills the vector with values from a uniform distribution
+			* 
+			* @param a The lower bound of the distribution
+			* @param b The upper bound of the distribution
+			*/
 			void RandomUniformDistribution(Real a, Real b);
 
+			/**
+			* @brief Normalises the vector
+			*/
 			void Normalise();
 
-			// Getters
+			/**
+			* @return The normal of the vector
+			*/
 			Real CalculateNormal() const;
-			Real Mean() const;
 
-			inline void Max(const Real min)
-			{ 
-				for (int i = 0; i < rows; i++)
-					data[i][0] = std::max(min, data[i][0]);
-			}
+			/**
+			* @brief Applies the max function to each element in the vector
+			* 
+			* @param min The minimum value
+			*/
+			void Max(const Real min);
 
-			inline Real Sum() const
-			{
-				Real sum = 0.0;
-				for (int i = 0; i < cols; i++)
-					sum += data[i][0];
-				return sum;
-			}
+			/**
+			* @brief Applies the min function to each element in the vector
+			*
+			* @param max The maximum value
+			*/
+			void Min(const Real max);
 
-			// Operators
+			/**
+			* @return The sum of every element in the vector
+			*/
+			Real Sum() const;
+
+			/**
+			* @return The mean value of the vector
+			*/
+			inline Real Mean() const { return Sum() / rows; }
+
+			/**
+			* @brief Access the vector at the specified index
+			*
+			* @param i The index of the value to return
+			* @return The value at the specified index
+			*/
 			inline Real operator[](const int i) const { return data[i][0]; }
+
+			/**
+			* @brief Access the vector at the specified index
+			*
+			* @param i The index of the value to return
+			* @return A reference to the value at the specified index
+			*/
 			inline Real& operator[](const int i) { return data[i][0]; }
 
-			// Not used
-			inline Vec operator=(const Matrix& mat)
+			/**
+			* @brief Assigns a Matrix to a Vec
+			*/
+			inline Vec operator=(const Matrix& matrix)
 			{
-				assert(mat.Cols() == 1);
-				cols = mat.Cols();
-
-				if (rows != mat.Rows())
-					data.resize(mat.Cols(), std::vector<Real>(1, 0.0));
-
-				for (int i = 0; i < rows; i++)
-				{
-					for (int j = 0; j < cols; j++)
-					{
-						data[i][j] = mat[i][j];
-					}
-				}
+				assert(matrix.Cols() == 1);
+				Matrix::operator=(matrix);
 				return *this;
 			}
 
 		private:
+
+			/**
+			* @brief Initialise vector data from a std::vector
+			*
+			* @params vector Data to inialise the vector from
+			*/
+			void Init(const std::vector<Real>& vector);
 		};
 
-		//////////////////// rowvec class ////////////////////
-
+		/**
+		* Class that implements a row vector (1 x n)
+		*
+		* @details Inherits from Matrix
+		*/
 		class Rowvec : public Matrix
 		{
 		public:
 
-			// Load and Destroy
+			/**
+			* Default constructor that initialises an empty Rowvec
+			*/
 			Rowvec() : Matrix() {}
-			Rowvec(const int& c) : Matrix(1, c) {}
-			Rowvec(const std::vector<Real>& vec) : Matrix(1, static_cast<int>(vec.size())) { Init(vec); }
-			Rowvec(const Matrix& mat);
+
+			/**
+			* Constructor that initialises a Rowvec of zeros
+			* 
+			* @param length The length of the vector
+			*/
+			Rowvec(const int& length) : Matrix(1, length) {}
+
+			/**
+			* Constructor that initialises a Rowvec with data
+			*
+			* @param vector The input data to initialise the vector
+			*/
+			Rowvec(const std::vector<Real>& vector) : Matrix(1, static_cast<int>(vector.size())) { Init(vector); }
+
+			/**
+			* @brief Default deconstructor
+			*/
 			~Rowvec() {}
 
-			void Init(const std::vector<Real>& vec);
+			Real Sum() const;
 
-			inline Real Sum() const
-			{
-				Real sum = 0.0;
-				for (int i = 0; i < cols; i++)
-					sum += data[0][i];
-				return sum;
-			}
-
-
-			// Operators
+			/**
+			* @brief Access the vector at the specified index
+			*
+			* @param i The index of the value to return
+			* @return The value at the specified index
+			*/
 			inline Real operator[](const int i) const { return data[0][i]; }
+
+			/**
+			* @brief Access the vector at the specified index
+			*
+			* @param i The index of the value to return
+			* @return A reference to the value at the specified index
+			*/
 			inline Real& operator[](const int i) { return data[0][i]; }
 
-			// Not used
-			inline Rowvec operator=(const Matrix& mat)
+			/**
+			* @brief Assigns a Matrix to a Rowvec
+			*/
+			inline Rowvec operator=(const Matrix& matrix)
 			{
 				assert(mat.Rows() == 1);
-				rows = mat.Rows();
-				// assert(mat.Rows() == rows);
-				// assert(mat.Cols() == cols);
-
-				if (cols != mat.Cols())
-					data[0].resize(mat.Cols());
-				
-				for (int i = 0; i < rows; i++)
-				{
-					for (int j = 0; j < cols; j++)
-						data[i][j] = mat[i][j];
-				}
+				Matrix::operator=(matrix);
 				return *this;
 			}
+
+		private:
+
+			/**
+			* @brief Initialise vector data from a std::vector
+			*
+			* @params vector Data to inialise the vector from
+			*/
+			void Init(const std::vector<Real>& vec);
 		};
 
 	}

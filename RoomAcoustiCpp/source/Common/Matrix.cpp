@@ -11,13 +11,13 @@ namespace RAC
 {
 	namespace Common
 	{
-		Matrix::Matrix(const std::vector<std::vector<Real>>& matrix) : rows(static_cast<int>(matrix.size()))
-		{
-			Init(matrix);
-		}
+		//////////////////// Matrix ////////////////////
+
+		////////////////////////////////////////
 
 		void Matrix::Init(const std::vector<std::vector<Real>>& matrix)
 		{
+			rows = static_cast<int>(matrix.size());
 			for (int i = 1; i < rows; i++)
 				assert(matrix[i].size() == matrix[0].size());
 
@@ -31,6 +31,8 @@ namespace RAC
 			column = std::vector<Real>(rows);
 		}
 
+		////////////////////////////////////////
+
 		void Matrix::AllocateSpace()
 		{
 			for (int i = 0; i < rows; i++)
@@ -38,22 +40,25 @@ namespace RAC
 			column = std::vector<Real>(rows);
 		}
 
+		////////////////////////////////////////
+
 		Matrix Matrix::Transpose()
 		{
 			assert(rows == data.size());
-			Matrix mat = Matrix(cols, rows);
+			Matrix matrix = Matrix(cols, rows);
 			for (int i = 0; i < rows; i++)
 			{
 				assert(cols == data[i].size());
 				for (int j = 0; j < cols; j++)
-					mat[j][i] = data[i][j];
+					matrix[j][i] = data[i][j];
 			}
-			return mat;
+			return matrix;
 		}
+
+		////////////////////////////////////////
 
 		void Matrix::Inverse()
 		{
-
 			assert(rows == cols); // Matrix must be square
 
 			// Create the augmented matrix [A|I]

@@ -4,99 +4,117 @@
 *
 */
 
+// C++ headers
 #include <cmath>
+#include <random>
 
+// Common headers
 #include "Common/Vec.h"
 
 namespace RAC
 {
 	namespace Common
 	{
-		//////////////////// vec class ////////////////////
+		//////////////////// Vec ////////////////////
 
-		Vec::Vec(Matrix& matrix) : Matrix(matrix)
-		{
-			assert(cols == 1);
-			// Init(matrix.GetColumn(0));
-		}
+		static std::default_random_engine generator(100); // Seed the generator
 
-		void Vec::Init(const std::vector<Real>& vec)
+		////////////////////////////////////////
+
+		void Vec::Init(const std::vector<Real>& vector)
 		{
-			assert(rows == vec.size());
+			rows = static_cast<int>(vector.size());
+			data.resize(rows, std::vector<Real>(1, 0.0));
 			for (int i = 0; i < rows; i++)
-				data[i][0] = vec[i];
+				data[i][0] = vector[i];
 		}
 
-		// Distributions
+		////////////////////////////////////////
+
 		void Vec::RandomNormalDistribution()
 		{
 			std::normal_distribution<Real> distribution; // mean 0, standard deviation 1
 			for (int i = 0; i < rows; i++)
-			{
 				data[i][0] = distribution(generator);
-			}
 		}
+
+		////////////////////////////////////////
 
 		void Vec::RandomUniformDistribution()
 		{
 			std::uniform_real_distribution<Real> distribution; // a 0, b 1
 			for (int i = 0; i < rows; i++)
-			{
 				data[i][0] = distribution(generator);
-			}
 		}
+
+		////////////////////////////////////////
 
 		void Vec::RandomUniformDistribution(Real a, Real b)
 		{
 			std::uniform_real_distribution<Real> distribution(a, b);
 			for (int i = 0; i < rows; i++)
-			{
 				data[i][0] = distribution(generator);
-			}
 		}
+
+		////////////////////////////////////////
 
 		void Vec::Normalise()
 		{
-			Real norm = CalculateNormal();
+			Real normal = CalculateNormal();
 			for (int i = 0; i < rows; i++)
-			{
-				data[i][0] = data[i][0] / norm;
-			}
+				data[i][0] = data[i][0] / normal;
 		}
 
-		// Getters
 		Real Vec::CalculateNormal() const
 		{
-			Real mag = 0.0;
+			Real magnitude = 0.0;
 			for (int i = 0; i < rows; i++)
-			{
-				mag += data[i][0] * data[i][0];
-			}
-			return sqrt(mag);
+				magnitude += data[i][0] * data[i][0];
+			return sqrt(magnitude);
 		}
 
-		Real Vec::Mean() const
+		////////////////////////////////////////
+
+		void Vec::Max(const Real min)
 		{
-			Real out = 0;
 			for (int i = 0; i < rows; i++)
-			{
-				out += data[i][0];
-			}
-			return out / rows;
+				data[i][0] = std::max(min, data[i][0]);
 		}
 
-		//////////////////// rowvec class ////////////////////
-
-		Rowvec::Rowvec(const Matrix& matrix) : Matrix(matrix)
+		void Vec::Min(const Real max)
 		{
-			assert(rows == 1);
-			Init(matrix.GetRow(0));
+			for (int i = 0; i < rows; i++)
+				data[i][0] = std::min(max, data[i][0]);
 		}
 
-		void Rowvec::Init(const std::vector<Real>& vec)
+		////////////////////////////////////////
+
+		Real Vec::Sum() const
 		{
-			assert(cols == vec.size());
-			data[0] = vec;
+			Real sum = 0.0;
+			for (int i = 0; i < cols; i++)
+				sum += data[i][0];
+			return sum;
+		}
+
+		//////////////////// Rowvec ////////////////////
+
+		////////////////////////////////////////
+
+		void Rowvec::Init(const std::vector<Real>& vector)
+		{
+			cols = static_cast<int>(vector.size());
+			data[0] = vector;
+		}
+
+		////////////////////////////////////////
+
+		Real Rowvec::Sum() const
+		{
+			Real sum = 0.0;
+			for (int i = 0; i < cols; i++)
+				sum += data[0][i];
+			return sum;
 		}
 	}
 }

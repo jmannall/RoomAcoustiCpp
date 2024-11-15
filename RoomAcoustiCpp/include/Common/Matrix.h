@@ -1,5 +1,5 @@
 /*
-* @class matrix
+* @class Matrix
 *
 * @brief Declaration of matrix class
 *
@@ -41,11 +41,11 @@ namespace RAC
 			Matrix(const int r, const int c) : rows(r), cols(c) { AllocateSpace(); };
 
 			/**
-			* Constructor that initialises a Matrix with zeros
+			* Constructor that initialises a Matrix with data
 			*
 			* @param matrix The input data to initialise the matrix
 			*/
-			Matrix(const std::vector<std::vector<Real>>& matrix);
+			Matrix(const std::vector<std::vector<Real>>& matrix) { Init(matrix); }
 
 			/**
 			* @brief Default deconstructor
@@ -174,17 +174,6 @@ namespace RAC
 			inline const std::vector<Real>& operator[](const int r) const { return data[r]; }
 
 			/**
-			* @brief Set equal to a matrix
-			*/
-			inline Matrix operator=(const Matrix& matrix)
-			{
-				rows = matrix.Rows();
-				cols = matrix.Cols();
-				Init(matrix.Data());
-				return *this;
-			}
-
-			/**
 			* @brief Adds a matrix to the current matrix
 			*/
 			inline Matrix operator+=(const Matrix& matrix)
@@ -254,6 +243,12 @@ namespace RAC
 
 		protected:
 
+			int rows, cols;							// Matrix dimensions
+			std::vector<std::vector<Real>> data;	// Matrix data
+			std::vector<Real> column;				// Stores a single column
+
+		private:
+
 			/**
 			* @brief Initialise matrix data from std::vector structure
 			*
@@ -270,10 +265,6 @@ namespace RAC
 			* @brief Clear matrix data
 			*/
 			inline void DeallocateSpace() { rows = 0; cols = 0; column.clear(); data.clear(); };
-
-			int rows, cols;							// Matrix dimensions
-			std::vector<std::vector<Real>> data;	// Matrix data
-			std::vector<Real> column;				// Stores a single column
 		};
 
 		//////////////////// Operators ////////////////////
