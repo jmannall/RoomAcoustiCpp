@@ -157,10 +157,10 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void HighShelf::UpdateParameters(const Real fc, const Real g)
+		void HighShelf::UpdateParameters(const Real fc, const Real gain)
 		{
 			Real omega = cot(PI_1 * fc * T); // 2 * PI * fc * T / 2
-			Real sqrtG = sqrt(g);
+			Real sqrtG = sqrt(gain);
 
 			Real store = omega / sqrtG;
 			a0 = 1.0 / (1.0 + store); // a[0] isn't used in GetOutput
@@ -195,9 +195,9 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void PeakHighShelf::UpdateGain(const Real g)
+		void PeakHighShelf::UpdateGain(const Real gain)
 		{
-			Real A = sqrt(g);
+			Real A = sqrt(gain);
 			Real v1 = A + 1.0;
 			Real v2 = A - 1.0;
 			Real v3 = v1 * cosOmega;
@@ -224,9 +224,9 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void PeakLowShelf::UpdateGain(const Real g)
+		void PeakLowShelf::UpdateGain(const Real gain)
 		{
-			Real A = sqrt(g);
+			Real A = sqrt(gain);
 			Real v1 = A + 1.0;
 			Real v2 = A - 1.0;
 			Real v3 = v1 * cosOmega;
