@@ -36,20 +36,21 @@ namespace RAC
 
 		//////////////////// Source class ////////////////////
 
-		Source::Source(Binaural::CCore* core, const Config& config) : mCore(core), mConfig(config), targetGain(0.0f), currentGain(0.0f), mAirAbsorption(mConfig.fs)
+		Source::Source(Binaural::CCore* core, const Config& config) : mCore(core), mConfig(config), targetGain(0.0f), currentGain(0.0f), mAirAbsorption(mConfig.fs), mDirectivity(SourceDirectivity::omni), feedsFDN(false), hasChanged(true)
 		{
 			vWallMutex = std::make_shared<std::mutex>();
 			vEdgeMutex = std::make_shared<std::mutex>();
 			dataMutex = std::make_shared<std::mutex>();
 			vSourcesMutex = std::make_shared<std::mutex>();
 			vSourceDataMutex = std::make_shared<std::mutex>();
+			currentDataMutex = std::make_shared<std::mutex>();
 
 			// Initialise source to core
 			{
 				lock_guard<mutex> lock(tuneInMutex);
 				mSource = mCore->CreateSingleSourceDSP();
 				mSource->EnablePropagationDelay();
-				// mSource->DisableInterpolation();
+				mSource->DisableInterpolation();
 
 				//Select spatialisation mode
 				UpdateSpatialisationMode(config.spatMode);
@@ -60,6 +61,7 @@ namespace RAC
 			bInput = CMonoBuffer<float>(config.numFrames);
 			bOutput.left = CMonoBuffer<float>(mConfig.numFrames);
 			bOutput.right = CMonoBuffer<float>(mConfig.numFrames);
+			bMonoOutput = CMonoBuffer<float>(mConfig.numFrames);
 		}
 
 		Source::~Source()
@@ -121,103 +123,116 @@ namespace RAC
 			freeFDNChannels.push_back(0);
 		}
 
-		void ProcessVirtualSource(VirtualSource& vS, const Buffer& data, Matrix& reverbInput, Buffer& outputBuffer)
-		{
-			vS.ProcessAudio(data, reverbInput, outputBuffer);
-		}
-
 		void Source::ProcessAudio(const Buffer& data, Matrix& reverbInput, Buffer& outputBuffer)
 		{
 			{
 				lock_guard<mutex> lock(*vSourcesMutex);
 				for (auto& it : mVSources)
-					it.second.ProcessAudio(data, reverbInput, outputBuffer);
+					it.second.ProcessAudio(data, reverbInput, outputBuffer, reverbEnergy);
 			}
 
 #ifdef DEBUG_AUDIO_THREAD
 	// Debug::Log("Total audio vSources: " + std::to_string(counter), Colour::Orange);
 #endif
 			lock_guard<std::mutex> lock(*dataMutex);
-			if (isVisible || currentGain != 0.0f)
+			if (currentGain == 0.0 && targetGain == 0.0)
+				return;
+
+#ifdef PROFILE_AUDIO_THREAD
+			BeginSource();
+			BeginAirAbsorption();
+#endif
+			mAirAbsorption.ProcessAudio(data, bStore, mConfig.numFrames, mConfig.lerpFactor);
+#ifdef PROFILE_AUDIO_THREAD
+			EndAirAbsorption();
+#endif
+			if (currentGain == targetGain)
 			{
-#ifdef PROFILE_AUDIO_THREAD
-				BeginSource();
-				BeginAirAbsorption();
-#endif
-				mAirAbsorption.ProcessAudio(data, bStore, mConfig.numFrames, mConfig.lerpFactor);
-#ifdef PROFILE_AUDIO_THREAD
-				EndAirAbsorption();
-#endif
-				if (currentGain == targetGain)
-				{
-					for (int i = 0; i < mConfig.numFrames; i++)
-						bInput[i] = static_cast<float>(currentGain * bStore[i]);
-				}
-				else
-				{
-					for (int i = 0; i < mConfig.numFrames; i++)
-					{
-						bInput[i] = static_cast<float>(currentGain * bStore[i]);
-						currentGain = Lerp(currentGain, targetGain, mConfig.lerpFactor);
-					}
-				}
-
-#ifdef PROFILE_AUDIO_THREAD
-				Begin3DTI();
-#endif
-				{
-					lock_guard<mutex> lock(tuneInMutex);
-					mSource->SetBuffer(bInput);
-					mSource->ProcessAnechoic(bOutput.left, bOutput.right);
-				}
-#ifdef PROFILE_AUDIO_THREAD
-				End3DTI();
-#endif
-
-				int j = 0;
+				for (int i = 0; i < mConfig.numFrames; i++)
+					bInput[i] = static_cast<float>(currentGain * bStore[i]);
+			}
+			else if (Equals(currentGain, targetGain))
+			{
+				currentGain = targetGain;
+				for (int i = 0; i < mConfig.numFrames; i++)
+					bInput[i] = static_cast<float>(currentGain * bStore[i]);
+			}
+			else
+			{
 				for (int i = 0; i < mConfig.numFrames; i++)
 				{
-					outputBuffer[j++] += static_cast<Real>(bOutput.left[i]);
-					outputBuffer[j++] += static_cast<Real>(bOutput.right[i]);
+					bInput[i] = static_cast<float>(currentGain * bStore[i]);
+					currentGain = Lerp(currentGain, targetGain, mConfig.lerpFactor);
 				}
-#ifdef PROFILE_AUDIO_THREAD
-				EndSource();
-#endif
 			}
+
+#ifdef PROFILE_AUDIO_THREAD
+			Begin3DTI();
+#endif
+			{
+				lock_guard<mutex> lock(tuneInMutex);
+				mSource->SetSourceTransform(transform);
+				mSource->SetBuffer(bInput);
+
+				if (feedsFDN)
+				{
+					{
+						Real factor = 1.1 * mAirAbsorption.GetDistance() * reverbEnergy / currentGain; // Adjusted gain
+						factor /= static_cast<Real>(mConfig.numFDNChannels);
+
+						mSource->ProcessAnechoic(bMonoOutput, bOutput.left, bOutput.right);
+						for (int i = 0; i < mConfig.numFrames; i++)
+						{
+							Real in = static_cast<Real>(bMonoOutput[i]) * factor;
+							for (int j = 0; j < mConfig.numFDNChannels; j++)
+								reverbInput[i][j] += in;
+						}
+					}
+				}
+				else
+					mSource->ProcessAnechoic(bOutput.left, bOutput.right);
+			}
+#ifdef PROFILE_AUDIO_THREAD
+			End3DTI();
+#endif
+
+			int j = 0;
+			for (int i = 0; i < mConfig.numFrames; i++)
+			{
+				outputBuffer[j++] += static_cast<Real>(bOutput.left[i]);
+				outputBuffer[j++] += static_cast<Real>(bOutput.right[i]);
+			}
+#ifdef PROFILE_AUDIO_THREAD
+			EndSource();
+#endif
 		}
 
 		void Source::Update(const Vec3& position, const Vec4& orientation, const Real distance)
 		{
+
+			/*UpdateVirtualSourceDataMap();
+			UpdateVirtualSources();*/
+
 			{
 				lock_guard<std::mutex>lock(*dataMutex);
 				mAirAbsorption.SetDistance(distance);
-				if (isVisible)
-					targetGain = 1.0f;
-				else
-					targetGain = 0.0f;
 			}
-			UpdateVirtualSourceDataMap();
-			UpdateVirtualSources();
-
-			CTransform transform;
+			{
+				lock_guard<std::mutex>lock(*currentDataMutex);
+				if (position == currentPosition && orientation == currentOrientation)
+					return;
+				hasChanged = true;
+				currentPosition = position;
+				currentOrientation = orientation;
+			}
+			lock_guard<std::mutex>lock(*dataMutex);
 			transform.SetOrientation(CQuaternion(static_cast<float>(orientation.w), static_cast<float>(orientation.x), static_cast<float>(orientation.y), static_cast<float>(orientation.z)));
 			transform.SetPosition(CVector3(static_cast<float>(position.x), static_cast<float>(position.y), static_cast<float>(position.z)));
-			// Update all transforms together
-			{
-				lock_guard<mutex> lock(tuneInMutex);
-				mSource->SetSourceTransform(transform);
-				for (auto& [key, vSource] : mVSources)
-					vSource.UpdateTransform();
-#ifdef DEBUG_HRTF
-				Debug::Log("Azimuth: " + FloatToStr(mSource->GetCurrentEarAzimuth(T_ear::LEFT)));
-				Debug::Log("Elevation: " + FloatToStr(mSource->GetCurrentEarElevation(T_ear::LEFT)));
-#endif
-			}
 		}
 
 		void Source::UpdateVirtualSourceDataMap()
 		{
-			lock_guard<mutex> lock(*vSourceDataMutex);
+			// lock_guard<mutex> lock(*vSourceDataMutex);
 			for (auto& [key, vSource] : currentVSources)
 			{
 				auto it = targetVSources.find(key);
@@ -243,7 +258,6 @@ namespace RAC
 				if (UpdateVirtualSource(vSource))
 					keys.push_back(key);
 			}
-
 			for (const auto& key : keys)
 				currentVSources.erase(key);
 		}
@@ -279,7 +293,7 @@ namespace RAC
 					if (it->second.GetFDNChannel() >= 0)
 						freeFDNChannels.push_back(it->second.GetFDNChannel());
 
-					int n = 0;
+					size_t n = 0;
 					{
 						unique_lock<mutex> lock(*vSourcesMutex, defer_lock);
 						if (lock.try_lock())
@@ -303,12 +317,6 @@ namespace RAC
 			else
 				freeFDNChannels[0]++;
 			return fdnChannel;
-		}
-
-		Vec3 Source::GetPosition()
-		{
-			CTransform transform = mSource->GetCurrentSourceTransform();
-			return Vec3(transform.GetPosition().x, transform.GetPosition().y, transform.GetPosition().z);
 		}
 	}
 }

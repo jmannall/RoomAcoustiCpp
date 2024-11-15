@@ -109,7 +109,7 @@ namespace RAC
 		*
 		* @return The ID of the new audio source.
 		*/
-		int InitSource();
+		size_t InitSource();
 
 		/**
 		* Updates the position and orientation of the audio source with the given ID.
@@ -118,34 +118,39 @@ namespace RAC
 		* @param position The new position of the source.
 		* @param orientation The new orientation of the source.
 		*/
-		void UpdateSource(size_t id, const Vec3& position, const Vec4& orientation);
+		void UpdateSource(const size_t id, const Vec3& position, const Vec4& orientation);
+
+		/**
+		* Updates the directivity of the audio source with the given ID.
+		* 
+		* @param id The ID of the audio source to update.
+		* @param directivity The new directivity of the source.
+		*/
+		void UpdateSourceDirectivity(const size_t id, const SourceDirectivity directivity);
 
 		/**
 		* Removes the audio source with the given ID.
 		*
 		* @param id The ID of the audio source to remove.
 		*/
-		void RemoveSource(size_t id);
+		void RemoveSource(const size_t id);
 
 		/**
 		* Initializes a new wall with the given parameters and returns its ID.
 		*
-		* @param normal The normal vector of the wall.
 		* @param vData The vertices of the wall.
 		* @param absorption The frequency absorption coefficients.
-		* @param reverbWall The reverb wall.
 		* @return The ID of the new wall.
 		*/
-		int InitWall(const Vec3& normal, const Real* vData, const Absorption& absorption);
+		size_t InitWall(const Vertices& vData, const Absorption& absorption);
 		
 		/**
 		* Updates the position and orientation of the wall with the given ID.
 		*
 		* @param id The ID of the wall to update.
-		* @param normal The new normal vector of the wall.
 		* @param vData The new vertices of the wall.
 		*/
-		void UpdateWall(size_t id, const Vec3& normal, const Real* vData);
+		void UpdateWall(size_t id, const Vertices& vData);
 
 		/**
 		* Updates the absorption of the wall with the given ID.

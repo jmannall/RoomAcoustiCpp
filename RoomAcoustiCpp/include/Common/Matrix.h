@@ -20,158 +20,268 @@ namespace RAC
 {
 	namespace Common
 	{
-
-		//////////////////// matrix class ////////////////////
-
+		/**
+		* @brief Class that stores a matrix data structure
+		*/
 		class Matrix
 		{
 		public:
 
-			// Load and Destroy
-			Matrix() : rows(0), cols(0) { AllocateSpace(); };
+			/**
+			* Default constructor that initialises an empty Matrix
+			*/
+			Matrix() : Matrix(0, 0) {};
+
+			/**
+			* Constructor that initialises a Matrix with zeros
+			*
+			* @param r The number of rows
+			* @param c The number of columns
+			*/
 			Matrix(const int r, const int c) : rows(r), cols(c) { AllocateSpace(); };
-			Matrix(const std::vector<std::vector<Real>>& mat);
-			~Matrix() { /*DeallocateSpace(); */ };
 
-			// Init
-			void Init(const std::vector<std::vector<Real>>& mat);
-			inline void Reset()
+			/**
+			* Constructor that initialises a Matrix with zeros
+			*
+			* @param matrix The input data to initialise the matrix
+			*/
+			Matrix(const std::vector<std::vector<Real>>& matrix);
+
+			/**
+			* @brief Default deconstructor
+			*/
+			~Matrix() {};
+
+			/**
+			* @brief Reset the matrix to zeros
+			*/
+			inline void Reset() { std::fill(data.begin(), data.end(), std::vector<Real>(cols, 0.0)); }
+
+			/**
+			* @brief Update data for a column of the matrix
+			* 
+			* @param column The input column to add
+			* @param c The column to add the vector to
+			*/
+			inline void AddColumn(const std::vector<Real>& column, const int c)
 			{
+				assert(column.size() == rows);
+				assert(c < cols);
 				for (int i = 0; i < rows; i++)
-				{
-					for (int j = 0; j < cols; j++)
-						data[i][j] = 0.0;
-				}
+					data[i][c] = column[i];
 			}
 
-			// Adders
-			inline void AddColumn(const std::vector<Real>& v, const int c)
+			/**
+			* @brief Update data for a row of the matrix
+			*
+			* @param row The input row to add
+			* @param r The row to add the vector to
+			*/
+			inline void AddRow(const std::vector<Real>& row, const int r)
 			{
-				for (int i = 0; i < rows; i++)
-					data[i][c] = v[i];
+				assert(row.size() == cols);
+				assert(r < rows);
+				data[r] = row;
 			}
-			inline void AddRow(const std::vector<Real>& v, const int r) { data[r] = v; }
 
-			// Getters
-			inline Real GetEntry(const int r, const int c) const { return data[r][c]; }
-			inline const std::vector<Real>& GetRow(int r) const { return data[r];	}
+			/**
+			* @brief Get a row of the matrix
+			* 
+			* @param r The row to get
+			* @return Reference (const) to the row
+			*/
+			inline const std::vector<Real>& GetRow(int r) const { assert(r < rows); return data[r]; }
+
+			/**
+			* @brief Get a column of the matrix
+			*
+			* @param c The column to get
+			* @return Reference (const) to the column
+			*/
 			inline const std::vector<Real>& GetColumn(int c)
 			{
+				assert(c < cols);
 				for (int i = 0; i < rows; i++)
 					column[i] = data[i][c];
 				return column;
 			}
 
-			inline int Rows() const { return rows; }
-			inline int Cols() const { return cols; }
+			/**
+			* @brief Get all data from the matrix
+			*
+			* @return Const reference to the matrix data
+			*/
 			inline const std::vector<std::vector<Real>>& Data() const { return data; }
+
+			/**
+			* @return The number of rows
+			*/
+			inline int Rows() const { return rows; }
+
+			/**
+			* @return The number of columns
+			*/
+			inline int Cols() const { return cols; }
+
+			/**
+			* @return The transpose of the matrix
+			*/
 			Matrix Transpose();
 
+			/**
+			* @brief Inverts the matrix
+			*/
 			void Inverse();
 
+			/**
+			* @brief Calculates the Log10 of the matrix (element-wise)
+			*/
 			inline void Log10()
 			{
 				for (int i = 0; i < rows; i++)
 				{
 					for (int j = 0; j < cols; j++)
-						this->data[i][j] = RAC::Common::Log10(data[i][j]);
+						data[i][j] = RAC::Common::Log10(data[i][j]);
 				}
 			}
 
+			/**
+			* @brief Calculates 10 raised to the power of each matrix entry (element-wise)
+			*/
 			inline void Pow10()
 			{
 				for (int i = 0; i < rows; i++)
 				{
 					for (int j = 0; j < cols; j++)
-						this->data[i][j] = RAC::Common::Pow10(data[i][j]);
+						data[i][j] = RAC::Common::Pow10(data[i][j]);
 				}
 			}
 
-			// Operators
+			/**
+			* @brief Access the matrix row at the specified index
+			* 
+			* @param r The index of the row to return
+			* @return A reference to the matrix row at the specified index
+			*/
 			inline std::vector<Real>& operator[](const int r) { return data[r]; }
 
-			inline Matrix operator=(const Matrix& mat)
+			/**
+			* @brief Access the matrix row at the specified index
+			* 
+			* @param r The index of the row to return
+			* @return A const reference to the matrix row at the specified index
+			*/
+			inline const std::vector<Real>& operator[](const int r) const { return data[r]; }
+
+			/**
+			* @brief Set equal to a matrix
+			*/
+			inline Matrix operator=(const Matrix& matrix)
 			{
-				rows = mat.Rows();
-				cols = mat.Cols();
-				Init(mat.Data());
+				rows = matrix.Rows();
+				cols = matrix.Cols();
+				Init(matrix.Data());
 				return *this;
 			}
 
-			inline Matrix operator+=(const Matrix& mat)
+			/**
+			* @brief Adds a matrix to the current matrix
+			*/
+			inline Matrix operator+=(const Matrix& matrix)
 			{
+				assert(rows == matrix.Rows());
+				assert(cols == matrix.Cols());
+
 				for (int i = 0; i < rows; i++)
 				{
 					for (int j = 0; j < cols; j++)
-						this->data[i][j] += mat.GetEntry(i, j);
+						data[i][j] += matrix[i][j];
 				}
 				return *this;
 			}
 
-			inline Matrix operator-=(const Matrix& mat)
+			/**
+			* @brief Subtracts a matrix from the current matrix
+			*/
+			inline Matrix operator-=(const Matrix& matrix)
 			{
+				assert(rows == matrix.Rows());
+				assert(cols == matrix.Cols());
+
 				for (int i = 0; i < rows; i++)
 				{
 					for (int j = 0; j < cols; j++)
-						this->data[i][j] -= mat.GetEntry(i, j);
+						data[i][j] -= matrix[i][j];
 				}
 				return *this;
 			}
 
+			/**
+			* @brief Multiplies the matrix entries by a given value
+			*/
 			inline Matrix operator*=(const Real a)
 			{
 				for (int i = 0; i < rows; i++)
 				{
 					for (int j = 0; j < cols; j++)
-						this->data[i][j] *= a;
+						data[i][j] *= a;
 				}
 				return *this;
 			}
 
-			inline Matrix operator/=(const Real a)
-			{
-				for (int i = 0; i < rows; i++)
-				{
-					for (int j = 0; j < cols; j++)
-						this->data[i][j] /= a;
-				}
-				return *this;
-			}
+			/**
+			* @brief Divides the matrix entries by a given value
+			*/
+			inline Matrix operator/=(const Real a) { return *this *= (1.0 / a); }
 
+			/**
+			* @brief Adds a single value to all matrix entries
+			*/
 			inline Matrix operator+=(const Real a)
 			{
 				for (int i = 0; i < rows; i++)
 				{
 					for (int j = 0; j < cols; j++)
-						this->data[i][j] += a;
+						data[i][j] += a;
 				}
 				return *this;
 			}
 
-			inline Matrix operator-=(const Real a)
-			{
-				for (int i = 0; i < rows; i++)
-				{
-					for (int j = 0; j < cols; j++)
-						this->data[i][j] -= a;
-				}
-				return *this;
-			}
+			/**
+			* @brief Subtracts a single value from all matrix entries
+			*/
+			inline Matrix operator-=(const Real a) { return *this += (-a); }
 
 		protected:
 
-			// Memory allocation
-			void AllocateSpace();
-			void DeallocateSpace();
+			/**
+			* @brief Initialise matrix data from std::vector structure
+			*
+			* @params matrix Data to inialise the matrix from
+			*/
+			void Init(const std::vector<std::vector<Real>>& matrix);
 
-			// Member variables
-			int rows, cols;
-			std::vector<std::vector<Real>> data;
-			std::vector<Real> column;
+			/**
+			* @brief Initialise matrix data with zeros
+			*/
+			void AllocateSpace();
+
+			/**
+			* @brief Clear matrix data
+			*/
+			inline void DeallocateSpace() { rows = 0; cols = 0; column.clear(); data.clear(); };
+
+			int rows, cols;							// Matrix dimensions
+			std::vector<std::vector<Real>> data;	// Matrix data
+			std::vector<Real> column;				// Stores a single column
 		};
 
 		//////////////////// Operators ////////////////////
 
+		/**
+		* @brief Performs an element-wise comparison
+		* @return True if all element pairs are equal, false otherwise
+		*/
 		inline bool operator==(const Matrix& u, const Matrix& v)
 		{
 			assert(u.Rows() == v.Rows());
@@ -187,6 +297,9 @@ namespace RAC
 			return equal;
 		}
 
+		/**
+		* @return The sum of two matrices
+		*/
 		inline Matrix operator+(const Matrix& u, const Matrix& v)
 		{
 			assert(u.Rows() == v.Rows());
@@ -197,24 +310,30 @@ namespace RAC
 			{
 				for (int j = 0; j < u.Cols(); j++)
 				{
-					Real entry = u.GetEntry(i, j) + v.GetEntry(i, j);
+					Real entry = u[i][j] + v[i][j];
 					out[i][j] = entry;
 				}
 			}
 			return out;
 		}
 
+		/**
+		* @brief Inverts the sign of all the matrix entries
+		*/
 		inline Matrix operator-(const Matrix& mat)
 		{
 			Matrix out = Matrix(mat.Rows(), mat.Cols());
 			for (int i = 0; i < mat.Rows(); i++)
 			{
 				for (int j = 0; j < mat.Cols(); j++)
-					out[i][j] = -mat.GetEntry(i, j);
+					out[i][j] = -mat[i][j];
 			}
 			return out;
 		}
 
+		/**
+		* @return Subtracts a matrix from another
+		*/
 		inline Matrix operator-(const Matrix& u, const Matrix& v)
 		{
 			assert(u.Rows() == v.Rows());
@@ -223,12 +342,15 @@ namespace RAC
 			for (int i = 0; i < u.Rows(); i++)
 			{
 				for (int j = 0; j < u.Cols(); j++)
-					out[i][j] = u.GetEntry(i, j) - v.GetEntry(i, j);
+					out[i][j] = u[i][j] - v[i][j];
 			}
 			return out;
 		}
 
-		inline Matrix Mulitply(Matrix& out, const Matrix& u, const Matrix& v)
+		/**
+		* @brief Performs a matrix multiplication
+		*/
+		inline void Mulitply(Matrix& out, const Matrix& u, const Matrix& v)
 		{
 			assert(u.Cols() == v.Rows());
 			assert(out.Rows() == u.Rows());
@@ -241,19 +363,25 @@ namespace RAC
 				{
 					sum = 0.0;
 					for (int k = 0; k < u.Cols(); ++k)
-						sum += u.GetEntry(i, k) * v.GetEntry(k, j);
+						sum += u[i][k] * v[k][j];
 					out[i][j] = sum;
 				}
 			}
-			return out;
 		}
 
+		/**
+		* @brief Performs a matrix multiplication
+		*/
 		inline Matrix operator*(const Matrix& u, const Matrix& v)
 		{
 			Matrix out = Matrix(u.Rows(), v.Cols());
-			return Mulitply(out, u, v);
+			Mulitply(out, u, v);
+			return out;
 		}
 
+		/**
+		* @brief Multiplies all entries in a matrix by a given value
+		*/
 		inline Matrix operator*(const Real a, const Matrix& mat)
 		{
 			Matrix out = Matrix(mat.Rows(), mat.Cols());
@@ -262,21 +390,21 @@ namespace RAC
 				for (int j = 0; j < mat.Cols(); j++)
 				{
 					for (int k = 0; k < mat.Cols(); k++)
-						out[i][j] = a * mat.GetEntry(i, j);
+						out[i][j] = a * mat[i][j];
 				}
 			}
 			return out;
 		}
 
-		inline Matrix operator*(const Matrix& mat, const Real a)
-		{
-			return a * mat;
-		}
+		/**
+		* @brief Multiplies all entries in a matrix by a given value
+		*/
+		inline Matrix operator*(const Matrix& mat, const Real a) { return a * mat; }
 
-		inline Matrix operator/(const Matrix& mat, const Real& a)
-		{
-			return (1.0 / a) * mat;
-		}
+		/**
+		* @brief Divides all entries in a matrix by a given value
+		*/
+		inline Matrix operator/(const Matrix& mat, const Real& a) { return (1.0 / a) * mat; }
 	}
 }
 

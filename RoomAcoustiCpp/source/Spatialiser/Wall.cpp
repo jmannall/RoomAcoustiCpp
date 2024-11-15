@@ -101,38 +101,34 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		Wall::Wall(const Vec3& normal, const Real* vData, const Absorption& absorption) : mNormal(normal), mPlaneId(0), mAbsorption(absorption)
+		Wall::Wall(const Vertices& vData, const Absorption& absorption) : mPlaneId(0), mAbsorption(absorption)
 		{
-			mVertices = std::vector<Vec3>(NUM_VERTICES);
-
-			Update(normal, vData);
+			Update(vData);
 
 #ifdef DEBUG_INIT
-	Debug::Log("Vertices: " + VecArrayToStr(mVertices), Colour::Orange);
+	Debug::Log("Vertices: " + VerticesToStr(mVertices), Colour::Orange);
 	Debug::Log("Normal: " + VecToStr(mNormal), Colour::Orange);
 #endif
 		}
 
 		////////////////////////////////////////
 
-		void Wall::Update(const Vec3& normal, const Real* vData)
+		void Wall::Update(const Vertices& vData)
 		{
-			mNormal = UnitVectorRound(normal);
+			mVertices = vData;
 
-			int j = 0;
-			for (int i = 0; i < mVertices.size(); i++)
-			{
-				// Round as otherwise comparing identical vertices from unity still returns false
-				Real x = Round(vData[j++]);
-				Real y = Round(vData[j++]);
-				Real z = Round(vData[j++]);
-				mVertices[i] = Vec3(x, y, z);
-			}
+			// Round as otherwise comparing identical vertices from unity still returns false
+			mVertices[0].RoundVec();
+			mVertices[1].RoundVec();
+			mVertices[2].RoundVec();
 
-			d = Round(Dot(normal, Vec3(vData[0], vData[1], vData[2])));
+			mNormal = UnitVector(Cross(vData[1] - vData[0], vData[2] - vData[0]));
+
+			d = Round(Dot(mNormal, vData[0]));
+			mNormal.RoundVec();
 
 			CalculateArea();	
-		}
+		}	
 
 		////////////////////////////////////////
 

@@ -11,12 +11,20 @@ namespace RAC
 {
 	namespace Common
 	{
-		Matrix::Matrix(const std::vector<std::vector<Real>>& mat) : rows(mat.size())
+		Matrix::Matrix(const std::vector<std::vector<Real>>& matrix) : rows(static_cast<int>(matrix.size()))
 		{
+			Init(matrix);
+		}
+
+		void Matrix::Init(const std::vector<std::vector<Real>>& matrix)
+		{
+			for (int i = 1; i < rows; i++)
+				assert(matrix[i].size() == matrix[0].size());
+
 			if (rows > 0)
 			{
-				cols = mat[0].size();
-				data = mat;
+				cols = static_cast<int>(matrix[0].size());
+				data = matrix;
 			}
 			else
 				cols = 0;
@@ -25,31 +33,18 @@ namespace RAC
 
 		void Matrix::AllocateSpace()
 		{
-			int r = rows;
-			for (int i = 0; i < r; i++)
+			for (int i = 0; i < rows; i++)
 				data.push_back(std::vector<Real>(cols, 0.0));
 			column = std::vector<Real>(rows);
 		}
 
-		void Matrix::DeallocateSpace()
-		{
-			data.clear();
-			/*for (int i = 0; i < rows; i++)
-				e[i].clear();
-			e.clear();*/
-		}
-
-		void Matrix::Init(const const std::vector<std::vector<Real>>& mat)
-		{
-			AllocateSpace();
-			data = mat;
-		}
-
 		Matrix Matrix::Transpose()
 		{
+			assert(rows == data.size());
 			Matrix mat = Matrix(cols, rows);
 			for (int i = 0; i < rows; i++)
 			{
+				assert(cols == data[i].size());
 				for (int j = 0; j < cols; j++)
 					mat[j][i] = data[i][j];
 			}

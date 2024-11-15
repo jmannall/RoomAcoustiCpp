@@ -39,7 +39,7 @@ static const UnityProfilerMarkerDesc* thirdOrderRefDiffMarker = nullptr;
 static const UnityProfilerMarkerDesc* fourthOrderRefDiffMarker = nullptr;
 static const UnityProfilerMarkerDesc* higherOrderRefDiffMarker = nullptr;
 static const UnityProfilerMarkerDesc* lateReverbMarker = nullptr;
-static const UnityProfilerMarkerDesc* copyDataMarker = nullptr;
+static const UnityProfilerMarkerDesc* updateAudioDataMarker = nullptr;
 
 static UnityProfilerThreadId backgroundThreadID = 999;
 #endif
@@ -80,7 +80,7 @@ extern "C" void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API UnityPluginLoad(IUnit
 	unityProfiler->CreateMarker(&fourthOrderRefDiffMarker, "FourthOrderReflectionDiffraction", kUnityProfilerCategoryOther, kUnityProfilerMarkerFlagDefault, 0);
 	unityProfiler->CreateMarker(&higherOrderRefDiffMarker, "HigherOrderReflectionDiffraction", kUnityProfilerCategoryOther, kUnityProfilerMarkerFlagDefault, 0);
 	unityProfiler->CreateMarker(&lateReverbMarker, "LateReverb", kUnityProfilerCategoryOther, kUnityProfilerMarkerFlagDefault, 0);
-	unityProfiler->CreateMarker(&copyDataMarker, "CopyData", kUnityProfilerCategoryOther, kUnityProfilerMarkerFlagDefault, 0);
+	unityProfiler->CreateMarker(&updateAudioDataMarker, "UpdateAudioData", kUnityProfilerCategoryOther, kUnityProfilerMarkerFlagDefault, 0);
 
 #endif
 }
@@ -431,16 +431,16 @@ void EndLateReverb()
 		GetUnityProfiler()->EndSample(lateReverbMarker);
 }
 
-void BeginCopyData()
+void BeginUpdateAudioData()
 {
 	if (GetDevBuild())
-		GetUnityProfiler()->BeginSample(copyDataMarker);
+		GetUnityProfiler()->BeginSample(updateAudioDataMarker);
 }
 
-void EndCopyData()
+void EndUpdateAudioData()
 {
 	if (GetDevBuild())
-		GetUnityProfiler()->EndSample(copyDataMarker);
+		GetUnityProfiler()->EndSample(updateAudioDataMarker);
 }
 
 #endif

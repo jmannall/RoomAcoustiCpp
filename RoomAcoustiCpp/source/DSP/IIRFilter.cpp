@@ -33,13 +33,13 @@ namespace RAC
 		{
 			Real v = input;
 			Real output = 0.0;
-			for (size_t i = 1; i <= order; ++i)
+			for (int i = 1; i <= order; ++i)
 			{
 				v -= y[i - 1] * a[i];
 				output += y[i - 1] * b[i];
 			}
 
-			for (size_t i = order; i >= 1; --i)
+			for (int i = order; i >= 1; --i)
 				y[i] = y[i - 1];
 
 			y[0] = v;

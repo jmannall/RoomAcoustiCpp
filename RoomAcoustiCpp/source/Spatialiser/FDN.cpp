@@ -9,6 +9,7 @@
 #include <mutex>
 //#include <xmmintrin.h>
 #include <cmath>
+#include <numeric>  // For std::gcd
 
 // Spatialiser headers
 #include "Spatialiser/FDN.h"
@@ -24,23 +25,23 @@ namespace RAC
 
 		//////////////////// FDN Channel class ////////////////////
 
-		Channel::Channel(const Config& config) : mT(1.0 / config.fs), mConfig(config), mAbsorptionFilter(mConfig.frequencyBands, mConfig.Q, mConfig.fs), idx(0)
+		Channel::Channel(const Config& config) : mConfig(config), mAbsorptionFilter(mConfig.frequencyBands, mConfig.Q, mConfig.fs), idx(0)
 		{
 			mBufferMutex = std::make_shared<std::mutex>();
-			SetDelay();
+			SetDelay(1);
 			SetAbsorption();
 		}
 
-		Channel::Channel(Real t, const Coefficients& T60, const Config& config) : mT(t), mConfig(config), mAbsorptionFilter(mConfig.frequencyBands, mConfig.Q, mConfig.fs), idx(0)
+		Channel::Channel(const int delayLength, const Coefficients& T60, const Config& config) : mConfig(config), mAbsorptionFilter(mConfig.frequencyBands, mConfig.Q, mConfig.fs), idx(0)
 		{
 			mBufferMutex = std::make_shared<std::mutex>();
-			SetDelay();
+			SetDelay(delayLength);
 			SetAbsorption(T60);
 		}
 
-		void Channel::SetParameters(const Coefficients& T60, const Real t)
+		void Channel::SetParameters(const Coefficients& T60, const int delayLength)
 		{
-			SetDelay(t);
+			SetDelay(delayLength);
 			if (T60 > 0.0)
 				SetAbsorption(T60);
 			else
@@ -63,12 +64,6 @@ namespace RAC
 		{
 			Coefficients g = CalcGain(T60);
 			mAbsorptionFilter.SetGain(g);
-		}
-
-		void Channel::SetDelay()
-		{
-			std::lock_guard<std::mutex> lock(*mBufferMutex);
-			mBuffer.ResizeBuffer(round(mT * mConfig.fs));
 		}
 
 		Real Channel::GetOutput(const Real input)
@@ -94,10 +89,10 @@ namespace RAC
 
 		FDN::FDN(const Coefficients& T60, const Vec& dimensions, const Config& config) : mConfig(config), x(config.numFDNChannels), y(config.numFDNChannels), mat(config.numFDNChannels, config.numFDNChannels)
 		{
-			Vec t = CalculateTimeDelay(dimensions);
+			std::vector<int> delayLengths = CalculateTimeDelay(dimensions);
 			mChannels.reserve(mConfig.numFDNChannels);
 			for (int i = 0; i < mConfig.numFDNChannels; i++)
-				mChannels.push_back(Channel(t[i], T60, mConfig));
+				mChannels.push_back(Channel(delayLengths[i], T60, mConfig));
 			SetFDNModel(FDNMatrix::householder);
 		}
 
@@ -109,14 +104,67 @@ namespace RAC
 
 		void FDN::SetParameters(const Coefficients& T60, const Vec& dimensions)
 		{
-			Vec t = CalculateTimeDelay(dimensions);
+			std::vector<int> delayLengths = CalculateTimeDelay(dimensions);
 			for (int i = 0; i < mConfig.numFDNChannels; i++)
-				mChannels[i].SetParameters(T60, t[i]);
+				mChannels[i].SetParameters(T60, delayLengths[i]);
 		}
 
-		Vec FDN::CalculateTimeDelay(const Vec& dimensions)
+		bool IsSetMutuallyPrime(const std::vector<int>& numbers)
 		{
+			for (int i = 0; i < numbers.size(); ++i)
+			{
+				for (int j = i + 1; j < numbers.size(); ++j)
+				{
+					if (std::gcd(numbers[i], numbers[j]) != 1)
+						return false;
+				}
+			}
+			return true;
+		}
+
+		bool IsEntryMutuallyPrime(const std::vector<int>& numbers, int idx) {
+			for (int i = 0; i < numbers.size(); ++i)
+			{
+				if (i == idx)
+					continue;
+				if (std::gcd(numbers[i], numbers[idx]) != 1)
+					return false;
+			}
+			return true;
+		}
+
+		void MakeSetMutuallyPrime(std::vector<int>& numbers) {
+			for (int i = 0; i < numbers.size(); ++i)
+			{
+				int limit = static_cast<int>(round(0.1 * numbers[i]));
+				for (int adjustment = 0; adjustment <= limit; ++adjustment)
+				{
+					int original = numbers[i];
+					bool found = false;
+
+					for (int sign : {-1, 1})
+					{
+						numbers[i] = original + sign * adjustment;
+						if (IsEntryMutuallyPrime(numbers, i))
+						{
+							found = true;
+							break;
+						}
+					}
+
+					if (found)
+						break;
+					numbers[i] = original;
+				}
+			}
+		}
+
+		std::vector<int> FDN::CalculateTimeDelay(const Vec& dimensions)
+		{
+			assert(dimensions.Rows() >  0);
+
 			Vec t = Vec(mConfig.numFDNChannels);
+			std::vector<int> delays = std::vector<int>(mConfig.numFDNChannels);
 			if (dimensions.Rows() > 0)
 			{
 				Real idx = static_cast<Real>(mConfig.numFDNChannels) / static_cast<Real>(dimensions.Rows());
@@ -137,9 +185,14 @@ namespace RAC
 					}
 				}
 				t *= INV_SPEED_OF_SOUND;
-				t.Max(0.0);
+				t.Max(1.0 / mConfig.fs);
+
+				for (int i = 0; i < mConfig.numFDNChannels; i++)
+					delays[i] = static_cast<int>(round(t[i] * mConfig.fs));
+				if (!IsSetMutuallyPrime(delays))
+					MakeSetMutuallyPrime(delays);
 			}
-			return t;
+			return delays;
 		}
 
 		void FDN::InitRandomOrthogonal()
@@ -162,7 +215,10 @@ namespace RAC
 					for (int i = 0; i < mConfig.numFDNChannels; ++i)
 					{
 						for (int k = 0; k < j; k++)
-							section[i][k] = mat.GetEntry(i, k);
+							section[i][k] = mat[i][k];
+						std::vector<Real> test = mat[i];
+						Real x = test[0];
+						Real y = mat[i][0];
 					}
 
 					vector -= section * (section.Transpose() * vector);

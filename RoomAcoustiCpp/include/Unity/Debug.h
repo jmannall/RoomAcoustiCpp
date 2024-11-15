@@ -17,8 +17,8 @@
 // Unity headers
 #include "Unity/IUnityInterface.h"
 
-// Common headers
-#include "Common/Vec3.h"
+// Spatialiser headers
+#include "Spatialiser/Types.h"
 
 #ifdef _ANDROID
 #define DLLExport __attribute__ ((visibility ("default")))
@@ -40,6 +40,7 @@ extern "C"
 namespace RAC
 {
     using namespace Common;
+    using namespace Spatialiser;
     namespace Unity
     {
         //////////////////// Colour enum ////////////////////
@@ -108,7 +109,7 @@ namespace RAC
             return ss.str();
         }
 
-        inline string VecArrayToStr(const std::vector<Vec3>& x)
+        inline string VerticesToStr(const Vertices& x)
         {
             stringstream ss;
             string output;

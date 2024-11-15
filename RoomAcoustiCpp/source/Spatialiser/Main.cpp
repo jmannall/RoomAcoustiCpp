@@ -356,7 +356,7 @@ extern "C"
 	*/
 	EXPORT int API RACInitSource()
 	{
-		return InitSource();
+		return static_cast<int>(InitSource());
 	}
 
 	/**
@@ -374,6 +374,29 @@ extern "C"
 	EXPORT void API RACUpdateSource(int id, float posX, float posY, float posZ, float oriW, float oriX, float oriY, float oriZ)
 	{
 		UpdateSource(static_cast<size_t>(id), Vec3(posX, posY, posZ), Vec4(oriW, oriX, oriY, oriZ));
+	}
+
+	/**
+	* Updates the directivity of the audio source with the given ID.
+	* 
+	* The mapping is as follows:
+	* 0 -> omni
+	* 1 -> cardioid
+	* 
+	* @param id The ID of the audio source to update.
+	* @param directivity The new directivity of the source.
+	*/
+	EXPORT void API RACUpdateSourceDirectivity(int id, int directivity)
+	{
+		switch (directivity)
+		{
+		case(0):
+		{ UpdateSourceDirectivity(id, SourceDirectivity::omni); break; }
+		case(1):
+		{ UpdateSourceDirectivity(id, SourceDirectivity::cardioid); break; }
+		default:
+		{ UpdateSourceDirectivity(id, SourceDirectivity::omni); break; }
+		}
 	}
 
 	/**
@@ -403,19 +426,18 @@ extern "C"
 	*
 	* @return The ID of the new wall.
 	*/
-	EXPORT int API RACInitWall(float nX, float nY, float nZ, const float* vData, const float* absorption)
+	EXPORT int API RACInitWall(const float* vData, const float* absorption)
 	{
 		std::vector<Real> a = std::vector<Real>(numAbsorptionBands);
 		for (int i = 0; i < numAbsorptionBands; i++)
 			a[i] = static_cast<Real>(absorption[i]);
 		Absorption abs = Absorption(a);
 
-		size_t numCoords = 9;
-		Buffer in = Buffer(numCoords);
-		for (int i = 0; i < numCoords; i++)
-			in[i] = static_cast<Real>(vData[i]);
+		Vertices vertices = { Vec3(vData[0], vData[1], vData[2]),
+			Vec3(vData[3], vData[4], vData[5]),
+			Vec3(vData[6], vData[7], vData[8]) };
 
-		return InitWall(Vec3(nX, nY, nZ), &in[0], abs);
+		return static_cast<int>(InitWall(vertices, abs));
 	}
 
 	/**
@@ -430,14 +452,13 @@ extern "C"
 	* @param nZ The z-coordinate of the wall's normal vector.
 	* @param vData The vertices of the wall.
 	*/
-	EXPORT void API RACUpdateWall(int id, float nX, float nY, float nZ, const float* vData)
+	EXPORT void API RACUpdateWall(int id, const float* vData)
 	{
-		size_t numCoords = 9;
-		Buffer in = Buffer(numCoords);
-		for (int i = 0; i < numCoords; i++)
-			in[i] = static_cast<Real>(vData[i]);
+		Vertices vertices = { Vec3(vData[0], vData[1], vData[2]),
+			Vec3(vData[3], vData[4], vData[5]),
+			Vec3(vData[6], vData[7], vData[8]) };
 
-		UpdateWall(static_cast<size_t>(id), Vec3(nX, nY, nZ), &in[0]);
+		UpdateWall(static_cast<size_t>(id), vertices);
 	}
 
 	/**
@@ -501,7 +522,7 @@ extern "C"
 	* Processes the output of the spatialiser.
 	*
 	* This function should be called after all audio sources have been updated for a frame.
-	* It will process the later reverberation and prepare the interleaved output buffer.
+	* It will process the late reverberation and prepare the interleaved output buffer.
 	*
 	* @return True if the processing was successful and the output buffer is ready, false otherwise.
 	*/
@@ -515,7 +536,7 @@ extern "C"
 #endif
 			return false;
 		}
-		else if (std::isnan(*buffer))
+		if (std::isnan(*buffer))
 		{
 #ifdef DEBUG_AUDIO_THREAD
 	Debug::Log("Process Output is NaN", Colour::Orange);

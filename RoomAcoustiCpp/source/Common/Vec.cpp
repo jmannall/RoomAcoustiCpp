@@ -14,10 +14,10 @@ namespace RAC
 	{
 		//////////////////// vec class ////////////////////
 
-		Vec::Vec(Matrix& mat)
+		Vec::Vec(Matrix& matrix) : Matrix(matrix)
 		{
-			assert(mat.Cols() == 1);
-			Init(mat.GetColumn(0));
+			assert(cols == 1);
+			// Init(matrix.GetColumn(0));
 		}
 
 		void Vec::Init(const std::vector<Real>& vec)
@@ -87,10 +87,10 @@ namespace RAC
 
 		//////////////////// rowvec class ////////////////////
 
-		Rowvec::Rowvec(const Matrix& mat)
+		Rowvec::Rowvec(const Matrix& matrix) : Matrix(matrix)
 		{
-			assert(mat.Rows() == 1);
-			Init(mat.GetRow(0));
+			assert(rows == 1);
+			Init(matrix.GetRow(0));
 		}
 
 		void Rowvec::Init(const std::vector<Real>& vec)

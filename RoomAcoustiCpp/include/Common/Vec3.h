@@ -38,7 +38,14 @@ namespace RAC
 #endif
 			~Vec3() {}
 
-			Real Length() { return sqrt(x * x + y * y + z * z); }
+			Real Length() const { return sqrt(x * x + y * y + z * z); }
+
+			inline void Normalise()
+			{ 
+				if (x == 0.0 && y == 0.0 && z == 0.0)
+					return;
+				*this /= Length();
+			}
 
 			inline void RoundVec()
 			{
@@ -63,8 +70,55 @@ namespace RAC
 				return *this;
 			}
 
+			inline const Real GetElevationRadians() const
+			{
+				// Error handler:
+				float distance = Length();
+				if (distance == 0.0f) // Distance from source to listener is zero
+					return 0.0f;
+
+				// 0=front; 90=up; -90=down
+				//float cosAngle = *upAxis / GetDistance(); // Error check: division by zero
+				//float angle = SafeAcos(cosAngle);
+				//return (M_PI / 2.0f) - angle;
+
+				// 0=front; 90=up; 270=down (LISTEN)
+				Real cosAngle = y / distance;
+				Real angle = SafeAcos(cosAngle);
+				Real adjustedAngle = (PI_1 * 2.5) - angle;
+
+				// Check limits (always return 0 instead of 2PI)
+				if (adjustedAngle >= PI_2)
+					adjustedAngle = std::fmod(adjustedAngle, PI_2);
+
+				return adjustedAngle;
+			}
+
+			// Get azimuth in radians, according to the selected axis convention. Currently uses LISTEN database convention for azimuth angles: anti-clockwise full circle starting with 0º in front.
+			inline const Real GetAzimuthRadians() const
+			{
+				// Error handler:
+				Real rightAxis = x;
+				Real forwardAxis = z;
+				if ((rightAxis == 0.0f) && (forwardAxis == 0.0f)) // Azimuth cannot be computed for a(0, 0, z) vector. 0.0 is returned
+					return 0.0f;
+
+				// front=0; left=-90; right=90
+				//return atan2(*rightAxis, *forwardAxis);		
+
+				//front=0; left=90; right=270 (LISTEN)
+				Real angle = std::atan2(rightAxis, forwardAxis);
+				Real adjustedAngle = std::fmod((PI_2 - angle), PI_2);
+
+				// Check limits (always return 0 instead of 2PI)
+				if (adjustedAngle >= PI_2)
+					adjustedAngle = std::fmod(adjustedAngle, PI_2);
+
+				return adjustedAngle;
+			}
+
 			// Operators
-			inline Vec3 operator+=(const Vec3& v)
+			inline Vec3& operator+=(const Vec3& v)
 			{
 				this->x += v.x;
 				this->y += v.y;
@@ -72,11 +126,34 @@ namespace RAC
 				return *this;
 			}
 
-			inline Vec3 operator-=(const Vec3& v)
+			inline Vec3& operator-=(const Vec3& v)
 			{
 				this->x -= v.x;
 				this->y -= v.y;
 				this->z -= v.z;
+				return *this;
+			}
+
+			inline Vec3& operator*=(const Real& a)
+			{
+				this->x *= a;
+				this->y *= a;
+				this->z *= a;
+				return *this;
+			}
+
+			inline Vec3& operator/=(const Real& a)
+			{
+				*this *= (1.0 / a);
+				return *this;
+			}
+
+			template <typename CVector3Type>
+			inline Vec3& operator=(const CVector3Type& v)
+			{
+				this->x = v.x;
+				this->y = v.y;
+				this->z = v.z;
 				return *this;
 			}
 
@@ -155,14 +232,11 @@ namespace RAC
 
 		//////////////////// Functions ////////////////////
 
-		inline Vec3 UnitVector(Vec3 v)
+		inline Vec3 UnitVector(const Vec3& v)
 		{
-			Real len = v.Length();
-			if (len == 0.0)
-			{
-				return Vec3(0.0, 0.0, 0.0);
-			}
-			return v / len;
+			if (v.x == 0.0 && v.y == 0.0 && v.z == 0.0)
+				return v;
+			return v / v.Length();
 		}
 
 		inline Vec3 UnitVectorRound(Vec3 v)

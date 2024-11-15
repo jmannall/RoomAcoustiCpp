@@ -53,8 +53,6 @@ namespace RAC
 				Path* mPath;
 			};
 
-
-
 			//////////////////// Attenuate class ////////////////////
 
 			class Attenuate : public Model

@@ -70,6 +70,15 @@ namespace RAC
 		*/
 		inline Real cot(const Real x) { return cos(x) / sin(x); }
 
+		inline Real SafeAcos(Real x)
+		{
+			if (x < -1.0)
+				x = -1.0;
+			else if (x > 1.0)
+				x = 1.0;
+			return std::acos(x);
+		}
+
 #else	// Float
 
 		const constexpr Real T_CELCIUS = 20.0f;								// Temperature in degrees celcius

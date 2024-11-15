@@ -94,8 +94,8 @@ namespace RAC
 		VirtualSource::VirtualSource(Binaural::CCore* core, const Config& config, const VirtualSourceData& data, int fdnChannel) : mCore(core), mSource(nullptr), mConfig(config), mFDNChannel(fdnChannel),
 			mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(data.GetAbsorption(), config.frequencyBands, config.Q, config.fs), mAirAbsorption(data.distance, mConfig.fs), feedsFDN(data.feedsFDN), bStore(config.numFrames), bDiffStore(config.numFrames),
 			attenuate(&mDiffractionPath), lowPass(&mDiffractionPath, config.fs), udfa(&mDiffractionPath, config.fs), udfai(&mDiffractionPath, config.fs), nnSmall(&mDiffractionPath), nnBest(&mDiffractionPath), utd(&mDiffractionPath, config.fs), btm(&mDiffractionPath, config.fs),
-			reflection(data.reflection), diffraction(data.diffraction), transform(data.transform), updateTransform(false), isInitialised(false), isCrossFading(false), mDiffractionModel(nullptr), mOldDiffractionModel(nullptr),
-			crossfadeCounter(0), crossfadeLengthSamples(mConfig.fs * 0.01)
+			reflection(data.reflection), diffraction(data.diffraction), transform(data.transform), /*updateTransform(false),*/ isInitialised(false), isCrossFading(false), mDiffractionModel(nullptr), mOldDiffractionModel(nullptr),
+			crossfadeCounter(0), crossfadeLengthSamples(static_cast<int>(round(mConfig.fs * 0.01)))
 		{
 			UpdateDiffractionModel(config.diffractionModel);
 			InitAudioData();
@@ -127,7 +127,7 @@ namespace RAC
 				unique_lock<mutex> lck(*audioMutex, std::defer_lock);
 				if (lck.try_lock())
 				{
-					mTargetGain = 1.0f;
+					mTargetGain = data.GetDirectivity();
 					if (!isInitialised)
 						Init(data);
 					Update(data, fdnChannel);
@@ -244,98 +244,110 @@ namespace RAC
 			crossfadeCounter = 0;
 		}
 
-		void VirtualSource::ProcessAudio(const Buffer& data, Matrix& reverbInput, Buffer& outputBuffer)
+		void VirtualSource::ProcessAudio(const Buffer& data, Matrix& reverbInput, Buffer& outputBuffer, Real reverbEnergy)
 		{
 			lock_guard<mutex> lock(*audioMutex);
-			if (isInitialised)
+
+			if (!isInitialised)
+				return;
+
+			if (mCurrentGain == 0.0 && mTargetGain == 0.0)
+				return;
+
+#ifdef PROFILE_AUDIO_THREAD
+			BeginVirtualSource();
+#endif
+			if (diffraction)
+			{
+				{
+#ifdef PROFILE_AUDIO_THREAD
+					BeginDiffraction();
+#endif
+					ProcessDiffraction(data, bStore);
+#ifdef PROFILE_AUDIO_THREAD
+					EndDiffraction();
+#endif
+					if (reflection)
+					{
+#ifdef PROFILE_AUDIO_THREAD
+						BeginReflection();
+#endif
+						mFilter.ProcessAudio(bStore, bStore, mConfig.numFrames, mConfig.lerpFactor);
+#ifdef PROFILE_AUDIO_THREAD
+						EndReflection();
+#endif
+					}
+				}
+			}
+			else if (reflection)
 			{
 #ifdef PROFILE_AUDIO_THREAD
-				BeginVirtualSource();
+				BeginReflection();
 #endif
-				if (diffraction)
-				{
-					{
+				mFilter.ProcessAudio(data, bStore, mConfig.numFrames, mConfig.lerpFactor);
 #ifdef PROFILE_AUDIO_THREAD
-						BeginDiffraction();
-#endif
-						ProcessDiffraction(data, bStore);
-#ifdef PROFILE_AUDIO_THREAD
-						EndDiffraction();
-#endif
-						if (reflection)
-						{
-#ifdef PROFILE_AUDIO_THREAD
-							BeginReflection();
-#endif
-							mFilter.ProcessAudio(bStore, bStore, mConfig.numFrames, mConfig.lerpFactor);
-#ifdef PROFILE_AUDIO_THREAD
-							EndReflection();
-#endif
-						}
-					}
-				}
-				else if (reflection)
-				{
-#ifdef PROFILE_AUDIO_THREAD
-					BeginReflection();
-#endif
-					mFilter.ProcessAudio(data, bStore, mConfig.numFrames, mConfig.lerpFactor);
-#ifdef PROFILE_AUDIO_THREAD
-					EndReflection();
-#endif
-				}
-#ifdef PROFILE_AUDIO_THREAD
-				BeginAirAbsorption();
-#endif
-				mAirAbsorption.ProcessAudio(bStore, bStore, mConfig.numFrames, mConfig.lerpFactor);
-#ifdef PROFILE_AUDIO_THREAD
-				EndAirAbsorption();
-#endif
-				if (mCurrentGain == mTargetGain)
-				{
-					for (int i = 0; i < mConfig.numFrames; i++)
-						bInput[i] = static_cast<float>(bStore[i] * mCurrentGain);
-				}
-				else
-				{
-					for (int i = 0; i < mConfig.numFrames; i++)
-					{
-						bInput[i] = static_cast<float>(bStore[i] * mCurrentGain);
-						mCurrentGain = Lerp(mCurrentGain, mTargetGain, mConfig.lerpFactor);
-					}
-				}
-		
-#ifdef PROFILE_AUDIO_THREAD
-				Begin3DTI();
-#endif
-				{
-					lock_guard<mutex> lock(tuneInMutex);
-					mSource->SetBuffer(bInput);
-
-					if (feedsFDN)
-					{
-						{
-							mSource->ProcessAnechoic(bMonoOutput, bOutput.left, bOutput.right);
-							for (int i = 0; i < mConfig.numFrames; i++)
-								reverbInput[i][mFDNChannel] += static_cast<Real>(bMonoOutput[i]);
-						}
-					}
-					else
-						mSource->ProcessAnechoic(bOutput.left, bOutput.right);
-				}
-#ifdef PROFILE_AUDIO_THREAD
-				End3DTI();
-#endif
-				int j = 0;
-				for (int i = 0; i < mConfig.numFrames; i++)
-				{
-					outputBuffer[j++] += static_cast<Real>(bOutput.left[i]);
-					outputBuffer[j++] += static_cast<Real>(bOutput.right[i]);
-				}
-#ifdef PROFILE_AUDIO_THREAD
-				EndVirtualSource();
+				EndReflection();
 #endif
 			}
+#ifdef PROFILE_AUDIO_THREAD
+			BeginAirAbsorption();
+#endif
+			mAirAbsorption.ProcessAudio(bStore, bStore, mConfig.numFrames, mConfig.lerpFactor);
+#ifdef PROFILE_AUDIO_THREAD
+			EndAirAbsorption();
+#endif
+			if (mCurrentGain == mTargetGain)
+			{
+				for (int i = 0; i < mConfig.numFrames; i++)
+					bInput[i] = static_cast<float>(bStore[i] * mCurrentGain);
+			}
+			else if (Equals(mCurrentGain, mTargetGain))
+			{
+				mCurrentGain = mTargetGain;
+				for (int i = 0; i < mConfig.numFrames; i++)
+					bInput[i] = static_cast<float>(bStore[i] * mCurrentGain);
+			}
+			else
+			{
+				for (int i = 0; i < mConfig.numFrames; i++)
+				{
+					bInput[i] = static_cast<float>(bStore[i] * mCurrentGain);
+					mCurrentGain = Lerp(mCurrentGain, mTargetGain, mConfig.lerpFactor);
+				}
+			}
+		
+#ifdef PROFILE_AUDIO_THREAD
+			Begin3DTI();
+#endif
+			{
+				lock_guard<mutex> lock(tuneInMutex);
+				mSource->SetSourceTransform(transform);
+				mSource->SetBuffer(bInput);
+
+				if (feedsFDN)
+				{
+					{
+						Real factor = reverbEnergy / mCurrentGain;
+						mSource->ProcessAnechoic(bMonoOutput, bOutput.left, bOutput.right);
+						for (int i = 0; i < mConfig.numFrames; i++)
+							reverbInput[i][mFDNChannel] += static_cast<Real>(bMonoOutput[i]) * factor;
+					}
+				}
+				else
+					mSource->ProcessAnechoic(bOutput.left, bOutput.right);
+			}
+#ifdef PROFILE_AUDIO_THREAD
+			End3DTI();
+#endif
+			int j = 0;
+			for (int i = 0; i < mConfig.numFrames; i++)
+			{
+				outputBuffer[j++] += static_cast<Real>(bOutput.left[i]);
+				outputBuffer[j++] += static_cast<Real>(bOutput.right[i]);
+			}
+#ifdef PROFILE_AUDIO_THREAD
+			EndVirtualSource();
+#endif
 		}
 
 		void VirtualSource::Init(const VirtualSourceData& data)
@@ -366,9 +378,9 @@ namespace RAC
 				mSource = mCore->CreateSingleSourceDSP();
 				mSource->EnablePropagationDelay();
 				mSource->SetSourceTransform(data.transform);
-				// mSource->DisableInterpolation();
+				mSource->DisableInterpolation();
 			}
-			updateTransform = true;
+			//updateTransform = true;
 			isInitialised = true;
 
 			//Select spatialisation mode
@@ -409,7 +421,7 @@ namespace RAC
 				lock_guard<mutex> lock(tuneInMutex);
 				mCore->RemoveSingleSourceDSP(mSource);
 			}
-			updateTransform = false;
+			// updateTransform = false;
 			isInitialised = false;
 		}
 	}

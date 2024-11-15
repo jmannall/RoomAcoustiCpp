@@ -60,7 +60,7 @@ namespace RAC
 		public:
 
 			// Load and Destroy
-			VirtualSourceData(size_t numBands) : valid(false), visible(false), feedsFDN(false), mFDNChannel(-1), order(0), reflection(false), diffraction(false), key(""), mAbsorption(numBands),
+			VirtualSourceData(int numBands) : valid(false), visible(false), feedsFDN(false), mFDNChannel(-1), order(0), reflection(false), diffraction(false), key(""), mAbsorption(numBands),
 				distance(0.0), lastUpdatedCycle(false), idKey{'0'}, reflectionKey{'r'}, diffractionKey{'d'} {};
 			~VirtualSourceData() { /*Clear();*/ };
 
@@ -84,9 +84,11 @@ namespace RAC
 			}
 
 			// Absorption
+			inline void AddDirectivity(const Real directivity) { mDirectivity = directivity; }
 			inline void AddAbsorption(const Absorption& absorption) { mAbsorption *= absorption; }
 			inline void ResetAbsorption() { mAbsorption = 1.0; }
 			inline Absorption& GetAbsorptionRef() { return mAbsorption; }
+			inline Real GetDirectivity() const { return mDirectivity; }
 
 			// Edge
 			inline void AddEdgeID(const size_t id)
@@ -113,7 +115,7 @@ namespace RAC
 			std::string GetKey() const { return key; }
 			inline bool IsReflection(int i) const { return pathParts[i].isReflection; }
 			inline Absorption GetAbsorption() const { return mAbsorption; }
-			inline size_t GetOrder() const { return order; }
+			inline int GetOrder() const { return order; }
 
 			// Transforms
 			void SetTransform(const Vec3& vSourcePosition);
@@ -198,8 +200,9 @@ namespace RAC
 			std::array<char, 1> diffractionKey;
 			std::vector<Part> pathParts;
 			std::vector<Vec3> mPositions;
-			size_t order;
+			int order;
 			Absorption mAbsorption;
+			Real mDirectivity;
 			Vec4 previousPlane;
 		};
 
@@ -227,10 +230,10 @@ namespace RAC
 
 			// Updates
 			bool UpdateVirtualSource(const VirtualSourceData& data, int& fdnChannel);
-			inline void UpdateTransform() { if (updateTransform) { mSource->SetSourceTransform(transform); } }
+			// inline void UpdateTransform() { if (updateTransform) { mSource->SetSourceTransform(transform); } }
 
 			// Audio
-			void ProcessAudio(const Buffer& data, Matrix& reverbInput, Buffer& outputBuffer);
+			void ProcessAudio(const Buffer& data, Matrix& reverbInput, Buffer& outputBuffer, Real reverbEnergy);
 
 			// Deactivate
 			inline void Deactivate() { mSource = nullptr; }

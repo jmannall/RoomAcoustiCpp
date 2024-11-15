@@ -5,6 +5,9 @@
 *
 */
 
+// C++ headers
+#include <assert.h> 
+
 // DSP headers
 #include "DSP/Buffer.h"
 
@@ -16,7 +19,9 @@ namespace RAC
 
 		void Buffer::ResizeBuffer(const int numSamples)
 		{
-			size_t size = Length();
+			assert(numSamples >= 0);
+
+			int size = Length();
 			if (size == numSamples)
 				return;
 			if (size < numSamples)

@@ -40,7 +40,7 @@ namespace RAC
 			*
 			* @param n The number of samples to initialise the buffer with.
 			*/
-			Buffer(const size_t n) { ResizeBuffer(n); };
+			Buffer(const int n) { ResizeBuffer(n); };
 
 			/**
 			* Constructor that initialises the buffer with a vector of Real values.
@@ -64,7 +64,7 @@ namespace RAC
 			* 
 			* @return The length of the buffer
 			*/
-			inline size_t Length() const { return mBuffer.size(); }
+			inline int Length() const { return static_cast<int>(mBuffer.size()); }
 
 			/**
 			* Resizes the buffer to a specified number of samples.

@@ -9,10 +9,13 @@
 
 // C++ headers
 #include <unordered_map>
+#include<array>
 
 // Common headers
 #include "Common/Types.h"
 #include "Common/Coefficients.h"
+#include "Common/Vec3.h"
+#include "Common/Vec4.h"
 
 namespace RAC
 {
@@ -38,7 +41,6 @@ namespace RAC
 		class Wall;
 		class Edge;
 		class Source;
-		class SourceData;
 		class VirtualSource;
 		class VirtualSourceData;
 
@@ -46,10 +48,11 @@ namespace RAC
 		typedef std::unordered_map<size_t, Wall> WallMap;
 		typedef std::unordered_map<size_t, Edge> EdgeMap;
 		typedef std::unordered_map<size_t, Source> SourceMap;
-		typedef std::unordered_map<size_t, SourceData> SourceDataMap;
 		typedef std::unordered_map<std::string, VirtualSource> VirtualSourceMap;
 		typedef std::unordered_map<std::string, VirtualSourceData> VirtualSourceDataMap;
 		typedef std::vector<std::vector<VirtualSourceData>> VirtualSourceDataStore;
+
+		typedef std::array<Vec3, 3> Vertices;
 
 		typedef std::unordered_map<size_t, std::vector<size_t>> EdgeIDMap;
 
@@ -77,28 +80,18 @@ namespace RAC
 			btm
 		};
 
-		static const int NUM_ABSORPTION_FREQ = 5;
-		static const Real ABSORPTION_FREQ[] = { 250.0, 500.0, 1000.0, 2000.0, 4000.0 };
+		enum class SourceDirectivity
+		{
+			omni,
+			cardioid,
+			speaker
+		};
 
 		enum class SpatMode { quality, performance, none };
 
-		enum class ReverbWall
-		{
-			posZ, negZ,
-			posX, negX,
-			posY, negY,
-			none
-		};
+		enum class DirectSound { none, doCheck, alwaysTrue };
 
-		enum class DirectSound
-		{
-			none, doCheck, alwaysTrue
-		};
-
-		enum class DiffractionSound
-		{
-			none, shadowZone, allZones
-		};
+		enum class DiffractionSound { none, shadowZone, allZones };
 
 		struct IEMConfig
 		{

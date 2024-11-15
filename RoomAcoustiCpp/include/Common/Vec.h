@@ -67,6 +67,7 @@ namespace RAC
 			inline Real operator[](const int i) const { return data[i][0]; }
 			inline Real& operator[](const int i) { return data[i][0]; }
 
+			// Not used
 			inline Vec operator=(const Matrix& mat)
 			{
 				assert(mat.Cols() == 1);
@@ -79,7 +80,7 @@ namespace RAC
 				{
 					for (int j = 0; j < cols; j++)
 					{
-						data[i][j] = mat.GetEntry(i, j);
+						data[i][j] = mat[i][j];
 					}
 				}
 				return *this;
@@ -97,7 +98,7 @@ namespace RAC
 			// Load and Destroy
 			Rowvec() : Matrix() {}
 			Rowvec(const int& c) : Matrix(1, c) {}
-			Rowvec(const std::vector<Real>& vec) : Matrix(1, vec.size()) { Init(vec); }
+			Rowvec(const std::vector<Real>& vec) : Matrix(1, static_cast<int>(vec.size())) { Init(vec); }
 			Rowvec(const Matrix& mat);
 			~Rowvec() {}
 
@@ -116,10 +117,13 @@ namespace RAC
 			inline Real operator[](const int i) const { return data[0][i]; }
 			inline Real& operator[](const int i) { return data[0][i]; }
 
+			// Not used
 			inline Rowvec operator=(const Matrix& mat)
 			{
 				assert(mat.Rows() == 1);
 				rows = mat.Rows();
+				// assert(mat.Rows() == rows);
+				// assert(mat.Cols() == cols);
 
 				if (cols != mat.Cols())
 					data[0].resize(mat.Cols());
@@ -127,9 +131,7 @@ namespace RAC
 				for (int i = 0; i < rows; i++)
 				{
 					for (int j = 0; j < cols; j++)
-					{
-						data[i][j] = mat.GetEntry(i, j);
-					}
+						data[i][j] = mat[i][j];
 				}
 				return *this;
 			}

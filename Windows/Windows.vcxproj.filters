@@ -50,6 +50,12 @@
     <ClCompile Include="..\RoomAcoustiCpp\codegen\lib\myNN\source\predict.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="UnitTest_GraphicEQ.cpp">
+      <Filter>UnitTest</Filter>
+    </ClCompile>
+    <ClCompile Include="UnitTest_Matrix.cpp">
+      <Filter>UnitTest</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\framework.h">
@@ -93,6 +99,9 @@
     </ClInclude>
     <ClInclude Include="..\RoomAcoustiCpp\codegen\lib\myNN\include\tmwtypes.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\UtilityFunctions.h">
+      <Filter>UnitTest</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

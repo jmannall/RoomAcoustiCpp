@@ -37,7 +37,7 @@ namespace RAC
 		public:
 
 			// Load and Destroy
-			Room(const size_t numBands) : nextPlane(0), nextWall(0), nextEdge(0), reverbTime(ReverbTime::Sabine), mVolume(0.0), numAbsorptionBands(numBands), hasChanged(true) {}
+			Room(const int numBands) : nextPlane(0), nextWall(0), nextEdge(0), reverbTime(ReverbTime::Sabine), mVolume(0.0), numAbsorptionBands(numBands), hasChanged(true) {}
 			~Room() {};
 
 			// Image source model
@@ -46,12 +46,12 @@ namespace RAC
 			// Wall
 			size_t AddWall(Wall& wall);
 
-			inline void UpdateWall(const size_t id, const Vec3& normal, const Real* vData)
+			inline void UpdateWall(const size_t id, const Vertices& vData)
 			{
 				lock_guard<std::mutex> lock(mWallMutex);
 				auto it = mWalls.find(id);
 				if (it == mWalls.end()) { return; } // case: wall does not exist
-				else { it->second.Update(normal, vData); RecordChange(); } // case: wall does exist
+				else { it->second.Update(vData); RecordChange(); } // case: wall does exist
 			}
 
 			inline void UpdateWallAbsorption(const size_t id, const Absorption& absorption)
@@ -248,7 +248,7 @@ namespace RAC
 
 			Real mVolume;
 			ReverbTime reverbTime;
-			size_t numAbsorptionBands;
+			int numAbsorptionBands;
 
 			WallMap mWalls;
 			std::vector<size_t> mEmptyWallSlots;
