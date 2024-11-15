@@ -4,8 +4,9 @@
 *
 */
 
+// Common headers
 #include "Common/Matrix.h"
-#include "Common/Vec.h"
+#include "Common/Definitions.h"
 
 namespace RAC
 {
@@ -93,6 +94,24 @@ namespace RAC
 			{
 				data[i].erase(data[i].begin(), data[i].begin() + cols);
 				data[i].shrink_to_fit();
+			}
+		}
+
+		void Matrix::Log10()
+		{
+			for (int i = 0; i < rows; i++)
+			{
+				for (int j = 0; j < cols; j++)
+					data[i][j] = RAC::Common::Log10(data[i][j]);
+			}
+		}
+
+		void Matrix::Pow10()
+		{
+			for (int i = 0; i < rows; i++)
+			{
+				for (int j = 0; j < cols; j++)
+					data[i][j] = RAC::Common::Pow10(data[i][j]);
 			}
 		}
 	}

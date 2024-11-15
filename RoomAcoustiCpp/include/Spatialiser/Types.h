@@ -83,8 +83,7 @@ namespace RAC
 		enum class SourceDirectivity
 		{
 			omni,
-			cardioid,
-			speaker
+			cardioid
 		};
 
 		enum class SpatMode { quality, performance, none };

@@ -70,53 +70,6 @@ namespace RAC
 				return *this;
 			}
 
-			inline const Real GetElevationRadians() const
-			{
-				// Error handler:
-				float distance = Length();
-				if (distance == 0.0f) // Distance from source to listener is zero
-					return 0.0f;
-
-				// 0=front; 90=up; -90=down
-				//float cosAngle = *upAxis / GetDistance(); // Error check: division by zero
-				//float angle = SafeAcos(cosAngle);
-				//return (M_PI / 2.0f) - angle;
-
-				// 0=front; 90=up; 270=down (LISTEN)
-				Real cosAngle = y / distance;
-				Real angle = SafeAcos(cosAngle);
-				Real adjustedAngle = (PI_1 * 2.5) - angle;
-
-				// Check limits (always return 0 instead of 2PI)
-				if (adjustedAngle >= PI_2)
-					adjustedAngle = std::fmod(adjustedAngle, PI_2);
-
-				return adjustedAngle;
-			}
-
-			// Get azimuth in radians, according to the selected axis convention. Currently uses LISTEN database convention for azimuth angles: anti-clockwise full circle starting with 0º in front.
-			inline const Real GetAzimuthRadians() const
-			{
-				// Error handler:
-				Real rightAxis = x;
-				Real forwardAxis = z;
-				if ((rightAxis == 0.0f) && (forwardAxis == 0.0f)) // Azimuth cannot be computed for a(0, 0, z) vector. 0.0 is returned
-					return 0.0f;
-
-				// front=0; left=-90; right=90
-				//return atan2(*rightAxis, *forwardAxis);		
-
-				//front=0; left=90; right=270 (LISTEN)
-				Real angle = std::atan2(rightAxis, forwardAxis);
-				Real adjustedAngle = std::fmod((PI_2 - angle), PI_2);
-
-				// Check limits (always return 0 instead of 2PI)
-				if (adjustedAngle >= PI_2)
-					adjustedAngle = std::fmod(adjustedAngle, PI_2);
-
-				return adjustedAngle;
-			}
-
 			// Operators
 			inline Vec3& operator+=(const Vec3& v)
 			{

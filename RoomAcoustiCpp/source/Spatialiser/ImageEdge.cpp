@@ -897,14 +897,6 @@ namespace RAC
 					return EPS;
 				return ret;
 			}
-			case SourceDirectivity::speaker:
-			{
-				Vec3 targetPosition = intersection - source.position;
-				Vec3 vectorToIntersection = source.orientation.Inverse().RotateVector(targetPosition);
-				Real azimuth = vectorToIntersection.GetAzimuthRadians();
-				Real elevation = vectorToIntersection.GetElevationRadians();
-				return 1.0;
-			}
 			default:
 				return 1.0;
 			}
