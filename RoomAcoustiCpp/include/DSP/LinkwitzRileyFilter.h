@@ -9,7 +9,7 @@
 #define DSP_LinkwitzRileyFilter_h
 
 // C++ headers
-#include "assert.h"
+#include <cassert>
 
 // DSP headers
 #include "DSP/IIRFilter.h"
@@ -27,7 +27,7 @@ namespace RAC
 		{
 		public:
 			/**
-			* Constructor that initialises a default Linkwitz Riley filterbank
+			* @brief Constructor that initialises a default Linkwitz Riley filterbank
 			*
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
@@ -35,7 +35,7 @@ namespace RAC
 				g(4, 1.0) { InitFilters(sampleRate); CalcMidFrequencies(); }
 
 			/**
-			* Constructor that initialises a Linkwitz Riley filterbank with three cutoff frequencies
+			* @brief Constructor that initialises a Linkwitz Riley filterbank with three cutoff frequencies
 			*
 			* @param fc0 The first cutoff frequency
 			* @param fc1 The second cutoff frequency
@@ -46,12 +46,12 @@ namespace RAC
 				fc({ fc0, fc1, fc2 }), g(4, 1.0) { InitFilters(sampleRate); CalcMidFrequencies(); }
 
 			/**
-			* Default deconstructor
+			* @brief Default deconstructor
 			*/
 			~LinkwitzRiley() {};
 
 			/**
-			* Returns the output of the LinkwitzRiley filter given an input
+			* @brief Returns the output of the LinkwitzRiley filter given an input
 			*
 			* @param input The input to the LinkwitzRiley Filter
 			* @return The output of the LinkwitzRiley Filter
@@ -59,44 +59,34 @@ namespace RAC
 			Real GetOutput(const Real input);
 
 			/**
-			* Updates the gain parameters of the LinkwitzRiley filter
+			* @brief Updates the gain parameters of the LinkwitzRiley filter
 			*
-			* @param gain The new gain parameters
+			* @param filterGains The new gain parameters
 			*/
-			inline void UpdateParameters(const Coefficients& gain)
+			inline void UpdateParameters(const Coefficients& filterGains)
 			{
-				assert(gain.Length() == g.Length());
-				g = gain;
+				assert(filterGains.Length() == gains.Length());
+				gains = filterGains;
 			};
 
-			/**
-			* Filter band mid frequencies
-			*/
-			Coefficients fm;
+			Coefficients fm;		// Filter band mid frequencies
 
 		private:
 			/**
-			* Intialises the PassFilter sections
+			* @brief Intialises the PassFilter sections
 			*
-			* @param fs The samplerate for calculating filter coefficients
+			* @param sampleRate The samplerate for calculating filter coefficients
 			*/
-			void InitFilters(const int fs);
+			void InitFilters(const int sampleRate);
 
 			/**
-			* Calculate the pass band center frequencies 
+			* @brief Calculate the pass band center frequencies 
 			*/
 			void CalcMidFrequencies();
 
-			/**
-			* Filter band cut off frequencies and gains
-			*/
-			Coefficients fc;
-			Coefficients g;
-
-			/**
-			* PassFilter sections
-			*/
-			std::vector<PassFilter> filters;
+			Coefficients fc;						// Filter band cut off frequencies
+			Coefficients gains;						// Filter band gains
+			std::vector<PassFilter> filters;		// PassFilter sections
 		};
 	}
 }

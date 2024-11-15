@@ -115,7 +115,7 @@ namespace RAC
 #ifdef PROFILE_DETAILED
 			BeginLerp();
 #endif
-			size_t len = start.Length();
+			int len = start.Length();
 
 			if (len % 8 != 0)
 			{

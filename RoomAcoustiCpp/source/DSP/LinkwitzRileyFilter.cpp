@@ -13,10 +13,10 @@ namespace RAC
 	{
 		////////////////////////////////////////
 
-		void LinkwitzRiley::InitFilters(const int fs)
+		void LinkwitzRiley::InitFilters(const int sampleRate)
 		{
-			PassFilter lpFilter[3] = { PassFilter(fc[0], true, fs), PassFilter(fc[1], true, fs), PassFilter(fc[2], true, fs) };
-			PassFilter hpFilter[3] = { PassFilter(fc[0], false, fs), PassFilter(fc[1], false, fs), PassFilter(fc[2], false, fs) };
+			PassFilter lpFilter[3] = { PassFilter(fc[0], true, sampleRate), PassFilter(fc[1], true, sampleRate), PassFilter(fc[2], true, sampleRate) };
+			PassFilter hpFilter[3] = { PassFilter(fc[0], false, sampleRate), PassFilter(fc[1], false, sampleRate), PassFilter(fc[2], false, sampleRate) };
 
 			filters.reserve(20);
 			filters.push_back(lpFilter[1]);
