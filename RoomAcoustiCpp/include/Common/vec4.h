@@ -8,58 +8,124 @@
 #ifndef Common_vec4_h
 #define Common_vec4_h
 
+// Common headers
 #include "Common/Types.h"
 #include "Common/vec3.h"
-
-#include "3dti_Toolkit/Common/Transform.h"
 
 namespace RAC
 {
 	namespace Common
 	{
-
-		//////////////////// vec4 class ////////////////////
-
+		/**
+		* @class Class that stores a quaternion data
+		*/
 		class Vec4
 		{
 		public:
 			
-			// Load and Destroy
+			/**
+			* @brief Default constructor that initialises a zero quaternion
+			*/
 			Vec4() : w(0.0), x(0.0), y(0.0), z(0.0) {}
-			Vec4(const Real w_, const Real x_, const Real y_, const Real z_) : w(w_), x(x_), y(y_), z(z_) {}
-#if DATA_TYPE_DOUBLE
-			Vec4(const float w_, const float x_, const float y_, const float z_) : w(static_cast<Real>(w_)), x(static_cast<Real>(x_)), y(static_cast<Real>(y_)), z(static_cast<Real>(z_)) {}
-#else
-			Vec4(const double w_, const double x_, const double y_, const double z_) : w(static_cast<Real>(w_)), x(static_cast<Real>(x_)), y(static_cast<Real>(y_)), z(static_cast<Real>(z_)) {}
-#endif
-			Vec4(const Real w_, const Vec3 vec) : w(w_), x(vec.x), y(vec.y), z(vec.z) {}
 
+			/**
+			* @brief Constructor that initialises a quaternion with specified values
+			*
+			* @param w The w component of the quaternion
+			* @param x The x component of the quaternion
+			* @param y The y component of the quaternion
+			* @param z The z component of the quaternion
+			*/
+			Vec4(const Real w, const Real x, const Real y, const Real z) : w(w), x(x), y(y), z(z) {}
+#if DATA_TYPE_DOUBLE
+
+			/**
+			* @brief Constructor that initialises a double quaternion from floats
+			*
+			* @param w The w component of the quaternion
+			* @param x The x component of the quaternion
+			* @param y The y component of the quaternion
+			* @param z The z component of the quaternion
+			*/
+			Vec4(const float w, const float x, const float y, const float z) : w(static_cast<Real>(w)), x(static_cast<Real>(x)), y(static_cast<Real>(y)), z(static_cast<Real>(z)) {}
+#else
+
+			/**
+			* @brief Constructor that initialises a float quaternion from doubles
+			*
+			* @param w The w component of the quaternion
+			* @param x The x component of the quaternion
+			* @param y The y component of the quaternion
+			* @param z The z component of the quaternion
+			*/
+			Vec4(const double w, const double x, const double y, const double z) : w(static_cast<Real>(w)), x(static_cast<Real>(x)), y(static_cast<Real>(y)), z(static_cast<Real>(z)) {}
+#endif
+
+			/**
+			* @brief Constructor that initialises a quaternion from a Real and Vec3
+			*
+			* @param w The w component of the quaternion
+			* @param vec The x, y, z components of the quaternion
+			*/
+			Vec4(const Real w, const Vec3 vec) : w(w), x(vec.x), y(vec.y), z(vec.z) {}
+
+			/**
+			* @brief Constructor that initialises a quaternion from a Vec3 with a zero w component
+			*
+			* @param vec The x, y, z components of the quaternion
+			*/
 			Vec4(const Vec3 vec) : w(0.0), x(vec.x), y(vec.y), z(vec.z) {}
+
+			/**
+			* @brief Default deconstructor
+			*/
 			~Vec4() {}
 
+			/**
+			* @return The forward vector of the quaternion
+			*/
+			inline Vec3 Forward() const
+			{
+				Vec3 forward;
+				forward.x = 2.0 * (x * z + w * y);
+				forward.y = 2.0 * (y * z - w * x);
+				forward.z = 1.0 - 2.0 * (x * x + y * y);
+				forward.Normalise();
+				return forward;
+			}
+
+			/**
+			* @return The square of the normal of the quaternion
+			*/
 			inline Real SquareNormal() const { return w * w + x * x + y * y + z * z; }
 
+			/**
+			* @brief Assigns a class with w, x, y, z parameters to Vec4
+			*/
 			template <typename CQuaternionType>
 			inline Vec4& operator=(const CQuaternionType& q)
 			{
-				this->w = q.w;
-				this->x = q.x;
-				this->y = q.y;
-				this->z = q.z;
+				w = q.w;
+				x = q.x;
+				y = q.y;
+				z = q.z;
 				return *this;
 			}
 
-			// Member variables
-			Real w;
-			Real x;
-			Real y;
-			Real z;
+			Real w;		// W component of the quaternion
+			Real x;		// X component of the quaternion
+			Real y;		// Y component of the quaternion
+			Real z;		// Z component of the quaternion
 
 		private:
 		};
 
-		//////////////////// Operators ////////////////////
+		//////////////////// Vec4 operator overloads ////////////////////
 
+		/**
+		* @brief Performs an element-wise comparison
+		* @return True if all element pairs are equal, false otherwise
+		*/
 		inline bool operator==(const Vec4& u, const Vec4& v)
 		{
 			if (u.w == v.w)
@@ -76,6 +142,10 @@ namespace RAC
 			return false;
 		}
 
+		/**
+		* @brief Performs an element-wise comparison
+		* @return True if any element pairs are unequal, false otherwise
+		*/
 		inline bool operator!=(const Vec4& u, const Vec4& v)
 		{
 			if (u == v)
@@ -83,6 +153,9 @@ namespace RAC
 			return true;
 		}
 
+		/**
+		* @return The inverted w, x, y, z of a quaternion
+		*/
 		inline Vec4 operator-(const Vec4& v)
 		{
 			return Vec4(-v.w, -v.x, -v.y, -v.z);
