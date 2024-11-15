@@ -20,7 +20,6 @@ namespace RAC
 	using namespace Common;
 	namespace DSP
 	{
-
 		/**
 		* Class that stores a resizeable buffer of Real values.
 		* 
@@ -38,16 +37,16 @@ namespace RAC
 			/**
 			* Constructor that initialises the buffer with a specified number of samples
 			*
-			* @param n The number of samples to initialise the buffer with.
+			* @param length The number of samples to initialise the buffer with.
 			*/
-			Buffer(const int n) { ResizeBuffer(n); };
+			Buffer(const int length) { ResizeBuffer(length); };
 
 			/**
 			* Constructor that initialises the buffer with a vector of Real values.
 			*
 			* @param vec The vector of Real values to initialise the buffer with.
 			*/
-			Buffer(const std::vector<Real>& Vec) : mBuffer(Vec) {};
+			Buffer(const std::vector<Real>& vector) : mBuffer(vector) {};
 
 			/**
 			* Default deconstructor.
@@ -89,33 +88,39 @@ namespace RAC
 			*/
 			std::vector<Real> GetBuffer() { return mBuffer; }
 
-			//////////////////// Member Operators ////////////////////
-
 			/**
-			* Returns the sample at a specified index.
+			* @brief Access the buffer at the specified index
 			*
-			* @param i The index of the sample to return.
+			* @param i The index of the value to return
+			* @return A reference to the value at the specified index
 			*/
 			inline Real& operator[](const int i) { return mBuffer[i]; };
+
+			/**
+			* @brief Access the buffer at the specified index
+			*
+			* @param i The index of the value to return
+			* @return The value at the specified index
+			*/
 			inline Real operator[](const int i) const { return mBuffer[i]; };
 
 			/**
 			* Multiplies each sample in the buffer by a scalar value.
 			*/
-			inline Buffer operator*=(const Real x)
+			inline Buffer operator*=(const Real a)
 			{
 				for (Real& sample : mBuffer)
-					sample*= x;
+					sample *= a;
 				return *this;
 			}
 
 			/**
 			* Adds a scalar value to each sample in the buffer.
 			*/
-			inline Buffer operator+=(const Real x)
+			inline Buffer operator+=(const Real a)
 			{
 				for (Real& sample : mBuffer)
-					sample += x;
+					sample += a;
 				return *this;
 			}
 
@@ -131,22 +136,14 @@ namespace RAC
 
 		private:
 
-			//////////////////// Member Variables ////////////////////
-
-			/**
-			* Buffer
-			*/
-			std::vector<Real> mBuffer;	// The buffer of Real values
+			std::vector<Real> mBuffer;		// Buffer data
 		};
 
-		//////////////////// Buffer Operators ////////////////////
+		//////////////////// Buffer operator overloads ////////////////////
 
 		/**
-		* Compares two buffers to check if they are equal.
-		*
-		* @details Two buffers are equal if they have the same length and all of their samples are equal.
-		* 
-		* @return True if the buffer are equal, false otherwise
+		* @brief Performs an element-wise comparison
+		* @return True if their samples are equal, false otherwise
 		*/
 		inline bool operator==(const Buffer& a, const Buffer& b)
 		{
@@ -175,23 +172,29 @@ namespace RAC
 			/**
 			* Constructor that initialises the buffer with a specified number of samples
 			*
-			* @param n The number of samples to initialise the buffer with.
+			* @param length The number of samples to initialise the buffer with.
 			*/
-			BufferF(const size_t n) { ResizeBuffer(n); };
+			BufferF(const int length) { ResizeBuffer(length); };
 
 			/**
 			* Default deconstructor.
 			*/
 			~BufferF() {};
 
-			//////////////////// Member Operators ////////////////////
-
 			/**
-			* Returns the sample at a specified index.
+			* @brief Access the buffer at the specified index
 			*
-			* @param i The index of the sample to return.
+			* @param i The index of the value to return
+			* @return The value at the specified index
 			*/
 			inline float& operator[](const int& i) { return mBuffer[i]; };
+
+			/**
+			* @brief Access the buffer at the specified index
+			*
+			* @param i The index of the value to return
+			* @return A reference to the value at the specified index
+			*/
 			inline float operator[](const int& i) const { return mBuffer[i]; };
 
 			/**
@@ -208,7 +211,7 @@ namespace RAC
 			/**
 			* Returns the length of the buffer.
 			*/
-			inline size_t Length() const { return mBuffer.size(); }
+			inline int Length() const { return mBuffer.size(); }
 
 		private:
 
@@ -219,14 +222,9 @@ namespace RAC
 			*
 			* @param numSamples The number of samples to resize the buffer to.
 			*/
-			void ResizeBuffer(const size_t numSamples);
+			void ResizeBuffer(const int numSamples);
 
-			//////////////////// Member Variables ////////////////////
-
-			/**
-			* Buffer
-			*/
-			std::vector<float> mBuffer; // The buffer of float values
+			std::vector<float> mBuffer;		// Buffer data
 		};
 	}
 }

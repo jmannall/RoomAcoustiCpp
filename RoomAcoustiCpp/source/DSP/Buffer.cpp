@@ -47,7 +47,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void BufferF::ResizeBuffer(const size_t numSamples)
+		void BufferF::ResizeBuffer(const int numSamples)
 		{
 			size_t size = mBuffer.size();
 			if (size == numSamples)
