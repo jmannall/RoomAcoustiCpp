@@ -1,6 +1,7 @@
 /*
+* @class Vec, Rowvec
 *
-*  \vec class
+* @brief Declaration of Vec and Rowvec classes
 *
 */
 

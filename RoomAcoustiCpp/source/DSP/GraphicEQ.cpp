@@ -3,6 +3,8 @@
 *
 * @brief Declaration of Graphic EQ class
 *
+* @remarks Based after Efficient Multi-Band Digital Audio Graphic Equalizer with Accurate Frequency Response Control. Oliver R, Jot J. 2015
+*
 */
 
 // DSP headers
@@ -12,12 +14,18 @@ namespace RAC
 {
 	namespace DSP
 	{
+		//////////////////// GraphicEQ ////////////////////
+
+		////////////////////////////////////////
+
 		GraphicEQ::GraphicEQ(const Coefficients& fc, const Real Q, const int sampleRate) : numFilters(fc.Length() + 2), lowShelf((fc[0] / 2.0) * sqrt(fc[0] / (fc[0] / 2.0)), Q, sampleRate), highShelf(fc[numFilters - 3] * sqrt((2.0 * fc[numFilters - 3]) / fc[numFilters - 3]), Q, sampleRate),
 			dbGains(numFilters), inputGains(numFilters), targetFilterGains(numFilters + 1), currentFilterGains(numFilters + 1), lastInput(fc.Length()), filterResponseMatrix(numFilters, numFilters), equal(false), valid(false)
 		{
 			InitFilters(fc, Q, sampleRate);
 			InitMatrix(fc);
 		}
+
+		////////////////////////////////////////
 
 		GraphicEQ::GraphicEQ(const Coefficients& gain, const Coefficients& fc, const Real Q, const int sampleRate) : numFilters(fc.Length() + 2), lowShelf((fc[0] / 2.0)* sqrt(fc[0] / (fc[0] / 2.0)), Q, sampleRate), highShelf(fc[numFilters - 3] * sqrt((2.0 * fc[numFilters - 3]) / fc[numFilters - 3]), Q, sampleRate),
 			dbGains(numFilters), inputGains(numFilters), targetFilterGains(numFilters + 1), currentFilterGains(numFilters + 1), lastInput(fc.Length()), filterResponseMatrix(numFilters, numFilters), equal(false), valid(false)
@@ -27,11 +35,15 @@ namespace RAC
 			InitParameters(gain);
 		}
 
+		////////////////////////////////////////
+
 		void GraphicEQ::InitFilters(const Coefficients& fc, const Real Q, const int sampleRate)
 		{
 			for (int i = 0; i < numFilters - 2; i++)
 				peakingFilters.push_back(PeakingFilter(fc[i], Q, sampleRate));
 		}
+
+		////////////////////////////////////////
 
 		void GraphicEQ::InitMatrix(const Coefficients& fc)
 		{
@@ -79,6 +91,8 @@ namespace RAC
 			filterResponseMatrix *= pdb;
 		}
 
+		////////////////////////////////////////
+
 		void GraphicEQ::InitParameters(const Coefficients& targetBandGains)
 		{
 			SetGain(targetBandGains);
@@ -86,6 +100,8 @@ namespace RAC
 			equal = true;
 			UpdateParameters();
 		}
+
+		////////////////////////////////////////
 
 		void GraphicEQ::SetGain(const Coefficients& targetBandGains)
 		{
@@ -125,6 +141,8 @@ namespace RAC
 				equal = false;
 		}
 
+		////////////////////////////////////////
+
 		void GraphicEQ::UpdateParameters()
 		{
 			int i = 1;
@@ -146,6 +164,8 @@ namespace RAC
 				valid = true;
 		}
 
+		////////////////////////////////////////
+
 		Real GraphicEQ::GetOutput(const Real input)
 		{
 			if (!valid)
@@ -158,6 +178,8 @@ namespace RAC
 			out *= currentFilterGains[0];
 			return out;
 		}
+
+		////////////////////////////////////////
 
 		void GraphicEQ::ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const int numFrames, const Real lerpFactor)
 		{

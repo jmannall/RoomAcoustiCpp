@@ -27,6 +27,8 @@ namespace RAC
 	using namespace Common;
 	namespace DSP
 	{
+		//////////////////// IIRFilter ////////////////////
+
 		////////////////////////////////////////
 
 		Real IIRFilter::GetOutput(const Real input)
@@ -47,6 +49,8 @@ namespace RAC
 
 			return output;
 		}
+
+		////////////////////////////////////////
 
 		std::vector<Real> IIRFilter::GetFrequencyResponse(const std::vector<Real>& frequencies) const
 		{
@@ -71,6 +75,8 @@ namespace RAC
 			return magnitudes;
 		}
 
+		//////////////////// IIRFIlter2 ////////////////////
+
 		////////////////////////////////////////
 
 		Real IIRFilter2::GetOutput(const Real input)
@@ -92,6 +98,8 @@ namespace RAC
 
 			return output;
 		}
+
+		////////////////////////////////////////
 
 		std::vector<Real> IIRFilter2::GetFrequencyResponse(const std::vector<Real>& frequencies) const
 		{
@@ -117,6 +125,8 @@ namespace RAC
 			return magnitudes;
 		}
 
+		//////////////////// IIRFIlter1 ////////////////////
+
 		////////////////////////////////////////
 
 		Real IIRFilter1::GetOutput(const Real input)
@@ -134,6 +144,8 @@ namespace RAC
 
 			return output;
 		}
+
+		////////////////////////////////////////
 
 		std::vector<Real> IIRFilter1::GetFrequencyResponse(const std::vector<Real>& frequencies) const
 		{
@@ -155,6 +167,8 @@ namespace RAC
 			return magnitudes;
 		}
 
+		//////////////////// HighSelf ////////////////////
+
 		////////////////////////////////////////
 
 		void HighShelf::UpdateParameters(const Real fc, const Real gain)
@@ -171,6 +185,8 @@ namespace RAC
 			b1 = (1 - store) * a0;
 		}
 
+		//////////////////// LowPass ////////////////////
+
 		////////////////////////////////////////
 
 		void LowPass::UpdateParameters(const Real fc)
@@ -183,6 +199,8 @@ namespace RAC
 			b0 = K * a0;
 			b1 = K * a0;
 		}
+
+		//////////////////// PeakHighSelf ////////////////////
 
 		////////////////////////////////////////
 
@@ -213,6 +231,8 @@ namespace RAC
 			b2 = A * (v1 + v4 - v5) * a0;
 		}
 
+		//////////////////// PeakLowShelf ////////////////////
+
 		////////////////////////////////////////
 
 		void PeakLowShelf::SetParameters(const Real fc, const Real Q)
@@ -242,6 +262,8 @@ namespace RAC
 			b2 = A * (v1 - v4 - v5) * a0;
 		}
 
+		//////////////////// PeakingFilter ////////////////////
+
 		////////////////////////////////////////
 
 		void PeakingFilter::SetParameters(const Real fc, const Real Q)
@@ -268,6 +290,8 @@ namespace RAC
 			b2 = (1 - v1) * a0;
 		}
 
+		//////////////////// ZPKFilter ////////////////////
+
 		////////////////////////////////////////
 
 		void ZPKFilter::UpdateParameters(const Coefficients& zpk) // z[0 - 1], p[2 - 3], k[4]
@@ -279,6 +303,8 @@ namespace RAC
 			a1 = -(zpk[2] + zpk[3]);
 			a2 = zpk[2] * zpk[3];
 		}
+
+		//////////////////// PassFilter ////////////////////
 
 		////////////////////////////////////////
 
@@ -310,10 +336,6 @@ namespace RAC
 			b0 = omega_sq * a0;
 			b1 = -2.0 * omega_sq * a0;
 			b2 = omega_sq * a0;
-		}
-
-		////////////////////////////////////////
-
-		
+		}	
 	}
 }

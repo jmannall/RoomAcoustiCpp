@@ -1,6 +1,7 @@
 /*
+* @class Matrix
 *
-*  \matrix class
+* @brief Declaration of matrix class
 *
 */
 
@@ -97,6 +98,8 @@ namespace RAC
 			}
 		}
 
+		////////////////////////////////////////
+
 		void Matrix::Log10()
 		{
 			for (int i = 0; i < rows; i++)
@@ -105,6 +108,8 @@ namespace RAC
 					data[i][j] = RAC::Common::Log10(data[i][j]);
 			}
 		}
+
+		////////////////////////////////////////
 
 		void Matrix::Pow10()
 		{

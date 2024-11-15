@@ -1,8 +1,9 @@
-
-
-// Common headers
-#include "Common/Types.h"
-#include "Common/Coefficients.h"
+/*
+* @class LinkwitzRiley
+*
+* @brief Declaration of LinkwitzRiley filter class
+*
+*/
 
 // DSP headers
 #include "DSP/LinkwitzRileyFilter.h"
@@ -11,6 +12,8 @@ namespace RAC
 {
 	namespace DSP
 	{
+		//////////////////// LinkwitzRiley ////////////////////
+
 		////////////////////////////////////////
 
 		void LinkwitzRiley::InitFilters(const int sampleRate)
@@ -63,10 +66,10 @@ namespace RAC
 			mid[1] = filters[13].GetOutput(filters[12].GetOutput(mid[1])) + filters[15].GetOutput(filters[14].GetOutput(mid[1]));
 
 			Real out[4];
-			out[0] = g[0] * filters[7].GetOutput(filters[6].GetOutput(mid[0]));
-			out[1] = g[1] * filters[9].GetOutput(filters[8].GetOutput(mid[0]));
-			out[2] = g[2] * filters[17].GetOutput(filters[16].GetOutput(mid[1]));
-			out[3] = g[3] * filters[19].GetOutput(filters[18].GetOutput(mid[1]));
+			out[0] = gains[0] * filters[7].GetOutput(filters[6].GetOutput(mid[0]));
+			out[1] = gains[1] * filters[9].GetOutput(filters[8].GetOutput(mid[0]));
+			out[2] = gains[2] * filters[17].GetOutput(filters[16].GetOutput(mid[1]));
+			out[3] = gains[3] * filters[19].GetOutput(filters[18].GetOutput(mid[1]));
 
 			return out[0] + out[1] + out[2] + out[3];
 		}

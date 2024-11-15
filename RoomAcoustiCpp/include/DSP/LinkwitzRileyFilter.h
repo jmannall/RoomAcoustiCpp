@@ -32,7 +32,7 @@ namespace RAC
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
 			LinkwitzRiley(const int sampleRate) : fm(4), fc(std::vector<Real>({ 176.0, 775.0, 3408.0 })),
-				g(4, 1.0) { InitFilters(sampleRate); CalcMidFrequencies(); }
+				gains(4, 1.0) { InitFilters(sampleRate); CalcMidFrequencies(); }
 
 			/**
 			* @brief Constructor that initialises a Linkwitz Riley filterbank with three cutoff frequencies
@@ -43,7 +43,7 @@ namespace RAC
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
 			LinkwitzRiley(const Real fc0, const Real fc1, const Real fc2, const int sampleRate) : fm(4),
-				fc({ fc0, fc1, fc2 }), g(4, 1.0) { InitFilters(sampleRate); CalcMidFrequencies(); }
+				fc({ fc0, fc1, fc2 }), gains(4, 1.0) { InitFilters(sampleRate); CalcMidFrequencies(); }
 
 			/**
 			* @brief Default deconstructor

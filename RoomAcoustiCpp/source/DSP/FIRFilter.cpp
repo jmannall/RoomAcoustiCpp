@@ -12,6 +12,8 @@ namespace RAC
 {
 	namespace DSP
 	{
+		//////////////////// FIRFilter ////////////////////
+
 		////////////////////////////////////////
 
 		Real FIRFilter::GetOutput(const Real input)
@@ -68,6 +70,8 @@ namespace RAC
 			return output;
 		}
 
+		////////////////////////////////////////
+
 		void FIRFilter::SetImpulseResponse(const Buffer& ir)
 		{
 			Resize(ir.Length());
@@ -75,11 +79,15 @@ namespace RAC
 				impulseResponse[i] = ir[i];
 		}
 
+		////////////////////////////////////////
+
 		void FIRFilter::IncreaseSize(const int length)
 		{
 			inputLine.ResizeBuffer(length);
 			impulseResponse.ResizeBuffer(length);
 		}
+
+		////////////////////////////////////////
 
 		void FIRFilter::DecreaseSize(const int length)
 		{
