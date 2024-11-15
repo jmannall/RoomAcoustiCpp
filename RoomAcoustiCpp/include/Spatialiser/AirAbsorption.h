@@ -13,9 +13,6 @@
 // Common headers
 #include "Common/Types.h"
 
-// Spatialsier headers
-#include "Spatialiser/Types.h"
-
 // DSP headers
 #include "DSP/Buffer.h"
 
@@ -25,69 +22,65 @@ namespace RAC
 	namespace Spatialiser
 	{
 		/**
-		* Class that implements an air absorption filter
+		* @brief Class that implements an air absorption filter
 		*/
 		class AirAbsorption
 		{
 		public:
 			/**
-			* Constructor that initialises the AirAbsorption with a given sample rate
+			* @brief Constructor that initialises the AirAbsorption with a given sample rate
 			*
 			* @param sampleRate The sample rate for calculating the filter coefficients
 			*/
-			AirAbsorption(const int sampleRate) : x(0), y(0), currentD(0.0), targetD(0.0), a(0.0), b(0.0), equal(true)
-			{
-				constant = static_cast<Real>(sampleRate) / (SPEED_OF_SOUND * 7782.0);
-				UpdateParameters();
-			}
+			AirAbsorption(const int sampleRate) : AirAbsorption(0.0, sampleRate) {}
 
 			/**
-			* Constructor that initialises the AirAbsorption with a given distance and sample rate
+			* @brief Constructor that initialises the AirAbsorption with a given distance and sample rate
 			*
 			* @param distance The distance for calculating the filter coefficients
 			* @param sampleRate The sample rate for calculating the filter coefficients
 			*/
-			AirAbsorption(const Real distance, const int sampleRate) : x(0), y(0), currentD(distance), targetD(distance), a(0.0), b(0.0), equal(true)
+			AirAbsorption(const Real distance, const int sampleRate) : x(0), y(0), currentDistance(distance), targetDistance(distance), a(0.0), b(0.0), equal(true)
 			{
 				constant = static_cast<Real>(sampleRate) / (SPEED_OF_SOUND * 7782.0);
 				UpdateParameters();
 			}
 
 			/**
-			* Default deconstructor
+			* @brief Default deconstructor
 			*/
 			~AirAbsorption() {}
 
 			/**
-			* Updates the target distance
+			* @brief Updates the target distance
 			*
 			* @param distance The new target distance
 			*/
 			inline void SetDistance(const Real distance)
 			{ 
-				targetD = distance;
-				if (currentD != targetD)
+				targetDistance = distance;
+				if (currentDistance != targetDistance)
 					equal = false;
 			}
 
 			/**
-			* Updates the filter coefficients
+			* @brief Updates the filter coefficients
 			*/
 			inline void UpdateParameters()
 			{
-				b = exp(-currentD * constant);
+				b = exp(-currentDistance * constant);
 				a = 1 - b;
 			}
 
 			/**
-			* Gets the current distance
+			* @brief Gets the current distance
 			*
 			* @return The current distance
 			*/
-			inline Real GetDistance() const { return currentD; }
+			inline Real GetDistance() const { return currentDistance; }
 
 			/**
-			* Returns the output of the AirAbsorption filter given an input
+			* @brief Returns the output of the AirAbsorption filter given an input
 			*
 			* @param input The input to the AirAbsorption filter
 			* @return The output of the AirAbsorption filter
@@ -95,7 +88,7 @@ namespace RAC
 			Real GetOutput(const Real input);
 
 			/**
-			* Processes an input buffer and updates the output buffer
+			* @brief Processes an input buffer and updates the output buffer
 			*
 			* @param inBuffer The input buffer
 			* @param outBuffer The output buffer
@@ -105,38 +98,22 @@ namespace RAC
 			void ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const int numFrames, const Real lerpFactor);
 						
 			/**
-			* Resets the filter buffers
+			* @brief Resets the filter buffers
 			*/
 			inline void ClearBuffers() { x = 0.0; y = 0.0; }
 
 		private:
-			/**
-			* Air absorption constant
-			*/
-			Real constant;
 
-			/**
-			* Previous input and output values
-			*/
-			Real x;
-			Real y;
+			Real constant;		// Air absorption constant
 
-			/**
-			* Filter coefficients
-			*/
-			Real b;
-			Real a;
+			Real x;		// Previous input
+			Real y;		// Previous output
+			Real b;		// Numerator coefficient
+			Real a;		// Denominator coefficient
 
-			/**
-			* Current and target distances
-			*/
-			Real currentD;
-			Real targetD;
-
-			/**
-			* Boolean to skip unnecessary update and audio calculations
-			*/
-			bool equal;
+			Real currentDistance;		// Current distance
+			Real targetDistance;		// Target distance
+			bool equal;					// True if the current and target distances are equal
 		};
 	}
 }

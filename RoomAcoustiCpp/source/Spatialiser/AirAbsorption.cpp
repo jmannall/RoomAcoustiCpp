@@ -18,6 +18,8 @@ namespace RAC
 	using namespace DSP;
 	namespace Spatialiser
 	{
+		//////////////////// AirAbsorption ////////////////////
+
 		////////////////////////////////////////
 
 		Real AirAbsorption::GetOutput(const Real input)
@@ -42,9 +44,9 @@ namespace RAC
 				for (int i = 0; i < numFrames; i++)
 					outBuffer[i] = GetOutput(inBuffer[i]);
 			}
-			else if (Equals(currentD, targetD))
+			else if (Equals(currentDistance, targetDistance))
 			{
-				currentD = targetD;
+				currentDistance = targetDistance;
 				equal = true;
 				UpdateParameters();
 				for (int i = 0; i < numFrames; i++)
@@ -55,7 +57,7 @@ namespace RAC
 				for (int i = 0; i < numFrames; i++)
 				{
 					outBuffer[i] = GetOutput(inBuffer[i]);
-					currentD = Lerp(currentD, targetD, lerpFactor);
+					currentDistance = Lerp(currentDistance, targetDistance, lerpFactor);
 					UpdateParameters();
 				}
 			}
