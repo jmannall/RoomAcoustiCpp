@@ -21,7 +21,7 @@ namespace RAC
 	namespace DSP
 	{
 		/**
-		* Class that stores a resizeable buffer of Real values.
+		* @brief Class that stores a resizeable buffer of Real values.
 		* 
 		* @details Used to store audio buffers and impulse responses
 		*/
@@ -30,12 +30,12 @@ namespace RAC
 		public:
 
 			/**
-			* Default constructor that initialises buffer with 1 sample.
+			* @brief Default constructor that initialises buffer with 1 sample.
 			*/
 			Buffer() { ResizeBuffer(1); };
 
 			/**
-			* Constructor that initialises the buffer with a specified number of samples
+			* @brief Constructor that initialises the buffer with a specified number of samples
 			*
 			* @param length The number of samples to initialise the buffer with.
 			*/
@@ -49,25 +49,24 @@ namespace RAC
 			Buffer(const std::vector<Real>& vector) : mBuffer(vector) {};
 
 			/**
-			* Default deconstructor.
+			* @brief Default deconstructor.
 			*/
 			~Buffer() {};
 
 			/**
-			* Resets all samples in the buffer to 0.
+			* @brief Resets all samples in the buffer to 0.
 			*/
 			inline void ResetBuffer() { std::fill(mBuffer.begin(), mBuffer.end(), 0.0); };
 
 			/**
-			* Returns the length of the buffer.
+			* @brief Returns the length of the buffer.
 			* 
 			* @return The length of the buffer
 			*/
 			inline int Length() const { return static_cast<int>(mBuffer.size()); }
 
 			/**
-			* Resizes the buffer to a specified number of samples.
-			* 
+			* @brief Resizes the buffer to a specified number of samples.
 			* @details If the new size is larger than the current size, the new samples are initialised to 0.
 			* 
 			* @param numSamples The number of samples to resize the buffer to.
@@ -75,8 +74,7 @@ namespace RAC
 			void ResizeBuffer(const int numSamples);
 
 			/**
-			* Checks if the buffer is valid.
-			* 
+			* @brief Checks if the buffer is valid.
 			* @details A buffer is valid if none of the values are nan.
 			* 
 			* @return False if the buffer contains nan values, true otherwise
@@ -105,7 +103,7 @@ namespace RAC
 			inline Real operator[](const int i) const { return mBuffer[i]; };
 
 			/**
-			* Multiplies each sample in the buffer by a scalar value.
+			* @brief Multiplies each sample in the buffer by a scalar value.
 			*/
 			inline Buffer operator*=(const Real a)
 			{
@@ -115,7 +113,7 @@ namespace RAC
 			}
 
 			/**
-			* Adds a scalar value to each sample in the buffer.
+			* @brief Adds a scalar value to each sample in the buffer.
 			*/
 			inline Buffer operator+=(const Real a)
 			{
@@ -125,7 +123,7 @@ namespace RAC
 			}
 
 			/**
-			* Adds another buffer to this buffer.
+			* @brief Adds another buffer to this buffer.
 			*/
 			inline Buffer operator+=(const Buffer& x)
 			{
@@ -156,7 +154,7 @@ namespace RAC
 		}
 
 		/**
-		* Class that stores a resizeable buffer of float values
+		* @brief Class that stores a resizeable buffer of float values
 		*
 		* @details Used to return an audio buffer of float values
 		*/
@@ -165,19 +163,19 @@ namespace RAC
 		public:
 
 			/**
-			* Default constructor that initialises buffer with 1 sample.
+			* @brief Default constructor that initialises buffer with 1 sample.
 			*/
 			BufferF() { ResizeBuffer(1); };
 
 			/**
-			* Constructor that initialises the buffer with a specified number of samples
+			* @brief Constructor that initialises the buffer with a specified number of samples
 			*
 			* @param length The number of samples to initialise the buffer with.
 			*/
 			BufferF(const int length) { ResizeBuffer(length); };
 
 			/**
-			* Default deconstructor.
+			* @brief Default deconstructor.
 			*/
 			~BufferF() {};
 
@@ -198,7 +196,7 @@ namespace RAC
 			inline float operator[](const int& i) const { return mBuffer[i]; };
 
 			/**
-			* Casts the values of a Buffer to a BufferF
+			* @brief Casts the values of a Buffer to a BufferF
 			*/
 			inline BufferF& operator=(const Buffer& b)
 			{
@@ -209,15 +207,14 @@ namespace RAC
 			}
 
 			/**
-			* Returns the length of the buffer.
+			* @brief Returns the length of the buffer.
 			*/
-			inline int Length() const { return mBuffer.size(); }
+			inline int Length() const { return static_cast<int>(mBuffer.size()); }
 
 		private:
 
 			/**
-			* Resizes the buffer to a specified number of samples.
-			*
+			* @brief Resizes the buffer to a specified number of samples.
 			* @details If the new size is larger than the current size, the new samples are initialised to 0.
 			*
 			* @param numSamples The number of samples to resize the buffer to.

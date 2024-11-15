@@ -20,25 +20,25 @@ namespace RAC
 	namespace DSP
 	{
 		/**
-		* Class that implements a Finite Impulse Response filter
+		* @brief Class that implements a Finite Impulse Response filter
 		*/
 		class FIRFilter
 		{
 		public:
 			/**
-			* Constructor that initialises the FIRFilter with a given impulse response
+			* @brief Constructor that initialises the FIRFilter with a given impulse response
 			*
-			* @param mIr The impulse response to initialise the FIRFilter with
+			* @param impulseResponse The impulse response to initialise the FIRFilter with
 			*/
-			FIRFilter(const Buffer& ir) : mIr(), irLen(mIr.Length()), count(static_cast<int>(ir.Length()) - 1), inputLine() { SetImpulseResponse(ir); };
+			FIRFilter(const Buffer& ir) : impulseResponse(), filterTaps(impulseResponse.Length()), count(static_cast<int>(ir.Length()) - 1), inputLine() { SetImpulseResponse(ir); };
 			
 			/**
-			* Default deconstructor
+			* @brief Default deconstructor
 			*/
 			~FIRFilter() {};
 
 			/**
-			* Returns the output of the FIRFilter given an input
+			* @brief Returns the output of the FIRFilter given an input
 			*
 			* @param input The input to the FIRFilter
 			* @return The output of the FIRFilter
@@ -46,99 +46,66 @@ namespace RAC
 			Real GetOutput(const Real input);
 
 			/**
-			* Resizes the impulse response and input line of the FIRFilter
+			* @brief Resizes the impulse response and input line of the FIRFilter
 			* 
 			* @details If the new length is not a multiple of 8, it is rounded up to the nearest multiple of 8 to allow for vectorisation in the GetOutput function.
 			* 
-			* @param len The new length of the impulse response
+			* @param length The new length of the impulse response
 			*/
-			inline void Resize(int len)
+			inline void Resize(int length)
 			{
-				if (len % 8 != 0)
-					len += (8 - len % 8);
-				if (len != irLen)
+				if (length % 8 != 0)
+					length += (8 - length % 8);
+				if (length != filterTaps)
 				{
-					if (len > irLen)
-						IncreaseSize(len);
+					if (length > filterTaps)
+						IncreaseSize(length);
 					else
-						DecreaseSize(len);
-					irLen = len;
+						DecreaseSize(length);
+					filterTaps = length;
 				}
 			}
 
+			/**
+			* @brief Updates the impulse response of the FIRFilter using linear interpolation
+			*/
 			inline void UpdateImpulseResponse(const Buffer& targetIr, const Real lerpFactor)
 			{
-				Lerp(mIr, targetIr, lerpFactor);
+				Lerp(impulseResponse, targetIr, lerpFactor);
 			}
 
-			inline Buffer GetImpulseResponse() const
-			{
-				return mIr;
-			}
+			inline Buffer GetImpulseResponse() const { return impulseResponse; }
 
 			/**
-			* Sets the impulse response of the FIRFilter
+			* @brief Sets the impulse response of the FIRFilter
 			*
 			* @param ir The new impulse response to set
 			*/
-			inline void SetImpulseResponse(const Buffer& ir)
-			{
-				Resize(ir.Length());
-				for (int i = 0; i < ir.Length(); i++)
-					mIr[i] = ir[i];
-			}
+			void SetImpulseResponse(const Buffer& ir);
 
 		private:
 
 			/**
-			* Increases the size of the impulse response and input line of the FIRFilter
-			*
+			* @brief Increases the size of the impulse response and input line of the FIRFilter
 			* @details New samples are initialised to 0.
 			*
-			* @param len The new length of the impulse response
+			* @param length The new length of the impulse response
 			*/
-			inline void IncreaseSize(const int len)
-			{
-				inputLine.ResizeBuffer(len);
-				mIr.ResizeBuffer(len);
-			}
+			void IncreaseSize(const int length);
 
 			/**
-			* Decreases the size of the impulse response and input line of the FIRFilter
-			*
+			* @brief Decreases the size of the impulse response and input line of the FIRFilter
 			* @details The input line is shifted to ensure the most recent samples are retained.
 			*
-			* @param len The new length of the impulse response
+			* @param length The new length of the impulse response
 			*/
-			inline void DecreaseSize(const int len)
-			{
-				Buffer store = inputLine;
-				int index = count;
-				for (int i = 0; i < irLen; i++)
-				{
-					inputLine[i] = store[index++];
-					if (index >= irLen) { index = 0; }
-				}
-				inputLine.ResizeBuffer(len);
-				mIr.ResizeBuffer(len);
-				count = 0;
-			}
+			void DecreaseSize(const int length);
 
-			/**
-			* The impulse response and input line buffers
-			*/
-			Buffer mIr;
-			Buffer inputLine;
+			Buffer impulseResponse;		// Impulse response buffer
+			Buffer inputLine;			// Input line buffer
 
-			/**
-			* The length of the impulse response and input line buffers
-			*/
-			int irLen;
-
-			/**
-			* The index for the next sample entry to the input line buffer
-			*/
-			int count;
+			int filterTaps;		// Length of impulse response
+			int count;			// Index for the next sample entry to the input line buffer
 		};
 	}
 }
