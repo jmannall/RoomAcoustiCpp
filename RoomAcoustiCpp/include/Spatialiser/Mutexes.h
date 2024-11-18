@@ -1,6 +1,5 @@
 /*
-*
-*  \Global mutexes for the RoomAcoustiCpp Spatialiser
+*  @brief Global mutexes for the RoomAcoustiCpp Spatialiser
 *
 */
 
@@ -14,8 +13,7 @@ namespace RAC
 {
 	namespace Spatialiser
 	{
-		// Mutexes
-		extern std::mutex tuneInMutex;
+		extern std::mutex tuneInMutex;		// Global 3DTI Mutex
 	}
 }
 

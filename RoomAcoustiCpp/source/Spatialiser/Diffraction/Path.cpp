@@ -62,8 +62,8 @@ namespace RAC
 
 			void Path::UpdateWData()
 			{
-				wData.t = mEdge.t;
-				wData.z = mEdge.zW;
+				wData.t = mEdge.GetExteriorAngle();
+				wData.z = mEdge.GetLength();
 			}
 
 			void Path::UpdateBaMa()
@@ -112,7 +112,7 @@ namespace RAC
 
 			void Path::CalcR(SRData* data)
 			{
-				data->r = (Cross(mEdge.GetAP(data->point), mEdge.mEdgeVector)).Length();
+				data->r = (Cross(mEdge.GetAP(data->point), mEdge.GetEdgeVector())).Length();
 			}
 
 			void Path::CalcZ()
@@ -124,7 +124,7 @@ namespace RAC
 			void Path::CalcZ(SRData* data)
 			{
 				Vec3 AP = mEdge.GetAP(data->point);
-				data->z = AP.Length() * Dot(UnitVector(AP), mEdge.mEdgeVector);
+				data->z = AP.Length() * Dot(UnitVector(AP), mEdge.GetEdgeVector());
 			}
 
 			void Path::CalcT()
@@ -161,8 +161,8 @@ namespace RAC
 			void Path::CalcT(SRData* data)
 			{
 				Vec3 k = UnitVector(data->point - mEdge.GetEdgeCoord(data->z));
-				data->t = acos(Dot(k, mEdge.mEdgeNormal));
-				data->rot = signbit(Dot(Cross(k, mEdge.mEdgeNormal), mEdge.mEdgeVector));
+				data->t = acos(Dot(k, mEdge.GetEdgeNormal()));
+				data->rot = signbit(Dot(Cross(k, mEdge.GetEdgeNormal()), mEdge.GetEdgeVector()));
 			}
 
 			void Path::CalcApex()

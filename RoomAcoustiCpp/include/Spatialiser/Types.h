@@ -14,7 +14,6 @@
 #include "Common/Types.h"
 #include "Common/Coefficients.h"
 #include "Common/Vec3.h"
-// #include "Common/Vec4.h"
 
 namespace RAC
 {

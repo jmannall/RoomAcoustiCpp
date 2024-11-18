@@ -241,7 +241,7 @@ namespace RAC
 			/**
 			* Default constructor that initialises an empty plane.
 			*/
-			Plane() : d(0.0), rValid(false) {}
+			Plane() : d(0.0), receiverValid(false) {}
 
 			/**
 			* Constructor that initialises a plane.
@@ -249,7 +249,7 @@ namespace RAC
 			* @param id The ID of the wall to add to the plane.
 			* @param wall The wall being added to the plane.
 			*/
-			Plane(const size_t id, const Wall& wall) : d(wall.GetD()), rValid(false), mNormal(wall.GetNormal()) { AddWall(id); }
+			Plane(const size_t id, const Wall& wall) : d(wall.GetD()), receiverValid(false), mNormal(wall.GetNormal()) { AddWall(id); }
 
 			/**
 			* Default deconstructor.
@@ -302,13 +302,15 @@ namespace RAC
 			* 
 			* @return True if the listener is in front of the plane, false otherwise
 			*/
-			inline bool GetRValid() const { return rValid; }
+			inline bool GetReceiverValid() const { return receiverValid; }
 
 
 			/**
 			* @brief Sets whether the listener is in front of the plane
+			* 
+			* @param listenerPosition The new listener position
 			*/
-			inline void SetRValid(const bool valid) { rValid = valid; }
+			inline void SetReceiverValid(const Vec3& listenerPosition) { receiverValid = ReflectPointInPlane(listenerPosition); }
 
 			/**
 			* @brief Checks whether a wall is coplanar with the plane
@@ -407,7 +409,7 @@ namespace RAC
 			*/
 			Real d;			// Distance of the plane from the origin along the normal direction
 			Vec3 mNormal;	// Normal of the plane
-			bool rValid;	// True if the listener is in front of the plane
+			bool receiverValid;	// True if the listener is in front of the plane
 
 			/**
 			* Connected IDs

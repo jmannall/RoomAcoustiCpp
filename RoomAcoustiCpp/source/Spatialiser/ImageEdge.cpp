@@ -113,14 +113,11 @@ namespace RAC
 		{
 			// Determine if receiver is in front or behind plane face
 			for (auto& it : mPlanes)
-				it.second.SetRValid(it.second.ReflectPointInPlane(mListenerPosition));
+				it.second.SetReceiverValid(mListenerPosition);
 
 			// Determine where receiver lies around an edge
 			for (auto& it : mEdges)
-			{
-				EdgeZone zone = it.second.FindEdgeZone(mListenerPosition);
-				it.second.SetRZone(zone);
-			}
+				it.second.SetReceiverZone(mListenerPosition);
 		}
 
 		bool ImageEdge::LineRoomObstruction(const Vec3& start, const Vec3& end) const
@@ -317,7 +314,7 @@ namespace RAC
 				for (auto& it : mPlanes)
 				{
 					k = it.second.PointPlanePosition(point);
-					if (it.second.GetRValid() && k < 0) // receiver in front of wall and point behind wall
+					if (it.second.GetReceiverValid() && k < 0) // receiver in front of wall and point behind wall
 						ks[i] = PlaneDistanceID(k, it.first); // A more negative k means the plane is closer to the receiver
 					i++;
 				}
@@ -442,7 +439,7 @@ namespace RAC
 			Vec3 position;
 			for (const auto& it : mEdges)
 			{
-				if (it.second.zW < mIEMConfig.minEdgeLength)
+				if (it.second.GetLength() < mIEMConfig.minEdgeLength)
 					continue;
 
 				// Source checks
@@ -469,10 +466,10 @@ namespace RAC
 					continue;
 
 				// Receiver checks
-				if (it.second.GetRZone() == EdgeZone::Invalid)
+				if (it.second.GetReceiverZone() == EdgeZone::Invalid)
 					continue;
 
-				if (mIEMConfig.diffraction == DiffractionSound::shadowZone && it.second.GetRZone() == EdgeZone::NonShadowed)
+				if (mIEMConfig.diffraction == DiffractionSound::shadowZone && it.second.GetReceiverZone() == EdgeZone::NonShadowed)
 					continue;
 
 				if (!vSource.mDiffractionPath.valid)
@@ -524,7 +521,7 @@ namespace RAC
 				if (!mIEMConfig.reflections)
 					continue;
 
-				if (!it.second.GetRValid())
+				if (!it.second.GetReceiverValid())
 					continue;
 
 				Absorption& absorption = vSource.GetAbsorptionRef();
@@ -585,7 +582,7 @@ namespace RAC
 #endif
 				for (const auto& it : mPlanes)
 				{
-					bool rValid = it.second.GetRValid();
+					bool rValid = it.second.GetReceiverValid();
 					for (const VirtualSourceData& vS : sp[prevRefIdx])
 					{
 						// HOD reflections
@@ -780,10 +777,10 @@ namespace RAC
 #endif
 				for (const auto& it : mEdges)
 				{
-					if (it.second.zW < mIEMConfig.minEdgeLength)
+					if (it.second.GetLength() < mIEMConfig.minEdgeLength)
 						continue;
 
-					EdgeZone rZone = it.second.GetRZone();
+					EdgeZone rZone = it.second.GetReceiverZone();
 					for (const VirtualSourceData& vS : sp[prevRefIdx])
 					{
 						if (vS.diffraction)
@@ -817,7 +814,7 @@ namespace RAC
 						if (rZone == EdgeZone::Invalid)
 							continue;
 
-						if (mIEMConfig.diffractedReflections == DiffractionSound::shadowZone && it.second.GetRZone() == EdgeZone::NonShadowed)
+						if (mIEMConfig.diffractedReflections == DiffractionSound::shadowZone && it.second.GetReceiverZone() == EdgeZone::NonShadowed)
 							continue;
 
 						if (!vSource.mDiffractionPath.valid)

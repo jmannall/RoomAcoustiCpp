@@ -149,7 +149,7 @@ namespace RAC
 
 				auto it = mEdges.find(id);
 				if (it == mEdges.end()) { return; } // case: edge does not exist
-				else { it->second.Update(edge); } // case: edge does exist
+				else { it->second = edge; } // case: edge does exist
 			}
 
 			inline void UpdateEdges(const std::vector<size_t>& IDs, const std::vector<Edge>& edges)

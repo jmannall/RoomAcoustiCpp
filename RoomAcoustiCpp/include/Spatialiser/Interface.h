@@ -1,5 +1,5 @@
 /*
-* @brief Interface between the API and Spatialiser global context
+* @brief Interface between the API and RoomAcoustiCpp global context
 * 
 */
 

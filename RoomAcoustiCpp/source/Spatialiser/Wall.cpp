@@ -67,7 +67,7 @@ namespace RAC
 		{
 			bool valid = ReflectPointInPlane(edge.GetEdgeCoord(EPS)); // Prevents false in case edge base is coplanar
 			if (valid)
-				valid = ReflectPointInPlane(edge.GetEdgeCoord(edge.zW - EPS));
+				valid = ReflectPointInPlane(edge.GetEdgeCoord(edge.GetLength() - EPS));
 
 			return valid;
 		}

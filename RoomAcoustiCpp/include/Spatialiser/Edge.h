@@ -27,7 +27,6 @@ namespace RAC
 	{
 		//////////////////// Class predelarations ////////////////////
 		
-		class Edge;
 		class Plane;
 
 		//////////////////// Data structures ////////////////////
@@ -36,6 +35,13 @@ namespace RAC
 		typedef std::pair<Vec3, Vec3> Vec3Pair;
 		typedef std::pair<Real, Real> RealPair;
 
+		/**
+		* @brief Describes the region a a point lies in around an edge 
+		* 
+		* @details NonShadowed - in front of both edge planes
+		* CanBeShadowed - in front of one edge plane
+		* Invalid - behind both edge planes
+		*/
 		enum EdgeZone
 		{
 			NonShadowed,
@@ -46,19 +52,19 @@ namespace RAC
 		//////////////////// Edge class ////////////////////
 
 		/**
-		* Class that describes an edge
+		* @brief Class that describes an edge
 		*/
 		class Edge
 		{
 		public:
 
 			/**
-			* Default constructor
+			* @brief Default constructor
 			*/
-			Edge() : zW(0.0), t(0.0), mDs(0.0, 0.0), rZone(EdgeZone::Invalid) {}
+			Edge() : zW(0.0), t(0.0), mDs(0.0, 0.0), receiverZone(EdgeZone::Invalid) {}
 
 			/**
-			* Constructor that initialises the Edge from the given parameters
+			* @brief Constructor that initialises the Edge from the given parameters
 			* 
 			* @param base The base coordinate of the edge
 			* @param top The top coordinate of the edge
@@ -72,37 +78,24 @@ namespace RAC
 			Edge(const Vec3& base, const Vec3& top, const Vec3& normal1, const Vec3& normal2, const size_t wallId1, const size_t wallId2, const size_t planeId1, const size_t planeId2);
 
 			/**
-			* Default deconstructor
+			* @brief Default deconstructor
 			*/
 			~Edge() {};
 
 			/**
-			* Calculates the edge parameters
+			* @brief Calculates the edge parameters
 			*/
 			void Update();
 
 			/**
-			* Updates the edge data from an EdgeData struct and updates the edge parameters
-			*
-			* @param data The input EdgeData struct
-			*/
-			inline void Update(const Edge& edge)
-			{
-				mBase = edge.GetBase();
-				mTop = edge.GetTop();
-				mFaceNormals = edge.GetFaceNormals();
-				Update();
-			}
-
-			/**
-			* Reflects the edge in a plane
+			* @brief Reflects the edge in a plane
 			*
 			* @param plane The input plane
 			*/
 			void ReflectInPlane(const Plane& plane);
 
 			/**
-			* Finds the vector between a point and the edge base
+			* @brief Finds the vector between a point and the edge base
 			*
 			* @param point The input coordinate
 			* @return The vector between the point and the edge base
@@ -110,7 +103,7 @@ namespace RAC
 			inline Vec3 GetAP(const Vec3& point) const { return point - mBase; }
 
 			/**
-			* Finds the coordinate of a point given the z value along the edge
+			* @brief Finds the coordinate of a point given the z value along the edge
 			*
 			* @param z The z value along the edge
 			* @return The coordinate at the z value along the edge
@@ -118,28 +111,42 @@ namespace RAC
 			inline Vec3 GetEdgeCoord(Real z) const { return mBase + z * mEdgeVector; }
 
 			/**
-			* Gets the base coordinates
-			*
 			* @return The base coordinate of the edge
 			*/
 			inline Vec3 GetBase() const { return mBase; }
 
 			/**
-			* Gets the top coordinates
-			*
 			* @return The top coordinate of the edge
 			*/
 			inline Vec3 GetTop() const { return mTop; }
 
 			/**
-			* Gets the mid coordinates
-			*
 			* @return The mid coordinate of the edge
 			*/
 			inline Vec3 GetMidPoint() const { return midPoint; }
 
 			/**
-			* Gets the second wall ID
+			* @return The length of the edge
+			*/
+			inline Real GetLength() const { return zW; }
+
+			/**
+			* @return The exterior angle of the edge
+			*/
+			inline Real GetExteriorAngle() const { return t; }
+
+			/**
+			* @return The vector that lies between the face normals
+			*/
+			inline const Vec3& GetEdgeNormal() const { return mEdgeNormal; }
+
+			/**
+			* The vector between the base and the top of the edge
+			*/
+			inline const Vec3& GetEdgeVector() const { return mEdgeVector; }
+
+			/**
+			* @brief Gets the second wall ID
 			*
 			* @param id The first wall ID
 			* @return The wall ID that does not match the input ID
@@ -153,15 +160,11 @@ namespace RAC
 			}
 
 			/**
-			* Gets the plane IDs
-			*
 			* @return The plane IDs as an ID pair
 			*/
 			inline IDPair GetPlaneIDs() const { return mPlaneIds; }
 
 			/**
-			* Gets the wall IDs
-			*
 			* @return The wall IDs as an ID pair
 			*/
 			inline IDPair GetWallIDs() const { return mWallIds; }
@@ -189,16 +192,16 @@ namespace RAC
 			/**
 			* Sets the receiver edge zone
 			* 
-			* @param zone The new receiver edge zone
+			* @param listenerPosition The new listener position
 			*/
-			inline void SetRZone(const EdgeZone zone) { rZone = zone; }
+			inline void SetReceiverZone(const Vec3& listenerPosition) { receiverZone = FindEdgeZone(listenerPosition); }
 
 			/**
 			* Gets the receiver edge zone
 			* 
  			* @return The receiver edge zone
 			*/
-			inline EdgeZone GetRZone() const { return rZone; }
+			inline EdgeZone GetReceiverZone() const { return receiverZone; }
 
 			/**
 			* Finds the edge zone of a given point
@@ -208,66 +211,22 @@ namespace RAC
 			*/
 			EdgeZone FindEdgeZone(const Vec3& point) const;
 
-			/**
-			* The exterior angle of the edge
-			*/
-			Real t;
-
-			/**
-			* The length of the edge
-			*/
-			Real zW;
-
-			/**
-			* The vector between the base and top of the edge
-			*/
-			Vec3 mEdgeVector;
-
-			/**
-			* The vector that lies between the face normals
- 			*/
-			Vec3 mEdgeNormal;
-
 		private:
-			/**
-			* The midpoint along the edge
-			*/
-			Vec3 midPoint;
 
-			/**
-			* The base coordinate of the edge
-			*/
-			Vec3 mBase;
+			Vec3 mBase;				// Base coordinate of the edge
+			Vec3 mTop;				// Top coordinate of the edge
+			Vec3 midPoint;			// Midpoint of the edge
+			Real t;					// Exterior angle of the edge
+			Real zW;				// Length of the edge
+			Vec3 mEdgeVector;		// Vector between the base and top of the edge
+			Vec3 mEdgeNormal;		// Vector that lies between the face normals
 
-			/**
-			* The top coordinate of the edge
-			*/
-			Vec3 mTop;
+			Vec3Pair mFaceNormals;		// Face normals of the edge
+			RealPair mDs;				// The D values describing the planes containing the walls making up the edge
+			IDPair mPlaneIds;			// The plane IDs of the planes containing the walls making up the edge
+			IDPair mWallIds;			// The wall IDs of the walls making up the edge
 
-			/**
-			* The face normals of the edge
-			*/
-			Vec3Pair mFaceNormals;
-
-			/**
-			* The D values describing the planes wherein the walls connected to the edge lie
-			*/
-			RealPair mDs;
-
-			/**
-			* The plane IDs of the planes making up the edge
-			*/
-			IDPair mPlaneIds;
-
-			/**
-			* The wall IDs of the walls connected to the edge
-			*/
-			IDPair mWallIds;
-
-			/**
-			* The receiver edge zone
-			*/
-			EdgeZone rZone;
+			EdgeZone receiverZone;		// The edge zone where the receiver is located
 		};
 	}
 }
