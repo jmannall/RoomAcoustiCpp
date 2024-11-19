@@ -217,8 +217,6 @@ namespace RAC
 		void Context::UpdateRoom(const Real volume, const Vec& dimensions)
 		{
 			Coefficients T60 = mRoom->GetReverbTime(volume);
-			if (T60 == 0.0)
-				T60 = mReverb->GetReverbTime();
 			if (dimensions.Rows() == 0)
 			{
 				Debug::Log("No dimensions provided for room", Colour::Red);
@@ -226,10 +224,10 @@ namespace RAC
 				defaultDimensions[0] = 2.5; // Assume height
 				defaultDimensions[1] = 4.0; // Assume width
 				defaultDimensions[2] = volume / 10.0; // Calculate depth
-				mReverb->SetFDNParameters(T60, defaultDimensions);
+				mReverb->UpdateFDNParameters(T60, defaultDimensions);
 			}
 			else
-				mReverb->SetFDNParameters(T60, dimensions);
+				mReverb->UpdateFDNParameters(T60, dimensions);
 		}
 
 		////////////////////////////////////////
@@ -249,7 +247,7 @@ namespace RAC
 			{
 				lock_guard<mutex> lock(tuneInMutex);
 				mListener->SetListenerTransform(transform);
-				mReverb->UpdateReverb(position);
+				mReverb->UpdateReverbSourcePositions(position);
 			}
 			mImageEdgeModel->SetListenerPosition(position);
 		}

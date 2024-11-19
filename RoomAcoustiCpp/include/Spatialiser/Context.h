@@ -108,7 +108,7 @@ namespace RAC
 			*
 			* @param model The new FDN model.
 			*/
-			inline void UpdateFDNModel(const FDNMatrix model) { mReverb->UpdateFDNModel(model); }
+			inline void InitFDNMatrix(const FDNMatrix matrixType) { mReverb->InitFDNMatrix(matrixType); }
 
 			/**
 			* @brief Updates the diffraction model.

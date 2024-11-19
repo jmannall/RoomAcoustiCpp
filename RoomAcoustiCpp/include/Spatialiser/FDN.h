@@ -11,17 +11,13 @@
 // C++ headers
 #include <vector>
 #include <mutex>
+#include <cassert>
 
 // Spatialiser headers
 #include "Spatialiser/Types.h"
-#include "Spatialiser/Wall.h"
-#include "Spatialiser/AirAbsorption.h"
-
-// Unity headers
-#include "Unity/Profiler.h"
-#include "Unity/Debug.h"
 
 // Common headers
+#include "Common/Types.h"
 #include "Common/Matrix.h"
 #include "Common/Vec.h"
 #include "Common/Coefficients.h"
@@ -34,33 +30,75 @@ namespace RAC
 {
 	using namespace Common;
 	using namespace DSP;
-	using namespace Unity;
 	namespace Spatialiser
 	{
-
-		//////////////////// FDN Channel class ////////////////////
-
+		/**
+		* @brief Implements an FDN Channel with a delay and absorption
+		*/
 		class Channel
 		{
 		public:
-			// Load and Destroy
-			Channel(const Config& config);
+			/**
+			* @brief Constructor that initialises an FDN Channel with a set delay length and T60
+			* 
+			* @params delayLength delay in samples
+			* @params T60 Target decay time
+			* @params config Configuration of the spatialiser
+			*/
 			Channel(const int delayLength, const Coefficients& T60, const Config& config);
-			~Channel() { /*delete mBufferMutex;*/ };
 
-			// Setters
-			// void UpdateT60(const Coefficients& T60);
-			void SetParameters(const Coefficients& T60, const int delayLength);
-			void SetAbsorption();
-			void SetAbsorption(const Coefficients& T60);
-			void UpdateAbsorption(const Coefficients& T60);
+			/**
+			* @brief Default deconstructor
+			*/
+			~Channel() {};
+
+			/**
+			* @brief Updates the target T60 and the delay line lengths
+			* @details Currently no delay line interpolation implemented
+			*
+			* @params T60 The new decay time
+			* @params delayLength The new delay in samples
+			*/
+			void UpdateParameters(const Coefficients& T60, const int delayLength);
+
+			/**
+			* @brief Initialises the absorption filter with a given target T60
+			* @details No interpolation of the absorption filter coefficients
+			* 
+			* @params T60 The target decay time
+			*/
+			inline void InitAbsorption(const Coefficients& T60) { mAbsorptionFilter.InitParameters(CalcGain(T60)); }
+
+			/**
+			* @brief Updates the absorption filter for a given target T60
+			*
+			* @params T60 The new target decay time
+			*/
+			inline void UpdateAbsorption(const Coefficients& T60) { mAbsorptionFilter.SetGain(CalcGain(T60)); }
+
+			/**
+			* @brief Calculates the filter gain coefficients required for a give T60
+			* 
+			* @params T60 The target decay time
+			* @return The required filter gain coefficients
+			*/
 			inline Coefficients CalcGain(const Coefficients& T60) { return (-3.0 * mT / T60).Pow10(); } // 20 * log10(H(f)) = -60 * t / t60(f);
-			inline void SetDelay(const int delayLength)
+			
+			/**
+			* @brief Initialises the delay line
+			* 
+			* @params delayLength The delay line length in samples
+			*/
+			inline void InitDelay(const int delayLength)
 			{ 
 				mT = static_cast<Real>(delayLength) / mConfig.fs;
 				std::lock_guard<std::mutex> lock(*mBufferMutex);
 				mBuffer.ResizeBuffer(delayLength);
 			}
+
+			/**
+			* @brief Resets the internal buffers to zero
+			*/
 			inline void Reset()
 			{ 
 				idx = 0; 
@@ -68,59 +106,106 @@ namespace RAC
 				mAbsorptionFilter.ClearBuffers();
 			}
 
-			// Getters
+			/**
+			* @brief Processes a single sample output
+			* 
+			* @brief input The next audio sample input to the delay line
+			* @return The next output from the channel
+			*/
 			Real GetOutput(const Real input);
 
 		private:
 
-			// Member variables
-			Real mT;
-			Config mConfig;
-			Buffer mBuffer;
-			GraphicEQ mAbsorptionFilter;
-			
-			//std::mutex* mBufferMutex;
-			std::shared_ptr<std::mutex> mBufferMutex;
-			int idx;	// Read index
+			Config mConfig;									// The spatialiser configuration
+			Buffer mBuffer;									// The internal delay line
+			GraphicEQ mAbsorptionFilter;					// The absorption filter to match the target decay time
+			std::shared_ptr<std::mutex> mBufferMutex;		// Protects mBuffer
+
+			Real mT;		// The current delay in seconds
+			int idx;		// Current delay line read index
+
 		};
 
-		//////////////////// FDN class ////////////////////
-
+		/**
+		* @brief Implements a feedback delay network with modifiable T60 and delay line lengths
+		*/
 		class FDN
 		{
 		public:
-			// Load and Destroy
-			FDN(const Config& config);
+			/**
+			* @brief Initialises an FDN with a target T60 and given primary room dimensions
+			* @details Initialises with a default householder matrix
+			* 
+			* @params T60 Target decay time
+			* @params dimensions Primary room dimensions that determine delay line lengths
+			* @params config The spatialiser configuration
+			*/
 			FDN(const Coefficients& T60, const Vec& dimensions, const Config& config);
+
+			/**
+			* @brief Default deconstructor
+			*/
 			~FDN() {}
 
-			// Getters
+			/**
+			* @brief Process a single FDN sample
+			* 
+			* @params data Multichannel audio input data
+			* @params gain Late reverberation gain
+			*/
 			void ProcessOutput(const std::vector<Real>& data, const Real gain);
-			inline Real GetOutput(const int i) const { return y[i]; }
 
-			// Setters
+			/**
+			* @brief Retrieve the last processed output for a given FDN channel
+			*
+			* @params i The channel number
+			* @return The last processed sample
+			*/
+			inline Real GetOutput(const int i) const { assert(i < y.Length()); return y[i]; }
+
+			/**
+			* @brief Updates the target T60
+			* 
+			* @params T60 The new decay time
+			*/
 			void UpdateT60(const Coefficients& T60);
-			void SetParameters(const Coefficients& T60, const Vec& dimensions);
+
+			/**
+			* @brief Updates the target T60 and the delay line lengths
+			* @details Currently no delay line interpolation implemented
+			* 
+			* @params T60 The new decay time
+			* @params dimensions The new primary room dimensions that determine the delay line lengths
+			*/
+			void UpdateParameters(const Coefficients& T60, const Vec& dimensions);
+
+			/**
+			* @brief Resets all internal FDN buffers to zero
+			*/
 			inline void Reset()
 			{ 
 				x.Reset(); y.Reset();  
 				for (int i = 0; i < mConfig.numFDNChannels; i++)
 					mChannels[i].Reset();
 			}
-			inline void SetFDNModel(const FDNMatrix& model)
+
+			/**
+			* @brief Initialises the FDN matrix
+			* 
+			* @params matrixType The new FDN matrix type
+			*/
+			inline void InitFDNMatrix(const FDNMatrix& matrixType)
 			{
-				switch (model)
+				switch (matrixType)
 				{
 				case FDNMatrix::householder:
 				{ 
-					mat = Matrix(mConfig.numFDNChannels, 1);
 					Init = &FDN::InitHouseHolder;
 					Process = &FDN::ProcessHouseholder;
 					break;
 				}
 				case FDNMatrix::randomOrthogonal:
 				{ 
-					mat = Matrix(mConfig.numFDNChannels, mConfig.numFDNChannels);
 					Init = &FDN::InitRandomOrthogonal;
 					Process = &FDN::ProcessSquare;
 					break;
@@ -130,18 +215,47 @@ namespace RAC
 			}
 
 		private:
-			// Init
-			void InitMatrix() { (this->*Init)(); };
-			void (FDN::* Init)();
+			/**
+			* @brief Calculate a sample delay based on given distances
+			* 
+			* @params dimensions Primary room dimensions
+			* @return Sample delays for each FDN channel
+			*/
 			std::vector<int> CalculateTimeDelay(const Vec& dimensions);
 
-			// Process
+			/**
+			* @brief Runs the currently selected matrix Init function
+			*/
+			void InitMatrix() { (this->*Init)(); };
+
+			/**
+			* @brief Init matrix function pointer
+			*/
+			void (FDN::* Init)();
+
+			/**
+			* @brief Runs the currently selected matrix Process function
+			*/
 			inline void ProcessMatrix() { (this->*Process)(); };
+
+			/**
+			* @brief Process matrix function pointer
+			*/
 			void (FDN::* Process)();
 
+			/**
+			* @brief Initialises the householder factor for effciently processing a householder matrix
+			*/
 			inline void InitHouseHolder() { houseHolderFactor = 2.0 / mConfig.numFDNChannels; }
+
+			/**
+			* @brief Initialises a random orthogonal matrix
+			*/
 			void InitRandomOrthogonal();
 
+			/**
+			* @brief Optimises processing of a householder feedback matrix
+			*/
 			inline void ProcessHouseholder()
 			{
 				Real entry = houseHolderFactor * y.Sum();
@@ -149,27 +263,18 @@ namespace RAC
 					x[i] = entry - y[i];
 			}
 
-			inline void ProcessSquare()
-			{
-				Real sum = 0.0;
-				for (int j = 0; j < mat.Cols(); ++j)
-				{
-					sum = 0.0;
-					for (int k = 0; k < mat.Rows(); ++k)
-						sum += y[k] * mat[k][j];
-					x[j] = sum;
-				}
-			}
+			/**
+			* @brief Processes a square feedback matrix
+			*/
+			void ProcessSquare();
 
-			// Member variables
-			Config mConfig;
-			std::vector<Channel> mChannels;
-			Rowvec x;
-			Rowvec y;
-			Matrix mat;
+			Config mConfig;						// Spatialiser configuration
+			std::vector<Channel> mChannels;		// Internal delay line channels
 
-			FDNMatrix mModel;
-			Real houseHolderFactor;
+			Rowvec x;					// Next input audio buffer
+			Rowvec y;					// Previous output audio buffer
+			Matrix feedbackMatrix;		// Feedback matrix
+			Real houseHolderFactor;		// Precomputed factor for processing a householder matrix
 		};
 	}
 }

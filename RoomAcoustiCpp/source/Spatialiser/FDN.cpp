@@ -16,55 +16,37 @@
 
 // Unity headers
 #include "Unity/UnityInterface.h"
+#include "Unity/Profiler.h"
+#include "Unity/Debug.h"
 
 namespace RAC
 {
 	using namespace Common;
+	using namespace Unity;
 	namespace Spatialiser
 	{
 
 		//////////////////// FDN Channel class ////////////////////
 
-		Channel::Channel(const Config& config) : mConfig(config), mAbsorptionFilter(mConfig.frequencyBands, mConfig.Q, mConfig.fs), idx(0)
+		////////////////////////////////////////
+
+		Channel::Channel(const int delayLength, const Coefficients& T60, const Config& config) : mConfig(config), mAbsorptionFilter(config.frequencyBands, config.Q, config.fs), idx(0)
 		{
 			mBufferMutex = std::make_shared<std::mutex>();
-			SetDelay(1);
-			SetAbsorption();
+			InitDelay(delayLength);
+			InitAbsorption(T60);
 		}
 
-		Channel::Channel(const int delayLength, const Coefficients& T60, const Config& config) : mConfig(config), mAbsorptionFilter(mConfig.frequencyBands, mConfig.Q, mConfig.fs), idx(0)
-		{
-			mBufferMutex = std::make_shared<std::mutex>();
-			SetDelay(delayLength);
-			SetAbsorption(T60);
-		}
+		////////////////////////////////////////
 
-		void Channel::SetParameters(const Coefficients& T60, const int delayLength)
+		void Channel::UpdateParameters(const Coefficients& T60, const int delayLength)
 		{
-			SetDelay(delayLength);
+			InitDelay(delayLength);
 			if (T60 > 0.0)
-				SetAbsorption(T60);
-			else
-				SetAbsorption();
+				InitAbsorption(T60);
 		}
 
-		void Channel::SetAbsorption()
-		{
-			Coefficients g = Coefficients(mConfig.frequencyBands.Length(), 1.0);
-			mAbsorptionFilter.InitParameters(g);
-		}
-
-		void Channel::SetAbsorption(const Coefficients& T60)
-		{
-			Coefficients g = CalcGain(T60);
-			mAbsorptionFilter.InitParameters(g);
-		}
-
-		void Channel::UpdateAbsorption(const Coefficients& T60)
-		{
-			Coefficients g = CalcGain(T60);
-			mAbsorptionFilter.SetGain(g);
-		}
+		////////////////////////////////////////
 
 		Real Channel::GetOutput(const Real input)
 		{
@@ -79,35 +61,9 @@ namespace RAC
 			return out;
 		}
 
-		//////////////////// FDN class ////////////////////
+		//////////////////// FDN utility functions ////////////////////
 
-		FDN::FDN(const Config& config) : mConfig(config), x(config.numFDNChannels), y(config.numFDNChannels), mat(config.numFDNChannels, config.numFDNChannels)
-		{
-			mChannels = std::vector<Channel>(mConfig.numFDNChannels, Channel(mConfig));
-			SetFDNModel(FDNMatrix::householder);
-		}
-
-		FDN::FDN(const Coefficients& T60, const Vec& dimensions, const Config& config) : mConfig(config), x(config.numFDNChannels), y(config.numFDNChannels), mat(config.numFDNChannels, config.numFDNChannels)
-		{
-			std::vector<int> delayLengths = CalculateTimeDelay(dimensions);
-			mChannels.reserve(mConfig.numFDNChannels);
-			for (int i = 0; i < mConfig.numFDNChannels; i++)
-				mChannels.push_back(Channel(delayLengths[i], T60, mConfig));
-			SetFDNModel(FDNMatrix::householder);
-		}
-
-		void FDN::UpdateT60(const Coefficients& T60)
-		{
-			for (int i = 0; i < mConfig.numFDNChannels; i++)
-				mChannels[i].UpdateAbsorption(T60);
-		}
-
-		void FDN::SetParameters(const Coefficients& T60, const Vec& dimensions)
-		{
-			std::vector<int> delayLengths = CalculateTimeDelay(dimensions);
-			for (int i = 0; i < mConfig.numFDNChannels; i++)
-				mChannels[i].SetParameters(T60, delayLengths[i]);
-		}
+		////////////////////////////////////////
 
 		bool IsSetMutuallyPrime(const std::vector<int>& numbers)
 		{
@@ -122,6 +78,8 @@ namespace RAC
 			return true;
 		}
 
+		////////////////////////////////////////
+
 		bool IsEntryMutuallyPrime(const std::vector<int>& numbers, int idx) {
 			for (int i = 0; i < numbers.size(); ++i)
 			{
@@ -132,6 +90,8 @@ namespace RAC
 			}
 			return true;
 		}
+
+		////////////////////////////////////////
 
 		void MakeSetMutuallyPrime(std::vector<int>& numbers) {
 			for (int i = 0; i < numbers.size(); ++i)
@@ -159,6 +119,38 @@ namespace RAC
 			}
 		}
 
+		//////////////////// FDN class ////////////////////
+
+		////////////////////////////////////////
+
+		FDN::FDN(const Coefficients& T60, const Vec& dimensions, const Config& config) : mConfig(config), x(config.numFDNChannels), y(config.numFDNChannels), feedbackMatrix(config.numFDNChannels, config.numFDNChannels)
+		{
+			std::vector<int> delayLengths = CalculateTimeDelay(dimensions);
+			mChannels.reserve(mConfig.numFDNChannels);
+			for (int i = 0; i < mConfig.numFDNChannels; i++)
+				mChannels.push_back(Channel(delayLengths[i], T60, mConfig));
+			InitFDNMatrix(FDNMatrix::householder);
+		}
+
+		////////////////////////////////////////
+
+		void FDN::UpdateT60(const Coefficients& T60)
+		{
+			for (int i = 0; i < mConfig.numFDNChannels; i++)
+				mChannels[i].UpdateAbsorption(T60);
+		}
+
+		////////////////////////////////////////
+
+		void FDN::UpdateParameters(const Coefficients& T60, const Vec& dimensions)
+		{
+			std::vector<int> delayLengths = CalculateTimeDelay(dimensions);
+			for (int i = 0; i < mConfig.numFDNChannels; i++)
+				mChannels[i].UpdateParameters(T60, delayLengths[i]);
+		}
+
+		////////////////////////////////////////
+
 		std::vector<int> FDN::CalculateTimeDelay(const Vec& dimensions)
 		{
 			assert(dimensions.Rows() >  0);
@@ -168,9 +160,9 @@ namespace RAC
 			if (dimensions.Rows() > 0)
 			{
 				Real idx = static_cast<Real>(mConfig.numFDNChannels) / static_cast<Real>(dimensions.Rows());
-				//assert(t.Rows() == config.numFDNChannels);
-				//assert(dimensions.Rows() <= config.numFDNChannels);
-				//assert(idx == floor(idx)); // length of dimensions must be a multiple of mNumChannels
+
+				assert(dimensions.Rows() <= config.numFDNChannels);
+				assert(idx == floor(idx)); // length of dimensions must be a multiple of mNumChannels
 
 				t.RandomUniformDistribution(-0.1, 0.1f);
 				t *= dimensions.Mean();
@@ -195,12 +187,16 @@ namespace RAC
 			return delays;
 		}
 
+		////////////////////////////////////////
+
 		void FDN::InitRandomOrthogonal()
 		{
+			feedbackMatrix = Matrix(mConfig.numFDNChannels, mConfig.numFDNChannels);
+
 			Vec vector = Vec(mConfig.numFDNChannels);
 			vector.RandomUniformDistribution(-1.0, 1.0);
 			vector.Normalise();
-			mat.AddColumn(vector.GetColumn(0), 0);
+			feedbackMatrix.AddColumn(vector.GetColumn(0), 0);
 
 			Real tol = 0.000001;
 			for (int j = 1; j < mConfig.numFDNChannels; ++j)
@@ -215,88 +211,21 @@ namespace RAC
 					for (int i = 0; i < mConfig.numFDNChannels; ++i)
 					{
 						for (int k = 0; k < j; k++)
-							section[i][k] = mat[i][k];
-						std::vector<Real> test = mat[i];
+							section[i][k] = feedbackMatrix[i][k];
+						std::vector<Real> test = feedbackMatrix[i];
 						Real x = test[0];
-						Real y = mat[i][0];
+						Real y = feedbackMatrix[i][0];
 					}
 
 					vector -= section * (section.Transpose() * vector);
 					norm = vector.CalculateNormal();
 				}
 				vector /= norm;
-				mat.AddColumn(vector.GetColumn(0), j);
+				feedbackMatrix.AddColumn(vector.GetColumn(0), j);
 			}
 		}
 
-		//void FDN::InitMatrix()
-		//{
-		//	vec vector = vec(mConfig.numFDNChannels);
-
-		//	const int numCh = 12;
-
-		//	std::vector<Real> col = std::vector<Real>({ 0.190688769837721, 0.385638500937477, -0.214721607924256, -0.223163172256605, 0.416580913100255, 0.134080009434784, -0.500189794156601, 0.383362598914846, 0.0964280106643111, -0.181167057154258, 0.283488160223467, 0.0886247705279117 });
-		//	houseMat.AddColumn(col, 0);
-
-		//	std::vector<Real> col0 = std::vector<Real>({ 0.251288080910173, 0.463081025830656, 0.123001447429897, 0.111209155896334, 0.283637518863125, 0.570862560700583, 0.277922724930659, -0.0140354015504064, 0.367357631085153, 0.256510104845225, -0.0578512136087400, -0.0839360870952322 });
-		//	std::vector<Real> col1 = std::vector<Real>({ 0.324000644136978, 0.0771150039207005, 0.221186170062238, -0.218478347921605, 0.0930050966965055, -0.236068488842949, -0.162162903275363, 0.252168440461209, -0.0636391434234939, 0.293980204799346, 0.680984148140615, -0.289729232256578 });
-		//	std::vector<Real> col2 = std::vector<Real>({ -0.297828765804106, 0.176011218147238, 0.242348095565290, 0.327022627771562, 0.0858729131180891, -0.00706759064976401, 0.331432781263459, 0.399747334659180, -0.601847346124569, 0.0558459994652321, -0.118327972777587, -0.241311909991920 });
-		//	std::vector<Real> col3 = std::vector<Real>({ 0.330055950901652, -0.216869057453229, -0.111159901172237, -0.353054687262316, -0.173534253414560, 0.259129139763574, 0.165010459499892, -0.207881337681749, -0.262200967910925, -0.176497541439552, -0.197385483265019, -0.632818960029143 });
-		//	std::vector<Real> col4 = std::vector<Real>({ 0.105680958925820, -0.0380855664321653, 0.145415322011594, -0.0618778110602707, 0.141599428075859, 0.537364009938170, -0.599570520866479, 0.0282576891073156, -0.455206204497853, -0.0325058263167070, -0.00379402734497303, 0.291597409929032 });
-		//	std::vector<Real> col5 = std::vector<Real>({ -0.321339967863874, 0.268880543333346, -0.314042404681992, -0.388009804647359, -0.494077032390177, 0.171201662008169, -0.140221504694795, 0.370915492213603, 0.0648917260264280, 0.357520602620454, -0.106791399615939, -0.0342172739941697 });
-		//	std::vector<Real> col6 = std::vector<Real>({ -0.176855953032873, 0.202554816161202, 0.196535383754806, 0.118413872277773, -0.331732594692273, -0.0227115087022323, 0.0106217702022385, -0.730451358081194, -0.230102744089435, 0.392275653584726, 0.154866614612900, -0.000225882951458356 });
-		//	std::vector<Real> col7 = std::vector<Real>({ 0.0374320952013009, 0.405874404532155, -0.482292752344398, 0.380882230633527, 0.164179460091712, -0.176380374350674, -0.466468700072716, -0.101540906997748, -0.0243014116201423, -0.101601368322497, -0.0677289874457483, -0.393342198997892 });
-		//	std::vector<Real> col8 = std::vector<Real>({ 0.365291904136971, 0.235189691239062, -0.256275018498463, -0.320315736415488, 0.274977779402982, -0.346141648014959, 0.188311867284220, -0.0674697172225185, -0.341404349595036, 0.271695641064810, -0.308151515259276, 0.349564626920972 });
-		//	std::vector<Real> col9 = std::vector<Real>({ 0.371185750860281, -0.296872329344590, -0.442052496522062, 0.490616458805380, -0.314888739469575, 0.177076342712406, 0.191703210839261, 0.137325777767009, -0.129828962753109, 0.222800036286988, 0.227081677748887, 0.183826263925673 });
-		//	std::vector<Real> col10 = std::vector<Real>({ -0.273375520667077, 0.224828294615083, -0.385627713105243, -0.220761398976612, 0.166485158095585, 0.199525454641433, 0.300012161100184, -0.131537924462519, -0.175763437367472, -0.397051080461701, 0.541602429645960, 0.143390929776798 });
-		//	std::vector<Real> col11 = std::vector<Real>({ 0.375740251310707, 0.477590019868876, 0.253103669081037, 0.0528437051430278, -0.519386743020745, -0.102534518236492, 0.0177337050031824, 0.101203773583646, -0.0276065775818014, -0.489202895520961, -0.0102455189239106, 0.181256560942768 });
-		//	mat.AddRow(col0, 0);
-		//	mat.AddRow(col1, 1);
-		//	mat.AddRow(col2, 2);
-		//	mat.AddRow(col3, 3);
-		//	mat.AddRow(col4, 4);
-		//	mat.AddRow(col5, 5);
-		//	mat.AddRow(col6, 6);
-		//	mat.AddRow(col7, 7);
-		//	mat.AddRow(col8, 8);
-		//	mat.AddRow(col9, 9);
-		//	mat.AddRow(col10, 10);
-		//	mat.AddRow(col11, 11);
-
-		//	/*for (int i = 0; i < mNumChannels; i++)
-		//	{
-		//		mat.AddEntry(1.0, i, i);
-		//	}*/
-
-		//	/*vector.RandomUniformDistribution(-1.0, 1.0);
-		//	vector.Normalise();
-		//	mat.AddColumn(vector, 0);
-
-		//	Real tol = 0.000001;
-		//	for (int j = 1; j < mNumChannels; j++)
-		//	{
-		//		Real norm = 0;
-		//		while (norm < tol)
-		//		{
-		//			vector.RandomUniformDistribution(-1.0, 1.0);
-
-		//			matrix section = matrix(mNumChannels, j);
-
-		//			for (int i = 0; i < mNumChannels; i++)
-		//			{
-		//				for (int k = 0; k < j; k++)
-		//				{
-		//					section.AddEntry(mat.GetEntry(i, k), i, k);
-		//				}
-		//			}
-
-		//			vector -= section * (section.Transpose() * vector);
-		//			norm = vector.CalculateNormal();
-		//		}
-		//		vector /= norm;
-		//		mat.AddColumn(vector, j);
-		//	}*/
-		//}
+		////////////////////////////////////////
 
 		void FDN::ProcessOutput(const std::vector<Real>& data, const Real gain)
 		{
@@ -323,6 +252,20 @@ namespace RAC
 #ifdef PROFILE_DETAILED
 			EndFDNMatrix();
 #endif
+		}
+
+		////////////////////////////////////////
+
+		void FDN::ProcessSquare()
+		{
+			Real sum = 0.0;
+			for (int j = 0; j < feedbackMatrix.Cols(); ++j)
+			{
+				sum = 0.0;
+				for (int k = 0; k < feedbackMatrix.Rows(); ++k)
+					sum += y[k] * feedbackMatrix[k][j];
+				x[j] = sum;
+			}
 		}
 	}
 }

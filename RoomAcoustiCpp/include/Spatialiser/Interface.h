@@ -74,7 +74,7 @@ namespace RAC
 		*
 		* @param model The matrix used within the FDN.
 		*/
-		void UpdateFDNModel(const FDNMatrix model);
+		void InitFDNMatrix(const FDNMatrix matrixType);
 
 		/**
 		* Updates the model used to process diffraction.

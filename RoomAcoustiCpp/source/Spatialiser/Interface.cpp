@@ -97,11 +97,11 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void UpdateFDNModel(const FDNMatrix model)
+		void InitFDNMatrix(const FDNMatrix matrixType)
 		{
 			auto context = GetContext();
 			if (context)
-				context->UpdateFDNModel(model);
+				context->InitFDNMatrix(matrixType);
 		}
 
 		////////////////////////////////////////

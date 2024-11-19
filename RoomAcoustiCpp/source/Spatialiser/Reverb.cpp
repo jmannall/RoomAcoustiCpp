@@ -1,6 +1,7 @@
 /*
+* @class Reverb, ReverbSource
 *
-*  \Reverb class
+* @brief Declaration of Reverb and ReverbSource classes
 *
 */
 
@@ -33,29 +34,22 @@ namespace RAC
 
 		//////////////////// ReverbSource class ////////////////////
 
-		ReverbSource::ReverbSource(Binaural::CCore* core, const Config& config) : mCore(core), mConfig(config), mReflectionFilter(config.frequencyBands, config.Q, config.fs),
-			mAbsorption(config.frequencyBands.Length()), filterInitialised(false), targetGain(0.0), currentGain(0.0), inputBuffer(mConfig.numFrames)
-		{
-			mMutex = std::make_shared<std::mutex>();
-			bInput = CMonoBuffer<float>(mConfig.numFrames);
-			bOutput.left = CMonoBuffer<float>(mConfig.numFrames);
-			bOutput.right = CMonoBuffer<float>(mConfig.numFrames);
-			Init();
-		}
+		////////////////////////////////////////
 
 		ReverbSource::ReverbSource(Binaural::CCore* core, const Config& config, const Vec3& shift) : mCore(core), mConfig(config), mReflectionFilter(config.frequencyBands, config.Q, config.fs),
 			mAbsorption(config.frequencyBands.Length()), mShift(shift), filterInitialised(false), targetGain(0.0), currentGain(0.0), inputBuffer(mConfig.numFrames)
 		{
-			mMutex = std::make_shared<std::mutex>();
+			mReflectionFilterMutex = std::make_shared<std::mutex>();
 			bInput = CMonoBuffer<float>(mConfig.numFrames);
 			bOutput.left = CMonoBuffer<float>(mConfig.numFrames);
 			bOutput.right = CMonoBuffer<float>(mConfig.numFrames);
 			Init();
 		}
 
+		////////////////////////////////////////
+
 		ReverbSource::~ReverbSource()
 		{
-			// delete mMutex;
 #ifdef DEBUG_REMOVE
 	Debug::Log("Remove reverb source", Colour::Red);
 #endif
@@ -64,6 +58,8 @@ namespace RAC
 				mCore->RemoveSingleSourceDSP(mSource);
 			}
 		}
+
+		////////////////////////////////////////
 
 		void ReverbSource::Init()
 		{
@@ -83,10 +79,12 @@ namespace RAC
 				mSource->DisableInterpolation();
 
 				//Select spatialisation mode
-				UpdateSpatialisationMode(SpatialisationMode::none);
+				UpdateSpatialisationMode(mConfig.spatialisationMode);
 			}
 			
 		}
+
+		////////////////////////////////////////
 
 		void ReverbSource::UpdateSpatialisationMode(const SpatialisationMode mode)
 		{
@@ -116,17 +114,21 @@ namespace RAC
 			}
 		}
 
-		void ReverbSource::UpdatePosition(const Vec3& position)
+		////////////////////////////////////////
+
+		void ReverbSource::UpdatePosition(const Vec3& listenerPosition)
 		{
 			// tuneInMutex already locked by context
 			CTransform transform;
-			transform.SetPosition(CVector3(static_cast<float>(position.x + mShift.x), static_cast<float>(position.y + mShift.y), static_cast<float>(position.z + mShift.z)));
+			transform.SetPosition(CVector3(static_cast<float>(listenerPosition.x + mShift.x), static_cast<float>(listenerPosition.y + mShift.y), static_cast<float>(listenerPosition.z + mShift.z)));
 			mSource->SetSourceTransform(transform);
 		}
 
-		void ReverbSource::UpdateReflectionFilter(const Absorption& absorption)
+		////////////////////////////////////////
+
+		void ReverbSource::UpdateReflectionFilter(const Coefficients& absorption)
 		{
-			lock_guard<mutex> lock(*mMutex);
+			lock_guard<mutex> lock(*mReflectionFilterMutex);
 			mAbsorption = absorption;
 
 			if (mAbsorption > EPS)
@@ -147,13 +149,15 @@ namespace RAC
 			}
 		}
 
+		////////////////////////////////////////
+
 		void ReverbSource::ProcessAudio(Buffer& outputBuffer)
 		{
 #ifdef PROFILE_AUDIO_THREAD
 			BeginReverbSource();
 #endif
 			{
-				lock_guard<mutex> lock(*mMutex);
+				lock_guard<mutex> lock(*mReflectionFilterMutex);
 #ifdef PROFILE_AUDIO_THREAD
 				BeginReflection();
 #endif
@@ -204,18 +208,15 @@ namespace RAC
 
 		//////////////////// Reverb class ////////////////////
 
-		Reverb::Reverb(Binaural::CCore* core, const Config& config) : mConfig(config), mFDN(config), mCore(core), valid(false), runFDN(false), mTargetGain(0.0), mCurrentGain (0.0), mT60(config.frequencyBands.Length())
+		////////////////////////////////////////
+
+		Reverb::Reverb(Binaural::CCore* core, const Config& config, const Vec& dimensions, const Coefficients& T60) : mFDN(T60, dimensions, config), mCore(core), mConfig(config),
+			valid(false), runFDN(false), mTargetGain(0.0), mCurrentGain(0.0), mT60(T60)
 		{
-			input = Matrix(mConfig.numFDNChannels, mConfig.numFrames);
-			out = Rowvec(mConfig.numFDNChannels);
 			InitSources();
 		}
 
-		Reverb::Reverb(Binaural::CCore* core, const Config& config, const Vec& dimensions, const Coefficients& T60) : mFDN(T60, dimensions, config), mCore(core), mConfig(config), valid(false), runFDN(false), mTargetGain(0.0), mCurrentGain(0.0), mT60(T60)
-		{
-			input = Matrix(mConfig.numFDNChannels, mConfig.numFrames);
-			InitSources();
-		}
+		////////////////////////////////////////
 
 		void Reverb::UpdateSpatialisationMode(const SpatialisationMode mode)
 		{
@@ -225,10 +226,10 @@ namespace RAC
 				source.UpdateSpatialisationMode(mode);
 		}
 
+		////////////////////////////////////////
+
 		void Reverb::InitSources()
 		{
-			lock_guard<mutex> lock(mCoreMutex);
-
 			std::vector<Vec3> points;
 			switch (mConfig.numFDNChannels)
 			{
@@ -250,23 +251,21 @@ namespace RAC
 			{ Icosahedron(points, true); Dodecahedron(points, true); break; }
 			}
 
-			// BREAKS update reverb source system!!!
-			// Remove and replace with ray traced wall absorption intersection.
 			mReverbSources.reserve(mConfig.numFDNChannels);
 			for (int i = 0; i < mConfig.numFDNChannels; i++)
-			{
-				ReverbSource temp = ReverbSource(mCore, mConfig, points[i]);
-				mReverbSources.push_back(temp);
-				temp.Deactivate();
-			}
+				mReverbSources.emplace_back(mCore, mConfig, points[i]);
 		}
 
-		void Reverb::UpdateReverb(const Vec3& position)
+		////////////////////////////////////////
+
+		void Reverb::UpdateReverbSourcePositions(const Vec3& listenerPosition)
 		{
 			// tuneInMutex already locked by context
 			for (int i = 0; i < mConfig.numFDNChannels; i++)
-				mReverbSources[i].UpdatePosition(position);
+				mReverbSources[i].UpdatePosition(listenerPosition);
 		}
+
+		////////////////////////////////////////
 
 		void Reverb::UpdateReflectionFilters(const std::vector<Absorption>& absorptions, const bool running)
 		{
@@ -294,6 +293,8 @@ namespace RAC
 			for (int i = 0; i < mConfig.numFDNChannels; i++)
 				mReverbSources[i].UpdateReflectionFilter(absorptions[i]);
 		}
+
+		////////////////////////////////////////
 
 		void Reverb::ProcessAudio(const Matrix& data, Buffer& outputBuffer)
 		{
@@ -355,47 +356,49 @@ namespace RAC
 			}
 		}
 
+		////////////////////////////////////////
+
 		void Reverb::UpdateReverbTime(const Coefficients& T60)
 		{
-#ifdef DEBUG_INIT
-			Debug::Log("Reverb T60: [" + RealToStr(T60[0]) + ", " + RealToStr(T60[1]) + ", " +
-				RealToStr(T60[2]) + ", " + RealToStr(T60[3]) + ", " + RealToStr(T60[4]) + "]", Colour::Orange);
-#endif
-			lock_guard <mutex> lock(mFDNMutex);
-			mFDN.UpdateT60(T60);
-		}
-
-		void Reverb::SetFDNParameters(const Coefficients& T60, const Vec& dimensions)
-		{
+			if (T60 > 0.0)
 			{
+#ifdef DEBUG_INIT
+				Debug::Log("Reverb T60: [" + RealToStr(T60[0]) + ", " + RealToStr(T60[1]) + ", " +
+					RealToStr(T60[2]) + ", " + RealToStr(T60[3]) + ", " + RealToStr(T60[4]) + "]", Colour::Orange);
+#endif
 				lock_guard <mutex> lock(mFDNMutex);
-				mFDN.Reset();
-				mFDN.SetParameters(T60, dimensions);
-			}
-			if (T60 < 20.0)
-			{
-				if (T60 > 0.0)
-				{
-#ifdef DEBUG_INIT
-					Debug::Log("Init FDN", Colour::Green);
-					Debug::Log("Reverb T60: [" + RealToStr(T60[0]) + ", " + RealToStr(T60[1]) + ", " +
-						RealToStr(T60[2]) + ", " + RealToStr(T60[3]) + ", " + RealToStr(T60[4]) + "]", Colour::Orange);
-#endif
-					valid = true;
-				}
-				else
-				{
-					valid = false;
-#ifdef DEBUG_INIT
-					Debug::Log("FDN reverb failed to initialise. T60 equal to or less than 0s.", Colour::Red);
-#endif
-				}
+				mFDN.UpdateT60(T60);
 			}
 			else
 			{
 				valid = false;
 #ifdef DEBUG_INIT
-				Debug::Log("FDN reverb failed to initialise. T60 over 20s.", Colour::Red);
+				Debug::Log("FDN reverb failed to initialise. T60 equal to or less than 0s.", Colour::Red);
+#endif
+			}
+		}
+
+		////////////////////////////////////////
+
+		void Reverb::UpdateFDNParameters(const Coefficients& T60, const Vec& dimensions)
+		{
+			if (T60 > 0.0)
+			{
+#ifdef DEBUG_INIT
+				Debug::Log("Init FDN", Colour::Green);
+				Debug::Log("Reverb T60: [" + RealToStr(T60[0]) + ", " + RealToStr(T60[1]) + ", " +
+					RealToStr(T60[2]) + ", " + RealToStr(T60[3]) + ", " + RealToStr(T60[4]) + "]", Colour::Orange);
+#endif
+				lock_guard <mutex> lock(mFDNMutex);
+				mFDN.Reset();
+				mFDN.UpdateParameters(T60, dimensions);
+				valid = true;
+			}
+			else
+			{
+				valid = false;
+#ifdef DEBUG_INIT
+				Debug::Log("FDN reverb failed to initialise. T60 equal to or less than 0s.", Colour::Red);
 #endif
 			}
 		}

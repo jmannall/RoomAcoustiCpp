@@ -139,6 +139,7 @@ namespace RAC
 				if (lck.try_lock())
 				{
 					mTargetGain = 0.0f;
+					// mDirectivityStore = mCurrentGain;
 					if (mCurrentGain < 0.0001)
 					{
 						if (isInitialised)
@@ -327,10 +328,14 @@ namespace RAC
 				if (feedsFDN)
 				{
 					{
-						Real factor = reverbEnergy / mCurrentGain;
+						//Real reverbFactor;
+						//if (mTargetGain == 0.0f)
+						//	reverbFactor = reverbEnergy / mDirectivityStore;
+						//else
+						//	reverbFactor = reverbEnergy / mCurrentGain;
 						mSource->ProcessAnechoic(bMonoOutput, bOutput.left, bOutput.right);
 						for (int i = 0; i < mConfig.numFrames; i++)
-							reverbInput[i][mFDNChannel] += static_cast<Real>(bMonoOutput[i]) * factor;
+							reverbInput[i][mFDNChannel] += static_cast<Real>(bMonoOutput[i]);
 					}
 				}
 				else

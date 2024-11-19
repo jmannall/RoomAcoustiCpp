@@ -328,7 +328,7 @@ namespace RAC
 			std::vector<IEMConfig> iemConfigs = { IEMConfig(3, DirectSound::doCheck, true, DiffractionSound::none, DiffractionSound::none, true, 0.0),
 				IEMConfig(0, DirectSound::doCheck, false, DiffractionSound::none, DiffractionSound::none, true, 0.0) };
 
-			for (int t = 1; t < 2; t++)
+			for (int t = 0; t < 2; t++)
 			{
 				UpdateIEMConfig(iemConfigs[t]);
 				for (int k = 0; k < 2; k++)
@@ -434,7 +434,7 @@ namespace RAC
 			UpdateListener(listenerPosition, listenerOrientation);
 			size_t sourceID = InitSource();
 			UpdateSource(sourceID, sourcePosition, sourceOrientation);
-			UpdateSourceDirectivity(sourceID, SourceDirectivity::speaker);
+			UpdateSourceDirectivity(sourceID, SourceDirectivity::omni);
 
 			Sleep(1000);
 			BufferF in = BufferF(numFrames);

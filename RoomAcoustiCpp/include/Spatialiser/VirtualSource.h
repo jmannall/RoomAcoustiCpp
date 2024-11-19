@@ -301,6 +301,7 @@ namespace RAC
 
 			Real mCurrentGain;
 			Real mTargetGain;
+			Real mDirectivityStore;
 			GraphicEQ mFilter;
 			Diffraction::Path mDiffractionPath;	// Diffraction path
 

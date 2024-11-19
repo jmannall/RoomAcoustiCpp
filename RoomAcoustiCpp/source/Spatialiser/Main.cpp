@@ -255,11 +255,11 @@ extern "C"
 		switch (id)
 		{
 		case(0):
-		{ UpdateFDNModel(FDNMatrix::householder); break; }
+		{ InitFDNMatrix(FDNMatrix::householder); break; }
 		case(1):
-		{ UpdateFDNModel(FDNMatrix::randomOrthogonal); break; }
+		{ InitFDNMatrix(FDNMatrix::randomOrthogonal); break; }
 		default:
-		{ UpdateFDNModel(FDNMatrix::householder); break; }
+		{ InitFDNMatrix(FDNMatrix::householder); break; }
 		}
 	}
 

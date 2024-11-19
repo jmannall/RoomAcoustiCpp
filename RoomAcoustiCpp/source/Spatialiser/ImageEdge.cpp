@@ -28,7 +28,7 @@ namespace RAC
 			sp.push_back(std::vector<VirtualSourceData>());
 
 			shared_ptr<Reverb> sharedReverb = mReverb.lock();
-			reverbDirections = sharedReverb->GetReverbSourceDirections();
+			sharedReverb->GetReverbSourceDirections(reverbDirections);
 			reverbAbsorptions = std::vector<Absorption>(static_cast<int>(reverbDirections.size()), Absorption(numAbsorptionBands));
 		}
 
