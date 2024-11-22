@@ -67,7 +67,7 @@ namespace RAC
 		*
 		* @param model The model used to calculate the late reverberation time.
 		*/
-		void UpdateReverbTimeModel(const ReverbFormula model);
+		void UpdateReverbTimeFormula(const ReverbFormula model);
 
 		/**
 		* Updates the FDN matrix used to process the late reverberation.

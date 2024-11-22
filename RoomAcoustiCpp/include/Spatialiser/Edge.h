@@ -10,9 +10,6 @@
 #ifndef RoomAcoustiCpp_Edge_h
 #define RoomAcoustiCpp_Edge_h
 
-// C++ headers
-#include <vector>
-
 // Common headers
 #include "Common/Vec3.h"
 #include "Common/Types.h"
@@ -48,8 +45,6 @@ namespace RAC
 			CanBeShadowed,
 			Invalid
 		};
-
-		//////////////////// Edge class ////////////////////
 
 		/**
 		* @brief Class that describes an edge

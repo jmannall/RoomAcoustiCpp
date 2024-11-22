@@ -226,18 +226,18 @@ extern "C"
 	* 0 -> Sabine
 	* 1 -> Eyring
 	* 
-	* @param id The ID corresponding to a reverb time model.
+	* @param id The ID corresponding to a reverb time formula.
 	*/
 	EXPORT void API RACUpdateReverbTimeModel(int id)
 	{
 		switch (id)
 		{
 			case(0):
-			{ UpdateReverbTimeModel(ReverbFormula::Sabine); break; }
+			{ UpdateReverbTimeFormula(ReverbFormula::Sabine); break; }
 			case(1):
-			{ UpdateReverbTimeModel(ReverbFormula::Eyring); break; }
+			{ UpdateReverbTimeFormula(ReverbFormula::Eyring); break; }
 			default:
-			{ UpdateReverbTimeModel(ReverbFormula::Sabine); break; }
+			{ UpdateReverbTimeFormula(ReverbFormula::Sabine); break; }
 		}
 	}
 

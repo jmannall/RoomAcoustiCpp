@@ -198,9 +198,9 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Context::UpdateReverbTimeModel(const ReverbFormula model)
+		void Context::UpdateReverbTimeFormula(const ReverbFormula model)
 		{
-			Coefficients T60 = mRoom->UpdateReverbTimeModel(model);
+			Coefficients T60 = mRoom->UpdateReverbTimeFormula(model);
 			UpdateReverbTime(T60);
 		}
 

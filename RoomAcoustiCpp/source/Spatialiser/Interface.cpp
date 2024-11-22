@@ -88,11 +88,11 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void UpdateReverbTimeModel(const ReverbFormula model)
+		void UpdateReverbTimeFormula(const ReverbFormula model)
 		{
 			auto context = GetContext();
 			if (context)
-				context->UpdateReverbTimeModel(model);
+				context->UpdateReverbTimeFormula(model);
 		}
 
 		////////////////////////////////////////

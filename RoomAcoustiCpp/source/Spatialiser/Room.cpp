@@ -13,10 +13,6 @@
 #include "Unity/Debug.h"
 #include "Unity/UnityInterface.h"
 
-// Common headers
-#include "Common/Types.h"
-#include "Common/Vec3.h"
-
 // Spatialiser headers
 #include "Spatialiser/Room.h"
 
@@ -27,6 +23,9 @@ namespace RAC
 	{
 
 		//////////////////// Room class ////////////////////
+
+		////////////////////////////////////////
+
 		size_t Room::AddWall(Wall& wall)
 		{
 			size_t id;
@@ -45,12 +44,40 @@ namespace RAC
 			return id;
 		}
 
+		////////////////////////////////////////
+
+		void Room::RemoveWall(const size_t id)
+		{
+			lock_guard<std::mutex> lock(mWallMutex);
+			auto it = mWalls.find(id);
+
+			if (it == mWalls.end()) { return; } // case: wall does not exist
+			else // case: wall does exist
+			{
+				RemoveEdges(it->second.GetEdges(), id);
+				RemoveWallFromPlane(it->second.GetPlaneID(), id);
+
+				mWalls.erase(it);
+				while (!mWallTimers.empty() && difftime(time(nullptr), mWallTimers.front().time) > 60)
+				{
+					mEmptyWallSlots.push_back(mWallTimers.front().id);
+					mWallTimers.erase(mWallTimers.begin());
+				}
+				mWallTimers.push_back(TimerPair(id));
+				RecordChange();
+			}
+		}
+
+		////////////////////////////////////////
+
 		void Room::AssignWallToPlane(const size_t id)
 		{
 			auto it = mWalls.find(id);
 			if (it != mWalls.end())
 				AssignWallToPlane(id, it->second);
 		}
+
+		////////////////////////////////////////
 
 		void Room::AssignWallToPlane(const size_t idW, Wall& wall)
 		{
@@ -79,6 +106,30 @@ namespace RAC
 			wall.SetPlaneID(idP);
 			return;
 		}
+
+		////////////////////////////////////////
+
+		void Room::RemoveWallFromPlane(const size_t idP, const size_t idW)
+		{
+			lock_guard<std::mutex> lock(mPlaneMutex);
+			auto itP = mPlanes.find(idP);
+
+			if (itP == mPlanes.end()) // case: plane does not exist
+				return;
+
+			if (itP->second.RemoveWall(idW)) // If plane contains no other walls
+			{
+				mPlanes.erase(itP);
+				while (!mPlaneTimers.empty() && difftime(time(nullptr), mPlaneTimers.front().time) > 60)
+				{
+					mEmptyPlaneSlots.push_back(mPlaneTimers.front().id);
+					mPlaneTimers.erase(mPlaneTimers.begin());
+				}
+				mPlaneTimers.push_back(TimerPair(idP));
+			}
+		}
+
+		////////////////////////////////////////
 
 		void Room::AddEdge(const Edge& edge)
 		{
@@ -113,6 +164,8 @@ namespace RAC
 			RecordChange();
 		}
 
+		////////////////////////////////////////
+
 		void Room::InitEdges(const size_t id)
 		{
 			std::vector<Edge> edges;
@@ -126,6 +179,8 @@ namespace RAC
 					AddEdge(edge);
 			}
 		}
+
+		////////////////////////////////////////
 
 		void Room::InitEdges(const size_t id, const std::vector<size_t>& IDsW)
 		{
@@ -143,16 +198,21 @@ namespace RAC
 			}
 		}
 
+		////////////////////////////////////////
+
 		void Room::FindEdges(const size_t idA, const size_t idB, std::vector<Edge>& edges, std::vector<size_t>& IDs)
 		{
 			auto itA = mWalls.find(idA);
 			auto itB = mWalls.find(idB);
 			std::vector<size_t> IDsA = itA->second.GetEdges();
 			std::vector<size_t> IDsB = itB->second.GetEdges();
+			// Write common edge IDs from both walls to IDs. Used to check whether the number of located edge changes
 			std::set_intersection(IDsA.begin(), IDsA.end(), IDsB.begin(), IDsB.end(), std::back_inserter(IDs));
 			if (itA != mWalls.end() && itB != mWalls.end()) // case: walls exist
 				FindEdges(itA->second, itB->second, idA, idB, edges);
 		}
+
+		////////////////////////////////////////
 
 		void Room::FindEdges(const Wall& wallA, const Wall& wallB, const size_t idA, const size_t idB, std::vector<Edge>& edges)
 		{
@@ -169,6 +229,8 @@ namespace RAC
 				}
 			}
 		}
+
+		////////////////////////////////////////
 
 		void Room::FindParallelEdges(const Wall& wallA, const Wall& wallB, const size_t idA, const size_t idB, std::vector<Edge>& edges)
 		{
@@ -220,6 +282,8 @@ namespace RAC
 				}
 			}
 		}
+
+		////////////////////////////////////////
 
 		// Coordinates defined using right hand rule.
 		// Vertices are defined using a right hand curl around the direction of the normal
@@ -301,6 +365,84 @@ namespace RAC
 			}
 		}
 
+		////////////////////////////////////////
+
+		void Room::UpdateEdge(const size_t id, const Edge& edge)
+		{
+			if (IsCoplanarEdge(edge))
+			{
+				RemoveEdge(id);
+				return;
+			}
+
+			auto it = mEdges.find(id);
+			if (it == mEdges.end()) { return; } // case: edge does not exist
+			else { it->second = edge; } // case: edge does exist
+		}
+
+		////////////////////////////////////////
+
+		bool Room::IsCoplanarEdge(const Edge& edge)
+		{
+			IDPair planeIds = edge.GetPlaneIDs();
+			// Vec3Pair edgeNormals = edge.GetFaceNormals();
+			{
+				lock_guard<std::mutex> lock(mPlaneMutex);
+				for (auto& itP : mPlanes)
+				{
+					if (itP.first == planeIds.first || itP.first == planeIds.second)
+						continue;
+
+					if (itP.second.PointPlanePosition(edge.GetMidPoint()) != 0.0)
+						continue;
+
+					if (itP.second.PointPlanePosition(edge.GetEdgeCoord(EPS)) == 0.0)
+						return true;
+				}
+			}
+			return false;
+		}
+
+		////////////////////////////////////////
+
+		void Room::RemoveEdge(const size_t idE, const size_t idW)
+		{
+			auto itE = mEdges.find(idE);
+			if (itE != mEdges.end())
+			{
+				size_t id = itE->second.GetWallID(idW);
+				auto itW = mWalls.find(id);
+				if (itW != mWalls.end()) // case: wall exists
+					itW->second.RemoveEdge(idE);
+
+				mEdges.erase(idE);
+				while (!mEdgeTimers.empty() && difftime(time(nullptr), mEdgeTimers.front().time) > 60)
+				{
+					mEmptyEdgeSlots.push_back(mEdgeTimers.front().id);
+					mEdgeTimers.erase(mEdgeTimers.begin());
+				}
+				mEdgeTimers.push_back(TimerPair(idE));
+			}
+		}
+
+		////////////////////////////////////////
+
+		void Room::RemoveEdge(const size_t idE)
+		{
+			auto itE = mEdges.find(idE);
+			if (itE != mEdges.end())
+			{
+				IDPair ids = itE->second.GetWallIDs();
+				auto itW = mWalls.find(ids.first);
+				if (itW != mWalls.end()) // case: wall exists
+					itW->second.RemoveEdge(idE);
+
+				RemoveEdge(idE, ids.first);
+			}
+		}
+
+		////////////////////////////////////////
+
 		void Room::UpdatePlanes()
 		{
 			std::unordered_map<size_t, size_t> freeWalls;
@@ -337,6 +479,8 @@ namespace RAC
 			}
 			RecordChange();
 		}
+
+		////////////////////////////////////////
 
 		void Room::UpdateEdges()
 		{
@@ -381,7 +525,8 @@ namespace RAC
 			RecordChange();
 		}
 
-		// Reverb
+		////////////////////////////////////////
+		
 		Coefficients Room::GetReverbTime()
 		{
 			if (mVolume <= 0.0)
@@ -399,7 +544,7 @@ namespace RAC
 				}
 			}
 
-			switch (reverbTime)
+			switch (reverbFormula)
 			{
 				case(ReverbFormula::Sabine):
 					return Sabine(absorption);
@@ -410,11 +555,15 @@ namespace RAC
 			}
 		}
 
+		////////////////////////////////////////
+
 		Coefficients Room::Sabine(const Coefficients& absorption)
 		{
 			Real factor = 24.0 * log(10.0) / SPEED_OF_SOUND;
 			return factor * mVolume / absorption;
 		}
+
+		////////////////////////////////////////
 
 		Coefficients Room::Eyring(const Coefficients& absorption, const Real& surfaceArea)
 		{

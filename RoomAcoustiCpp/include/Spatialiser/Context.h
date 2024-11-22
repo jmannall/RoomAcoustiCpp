@@ -1,6 +1,10 @@
 /*
-* @brief Defines the RoomAcoustiCpp global context
+* @class Context
+* 
+* @brief Declaration of the Context class
 *
+* @details Defines the RoomAcoustiCpp global context
+* 
 */
 
 #ifndef RoomAcoustiCpp_Context_h
@@ -101,7 +105,7 @@ namespace RAC
 			*
 			* @param model The new reverb time model.
 			*/
-			void UpdateReverbTimeModel(const ReverbFormula model);
+			void UpdateReverbTimeFormula(const ReverbFormula model);
 
 			/**
 			* @brief Updates the feedback delay network (FDN) model.
@@ -236,9 +240,6 @@ namespace RAC
 			void GetOutput(float** bufferPtr);
 
 		private:
-
-			//////////////////// Member Variables ////////////////////
-
 			/**
 			* Spatialiser
 			*/
