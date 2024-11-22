@@ -1,15 +1,12 @@
 /*
-* @class Source, SourceData
+* @class Source
 *
-* @brief Declaration of Source and SourceData classes
+* @brief Declaration of Source class
 *
 */
 
 #ifndef RoomAcoustiCpp_Source_h
 #define RoomAcoustiCpp_Source_h
-
-// C++ headers
-#include <unordered_map>
 
 // Common headers
 #include "Common/Matrix.h"
@@ -18,17 +15,15 @@
 #include "Common/Vec4.h"
 
 // Spatialiser headers
-#include "Spatialiser/VirtualSource.h"
 #include "Spatialiser/Types.h"
 #include "Spatialiser/AirAbsorption.h"
+#include "Spatialiser/VirtualSource.h"
 #include "Spatialiser/Mutexes.h"
 
 // 3DTI headers
+#include "BinauralSpatializer/Core.h"
 #include "BinauralSpatializer/SingleSourceDSP.h"
 #include "Common/Transform.h"
-
-// Unity headers
-#include "Unity/Debug.h"
 
 using namespace Common;
 namespace RAC
@@ -36,6 +31,13 @@ namespace RAC
 	using namespace Common;
 	namespace Spatialiser
 	{
+		//////////////////// Data structures ////////////////////
+
+		typedef std::pair<Real, bool> SourceAudioData;
+
+		/**
+		* @brief Describes source position, orientation and directivity
+		*/
 		struct SourceData
 		{
 			size_t id;
@@ -46,75 +48,107 @@ namespace RAC
 			bool hasChanged;
 		};
 
-		typedef std::pair<Real, bool> SourceAudioData;
-
-		//////////////////// Source class ////////////////////
-
+		/**
+		* @brief Class that represents a sound source
+		*/
 		class Source
 		{
 		public:
 
-			// Load and Destroy
+			/**
+			* @brief Constructor that initialises the source with the given configuration.
+			* 
+			* @param core The 3DTI processing core
+			* @param config The spatialiser configuration
+			*/
 			Source(Binaural::CCore* core, const Config& config);
+
+			/**
+			* @brief Default deconstructor
+			*/
 			~Source();
 
+			/**
+			* @brief Update the spatialisation mode for the HRTF processing
+			* 
+			* @param mode The new spatialisation mode
+			*/
 			void UpdateSpatialisationMode(const SpatialisationMode mode);
-			void UpdateDiffractionModel(const DiffractionModel model);
-			inline void UpdateDirectivity(const SourceDirectivity directivity)
-			{
-				{ 
-					lock_guard<mutex> lock(*dataMutex);
-					mDirectivity = directivity;
-					switch (mDirectivity)
-					{
-					case SourceDirectivity::omni:
-						reverbEnergy = 1.0;
-						break;
-					case SourceDirectivity::cardioid:
-						reverbEnergy = 0.5;
-						break;
-					default:
-						reverbEnergy = 1.0;
-						break;
-					}
-				}
-				{ lock_guard<mutex> lock(*currentDataMutex); hasChanged = true; }
-			}
-			
-			// Getters
-			inline shared_ptr<Binaural::CSingleSourceDSP>& GetSource() { return mSource; }
 
-			// Updates
+			/**
+			* @brief Updates the diffraction model
+			* 
+			* @params model The new diffraction model
+			*/
+			void UpdateDiffractionModel(const DiffractionModel model);
+
+			/**
+			* @brief Updates the source directivity
+			* 
+			* @params directivity The new source directivity
+			*/
+			void UpdateDirectivity(const SourceDirectivity directivity);
+
+			/**
+			* @brief Updates the source position and orientation
+			* 
+			* @params position The new source position
+			* @params orientation The new source orientation
+			* @params distance The distance of the source from the listener
+			*/
 			void Update(const Vec3& position, const Vec4& orientation, const Real distance);
 
+			/**
+			* @brief Updates the source audio DSP parameters and image sources
+			* 
+			* @params source The source audio DSP parameters
+			* @params vSources The current image sources
+			*/
 			inline void UpdateData(const SourceAudioData source, const VirtualSourceDataMap& vSources)
 			{ 
 				{ lock_guard<mutex> lock(*dataMutex); targetGain = source.first; feedsFDN = source.second; }
 				targetVSources = vSources;
-				// { lock_guard<std::mutex> lock(*vSourceDataMutex); targetVSources = vSources; }
 				UpdateVirtualSourceDataMap();
 				UpdateVirtualSources();
-				/*{
-					lock_guard<mutex> lock(tuneInMutex);
-					for (auto& [key, vSource] : mVSources)
-						vSource.UpdateTransform();
-				}*/
 			}
 
-			Vec3 GetPosition() const { lock_guard<std::mutex>lock(*currentDataMutex); return currentPosition; };
-			Vec4 GetOrientation() const { lock_guard<std::mutex>lock(*currentDataMutex); return currentOrientation; };
+			/**
+			* @return The current source position
+			*/
+			inline Vec3 GetPosition() const { lock_guard<std::mutex>lock(*currentDataMutex); return currentPosition; };
 
-			SourceDirectivity GetDirectivity() { lock_guard<mutex> lock(*dataMutex); return mDirectivity; }
+			/**
+			* @return The current source orientation
+			*/
+			inline Vec4 GetOrientation() const { lock_guard<std::mutex>lock(*currentDataMutex); return currentOrientation; };
 
-			bool HasChanged() { lock_guard<mutex> lock(*currentDataMutex); if (hasChanged) { hasChanged = false; return true; } return false; }
+			/**
+			* @return The current source directivity
+			*/
+			inline SourceDirectivity GetDirectivity() { lock_guard<mutex> lock(*dataMutex); return mDirectivity; }
 
-			inline CTransform GetTransform() { return mSource->GetCurrentSourceTransform(); }
+			/**
+			* @return True if the source has changed since the last check
+			*/
+			inline bool HasChanged() { lock_guard<mutex> lock(*currentDataMutex); if (hasChanged) { hasChanged = false; return true; } return false; }
 			
-			// Audio
+			/**
+			* @brief Process a single audio frame
+			* 
+			* @params data The input audio buffer
+			* @params reverbInput The reverb input buffer to write to
+			* @params outputBuffer The output buffer to write to
+			*/
 			void ProcessAudio(const Buffer& data, Matrix& reverbInput, Buffer& outputBuffer);
 
-			// Reset
+			/**
+			* @brief Prevents the 3DTI source from being destroyed when destructor called.
+			*/
 			inline void Deactivate() { mSource = nullptr; }
+
+			/**
+			* @brief Destroys all image sources
+			*/
 			inline void Reset()
 			{ 
 				{ lock_guard<std::mutex> lock(*vSourcesMutex); mVSources.clear(); }
@@ -122,51 +156,64 @@ namespace RAC
 			}
 
 		private:
-
+			/**
+			* @brief Updates the current image sources from the target image sources
+			*/
 			void UpdateVirtualSourceDataMap();
+
+			/**
+			* @brief Updates the audio thread image sources from the current image sources
+			*/
 			void UpdateVirtualSources();
+
+			/**
+			* @brief Updates the audio thread data for a given image source
+			* 
+			* @params data The new image source data
+			* @return True if the image was destroyed successfully, false otherwise
+			*/
 			bool UpdateVirtualSource(const VirtualSourceData& data);
+
+			/**
+			* @return The next free FDN channel
+			*/
 			int AssignFDNChannel();
 
+			/**
+			* @brief Resets the free FDN channel slots
+			*/
 			void ResetFDNSlots();
 
-			// Constants
-			Binaural::CCore* mCore;
-			Config mConfig;
+			Config mConfig;							// The spatialiser configuration
+			AirAbsorption mAirAbsorption;			// Air absorption filter
+			SourceDirectivity mDirectivity;			// Source directivity
+			Buffer bStore;							// Internal audio buffer
 
-			// Audio data
-			Buffer bStore;
-			CMonoBuffer<float> bInput;
-			CEarPair<CMonoBuffer<float>> bOutput;	// 3DTI stereo output buffer
-			CMonoBuffer<float> bMonoOutput;			// 3DTI Mono output buffer
-			shared_ptr<Binaural::CSingleSourceDSP> mSource;
-			AirAbsorption mAirAbsorption;
-			Real targetGain;
-			Real currentGain;
+			Real targetGain;		// Target source gain
+			Real currentGain;		// Current source gain
+			Real reverbEnergy;		// Reverb energy based on directivity
+			bool feedsFDN;			// True if the source feeds the FDN
 
-			Real reverbEnergy;
-			SourceDirectivity mDirectivity;
-			bool feedsFDN;
-
-			std::vector<int> freeFDNChannels;
-
-			Vec3 currentPosition;
-			Vec4 currentOrientation;
-			bool hasChanged;
-			CTransform transform;
+			Vec3 currentPosition;			// Current source position
+			Vec4 currentOrientation;		// Current source orientation
+			bool hasChanged;				// Flag to check if the source has changed
 			
-			VirtualSourceMap mVSources;
+			VirtualSourceMap mVSources;					// Audio thread image sources
+			VirtualSourceDataMap currentVSources;		// Current image sources
+			VirtualSourceDataMap targetVSources;		// Target image sources
+			std::vector<int> freeFDNChannels;			// Free FDN channels
 
-			VirtualSourceDataMap currentVSources;
-			VirtualSourceDataMap targetVSources;
+			Binaural::CCore* mCore;								// 3DTI core
+			shared_ptr<Binaural::CSingleSourceDSP> mSource;		// 3DTI source
+			CTransform transform;								// 3DTI source transform
+			CMonoBuffer<float> bInput;							// 3DTI mono input buffer
+			CEarPair<CMonoBuffer<float>> bOutput;				// 3DTI stereo output buffer
+			CMonoBuffer<float> bMonoOutput;						// 3DTI mono output buffer
 
-			// Mutexes
-			shared_ptr<std::mutex> vWallMutex; // Protects mVirtualSources
-			shared_ptr<std::mutex> vEdgeMutex; // Protects mVirtualEdgeSources
-			shared_ptr<std::mutex> dataMutex; // Protects isVisible, targetGain, currentGain, mDirectivity
-			shared_ptr<std::mutex> vSourceDataMutex; // Protects currentVSources, targetVSources
-			shared_ptr<std::mutex> vSourcesMutex; // Protects mVSources
-			shared_ptr<std::mutex> currentDataMutex; // Protects currentPosition, currentOrientation, hasChanged
+			shared_ptr<std::mutex> dataMutex;				// Protects isVisible, targetGain, currentGain, mDirectivity
+			shared_ptr<std::mutex> vSourceDataMutex;		// Protects currentVSources, targetVSources
+			shared_ptr<std::mutex> vSourcesMutex;			// Protects mVSources
+			shared_ptr<std::mutex> currentDataMutex;		// Protects currentPosition, currentOrientation, hasChanged
 		};
 	}
 }

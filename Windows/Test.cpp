@@ -294,7 +294,7 @@ namespace RAC
 			IEMConfig iemConfig = IEMConfig(3, DirectSound::doCheck, true, DiffractionSound::none, DiffractionSound::none, true, 0.0);
 			UpdateIEMConfig(iemConfig);
 			UpdateSpatialisationMode(SpatialisationMode::quality);
-			UpdateReverbTimeModel(ReverbFormula::Eyring);
+			UpdateReverbTimeFormula(ReverbFormula::Eyring);
 			UpdateFDNModel(FDNMatrix::randomOrthogonal);
 			UpdateDiffractionModel(DiffractionModel::attenuate);
 

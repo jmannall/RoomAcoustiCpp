@@ -1,29 +1,20 @@
 /*
-* @class Source, SourceData
+* @class Source
 *
-* @brief Declaration of Source and SourceData classes
+* @brief Declaration of Source class
 *
 */
-
-// Common headers
-#include "Common/Types.h" 
-#include "Common/Vec3.h"
-#include "Common/Vec4.h"
 
 // Spatialiser headers
 #include "Spatialiser/Source.h"
 #include "Spatialiser/Mutexes.h"
 
+// DSP headers
+#include "DSP/Interpolate.h"
+
 // Unity headers
 #include "Unity/Debug.h"
 #include "Unity/UnityInterface.h"
-
-// 3DTI headers
-#include "BinauralSpatializer/Core.h"
-#include "Common/CommonDefinitions.h"
-
-// DSP headers
-#include "DSP/Interpolate.h"
 
 using namespace Common;
 namespace RAC
@@ -36,10 +27,10 @@ namespace RAC
 
 		//////////////////// Source class ////////////////////
 
+		////////////////////////////////////////
+
 		Source::Source(Binaural::CCore* core, const Config& config) : mCore(core), mConfig(config), targetGain(0.0f), currentGain(0.0f), mAirAbsorption(mConfig.fs), mDirectivity(SourceDirectivity::omni), feedsFDN(false), hasChanged(true)
 		{
-			vWallMutex = std::make_shared<std::mutex>();
-			vEdgeMutex = std::make_shared<std::mutex>();
 			dataMutex = std::make_shared<std::mutex>();
 			vSourcesMutex = std::make_shared<std::mutex>();
 			vSourceDataMutex = std::make_shared<std::mutex>();
@@ -64,6 +55,8 @@ namespace RAC
 			bMonoOutput = CMonoBuffer<float>(mConfig.numFrames);
 		}
 
+		////////////////////////////////////////
+
 		Source::~Source()
 		{
 			{
@@ -72,6 +65,8 @@ namespace RAC
 			}
 			Reset();
 		}
+
+		////////////////////////////////////////
 
 		void Source::UpdateSpatialisationMode(const SpatialisationMode mode)
 		{
@@ -107,6 +102,8 @@ namespace RAC
 			}
 		}
 
+		////////////////////////////////////////
+
 		void Source::UpdateDiffractionModel(const DiffractionModel model)
 		{
 			mConfig.diffractionModel = model;
@@ -117,11 +114,38 @@ namespace RAC
 			}
 		}
 
+		////////////////////////////////////////
+
+		void Source::UpdateDirectivity(const SourceDirectivity directivity)
+		{
+			{
+				lock_guard<mutex> lock(*dataMutex);
+				mDirectivity = directivity;
+				switch (mDirectivity)
+				{
+				case SourceDirectivity::omni:
+					reverbEnergy = 1.0;
+					break;
+				case SourceDirectivity::cardioid:
+					reverbEnergy = 0.5;
+					break;
+				default:
+					reverbEnergy = 1.0;
+					break;
+				}
+			}
+			{ lock_guard<mutex> lock(*currentDataMutex); hasChanged = true; }
+		}
+
+		////////////////////////////////////////
+
 		void Source::ResetFDNSlots()
 		{
 			freeFDNChannels.clear();
 			freeFDNChannels.push_back(0);
 		}
+
+		////////////////////////////////////////
 
 		void Source::ProcessAudio(const Buffer& data, Matrix& reverbInput, Buffer& outputBuffer)
 		{
@@ -207,12 +231,10 @@ namespace RAC
 #endif
 		}
 
+		////////////////////////////////////////
+
 		void Source::Update(const Vec3& position, const Vec4& orientation, const Real distance)
 		{
-
-			/*UpdateVirtualSourceDataMap();
-			UpdateVirtualSources();*/
-
 			{
 				lock_guard<std::mutex>lock(*dataMutex);
 				mAirAbsorption.SetDistance(distance);
@@ -230,9 +252,10 @@ namespace RAC
 			transform.SetPosition(CVector3(static_cast<float>(position.x), static_cast<float>(position.y), static_cast<float>(position.z)));
 		}
 
+		////////////////////////////////////////
+
 		void Source::UpdateVirtualSourceDataMap()
 		{
-			// lock_guard<mutex> lock(*vSourceDataMutex);
 			for (auto& [key, vSource] : currentVSources)
 			{
 				auto it = targetVSources.find(key);
@@ -250,6 +273,8 @@ namespace RAC
 			}
 		}
 
+		////////////////////////////////////////
+
 		void Source::UpdateVirtualSources()
 		{
 			std::vector<std::string> keys;
@@ -261,6 +286,8 @@ namespace RAC
 			for (const auto& key : keys)
 				currentVSources.erase(key);
 		}
+
+		////////////////////////////////////////
 
 		bool Source::UpdateVirtualSource(const VirtualSourceData& data)
 		{
@@ -306,6 +333,8 @@ namespace RAC
 			}
 			return false;
 		}
+
+		////////////////////////////////////////
 
 		int Source::AssignFDNChannel()
 		{
