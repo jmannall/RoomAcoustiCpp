@@ -20,7 +20,7 @@
 
 // 3DTI headers
 #include "BinauralSpatializer/Core.h"
-#include "3dti_Toolkit/Common/CommonDefinitions.h"
+#include "Common/CommonDefinitions.h"
 
 // DSP headers
 #include "DSP/Interpolate.h"

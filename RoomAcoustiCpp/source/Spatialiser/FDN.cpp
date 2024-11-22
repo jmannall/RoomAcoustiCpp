@@ -161,7 +161,7 @@ namespace RAC
 			{
 				Real idx = static_cast<Real>(mConfig.numFDNChannels) / static_cast<Real>(dimensions.Rows());
 
-				assert(dimensions.Rows() <= config.numFDNChannels);
+				assert(dimensions.Rows() <= mConfig.numFDNChannels);
 				assert(idx == floor(idx)); // length of dimensions must be a multiple of mNumChannels
 
 				t.RandomUniformDistribution(-0.1, 0.1f);

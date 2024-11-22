@@ -161,7 +161,7 @@ namespace RAC
 			* @params i The channel number
 			* @return The last processed sample
 			*/
-			inline Real GetOutput(const int i) const { assert(i < y.Length()); return y[i]; }
+			inline Real GetOutput(const int i) const { assert(i < y.Cols()); return y[i]; }
 
 			/**
 			* @brief Updates the target T60

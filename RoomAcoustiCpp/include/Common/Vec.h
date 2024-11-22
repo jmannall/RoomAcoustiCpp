@@ -197,7 +197,7 @@ namespace RAC
 			*/
 			inline Rowvec operator=(const Matrix& matrix)
 			{
-				assert(mat.Rows() == 1);
+				assert(matrix.Rows() == 1);
 				Matrix::operator=(matrix);
 				return *this;
 			}
