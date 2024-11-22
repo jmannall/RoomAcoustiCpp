@@ -318,17 +318,17 @@ namespace RAC
 
 			WallMap mWalls;								// Stored walls
 			std::vector<size_t> mEmptyWallSlots;		// Available wall IDs
-			std::vector<TimerPair> mWallTimers;			// IDs waiting to be made available
+			std::vector<TimerPair> mWallTimers;			// Wall IDs waiting to be made available
 			size_t nextWall;							// Next wall ID if none are available
 
 			PlaneMap mPlanes;							// Stored planes
 			std::vector<size_t> mEmptyPlaneSlots;		// Available plane IDs
-			std::vector<TimerPair> mPlaneTimers;		// IDs waiting to be made available
+			std::vector<TimerPair> mPlaneTimers;		// Plane IDs waiting to be made available
 			size_t nextPlane;							// Next plane ID if none are available
 
 			EdgeMap mEdges;								// Stored edges
 			std::vector<size_t> mEmptyEdgeSlots;		// Available edge IDs
-			std::vector<TimerPair> mEdgeTimers;			// IDs waiting to be made available
+			std::vector<TimerPair> mEdgeTimers;			// Edge IDs waiting to be made available
 			size_t nextEdge;							// Next edge ID if none are available
 
 			std::mutex mWallMutex;		// Protects mWalls. Must always be locked before Plane and Edge

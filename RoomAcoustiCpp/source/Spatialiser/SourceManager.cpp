@@ -5,15 +5,7 @@
 *
 */
 
-// C++ headers
-#include <unordered_map>
-#include <mutex>
-
-// Common headers
-#include "Common/Types.h" 
-
 // Spatialiser headers
-#include "Spatialiser/Source.h"
 #include "Spatialiser/SourceManager.h"
 
 namespace RAC
@@ -23,12 +15,12 @@ namespace RAC
 
 		//////////////////// SourceManager class ////////////////////
 
+		////////////////////////////////////////
+
 		size_t SourceManager::Init()
 		{
 			size_t id;
-			lock(updateMutex, processAudioMutex);
-			unique_lock<shared_mutex> lk1(updateMutex, std::adopt_lock);
-			lock_guard<mutex> lk2(processAudioMutex, std::adopt_lock);
+			unique_lock<shared_mutex> lock(mSourceMutex);
 
 			Source source = Source(mCore, mConfig);
 			if (!mEmptySlots.empty()) // Assign source to an existing ID
@@ -45,33 +37,51 @@ namespace RAC
 			return id;
 		}
 
+		////////////////////////////////////////
+
+		void SourceManager::Remove(const size_t id)
+		{
+			unique_lock<shared_mutex> lock(mSourceMutex);
+
+			size_t removed = mSources.erase(id);
+			while (!mTimers.empty() && difftime(time(nullptr), mTimers.front().time) > 60)
+			{
+				mEmptySlots.push_back(mTimers.front().id);
+				mTimers.erase(mTimers.begin());
+			}
+
+			if (removed == 0)
+				return;
+
+			sourceData.pop_back();
+			mTimers.push_back(TimerPair(id));
+		}
+
+		////////////////////////////////////////
+
 		void SourceManager::UpdateSpatialisationMode(const SpatialisationMode mode)
 		{
 			mConfig.spatialisationMode = mode;
-			shared_lock<shared_mutex> lock(updateMutex);
+			shared_lock<shared_mutex> lock(mSourceMutex);
 			for (auto& it : mSources)
 				it.second.UpdateSpatialisationMode(mode);
 		}
 
+		////////////////////////////////////////
+
 		void SourceManager::UpdateDiffractionModel(const DiffractionModel model)
 		{
 			mConfig.diffractionModel = model;
-			shared_lock<shared_mutex> lock(updateMutex);
+			shared_lock<shared_mutex> lock(mSourceMutex);
 			for (auto& it : mSources)
 				it.second.UpdateDiffractionModel(model);
 		}
 
-		void SourceManager::UpdateSourceDirectivity(const size_t id, const SourceDirectivity directivity)
-		{
-			shared_lock<shared_mutex> lock(updateMutex);
-			auto it = mSources.find(id);
-			if (it != mSources.end()) // case: source does exist
-			{ it->second.UpdateDirectivity(directivity); }
-		}
+		////////////////////////////////////////
 
 		std::vector<SourceData> SourceManager::GetSourceData()
 		{
-			shared_lock<shared_mutex> lock(updateMutex);
+			shared_lock<shared_mutex> lock(mSourceMutex);
 			assert(sourceData.size() == mSources.size()); // Ensure sourceData is up to date (size matches mSources)
 			int i = 0;
 			Vec4 orientation;
@@ -86,14 +96,6 @@ namespace RAC
 				i++;
 			}
 			return sourceData;
-		}
-
-		void SourceManager::ProcessAudio(const size_t id, const Buffer& data, Matrix& reverbInput, Buffer& outputBuffer)
-		{
-			lock_guard <mutex> lock(processAudioMutex);
-			auto it = mSources.find(id);
-			if (it != mSources.end()) // case: source does exist
-			{ it->second.ProcessAudio(data, reverbInput, outputBuffer); }
 		}
 	}
 }

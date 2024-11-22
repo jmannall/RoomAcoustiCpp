@@ -9,15 +9,15 @@
 #define RoomAcoustiCpp_SourceManager_h
 
 // C++ headers
-#include <unordered_map>
 #include <mutex>
-#include <ctime>
 #include <shared_mutex>
+
+// Common headers
+#include "Common/Types.h" 
 
 // Spatialiser headers
 #include "Spatialiser/Types.h"
 #include "Spatialiser/Source.h"
-#include "Spatialiser/Mutexes.h"
 
 // 3DTI headers
 #include "BinauralSpatializer/Core.h"
@@ -34,89 +34,137 @@ namespace RAC
 		{
 		public:
 
-			// Load and Destroy
+			/**
+			* @brief Constructor that initialises the source manager with the given configuration.
+			* 
+			* @params core The 3DTI processing core
+			* @params config The spatialiser configuration
+			*/
 			SourceManager(Binaural::CCore* core, const Config& config) : mSources(), mEmptySlots(), mCore(core), mConfig(config), nextSource(0) {};
-			~SourceManager()
-			{ 
-				/*lock(updateMutex, processAudioMutex);
-				unique_lock<shared_mutex> lk1(updateMutex, std::adopt_lock);
-				lock_guard<mutex> lk2(processAudioMutex, std::adopt_lock); */
-				scoped_lock lock(updateMutex, processAudioMutex);
-				Reset();
-			};
+			
+			/**
+			* @brief Default deconstructor
+			*/
+			~SourceManager() { unique_lock<shared_mutex> lock(mSourceMutex); Reset(); };
 
+			/**
+			* @brief Updates the spatialisation mode for the HRTF processing
+			* 
+			* @params mode New spatialisation mode
+			*/
 			void UpdateSpatialisationMode(const SpatialisationMode mode);
-			void UpdateDiffractionModel(const DiffractionModel model);
-			void UpdateSourceDirectivity(const size_t id, const SourceDirectivity directivity);
 
-			// Sources
+			/**
+			* @brief Updates the diffraction model
+			* 
+			* @params model The new diffraction model
+			*/
+			void UpdateDiffractionModel(const DiffractionModel model);
+
+			/**
+			* @brief Updates the source directivity for a given source ID
+			* 
+			* @params id The source ID
+			* @params directivity The new directivity
+			*/
+			inline void UpdateSourceDirectivity(const size_t id, const SourceDirectivity directivity)
+			{
+				shared_lock<shared_mutex> lock(mSourceMutex);
+				auto it = mSources.find(id);
+				if (it != mSources.end()) // case: source does exist
+					it->second.UpdateDirectivity(directivity);
+			}
+
+			/**
+			* @brief Initialises a new source
+			* 
+			* @return The ID of the new source
+			*/
 			size_t Init();
 
+			/**
+			* @brief Updates the position and orientation of a source
+			* 
+			* @params id The ID of the source
+			* @params position The new position of the source
+			* @params orientation The new orientation of the source
+			* @params distance The distance of the source from the listener
+			*/
 			inline void Update(const size_t id, const Vec3& position, const Vec4& orientation, Real& distance)
 			{
-				shared_lock<shared_mutex> lock(updateMutex); // Lock before locate to ensure not deleted between found and mutex lock
+				shared_lock<shared_mutex> lock(mSourceMutex);
 				auto it = mSources.find(id);
 				if (it != mSources.end()) { it->second.Update(position, orientation, distance); } // case: source does exist
 			}
 
-			inline void Remove(const size_t id)
-			{
-				/*lock(updateMutex, processAudioMutex);
-				unique_lock<shared_mutex> lock1(updateMutex, adopt_lock);
-				lock_guard<mutex> lock2(processAudioMutex, adopt_lock);*/
-				scoped_lock lock(updateMutex, processAudioMutex);
+			void Remove(const size_t id);
 
-				size_t removed = mSources.erase(id);
-				while (!mTimers.empty() && difftime(time(nullptr), mTimers.front().time) > 60)
-				{
-					mEmptySlots.push_back(mTimers.front().id);
-					mTimers.erase(mTimers.begin());
-				}
-
-				if (removed == 0)
-					return;
-
-				sourceData.pop_back();
-				mTimers.push_back(TimerPair(id));
-			}
-
+			/**
+			* @return Position, orientation and directivity data for all sources
+			*/
 			std::vector<SourceData> GetSourceData();
+
+			/**
+			* @brief Returns the position of the source with the given ID
+			* 
+			* @params id The ID of the source
+			* @return The position of the source
+			*/
 			inline Vec3 GetSourcePosition(const size_t id)
 			{
-				shared_lock<shared_mutex> shared_lock(updateMutex); // Lock before locate to ensure not deleted between found and mutex lock
-				lock_guard<mutex> lock(tuneInMutex);
+				shared_lock<shared_mutex> lock(mSourceMutex);
 				auto it = mSources.find(id);
 				if (it != mSources.end()) { return it->second.GetPosition(); } // case: source does exist
 				return Vec3();
 			}
 
+			/**
+			* @brief Updates the audio DSP parameters and image sources for a given source
+			* 
+			* @params id The ID of the source
+			* @params source The source audio DSP parameters
+			* @params vSources The new image sources
+			*/
 			inline void UpdateSourceData(const size_t id, const SourceAudioData source, const VirtualSourceDataMap& vSources)
 			{
-				shared_lock<shared_mutex> lock(updateMutex);
+				shared_lock<shared_mutex> lock(mSourceMutex);
 				auto it = mSources.find(id);
 				if (it != mSources.end()) { it->second.UpdateData(source, vSources); } // case: source does exist
 			}
 
-			// Audio
-			void ProcessAudio(const size_t id, const Buffer& data, Matrix& reverbInput, Buffer& outputBuffer);
+			/**
+			* @brief Process a single audio frame for a given source
+			* 
+			* @params id The ID of the source
+			* @params data The input audio buffer
+			* @params reverbInput The reverb input matrix to write to
+			* @params outputBuffer The output audio buffer to write to
+			*/
+			inline void ProcessAudio(const size_t id, const Buffer& data, Matrix& reverbInput, Buffer& outputBuffer)
+			{
+				shared_lock<shared_mutex> lock(mSourceMutex);
+				auto it = mSources.find(id);
+				if (it != mSources.end()) // case: source does exist
+					it->second.ProcessAudio(data, reverbInput, outputBuffer);
+			}
 
 		private:
+			/**
+			* @brief Removes all sources
+			*/
 			inline void Reset() { mSources.clear(); mEmptySlots.clear(); }
 
-			// Sources
-			SourceMap mSources;
-			std::vector<size_t> mEmptySlots;
-			std::vector<TimerPair> mTimers;
-			size_t nextSource;
-			std::vector<SourceData> sourceData;
+			Config mConfig;			// Spatialiser configuration
 
-			// Mutexes
-			std::shared_mutex updateMutex; // Locks during update step
-			std::mutex processAudioMutex; // Locks during process audio step
+			SourceMap mSources;							// Stored sources
+			std::vector<size_t> mEmptySlots;			// Available source IDs
+			std::vector<TimerPair> mTimers;				// Source IDs waiting to be made available
+			size_t nextSource;							// Next source ID if none available
+			std::vector<SourceData> sourceData;			// Stores position, orientation and directivity data for all sources
 
-			// Variables
-			Binaural::CCore* mCore;
-			Config mConfig;
+			Binaural::CCore* mCore;			// 3DTI processing core
+
+			std::shared_mutex mSourceMutex;		// Protects mSources
 		};
 	}
 }
