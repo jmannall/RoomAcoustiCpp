@@ -32,8 +32,8 @@ namespace RAC
 		Source::Source(Binaural::CCore* core, const Config& config) : mCore(core), mConfig(config), targetGain(0.0f), currentGain(0.0f), mAirAbsorption(mConfig.fs), mDirectivity(SourceDirectivity::omni), feedsFDN(false), hasChanged(true)
 		{
 			dataMutex = std::make_shared<std::mutex>();
-			vSourcesMutex = std::make_shared<std::mutex>();
-			vSourceDataMutex = std::make_shared<std::mutex>();
+			imageSourcesMutex = std::make_shared<std::mutex>();
+			imageSourceDataMutex = std::make_shared<std::mutex>();
 			currentDataMutex = std::make_shared<std::mutex>();
 
 			// Initialise source to core
@@ -96,8 +96,8 @@ namespace RAC
 			}
 
 			{
-				lock_guard<mutex> lock(*vSourcesMutex);
-				for (auto& it : mVSources)
+				lock_guard<mutex> lock(*imageSourcesMutex);
+				for (auto& it : mImageSources)
 					it.second.UpdateSpatialisationMode(mode);
 			}
 		}
@@ -108,8 +108,8 @@ namespace RAC
 		{
 			mConfig.diffractionModel = model;
 			{
-				lock_guard<mutex> lock(*vSourcesMutex);
-				for (auto& it : mVSources)
+				lock_guard<mutex> lock(*imageSourcesMutex);
+				for (auto& it : mImageSources)
 					it.second.UpdateDiffractionModel(model);
 			}
 		}
@@ -150,9 +150,9 @@ namespace RAC
 		void Source::ProcessAudio(const Buffer& data, Matrix& reverbInput, Buffer& outputBuffer)
 		{
 			{
-				lock_guard<mutex> lock(*vSourcesMutex);
-				for (auto& it : mVSources)
-					it.second.ProcessAudio(data, reverbInput, outputBuffer, reverbEnergy);
+				lock_guard<mutex> lock(*imageSourcesMutex);
+				for (auto& it : mImageSources)
+					it.second.ProcessAudio(data, reverbInput, outputBuffer);
 			}
 
 #ifdef DEBUG_AUDIO_THREAD
@@ -254,20 +254,20 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Source::UpdateVirtualSourceDataMap()
+		void Source::UpdateImageSourceDataMap()
 		{
-			for (auto& [key, vSource] : currentVSources)
+			for (auto& [key, vSource] : currentImageSources)
 			{
-				auto it = targetVSources.find(key);
-				if (it == targetVSources.end()) // case: old vSource
+				auto it = targetImageSources.find(key);
+				if (it == targetImageSources.end()) // case: old vSource
 					vSource.Invisible();
 			}
 
-			for (auto& [key, vSource] : targetVSources)
+			for (auto& [key, vSource] : targetImageSources)
 			{
-				auto it = currentVSources.find(key);
-				if (it == currentVSources.end()) // case: add new vSource
-					currentVSources.emplace(key, vSource);
+				auto it = currentImageSources.find(key);
+				if (it == currentImageSources.end()) // case: add new vSource
+					currentImageSources.emplace(key, vSource);
 				else // case: update exist vSource
 					it->second = vSource;
 			}
@@ -275,43 +275,43 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Source::UpdateVirtualSources()
+		void Source::UpdateImageSources()
 		{
 			std::vector<std::string> keys;
-			for (auto& [key, vSource] : currentVSources)
+			for (auto& [key, vSource] : currentImageSources)
 			{
-				if (UpdateVirtualSource(vSource))
+				if (UpdateImageSource(vSource))
 					keys.push_back(key);
 			}
 			for (const auto& key : keys)
-				currentVSources.erase(key);
+				currentImageSources.erase(key);
 		}
 
 		////////////////////////////////////////
 
-		bool Source::UpdateVirtualSource(const VirtualSourceData& data)
+		bool Source::UpdateImageSource(const ImageSourceData& data)
 		{
-			auto it = mVSources.find(data.GetKey());
-			if (it == mVSources.end())		// case: virtual source does not exist
+			auto it = mImageSources.find(data.GetKey());
+			if (it == mImageSources.end())		// case: virtual source does not exist
 			{
 				int fdnChannel = -1;
-				if (data.feedsFDN)
+				if (data.IsFeedingFDN())
 					fdnChannel = AssignFDNChannel();
 				{
-					unique_lock<mutex> lock(*vSourcesMutex, defer_lock);
+					unique_lock<mutex> lock(*imageSourcesMutex, defer_lock);
 					if (lock.try_lock())
-						mVSources.try_emplace(data.GetKey(), mCore, mConfig, data, fdnChannel);
+						mImageSources.try_emplace(data.GetKey(), mCore, mConfig, data, fdnChannel);
 				}
 			}
 			else
 			{
 				int fdnChannel = -1;
-				if (data.feedsFDN && it->second.GetFDNChannel() < 0)
+				if (data.IsFeedingFDN() && it->second.GetFDNChannel() < 0)
 					fdnChannel = AssignFDNChannel();
 
-				bool remove = it->second.UpdateVirtualSource(data, fdnChannel);
+				bool remove = it->second.Update(data, fdnChannel);
 
-				assert(!(data.feedsFDN && it->second.GetFDNChannel() == -1));
+				assert(!(data.IsFeedingFDN() && it->second.GetFDNChannel() == -1));
 
 				if (fdnChannel >= 0) // Add vSource old fdnChannel to freeFDNChannels (Also prevents leaking FDN channels if !data.visible and the channel is not assigned to vSource)
 					freeFDNChannels.push_back(fdnChannel);
@@ -322,9 +322,9 @@ namespace RAC
 
 					size_t n = 0;
 					{
-						unique_lock<mutex> lock(*vSourcesMutex, defer_lock);
+						unique_lock<mutex> lock(*imageSourcesMutex, defer_lock);
 						if (lock.try_lock())
-							n = mVSources.erase(data.GetKey());
+							n = mImageSources.erase(data.GetKey());
 					}
 
 					if (n == 1) // Check vSource has been successfully erased

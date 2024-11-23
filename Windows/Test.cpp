@@ -797,7 +797,7 @@ namespace RAC
 			Source source = Source(&core, config);
 
 			VirtualSourceDataMap vSources;
-			VirtualSourceData vSource = VirtualSourceData(5);
+			ImageSourceData vSource = ImageSourceData(5);
 			vSource.SetPreviousPlane(Vec4(plane.GetD(), plane.GetNormal()));
 
 			vSource.Valid();
@@ -807,7 +807,7 @@ namespace RAC
 			plane.ReflectPointInPlane(position, sPosition);
 			vSource.SetTransform(position);
 
-			Absorption& abs = vSource.GetAbsorptionRef();
+			Absorption& abs = vSource.GetAbsorption();
 			abs = absorption;
 
 			vSource.SetDistance(lPosition);
@@ -815,7 +815,7 @@ namespace RAC
 
 			for (int i = 0; i < 10; i++)
 			{
-				VirtualSourceData v = vSource;
+				ImageSourceData v = vSource;
 				v.AddPlaneID(i);
 				vSources.insert_or_assign(v.GetKey(), v);
 			}

@@ -125,7 +125,7 @@ namespace RAC
 			* @params source The source audio DSP parameters
 			* @params vSources The new image sources
 			*/
-			inline void UpdateSourceData(const size_t id, const SourceAudioData source, const VirtualSourceDataMap& vSources)
+			inline void UpdateSourceData(const size_t id, const SourceAudioData source, const ImageSourceDataMap& vSources)
 			{
 				shared_lock<shared_mutex> lock(mSourceMutex);
 				auto it = mSources.find(id);

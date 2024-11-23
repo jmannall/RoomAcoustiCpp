@@ -1,19 +1,19 @@
 /*
-* @class VirtualSource, VirtualsourceData
+* @class ImageSource, ImageSourceData
 *
-* @brief Declaration of VirtualSource and VirtualsourceData classes
-* 
-* @remarks Currently, it can only handle one diffracting edge per path/virtual source
+* @brief Declaration of ImageSource and ImageSourceData classes
+*
+* @remarks Currently, it can only handle one diffracting edge per path/image source
 *
 */
 
 // Spatialiser headers
 #include "Spatialiser/VirtualSource.h"
 #include "Spatialiser/Mutexes.h"
-#include "Spatialiser/Types.h"
 
 // Unity headers
 #include "Unity/UnityInterface.h"
+#include "Unity/Debug.h"
 
 // DSP headers
 #include "DSP/Interpolate.h"
@@ -26,62 +26,66 @@ namespace RAC
 	namespace Spatialiser
 	{
 
-		//////////////////// VirtualSourceData class ////////////////////
+		//////////////////// ImageSourceData class ////////////////////
 
-		Vec3 VirtualSourceData::GetPosition(const int i) const
+		////////////////////////////////////////
+
+		void ImageSourceData::AddPlaneID(const size_t id)
 		{
-			assert(i < order);
-			return mPositions[i];
-		}
-
-		void VirtualSourceData::SetTransform(const Vec3& vSourcePosition)
-		{
-			transform.SetPosition(CVector3(static_cast<float>(vSourcePosition.x), static_cast<float>(vSourcePosition.y), static_cast<float>(vSourcePosition.z)));
-			mPositions.emplace_back(vSourcePosition);
-		}
-
-		void VirtualSourceData::SetTransform(const Vec3& vSourcePosition, const Vec3& vEdgeSourcePosition)
-		{
-			transform.SetPosition(CVector3(static_cast<float>(vEdgeSourcePosition.x), static_cast<float>(vEdgeSourcePosition.y), static_cast<float>(vEdgeSourcePosition.z)));
-			mPositions.emplace_back(vSourcePosition);
-		}
-
-		VirtualSourceData VirtualSourceData::Trim(const int i)
-		{
-			order = i + 1;
-
-			if (mPositions.size() > i)
-				mPositions.erase(mPositions.begin() + order, mPositions.end());
-			if (pathParts.size() > i)
-				pathParts.erase(pathParts.begin() + order, pathParts.end());
-
-			feedsFDN = false;
-			mFDNChannel = -1;
-
-			Reset();
-
-			key = "";
-			reflection = false;
-			diffraction = false;
-			int j = 0;
-			for (Part part : pathParts)
+			pathParts.emplace_back(id, true);
+			order++;
+			reflection = true;
+			auto [ptr, ec] = std::to_chars(idKey.data(), idKey.data() + idKey.size(), id);
+			if (ec == std::errc()) // Null-terminate manually if conversion is successful
+				*ptr = '\0';
+			else// Failed to convert id to char array
 			{
-				if (part.isReflection)
-				{
-					reflection = true;
-					key = key + std::to_string(part.id) + "r";
-				}
-				else
-				{
-					diffraction = true;
-					key = key + std::to_string(part.id) + "d";
-				}
-				j++;
+				key += reflectionKey[0];
+				return;
 			}
-			return *this;
+
+			key += idKey.data();
+			key += reflectionKey[0];
 		}
 
-		void VirtualSourceData::SetDistance(const Vec3& listenerPosition)
+		////////////////////////////////////////
+
+		void ImageSourceData::AddEdgeID(const size_t id)
+		{
+			pathParts.emplace_back(id, false);
+			order++;
+			diffraction = true;
+			auto [ptr, ec] = std::to_chars(idKey.data(), idKey.data() + idKey.size(), id);
+			if (ec == std::errc()) // Null-terminate manually if conversion is successful
+				*ptr = '\0';
+			else// Failed to convert id to char array
+			{
+				key += diffractionKey[0];
+				return;
+			}
+			key += idKey.data();
+			key += diffractionKey[0];
+		}
+
+		////////////////////////////////////////
+
+		void ImageSourceData::SetTransform(const Vec3& position)
+		{
+			transform.SetPosition(CVector3(static_cast<float>(position.x), static_cast<float>(position.y), static_cast<float>(position.z)));
+			mPositions.emplace_back(position);
+		}
+
+		////////////////////////////////////////
+
+		void ImageSourceData::SetTransform(const Vec3& position, const Vec3& rotatedEdgePosition)
+		{
+			transform.SetPosition(CVector3(static_cast<float>(rotatedEdgePosition.x), static_cast<float>(rotatedEdgePosition.y), static_cast<float>(rotatedEdgePosition.z)));
+			mPositions.emplace_back(position);
+		}
+
+		////////////////////////////////////////
+
+		void ImageSourceData::SetDistance(const Vec3& listenerPosition)
 		{
 			if (diffraction)
 				distance = mDiffractionPath.rData.d + mDiffractionPath.sData.d;
@@ -89,26 +93,45 @@ namespace RAC
 				distance = (listenerPosition - GetPosition()).Length();
 		}
 
-		//////////////////// VirtualSource class ////////////////////
+		////////////////////////////////////////
 
-		VirtualSource::VirtualSource(Binaural::CCore* core, const Config& config, const VirtualSourceData& data, int fdnChannel) : mCore(core), mSource(nullptr), mConfig(config), mFDNChannel(fdnChannel),
-			mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(data.GetAbsorption(), config.frequencyBands, config.Q, config.fs), mAirAbsorption(data.distance, mConfig.fs), feedsFDN(data.feedsFDN), bStore(config.numFrames), bDiffStore(config.numFrames),
+		void ImageSourceData::Clear()
+		{
+			Reset();
+			pathParts.clear();
+			mPositions.clear();
+			reflection = false;
+			diffraction = false;
+			order = 0;
+			key = "";
+		}
+
+		////////////////////////////////////////
+
+		void ImageSourceData::Update(const ImageSourceData& imageSource)
+		{
+			pathParts = imageSource.pathParts;
+			mPositions = imageSource.mPositions;
+			reflection = imageSource.reflection;
+			diffraction = imageSource.diffraction;
+			if (diffraction)
+				mDiffractionPath = imageSource.mDiffractionPath;
+			order = imageSource.order;
+			key = imageSource.key;
+		}
+
+		//////////////////// ImageSource class ////////////////////
+
+		////////////////////////////////////////
+
+		ImageSource::ImageSource(Binaural::CCore* core, const Config& config, const ImageSourceData& data, int fdnChannel) : mCore(core), mSource(nullptr), mConfig(config), mFDNChannel(fdnChannel),
+			mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(data.GetAbsorption(), config.frequencyBands, config.Q, config.fs), mAirAbsorption(data.GetDistance(), mConfig.fs), feedsFDN(data.IsFeedingFDN()), bStore(config.numFrames), bDiffStore(config.numFrames),
 			attenuate(&mDiffractionPath), lowPass(&mDiffractionPath, config.fs), udfa(&mDiffractionPath, config.fs), udfai(&mDiffractionPath, config.fs), nnSmall(&mDiffractionPath), nnBest(&mDiffractionPath), utd(&mDiffractionPath, config.fs), btm(&mDiffractionPath, config.fs),
-			reflection(data.reflection), diffraction(data.diffraction), transform(data.transform), /*updateTransform(false),*/ isInitialised(false), isCrossFading(false), mDiffractionModel(nullptr), mOldDiffractionModel(nullptr),
+			reflection(data.IsReflection()), diffraction(data.IsDiffraction()), transform(data.GetTransform()), isInitialised(false), isCrossFading(false), mDiffractionModel(nullptr), mOldDiffractionModel(nullptr),
 			crossfadeCounter(0), crossfadeLengthSamples(static_cast<int>(round(mConfig.fs * 0.01)))
 		{
 			UpdateDiffractionModel(config.diffractionModel);
-			InitAudioData();
-			UpdateVirtualSource(data, fdnChannel);
-		}
-
-		VirtualSource::~VirtualSource()
-		{
-			mCore->RemoveSingleSourceDSP(mSource);
-		};
-
-		void VirtualSource::InitAudioData()
-		{
+			
 			audioMutex = std::make_shared<std::mutex>();
 
 			bInput = CMonoBuffer<float>(mConfig.numFrames);
@@ -116,43 +139,20 @@ namespace RAC
 			bOutput.right = CMonoBuffer<float>(mConfig.numFrames);
 			bMonoOutput = CMonoBuffer<float>(mConfig.numFrames);
 			bDiffStore.ResizeBuffer(std::min(mConfig.numFrames, crossfadeLengthSamples));
+
+			Update(data, fdnChannel);
 		}
 
-		// Return value depending on removed, not removed and source busy (so try again later)?
-		// if is Init() so do later all in one go (less locking of mutex)
-		bool VirtualSource::UpdateVirtualSource(const VirtualSourceData& data, int& fdnChannel)
+		////////////////////////////////////////
+
+		ImageSource::~ImageSource()
 		{
-			if (data.visible) // Process virtual source - Init if doesn't exist
-			{
-				unique_lock<mutex> lck(*audioMutex, std::defer_lock);
-				if (lck.try_lock())
-				{
-					mTargetGain = data.GetDirectivity();
-					if (!isInitialised)
-						Init(data);
-					Update(data, fdnChannel);
-				}
-			}
-			else
-			{
-				unique_lock<mutex> lck(*audioMutex, std::defer_lock);
-				if (lck.try_lock())
-				{
-					mTargetGain = 0.0f;
-					// mDirectivityStore = mCurrentGain;
-					if (mCurrentGain < 0.0001)
-					{
-						if (isInitialised)
-							Remove();
-						lck.unlock();
-						return true;
-					}
-				}
-			}
-			return false;
+			mCore->RemoveSingleSourceDSP(mSource);
 		}
 
-		void VirtualSource::UpdateSpatialisationMode(const SpatialisationMode mode)
+		////////////////////////////////////////
+
+		void ImageSource::UpdateSpatialisationMode(const SpatialisationMode mode)
 		{
 			mConfig.spatialisationMode = mode;
 			if (isInitialised)
@@ -184,52 +184,30 @@ namespace RAC
 			}
 		}
 
-		void VirtualSource::UpdateDiffractionModel(const DiffractionModel model)
+		////////////////////////////////////////
+
+		void ImageSource::UpdateDiffractionModel(const DiffractionModel model)
 		{
 			mOldDiffractionModel = mDiffractionModel;
 			mConfig.diffractionModel = model;
 			switch (model)
 			{
 			case DiffractionModel::attenuate:
-			{
-				mDiffractionModel = &attenuate;
-				break;
-			}
+			{ mDiffractionModel = &attenuate; break; }
 			case DiffractionModel::lowPass:
-			{
-				mDiffractionModel = &lowPass;
-				break;
-			}
+			{ mDiffractionModel = &lowPass; break; }
 			case DiffractionModel::udfa:
-			{
-				mDiffractionModel = &udfa;
-				break;
-			}
+			{ mDiffractionModel = &udfa; break; }
 			case DiffractionModel::udfai:
-			{
-				mDiffractionModel = &udfai;
-				break;
-			}
+			{ mDiffractionModel = &udfai; break; }
 			case DiffractionModel::nnBest:
-			{
-				mDiffractionModel = &nnBest;
-				break;
-			}
+			{ mDiffractionModel = &nnBest; break; }
 			case DiffractionModel::nnSmall:
-			{
-				mDiffractionModel = &nnSmall;
-				break;
-			}
+			{ mDiffractionModel = &nnSmall; break; }
 			case DiffractionModel::utd:
-			{
-				mDiffractionModel = &utd;
-				break;
-			}
+			{ mDiffractionModel = &utd; break; }
 			case DiffractionModel::btm:
-			{
-				mDiffractionModel = &btm;
-				break;
-			}
+			{ mDiffractionModel = &btm; break; }
 			default:
 				mDiffractionModel = &btm;
 			}
@@ -245,7 +223,121 @@ namespace RAC
 			crossfadeCounter = 0;
 		}
 
-		void VirtualSource::ProcessAudio(const Buffer& data, Matrix& reverbInput, Buffer& outputBuffer, Real reverbEnergy)
+		////////////////////////////////////////
+
+		bool ImageSource::Update(const ImageSourceData& data, int& fdnChannel)
+		{
+			if (data.IsVisible()) // Process virtual source - Init if doesn't exist
+			{
+				unique_lock<mutex> lck(*audioMutex, std::defer_lock);
+				if (lck.try_lock())
+				{
+					mTargetGain = data.GetDirectivity();
+					if (!isInitialised)
+						Init(data);
+					UpdateParameters(data, fdnChannel);
+				}
+			}
+			else
+			{
+				unique_lock<mutex> lck(*audioMutex, std::defer_lock);
+				if (lck.try_lock())
+				{
+					mTargetGain = 0.0f;
+					// mDirectivityStore = mCurrentGain;
+					if (mCurrentGain < 0.0001)
+					{
+						if (isInitialised)
+							Remove();
+						lck.unlock();
+						return true;
+					}
+				}
+			}
+			return false;
+		}
+
+		////////////////////////////////////////
+
+		void ImageSource::Init(const ImageSourceData& data)
+		{
+			// audioMutex already locked
+#ifdef DEBUG_VIRTUAL_SOURCE
+			Debug::Log("Init virtual source", Colour::Green);
+#endif
+			reflection = data.IsReflection();
+			diffraction = data.IsDiffraction();
+
+			if (reflection) // Set reflection filter
+				mFilter.InitParameters(data.GetAbsorption());
+
+			// Set btm currentIr
+			if (diffraction)
+			{
+				mDiffractionPath = data.GetDiffractionPath();
+				btm.UpdatePath(&mDiffractionPath);
+				btm.InitParameters();
+			}
+
+			order = data.GetOrder();
+			{
+				lock_guard<mutex> lock(tuneInMutex);
+
+				// Initialise source to core
+				mSource = mCore->CreateSingleSourceDSP();
+				mSource->EnablePropagationDelay();
+				mSource->SetSourceTransform(data.GetTransform());
+				mSource->DisableInterpolation();
+			}
+			//updateTransform = true;
+			isInitialised = true;
+
+			//Select spatialisation mode
+			UpdateSpatialisationMode(mConfig.spatialisationMode);
+		}
+
+		////////////////////////////////////////
+
+		void ImageSource::UpdateParameters(const ImageSourceData& data, int& fdnChannel)
+		{
+			// audioMutex already locked
+			if (reflection) // Update reflection filter
+				mFilter.SetGain(data.GetAbsorption());
+
+			if (diffraction)
+			{
+				mDiffractionPath = data.GetDiffractionPath();
+				UpdateDiffraction();
+			}
+
+			mAirAbsorption.SetDistance(data.GetDistance());
+
+			if (data.IsFeedingFDN() != feedsFDN)
+			{
+				feedsFDN = !feedsFDN;
+				std::swap(mFDNChannel, fdnChannel);
+			}
+
+			transform = data.GetTransform();
+		}
+
+		////////////////////////////////////////
+
+		void ImageSource::Remove()
+		{
+#ifdef DEBUG_VIRTUAL_SOURCE
+			Debug::Log("Remove virtual source", Colour::Red);
+#endif
+			{
+				lock_guard<mutex> lock(tuneInMutex);
+				mCore->RemoveSingleSourceDSP(mSource);
+			}
+			isInitialised = false;
+		}
+
+		////////////////////////////////////////
+
+		void ImageSource::ProcessAudio(const Buffer& data, Matrix& reverbInput, Buffer& outputBuffer)
 		{
 			lock_guard<mutex> lock(*audioMutex);
 
@@ -328,11 +420,6 @@ namespace RAC
 				if (feedsFDN)
 				{
 					{
-						//Real reverbFactor;
-						//if (mTargetGain == 0.0f)
-						//	reverbFactor = reverbEnergy / mDirectivityStore;
-						//else
-						//	reverbFactor = reverbEnergy / mCurrentGain;
 						mSource->ProcessAnechoic(bMonoOutput, bOutput.left, bOutput.right);
 						for (int i = 0; i < mConfig.numFrames; i++)
 							reverbInput[i][mFDNChannel] += static_cast<Real>(bMonoOutput[i]);
@@ -355,79 +442,34 @@ namespace RAC
 #endif
 		}
 
-		void VirtualSource::Init(const VirtualSourceData& data)
+		////////////////////////////////////////
+
+		void ImageSource::ProcessDiffraction(const Buffer& inBuffer, Buffer& outBuffer)
 		{
-			// audioMutex already locked
-#ifdef DEBUG_VIRTUAL_SOURCE
-	Debug::Log("Init virtual source", Colour::Green);
-#endif
-			reflection = data.reflection;
-			diffraction = data.diffraction;
-
-			if (reflection) // Set reflection filter
-				mFilter.InitParameters(data.GetAbsorption());
-
-			// Set btm currentIr
-			if (diffraction)
+			if (isCrossFading)
 			{
-				mDiffractionPath = data.mDiffractionPath;
-				btm.UpdatePath(&mDiffractionPath);
-				btm.InitParameters();
+				assert(mOldDiffractionModel != nullptr);
+
+				mOldDiffractionModel->ProcessAudio(inBuffer, bDiffStore, bDiffStore.Length(), mConfig.lerpFactor);
+				mDiffractionModel->ProcessAudio(inBuffer, outBuffer, mConfig.numFrames, mConfig.lerpFactor);
+
+				for (int i = 0; i < bDiffStore.Length(); ++i)
+				{
+					float crossfadeFactor = static_cast<float>(crossfadeCounter) / crossfadeLengthSamples;
+					outBuffer[i] *= crossfadeFactor;
+					outBuffer[i] += bDiffStore[i] * (1.0f - crossfadeFactor);
+					++crossfadeCounter;
+
+					if (crossfadeCounter >= crossfadeLengthSamples)
+					{
+						isCrossFading = false;
+						mOldDiffractionModel = nullptr;
+						return;
+					}
+				}
 			}
-
-			order = data.GetOrder();
-			{
-				lock_guard<mutex> lock(tuneInMutex);
-
-				// Initialise source to core
-				mSource = mCore->CreateSingleSourceDSP();
-				mSource->EnablePropagationDelay();
-				mSource->SetSourceTransform(data.transform);
-				mSource->DisableInterpolation();
-			}
-			//updateTransform = true;
-			isInitialised = true;
-
-			//Select spatialisation mode
-			UpdateSpatialisationMode(mConfig.spatialisationMode);
-		}
-
-		void VirtualSource::Update(const VirtualSourceData& data, int& fdnChannel)
-		{
-			// audioMutex already locked
-			if (reflection) // Update reflection filter
-				mFilter.SetGain(data.GetAbsorption());
-
-			if (diffraction)
-			{
-				mDiffractionPath = data.mDiffractionPath;
-				UpdateDiffraction();
-			}
-
-			mAirAbsorption.SetDistance(data.distance);
-
-			if (data.feedsFDN != feedsFDN)
-			{
-				feedsFDN = data.feedsFDN;
-				int oldChannel = mFDNChannel;
-				mFDNChannel = fdnChannel;
-				fdnChannel = oldChannel;
-			}
-
-			transform = data.transform;
-		}
-
-		void VirtualSource::Remove()
-		{
-#ifdef DEBUG_VIRTUAL_SOURCE
-	Debug::Log("Remove virtual source", Colour::Red);
-#endif
-			{
-				lock_guard<mutex> lock(tuneInMutex);
-				mCore->RemoveSingleSourceDSP(mSource);
-			}
-			// updateTransform = false;
-			isInitialised = false;
+			else
+				mDiffractionModel->ProcessAudio(inBuffer, outBuffer, mConfig.numFrames, mConfig.lerpFactor);
 		}
 	}
 }

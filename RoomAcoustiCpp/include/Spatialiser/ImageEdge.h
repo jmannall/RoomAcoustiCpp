@@ -35,7 +35,7 @@ namespace RAC
 			void UpdateLateReverbFilters();
 
 		private:
-			SourceAudioData ReflectPointInRoom(const SourceData& source, VirtualSourceDataMap& vSources);
+			SourceAudioData ReflectPointInRoom(const SourceData& source, ImageSourceDataMap& vSources);
 
 			void UpdateRValid();
 			// EdgeZone FindEdgeZone(const vec3& point, const std::vector<size_t> planeIDs);
@@ -43,8 +43,8 @@ namespace RAC
 			bool FindWallIntersection(Absorption& absorption, Vec3& intersection, const Vec3& start, const Vec3& end, const Plane& plane) const;
 
 			bool FindIntersection(Vec3& intersection, Absorption& absorption, const Vec3& start, const Vec3& end, const Plane& plane) const;
-			bool FindIntersections(std::vector<Vec3>& intersections, VirtualSourceData& vSource, int bounceIdx) const;
-			bool FindIntersections(std::vector<Vec3>& intersections, VirtualSourceData& vSource, int bounceIdx, const Vec3& start) const;
+			bool FindIntersections(std::vector<Vec3>& intersections, ImageSourceData& vSource, int bounceIdx) const;
+			bool FindIntersections(std::vector<Vec3>& intersections, ImageSourceData& vSource, int bounceIdx, const Vec3& start) const;
 
 			bool FindWallObstruction(const Vec3& start, const Vec3& end, const Plane& plane) const;
 
@@ -55,13 +55,13 @@ namespace RAC
 			bool LineRoomObstruction(const Vec3& start, const Vec3& end, size_t currentPlaneId1, size_t currentPlaneId2) const;
 			void LineRoomObstruction(const Vec3& start, const Vec3& end, size_t currentPlaneId1, size_t currentPlaneId2, bool& obstruction) const;
 
-			size_t FirstOrderDiffraction(const SourceData& source, VirtualSourceDataMap& vSources);
-			size_t FirstOrderReflections(const SourceData& source, VirtualSourceDataMap& vSources, size_t counter);
-			void HigherOrderReflections(const SourceData& source, VirtualSourceDataMap& vSources);
+			size_t FirstOrderDiffraction(const SourceData& source, ImageSourceDataMap& vSources);
+			size_t FirstOrderReflections(const SourceData& source, ImageSourceDataMap& vSources, size_t counter);
+			void HigherOrderReflections(const SourceData& source, ImageSourceDataMap& vSources);
 
 			Real CalculateDirectivity(const SourceData& source, const Vec3& intersection) const;
-			void InitVSource(const SourceData& source, const Vec3& intersection, VirtualSourceData& vSource, VirtualSourceDataMap& vSources, bool feedsFDN);
-			void EraseOldEntries(VirtualSourceDataMap& vSources);
+			void InitVSource(const SourceData& source, const Vec3& intersection, ImageSourceData& vSource, ImageSourceDataMap& vSources, bool feedsFDN);
+			void EraseOldEntries(ImageSourceDataMap& vSources);
 
 			weak_ptr<Room> mRoom;
 			weak_ptr<SourceManager> mSourceManager;
@@ -72,7 +72,7 @@ namespace RAC
 			WallMap mWalls;
 			EdgeMap mEdges;
 			std::vector<SourceData> mSources;
-			std::vector<VirtualSourceDataMap> mVSources;
+			std::vector<ImageSourceDataMap> mVSources;
 			std::vector<SourceAudioData> mSourceAudioDatas;
 			std::vector<bool> mCurrentCycles;
 

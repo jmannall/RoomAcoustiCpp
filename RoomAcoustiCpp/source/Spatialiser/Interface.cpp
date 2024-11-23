@@ -7,8 +7,12 @@
 #include "Spatialiser/Interface.h"
 #include "Spatialiser/Context.h"
 
+// Unity headers
+#include "Unity/Debug.h"
+
 namespace RAC
 {
+	using namespace Unity;
 	namespace Spatialiser
 	{
 		////////////////////////////////////////

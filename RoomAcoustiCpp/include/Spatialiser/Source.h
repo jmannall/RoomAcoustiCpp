@@ -104,12 +104,12 @@ namespace RAC
 			* @params source The source audio DSP parameters
 			* @params vSources The current image sources
 			*/
-			inline void UpdateData(const SourceAudioData source, const VirtualSourceDataMap& vSources)
+			inline void UpdateData(const SourceAudioData source, const ImageSourceDataMap& vSources)
 			{ 
 				{ lock_guard<mutex> lock(*dataMutex); targetGain = source.first; feedsFDN = source.second; }
-				targetVSources = vSources;
-				UpdateVirtualSourceDataMap();
-				UpdateVirtualSources();
+				targetImageSources = vSources;
+				UpdateImageSourceDataMap();
+				UpdateImageSources();
 			}
 
 			/**
@@ -151,7 +151,7 @@ namespace RAC
 			*/
 			inline void Reset()
 			{ 
-				{ lock_guard<std::mutex> lock(*vSourcesMutex); mVSources.clear(); }
+				{ lock_guard<std::mutex> lock(*imageSourcesMutex); mImageSources.clear(); }
 				ResetFDNSlots();
 			}
 
@@ -159,12 +159,12 @@ namespace RAC
 			/**
 			* @brief Updates the current image sources from the target image sources
 			*/
-			void UpdateVirtualSourceDataMap();
+			void UpdateImageSourceDataMap();
 
 			/**
 			* @brief Updates the audio thread image sources from the current image sources
 			*/
-			void UpdateVirtualSources();
+			void UpdateImageSources();
 
 			/**
 			* @brief Updates the audio thread data for a given image source
@@ -172,7 +172,7 @@ namespace RAC
 			* @params data The new image source data
 			* @return True if the image was destroyed successfully, false otherwise
 			*/
-			bool UpdateVirtualSource(const VirtualSourceData& data);
+			bool UpdateImageSource(const ImageSourceData& data);
 
 			/**
 			* @return The next free FDN channel
@@ -198,9 +198,9 @@ namespace RAC
 			Vec4 currentOrientation;		// Current source orientation
 			bool hasChanged;				// Flag to check if the source has changed
 			
-			VirtualSourceMap mVSources;					// Audio thread image sources
-			VirtualSourceDataMap currentVSources;		// Current image sources
-			VirtualSourceDataMap targetVSources;		// Target image sources
+			ImageSourceMap mImageSources;				// Audio thread image sources
+			ImageSourceDataMap currentImageSources;		// Current image sources
+			ImageSourceDataMap targetImageSources;		// Target image sources
 			std::vector<int> freeFDNChannels;			// Free FDN channels
 
 			Binaural::CCore* mCore;								// 3DTI core
@@ -210,10 +210,10 @@ namespace RAC
 			CEarPair<CMonoBuffer<float>> bOutput;				// 3DTI stereo output buffer
 			CMonoBuffer<float> bMonoOutput;						// 3DTI mono output buffer
 
-			shared_ptr<std::mutex> dataMutex;				// Protects isVisible, targetGain, currentGain, mDirectivity
-			shared_ptr<std::mutex> vSourceDataMutex;		// Protects currentVSources, targetVSources
-			shared_ptr<std::mutex> vSourcesMutex;			// Protects mVSources
-			shared_ptr<std::mutex> currentDataMutex;		// Protects currentPosition, currentOrientation, hasChanged
+			shared_ptr<std::mutex> dataMutex;					// Protects isVisible, targetGain, currentGain, mDirectivity
+			shared_ptr<std::mutex> imageSourceDataMutex;		// Protects currentImageSources, targetImageSources
+			shared_ptr<std::mutex> imageSourcesMutex;			// Protects mImageSources
+			shared_ptr<std::mutex> currentDataMutex;			// Protects currentPosition, currentOrientation, hasChanged
 		};
 	}
 }

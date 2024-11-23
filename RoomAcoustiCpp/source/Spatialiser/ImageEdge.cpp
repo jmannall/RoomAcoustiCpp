@@ -24,8 +24,8 @@ namespace RAC
 		ImageEdge::ImageEdge(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const int numBands) :
 			mRoom(room), mSourceManager(sourceManager), mReverb(reverb), numAbsorptionBands(numBands), currentCycle(false), configChanged(true)
 		{
-			sp = std::vector<std::vector<VirtualSourceData>>();
-			sp.push_back(std::vector<VirtualSourceData>());
+			sp = std::vector<std::vector<ImageSourceData>>();
+			sp.push_back(std::vector<ImageSourceData>());
 
 			shared_ptr<Reverb> sharedReverb = mReverb.lock();
 			sharedReverb->GetReverbSourceDirections(reverbDirections);
@@ -222,15 +222,15 @@ namespace RAC
 			return false;
 		}
 
-		bool ImageEdge::FindIntersections(std::vector<Vec3>& intersections, VirtualSourceData& vSource, int bounceIdx) const
+		bool ImageEdge::FindIntersections(std::vector<Vec3>& intersections, ImageSourceData& vSource, int bounceIdx) const
 		{
 			return FindIntersections(intersections, vSource, bounceIdx, mListenerPosition);
 		}
 
-		bool ImageEdge::FindIntersections(std::vector<Vec3>& intersections, VirtualSourceData& vSource, int bounceIdx, const Vec3& start) const
+		bool ImageEdge::FindIntersections(std::vector<Vec3>& intersections, ImageSourceData& vSource, int bounceIdx, const Vec3& start) const
 		{
 			vSource.ResetAbsorption();
-			Absorption& absorption = vSource.GetAbsorptionRef();
+			Absorption& absorption = vSource.GetAbsorption();
 			bool valid = true;
 			if (vSource.IsReflection(bounceIdx))
 			{
@@ -262,7 +262,7 @@ namespace RAC
 					auto it = mEdges.find(vSource.GetID(idx1));
 					if (it != mEdges.end()) // case: edge exists
 					{
-						intersections[idx1] = it->second.GetEdgeCoord(vSource.mDiffractionPath.zA);
+						intersections[idx1] = it->second.GetEdgeCoord(vSource.GetDiffractionPath().zA);
 						idx1--; idx2--;
 					}
 					else
@@ -351,7 +351,7 @@ namespace RAC
 #endif
 		}
 
-		SourceAudioData ImageEdge::ReflectPointInRoom(const SourceData& source, VirtualSourceDataMap& vSources)
+		SourceAudioData ImageEdge::ReflectPointInRoom(const SourceData& source, ImageSourceDataMap& vSources)
 		{
 
 #ifdef PROFILE_BACKGROUND_THREAD
@@ -392,7 +392,7 @@ namespace RAC
 			}
 
 			if (sp.size() != mIEMConfig.order)
-				sp.resize(mIEMConfig.order, std::vector<VirtualSourceData>());
+				sp.resize(mIEMConfig.order, std::vector<ImageSourceData>());
 
 			size_t counter = 0;
 
@@ -404,7 +404,7 @@ namespace RAC
 			{
 				counter = FirstOrderReflections(source, vSources, counter);
 
-				sp[0].resize(counter, VirtualSourceData(numAbsorptionBands));
+				sp[0].resize(counter, ImageSourceData(numAbsorptionBands));
 
 				if (mIEMConfig.order < 2)
 				{
@@ -418,7 +418,7 @@ namespace RAC
 				HigherOrderReflections(source, vSources);
 			}
 			else
-				sp[0].resize(counter, VirtualSourceData(numAbsorptionBands));
+				sp[0].resize(counter, ImageSourceData(numAbsorptionBands));
 
 			EraseOldEntries(vSources);
 #ifdef PROFILE_BACKGROUND_THREAD
@@ -427,7 +427,7 @@ namespace RAC
 			return direct;
 		}
 
-		size_t ImageEdge::FirstOrderDiffraction(const SourceData& source, VirtualSourceDataMap& vSources)
+		size_t ImageEdge::FirstOrderDiffraction(const SourceData& source, ImageSourceDataMap& vSources)
 		{
 #ifdef PROFILE_BACKGROUND_THREAD
 			BeginFirstOrderDiff();
@@ -452,7 +452,7 @@ namespace RAC
 					continue;
 
 
-				VirtualSourceData& vSource = counter < size ? sp[0][counter] : sp[0].emplace_back(numAbsorptionBands);
+				ImageSourceData& vSource = counter < size ? sp[0][counter] : sp[0].emplace_back(numAbsorptionBands);
 				
 				if (counter < size)
 					vSource.Clear();
@@ -472,10 +472,10 @@ namespace RAC
 				if (mIEMConfig.diffraction == DiffractionSound::shadowZone && it.second.GetReceiverZone() == EdgeZone::NonShadowed)
 					continue;
 
-				if (!vSource.mDiffractionPath.valid)
+				if (!vSource.GetDiffractionPath().valid)
 					continue;
 
-				if (!vSource.mDiffractionPath.inShadow && mIEMConfig.diffraction == DiffractionSound::shadowZone)
+				if (!vSource.GetDiffractionPath().inShadow && mIEMConfig.diffraction == DiffractionSound::shadowZone)
 					continue;
 
 				IDPair planeIds = it.second.GetPlaneIDs();
@@ -492,7 +492,7 @@ namespace RAC
 		}
 
 		// Reflection
-		size_t ImageEdge::FirstOrderReflections(const SourceData& source, VirtualSourceDataMap& vSources, size_t counter)
+		size_t ImageEdge::FirstOrderReflections(const SourceData& source, ImageSourceDataMap& vSources, size_t counter)
 		{
 #ifdef PROFILE_BACKGROUND_THREAD
 			BeginFirstOrderRef();
@@ -506,7 +506,7 @@ namespace RAC
 				if (!it.second.ReflectPointInPlane(position, source.position))
 					continue;
 
-				VirtualSourceData& vSource = counter < size ? sp[0][counter] : sp[0].emplace_back(numAbsorptionBands);
+				ImageSourceData& vSource = counter < size ? sp[0][counter] : sp[0].emplace_back(numAbsorptionBands);
 
 				vSource.SetPreviousPlane(Vec4(it.second.GetD(), it.second.GetNormal()));
 
@@ -524,7 +524,7 @@ namespace RAC
 				if (!it.second.GetReceiverValid())
 					continue;
 
-				Absorption& absorption = vSource.GetAbsorptionRef();
+				Absorption& absorption = vSource.GetAbsorption();
 
 				if (!FindIntersection(intersection, absorption, mListenerPosition, position, it.second))
 					continue;
@@ -540,7 +540,7 @@ namespace RAC
 			return counter;
 		}
 
-		void ImageEdge::HigherOrderReflections(const SourceData& source, VirtualSourceDataMap& vSources)
+		void ImageEdge::HigherOrderReflections(const SourceData& source, ImageSourceDataMap& vSources)
 		{
 			// Check for first order reflections in sp
 			if (sp[0].size() == 0)
@@ -583,10 +583,10 @@ namespace RAC
 				for (const auto& it : mPlanes)
 				{
 					bool rValid = it.second.GetReceiverValid();
-					for (const VirtualSourceData& vS : sp[prevRefIdx])
+					for (const ImageSourceData& vS : sp[prevRefIdx])
 					{
 						// HOD reflections
-						if (!vS.diffraction)
+						if (!vS.IsDiffraction())
 						{
 							// Can't reflect in same plane twice
 							if (it.first == vS.GetID(prevRefIdx))
@@ -606,7 +606,7 @@ namespace RAC
 							if (!it.second.ReflectPointInPlane(position, vS.GetPosition(prevRefIdx)))
 								continue;
 
-							VirtualSourceData& vSource = counter < size ? sp[refIdx][counter] : sp[refIdx].emplace_back(vS);
+							ImageSourceData& vSource = counter < size ? sp[refIdx][counter] : sp[refIdx].emplace_back(vS);
 
 							vSource.SetPreviousPlane(planeData);
 
@@ -676,7 +676,7 @@ namespace RAC
 							if (!it.second.EdgePlanePosition(edge))
 								continue;
 
-							VirtualSourceData& vSource = counter < size ? sp[refIdx][counter] : sp[refIdx].emplace_back(vS);
+							ImageSourceData& vSource = counter < size ? sp[refIdx][counter] : sp[refIdx].emplace_back(vS);
 
 							vSource.SetPreviousPlane(planeData);
 
@@ -704,10 +704,10 @@ namespace RAC
 							if (mIEMConfig.diffractedReflections == DiffractionSound::shadowZone && zone == EdgeZone::NonShadowed)
 								continue;
 
-							if (!vSource.mDiffractionPath.valid)
+							if (!vSource.GetDiffractionPath().valid)
 								continue;
 
-							if (!vSource.mDiffractionPath.inShadow && mIEMConfig.diffractedReflections == DiffractionSound::shadowZone)
+							if (!vSource.GetDiffractionPath().inShadow && mIEMConfig.diffractedReflections == DiffractionSound::shadowZone)
 								continue;
 
 							// Check valid intersections
@@ -756,7 +756,7 @@ namespace RAC
 #endif
 				if (mIEMConfig.diffractedReflections == DiffractionSound::none)
 				{
-					sp[refIdx].resize(counter, VirtualSourceData(numAbsorptionBands));
+					sp[refIdx].resize(counter, ImageSourceData(numAbsorptionBands));
 					continue;
 				}
 #ifdef PROFILE_BACKGROUND_THREAD
@@ -781,9 +781,9 @@ namespace RAC
 						continue;
 
 					EdgeZone rZone = it.second.GetReceiverZone();
-					for (const VirtualSourceData& vS : sp[prevRefIdx])
+					for (const ImageSourceData& vS : sp[prevRefIdx])
 					{
-						if (vS.diffraction)
+						if (vS.IsDiffraction())
 							continue;
 
 						// Can't diffract in edge attached to plane
@@ -799,7 +799,7 @@ namespace RAC
 						if (mIEMConfig.diffractedReflections == DiffractionSound::shadowZone && zone == EdgeZone::NonShadowed)
 							continue;
 
-						VirtualSourceData& vSource = counter < size ? sp[refIdx][counter] : sp[refIdx].emplace_back(vS);
+						ImageSourceData& vSource = counter < size ? sp[refIdx][counter] : sp[refIdx].emplace_back(vS);
 
 						if (counter < size)
 							sp[refIdx][counter].Update(vS);
@@ -817,10 +817,10 @@ namespace RAC
 						if (mIEMConfig.diffractedReflections == DiffractionSound::shadowZone && it.second.GetReceiverZone() == EdgeZone::NonShadowed)
 							continue;
 
-						if (!vSource.mDiffractionPath.valid)
+						if (!vSource.GetDiffractionPath().valid)
 							continue;
 
-						if (!vSource.mDiffractionPath.inShadow && mIEMConfig.diffractedReflections == DiffractionSound::shadowZone)
+						if (!vSource.GetDiffractionPath().inShadow && mIEMConfig.diffractedReflections == DiffractionSound::shadowZone)
 							continue;
 
 						// Check valid intersections
@@ -865,18 +865,18 @@ namespace RAC
 					EndHigherOrderRefDiff();
 				}
 #endif
-				sp[refIdx].resize(counter, VirtualSourceData(numAbsorptionBands));
+				sp[refIdx].resize(counter, ImageSourceData(numAbsorptionBands));
 			}
 		}
 
-		void ImageEdge::InitVSource(const SourceData& source, const Vec3& intersection, VirtualSourceData& vSource, VirtualSourceDataMap& vSources, bool feedsFDN)
+		void ImageEdge::InitVSource(const SourceData& source, const Vec3& intersection, ImageSourceData& vSource, ImageSourceDataMap& vSources, bool feedsFDN)
 		{
 			Real directivity = CalculateDirectivity(source, intersection);
-			vSource.AddDirectivity(directivity);
+			vSource.SetDirectivity(directivity);
 
 			vSource.SetDistance(mListenerPosition);
 			vSource.Visible(feedsFDN);
-			vSource.lastUpdatedCycle = currentCycle;
+			vSource.UpdateCycle(currentCycle);
 			vSources.insert_or_assign(vSource.GetKey(), vSource);
 		}
 
@@ -899,14 +899,14 @@ namespace RAC
 			}
 		}
 
-		void ImageEdge::EraseOldEntries(VirtualSourceDataMap& vSources)
+		void ImageEdge::EraseOldEntries(ImageSourceDataMap& vSources)
 		{
 			for (auto it = vSources.begin(); it != vSources.end();)
 			{
-				if (it->second.lastUpdatedCycle != currentCycle)
-					it = vSources.erase(it);
-				else
+				if (it->second.UpdatedThisCycle(currentCycle))
 					++it;
+				else
+					it = vSources.erase(it);
 			}
 		}
 	}
