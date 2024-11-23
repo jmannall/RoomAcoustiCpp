@@ -1,7 +1,7 @@
 /*
 * @class VirtualSource, VirtualsourceData
 *
-* @brief Declaration of VirtualSource and VirtualsourceData classes
+* @brief Declaration of VirtualSource and VirtualSourceData classes
 *
 * @remarks Currently, it can only handle one diffracting edge per path/virtual source
 *

@@ -29,7 +29,7 @@ namespace RAC
 		size_t Room::AddWall(Wall& wall)
 		{
 			size_t id;
-			lock_guard<std::mutex> lock(mWallMutex);
+			std::lock_guard<std::mutex> lock(mWallMutex);
 			if (!mEmptyWallSlots.empty()) // Assign wall to an existing ID
 			{
 				id = mEmptyWallSlots.back();
@@ -48,7 +48,7 @@ namespace RAC
 
 		void Room::RemoveWall(const size_t id)
 		{
-			lock_guard<std::mutex> lock(mWallMutex);
+			std::lock_guard<std::mutex> lock(mWallMutex);
 			auto it = mWalls.find(id);
 
 			if (it == mWalls.end()) { return; } // case: wall does not exist
@@ -81,7 +81,7 @@ namespace RAC
 
 		void Room::AssignWallToPlane(const size_t idW, Wall& wall)
 		{
-			lock_guard<std::mutex> lock(mPlaneMutex);
+			std::lock_guard<std::mutex> lock(mPlaneMutex);
 			for (auto& it : mPlanes)
 			{
 				if (it.second.IsCoplanar(wall))
@@ -111,7 +111,7 @@ namespace RAC
 
 		void Room::RemoveWallFromPlane(const size_t idP, const size_t idW)
 		{
-			lock_guard<std::mutex> lock(mPlaneMutex);
+			std::lock_guard<std::mutex> lock(mPlaneMutex);
 			auto itP = mPlanes.find(idP);
 
 			if (itP == mPlanes.end()) // case: plane does not exist
@@ -134,7 +134,7 @@ namespace RAC
 		void Room::AddEdge(const Edge& edge)
 		{
 			size_t id;
-			lock_guard<std::mutex> lock(mEdgeMutex);
+			std::lock_guard<std::mutex> lock(mEdgeMutex);
 
 			if (IsCoplanarEdge(edge))
 				return;
@@ -169,7 +169,7 @@ namespace RAC
 		void Room::InitEdges(const size_t id)
 		{
 			std::vector<Edge> edges;
-			lock_guard<std::mutex> lock(mWallMutex);
+			std::lock_guard<std::mutex> lock(mWallMutex);
 			auto itA = mWalls.find(id);
 			if (itA != mWalls.end())
 			{
@@ -387,7 +387,7 @@ namespace RAC
 			IDPair planeIds = edge.GetPlaneIDs();
 			// Vec3Pair edgeNormals = edge.GetFaceNormals();
 			{
-				lock_guard<std::mutex> lock(mPlaneMutex);
+				std::lock_guard<std::mutex> lock(mPlaneMutex);
 				for (auto& itP : mPlanes)
 				{
 					if (itP.first == planeIds.first || itP.first == planeIds.second)
@@ -446,9 +446,9 @@ namespace RAC
 		void Room::UpdatePlanes()
 		{
 			std::unordered_map<size_t, size_t> freeWalls;
-			lock_guard<std::mutex> lock(mWallMutex);
+			std::lock_guard<std::mutex> lock(mWallMutex);
 			{
-				lock_guard<std::mutex> lock(mPlaneMutex);
+				std::lock_guard<std::mutex> lock(mPlaneMutex);
 				for (auto& itP : mPlanes)
 				{
 					bool updatePlane = true;
@@ -485,9 +485,9 @@ namespace RAC
 		void Room::UpdateEdges()
 		{
 			std::unordered_map<size_t, size_t> freeWalls;
-			lock_guard<std::mutex> lock(mWallMutex);
+			std::lock_guard<std::mutex> lock(mWallMutex);
 			{
-				lock_guard<std::mutex> lock(mEdgeMutex);
+				std::lock_guard<std::mutex> lock(mEdgeMutex);
 				for (auto& itE : mEdges)
 				{
 					IDPair ids = itE.second.GetWallIDs();
@@ -510,7 +510,7 @@ namespace RAC
 					std::vector<size_t> IDs = itW.second.GetEdges();
 					std::vector<size_t> IDsW;
 					{
-						lock_guard<std::mutex> lock(mEdgeMutex);
+						std::lock_guard<std::mutex> lock(mEdgeMutex);
 						for (auto& id : IDs)
 						{
 
@@ -536,7 +536,7 @@ namespace RAC
 			Real surfaceArea = 0.0;
 
 			{
-				lock_guard<std::mutex> lock(mWallMutex);
+				std::lock_guard<std::mutex> lock(mWallMutex);
 				for (const auto& it : mWalls)
 				{
 					absorption -= (it.second.GetAbsorption() * it.second.GetAbsorption() - 1.0) * it.second.GetArea();
