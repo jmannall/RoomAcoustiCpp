@@ -17,7 +17,7 @@
 // Spatialiser headers
 #include "Spatialiser/Types.h"
 #include "Spatialiser/AirAbsorption.h"
-#include "Spatialiser/VirtualSource.h"
+#include "Spatialiser/ImageSource.h"
 #include "Spatialiser/Mutexes.h"
 
 // 3DTI headers

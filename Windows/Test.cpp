@@ -12,7 +12,7 @@
 #include "Spatialiser/Edge.h"
 #include "Spatialiser/Wall.h"
 #include "Spatialiser/Reverb.h"
-#include "Spatialiser/VirtualSource.h"
+#include "Spatialiser/ImageSource.h"
 #include "Spatialiser/Source.h"
 
 #include "Unity/Debug.h"

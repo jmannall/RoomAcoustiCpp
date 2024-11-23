@@ -28,13 +28,13 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Edge.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\FDN.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\ImageEdge.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\ImageSource.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Interface.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Main.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\SourceManager.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Reverb.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Room.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Source.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\VirtualSource.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Wall.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Unity\Debug.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Unity\UnityInterface.cpp" />
@@ -63,6 +63,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Edge.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\FDN.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\ImageEdge.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\ImageSource.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Interface.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Mutexes.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\SourceManager.h" />
@@ -70,7 +71,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Room.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Source.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Types.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\VirtualSource.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Wall.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Unity\Debug.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Unity\IUnityInterface.h" />

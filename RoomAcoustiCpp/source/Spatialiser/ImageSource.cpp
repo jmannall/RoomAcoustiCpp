@@ -8,7 +8,7 @@
 */
 
 // Spatialiser headers
-#include "Spatialiser/VirtualSource.h"
+#include "Spatialiser/ImageSource.h"
 #include "Spatialiser/Mutexes.h"
 
 // Unity headers
