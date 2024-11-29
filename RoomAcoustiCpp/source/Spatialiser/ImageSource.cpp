@@ -33,7 +33,6 @@ namespace RAC
 		void ImageSourceData::AddPlaneID(const size_t id)
 		{
 			pathParts.emplace_back(id, true);
-			order++;
 			reflection = true;
 			auto [ptr, ec] = std::to_chars(idKey.data(), idKey.data() + idKey.size(), id);
 			if (ec == std::errc()) // Null-terminate manually if conversion is successful
@@ -53,7 +52,6 @@ namespace RAC
 		void ImageSourceData::AddEdgeID(const size_t id)
 		{
 			pathParts.emplace_back(id, false);
-			order++;
 			diffraction = true;
 			auto [ptr, ec] = std::to_chars(idKey.data(), idKey.data() + idKey.size(), id);
 			if (ec == std::errc()) // Null-terminate manually if conversion is successful
@@ -102,7 +100,6 @@ namespace RAC
 			mPositions.clear();
 			reflection = false;
 			diffraction = false;
-			order = 0;
 			key = "";
 		}
 
@@ -116,7 +113,6 @@ namespace RAC
 			diffraction = imageSource.diffraction;
 			if (diffraction)
 				mDiffractionPath = imageSource.mDiffractionPath;
-			order = imageSource.order;
 			key = imageSource.key;
 		}
 
@@ -279,7 +275,6 @@ namespace RAC
 				btm.InitParameters();
 			}
 
-			order = data.GetOrder();
 			{
 				lock_guard<mutex> lock(tuneInMutex);
 

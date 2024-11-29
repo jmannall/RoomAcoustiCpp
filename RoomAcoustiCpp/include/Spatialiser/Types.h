@@ -46,14 +46,14 @@ namespace RAC
 		class ImageSource;
 		class ImageSourceData;
 
-		typedef std::unordered_map<size_t, Plane> PlaneMap;										// Store planes
-		typedef std::unordered_map<size_t, Wall> WallMap;										// Store walls
-		typedef std::unordered_map<size_t, Edge> EdgeMap;										// Store edges
-		typedef std::unordered_map<size_t, Source> SourceMap;									// Store sources
-		typedef std::unordered_map<std::string, ImageSource> ImageSourceMap;				// Store virtual sources
-		typedef std::unordered_map<std::string, ImageSourceData> ImageSourceDataMap;		// Store virtual source datas
+		typedef std::unordered_map<size_t, Plane> PlaneMap;									// Store planes
+		typedef std::unordered_map<size_t, Wall> WallMap;									// Store walls
+		typedef std::unordered_map<size_t, Edge> EdgeMap;									// Store edges
+		typedef std::unordered_map<size_t, Source> SourceMap;								// Store sources
+		typedef std::unordered_map<std::string, ImageSource> ImageSourceMap;				// Store image sources
+		typedef std::unordered_map<std::string, ImageSourceData> ImageSourceDataMap;		// Store image source datas
 
-		typedef std::vector<std::vector<ImageSourceData>> VirtualSourceDataStore;				// Store virtual source data
+		typedef std::vector<std::vector<ImageSourceData>> ImageSourceDataStore;				// Store image source data
 
 		typedef std::array<Vec3, 3> Vertices;		// Store vertices
 

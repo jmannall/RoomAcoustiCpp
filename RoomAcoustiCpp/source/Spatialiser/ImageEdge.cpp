@@ -1,14 +1,14 @@
 /*
+* @class ImageEdge
 *
-*  \ImageEdge class
+* @brief Declaration of ImageEdge class
+*
+* @remarks Image edge model based after The image edge model. Armin E, Jonas S, and Michael V. 2015
 *
 */
 
 // C++ headers
 #include <algorithm>
-
-// Common headers
-#include "Common/Vec3.h"
 
 // Spatialiser headers
 #include "Spatialiser/ImageEdge.h"
@@ -20,9 +20,12 @@ namespace RAC
 {
 	namespace Spatialiser
 	{
+		//////////////////// ImageEdge Class ////////////////////
 
-		ImageEdge::ImageEdge(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const int numBands) :
-			mRoom(room), mSourceManager(sourceManager), mReverb(reverb), numAbsorptionBands(numBands), currentCycle(false), configChanged(true)
+		////////////////////////////////////////
+
+		ImageEdge::ImageEdge(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const int numFrequencyBands) :
+			mRoom(room), mSourceManager(sourceManager), mReverb(reverb), numAbsorptionBands(numFrequencyBands), currentCycle(false), configChanged(true)
 		{
 			sp = std::vector<std::vector<ImageSourceData>>();
 			sp.push_back(std::vector<ImageSourceData>());
@@ -32,14 +35,16 @@ namespace RAC
 			reverbAbsorptions = std::vector<Absorption>(static_cast<int>(reverbDirections.size()), Absorption(numAbsorptionBands));
 		}
 
-		bool ImageEdge::RunIEM()
+		////////////////////////////////////////
+
+		void ImageEdge::RunIEM()
 		{
 			bool doIEM = false;
 
 			shared_ptr<Room> sharedRoom = mRoom.lock();
 			if (sharedRoom->HasChanged())
 			{
-				// Recopy room data (planes, walls, edges
+				// Recopy room data (planes, walls, edges)
 				mPlanes = sharedRoom->GetPlanes();
 				mWalls = sharedRoom->GetWalls();
 				mEdges = sharedRoom->GetEdges();
@@ -53,7 +58,7 @@ namespace RAC
 			BeginIEM();
 #endif
 			{
-				lock_guard<std::mutex> lock(mMutex);
+				lock_guard<std::mutex> lock(dataStoreMutex);
 				if (mListenerPosition != mListenerPositionStore)
 				{
 					mListenerPosition = mListenerPositionStore;
@@ -71,9 +76,9 @@ namespace RAC
 			EndIEM();
 #endif
 
-			if (mVSources.size() != mSources.size())
+			if (imageSources.size() != mSources.size())
 			{
-				mVSources.resize(mSources.size());
+				imageSources.resize(mSources.size());
 				mSourceAudioDatas.resize(mSources.size());
 				mCurrentCycles.resize(mSources.size());
 				doIEM = true;
@@ -82,32 +87,32 @@ namespace RAC
 			int i = 0;
 			for (SourceData& source : mSources)
 			{
-				/*if (doIEM || source.hasChanged)
+				if (doIEM || source.hasChanged)
 				{
 					mCurrentCycles[i] = !mCurrentCycles[i];
 					currentCycle = mCurrentCycles[i];
-					mSourceAudioDatas[i] = ReflectPointInRoom(source, mVSources[i]);
-				}*/
-
-				mCurrentCycles[i] = !mCurrentCycles[i];
-				currentCycle = mCurrentCycles[i];
-				mSourceAudioDatas[i] = ReflectPointInRoom(source, mVSources[i]);
+					mSourceAudioDatas[i] = ReflectPointInRoom(source, imageSources[i]);
+				}
 
 #ifdef DEBUG_IEM_THREAD
 				Debug::Log("Source visible: " + BoolToStr(visible), Colour::White);
-				Debug::Log("Source " + std::to_string((int)it->first) + " has " + std::to_string(vSources.size()) + " visible virtual sources", Colour::White);
+				Debug::Log("Source " + std::to_string((int)it->first) + " has " + std::to_string(imageSources.size()) + " visible image sources", Colour::White);
 #endif
 #ifdef PROFILE_BACKGROUND_THREAD
 				BeginUpdateAudioData();
 #endif
-				sharedSource->UpdateSourceData(source.id, mSourceAudioDatas[i], mVSources[i]);
+				sharedSource->UpdateSourceData(source.id, mSourceAudioDatas[i], imageSources[i]);
 #ifdef PROFILE_BACKGROUND_THREAD
 				EndUpdateAudioData();
 #endif
 				++i;
-			}			
-			return doIEM;
+			}	
+
+			if (doIEM && mIEMConfig.lateReverb)
+				UpdateLateReverbFilters();
 		}
+
+		////////////////////////////////////////
 
 		void ImageEdge::UpdateRValid()
 		{
@@ -120,159 +125,45 @@ namespace RAC
 				it.second.SetReceiverZone(mListenerPosition);
 		}
 
-		bool ImageEdge::LineRoomObstruction(const Vec3& start, const Vec3& end) const
-		{
-			return LineRoomObstruction(start, end, -1);
-		}
+		////////////////////////////////////////
 
-		void ImageEdge::LineRoomObstruction(const Vec3& start, const Vec3& end, bool& obstruction) const
+		bool ImageEdge::FindIntersections(ImageSourceData& imageSource, std::vector<Vec3>& intersections) const
 		{
-			obstruction = LineRoomObstruction(start, end, -1);
-		}
-
-		bool ImageEdge::LineRoomObstruction(const Vec3& start, const Vec3& end, size_t currentPlaneId) const
-		{
-			for (auto& itP : mPlanes)
+			int bounceIdx = static_cast<int>(intersections.size()) - 1;
+			imageSource.ResetAbsorption();
+			Absorption& absorption = imageSource.GetAbsorption();
+			bool valid = false;
+			if (imageSource.IsReflection(bounceIdx))
 			{
-				if (itP.first != currentPlaneId)
-				{
-					if (itP.second.LinePlaneObstruction(start, end))
-					{
-						if (FindWallObstruction(start, end, itP.second))
-							return true;
-					}
-				}
-			}
-			return false;
-		}
-
-		void ImageEdge::LineRoomObstruction(const Vec3& start, const Vec3& end, size_t currentPlaneId, bool& obstruction) const
-		{
-			if (!obstruction)
-				obstruction = LineRoomObstruction(start, end, currentPlaneId);
-		}
-
-		bool ImageEdge::LineRoomObstruction(const Vec3& start, const Vec3& end, size_t currentPlaneId1, size_t currentPlaneId2) const
-		{
-			for (auto& itP : mPlanes)
-			{
-				if (itP.first != currentPlaneId1 && itP.first != currentPlaneId2)
-				{
-					if (itP.second.LinePlaneObstruction(start, end))
-					{
-						if (FindWallObstruction(start, end, itP.second))
-							return true;
-					}
-				}
-			}
-			return false;
-		}
-
-		void ImageEdge::LineRoomObstruction(const Vec3& start, const Vec3& end, size_t currentPlaneId1, size_t currentPlaneId2, bool& obstruction) const
-		{
-			if (!obstruction)
-				obstruction = LineRoomObstruction(start, end, currentPlaneId1, currentPlaneId2);
-		}
-
-		bool ImageEdge::FindWallObstruction(const Vec3& start, const Vec3& end, const Plane& plane) const
-		{
-			for (auto& idW : plane.GetWalls())
-			{
-				auto itW = mWalls.find(idW);
-				if (itW != mWalls.end()) // case: wall exists
-				{
-					if (itW->second.LineWallObstruction(start, end))
-						return true;
-				}
-			}
-			return false;
-		}
-
-		bool ImageEdge::FindWallIntersection(Absorption& absorption, Vec3& intersection, const Vec3& start, const Vec3& end, const Plane& plane) const
-		{
-			for (auto& idW : plane.GetWalls())
-			{
-				auto itW = mWalls.find(idW);
-				if (itW != mWalls.end()) // case: wall exists
-				{
-					if (itW->second.LineWallIntersection(intersection, start, end))
-					{
-						absorption *= itW->second.GetAbsorption();
-						if (start != intersection) // case: point on edge (consecutive intersections are identical)
-							return true;
-
-						if (itW->second.VertexMatch(intersection))  // case: point on corner (will be triggered twice)
-							absorption *= INV_SQRT_3;
-						else
-							absorption *= 0.5;					
-						return true;
-					}
-				}
-			}
-			return false;
-		}
-
-		bool ImageEdge::FindIntersection(Vec3& intersection, Absorption& absorption, const Vec3& start, const Vec3& end, const Plane& plane) const
-		{
-			if (plane.LinePlaneIntersection(start, end))
-			{
-				if (FindWallIntersection(absorption, intersection, start, end, plane))
-					return true;
-			}
-			return false;
-		}
-
-		bool ImageEdge::FindIntersections(std::vector<Vec3>& intersections, ImageSourceData& vSource, int bounceIdx) const
-		{
-			return FindIntersections(intersections, vSource, bounceIdx, mListenerPosition);
-		}
-
-		bool ImageEdge::FindIntersections(std::vector<Vec3>& intersections, ImageSourceData& vSource, int bounceIdx, const Vec3& start) const
-		{
-			vSource.ResetAbsorption();
-			Absorption& absorption = vSource.GetAbsorption();
-			bool valid = true;
-			if (vSource.IsReflection(bounceIdx))
-			{
-				auto it = mPlanes.find(vSource.GetID(bounceIdx));
-				if (it != mPlanes.end()) // case: wall exists
-					valid = FindIntersection(intersections[bounceIdx], absorption, start, vSource.GetPosition(bounceIdx), it->second);
+				auto it = mPlanes.find(imageSource.GetID(bounceIdx));
+				if (it != mPlanes.end()) // case: plane exists
+					valid = LinePlaneIntersection(mListenerPosition, imageSource.GetPosition(bounceIdx), it->second, absorption, intersections[bounceIdx]);
 			}
 			else
-				intersections[bounceIdx] = vSource.GetApex();
+				intersections[bounceIdx] = imageSource.GetApex();
 
-			int idx1 = bounceIdx - 1;
-			int idx2 = bounceIdx;
-			while (valid && idx1 >= 0)
+			int bounceIdxTakeOne = bounceIdx - 1;
+			while (valid && bounceIdxTakeOne >= 0)
 			{
-				// (idx1) Current bounce (idx2) Previous bounce in code and next bounce in path
-				if (vSource.IsReflection(idx1))
+				// (bounceIdxTakeOne) Reflection intersection being found (bounceIdx) Previous reflection intersection in code and next intersection in path
+				if (imageSource.IsReflection(bounceIdxTakeOne))
 				{
-					auto it = mPlanes.find(vSource.GetID(idx1));
-					if (it != mPlanes.end()) // case: wall exists
-					{
-						valid = FindIntersection(intersections[idx1], absorption, intersections[idx2], vSource.GetPosition(idx1), it->second);
-						idx1--; idx2--;
-					}
+					auto it = mPlanes.find(imageSource.GetID(bounceIdxTakeOne));
+					if (it != mPlanes.end()) // case: plane exists
+						valid = LinePlaneIntersection(intersections[bounceIdx], imageSource.GetPosition(bounceIdxTakeOne), it->second, absorption, intersections[bounceIdxTakeOne]);
 					else
 						return false;
 				}
 				else
-				{
-					auto it = mEdges.find(vSource.GetID(idx1));
-					if (it != mEdges.end()) // case: edge exists
-					{
-						intersections[idx1] = it->second.GetEdgeCoord(vSource.GetDiffractionPath().zA);
-						idx1--; idx2--;
-					}
-					else
-						return false;
-				}
+					intersections[bounceIdxTakeOne] = imageSource.GetApex();
+
+				bounceIdxTakeOne--; bounceIdx--;
 			}
 
 			if (!valid)
 				return false;
 
+			// Check for more than three identical intersection points in a row
 			if (intersections.size() < 4)
 				return valid;
 
@@ -291,67 +182,150 @@ namespace RAC
 			return valid;
 		}
 
-		// Image Source Model
+		////////////////////////////////////////
 
-		typedef std::pair<Real, size_t> PlaneDistanceID;
-		bool comparator(const PlaneDistanceID& l, const PlaneDistanceID& r)
+		bool ImageEdge::LinePlaneIntersection(const Vec3& start, const Vec3& end, const Plane& plane, Absorption& absorption, Vec3& intersection) const
 		{
-			return l.first < r.first;
-		}
-
-		void ImageEdge::UpdateLateReverbFilters()
-		{
-#ifdef PROFILE_BACKGROUND_THREAD
-			BeginLateReverb();
-#endif
-			Real k;
-			Vec3 point, intersection;
-			for (int j = 0; j < reverbDirections.size(); j++)
+			if (plane.LinePlaneIntersection(start, end))
 			{
-				std::vector<PlaneDistanceID> ks = std::vector(mPlanes.size(), PlaneDistanceID(0.0, -1));
-				point = mListenerPosition + reverbDirections[j];
-				int i = 0;
-				for (auto& it : mPlanes)
-				{
-					k = it.second.PointPlanePosition(point);
-					if (it.second.GetReceiverValid() && k < 0) // receiver in front of wall and point behind wall
-						ks[i] = PlaneDistanceID(k, it.first); // A more negative k means the plane is closer to the receiver
-					i++;
-				}
-				std::sort(ks.begin(), ks.end());
-				bool valid = false;
-				i = 0;
-				while (!valid && i < ks.size())
-				{
-					if (ks[i].first < 0.0)
-					{
-						auto itP = mPlanes.find(ks[i].second);
-						if (itP != mPlanes.end()) // case: plane exists
-						{
-							reverbAbsorptions[j] = 1.0;
-							valid = FindIntersection(intersection, reverbAbsorptions[j], mListenerPosition, point, itP->second);
-						}
-					}
-					i++;
-				}
-				if (!valid)
-					reverbAbsorptions[j] = 0.0;
+				if (LineWallIntersection(start, end, plane.GetWalls(), absorption, intersection))
+					return true;
 			}
-
-#ifdef PROFILE_BACKGROUND_THREAD
-			EndLateReverb();
-#endif
-#ifdef PROFILE_BACKGROUND_THREAD
-			BeginUpdateAudioData();
-#endif
-			std::shared_ptr<Reverb> sharedReverb = mReverb.lock();
-			sharedReverb->UpdateReflectionFilters(reverbAbsorptions, mIEMConfig.lateReverb);
-#ifdef PROFILE_BACKGROUND_THREAD
-			EndUpdateAudioData();
-#endif
+			return false;
 		}
 
-		SourceAudioData ImageEdge::ReflectPointInRoom(const SourceData& source, ImageSourceDataMap& vSources)
+		////////////////////////////////////////
+
+		bool ImageEdge::LineWallIntersection(const Vec3& start, const Vec3& end, const std::vector<size_t>& wallIDs, Absorption& absorption, Vec3& intersection) const
+		{
+			for (auto& idW : wallIDs)
+			{
+				auto itW = mWalls.find(idW);
+				if (itW == mWalls.end()) // case: wall doesn't exist
+					continue;
+
+				if (itW->second.LineWallIntersection(start, end, intersection))
+				{
+					absorption *= itW->second.GetAbsorption();
+					if (start != intersection) // case: point on edge (consecutive intersections are identical)
+						return true;
+
+					if (itW->second.VertexMatch(intersection))  // case: point on corner (will be triggered twice)
+						absorption *= INV_SQRT_3;
+					else
+						absorption *= 0.5;
+					return true;
+				}
+			}
+			return false;
+		}
+
+		////////////////////////////////////////
+
+		bool ImageEdge::CheckObstructions(const Vec3& source, const ImageSourceData& imageSource, const std::vector<Vec3>& intersections) const
+		{
+			int refIdx = static_cast<int>(intersections.size()) - 1;
+			bool obstruction = false;
+			IDPair edgePlaneIDs = imageSource.GetEdge().GetPlaneIDs();
+
+			if (imageSource.IsReflection(refIdx))
+				obstruction = LineRoomObstruction(mListenerPosition, intersections[refIdx], { imageSource.GetID(refIdx) });
+			else
+				obstruction = LineRoomObstruction(mListenerPosition, intersections[refIdx], { edgePlaneIDs.first, edgePlaneIDs.second });
+
+			if (obstruction)
+				return true;
+
+			if (imageSource.IsReflection(0))
+				obstruction = LineRoomObstruction(intersections[0], source, { imageSource.GetID(0) });
+			else
+				obstruction = LineRoomObstruction(intersections[0], source, { edgePlaneIDs.first, edgePlaneIDs.second });
+
+			int p = 0;
+			while (!obstruction && p < refIdx)
+			{
+				if (imageSource.IsReflection(p))
+				{
+					if (imageSource.IsReflection(p + 1))
+						obstruction = LineRoomObstruction(intersections[p], intersections[p + 1], { imageSource.GetID(p), imageSource.GetID(p + 1) });
+					else
+						obstruction = LineRoomObstruction(intersections[p], intersections[p + 1], { imageSource.GetID(p), edgePlaneIDs.first, edgePlaneIDs.second });
+				}
+				else
+					obstruction = LineRoomObstruction(intersections[p], intersections[p + 1], { edgePlaneIDs.first, edgePlaneIDs.second, imageSource.GetID(p + 1) });
+				p++;
+			}
+			return obstruction;
+		}
+
+		////////////////////////////////////////
+
+		bool ImageEdge::LineRoomObstruction(const Vec3& start, const Vec3& end, const std::unordered_set<size_t>& excludedPlaneIds) const
+		{
+			for (const auto& itP : mPlanes)
+			{
+				// Skip excluded planes
+				if (excludedPlaneIds.find(itP.first) != excludedPlaneIds.end())
+					continue;
+
+				if (LinePlaneObstruction(start, end, itP.second))
+					return true;
+			}
+			return false;
+		}
+
+		////////////////////////////////////////
+
+		bool ImageEdge::LinePlaneObstruction(const Vec3& start, const Vec3 end, const Plane& plane) const
+		{
+			if (plane.LinePlaneObstruction(start, end))
+			{
+				if (LineWallObstruction(start, end, plane.GetWalls()))
+					return true;
+			}
+			return false;
+		}
+
+		////////////////////////////////////////
+
+		bool ImageEdge::LineWallObstruction(const Vec3& start, const Vec3& end, const std::vector<size_t>& wallIDs) const
+		{
+			for (auto& idW : wallIDs)
+			{
+				auto itW = mWalls.find(idW);
+				if (itW == mWalls.end()) // case: wall doesn't exist
+					continue;
+
+				if (itW->second.LineWallObstruction(start, end))
+					return true;
+			}
+			return false;
+		}
+
+		////////////////////////////////////////
+
+		Real ImageEdge::CalculateDirectivity(const SourceData& source, const Vec3& point) const
+		{
+			switch (source.directivity)
+			{
+			case SourceDirectivity::omni:
+				return 1.0;
+			case SourceDirectivity::cardioid:
+			{
+				Real angle = acos(Dot(source.forward, UnitVector(point - source.position)));
+				Real ret = 0.5 * (1 + cos(angle));
+				if (ret < EPS)
+					return EPS;
+				return ret;
+			}
+			default:
+				return 1.0;
+			}
+		}
+
+		////////////////////////////////////////
+
+		SourceAudioData ImageEdge::ReflectPointInRoom(const SourceData& source, ImageSourceDataMap& imageSources)
 		{
 
 #ifdef PROFILE_BACKGROUND_THREAD
@@ -383,8 +357,10 @@ namespace RAC
 
 			if (mIEMConfig.order < 1 || (!mIEMConfig.reflections && mIEMConfig.diffraction == DiffractionSound::none && mIEMConfig.diffractedReflections == DiffractionSound::none))
 			{
+				sp.clear();
+
 				direct.second = mIEMConfig.lateReverb;
-				EraseOldEntries(vSources);
+				EraseOldEntries(imageSources);
 #ifdef PROFILE_BACKGROUND_THREAD
 				EndIEM();
 #endif
@@ -397,37 +373,38 @@ namespace RAC
 			size_t counter = 0;
 
 			if ((mIEMConfig.diffraction != DiffractionSound::none || mIEMConfig.diffractedReflections != DiffractionSound::none) && mEdges.size() > 0)
-				counter = FirstOrderDiffraction(source, vSources);
+				counter = FirstOrderDiffraction(source, imageSources);
 
-			// Reflections
 			if ((mIEMConfig.reflections || mIEMConfig.diffractedReflections != DiffractionSound::none) && mWalls.size() > 0)
 			{
-				counter = FirstOrderReflections(source, vSources, counter);
+				counter = FirstOrderReflections(source, imageSources, counter);
 
 				sp[0].resize(counter, ImageSourceData(numAbsorptionBands));
 
 				if (mIEMConfig.order < 2)
 				{
-					EraseOldEntries(vSources);
+					EraseOldEntries(imageSources);
 #ifdef PROFILE_BACKGROUND_THREAD
 					EndIEM();
 #endif
 					return direct;
 				}
 
-				HigherOrderReflections(source, vSources);
+				HigherOrderPaths(source, imageSources);
 			}
 			else
 				sp[0].resize(counter, ImageSourceData(numAbsorptionBands));
 
-			EraseOldEntries(vSources);
+			EraseOldEntries(imageSources);
 #ifdef PROFILE_BACKGROUND_THREAD
 			EndIEM();
 #endif
 			return direct;
 		}
 
-		size_t ImageEdge::FirstOrderDiffraction(const SourceData& source, ImageSourceDataMap& vSources)
+		////////////////////////////////////////
+
+		size_t ImageEdge::FirstOrderDiffraction(const SourceData& source, ImageSourceDataMap& imageSources)
 		{
 #ifdef PROFILE_BACKGROUND_THREAD
 			BeginFirstOrderDiff();
@@ -452,15 +429,15 @@ namespace RAC
 					continue;
 
 
-				ImageSourceData& vSource = counter < size ? sp[0][counter] : sp[0].emplace_back(numAbsorptionBands);
+				ImageSourceData& imageSource = counter < size ? sp[0][counter] : sp[0].emplace_back(numAbsorptionBands);
 				
 				if (counter < size)
-					vSource.Clear();
+					imageSource.Clear();
 				counter++;
 
-				vSource.Valid();
-				vSource.AddEdgeID(it.first);
-				vSource.UpdateDiffractionPath(source.position, mListenerPosition, it.second);
+				imageSource.Valid();
+				imageSource.AddEdgeID(it.first);
+				imageSource.UpdateDiffractionPath(source.position, mListenerPosition, it.second);
 
 				if (mIEMConfig.diffraction == DiffractionSound::none)
 					continue;
@@ -472,18 +449,16 @@ namespace RAC
 				if (mIEMConfig.diffraction == DiffractionSound::shadowZone && it.second.GetReceiverZone() == EdgeZone::NonShadowed)
 					continue;
 
-				if (!vSource.GetDiffractionPath().valid)
+				if (!imageSource.GetDiffractionPath().valid)
 					continue;
 
-				if (!vSource.GetDiffractionPath().inShadow && mIEMConfig.diffraction == DiffractionSound::shadowZone)
+				if (!imageSource.GetDiffractionPath().inShadow && mIEMConfig.diffraction == DiffractionSound::shadowZone)
 					continue;
 
-				IDPair planeIds = it.second.GetPlaneIDs();
-				bool obstruction = LineRoomObstruction(source.position, vSource.GetApex(), planeIds.first, planeIds.second);
-				LineRoomObstruction(vSource.GetApex(), mListenerPosition, planeIds.first, planeIds.second, obstruction);
+				if (CheckObstructions(source.position, imageSource, { imageSource.GetApex() }))
+					continue;
 
-				if (!obstruction)
-					InitVSource(source, vSource.GetApex(), vSource, vSources, feedsFDN);
+				InitImageSource(source, imageSource.GetApex(), imageSource, imageSources, feedsFDN);
 			}
 #ifdef PROFILE_BACKGROUND_THREAD
 			EndFirstOrderDiff();
@@ -491,8 +466,9 @@ namespace RAC
 			return counter;
 		}
 
-		// Reflection
-		size_t ImageEdge::FirstOrderReflections(const SourceData& source, ImageSourceDataMap& vSources, size_t counter)
+		////////////////////////////////////////
+
+		size_t ImageEdge::FirstOrderReflections(const SourceData& source, ImageSourceDataMap& imageSources, size_t counter)
 		{
 #ifdef PROFILE_BACKGROUND_THREAD
 			BeginFirstOrderRef();
@@ -500,23 +476,25 @@ namespace RAC
 			size_t size = sp[0].size();
 
 			bool feedsFDN = mIEMConfig.order == 1 && mIEMConfig.lateReverb;
-			Vec3 position, intersection;
+			Vec3 position;
+			std::vector<Vec3> intersections = std::vector<Vec3>(1, Vec3());
 			for (const auto& it : mPlanes)
 			{
 				if (!it.second.ReflectPointInPlane(position, source.position))
 					continue;
 
-				ImageSourceData& vSource = counter < size ? sp[0][counter] : sp[0].emplace_back(numAbsorptionBands);
+				ImageSourceData& imageSource = counter < size ? sp[0][counter] : sp[0].emplace_back(numAbsorptionBands);
 
-				vSource.SetPreviousPlane(Vec4(it.second.GetD(), it.second.GetNormal()));
+				imageSource.SetPreviousPlane(Vec4(it.second.GetD(), it.second.GetNormal()));
 
 				if (counter < size)
-					vSource.Clear();
+					imageSource.Clear();
 				counter++;
 
-				vSource.Valid();
-				vSource.AddPlaneID(it.first);
-				vSource.SetTransform(position);
+				imageSource.Valid();
+				imageSource.AddPlaneID(it.first);
+
+				imageSource.SetTransform(position);
 
 				if (!mIEMConfig.reflections)
 					continue;
@@ -524,15 +502,13 @@ namespace RAC
 				if (!it.second.GetReceiverValid())
 					continue;
 
-				Absorption& absorption = vSource.GetAbsorption();
-
-				if (!FindIntersection(intersection, absorption, mListenerPosition, position, it.second))
+				if (!FindIntersections(imageSource, intersections))
 					continue;
 
-				bool obstruction = LineRoomObstruction(source.position, intersection, it.first);
-				LineRoomObstruction(intersection, mListenerPosition, it.first, obstruction);
-				if (!obstruction)
-					InitVSource(source, intersection, vSource, vSources, feedsFDN);
+				if (CheckObstructions(source.position, imageSource, intersections))
+					continue;
+
+				InitImageSource(source, intersections[0], imageSource, imageSources, feedsFDN);
 			}
 #ifdef PROFILE_BACKGROUND_THREAD
 			EndFirstOrderRef();
@@ -540,7 +516,9 @@ namespace RAC
 			return counter;
 		}
 
-		void ImageEdge::HigherOrderReflections(const SourceData& source, ImageSourceDataMap& vSources)
+		////////////////////////////////////////
+
+		void ImageEdge::HigherOrderPaths(const SourceData& source, ImageSourceDataMap& imageSources)
 		{
 			// Check for first order reflections in sp
 			if (sp[0].size() == 0)
@@ -606,18 +584,18 @@ namespace RAC
 							if (!it.second.ReflectPointInPlane(position, vS.GetPosition(prevRefIdx)))
 								continue;
 
-							ImageSourceData& vSource = counter < size ? sp[refIdx][counter] : sp[refIdx].emplace_back(vS);
+							ImageSourceData& imageSource = counter < size ? sp[refIdx][counter] : sp[refIdx].emplace_back(vS);
 
-							vSource.SetPreviousPlane(planeData);
+							imageSource.SetPreviousPlane(planeData);
 
 							if (counter < size)
 								sp[refIdx][counter].Update(vS);
 							counter++;
 
-							vSource.Reset();
-							vSource.Valid();
-							vSource.AddPlaneID(it.first);
-							vSource.SetTransform(position);
+							imageSource.Reset();
+							imageSource.Valid();
+							imageSource.AddPlaneID(it.first);
+							imageSource.SetTransform(position);
 
 							if (!mIEMConfig.reflections)
 								continue;
@@ -625,22 +603,13 @@ namespace RAC
 							if (!rValid)
 								continue;
 
-							// Check valid intersections
-							if (!FindIntersections(intersections, vSource, refIdx))
+							if (!FindIntersections(imageSource, intersections))
 								continue;
 
-							// Check for obstruction
-							bool obstruction = LineRoomObstruction(intersections[refIdx], mListenerPosition, it.first);
-							LineRoomObstruction(intersections[0], source.position, vSource.GetID(0), obstruction);
+							if (CheckObstructions(source.position, imageSource, intersections))
+								continue;
 
-							int p = 0;
-							while (!obstruction && p < refIdx)
-							{
-								obstruction = LineRoomObstruction(intersections[p], intersections[p + 1], vSource.GetID(p), vSource.GetID(p + 1));
-								p++;
-							}
-							if (!obstruction)
-								InitVSource(source, intersections[0], vSource, vSources, feedsFDN);
+							InitImageSource(source, intersections[0], imageSource, imageSources, feedsFDN);
 						}
 						// HOD reflections (post diffraction)
 						else if (mIEMConfig.diffractedReflections != DiffractionSound::none)
@@ -676,26 +645,26 @@ namespace RAC
 							if (!it.second.EdgePlanePosition(edge))
 								continue;
 
-							ImageSourceData& vSource = counter < size ? sp[refIdx][counter] : sp[refIdx].emplace_back(vS);
+							ImageSourceData& imageSource = counter < size ? sp[refIdx][counter] : sp[refIdx].emplace_back(vS);
 
-							vSource.SetPreviousPlane(planeData);
+							imageSource.SetPreviousPlane(planeData);
 
 							if (counter < size)
 								sp[refIdx][counter].Update(vS);
 							counter++;
 
-							vSource.Reset();
-							vSource.Valid();
-							vSource.AddPlaneID(it.first);
+							imageSource.Reset();
+							imageSource.Valid();
+							imageSource.AddPlaneID(it.first);
 
-							position = vSource.GetPosition(prevRefIdx);
+							position = imageSource.GetPosition(prevRefIdx);
 							it.second.ReflectPointInPlaneNoCheck(position);
-							vSource.UpdateDiffractionPath(position, mListenerPosition, it.second);
+							imageSource.UpdateDiffractionPath(position, mListenerPosition, it.second);
 
 							if (!rValid)
 								continue;
 
-							EdgeZone zone = vSource.GetEdge().FindEdgeZone(mListenerPosition);
+							EdgeZone zone = imageSource.GetEdge().FindEdgeZone(mListenerPosition);
 
 							// Receiver checks
 							if (zone == EdgeZone::Invalid)
@@ -704,36 +673,19 @@ namespace RAC
 							if (mIEMConfig.diffractedReflections == DiffractionSound::shadowZone && zone == EdgeZone::NonShadowed)
 								continue;
 
-							if (!vSource.GetDiffractionPath().valid)
+							if (!imageSource.GetDiffractionPath().valid)
 								continue;
 
-							if (!vSource.GetDiffractionPath().inShadow && mIEMConfig.diffractedReflections == DiffractionSound::shadowZone)
+							if (!imageSource.GetDiffractionPath().inShadow && mIEMConfig.diffractedReflections == DiffractionSound::shadowZone)
 								continue;
 
-							// Check valid intersections
-							if (!FindIntersections(intersections, vSource, refIdx))
+							if (!FindIntersections(imageSource, intersections))
 								continue;
 
-							// Check for obstruction
-							bool obstruction = LineRoomObstruction(mListenerPosition, intersections[refIdx]);
-							LineRoomObstruction(intersections[0], source.position, vSource.GetID(0), obstruction);
+							if (CheckObstructions(source.position, imageSource, intersections))
+								continue;
 
-							int p = 0;
-							while (!obstruction && p < refIdx)
-							{
-								if (vSource.IsReflection(p))
-								{
-									if (vSource.IsReflection(p + 1))
-										obstruction = LineRoomObstruction(intersections[p], intersections[p + 1], vSource.GetID(p), vSource.GetID(p + 1));
-									else
-										obstruction = LineRoomObstruction(intersections[p], intersections[p + 1], vSource.GetID(p));
-								}
-								else
-									obstruction = LineRoomObstruction(intersections[p], intersections[p + 1], vSource.GetID(p + 1));
-								p++;
-							}
-							if (!obstruction)
-								InitVSource(source, intersections[0], vSource, vSources, feedsFDN);
+							InitImageSource(source, intersections[0], imageSource, imageSources, feedsFDN);
 						}
 					}
 				}
@@ -799,16 +751,16 @@ namespace RAC
 						if (mIEMConfig.diffractedReflections == DiffractionSound::shadowZone && zone == EdgeZone::NonShadowed)
 							continue;
 
-						ImageSourceData& vSource = counter < size ? sp[refIdx][counter] : sp[refIdx].emplace_back(vS);
+						ImageSourceData& imageSource = counter < size ? sp[refIdx][counter] : sp[refIdx].emplace_back(vS);
 
 						if (counter < size)
 							sp[refIdx][counter].Update(vS);
 						counter++;
 
-						vSource.Reset();
-						vSource.Valid();
-						vSource.AddEdgeID(it.first);
-						vSource.UpdateDiffractionPath(vSource.GetPosition(), mListenerPosition, it.second);
+						imageSource.Reset();
+						imageSource.Valid();
+						imageSource.AddEdgeID(it.first);
+						imageSource.UpdateDiffractionPath(imageSource.GetPosition(), mListenerPosition, it.second);
 
 						// Receiver checks
 						if (rZone == EdgeZone::Invalid)
@@ -817,36 +769,19 @@ namespace RAC
 						if (mIEMConfig.diffractedReflections == DiffractionSound::shadowZone && it.second.GetReceiverZone() == EdgeZone::NonShadowed)
 							continue;
 
-						if (!vSource.GetDiffractionPath().valid)
+						if (!imageSource.GetDiffractionPath().valid)
 							continue;
 
-						if (!vSource.GetDiffractionPath().inShadow && mIEMConfig.diffractedReflections == DiffractionSound::shadowZone)
+						if (!imageSource.GetDiffractionPath().inShadow && mIEMConfig.diffractedReflections == DiffractionSound::shadowZone)
 							continue;
 
-						// Check valid intersections
-						if (!FindIntersections(intersections, vSource, refIdx))
+						if (!FindIntersections(imageSource, intersections))
 							continue;
 
-						// Check for obstruction
-						bool obstruction = LineRoomObstruction(mListenerPosition, intersections[refIdx]);
-						LineRoomObstruction(intersections[0], source.position, vSource.GetID(0), obstruction);
+						if (CheckObstructions(source.position, imageSource, intersections))
+							continue;
 
-						int p = 0;
-						while (!obstruction && p < refIdx)
-						{
-							if (vSource.IsReflection(p))
-							{
-								if (vSource.IsReflection(p + 1))
-									obstruction = LineRoomObstruction(intersections[p], intersections[p + 1], vSource.GetID(p), vSource.GetID(p + 1));
-								else
-									obstruction = LineRoomObstruction(intersections[p], intersections[p + 1], vSource.GetID(p));
-							}
-							else
-								obstruction = LineRoomObstruction(intersections[p], intersections[p + 1], vSource.GetID(p + 1));
-							p++;
-						}
-						if (!obstruction)
-							InitVSource(source, intersections[0], vSource, vSources, feedsFDN);
+						InitImageSource(source, intersections[0], imageSource, imageSources, feedsFDN);
 					}
 				}
 #ifdef PROFILE_BACKGROUND_THREAD
@@ -869,44 +804,86 @@ namespace RAC
 			}
 		}
 
-		void ImageEdge::InitVSource(const SourceData& source, const Vec3& intersection, ImageSourceData& vSource, ImageSourceDataMap& vSources, bool feedsFDN)
+		////////////////////////////////////////
+
+		void ImageEdge::InitImageSource(const SourceData& source, const Vec3& intersection, ImageSourceData& imageSource, ImageSourceDataMap& imageSources, bool feedsFDN)
 		{
 			Real directivity = CalculateDirectivity(source, intersection);
-			vSource.SetDirectivity(directivity);
+			imageSource.SetDirectivity(directivity);
 
-			vSource.SetDistance(mListenerPosition);
-			vSource.Visible(feedsFDN);
-			vSource.UpdateCycle(currentCycle);
-			vSources.insert_or_assign(vSource.GetKey(), vSource);
+			imageSource.SetDistance(mListenerPosition);
+			imageSource.Visible(feedsFDN);
+			imageSource.UpdateCycle(currentCycle);
+			imageSources.insert_or_assign(imageSource.GetKey(), imageSource);
 		}
 
-		Real ImageEdge::CalculateDirectivity(const SourceData& source, const Vec3& intersection) const
+		////////////////////////////////////////
+
+		typedef std::pair<Real, size_t> PlaneDistanceID;
+		bool comparator(const PlaneDistanceID& l, const PlaneDistanceID& r) { return l.first < r.first; }
+
+		void ImageEdge::UpdateLateReverbFilters()
 		{
-			switch (source.directivity)
+#ifdef PROFILE_BACKGROUND_THREAD
+			BeginLateReverb();
+#endif
+			Real k;
+			Vec3 point, intersection;
+			for (int j = 0; j < reverbDirections.size(); j++)
 			{
-			case SourceDirectivity::omni:
-				return 1.0;
-			case SourceDirectivity::cardioid:
-			{
-				Real angle = acos(Dot(source.forward, UnitVector(intersection - source.position)));
-				Real ret = 0.5 * (1 + cos(angle));
-				if (ret < EPS)
-					return EPS;
-				return ret;
+				std::vector<PlaneDistanceID> ks = std::vector(mPlanes.size(), PlaneDistanceID(0.0, -1));
+				point = mListenerPosition + reverbDirections[j];
+				int i = 0;
+				for (auto& it : mPlanes)
+				{
+					k = it.second.PointPlanePosition(point);
+					if (it.second.GetReceiverValid() && k < 0) // receiver in front of wall and point behind wall
+						ks[i] = PlaneDistanceID(k, it.first); // A more negative k means the plane is closer to the receiver
+					i++;
+				}
+				std::sort(ks.begin(), ks.end());
+				bool valid = false;
+				i = 0;
+				while (!valid && i < ks.size())
+				{
+					if (ks[i].first < 0.0)
+					{
+						auto itP = mPlanes.find(ks[i].second);
+						if (itP != mPlanes.end()) // case: plane exists
+						{
+							reverbAbsorptions[j] = 1.0;
+							valid = LinePlaneIntersection(mListenerPosition, point, itP->second, reverbAbsorptions[j], intersection);
+						}
+					}
+					i++;
+				}
+				if (!valid)
+					reverbAbsorptions[j] = 0.0;
 			}
-			default:
-				return 1.0;
-			}
+
+#ifdef PROFILE_BACKGROUND_THREAD
+			EndLateReverb();
+#endif
+#ifdef PROFILE_BACKGROUND_THREAD
+			BeginUpdateAudioData();
+#endif
+			std::shared_ptr<Reverb> sharedReverb = mReverb.lock();
+			sharedReverb->UpdateReflectionFilters(reverbAbsorptions, mIEMConfig.lateReverb);
+#ifdef PROFILE_BACKGROUND_THREAD
+			EndUpdateAudioData();
+#endif
 		}
 
-		void ImageEdge::EraseOldEntries(ImageSourceDataMap& vSources)
+		////////////////////////////////////////
+
+		void ImageEdge::EraseOldEntries(ImageSourceDataMap& imageSources)
 		{
-			for (auto it = vSources.begin(); it != vSources.end();)
+			for (auto it = imageSources.begin(); it != imageSources.end();)
 			{
 				if (it->second.UpdatedThisCycle(currentCycle))
 					++it;
 				else
-					it = vSources.erase(it);
+					it = imageSources.erase(it);
 			}
 		}
 	}

@@ -55,15 +55,8 @@ namespace RAC
 #ifdef PROFILE_BACKGROUND_THREAD
 				BeginBackgroundLoop();
 #endif
-				// Update IEM Config
-				// imageEdgeModel->UpdateIEMConfig(context->GetIEMConfig());
-
 				// Update IEM
-				bool hasChanged = imageEdgeModel->RunIEM();
-
-				// Update FDN reflection filters
-				// if (hasChanged)
-				imageEdgeModel->UpdateLateReverbFilters();
+				imageEdgeModel->RunIEM();
 
 				isRunning = context->IsRunning();
 #ifdef PROFILE_BACKGROUND_THREAD

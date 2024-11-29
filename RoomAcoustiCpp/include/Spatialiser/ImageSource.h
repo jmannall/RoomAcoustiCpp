@@ -72,7 +72,7 @@ namespace RAC
 			* 
 			* @param numFrequencyBands The number of frequency bands for applying wall absorption
 			*/
-			ImageSourceData(int numFrequencyBands) : valid(false), visible(false), feedsFDN(false), order(0), reflection(false), diffraction(false), key(""),
+			ImageSourceData(int numFrequencyBands) : valid(false), visible(false), feedsFDN(false), reflection(false), diffraction(false), key(""),
 				mAbsorption(numFrequencyBands), mDirectivity(1.0), distance(0.0), lastUpdatedCycle(false), idKey{'0'}, reflectionKey{'r'}, diffractionKey{'d'} {};
 
 			/**
@@ -157,11 +157,6 @@ namespace RAC
 			inline std::string GetKey() const { return key; }
 
 			/**
-			* @return The number or reflections and diffractions in the image source path
-			*/
-			inline int GetOrder() const { return order; }
-
-			/**
 			* @brief Sets the 3DTI transform and stores the source position
 			*
 			* @param position The position of the image source
@@ -188,7 +183,7 @@ namespace RAC
 			* 
 			* @return The position of the image source at the given index
 			*/
-			inline Vec3 GetPosition(int i) const { assert(i < order); return mPositions[i]; };
+			inline Vec3 GetPosition(int i) const { assert(i < mPositions.size()); return mPositions[i]; };
 			
 			/**
 			* @brief Updates the diffraction path of the image source
@@ -344,7 +339,6 @@ namespace RAC
 
 			std::vector<Part> pathParts;		// Reflection and diffraction parts of the image source path
 			std::vector<Vec3> mPositions;		// Positions of the image source along the path
-			int order;							// Number of reflections and diffractions in the image source path
 			Vec4 previousPlane;					// Previous reflected plane information where: w -> D, x, y, z -> Normal
 
 			Diffraction::Path mDiffractionPath;			// Diffraction path of the image source
@@ -471,7 +465,6 @@ namespace RAC
 			Config mConfig;			// Spatialiser configuration
 			bool feedsFDN;			// True if the image source feeds the FDN, false otherwise
 			int mFDNChannel;		// The FDN channel the image source feeds, -1 if the image source does not feed the FDN
-			int order;				// Number of reflections and diffractions in the image source path
 
 			Buffer bStore;								// Internal working buffer
 			Buffer bDiffStore;							// Internal diffraction crossfade buffer

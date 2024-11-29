@@ -97,6 +97,40 @@ namespace RAC
 			return kS * kE <= 0;	// point lies on plane when kS || kE == 0.
 		}
 
+		//////////////////// Wall utility functions ////////////////////
+
+		////////////////////////////////////////
+
+		IntersectionResult IntersectTriangle(const Vec3& v1, const Vec3& v2, const Vec3& v3, const Vec3& origin, const Vec3& dir, const bool returnIntersection)
+		{
+			Vec3 E1 = v2 - v1;
+			Vec3 E2 = v3 - v1;
+			Vec3 pVec = Cross(dir, E2);
+			Real det = Dot(E1, pVec);
+
+			if (det > -MIN_VALUE && det < MIN_VALUE)
+				return { false, 0.0 };    // This ray is parallel to this triangle.
+
+			Real invdet = 1.0 / det;
+
+			Vec3 tVec = origin - v1;
+			Real u = Dot(tVec, pVec) * invdet;
+
+			if (u < 0.0 || u > 1.0)
+				return { false, 0.0 };
+
+			Vec3 qVec = Cross(tVec, E1);
+			Real v = Dot(dir, qVec) * invdet;
+
+			if (v < 0.0 || u + v > 1.0)
+				return { false, 0.0 };
+
+			if (returnIntersection)
+				return { true, Dot(E2, qVec) * invdet };
+			else
+				return { true, 0.0 };
+		}
+
 		//////////////////// Wall Class ////////////////////
 
 		////////////////////////////////////////
@@ -128,102 +162,21 @@ namespace RAC
 			mNormal.RoundVec();
 
 			CalculateArea();	
-		}	
-
-		////////////////////////////////////////
-
-		bool Wall::LineWallIntersection(const Vec3& start, const Vec3& end) const
-		{
-			Vec3 intersection;
-			return LineWallIntersection(intersection, start, end);
 		}
 
 		////////////////////////////////////////
 
-		// Fast, minimum storage ray/triangle intersection. Möller, Trumbore. 2005
-		bool IntersectTriangle(const Vec3& v1, const Vec3& v2, const Vec3& v3, const Vec3& origin, const Vec3& dir)
+		bool Wall::LineWallIntersection(const Vec3& start, const Vec3& end, Vec3& intersection) const
 		{
-			Vec3 E1 = v2 - v1;
-			Vec3 E2 = v3 - v1;
-			Vec3 pVec = Cross(dir, E2);
-			Real det = Dot(E1, pVec);
-
-			if (det > -MIN_VALUE && det < MIN_VALUE)
-				return false;    // This ray is parallel to this triangle.
-
-			Real invdet = 1.0 / det;
-
-			Vec3 tVec = origin - v1;
-			Real u = Dot(tVec, pVec) * invdet;
-
-			if (u < 0.0 || u > 1.0)
-				return false;
-
-			Vec3 qVec = Cross(tVec, E1);
-			Real v = Dot(dir, qVec) * invdet;
-
-			if (v < 0.0 || u + v > 1.0)
-				return false;
-
-			return true;
-		}
-
-		////////////////////////////////////////
-
-		bool IntersectTriangle(const Vec3& v1, const Vec3& v2, const Vec3& v3, const Vec3& origin, const Vec3& dir, Real& t)
-		{
-			Vec3 E1 = v2 - v1;
-			Vec3 E2 = v3 - v1;
-			Vec3 pVec = Cross(dir, E2);
-			Real det = Dot(E1, pVec);
-
-			if (det > -MIN_VALUE && det < MIN_VALUE)
-				return false;    // This ray is parallel to this triangle.
-
-			Real invdet = 1.0 / det;
-
-			Vec3 tVec = origin - v1;
-			Real u = Dot(tVec, pVec) * invdet;
-
-			if (u < 0.0 || u > 1.0)
-				return false;
-
-			Vec3 qVec = Cross(tVec, E1);
-			Real v = Dot(dir, qVec) * invdet;
-
-			if (v < 0.0 || u + v > 1.0)
-				return false;
-
-			t = Dot(E2, qVec) * invdet;
-			return true;
-		}
-
-		////////////////////////////////////////
-
-		bool IntersectTriangle(const Vec3& v1, const Vec3& v2, const Vec3& v3, const Vec3& origin, const Vec3& dir, Vec3& intersection)
-		{
-			Real t = 0.0;
-			if (IntersectTriangle(v1, v2, v3, origin, dir, t))
+			Vec3 dir = start - end;
+			IntersectionResult result = IntersectTriangle(mVertices[0], mVertices[1], mVertices[2], start, dir, true);
+			if (result.first)
 			{
 				// intersection = v1 + E1 * u + E2 * v;
-				intersection = origin + dir * t;
+				intersection = start + dir * result.second;
 				return true;
 			}
 			return false;
-		}
-
-		////////////////////////////////////////
-
-		bool Wall::LineWallIntersection(Vec3& intersection, const Vec3& start, const Vec3& end) const
-		{
-			return IntersectTriangle(mVertices[0], mVertices[1], mVertices[2], start, start - end, intersection);
-		}
-
-		////////////////////////////////////////
-
-		bool Wall::LineWallObstruction(const Vec3& start, const Vec3& end) const
-		{
-			return IntersectTriangle(mVertices[0], mVertices[1], mVertices[2], start, start - end);
 		}
 	}
 }

@@ -26,6 +26,26 @@ namespace RAC
 	using namespace Common;
 	namespace Spatialiser
 	{
+		//////////////////// Data structures ////////////////////
+
+		typedef std::pair<bool, Real> IntersectionResult;
+
+		//////////////////// Utility functions ////////////////////
+
+		/**
+		* @brief Determines if a given line intersects a triangle
+		* 
+		* @param v1 The first vertex of the triangle
+		* @param v2 The second vertex of the triangle
+		* @param v3 The third vertex of the triangle
+		* @param origin The origin of the line
+		* @param dir The direction of the line
+		* @param returnIntersection True if data to calculate the intersection point should be returned, false otherwise
+		* 
+		* @return A pair containing a boolean indicating if the line intersects the triangle and the distance to the intersection point
+		*/
+		IntersectionResult IntersectTriangle(const Vec3& v1, const Vec3& v2, const Vec3& v3, const Vec3& origin, const Vec3& dir, const bool returnIntersection);
+
 		/**
 		* Class that represents a Wall in the room
 		*
@@ -100,6 +120,9 @@ namespace RAC
 			*/
 			inline Vertices GetVertices() const { return mVertices; }
 
+			/**
+			* @return True if the wall contains the given vertex, false otherwise
+			*/
 			inline bool VertexMatch(const Vec3& x) const { return mVertices[0] == x || mVertices[1] == x || mVertices[2] == x; }
 
 			/**
@@ -149,16 +172,6 @@ namespace RAC
 			inline Real PointWallPosition(const Vec3& point) const { return Dot(point, mNormal) - d; }
 
 			/**
-			* @brief Determines if a given line intersects the wall
-			*
-			* @param start The beginning of the line
-			* @param end The end of the line
-			*
-			* @return True if the line intersects the wall, false otherwise
-			*/
-			bool LineWallIntersection(const Vec3& start, const Vec3& end) const;
-
-			/**
 			* @brief Determines if a given line intersects the wall and stores the intersection point
 			*
 			* @param intersection A vec3 to store the intersection point
@@ -167,8 +180,8 @@ namespace RAC
 			*
 			* @return True if the line intersects the wall, false otherwise
 			*/
-			bool LineWallIntersection(Vec3& intersection, const Vec3& start, const Vec3& end) const;
-
+			bool LineWallIntersection(const Vec3& start, const Vec3& end, Vec3& intersection) const;
+			
 			/**
 			* @brief Determines if the wall obstructs a given line
 			*
@@ -177,7 +190,7 @@ namespace RAC
 			*
 			* @return True if the wall obstructs the line, false otherwise
 			*/
-			bool LineWallObstruction(const Vec3& start, const Vec3& end) const;
+			inline bool LineWallObstruction(const Vec3& start, const Vec3& end) const { return IntersectTriangle(mVertices[0], mVertices[1], mVertices[2], start, start - end, false).first; }
 
 			/**
 			* @brief Updates the wall normal, vertices, area and d value
@@ -194,37 +207,16 @@ namespace RAC
 			inline void Update(const Absorption& absorption) { Real area = GetArea(); mAbsorption = absorption; mAbsorption.mArea = area; }
 
 		private:
-
-			// Area
 			/**
-			* @brief Calculates the area of a triangle
-			* 
-			* @param v The first vertex of the triangle
-			* @param u The second vertex of the triangle
-			* @param w The third vertex of the triangle
-			* 
-			* @return The area of the triangle
+			* @brief Calculates the area of the wall (area of a triangle)
 			*/
-			inline Real TriangleArea(const Vec3& v, const Vec3& u, const Vec3& w) const { return 0.5* (Cross(v - u, v - w).Length()); }
+			inline void CalculateArea() { mAbsorption.mArea = 0.5 * (Cross(mVertices[0] - mVertices[1], mVertices[0] - mVertices[2]).Length()); }
 
-			/**
-			* @brief Calculates the area of the wall
-			*/
-			inline void CalculateArea() { mAbsorption.mArea = TriangleArea(mVertices[0], mVertices[1], mVertices[2]); }
-
-			//////////////////// Member Variables ////////////////////
-
-			/**
-			* Wall parameters
-			*/
 			Vertices mVertices;				// Vertices of the wall
 			Vec3 mNormal;					// Normal of the wall
 			Real d;							// Distance of the wall from the origin along the normal direction
 			Absorption mAbsorption;			// Material absorption of the wall
 
-			/**
-			* Connected IDs
-			*/
 			size_t mPlaneId;				// ID of the plane the wall is part of
 			std::vector<size_t> mEdges;		// IDs of connected edges
 		};
@@ -400,20 +392,13 @@ namespace RAC
 			* @param wall The wall to update the plane with
 			*/
 			inline void Update(const Wall& wall) { d = wall.GetD(); mNormal = wall.GetNormal(); };
+
 		private:
 
-			//////////////////// Member Variables ////////////////////
+			Real d;					// Distance of the plane from the origin along the normal direction
+			Vec3 mNormal;			// Normal of the plane
+			bool receiverValid;		// True if the listener is in front of the plane
 
-			/**
-			* Plane parameters
-			*/
-			Real d;			// Distance of the plane from the origin along the normal direction
-			Vec3 mNormal;	// Normal of the plane
-			bool receiverValid;	// True if the listener is in front of the plane
-
-			/**
-			* Connected IDs
-			*/
 			std::vector<size_t> mWalls;		// IDs of connected walls
 		};
 	}
