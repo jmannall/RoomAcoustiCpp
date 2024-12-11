@@ -15,6 +15,7 @@
 #include <sstream>
 #include <iostream>
 #include <vector>
+#include <mutex>
 
 // Unity headers
 #include "Unity/IUnityInterface.h"
@@ -30,12 +31,20 @@
 #define DLLExport
 #endif
 
+static std::mutex debugMutex;		// Protects debugCallbackInstance
+static std::mutex iemMutex;		// Protects iemCallbackInstance
+
 extern "C"
 {
     //Create a callback delegate
-    typedef void(*FuncCallBack)(const char* message, int colour, int size);
-    static FuncCallBack callbackInstance = nullptr;
-    DLLExport void RegisterDebugCallback(FuncCallBack cb);
+    typedef void(*FuncDebugCallback)(const char* message, int colour, int size);
+    typedef void(*FuncIEMCallback)(int id);
+    static FuncDebugCallback debugCallbackInstance = nullptr;
+	static FuncIEMCallback iemCallbackInstance = nullptr;
+    DLLExport void RegisterDebugCallback(FuncDebugCallback cb);
+    DLLExport void RegisterIEMCallback(FuncIEMCallback cb);
+    DLLExport void UnregisterDebugCallback();
+    DLLExport void UnregisterIEMCallback();
 }
 
 namespace RAC
@@ -60,6 +69,8 @@ namespace RAC
             static void Log(const float message, Colour colour = Colour::Black);
             static void Log(const double message, Colour colour = Colour::Black);
             static void Log(const bool message, Colour colour = Colour::Black);
+
+            static void IEMFlag(int id);
 
         private:
             static void send_log(const std::stringstream& ss, const Colour& colour);

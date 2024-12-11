@@ -21,15 +21,17 @@ namespace RAC
 
         void  Debug::Log(const char* message, Colour colour)
         {
-            if (callbackInstance != nullptr)
-                callbackInstance(message, (int)colour, (int)strlen(message));
+            std::lock_guard lock(debugMutex);
+            if (debugCallbackInstance != nullptr)
+                debugCallbackInstance(message, (int)colour, (int)strlen(message));
         }
 
         void  Debug::Log(const std::string message, Colour colour)
         {
+            std::lock_guard lock(debugMutex);
             const char* tmsg = message.c_str();
-            if (callbackInstance != nullptr)
-                callbackInstance(tmsg, (int)colour, (int)strlen(tmsg));
+            if (debugCallbackInstance != nullptr)
+                debugCallbackInstance(tmsg, (int)colour, (int)strlen(tmsg));
         }
 
         void  Debug::Log(const int message, Colour colour)
@@ -73,18 +75,45 @@ namespace RAC
 
         void Debug::send_log(const std::stringstream& ss, const Colour& colour)
         {
+            std::lock_guard lock(debugMutex);
             const std::string tmp = ss.str();
             const char* tmsg = tmp.c_str();
-            if (callbackInstance != nullptr)
-                callbackInstance(tmsg, (int)colour, (int)strlen(tmsg));
+            if (debugCallbackInstance != nullptr)
+                debugCallbackInstance(tmsg, (int)colour, (int)strlen(tmsg));
         }
+
+		void Debug::IEMFlag(int id)
+		{
+            std::lock_guard lock(iemMutex);
+			if (iemCallbackInstance != nullptr)
+				iemCallbackInstance(id);
+		}
     }
 }
 
 //////////////////// Functions ////////////////////
 
 // Create a callback delegate
-void RegisterDebugCallback(FuncCallBack cb)
+void RegisterDebugCallback(FuncDebugCallback cb)
 {
-    callbackInstance = cb;
+    std::lock_guard lock(debugMutex);
+    debugCallbackInstance = cb;
+}
+
+void RegisterIEMCallback(FuncIEMCallback cb)
+{
+    std::lock_guard lock(iemMutex);
+    iemCallbackInstance = cb;
+}
+
+void UnregisterDebugCallback()
+{
+    std::lock_guard lock(debugMutex);
+    debugCallbackInstance = nullptr;
+}
+
+void UnregisterIEMCallback()
+{
+    std::lock_guard lock(iemMutex);
+    iemCallbackInstance = nullptr;
 }

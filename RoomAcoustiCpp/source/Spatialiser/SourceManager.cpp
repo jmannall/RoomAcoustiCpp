@@ -22,7 +22,7 @@ namespace RAC
 			size_t id;
 			unique_lock<shared_mutex> lock(mSourceMutex);
 
-			Source source = Source(mCore, mConfig);
+			// Source source = Source(mCore, mConfig);
 			if (!mEmptySlots.empty()) // Assign source to an existing ID
 			{
 				id = mEmptySlots.back();
@@ -31,9 +31,10 @@ namespace RAC
 			else // Create a new ID
 				id = nextSource++;
 
-			mSources.insert_or_assign(id, source);
+			mSources.try_emplace(id, mCore, mConfig);
+			// mSources.insert_or_assign(id, source);
 			sourceData.emplace_back();
-			source.Deactivate();
+			// source.Deactivate();
 			return id;
 		}
 

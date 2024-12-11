@@ -185,8 +185,8 @@ namespace RAC
 			inline void Reset()
 			{ 
 				x.Reset(); y.Reset();  
-				for (int i = 0; i < mConfig.numFDNChannels; i++)
-					mChannels[i].Reset();
+				for (Channel& channel : mChannels)
+					channel.Reset();
 			}
 
 			/**

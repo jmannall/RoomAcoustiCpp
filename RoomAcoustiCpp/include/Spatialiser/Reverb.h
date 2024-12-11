@@ -214,9 +214,14 @@ namespace RAC
 			void UpdateFDNParameters(const Coefficients& T60, const Vec& dimensions);
 
 			/**
-			* @brief Resets the FDN internal buffers to zero
+			* @brief Resets the FDN and ReverbSources internal buffers to zero
 			*/
-			inline void ResetFDN() { mFDN.Reset(); }
+			inline void ResetFDN()
+			{ 
+				mFDN.Reset(); 
+				for (ReverbSource& reverbSource : mReverbSources)
+					reverbSource.Reset();
+			}
 
 			/**
 			* @brief Calculate the end limits for reverb source directions

@@ -61,6 +61,32 @@ namespace RAC
 		};
 
 		/**
+		* @brief Stores the base and edge vector of an image edge
+		*/
+		struct ImageEdgeData
+		{
+			Vec3 base;				// Base coordinate of the image edge
+			Vec3 edgeVector;		// Vector from the base to the top of the image edge
+
+			/**
+			* @brief Constructor that initialises the ImageEdgeData
+			*
+			* @param base The base coordinate of the image edge
+			* @param edgeVector The vector from the base to the top of the image edge
+			*/
+			ImageEdgeData(const Vec3& base, const Vec3& edgeVector) : base(base), edgeVector(edgeVector) {};
+
+			/**
+			* @brief Returns the coordinate of the edge at the given z coordinate
+			* 
+			* @param z The z coordinate of the edge
+			* 
+			* @return The coordinate of the edge at the given z coordinate
+			*/
+			Vec3 GetEdgeCoordinate(const Real z) const { return base + z * edgeVector; }
+		};
+
+		/**
 		* @brief Stores data used to create an image source
 		*/
 		class ImageSourceData
@@ -177,14 +203,14 @@ namespace RAC
 			inline Vec3 GetPosition() const { return mPositions.back(); }
 
 			/**
-			* @brief Returns the position of the image source at the given index
+			* @brief Returns the position of the image source or image edge apex point at the given index
 			* 
 			* @param i The index of the position to return
 			* 
-			* @return The position of the image source at the given index
+			* @return The position of the image source or image edge apex point at the given index
 			*/
-			inline Vec3 GetPosition(int i) const { assert(i < mPositions.size()); return mPositions[i]; };
-			
+			Vec3 GetPosition(int i) const;
+
 			/**
 			* @brief Updates the diffraction path of the image source
 			* 
@@ -194,6 +220,7 @@ namespace RAC
 			*/
 			inline void UpdateDiffractionPath(const Vec3& source, const Vec3& receiver, const Edge& edge)
 			{
+				mEdges.emplace_back(edge.GetBase(), edge.GetEdgeVector());
 				mDiffractionPath.UpdateParameters(source, receiver, edge);
 				SetTransform(source, mDiffractionPath.CalculateVirtualPostion());
 			}
@@ -208,6 +235,7 @@ namespace RAC
 			inline void UpdateDiffractionPath(const Vec3& source, const Vec3& receiver, const Plane& plane)
 			{
 				mDiffractionPath.ReflectEdgeInPlane(plane);
+				mEdges.emplace_back(mDiffractionPath.GetEdge().GetBase(), mDiffractionPath.GetEdge().GetEdgeVector());
 				mDiffractionPath.UpdateParameters(source, receiver);
 				SetTransform(source, mDiffractionPath.CalculateVirtualPostion());
 			}
@@ -220,7 +248,7 @@ namespace RAC
 			/**
 			* @return The apex of the diffraction path
 			*/
-			inline Vec3 GetApex() const { return mDiffractionPath.GetApex(); }
+			inline Vec3 GetApex() const { assert(mEdges.size() > 0); return mEdges[0].GetEdgeCoordinate(mDiffractionPath.GetApexZ()); }
 
 			/**
 			* @brief Sets the image source as visible and whether it feeds the FDN
@@ -337,9 +365,11 @@ namespace RAC
 			std::array<char, 1> reflectionKey;			// Char that stores the reflection key
 			std::array<char, 1> diffractionKey;			// Char that stores the diffraction key
 
-			std::vector<Part> pathParts;		// Reflection and diffraction parts of the image source path
-			std::vector<Vec3> mPositions;		// Positions of the image source along the path
-			Vec4 previousPlane;					// Previous reflected plane information where: w -> D, x, y, z -> Normal
+			std::vector<Part> pathParts;			// Reflection and diffraction parts of the image source path
+			std::vector<Vec3> mPositions;			// Positions of the image source along the path
+			std::vector<ImageEdgeData> mEdges;		// Image edges along the image source path
+			int diffractionIndex;					// Index of the first diffraction in the image source path
+			Vec4 previousPlane;						// Previous reflected plane information where: w -> D, x, y, z -> Normal
 
 			Diffraction::Path mDiffractionPath;			// Diffraction path of the image source
 			Absorption mAbsorption;						// Wall absorption of the image source
@@ -354,8 +384,6 @@ namespace RAC
 			bool diffraction;				// True if the image source path includes any diffractions, false otherwise
 			bool lastUpdatedCycle;			// True if the image source was updated in the current cycle, false otherwise
 		};
-
-		//////////////////// VirtualSource class ////////////////////
 
 		/**
 		* @brief Represents an image source and processes its audio

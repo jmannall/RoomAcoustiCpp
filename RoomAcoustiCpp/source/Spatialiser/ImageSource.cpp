@@ -53,6 +53,7 @@ namespace RAC
 		{
 			pathParts.emplace_back(id, false);
 			diffraction = true;
+			diffractionIndex = static_cast<int>(pathParts.size()) - 1;
 			auto [ptr, ec] = std::to_chars(idKey.data(), idKey.data() + idKey.size(), id);
 			if (ec == std::errc()) // Null-terminate manually if conversion is successful
 				*ptr = '\0';
@@ -93,11 +94,26 @@ namespace RAC
 
 		////////////////////////////////////////
 
+		Vec3 ImageSourceData::GetPosition(int i) const
+		{
+			if (diffraction)
+			{
+				assert(i - diffractionIndex < mEdges.size());
+				if (i >= diffractionIndex)
+					return mEdges[i - diffractionIndex].GetEdgeCoordinate(mDiffractionPath.GetApexZ());
+			}
+			assert(i < mPositions.size());
+			return mPositions[i];
+		}
+
+		////////////////////////////////////////
+
 		void ImageSourceData::Clear()
 		{
 			Reset();
 			pathParts.clear();
 			mPositions.clear();
+			mEdges.clear();
 			reflection = false;
 			diffraction = false;
 			key = "";
@@ -112,7 +128,11 @@ namespace RAC
 			reflection = imageSource.reflection;
 			diffraction = imageSource.diffraction;
 			if (diffraction)
+			{
+				mEdges = imageSource.mEdges;
+				diffractionIndex = imageSource.diffractionIndex;
 				mDiffractionPath = imageSource.mDiffractionPath;
+			}
 			key = imageSource.key;
 		}
 

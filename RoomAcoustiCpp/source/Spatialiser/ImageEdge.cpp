@@ -15,9 +15,11 @@
 
 // Unity headers
 #include "Unity/UnityInterface.h"
+#include "Unity/Debug.h"
 
 namespace RAC
 {
+	using namespace Unity;
 	namespace Spatialiser
 	{
 		//////////////////// ImageEdge Class ////////////////////
@@ -105,11 +107,18 @@ namespace RAC
 #ifdef PROFILE_BACKGROUND_THREAD
 				EndUpdateAudioData();
 #endif
+#ifdef IEM_FLAG
+				Debug::IEMFlag(source.id);
+#endif
 				++i;
 			}	
 
 			if (doIEM && mIEMConfig.lateReverb)
 				UpdateLateReverbFilters();
+
+#ifdef IEM_FLAG
+			Debug::IEMFlag(-1);
+#endif
 		}
 
 		////////////////////////////////////////
@@ -567,7 +576,7 @@ namespace RAC
 						if (!vS.IsDiffraction())
 						{
 							// Can't reflect in same plane twice
-							if (it.first == vS.GetID(prevRefIdx))
+							if (it.first == vS.GetID())
 								continue;
 
 							Vec4 previousPlaneData = vS.GetPreviousPlane();
@@ -581,7 +590,7 @@ namespace RAC
 							if (planeData == -previousPlaneData)
 								continue;
 
-							if (!it.second.ReflectPointInPlane(position, vS.GetPosition(prevRefIdx)))
+							if (!it.second.ReflectPointInPlane(position, vS.GetPosition()))
 								continue;
 
 							ImageSourceData& imageSource = counter < size ? sp[refIdx][counter] : sp[refIdx].emplace_back(vS);
@@ -621,7 +630,7 @@ namespace RAC
 							if (vS.IsReflection(prevRefIdx))
 							{
 								// Can't reflect in same plane twice
-								if (it.first == vS.GetID(prevRefIdx))
+								if (it.first == vS.GetID())
 									continue;
 
 								Vec4 previousPlaneData = vS.GetPreviousPlane();
@@ -657,7 +666,7 @@ namespace RAC
 							imageSource.Valid();
 							imageSource.AddPlaneID(it.first);
 
-							position = imageSource.GetPosition(prevRefIdx);
+							position = imageSource.GetPosition();
 							it.second.ReflectPointInPlaneNoCheck(position);
 							imageSource.UpdateDiffractionPath(position, mListenerPosition, it.second);
 

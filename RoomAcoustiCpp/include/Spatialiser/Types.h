@@ -34,6 +34,11 @@ namespace RAC
 // #define DEBUG_HRTF
 // #define DEBUG_VIRTUAL_SOURCE
 
+		/**
+		* @brief Debugging flags for completed iem model
+		*/
+#define IEM_FLAG
+
 		//////////////////// Typedefs ////////////////////
 
 		/**

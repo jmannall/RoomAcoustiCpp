@@ -72,6 +72,16 @@ namespace RAC
 						return mEdge.GetEdgeCoord(zA); // precalculate at update?
 				}
 
+				inline Real GetApexZ() const
+				{
+					if (zA < 0)
+						return 0;
+					else if (zA > wData.z)
+						return wData.z;
+					else
+						return zA;
+				}
+
 				// Edge
 				const inline Edge& GetEdge() const { return mEdge; }
 				inline Vec3 CalculateVirtualPostion() const { return rData.point + (sData.d + rData.d) * (mEdge.GetEdgeCoord(zA) - rData.point) / rData.d; }

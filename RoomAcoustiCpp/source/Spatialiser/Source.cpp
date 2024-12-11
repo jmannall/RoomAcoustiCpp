@@ -301,6 +301,8 @@ namespace RAC
 					unique_lock<mutex> lock(*imageSourcesMutex, defer_lock);
 					if (lock.try_lock())
 						mImageSources.try_emplace(data.GetKey(), mCore, mConfig, data, fdnChannel);
+					else
+						Unity::Debug::Log("Failed to lock imageSourcesMutex", Unity::Colour::Red);
 				}
 			}
 			else
