@@ -67,8 +67,12 @@ extern "C"
 	{
 
 		int numFDNChannels = 0;
-		if (maxFDNChannels < 4)
+		if (maxFDNChannels < 1)
 		{ numFDNChannels = 0; }
+		else if (maxFDNChannels < 2)
+		{ numFDNChannels = 1; }
+		else if (maxFDNChannels < 4)
+		{ numFDNChannels = 2; }
 		else if (maxFDNChannels < 6)
 		{ numFDNChannels = 4; }
 		else if (maxFDNChannels < 8)
@@ -83,8 +87,7 @@ extern "C"
 		{ numFDNChannels = 20; }
 		else if (maxFDNChannels < 32)
 		{ numFDNChannels = 24; }
-		else if (maxFDNChannels < 6)
-		{ numFDNChannels = 32; }
+		else { numFDNChannels = 32; }
 
 		numAbsorptionBands = numBands;
 		Coefficients frequencyBands = Coefficients(static_cast<size_t>(numBands));

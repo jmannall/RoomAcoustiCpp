@@ -233,6 +233,10 @@ namespace RAC
 			std::vector<Vec3> points;
 			switch (mConfig.numFDNChannels)
 			{
+			case 1:
+			{ points.push_back(Vec3(0.0, 0.0, 1.0)); break; }
+			case 2:
+			{ points.push_back(Vec3(-1.0, 0.0, 0.0)); points.push_back(Vec3(1.0, 0.0, 0.0)); break; }
 			case 4:
 			{ Tetrahedron(points, true); break; }
 			case 6:
