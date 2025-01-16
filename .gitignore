@@ -363,7 +363,8 @@ MigrationBackup/
 FodyWeavers.xsd
 /DawnCache
 /GPUCache
-/Windows
 /Resources
 /SimulationData
 /UnitTesting/build
+/Windows/Intel® VTune™ Profiler Results
+/Windows/x64
