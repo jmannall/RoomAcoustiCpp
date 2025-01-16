@@ -35,7 +35,6 @@
     <ClCompile Include="..\RoomAcoustiCpp\codegen\lib\myNN\source\mySmallNN.cpp" />
     <ClCompile Include="..\RoomAcoustiCpp\codegen\lib\myNN\source\predict.cpp" />
     <ClCompile Include="source\dllmain.cpp" />
-    <ClCompile Include="source\FirstDLL.cpp" />
     <ClCompile Include="Test.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
@@ -63,7 +62,6 @@
     <ClInclude Include="..\RoomAcoustiCpp\codegen\lib\myNN\include\predict.h" />
     <ClInclude Include="..\RoomAcoustiCpp\codegen\lib\myNN\include\rtwtypes.h" />
     <ClInclude Include="..\RoomAcoustiCpp\codegen\lib\myNN\include\tmwtypes.h" />
-    <ClInclude Include="include\FirstDLL.h" />
     <ClInclude Include="include\framework.h" />
     <ClInclude Include="include\UtilityFunctions.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
