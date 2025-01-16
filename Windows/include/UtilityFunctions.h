@@ -15,6 +15,13 @@ inline std::string IntToStr(int x)
 	return ss.str();
 }
 
+inline std::string DoubleToStr(double x)
+{
+	std::stringstream ss;
+	ss << x;
+	return ss.str();
+}
+
 //////////////////// Parse csv files ////////////////////
 
 inline double StrToDouble(const std::string& str) { return std::stod(str); }

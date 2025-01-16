@@ -39,9 +39,13 @@
     <ClCompile Include="Test.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="UnitTest_Coefficients.cpp" />
+    <ClCompile Include="UnitTest_DiffractionModels.cpp" />
+    <ClCompile Include="UnitTest_FIRFilter.cpp" />
     <ClCompile Include="UnitTest_GraphicEQ.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="UnitTest_Interpolate.cpp" />
     <ClCompile Include="UnitTest_Matrix.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
