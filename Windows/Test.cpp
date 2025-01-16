@@ -295,7 +295,7 @@ namespace RAC
 			UpdateIEMConfig(iemConfig);
 			UpdateSpatialisationMode(SpatialisationMode::quality);
 			UpdateReverbTimeFormula(ReverbFormula::Eyring);
-			UpdateFDNModel(FDNMatrix::randomOrthogonal);
+			InitFDNMatrix(FDNMatrix::randomOrthogonal);
 			UpdateDiffractionModel(DiffractionModel::attenuate);
 
 			// Absorption absorption = Absorption({ 0.222, 0.258, 0.405, 0.378, 0.284, 0.270, 0.277 }); // Sabine
@@ -412,8 +412,8 @@ namespace RAC
 			IEMConfig iemConfig = IEMConfig(3, DirectSound::doCheck, true, DiffractionSound::none, DiffractionSound::none, true, 0.0);
 			UpdateIEMConfig(iemConfig);
 			UpdateSpatialisationMode(SpatialisationMode::quality);
-			UpdateReverbTimeModel(ReverbFormula::Sabine);
-			UpdateFDNModel(FDNMatrix::randomOrthogonal);
+			UpdateReverbTimeFormula(ReverbFormula::Sabine);
+			InitFDNMatrix(FDNMatrix::randomOrthogonal);
 			UpdateDiffractionModel(DiffractionModel::attenuate);
 
 			Absorption absorption = Absorption({ 0.222, 0.258, 0.405, 0.378, 0.284, 0.270, 0.277 });
@@ -796,7 +796,7 @@ namespace RAC
 
 			Source source = Source(&core, config);
 
-			VirtualSourceDataMap vSources;
+			ImageSourceDataMap vSources;
 			ImageSourceData vSource = ImageSourceData(5);
 			vSource.SetPreviousPlane(Vec4(plane.GetD(), plane.GetNormal()));
 
@@ -962,7 +962,7 @@ namespace RAC
 
 			Binaural::CCore core = CreateCore(config.fs, config.numFrames, 5);
 
-			ReverbSource reverbSource(&core, config);
+			ReverbSource reverbSource(&core, config, Vec3(1.0, 0.0, 0.0));
 
 			std::vector<Real> in = { 0.7, 0.7, 0.7, 0.7, 0.7 };
 			Absorption absorption1(in);
