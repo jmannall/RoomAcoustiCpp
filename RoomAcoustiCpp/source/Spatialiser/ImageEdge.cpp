@@ -219,7 +219,7 @@ namespace RAC
 						return true;
 
 					if (itW->second.VertexMatch(intersection))  // case: point on corner (will be triggered twice)
-						absorption *= INV_SQRT_3;
+						absorption *= INV_SQRT_6;
 					else
 						absorption *= 0.5;
 					return true;
