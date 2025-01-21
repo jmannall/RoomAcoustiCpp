@@ -109,7 +109,7 @@ namespace RAC
 				++i;
 			}	
 
-			if (doIEM && mIEMConfig.lateReverb)
+			if (doIEM)
 				UpdateLateReverbFilters();
 
 #ifdef IEM_FLAG
@@ -862,6 +862,14 @@ namespace RAC
 
 		void ImageEdge::UpdateLateReverbFilters()
 		{
+			if (!mIEMConfig.lateReverb)
+			{
+#ifdef DEBUG_IEM
+				for (int j = 0; j < reverbDirections.size(); j++)
+					Debug::remove_path("rev_" + IntToStr(j));
+#endif
+				return;
+			}
 #ifdef PROFILE_BACKGROUND_THREAD
 			BeginLateReverb();
 #endif
@@ -869,6 +877,9 @@ namespace RAC
 			Vec3 point, intersection;
 			for (int j = 0; j < reverbDirections.size(); j++)
 			{
+#ifdef DEBUG_IEM
+				Debug::send_path("rev_" + IntToStr(j), {mListenerPosition}, reverbDirections[j]);
+#endif
 				std::vector<PlaneDistanceID> ks = std::vector(mPlanes.size(), PlaneDistanceID(0.0, -1));
 				point = mListenerPosition + reverbDirections[j];
 				int i = 0;
