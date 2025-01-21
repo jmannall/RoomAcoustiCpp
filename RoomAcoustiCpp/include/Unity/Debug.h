@@ -32,18 +32,23 @@
 #endif
 
 static std::mutex debugMutex;		// Protects debugCallbackInstance
-static std::mutex iemMutex;		// Protects iemCallbackInstance
+static std::mutex pathMutex;		// Protects pathCallbackInstance
+static std::mutex iemMutex;		    // Protects iemCallbackInstance
 
 extern "C"
 {
     //Create a callback delegate
     typedef void(*FuncDebugCallback)(const char* message, int colour, int size);
+	typedef void(*FuncPathCallback)(const char* key, const float* intersections, int size, int numIntersections);
     typedef void(*FuncIEMCallback)(int id);
     static FuncDebugCallback debugCallbackInstance = nullptr;
+    static FuncPathCallback pathCallbackInstance = nullptr;
 	static FuncIEMCallback iemCallbackInstance = nullptr;
     DLLExport void RegisterDebugCallback(FuncDebugCallback cb);
+	DLLExport void RegisterPathCallback(FuncPathCallback cb);
     DLLExport void RegisterIEMCallback(FuncIEMCallback cb);
     DLLExport void UnregisterDebugCallback();
+	DLLExport void UnregisterPathCallback();
     DLLExport void UnregisterIEMCallback();
 }
 
@@ -53,6 +58,24 @@ namespace RAC
     using namespace Spatialiser;
     namespace Unity
     {
+        //////////////////// #defines ////////////////////
+
+/**
+* @brief Debugging flags for printing debug messages
+*/
+#define DEBUG_INIT
+// #define DEBUG_UPDATE
+#define DEBUG_REMOVE
+// #define DEBUG_AUDIO_THREAD
+// #define DEBUG_HRTF
+// #define DEBUG_WALL
+// #define DEBUG_IMAGE_SOURCE
+#define DEBUG_IEM
+
+/**
+* @brief Debugging flags for completed iem model
+*/
+#define IEM_FLAG
 
         enum class Colour { Red, Green, Blue, Black, White, Yellow, Orange };
 
@@ -69,6 +92,9 @@ namespace RAC
             static void Log(const float message, Colour colour = Colour::Black);
             static void Log(const double message, Colour colour = Colour::Black);
             static void Log(const bool message, Colour colour = Colour::Black);
+
+            static void send_path(const std::string& key, const std::vector<Vec3>& intersections);
+            static void remove_path(const std::string& key);
 
             static void IEMFlag(int id);
 

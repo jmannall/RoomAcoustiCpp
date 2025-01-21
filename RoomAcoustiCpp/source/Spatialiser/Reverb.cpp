@@ -367,8 +367,8 @@ namespace RAC
 			if (T60 > 0.0)
 			{
 #ifdef DEBUG_INIT
-				Debug::Log("Reverb T60: [" + RealToStr(T60[0]) + ", " + RealToStr(T60[1]) + ", " +
-					RealToStr(T60[2]) + ", " + RealToStr(T60[3]) + ", " + RealToStr(T60[4]) + "]", Colour::Orange);
+				Debug::Log("Init FDN: [" + RealToStr(T60[0]) + ", " + RealToStr(T60[1]) + ", " +
+					RealToStr(T60[2]) + ", " + RealToStr(T60[3]) + ", " + RealToStr(T60[4]) + "]", Colour::Green);
 #endif
 				lock_guard <mutex> lock(mFDNMutex);
 				mFDN.UpdateT60(T60);
@@ -389,9 +389,8 @@ namespace RAC
 			if (T60 > 0.0)
 			{
 #ifdef DEBUG_INIT
-				Debug::Log("Init FDN", Colour::Green);
-				Debug::Log("Reverb T60: [" + RealToStr(T60[0]) + ", " + RealToStr(T60[1]) + ", " +
-					RealToStr(T60[2]) + ", " + RealToStr(T60[3]) + ", " + RealToStr(T60[4]) + "]", Colour::Orange);
+				Debug::Log("Init FDN: [" + RealToStr(T60[0]) + ", " + RealToStr(T60[1]) + ", " +
+					RealToStr(T60[2]) + ", " + RealToStr(T60[3]) + ", " + RealToStr(T60[4]) + "]", Colour::Green);
 #endif
 				lock_guard <mutex> lock(mFDNMutex);
 				mFDN.Reset();

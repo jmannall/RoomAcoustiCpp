@@ -36,7 +36,7 @@ namespace RAC
 
 		void BackgroundProcessor(Context* context)
 		{
-#ifdef DEBUG_IEM_THREAD
+#ifdef DEBUG_INIT
 	Debug::Log("Begin background thread", Colour::Green);
 #endif
 #ifdef PROFILE_BACKGROUND_THREAD
@@ -72,7 +72,7 @@ namespace RAC
 #ifdef PROFILE_BACKGROUND_THREAD
 			UnregisterBackgroundThread();
 #endif
-#ifdef DEBUG_IEM_THREAD
+#ifdef DEBUG_REMOVE
 	Debug::Log("End background thread", Colour::Red);
 #endif
 		}

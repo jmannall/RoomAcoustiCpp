@@ -21,24 +21,6 @@ namespace RAC
 	namespace Spatialiser
 	{
 
-		//////////////////// #defines ////////////////////
-
-		/**
-		* @brief Debugging flags for printing debug messages
-		*/
-#define DEBUG_INIT
-// #define DEBUG_UPDATE
-// #define DEBUG_REMOVE
-// #define DEBUG_AUDIO_THREAD
-// #define DEBUG_IEM_THREAD
-// #define DEBUG_HRTF
-// #define DEBUG_VIRTUAL_SOURCE
-
-		/**
-		* @brief Debugging flags for completed iem model
-		*/
-#define IEM_FLAG
-
 		//////////////////// Typedefs ////////////////////
 
 		/**

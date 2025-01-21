@@ -82,6 +82,39 @@ namespace RAC
                 debugCallbackInstance(tmsg, (int)colour, (int)strlen(tmsg));
         }
 
+        void Debug::send_path(const std::string& key, const std::vector<Vec3>& intersections)
+        {
+            std::lock_guard lock(pathMutex);
+            const char* tmsg = key.c_str();
+            
+            // Convert intersections to an array format
+            size_t size = intersections.size();
+            float* intersectionArray = new float[3 * size];
+            int count = 0;
+            for (size_t i = 0; i < size; ++i)
+            {
+                intersectionArray[count++] = intersections[i].x;
+                intersectionArray[count++] = intersections[i].y;
+                intersectionArray[count++] = intersections[i].z;
+            }
+
+            if (pathCallbackInstance != nullptr)
+                pathCallbackInstance(tmsg, &intersectionArray[0], (int)strlen(tmsg), (int)size);
+
+            delete[] intersectionArray;
+        }
+
+        void Debug::remove_path(const std::string& key)
+        {
+            std::lock_guard lock(pathMutex);
+            const char* tmsg = key.c_str();
+
+            float intersectionArray = 0.0f;
+
+            if (pathCallbackInstance != nullptr)
+                pathCallbackInstance(tmsg, &intersectionArray, (int)strlen(tmsg), 0);
+        }
+
 		void Debug::IEMFlag(int id)
 		{
             std::lock_guard lock(iemMutex);
@@ -100,6 +133,12 @@ void RegisterDebugCallback(FuncDebugCallback cb)
     debugCallbackInstance = cb;
 }
 
+void RegisterPathCallback(FuncPathCallback cb)
+{
+	std::lock_guard lock(pathMutex);
+	pathCallbackInstance = cb;
+}
+
 void RegisterIEMCallback(FuncIEMCallback cb)
 {
     std::lock_guard lock(iemMutex);
@@ -110,6 +149,12 @@ void UnregisterDebugCallback()
 {
     std::lock_guard lock(debugMutex);
     debugCallbackInstance = nullptr;
+}
+
+void UnregisterPathCallback()
+{
+	std::lock_guard lock(pathMutex);
+	pathCallbackInstance = nullptr;
 }
 
 void UnregisterIEMCallback()

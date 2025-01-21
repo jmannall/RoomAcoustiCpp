@@ -96,10 +96,6 @@ namespace RAC
 					mSourceAudioDatas[i] = ReflectPointInRoom(source, imageSources[i]);
 				}
 
-#ifdef DEBUG_IEM_THREAD
-				Debug::Log("Source visible: " + BoolToStr(visible), Colour::White);
-				Debug::Log("Source " + std::to_string((int)it->first) + " has " + std::to_string(imageSources.size()) + " visible image sources", Colour::White);
-#endif
 #ifdef PROFILE_BACKGROUND_THREAD
 				BeginUpdateAudioData();
 #endif
@@ -149,7 +145,10 @@ namespace RAC
 					valid = LinePlaneIntersection(mListenerPosition, imageSource.GetPosition(bounceIdx), it->second, absorption, intersections[bounceIdx]);
 			}
 			else
+			{
+				valid = true;
 				intersections[bounceIdx] = imageSource.GetApex();
+			}
 
 			int bounceIdxTakeOne = bounceIdx - 1;
 			while (valid && bounceIdxTakeOne >= 0)
@@ -467,6 +466,10 @@ namespace RAC
 				if (CheckObstructions(source.position, imageSource, { imageSource.GetApex() }))
 					continue;
 
+#ifdef DEBUG_IEM
+				Debug::send_path(imageSource.GetKey(), { imageSource.GetApex() });
+#endif
+
 				InitImageSource(source, imageSource.GetApex(), imageSource, imageSources, feedsFDN);
 			}
 #ifdef PROFILE_BACKGROUND_THREAD
@@ -516,6 +519,10 @@ namespace RAC
 
 				if (CheckObstructions(source.position, imageSource, intersections))
 					continue;
+
+#ifdef DEBUG_IEM
+				Debug::send_path(imageSource.GetKey(), intersections);
+#endif
 
 				InitImageSource(source, intersections[0], imageSource, imageSources, feedsFDN);
 			}
@@ -618,6 +625,10 @@ namespace RAC
 							if (CheckObstructions(source.position, imageSource, intersections))
 								continue;
 
+#ifdef DEBUG_IEM
+							Debug::send_path(imageSource.GetKey(), intersections);
+#endif
+
 							InitImageSource(source, intersections[0], imageSource, imageSources, feedsFDN);
 						}
 						// HOD reflections (post diffraction)
@@ -693,6 +704,10 @@ namespace RAC
 
 							if (CheckObstructions(source.position, imageSource, intersections))
 								continue;
+
+#ifdef DEBUG_IEM
+							Debug::send_path(imageSource.GetKey(), intersections);
+#endif
 
 							InitImageSource(source, intersections[0], imageSource, imageSources, feedsFDN);
 						}
@@ -789,6 +804,10 @@ namespace RAC
 
 						if (CheckObstructions(source.position, imageSource, intersections))
 							continue;
+
+#ifdef DEBUG_IEM
+						Debug::send_path(imageSource.GetKey(), intersections);
+#endif
 
 						InitImageSource(source, intersections[0], imageSource, imageSources, feedsFDN);
 					}
@@ -892,7 +911,12 @@ namespace RAC
 				if (it->second.UpdatedThisCycle(currentCycle))
 					++it;
 				else
+				{
+#ifdef DEBUG_IEM
+					Debug::remove_path(it->first);
+#endif
 					it = imageSources.erase(it);
+				}
 			}
 		}
 	}

@@ -139,7 +139,7 @@ namespace RAC
 		{
 			Update(vData);
 
-#ifdef DEBUG_INIT
+#ifdef DEBUG_WALL
 	Debug::Log("Vertices: " + VerticesToStr(mVertices), Colour::Orange);
 	Debug::Log("Normal: " + VecToStr(mNormal), Colour::Orange);
 #endif

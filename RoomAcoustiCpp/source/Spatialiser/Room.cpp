@@ -234,7 +234,7 @@ namespace RAC
 
 		void Room::FindParallelEdges(const Wall& wallA, const Wall& wallB, const size_t idA, const size_t idB, std::vector<Edge>& edges)
 		{
-			if (wallA.GetD() == -wallB.GetD())
+			if (abs(wallA.GetD() + wallB.GetD()) < 0.01)
 			{
 				Vertices verticesA = wallA.GetVertices();
 				Vertices verticesB = wallB.GetVertices();
@@ -303,14 +303,6 @@ namespace RAC
 				int j = 0;
 				while (!match && j < numB)
 				{
-					/*if (verticesA[i].x == verticesB[j].x)
-					{
-						if (verticesA[i].y == verticesB[j].y)
-						{
-							if (verticesA[i].z == verticesB[j].z)
-								match = true;
-						}
-					}*/
 					match = verticesA[i] == verticesB[j];
 					j++;
 				}
@@ -347,18 +339,20 @@ namespace RAC
 						{
 							// Cross(a.GetNormal(), b.GetNormal()) gives vector in direction of the edge
 							// verticesA[idxA] - verticesA[i] give vector from base to top of edge
-							bool reflexAngle = UnitVectorRound(Cross(wallA.GetNormal(), wallB.GetNormal())) == UnitVectorRound(verticesA[idxA] - verticesA[i]);
-
-							if (reflexAngle) // Check returns correct angle type
+							Vec3 test1 = UnitVectorRound(Cross(wallA.GetNormal(), wallB.GetNormal()));
+							Vec3 test2 = UnitVectorRound(verticesA[idxA] - verticesA[i]);
+							
+							if (test1 == test2) // Check returns correct angle type
 							{
 								edges.emplace_back(verticesA[i], verticesA[idxA], wallA.GetNormal(), wallB.GetNormal(), idA, idB, wallA.GetPlaneID(), wallB.GetPlaneID());
 								return;
 							}
-							else
+							else if (test1 == -test2)
 							{
 								edges.emplace_back(verticesA[i], verticesA[idxA], wallB.GetNormal(), wallA.GetNormal(), idB, idA, wallB.GetPlaneID(), wallA.GetPlaneID());
 								return;
 							}
+							// else case: edge is invalid (numerical issues caused k < 0)
 						}
 					}
 				}

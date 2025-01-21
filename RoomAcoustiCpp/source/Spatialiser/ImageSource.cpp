@@ -51,6 +51,9 @@ namespace RAC
 
 		void ImageSourceData::AddEdgeID(const size_t id)
 		{
+			if (!diffraction)
+				mEdges.clear();
+
 			pathParts.emplace_back(id, false);
 			diffraction = true;
 			diffractionIndex = static_cast<int>(pathParts.size()) - 1;
@@ -278,7 +281,7 @@ namespace RAC
 		void ImageSource::Init(const ImageSourceData& data)
 		{
 			// audioMutex already locked
-#ifdef DEBUG_VIRTUAL_SOURCE
+#ifdef DEBUG_IMAGE_SOURCE
 			Debug::Log("Init virtual source", Colour::Green);
 #endif
 			reflection = data.IsReflection();
@@ -340,7 +343,7 @@ namespace RAC
 
 		void ImageSource::Remove()
 		{
-#ifdef DEBUG_VIRTUAL_SOURCE
+#ifdef DEBUG_IMAGE_SOURCE
 			Debug::Log("Remove virtual source", Colour::Red);
 #endif
 			{

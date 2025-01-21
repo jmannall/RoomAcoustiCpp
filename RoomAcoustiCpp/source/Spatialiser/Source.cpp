@@ -155,9 +155,6 @@ namespace RAC
 					it.second.ProcessAudio(data, reverbInput, outputBuffer);
 			}
 
-#ifdef DEBUG_AUDIO_THREAD
-	// Debug::Log("Total audio vSources: " + std::to_string(counter), Colour::Orange);
-#endif
 			lock_guard<std::mutex> lock(*dataMutex);
 			if (currentGain == 0.0 && targetGain == 0.0)
 				return;
