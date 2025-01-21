@@ -82,21 +82,24 @@ namespace RAC
                 debugCallbackInstance(tmsg, (int)colour, (int)strlen(tmsg));
         }
 
-        void Debug::send_path(const std::string& key, const std::vector<Vec3>& intersections)
+        void Debug::send_path(const std::string& key, const std::vector<Vec3>& intersections, const Vec3& position)
         {
             std::lock_guard lock(pathMutex);
             const char* tmsg = key.c_str();
             
             // Convert intersections to an array format
-            size_t size = intersections.size();
+            size_t size = intersections.size() + 1;
             float* intersectionArray = new float[3 * size];
             int count = 0;
-            for (size_t i = 0; i < size; ++i)
+            for (size_t i = 0; i < size - 1; ++i)
             {
                 intersectionArray[count++] = intersections[i].x;
                 intersectionArray[count++] = intersections[i].y;
                 intersectionArray[count++] = intersections[i].z;
             }
+            intersectionArray[count++] = position.x;
+            intersectionArray[count++] = position.y;
+            intersectionArray[count++] = position.z;
 
             if (pathCallbackInstance != nullptr)
                 pathCallbackInstance(tmsg, &intersectionArray[0], (int)strlen(tmsg), (int)size);

@@ -467,7 +467,9 @@ namespace RAC
 					continue;
 
 #ifdef DEBUG_IEM
-				Debug::send_path(imageSource.GetKey(), { imageSource.GetApex() });
+				Vec3 position;
+				position = imageSource.GetTransform().GetPosition();
+				Debug::send_path(imageSource.GetKey(), { imageSource.GetApex() }, position);
 #endif
 
 				InitImageSource(source, imageSource.GetApex(), imageSource, imageSources, feedsFDN);
@@ -521,7 +523,9 @@ namespace RAC
 					continue;
 
 #ifdef DEBUG_IEM
-				Debug::send_path(imageSource.GetKey(), intersections);
+				Vec3 position;
+				position = imageSource.GetTransform().GetPosition();
+				Debug::send_path(imageSource.GetKey(), intersections, position);
 #endif
 
 				InitImageSource(source, intersections[0], imageSource, imageSources, feedsFDN);
@@ -626,7 +630,9 @@ namespace RAC
 								continue;
 
 #ifdef DEBUG_IEM
-							Debug::send_path(imageSource.GetKey(), intersections);
+							Vec3 position;
+							position = imageSource.GetTransform().GetPosition();
+							Debug::send_path(imageSource.GetKey(), intersections, position);
 #endif
 
 							InitImageSource(source, intersections[0], imageSource, imageSources, feedsFDN);
@@ -706,7 +712,9 @@ namespace RAC
 								continue;
 
 #ifdef DEBUG_IEM
-							Debug::send_path(imageSource.GetKey(), intersections);
+							Vec3 position;
+							position = imageSource.GetTransform().GetPosition();
+							Debug::send_path(imageSource.GetKey(), intersections, position);
 #endif
 
 							InitImageSource(source, intersections[0], imageSource, imageSources, feedsFDN);
@@ -806,7 +814,9 @@ namespace RAC
 							continue;
 
 #ifdef DEBUG_IEM
-						Debug::send_path(imageSource.GetKey(), intersections);
+						Vec3 position;
+						position = imageSource.GetTransform().GetPosition();
+						Debug::send_path(imageSource.GetKey(), intersections, position);
 #endif
 
 						InitImageSource(source, intersections[0], imageSource, imageSources, feedsFDN);

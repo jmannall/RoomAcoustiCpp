@@ -93,7 +93,7 @@ namespace RAC
             static void Log(const double message, Colour colour = Colour::Black);
             static void Log(const bool message, Colour colour = Colour::Black);
 
-            static void send_path(const std::string& key, const std::vector<Vec3>& intersections);
+            static void send_path(const std::string& key, const std::vector<Vec3>& intersections, const Vec3& position);
             static void remove_path(const std::string& key);
 
             static void IEMFlag(int id);

@@ -298,7 +298,7 @@ namespace RAC
 		size_t Context::InitWall(const Vertices& vData, const Absorption& absorption)
 		{
 #ifdef DEBUG_INIT
-	Debug::Log("Init Wall and Edges", Colour::Green);
+	Debug::Log("Init Wall", Colour::Green);
 #endif
 
 			Wall wall = Wall(vData, absorption);
@@ -327,7 +327,7 @@ namespace RAC
 		void Context::RemoveWall(size_t id)
 		{
 #ifdef DEBUG_REMOVE
-	Debug::Log("Remove Wall and Edges", Colour::Red);
+	Debug::Log("Remove Wall", Colour::Red);
 #endif
 			mRoom->RemoveWall(id);
 		}
