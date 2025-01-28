@@ -71,6 +71,7 @@ namespace RAC
 // #define DEBUG_WALL
 // #define DEBUG_IMAGE_SOURCE
 #define DEBUG_IEM
+#define DEBUG_GEOMETRY
 
 /**
 * @brief Debugging flags for completed iem model

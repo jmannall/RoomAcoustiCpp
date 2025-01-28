@@ -161,7 +161,7 @@ namespace RAC
 		inline Vec3 operator-(const Vec3& u, const Vec3& v) { return -v + u; }
 		inline Vec3 operator*(const Real a, const Vec3& v) { return Vec3(a * v.x, a * v.y, a * v.z); }
 		inline Vec3 operator*(const Vec3& v, const Real a) { return a * v; }
-		inline Vec3 operator/(const Vec3& v, const Real a) { return (1.0 / a) * v; }
+		inline Vec3 operator/(const Vec3& v, const Real a) { return Vec3(v.x / a, v.y / a, v.z / a); }
 		inline Vec3 operator/(const Real a, const Vec3& v) { return Vec3(a / v.x, a / v.y, a / v.z); }
 
 		/**

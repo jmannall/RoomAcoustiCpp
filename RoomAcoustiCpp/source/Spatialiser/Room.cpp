@@ -162,6 +162,10 @@ namespace RAC
 
 			mEdges.insert_or_assign(id, edge);
 			RecordChange();
+
+#ifdef DEBUG_GEOMETRY
+			Debug::send_path(std::to_string(id) + "e", { edge.GetBase() }, edge.GetTop());
+#endif
 		}
 
 		////////////////////////////////////////
@@ -372,26 +376,42 @@ namespace RAC
 			auto it = mEdges.find(id);
 			if (it == mEdges.end()) { return; } // case: edge does not exist
 			else { it->second = edge; } // case: edge does exist
+			
+#ifdef DEBUG_GEOMETRY
+			Debug::send_path(std::to_string(id) + "e", { edge.GetBase() }, edge.GetTop());
+#endif
 		}
 
 		////////////////////////////////////////
 
 		bool Room::IsCoplanarEdge(const Edge& edge)
 		{
-			IDPair planeIds = edge.GetPlaneIDs();
-			// Vec3Pair edgeNormals = edge.GetFaceNormals();
+			IDPair wallIds = edge.GetWallIDs();
 			{
 				std::lock_guard<std::mutex> lock(mPlaneMutex);
 				for (auto& itP : mPlanes)
 				{
-					if (itP.first == planeIds.first || itP.first == planeIds.second)
+					if (itP.second.PointPlanePosition(edge.GetBase()) != 0.0)
 						continue;
 
-					if (itP.second.PointPlanePosition(edge.GetMidPoint()) != 0.0)
+					if (itP.second.PointPlanePosition(edge.GetTop()) != 0.0)
 						continue;
 
-					if (itP.second.PointPlanePosition(edge.GetEdgeCoord(EPS)) == 0.0)
-						return true;
+					auto walls = itP.second.GetWalls();
+					Vec3 start = edge.GetMidPoint() + itP.second.GetNormal();
+					Vec3 end = edge.GetMidPoint() - itP.second.GetNormal();
+					for (auto& id : walls)
+					{
+						if (id == wallIds.first || id == wallIds.second)
+							continue;
+
+						auto itW = mWalls.find(id);
+						if (itW != mWalls.end())
+						{
+							if (itW->second.LineWallObstruction(start, end))
+								return true;
+						}
+					}
 				}
 			}
 			return false;
@@ -412,6 +432,9 @@ namespace RAC
 				if (itW != mWalls.end()) // case: wall exists
 					itW->second.RemoveEdge(idE);
 
+#ifdef DEBUG_IEM
+				Debug::remove_path(std::to_string(idE) + "e");
+#endif
 				mEdges.erase(idE);
 				while (!mEdgeTimers.empty() && difftime(time(nullptr), mEdgeTimers.front().time) > 60)
 				{
@@ -484,6 +507,7 @@ namespace RAC
 			std::unordered_map<size_t, size_t> freeWalls;
 			std::lock_guard<std::mutex> lock(mWallMutex);
 			{
+				std::vector<size_t> removeIDs;
 				std::lock_guard<std::mutex> lock(mEdgeMutex);
 				for (auto& itE : mEdges)
 				{
@@ -497,8 +521,10 @@ namespace RAC
 					else if (edges.size() > 1)
 						UpdateEdges(IDs, edges);
 					else
-						RemoveEdge(itE.first);
+						removeIDs.push_back(itE.first);
 				}
+				for (size_t id : removeIDs)
+					RemoveEdge(id);
 			}
 			for (auto& itW : mWalls)
 			{
