@@ -18,7 +18,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		GraphicEQ::GraphicEQ(const Coefficients& fc, const Real Q, const int sampleRate) : numFilters(fc.Length() + 2), lowShelf((fc[0] / 2.0) * sqrt(fc[0] / (fc[0] / 2.0)), Q, sampleRate), highShelf(fc[numFilters - 3] * sqrt((2.0 * fc[numFilters - 3]) / fc[numFilters - 3]), Q, sampleRate),
+		GraphicEQ::GraphicEQ(const Coefficients& fc, const Real Q, const int sampleRate) : numFilters(fc.Length() + 2), lowShelf(std::max((fc[0] / 2.0)* sqrt(fc[0] / (fc[0] / 2.0)), 20.0), Q, sampleRate), highShelf(std::min(fc[numFilters - 3] * sqrt((2.0 * fc[numFilters - 3]) / fc[numFilters - 3]), 20000.0), Q, sampleRate),
 			dbGains(numFilters), inputGains(numFilters), targetFilterGains(numFilters + 1), currentFilterGains(numFilters + 1), lastInput(fc.Length()), filterResponseMatrix(numFilters, numFilters), equal(false), valid(false)
 		{
 			InitFilters(fc, Q, sampleRate);
@@ -27,11 +27,8 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		GraphicEQ::GraphicEQ(const Coefficients& gain, const Coefficients& fc, const Real Q, const int sampleRate) : numFilters(fc.Length() + 2), lowShelf((fc[0] / 2.0)* sqrt(fc[0] / (fc[0] / 2.0)), Q, sampleRate), highShelf(fc[numFilters - 3] * sqrt((2.0 * fc[numFilters - 3]) / fc[numFilters - 3]), Q, sampleRate),
-			dbGains(numFilters), inputGains(numFilters), targetFilterGains(numFilters + 1), currentFilterGains(numFilters + 1), lastInput(fc.Length()), filterResponseMatrix(numFilters, numFilters), equal(false), valid(false)
-		{
-			InitFilters(fc, Q, sampleRate);
-			InitMatrix(fc);
+		GraphicEQ::GraphicEQ(const Coefficients& gain, const Coefficients& fc, const Real Q, const int sampleRate) : GraphicEQ(fc, Q, sampleRate)
+		{ 
 			InitParameters(gain);
 		}
 
@@ -49,10 +46,10 @@ namespace RAC
 		{
 			std::vector<Real> f = std::vector<Real>(numFilters, 0.0);
 
-			f[0] = fc[0] / 2.0;
+			f[0] = std::max(fc[0] / 2.0, 20.0);
 			for (int i = 1; i < numFilters - 1; i++)
 				f[i] = fc[i - 1];
-			f[numFilters - 1] = 2.0 * fc[numFilters - 3];
+			f[numFilters - 1] = std::min(2.0 * fc[numFilters - 3], 20000.0);
 
 			Real pdb = 6.0;
 			Real p = pow(10.0, pdb / 20.0);
