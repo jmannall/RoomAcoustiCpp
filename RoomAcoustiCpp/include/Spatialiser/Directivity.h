@@ -16,7 +16,6 @@
 
 // GSL headers
 #include <gsl/gsl_sf_legendre.h>
-#include <gsl/gsl_sf_gamma.h>
 
 // C++ headers
 #include <vector>
@@ -115,18 +114,14 @@ namespace RAC
 			*/
 			inline Complex SphericalHarmonic(int l, int m, Real theta, Real phi) const 
 			{
-				// Compute normalization constant
-				Real C = std::sqrt((2.0 * l + 1) / PI_4 *
-					gsl_sf_fact(l - std::abs(m)) / gsl_sf_fact(l + std::abs(m)));
-
-				// Compute the associated Legendre polynomial P_lm(cos(theta))
-				Real P_lm = gsl_sf_legendre_Plm(l, std::abs(m), std::cos(theta));
+				// Compute the associated Legendre polynomial sqrt((2l+1)/(4pi)) sqrt((l-m)!/(l+m)!) P_l^m(cos(theta))
+				Real P_lm = gsl_sf_legendre_sphPlm(l, std::abs(m), std::cos(theta));
 
 				// Compute the exponential term
 				Complex E = std::exp(Complex(0, -m * phi));
 
 				// Compute spherical harmonic
-				return C * P_lm * E;
+				return P_lm * E;
 			}
 
 			std::vector<Real> fm;								// Mid frequencies
