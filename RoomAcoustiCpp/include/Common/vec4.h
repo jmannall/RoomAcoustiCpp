@@ -100,6 +100,55 @@ namespace RAC
 			inline Real SquareNormal() const { return w * w + x * x + y * y + z * z; }
 
 			/**
+			* @return The inverse of the quaternion
+			*/
+			Vec4 Inverse() const
+			{
+				Real normSquared = SquareNormal();
+				if (normSquared == 0.0f)
+					return Vec4();
+
+                return Conjugate() / normSquared;
+			}
+
+			/**
+			* @return The conjugate of the quaternion
+			*/
+			inline Vec4 Conjugate() const { return Vec4(w, -x, -y, -z); }
+
+			/**
+			* @brief Rotates a vector by the quaternion
+			* 
+			* @param v The vector to rotate
+			* 
+			* @return The rotated vector
+			*/
+			Vec3 RotateVector(const Vec3& v) const
+			{
+				Vec4 rotatedVector = (*this) * Vec4(v) * Inverse();
+				return Vec3(rotatedVector.x, rotatedVector.y, rotatedVector.z);
+			}
+
+			/**
+			* @brief Performs a quaternion multiplication
+			*/
+			inline Vec4 operator*(const Vec4& v) const
+			{
+				return Vec4(w * v.w - x * v.x - y * v.y - z * v.z,
+					w * v.x + x * v.w - y * v.z + z * v.y,
+					w * v.y + x * v.z + y * v.w - z * v.x,
+					w * v.z - x * v.y + y * v.x + z * v.w);
+			}
+
+			/**
+			* @brief Divides the quaternioin by a given value 
+			*/
+			inline Vec4 operator/(const Real a) const
+			{ 
+				return Vec4(w / a, x / a, y / a, z / a);
+			}
+
+			/**
 			* @brief Assigns a class with w, x, y, z parameters to Vec4
 			*/
 			template <typename CQuaternionType>

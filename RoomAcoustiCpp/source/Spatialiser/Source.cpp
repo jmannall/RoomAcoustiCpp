@@ -29,7 +29,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		Source::Source(Binaural::CCore* core, const Config& config) : mCore(core), mConfig(config), targetGain(0.0f), currentGain(0.0f), mAirAbsorption(mConfig.fs), mDirectivity(SourceDirectivity::omni), feedsFDN(false), hasChanged(true)
+		Source::Source(Binaural::CCore* core, const Config& config) : mCore(core), mConfig(config), targetGain(0.0f), currentGain(0.0f), mAirAbsorption(mConfig.fs), mDirectivity(SourceDirectivity::omni), directivityFilter(config.frequencyBands, config.Q, config.fs), feedsFDN(false), hasChanged(true)
 		{
 			dataMutex = std::make_shared<std::mutex>();
 			imageSourcesMutex = std::make_shared<std::mutex>();
@@ -129,6 +129,9 @@ namespace RAC
 				case SourceDirectivity::cardioid:
 					reverbEnergy = 0.5;
 					break;
+				case SourceDirectivity::genelec8020c:
+					reverbEnergy = 0.5;
+					break;
 				default:
 					reverbEnergy = 1.0;
 					break;
@@ -156,18 +159,36 @@ namespace RAC
 			}
 
 			lock_guard<std::mutex> lock(*dataMutex);
-			if (currentGain == 0.0 && targetGain == 0.0)
+			/*if (currentGain == 0.0 && targetGain == 0.0)
+				return;*/
+			if (directivityFilter.Invalid())
 				return;
+
+			Real gain;
+			if (feedsFDN)
+				gain = directivityFilter.GetDCGain(); // Adjusted gain
 
 #ifdef PROFILE_AUDIO_THREAD
 			BeginSource();
+			BeginReflection();
+#endif
+			directivityFilter.ProcessAudio(data, bStore, mConfig.numFrames, mConfig.lerpFactor);
+#ifdef PROFILE_AUDIO_THREAD
+			EndReflection();
 			BeginAirAbsorption();
 #endif
-			mAirAbsorption.ProcessAudio(data, bStore, mConfig.numFrames, mConfig.lerpFactor);
+			mAirAbsorption.ProcessAudio(bStore, bStore, mConfig.numFrames, mConfig.lerpFactor);
 #ifdef PROFILE_AUDIO_THREAD
 			EndAirAbsorption();
 #endif
-			if (currentGain == targetGain)
+			if (feedsFDN && !directivityFilter.Invalid())
+			{
+				if (gain == 0.0)
+					gain = directivityFilter.GetDCGain(); // Adjusted gain
+				else
+					gain = (gain + directivityFilter.GetDCGain()) / 2.0; // Adjusted gain
+			}
+			/*if (currentGain == targetGain)
 			{
 				for (int i = 0; i < mConfig.numFrames; i++)
 					bInput[i] = static_cast<float>(currentGain * bStore[i]);
@@ -185,7 +206,10 @@ namespace RAC
 					bInput[i] = static_cast<float>(currentGain * bStore[i]);
 					currentGain = Lerp(currentGain, targetGain, mConfig.lerpFactor);
 				}
-			}
+			}*/
+
+			for (int i = 0; i < mConfig.numFrames; i++)
+				bInput[i] = static_cast<float>(bStore[i]);
 
 #ifdef PROFILE_AUDIO_THREAD
 			Begin3DTI();
@@ -197,17 +221,15 @@ namespace RAC
 
 				if (feedsFDN)
 				{
-					{
-						Real factor = 1.1 * mAirAbsorption.GetDistance() * reverbEnergy / currentGain; // Adjusted gain
-						factor /= static_cast<Real>(mConfig.numFDNChannels);
+					Real factor = 1.1 * mAirAbsorption.GetDistance() * reverbEnergy / gain; // Adjusted gain
+					factor /= static_cast<Real>(mConfig.numFDNChannels);
 
-						mSource->ProcessAnechoic(bMonoOutput, bOutput.left, bOutput.right);
-						for (int i = 0; i < mConfig.numFrames; i++)
-						{
-							Real in = static_cast<Real>(bMonoOutput[i]) * factor;
-							for (int j = 0; j < mConfig.numFDNChannels; j++)
-								reverbInput[i][j] += in;
-						}
+					mSource->ProcessAnechoic(bMonoOutput, bOutput.left, bOutput.right);
+					for (int i = 0; i < mConfig.numFrames; i++)
+					{
+						Real in = static_cast<Real>(bMonoOutput[i]) * factor;
+						for (int j = 0; j < mConfig.numFDNChannels; j++)
+							reverbInput[i][j] += in;
 					}
 				}
 				else

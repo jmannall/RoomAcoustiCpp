@@ -221,5 +221,8 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\ImageSource.h">
       <Filter>Header Files\Spatialiser</Filter>
     </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Directivity.h">
+      <Filter>Header Files\Spatialiser</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

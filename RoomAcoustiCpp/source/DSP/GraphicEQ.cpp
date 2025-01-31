@@ -113,6 +113,12 @@ namespace RAC
 			}
 			else
 			{
+				if (!valid)
+				{
+					valid = true;
+					ClearBuffers();
+				}
+
 				// when dB is used here. Factors of 20 are cancelled out.
 				Real g = (targetBandGains[0] + targetBandGains[1]) / 2.0;
 				dbGains[0] = std::max(g, EPS); // Prevent log10(0)
@@ -142,6 +148,12 @@ namespace RAC
 
 		void GraphicEQ::UpdateParameters()
 		{
+			if (currentFilterGains[0] == 0.0)
+			{
+				valid = false;
+				return;
+			}
+
 			int i = 1;
 
 			lowShelf.UpdateGain(currentFilterGains[i]);
@@ -154,11 +166,6 @@ namespace RAC
 			}
 
 			highShelf.UpdateGain(currentFilterGains[i]);
-
-			if (currentFilterGains[0] == 0)
-				valid = false;
-			else
-				valid = true;
 		}
 
 		////////////////////////////////////////

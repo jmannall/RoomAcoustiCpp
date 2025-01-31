@@ -60,6 +60,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Context.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Diffraction\Models.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Diffraction\Path.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Directivity.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Edge.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\FDN.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\ImageEdge.h" />

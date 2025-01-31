@@ -12,6 +12,7 @@
 
 // Spatialiser headers
 #include "Spatialiser/ImageEdge.h"
+#include "Spatialiser/Directivity.h"
 
 // Unity headers
 #include "Unity/UnityInterface.h"
@@ -26,15 +27,15 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		ImageEdge::ImageEdge(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const int numFrequencyBands) :
-			mRoom(room), mSourceManager(sourceManager), mReverb(reverb), numAbsorptionBands(numFrequencyBands), currentCycle(false), configChanged(true)
+		ImageEdge::ImageEdge(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const Coefficients& frequencyBands) :
+			mRoom(room), mSourceManager(sourceManager), mReverb(reverb), frequencyBands(frequencyBands), currentCycle(false), configChanged(true)
 		{
 			sp = std::vector<std::vector<ImageSourceData>>();
 			sp.push_back(std::vector<ImageSourceData>());
 
 			shared_ptr<Reverb> sharedReverb = mReverb.lock();
 			sharedReverb->GetReverbSourceDirections(reverbDirections);
-			reverbAbsorptions = std::vector<Absorption>(static_cast<int>(reverbDirections.size()), Absorption(numAbsorptionBands));
+			reverbAbsorptions = std::vector<Absorption>(static_cast<int>(reverbDirections.size()), Absorption(frequencyBands.Length()));
 		}
 
 		////////////////////////////////////////
@@ -81,7 +82,7 @@ namespace RAC
 			if (imageSources.size() != mSources.size())
 			{
 				imageSources.resize(mSources.size());
-				mSourceAudioDatas.resize(mSources.size());
+				mSourceAudioDatas.resize(mSources.size(), SourceAudioData(frequencyBands.Length(), false));
 				mCurrentCycles.resize(mSources.size());
 				doIEM = true;
 			}
@@ -93,7 +94,7 @@ namespace RAC
 				{
 					mCurrentCycles[i] = !mCurrentCycles[i];
 					currentCycle = mCurrentCycles[i];
-					mSourceAudioDatas[i] = ReflectPointInRoom(source, imageSources[i]);
+					ReflectPointInRoom(source, mSourceAudioDatas[i], imageSources[i]);
 				}
 
 #ifdef PROFILE_BACKGROUND_THREAD
@@ -312,28 +313,43 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		Real ImageEdge::CalculateDirectivity(const SourceData& source, const Vec3& point) const
+		Absorption ImageEdge::CalculateDirectivity(const SourceData& source, const Vec3& point) const
 		{
+			Absorption directivity(frequencyBands.Length());
 			switch (source.directivity)
 			{
 			case SourceDirectivity::omni:
-				return 1.0;
+			{ directivity = 1.0; break; }
 			case SourceDirectivity::cardioid:
 			{
 				Real angle = acos(Dot(source.forward, UnitVector(point - source.position)));
 				Real ret = 0.5 * (1 + cos(angle));
 				if (ret < EPS)
-					return EPS;
-				return ret;
+					directivity = EPS;
+				directivity = ret;
+				break;
+			}
+			case SourceDirectivity::genelec8020c:
+			{
+				Vec3 direction = UnitVector(point - source.position);
+				Vec3 localDirection = source.orientation.RotateVector(direction);
+
+				Real theta = acos(localDirection.z);
+				Real phi = atan2(localDirection.y, localDirection.x);
+
+				
+				directivity = GENELEC.Response(frequencyBands, theta, phi);
+				break;
 			}
 			default:
-				return 1.0;
+				directivity = 1.0;
 			}
+			return directivity;
 		}
 
 		////////////////////////////////////////
 
-		SourceAudioData ImageEdge::ReflectPointInRoom(const SourceData& source, ImageSourceDataMap& imageSources)
+		void ImageEdge::ReflectPointInRoom(const SourceData& source, SourceAudioData& direct, ImageSourceDataMap& imageSources)
 		{
 
 #ifdef PROFILE_BACKGROUND_THREAD
@@ -341,7 +357,6 @@ namespace RAC
 			BeginDirect();
 #endif
 
-			SourceAudioData direct = { 0.0, false };
 			bool lineOfSight = false;
 			// Direct sound
 			switch (mIEMConfig.direct)
@@ -357,7 +372,9 @@ namespace RAC
 			}
 
 			if (lineOfSight)
-				direct.first = CalculateDirectivity(source, mListenerPosition);
+				direct.directivity = CalculateDirectivity(source, mListenerPosition);
+			else
+				direct.directivity = 0.0;
 
 #ifdef PROFILE_BACKGROUND_THREAD
 			EndDirect();
@@ -367,13 +384,15 @@ namespace RAC
 			{
 				sp.clear();
 
-				direct.second = mIEMConfig.lateReverb;
+				direct.feedsFDN = mIEMConfig.lateReverb;
 				EraseOldEntries(imageSources);
 #ifdef PROFILE_BACKGROUND_THREAD
 				EndIEM();
 #endif
-				return direct;
+				return;
 			}
+			else
+				direct.feedsFDN = false;
 
 			if (sp.size() != mIEMConfig.order)
 				sp.resize(mIEMConfig.order, std::vector<ImageSourceData>());
@@ -387,7 +406,7 @@ namespace RAC
 			{
 				counter = FirstOrderReflections(source, imageSources, counter);
 
-				sp[0].resize(counter, ImageSourceData(numAbsorptionBands));
+				sp[0].resize(counter, ImageSourceData(frequencyBands.Length()));
 
 				if (mIEMConfig.order < 2)
 				{
@@ -395,19 +414,19 @@ namespace RAC
 #ifdef PROFILE_BACKGROUND_THREAD
 					EndIEM();
 #endif
-					return direct;
+					return;
 				}
 
 				HigherOrderPaths(source, imageSources);
 			}
 			else
-				sp[0].resize(counter, ImageSourceData(numAbsorptionBands));
+				sp[0].resize(counter, ImageSourceData(frequencyBands.Length()));
 
 			EraseOldEntries(imageSources);
 #ifdef PROFILE_BACKGROUND_THREAD
 			EndIEM();
 #endif
-			return direct;
+			return;
 		}
 
 		////////////////////////////////////////
@@ -437,7 +456,7 @@ namespace RAC
 					continue;
 
 
-				ImageSourceData& imageSource = counter < size ? sp[0][counter] : sp[0].emplace_back(numAbsorptionBands);
+				ImageSourceData& imageSource = counter < size ? sp[0][counter] : sp[0].emplace_back(frequencyBands.Length());
 				
 				if (counter < size)
 					imageSource.Clear();
@@ -497,7 +516,7 @@ namespace RAC
 				if (!it.second.ReflectPointInPlane(position, source.position))
 					continue;
 
-				ImageSourceData& imageSource = counter < size ? sp[0][counter] : sp[0].emplace_back(numAbsorptionBands);
+				ImageSourceData& imageSource = counter < size ? sp[0][counter] : sp[0].emplace_back(frequencyBands.Length());
 
 				imageSource.SetPreviousPlane(Vec4(it.second.GetD(), it.second.GetNormal()));
 
@@ -740,7 +759,7 @@ namespace RAC
 #endif
 				if (mIEMConfig.diffractedReflections == DiffractionSound::none)
 				{
-					sp[refIdx].resize(counter, ImageSourceData(numAbsorptionBands));
+					sp[refIdx].resize(counter, ImageSourceData(frequencyBands.Length()));
 					continue;
 				}
 #ifdef PROFILE_BACKGROUND_THREAD
@@ -838,7 +857,7 @@ namespace RAC
 					EndHigherOrderRefDiff();
 				}
 #endif
-				sp[refIdx].resize(counter, ImageSourceData(numAbsorptionBands));
+				sp[refIdx].resize(counter, ImageSourceData(frequencyBands.Length()));
 			}
 		}
 
@@ -846,8 +865,12 @@ namespace RAC
 
 		void ImageEdge::InitImageSource(const SourceData& source, const Vec3& intersection, ImageSourceData& imageSource, ImageSourceDataMap& imageSources, bool feedsFDN)
 		{
-			Real directivity = CalculateDirectivity(source, intersection);
-			imageSource.SetDirectivity(directivity);
+			Absorption directivity(frequencyBands.Length());
+			directivity = CalculateDirectivity(source, intersection);
+			imageSource.AddAbsorption(directivity);
+
+			/*Real directivity = CalculateDirectivity(source, intersection);
+			imageSource.SetDirectivity(directivity);*/
 
 			imageSource.SetDistance(mListenerPosition);
 			imageSource.Visible(feedsFDN);

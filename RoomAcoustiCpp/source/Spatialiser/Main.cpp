@@ -385,6 +385,7 @@ extern "C"
 	* The mapping is as follows:
 	* 0 -> omni
 	* 1 -> cardioid
+	* 2 -> genelec8020c
 	* 
 	* @param id The ID of the audio source to update.
 	* @param directivity The new directivity of the source.
@@ -397,6 +398,8 @@ extern "C"
 		{ UpdateSourceDirectivity(id, SourceDirectivity::omni); break; }
 		case(1):
 		{ UpdateSourceDirectivity(id, SourceDirectivity::cardioid); break; }
+		case(2):
+		{ UpdateSourceDirectivity(id, SourceDirectivity::genelec8020c); break; }
 		default:
 		{ UpdateSourceDirectivity(id, SourceDirectivity::omni); break; }
 		}

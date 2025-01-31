@@ -33,7 +33,15 @@ namespace RAC
 	{
 		//////////////////// Data structures ////////////////////
 
-		typedef std::pair<Real, bool> SourceAudioData;
+		// typedef std::pair<Absorption, bool> SourceAudioData;
+
+		struct SourceAudioData
+		{
+			Absorption directivity;
+			bool feedsFDN;
+
+			SourceAudioData(int len, bool feedsFDN) : directivity(len), feedsFDN(feedsFDN) {}
+		};
 
 		/**
 		* @brief Describes source position, orientation and directivity
@@ -106,7 +114,7 @@ namespace RAC
 			*/
 			inline void UpdateData(const SourceAudioData source, const ImageSourceDataMap& vSources)
 			{ 
-				{ lock_guard<mutex> lock(*dataMutex); targetGain = source.first; feedsFDN = source.second; }
+				{ lock_guard<mutex> lock(*dataMutex); directivityFilter.SetGain(source.directivity); feedsFDN = source.feedsFDN; }
 				targetImageSources = vSources;
 				UpdateImageSourceDataMap();
 				UpdateImageSources();
@@ -189,10 +197,11 @@ namespace RAC
 			SourceDirectivity mDirectivity;			// Source directivity
 			Buffer bStore;							// Internal audio buffer
 
-			Real targetGain;		// Target source gain
-			Real currentGain;		// Current source gain
-			Real reverbEnergy;		// Reverb energy based on directivity
-			bool feedsFDN;			// True if the source feeds the FDN
+			Real targetGain;				// Target source gain
+			Real currentGain;				// Current source gain
+			GraphicEQ directivityFilter;	// Directivity filter
+			Real reverbEnergy;				// Reverb energy based on directivity
+			bool feedsFDN;					// True if the source feeds the FDN
 
 			Vec3 currentPosition;			// Current source position
 			Vec4 currentOrientation;		// Current source orientation

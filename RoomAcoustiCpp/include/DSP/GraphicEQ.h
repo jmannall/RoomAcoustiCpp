@@ -121,6 +121,17 @@ namespace RAC
 					filter.ClearBuffers();
 				highShelf.ClearBuffers();
 			}
+
+			/**
+			* @return True if the filter is invalid, false otherwise
+			*/
+			inline bool Invalid() { return !valid; }
+
+			/**
+			* @return The overall gain of the filter
+			*/
+			inline Real GetDCGain() { return currentFilterGains[0]; }
+
 		private:
 
 			/**

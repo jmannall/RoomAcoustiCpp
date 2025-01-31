@@ -97,7 +97,7 @@ namespace RAC
 			mReverb = std::make_shared<Reverb>(&mCore, mConfig);
 			mRoom = std::make_shared<Room>(mConfig.frequencyBands.Length());
 			mSources = std::make_shared<SourceManager>(&mCore, mConfig);
-			mImageEdgeModel = std::make_shared<ImageEdge>(mRoom, mSources, mReverb, mConfig.frequencyBands.Length());
+			mImageEdgeModel = std::make_shared<ImageEdge>(mRoom, mSources, mReverb, mConfig.frequencyBands);
 			
 			// Initialize NNs
 			myNN_initialize();
@@ -349,7 +349,7 @@ namespace RAC
 			{
 				for (int i = 0; i < mConfig.numFrames; i++)
 					mInputBuffer[i] = static_cast<Real>(data[i]);
-				mSources->ProcessAudio(id, mInputBuffer, mReverbInput, mOutputBuffer);
+				mSources->ProcessAudio(id, mInputBuffer, mReverbInput, mOutputBuffer);				
 			}
 		}
 

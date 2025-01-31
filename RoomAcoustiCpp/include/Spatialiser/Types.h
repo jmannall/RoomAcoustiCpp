@@ -73,7 +73,8 @@ namespace RAC
 		enum class SourceDirectivity
 		{
 			omni,
-			cardioid
+			cardioid,
+			genelec8020c
 		};
 
 		enum class SpatialisationMode { quality, performance, none };
@@ -169,8 +170,11 @@ namespace RAC
 			* @param mode The spatialisation mode
 			*/
 			Config(int sampleRate, int numFrames, int numFDNChannels, Real lerpFactor, Real Q, Coefficients fBands, DiffractionModel model, SpatialisationMode mode) : 
-				fs(sampleRate), numFrames(numFrames), numFDNChannels(numFDNChannels), lerpFactor(1.0 / (static_cast<Real>(numFrames) * std::max(lerpFactor, 1.0 / static_cast<Real>(numFrames)))),
-				Q(Q), frequencyBands(fBands), diffractionModel(model), spatialisationMode(mode) {};
+				fs(sampleRate), numFrames(numFrames), numFDNChannels(numFDNChannels), lerpFactor(96.0 * lerpFactor / static_cast<Real>(sampleRate)),
+				Q(Q), frequencyBands(fBands), diffractionModel(model), spatialisationMode(mode)
+			{
+				this->lerpFactor = std::max(std::min(this->lerpFactor, 1.0), 1.0 / static_cast<Real>(sampleRate));
+			};
 		};
 	}
 }

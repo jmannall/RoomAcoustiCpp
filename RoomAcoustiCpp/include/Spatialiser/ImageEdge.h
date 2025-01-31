@@ -38,9 +38,9 @@ namespace RAC
 			* @param room Pointer to the room class
 			* @param sourceManager Pointer to the source manager class
 			* @param reverb Pointer to the late reverb class
-			* @param numFrequencyBands Number of frequency bands for graphic equalisers
+			* @param frequencyBands Frequency bands for graphic equalisers
 			*/
-			ImageEdge(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const int numFrequencyBands);
+			ImageEdge(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const Coefficients& numFrequencyBands);
 			
 			/**
 			* @brief Default deconstructor
@@ -156,17 +156,16 @@ namespace RAC
 			*
 			* @return The directivity of the source
 			*/
-			Real CalculateDirectivity(const SourceData& source, const Vec3& point) const;
+			Absorption CalculateDirectivity(const SourceData& source, const Vec3& point) const;
 
 			/**
 			* @brief Run the image edge model for the given source
 			*
 			* @param source The current source data to run the image edge model for
 			* @param imageSources The image source data to write to
-			*
-			* @return The direct sound audio data for the current source
+			* @param direct The direct sound audio data for the current source
 			*/
-			SourceAudioData ReflectPointInRoom(const SourceData& source, ImageSourceDataMap& imageSources);
+			void ReflectPointInRoom(const SourceData& source, SourceAudioData& direct, ImageSourceDataMap& imageSources);
 
 			/**
 			* @brief Find all first order diffractions
@@ -241,7 +240,7 @@ namespace RAC
 			std::vector<Vec3> reverbDirections;				// The directions of the late reverb sources
 			std::vector<Absorption> reverbAbsorptions;		// The absorption coefficients of the late reverb sources
 
-			int numAbsorptionBands;			// Number of frequency bands for graphic equalisers
+			Coefficients frequencyBands;	// Frequency bands for graphic equalisers
 			bool currentCycle;				// Stores the current cycle of the currently processed source
 			bool configChanged;				// True if the image edge model configuration has changed since the last run
 

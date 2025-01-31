@@ -21,6 +21,29 @@ namespace RAC
 	{
 	public:
 
+		TEST_METHOD(InvalidGraphicEQ)
+		{
+			Coefficients gain = Coefficients(std::vector<Real>(5, 0.0));
+			Coefficients fc = Coefficients({ 250.0, 500.0, 1000.0, 2000.0, 4000.0 });
+			Real Q = 0.98;
+			int fs = 48e3;
+
+			GraphicEQ eq = GraphicEQ(gain, fc, Q, fs);
+
+			int numFrames = 256;
+			Real lerpFactor = 1.0 / static_cast<Real>(fs);
+			Buffer in = Buffer(numFrames);
+			in[0] = 1.0;
+			Buffer out = Buffer(numFrames);
+			eq.ProcessAudio(in, out, numFrames, lerpFactor);
+
+			eq.SetGain(std::vector<Real>(5, 1.0));
+			eq.ProcessAudio(in, out, numFrames, lerpFactor);
+
+			Assert::IsFalse(std::isnan(out[0]), L"Filter stuck as invalid");
+			Assert::IsFalse(out[1] == 0.0, L"Filter at zero");
+		}
+
 		TEST_METHOD(ProcessGraphicEQ)
 		{
 			// std::string filePath = _SOLUTIONDIR;
