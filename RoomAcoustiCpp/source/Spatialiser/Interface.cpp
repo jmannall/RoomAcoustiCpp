@@ -246,5 +246,18 @@ namespace RAC
 			else
 				*bufferPtr = nullptr;
 		}
+
+		////////////////////////////////////////
+
+#ifdef USE_MOD_ART
+		void GetOutput_MOD_ART(float** bufferPtr, const float* data)
+		{
+			auto context = GetContext();
+			if (context)
+				context->GetOutput_MOD_ART(bufferPtr, data);
+			else
+				*bufferPtr = nullptr;
+		}
+#endif
 	}
 }

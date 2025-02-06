@@ -239,6 +239,10 @@ namespace RAC
 			*/
 			void GetOutput(float** bufferPtr);
 
+#ifdef USE_MOD_ART
+			void GetOutput_MOD_ART(float** bufferPtr, const float* data);
+#endif
+
 		private:
 			/**
 			* Spatialiser
@@ -263,6 +267,9 @@ namespace RAC
 			Matrix mReverbInput;	// Audio reverb input matrix
 			BufferF mSendBuffer;	// Audio send buffer (float)
 
+#ifdef USE_MOD_ART
+			Matrix mMOD_ARTReverbInput;	// Audio reverb MOD_ART input matrix
+#endif
 			/**
 			* Handles
 			*/

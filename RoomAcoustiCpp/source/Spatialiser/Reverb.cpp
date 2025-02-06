@@ -206,6 +206,42 @@ namespace RAC
 #endif
 		}
 
+		////////////////////////////////////////
+
+#ifdef USE_MOD_ART
+		void ReverbSource::ProcessAudio_MOD_ART(Buffer& outputBuffer)
+		{
+#ifdef PROFILE_AUDIO_THREAD
+			BeginReverbSource();
+#endif
+			for (int i = 0; i < mConfig.numFrames; i++)
+				bInput[i] = static_cast<float>(inputBuffer[i]);
+
+#ifdef PROFILE_AUDIO_THREAD
+			Begin3DTI();
+#endif
+			{
+				lock_guard<mutex> lock(tuneInMutex);
+				mSource->SetBuffer(bInput);
+
+				mSource->ProcessAnechoic(bOutput.left, bOutput.right);
+			}
+#ifdef PROFILE_AUDIO_THREAD
+			End3DTI();
+#endif
+
+			int j = 0;
+			for (int i = 0; i < mConfig.numFrames; i++)
+			{
+				outputBuffer[j++] += static_cast<Real>(bOutput.left[i]);
+				outputBuffer[j++] += static_cast<Real>(bOutput.right[i]);
+			}
+#ifdef PROFILE_AUDIO_THREAD
+			EndReverbSource();
+#endif
+		}
+#endif
+
 		//////////////////// Reverb class ////////////////////
 
 		////////////////////////////////////////
@@ -359,6 +395,24 @@ namespace RAC
 #endif
 			}
 		}
+
+		////////////////////////////////////////
+
+#ifdef USE_MOD_ART
+		void Reverb::ProcessAudio_MOD_ART(const Matrix& data, Buffer& outputBuffer)
+		{
+			int j = 0;
+			for (auto& source : mReverbSources)
+			{
+				source.AddInput(data.GetRow(j));
+				j++;
+			}
+
+			// Process buffer of each channel
+			for (auto& source : mReverbSources)
+				source.ProcessAudio_MOD_ART(outputBuffer);
+		}
+#endif
 
 		////////////////////////////////////////
 

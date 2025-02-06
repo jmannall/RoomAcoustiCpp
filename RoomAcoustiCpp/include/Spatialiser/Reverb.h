@@ -91,11 +91,24 @@ namespace RAC
 			void AddInput(const Real in, const int& i) { inputBuffer[i] = in; }
 
 			/**
+			* @brief Update the reverb source input buffer
+			*
+			* @params in The new input buffer
+			*/
+#ifdef USE_MOD_ART
+			void AddInput(const Buffer& in) { inputBuffer = in; }
+#endif
+
+			/**
 			* @brief Process the current reverb source audio buffer
 			* 
 			* @params outputBuffer The output buffer to write to
 			*/
 			void ProcessAudio(Buffer& outputBuffer);
+
+#ifdef USE_MOD_ART
+			void ProcessAudio_MOD_ART(Buffer& outputBuffer);
+#endif
 
 			/**
 			* @brief Reset the internal buffers to zero
@@ -190,6 +203,10 @@ namespace RAC
 			* @params ouputBuffer Stereo output buffer to write to
 			*/
 			void ProcessAudio(const Matrix& data, Buffer& outputBuffer);
+
+#ifdef USE_MOD_ART
+			void ProcessAudio_MOD_ART(const Matrix& data, Buffer& outputBuffer);
+#endif
 
 			/**
 			* @brief Updates the target T60

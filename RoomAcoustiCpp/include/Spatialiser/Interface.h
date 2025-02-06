@@ -187,6 +187,10 @@ namespace RAC
 		* @param bufferPtr A pointer to a float pointer. This will be set to point to the output buffer.
 		*/
 		void GetOutput(float** bufferPtr);
+
+#ifdef USE_MOD_ART
+		void GetOutput_MOD_ART(float** bufferPtr, const float* data);
+#endif
 	}
 }
 #endif

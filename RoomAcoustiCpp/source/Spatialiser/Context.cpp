@@ -109,6 +109,9 @@ namespace RAC
 			mOutputBuffer = Buffer(2 * mConfig.numFrames); // Stereo output buffer
 			mSendBuffer = BufferF(2 * mConfig.numFrames);
 			mReverbInput = Matrix(mConfig.numFrames, mConfig.numFDNChannels);
+#ifdef USE_MOD_ART
+			mMOD_ARTReverbInput = Matrix(mConfig.numFDNChannels, mConfig.numFrames);
+#endif
 		}
 
 		////////////////////////////////////////
@@ -375,5 +378,33 @@ namespace RAC
 			// Reset output buffer
 			mOutputBuffer.ResetBuffer();
 		}
+
+		////////////////////////////////////////
+
+#ifdef USE_MOD_ART
+		void Context::GetOutput_MOD_ART(float** bufferPtr, const float* data)
+		{
+			for (int i = 0; i < mConfig.numFDNChannels; i++)
+			{
+				for (int j = 0; j < mConfig.numFrames; j++)
+					mMOD_ARTReverbInput[i][j] = data[i + j * mConfig.numFDNChannels];
+			}
+
+			// Process reverb
+			unique_lock<mutex> lock(audioMutex, std::defer_lock);
+			if (lock.try_lock())
+				mReverb->ProcessAudio_MOD_ART(mMOD_ARTReverbInput, mOutputBuffer);
+			if (!lock.owns_lock())
+			{
+				while (lock.try_lock() == false) { std::this_thread::yield(); }
+			}
+			// Copy output to send and set pointer
+			mSendBuffer = mOutputBuffer;
+			*bufferPtr = &mSendBuffer[0];
+
+			// Reset output buffer
+			mOutputBuffer.ResetBuffer();
+		}
+#endif
 	}
 }
