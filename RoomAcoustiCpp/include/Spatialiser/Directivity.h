@@ -14,6 +14,9 @@
 #include "Common/Complex.h"
 #include "Common/Coefficients.h"
 
+// #define HAS_GSL
+
+#ifdef HAS_GSL
 // GSL headers
 #include <gsl/gsl_sf_legendre.h>
 
@@ -225,8 +228,7 @@ namespace RAC
 		* @brief Genelec 8020c directivity data
 		*/
 		const Directivity GENELEC = Directivity({ 62.5, 125.0, 250.0, 500.0, 1e3, 2e3, 4e3, 8e3, 16e3 }, GENELEC_DIRECTIVITY);
-
 	}
 }
-
+#endif
 #endif

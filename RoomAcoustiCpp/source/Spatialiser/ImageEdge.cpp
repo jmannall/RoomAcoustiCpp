@@ -329,6 +329,7 @@ namespace RAC
 				directivity = ret;
 				break;
 			}
+#ifdef HAS_GSL
 			case SourceDirectivity::genelec8020c:
 			{
 				Vec3 direction = UnitVector(point - source.position);
@@ -341,6 +342,7 @@ namespace RAC
 				directivity = GENELEC.Response(frequencyBands, theta, phi);
 				break;
 			}
+#endif
 			default:
 				directivity = 1.0;
 			}
