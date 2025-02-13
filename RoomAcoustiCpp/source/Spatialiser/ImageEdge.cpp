@@ -408,7 +408,7 @@ namespace RAC
 			{
 				counter = FirstOrderReflections(source, imageSources, counter);
 
-				sp[0].resize(counter, ImageSourceData(frequencyBands.Length()));
+				sp[0].resize(counter, ImageSourceData(frequencyBands.Length(), source.id));
 
 				if (mIEMConfig.order < 2)
 				{
@@ -422,7 +422,7 @@ namespace RAC
 				HigherOrderPaths(source, imageSources);
 			}
 			else
-				sp[0].resize(counter, ImageSourceData(frequencyBands.Length()));
+				sp[0].resize(counter, ImageSourceData(frequencyBands.Length(), source.id));
 
 			EraseOldEntries(imageSources);
 #ifdef PROFILE_BACKGROUND_THREAD
@@ -458,10 +458,10 @@ namespace RAC
 					continue;
 
 
-				ImageSourceData& imageSource = counter < size ? sp[0][counter] : sp[0].emplace_back(frequencyBands.Length());
+				ImageSourceData& imageSource = counter < size ? sp[0][counter] : sp[0].emplace_back(frequencyBands.Length(), source.id);
 				
 				if (counter < size)
-					imageSource.Clear();
+					imageSource.Clear(source.id);
 				counter++;
 
 				imageSource.Valid();
@@ -518,12 +518,12 @@ namespace RAC
 				if (!it.second.ReflectPointInPlane(position, source.position))
 					continue;
 
-				ImageSourceData& imageSource = counter < size ? sp[0][counter] : sp[0].emplace_back(frequencyBands.Length());
+				ImageSourceData& imageSource = counter < size ? sp[0][counter] : sp[0].emplace_back(frequencyBands.Length(), source.id);
 
 				imageSource.SetPreviousPlane(Vec4(it.second.GetD(), it.second.GetNormal()));
 
 				if (counter < size)
-					imageSource.Clear();
+					imageSource.Clear(source.id);
 				counter++;
 
 				imageSource.Valid();
@@ -761,7 +761,7 @@ namespace RAC
 #endif
 				if (mIEMConfig.diffractedReflections == DiffractionSound::none)
 				{
-					sp[refIdx].resize(counter, ImageSourceData(frequencyBands.Length()));
+					sp[refIdx].resize(counter, ImageSourceData(frequencyBands.Length(), source.id));
 					continue;
 				}
 #ifdef PROFILE_BACKGROUND_THREAD
@@ -859,7 +859,7 @@ namespace RAC
 					EndHigherOrderRefDiff();
 				}
 #endif
-				sp[refIdx].resize(counter, ImageSourceData(frequencyBands.Length()));
+				sp[refIdx].resize(counter, ImageSourceData(frequencyBands.Length(), source.id));
 			}
 		}
 
@@ -891,7 +891,7 @@ namespace RAC
 			{
 #ifdef DEBUG_IEM
 				for (int j = 0; j < reverbDirections.size(); j++)
-					Debug::remove_path("rev_" + IntToStr(j));
+					Debug::remove_path(IntToStr(j) + "l");
 #endif
 				return;
 			}
@@ -903,7 +903,7 @@ namespace RAC
 			for (int j = 0; j < reverbDirections.size(); j++)
 			{
 #ifdef DEBUG_IEM
-				Debug::send_path("rev_" + IntToStr(j), {mListenerPosition}, reverbDirections[j]);
+				Debug::send_path(IntToStr(j) + "l", {mListenerPosition}, reverbDirections[j]);
 #endif
 				std::vector<PlaneDistanceID> ks = std::vector(mPlanes.size(), PlaneDistanceID(0.0, -1));
 				point = mListenerPosition + reverbDirections[j];

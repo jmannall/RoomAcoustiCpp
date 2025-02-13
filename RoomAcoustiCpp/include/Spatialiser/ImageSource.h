@@ -98,8 +98,11 @@ namespace RAC
 			* 
 			* @param numFrequencyBands The number of frequency bands for applying wall absorption
 			*/
-			ImageSourceData(int numFrequencyBands) : valid(false), visible(false), feedsFDN(false), reflection(false), diffraction(false), key(""),
-				mAbsorption(numFrequencyBands), mDirectivity(1.0), distance(0.0), lastUpdatedCycle(false), idKey{'0'}, reflectionKey{'r'}, diffractionKey{'d'} {};
+			ImageSourceData(int numFrequencyBands, int sourceID) : valid(false), visible(false), feedsFDN(false), reflection(false), diffraction(false),
+				mAbsorption(numFrequencyBands), mDirectivity(1.0), distance(0.0), lastUpdatedCycle(false), idKey{ '0' }, sourceKey{ 's' }, reflectionKey { 'r' }, diffractionKey{ 'd' }
+			{
+				AddSourceID(sourceID);
+			};
 
 			/**
 			* @brief Default deconstructor
@@ -280,7 +283,7 @@ namespace RAC
 			/**
 			* @brief Clears the image source data
 			*/
-			void Clear();
+			void Clear(int sourceID);
 
 			/**
 			* @brief Updates the image source data using another image source
@@ -360,8 +363,16 @@ namespace RAC
 
 		private:
 
+			/**
+			* @brief Adds the sourceID to the key
+			*
+			* @param id The ID of the source
+			*/
+			void AddSourceID(const size_t id);
+
 			std::string key;							// String key that defines the image source path
-			std::array<char, 21> idKey;					// Char that stores the ID of a plane or edge
+			std::array<char, 21> idKey;					// Char that stores the ID of a plane, edge or source
+			std::array<char, 1> sourceKey;				// Char that stores the source key
 			std::array<char, 1> reflectionKey;			// Char that stores the reflection key
 			std::array<char, 1> diffractionKey;			// Char that stores the diffraction key
 

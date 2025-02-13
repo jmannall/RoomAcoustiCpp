@@ -23,12 +23,29 @@ namespace RAC
 {
 	using namespace Common;
 	using namespace DSP;
+	using namespace Unity;
 	namespace Spatialiser
 	{
 
 		//////////////////// ImageSourceData class ////////////////////
 
 		////////////////////////////////////////
+
+		void ImageSourceData::AddSourceID(const size_t id)
+		{
+			key = "";
+			auto [ptr, ec] = std::to_chars(idKey.data(), idKey.data() + idKey.size(), id);
+			if (ec == std::errc()) // Null-terminate manually if conversion is successful
+				*ptr = '\0';
+			else// Failed to convert id to char array
+			{
+				key += sourceKey[0];
+				return;
+			}
+
+			key += idKey.data();
+			key += sourceKey[0];
+		}
 
 		void ImageSourceData::AddPlaneID(const size_t id)
 		{
@@ -111,7 +128,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void ImageSourceData::Clear()
+		void ImageSourceData::Clear(int sourceID)
 		{
 			Reset();
 			pathParts.clear();
@@ -119,7 +136,7 @@ namespace RAC
 			mEdges.clear();
 			reflection = false;
 			diffraction = false;
-			key = "";
+			AddSourceID(sourceID);
 		}
 
 		////////////////////////////////////////
