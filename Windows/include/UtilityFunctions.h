@@ -8,6 +8,9 @@
 #include <vector>
 #include <iostream>
 
+const std::string dir = _SOLUTIONDIR;
+const std::string filePath = dir + "UnitTestData\\";
+
 inline std::string IntToStr(int x)
 {
 	std::stringstream ss;

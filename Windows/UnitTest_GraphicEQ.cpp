@@ -14,9 +14,6 @@ namespace RAC
 
 #pragma optimize("", off)
 
-	extern std::string dir = _SOLUTIONDIR;
-	extern std::string filePath = dir + "UnitTestData\\";
-
 	TEST_CLASS(GraphicEQ_Class)
 	{
 	public:
