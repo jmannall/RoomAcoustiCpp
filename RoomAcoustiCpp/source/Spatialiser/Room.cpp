@@ -79,45 +79,45 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Room::AssignWallToPlane(const size_t idW, Wall& wall)
+		void Room::AssignWallToPlane(const size_t wallID, Wall& wall)
 		{
 			std::lock_guard<std::mutex> lock(mPlaneMutex);
-			for (auto& it : mPlanes)
+			for (auto& [planeID, plane] : mPlanes)
 			{
-				if (it.second.IsCoplanar(wall))
+				if (plane.IsCoplanar(wall))
 				{
-					it.second.AddWall(idW);
-					wall.SetPlaneID(it.first);
+					plane.AddWall(wallID);
+					wall.SetPlaneID(planeID);
 					return;
 				}
 			}
 
-			size_t idP;
+			size_t planeID;
 			// Initialise a new plane
 			if (!mEmptyPlaneSlots.empty()) // Assign plane to an existing ID
 			{
-				idP = mEmptyPlaneSlots.back();
+				planeID = mEmptyPlaneSlots.back();
 				mEmptyPlaneSlots.pop_back();
 			}
 			else // Create a new ID
-				idP = nextPlane++;
+				planeID = nextPlane++;
 
-			mPlanes.insert_or_assign(idP, Plane(idW, wall));
-			wall.SetPlaneID(idP);
+			mPlanes.insert_or_assign(planeID, Plane(wallID, wall));
+			wall.SetPlaneID(planeID);
 			return;
 		}
 
 		////////////////////////////////////////
 
-		void Room::RemoveWallFromPlane(const size_t idP, const size_t idW)
+		void Room::RemoveWallFromPlane(const size_t planeID, const size_t wallID)
 		{
 			std::lock_guard<std::mutex> lock(mPlaneMutex);
-			auto itP = mPlanes.find(idP);
+			auto itP = mPlanes.find(planeID);
 
 			if (itP == mPlanes.end()) // case: plane does not exist
 				return;
 
-			if (itP->second.RemoveWall(idW)) // If plane contains no other walls
+			if (itP->second.RemoveWall(wallID)) // If plane contains no other walls
 			{
 				mPlanes.erase(itP);
 				while (!mPlaneTimers.empty() && difftime(time(nullptr), mPlaneTimers.front().time) > 60)
@@ -125,7 +125,7 @@ namespace RAC
 					mEmptyPlaneSlots.push_back(mPlaneTimers.front().id);
 					mPlaneTimers.erase(mPlaneTimers.begin());
 				}
-				mPlaneTimers.push_back(TimerPair(idP));
+				mPlaneTimers.push_back(TimerPair(planeID));
 			}
 		}
 
@@ -174,30 +174,30 @@ namespace RAC
 		{
 			std::vector<Edge> edges;
 			std::lock_guard<std::mutex> lock(mWallMutex);
-			auto itA = mWalls.find(id);
+			const auto itA = mWalls.find(id);
 			if (itA != mWalls.end())
 			{
-				for (auto& itB : mWalls)
-					FindEdges(itA->second, itB.second, itA->first, itB.first, edges);
-				for (auto& edge : edges)
+				for (const auto& [wallID, wall] : mWalls)
+					FindEdges(itA->second, wall, itA->first, wallID, edges);
+				for (const Edge& edge : edges)
 					AddEdge(edge);
 			}
 		}
 
 		////////////////////////////////////////
 
-		void Room::InitEdges(const size_t id, const std::vector<size_t>& IDsW)
+		void Room::InitEdges(const size_t id, const std::vector<size_t>& wallIDs)
 		{
 			std::vector<Edge> edges;
 			auto itA = mWalls.find(id);
 			if (itA != mWalls.end())
 			{
-				for (auto& itB : mWalls)
+				for (const auto& [wallID, wall] : mWalls)
 				{
-					if (std::find(IDsW.begin(), IDsW.end(), itB.first) == IDsW.end())
-						FindEdges(itA->second, itB.second, itA->first, itB.first, edges);
+					if (std::find(wallIDs.begin(), wallIDs.end(), wallID) == wallIDs.end())
+						FindEdges(itA->second, wall, itA->first, wallID, edges);
 				}
-				for (auto& edge : edges)
+				for (const Edge& edge : edges)
 					AddEdge(edge);
 			}
 		}
@@ -320,7 +320,7 @@ namespace RAC
 					if (idxB == numB)
 						idxB = 0;
 					bool validEdge = verticesA[idxA] == verticesB[idxB]; // Must be this way to ensure normals not twisted. (right hand rule) therefore one rotated up the edge one rotates down
-					
+
 					if (!validEdge)
 					{
 						idxA = i + 1;
@@ -345,7 +345,7 @@ namespace RAC
 							// verticesA[idxA] - verticesA[i] give vector from base to top of edge
 							Vec3 test1 = UnitVectorRound(Cross(wallA.GetNormal(), wallB.GetNormal()));
 							Vec3 test2 = UnitVectorRound(verticesA[idxA] - verticesA[i]);
-							
+
 							if (test1 == test2) // Check returns correct angle type
 							{
 								edges.emplace_back(verticesA[i], verticesA[idxA], wallA.GetNormal(), wallB.GetNormal(), idA, idB, wallA.GetPlaneID(), wallB.GetPlaneID());
@@ -376,7 +376,7 @@ namespace RAC
 			auto it = mEdges.find(id);
 			if (it == mEdges.end()) { return; } // case: edge does not exist
 			else { it->second = edge; } // case: edge does exist
-			
+
 #ifdef DEBUG_GEOMETRY
 			Debug::send_path(std::to_string(id) + "e", { edge.GetBase() }, edge.GetTop());
 #endif
@@ -386,26 +386,26 @@ namespace RAC
 
 		bool Room::IsCoplanarEdge(const Edge& edge)
 		{
-			IDPair wallIds = edge.GetWallIDs();
+			IDPair edgeWallIDs = edge.GetWallIDs();
 			{
 				std::lock_guard<std::mutex> lock(mPlaneMutex);
-				for (auto& itP : mPlanes)
+				for (const auto& [planeID, plane] : mPlanes)
 				{
-					if (itP.second.PointPlanePosition(edge.GetBase()) != 0.0)
+					if (plane.PointPlanePosition(edge.GetBase()) != 0.0)
 						continue;
 
-					if (itP.second.PointPlanePosition(edge.GetTop()) != 0.0)
+					if (plane.PointPlanePosition(edge.GetTop()) != 0.0)
 						continue;
 
-					auto walls = itP.second.GetWalls();
-					Vec3 start = edge.GetMidPoint() + itP.second.GetNormal();
-					Vec3 end = edge.GetMidPoint() - itP.second.GetNormal();
-					for (auto& id : walls)
+					std::vector<size_t> wallIDs = plane.GetWalls();
+					Vec3 start = edge.GetMidPoint() + plane.GetNormal();
+					Vec3 end = edge.GetMidPoint() - plane.GetNormal();
+					for (const size_t wallID : wallIDs)
 					{
-						if (id == wallIds.first || id == wallIds.second)
+						if (wallID == edgeWallIDs.first || wallID == edgeWallIDs.second)
 							continue;
 
-						auto itW = mWalls.find(id);
+						auto itW = mWalls.find(wallID);
 						if (itW != mWalls.end())
 						{
 							if (itW->second.LineWallObstruction(start, end))
@@ -419,45 +419,45 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Room::RemoveEdge(const size_t idE, const size_t idW)
+		void Room::RemoveEdge(const size_t edgeID, const size_t wallID)
 		{
-			auto itE = mEdges.find(idE);
+			auto itE = mEdges.find(edgeID);
 			if (itE != mEdges.end())
 			{
 #ifdef DEBUG_REMOVE
 				Debug::Log("Remove Edge", Colour::Red);
 #endif
-				size_t id = itE->second.GetWallID(idW);
+				size_t id = itE->second.GetWallID(wallID);
 				auto itW = mWalls.find(id);
 				if (itW != mWalls.end()) // case: wall exists
-					itW->second.RemoveEdge(idE);
+					itW->second.RemoveEdge(edgeID);
 
 #ifdef DEBUG_IEM
-				Debug::remove_path(std::to_string(idE) + "e");
+				Debug::remove_path(std::to_string(edgeID) + "e");
 #endif
-				mEdges.erase(idE);
+				mEdges.erase(edgeID);
 				while (!mEdgeTimers.empty() && difftime(time(nullptr), mEdgeTimers.front().time) > 60)
 				{
 					mEmptyEdgeSlots.push_back(mEdgeTimers.front().id);
 					mEdgeTimers.erase(mEdgeTimers.begin());
 				}
-				mEdgeTimers.push_back(TimerPair(idE));
+				mEdgeTimers.push_back(TimerPair(edgeID));
 			}
 		}
 
 		////////////////////////////////////////
 
-		void Room::RemoveEdge(const size_t idE)
+		void Room::RemoveEdge(const size_t edgeID)
 		{
-			auto itE = mEdges.find(idE);
+			auto itE = mEdges.find(edgeID);
 			if (itE != mEdges.end())
 			{
-				IDPair ids = itE->second.GetWallIDs();
-				auto itW = mWalls.find(ids.first);
+				IDPair wallIDs = itE->second.GetWallIDs();
+				auto itW = mWalls.find(wallIDs.first);
 				if (itW != mWalls.end()) // case: wall exists
-					itW->second.RemoveEdge(idE);
+					itW->second.RemoveEdge(edgeID);
 
-				RemoveEdge(idE, ids.first);
+				RemoveEdge(edgeID, wallIDs.first);
 			}
 		}
 
@@ -469,33 +469,33 @@ namespace RAC
 			std::lock_guard<std::mutex> lock(mWallMutex);
 			{
 				std::lock_guard<std::mutex> lock(mPlaneMutex);
-				for (auto& itP : mPlanes)
+				for (auto& [planeID, plane] : mPlanes)
 				{
 					bool updatePlane = true;
-					std::vector<size_t> ids = itP.second.GetWalls();
-					for (auto& id : ids)
+					std::vector<size_t> wallIDs = plane.GetWalls();
+					for (const size_t wallID : wallIDs)
 					{
-						auto itW = mWalls.find(id);
+						auto itW = mWalls.find(wallID);
 						if (itW == mWalls.end()) // case: wall does not exist
-							freeWalls.insert_or_assign(itP.first, id);
+							freeWalls.insert_or_assign(planeID, wallID);
 						else // case: wall does exist
 						{
 							if (updatePlane)
 							{
-								itP.second.Update(itW->second);
+								plane.Update(itW->second);
 								updatePlane = false;
 							}
 							// If not coplanar - Add to freeWalls
-							else if (!itP.second.IsCoplanar(itW->second))
-								freeWalls.insert_or_assign(itP.first, id);
+							else if (!plane.IsCoplanar(itW->second))
+								freeWalls.insert_or_assign(planeID, wallID);
 						}
 					}
 				}
 			}
-			for (auto& it : freeWalls)
+			for (const auto& [wallID, wall] : freeWalls)
 			{
-				RemoveWallFromPlane(it.first, it.second);
-				AssignWallToPlane(it.second);
+				RemoveWallFromPlane(wallID, wall);
+				AssignWallToPlane(wall);
 			}
 			RecordChange();
 		}
@@ -509,9 +509,9 @@ namespace RAC
 			{
 				std::vector<size_t> removeIDs;
 				std::lock_guard<std::mutex> lock(mEdgeMutex);
-				for (auto& itE : mEdges)
+				for (const auto& [edgeID, edge] : mEdges)
 				{
-					IDPair ids = itE.second.GetWallIDs();
+					IDPair ids = edge.GetWallIDs();
 					std::vector<Edge> edges;
 					std::vector<size_t> IDs;
 					FindEdges(ids.first, ids.second, edges, IDs);
@@ -521,35 +521,35 @@ namespace RAC
 					else if (edges.size() > 1)
 						UpdateEdges(IDs, edges);
 					else
-						removeIDs.push_back(itE.first);
+						removeIDs.push_back(edgeID);
 				}
 				for (size_t id : removeIDs)
 					RemoveEdge(id);
 			}
-			for (auto& itW : mWalls)
+			for (const auto& [wallID, wall] : mWalls)
 			{
-				if (itW.second.EmptyEdges())
+				if (wall.EmptyEdges())
 				{
-					std::vector<size_t> IDs = itW.second.GetEdges();
-					std::vector<size_t> IDsW;
+					std::vector<size_t> edgeIDs = wall.GetEdges();
+					std::vector<size_t> wallIDs;
 					{
 						std::lock_guard<std::mutex> lock(mEdgeMutex);
-						for (auto& id : IDs)
+						for (const size_t edgeID : edgeIDs)
 						{
 
-							auto it = mEdges.find(id);
+							auto it = mEdges.find(edgeID);
 							if (it != mEdges.end()) // case: edge does exist
-								IDsW.push_back(it->second.GetWallID(itW.first));
+								wallIDs.push_back(it->second.GetWallID(wallID));
 						}
 					}
-					InitEdges(itW.first, IDsW);
+					InitEdges(wallID, wallIDs);
 				}
 			}
 			RecordChange();
 		}
 
 		////////////////////////////////////////
-		
+
 		Coefficients Room::GetReverbTime()
 		{
 			if (mVolume <= 0.0)
@@ -560,21 +560,21 @@ namespace RAC
 
 			{
 				std::lock_guard<std::mutex> lock(mWallMutex);
-				for (const auto& it : mWalls)
+				for (const auto& [wallID, wall] : mWalls)
 				{
-					absorption -= (it.second.GetAbsorption() * it.second.GetAbsorption() - 1.0) * it.second.GetArea();
-					surfaceArea += it.second.GetArea();
+					absorption -= (wall.GetAbsorption() * wall.GetAbsorption() - 1.0) * wall.GetArea();
+					surfaceArea += wall.GetArea();
 				}
 			}
 
 			switch (reverbFormula)
 			{
-				case(ReverbFormula::Sabine):
-					return Sabine(absorption);
-				case(ReverbFormula::Eyring):
-					return Eyring(absorption, surfaceArea);
-				default:
-					return Coefficients(numAbsorptionBands);
+			case(ReverbFormula::Sabine):
+				return Sabine(absorption);
+			case(ReverbFormula::Eyring):
+				return Eyring(absorption, surfaceArea);
+			default:
+				return Coefficients(numAbsorptionBands);
 			}
 		}
 

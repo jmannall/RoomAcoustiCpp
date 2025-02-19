@@ -5,12 +5,12 @@
 *
 */
 
-#ifndef Common_vec4_h
-#define Common_vec4_h
+#ifndef Common_Vec4_h
+#define Common_Vec4_h
 
 // Common headers
 #include "Common/Types.h"
-#include "Common/vec3.h"
+#include "Common/Vec3.h"
 
 namespace RAC
 {

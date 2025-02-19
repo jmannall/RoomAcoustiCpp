@@ -123,12 +123,12 @@ namespace RAC
 		void ImageEdge::UpdateRValid()
 		{
 			// Determine if receiver is in front or behind plane face
-			for (auto& it : mPlanes)
-				it.second.SetReceiverValid(mListenerPosition);
+			for (auto& [planeID, plane] : mPlanes)
+				plane.SetReceiverValid(mListenerPosition);
 
 			// Determine where receiver lies around an edge
-			for (auto& it : mEdges)
-				it.second.SetReceiverZone(mListenerPosition);
+			for (auto& [edgeID, edge] : mEdges)
+				edge.SetReceiverZone(mListenerPosition);
 		}
 
 		////////////////////////////////////////
@@ -207,9 +207,9 @@ namespace RAC
 
 		bool ImageEdge::LineWallIntersection(const Vec3& start, const Vec3& end, const std::vector<size_t>& wallIDs, Absorption& absorption, Vec3& intersection) const
 		{
-			for (auto& idW : wallIDs)
+			for (const size_t wallID : wallIDs)
 			{
-				auto itW = mWalls.find(idW);
+				auto itW = mWalls.find(wallID);
 				if (itW == mWalls.end()) // case: wall doesn't exist
 					continue;
 
@@ -271,13 +271,13 @@ namespace RAC
 
 		bool ImageEdge::LineRoomObstruction(const Vec3& start, const Vec3& end, const std::unordered_set<size_t>& excludedPlaneIds) const
 		{
-			for (const auto& itP : mPlanes)
+			for (const auto& [planeID, plane] : mPlanes)
 			{
 				// Skip excluded planes
-				if (excludedPlaneIds.find(itP.first) != excludedPlaneIds.end())
+				if (excludedPlaneIds.find(planeID) != excludedPlaneIds.end())
 					continue;
 
-				if (LinePlaneObstruction(start, end, itP.second))
+				if (LinePlaneObstruction(start, end, plane))
 					return true;
 			}
 			return false;
@@ -299,9 +299,9 @@ namespace RAC
 
 		bool ImageEdge::LineWallObstruction(const Vec3& start, const Vec3& end, const std::vector<size_t>& wallIDs) const
 		{
-			for (auto& idW : wallIDs)
+			for (const size_t wallID : wallIDs)
 			{
-				auto itW = mWalls.find(idW);
+				auto itW = mWalls.find(wallID);
 				if (itW == mWalls.end()) // case: wall doesn't exist
 					continue;
 
@@ -374,9 +374,19 @@ namespace RAC
 			}
 
 			if (lineOfSight)
+			{
 				direct.directivity = CalculateDirectivity(source, mListenerPosition);
+#ifdef DEBUG_IEM
+				Debug::send_path(IntToStr(source.id) + "s", { source.position }, mListenerPosition);
+#endif
+			}
 			else
+			{
 				direct.directivity = 0.0;
+#ifdef DEBUG_IEM
+				Debug::remove_path(IntToStr(source.id) + "s");
+#endif
+			}
 
 #ifdef PROFILE_BACKGROUND_THREAD
 			EndDirect();
@@ -443,13 +453,13 @@ namespace RAC
 
 			bool feedsFDN = mIEMConfig.order == 1 && mIEMConfig.lateReverb;
 			Vec3 position;
-			for (const auto& it : mEdges)
+			for (const auto& [edgeID, edge] : mEdges)
 			{
-				if (it.second.GetLength() < mIEMConfig.minEdgeLength)
+				if (edge.GetLength() < mIEMConfig.minEdgeLength)
 					continue;
 
 				// Source checks
-				EdgeZone zone = it.second.FindEdgeZone(source.position);
+				EdgeZone zone = edge.FindEdgeZone(source.position);
 
 				if (zone == EdgeZone::Invalid)
 					continue;
@@ -465,17 +475,17 @@ namespace RAC
 				counter++;
 
 				imageSource.Valid();
-				imageSource.AddEdgeID(it.first);
-				imageSource.UpdateDiffractionPath(source.position, mListenerPosition, it.second);
+				imageSource.AddEdgeID(edgeID);
+				imageSource.UpdateDiffractionPath(source.position, mListenerPosition, edge);
 
 				if (mIEMConfig.diffraction == DiffractionSound::none)
 					continue;
 
 				// Receiver checks
-				if (it.second.GetReceiverZone() == EdgeZone::Invalid)
+				if (edge.GetReceiverZone() == EdgeZone::Invalid)
 					continue;
 
-				if (mIEMConfig.diffraction == DiffractionSound::shadowZone && it.second.GetReceiverZone() == EdgeZone::NonShadowed)
+				if (mIEMConfig.diffraction == DiffractionSound::shadowZone && edge.GetReceiverZone() == EdgeZone::NonShadowed)
 					continue;
 
 				if (!imageSource.GetDiffractionPath().valid)
@@ -513,28 +523,28 @@ namespace RAC
 			bool feedsFDN = mIEMConfig.order == 1 && mIEMConfig.lateReverb;
 			Vec3 position;
 			std::vector<Vec3> intersections = std::vector<Vec3>(1, Vec3());
-			for (const auto& it : mPlanes)
+			for (const auto& [planeID, plane] : mPlanes)
 			{
-				if (!it.second.ReflectPointInPlane(position, source.position))
+				if (!plane.ReflectPointInPlane(position, source.position))
 					continue;
 
 				ImageSourceData& imageSource = counter < size ? sp[0][counter] : sp[0].emplace_back(frequencyBands.Length(), source.id);
 
-				imageSource.SetPreviousPlane(Vec4(it.second.GetD(), it.second.GetNormal()));
+				imageSource.SetPreviousPlane(Vec4(plane.GetD(), plane.GetNormal()));
 
 				if (counter < size)
 					imageSource.Clear(source.id);
 				counter++;
 
 				imageSource.Valid();
-				imageSource.AddPlaneID(it.first);
+				imageSource.AddPlaneID(planeID);
 
 				imageSource.SetTransform(position);
 
 				if (!mIEMConfig.reflections)
 					continue;
 
-				if (!it.second.GetReceiverValid())
+				if (!plane.GetReceiverValid())
 					continue;
 
 				if (!FindIntersections(imageSource, intersections))
@@ -599,20 +609,20 @@ namespace RAC
 					BeginHigherOrderRef();
 				}
 #endif
-				for (const auto& it : mPlanes)
+				for (const auto& [planeID, plane] : mPlanes)
 				{
-					bool rValid = it.second.GetReceiverValid();
+					bool rValid = plane.GetReceiverValid();
 					for (const ImageSourceData& vS : sp[prevRefIdx])
 					{
 						// HOD reflections
 						if (!vS.IsDiffraction())
 						{
 							// Can't reflect in same plane twice
-							if (it.first == vS.GetID())
+							if (planeID == vS.GetID())
 								continue;
 
 							Vec4 previousPlaneData = vS.GetPreviousPlane();
-							Vec4 planeData = Vec4(it.second.GetD(), it.second.GetNormal());
+							Vec4 planeData = Vec4(plane.GetD(), plane.GetNormal());
 
 							// Can't reflect in parallel plane
 							if (planeData.x == previousPlaneData.x && planeData.y == previousPlaneData.y && planeData.z == previousPlaneData.z)
@@ -622,7 +632,7 @@ namespace RAC
 							if (planeData == -previousPlaneData)
 								continue;
 
-							if (!it.second.ReflectPointInPlane(position, vS.GetPosition()))
+							if (!plane.ReflectPointInPlane(position, vS.GetPosition()))
 								continue;
 
 							ImageSourceData& imageSource = counter < size ? sp[refIdx][counter] : sp[refIdx].emplace_back(vS);
@@ -635,7 +645,7 @@ namespace RAC
 
 							imageSource.Reset();
 							imageSource.Valid();
-							imageSource.AddPlaneID(it.first);
+							imageSource.AddPlaneID(planeID);
 							imageSource.SetTransform(position);
 
 							if (!mIEMConfig.reflections)
@@ -663,12 +673,12 @@ namespace RAC
 						{
 							const Edge& edge = vS.GetEdge();
 
-							Vec4 planeData = Vec4(it.second.GetD(), it.second.GetNormal());
+							Vec4 planeData = Vec4(plane.GetD(), plane.GetNormal());
 
 							if (vS.IsReflection(prevRefIdx))
 							{
 								// Can't reflect in same plane twice
-								if (it.first == vS.GetID())
+								if (planeID == vS.GetID())
 									continue;
 
 								Vec4 previousPlaneData = vS.GetPreviousPlane();
@@ -684,12 +694,12 @@ namespace RAC
 							else
 							{
 								// Can't reflect in plane attached to edge
-								if (edge.IncludesPlane(it.first))
+								if (edge.IncludesPlane(planeID))
 									continue;
 							}
 
 							// Check edge in front of plane
-							if (!it.second.EdgePlanePosition(edge))
+							if (!plane.EdgePlanePosition(edge))
 								continue;
 
 							ImageSourceData& imageSource = counter < size ? sp[refIdx][counter] : sp[refIdx].emplace_back(vS);
@@ -702,11 +712,11 @@ namespace RAC
 
 							imageSource.Reset();
 							imageSource.Valid();
-							imageSource.AddPlaneID(it.first);
+							imageSource.AddPlaneID(planeID);
 
 							position = imageSource.GetPosition();
-							it.second.ReflectPointInPlaneNoCheck(position);
-							imageSource.UpdateDiffractionPath(position, mListenerPosition, it.second);
+							plane.ReflectPointInPlaneNoCheck(position);
+							imageSource.UpdateDiffractionPath(position, mListenerPosition, plane);
 
 							if (!rValid)
 								continue;
@@ -780,23 +790,23 @@ namespace RAC
 					BeginHigherOrderRefDiff();
 				}
 #endif
-				for (const auto& it : mEdges)
+				for (const auto& [edgeID, edge] : mEdges)
 				{
-					if (it.second.GetLength() < mIEMConfig.minEdgeLength)
+					if (edge.GetLength() < mIEMConfig.minEdgeLength)
 						continue;
 
-					EdgeZone rZone = it.second.GetReceiverZone();
+					EdgeZone rZone = edge.GetReceiverZone();
 					for (const ImageSourceData& vS : sp[prevRefIdx])
 					{
 						if (vS.IsDiffraction())
 							continue;
 
 						// Can't diffract in edge attached to plane
-						if (it.second.IncludesPlane(vS.GetID()))
+						if (edge.IncludesPlane(vS.GetID()))
 							continue;
 
 						// Source checks
-						EdgeZone zone = it.second.FindEdgeZone(vS.GetPosition());
+						EdgeZone zone = edge.FindEdgeZone(vS.GetPosition());
 
 						if (zone == EdgeZone::Invalid)
 							continue;
@@ -812,14 +822,14 @@ namespace RAC
 
 						imageSource.Reset();
 						imageSource.Valid();
-						imageSource.AddEdgeID(it.first);
-						imageSource.UpdateDiffractionPath(imageSource.GetPosition(), mListenerPosition, it.second);
+						imageSource.AddEdgeID(edgeID);
+						imageSource.UpdateDiffractionPath(imageSource.GetPosition(), mListenerPosition, edge);
 
 						// Receiver checks
 						if (rZone == EdgeZone::Invalid)
 							continue;
 
-						if (mIEMConfig.diffractedReflections == DiffractionSound::shadowZone && it.second.GetReceiverZone() == EdgeZone::NonShadowed)
+						if (mIEMConfig.diffractedReflections == DiffractionSound::shadowZone && edge.GetReceiverZone() == EdgeZone::NonShadowed)
 							continue;
 
 						if (!imageSource.GetDiffractionPath().valid)
@@ -908,11 +918,11 @@ namespace RAC
 				std::vector<PlaneDistanceID> ks = std::vector(mPlanes.size(), PlaneDistanceID(0.0, -1));
 				point = mListenerPosition + reverbDirections[j];
 				int i = 0;
-				for (auto& it : mPlanes)
+				for (const auto& [planeID, plane] : mPlanes)
 				{
-					k = it.second.PointPlanePosition(point);
-					if (it.second.GetReceiverValid() && k < 0) // receiver in front of wall and point behind wall
-						ks[i] = PlaneDistanceID(k, it.first); // A more negative k means the plane is closer to the receiver
+					k = plane.PointPlanePosition(point);
+					if (plane.GetReceiverValid() && k < 0) // receiver in front of wall and point behind wall
+						ks[i] = PlaneDistanceID(k, planeID); // A more negative k means the plane is closer to the receiver
 					i++;
 				}
 				std::sort(ks.begin(), ks.end());

@@ -234,7 +234,7 @@ namespace RAC
 #endif
 
 			int i = 0;
-			for (auto& channel : mChannels)
+			for (Channel& channel : mChannels)
 			{
 				if (isnan(x[i]))
 					Debug::Log("X was nan", Colour::Red);

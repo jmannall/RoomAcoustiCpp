@@ -153,7 +153,7 @@ namespace RAC
 			/**
 			* @brief Assign a wall to a plane
 			* 
-			* @params The wall ID to assign to a plane
+			* @params id The wall ID to assign to a plane
 			*/
 			void AssignWallToPlane(const size_t id);
 
@@ -168,10 +168,10 @@ namespace RAC
 			/**
 			* @brief Remove a wall from a plane
 			* 
-			* @params idP The plane ID to remove the wall from
-			* @params idW The wall ID to remove from the plane
+			* @params planeID The plane ID to remove the wall from
+			* @params wallID The wall ID to remove from the plane
 			*/
-			void RemoveWallFromPlane(const size_t idP, const size_t idW);
+			void RemoveWallFromPlane(const size_t planeID, const size_t wallID);
 
 			/**
 			* @brief Add a located edge to the room
@@ -182,9 +182,9 @@ namespace RAC
 			* @brief Initialise edges between walls
 			* 
 			* @params id The ID of the wall to search for edges for
-			* @params IDsW The IDs of walls with already connected edges
+			* @params wallIDs The IDs of walls with already connected edges
 			*/
-			void InitEdges(const size_t id, const std::vector<size_t>& IDsW);
+			void InitEdges(const size_t id, const std::vector<size_t>& wallIDs);
 
 			/**
 			* @brief Locate edges between walls
@@ -246,7 +246,7 @@ namespace RAC
 			inline void UpdateEdges(const std::vector<size_t>& IDs, const std::vector<Edge>& edges)
 			{
 				int i = 0;
-				for (auto& edge : edges)
+				for (const Edge& edge : edges)
 				{
 					UpdateEdge(IDs[i], edge);
 					i++;
@@ -264,30 +264,30 @@ namespace RAC
 			/**
 			* @brief Remove the edges with the given IDs
 			* 
-			* @params IDs The IDs of the edges to remove
-			* @params idW The ID of the first wall the edge was atatched to
+			* @params edgeIDs The IDs of the edges to remove
+			* @params wallID The ID of the first wall the edge was atatched to
 			*/
-			inline void RemoveEdges(const std::vector<size_t>& IDsE, const size_t idW)
+			inline void RemoveEdges(const std::vector<size_t>& edgeIDs, const size_t wallID)
 			{
 				std::lock_guard<std::mutex> lock(mEdgeMutex);
-				for (auto& idE : IDsE)
-					RemoveEdge(idE, idW);
+				for (const size_t edgeID : edgeIDs)
+					RemoveEdge(edgeID, wallID);
 			}
 
 			/**
 			* @brief Remove the edge with the given ID
 			* 
-			* @params idE The ID of the edge to remove
-			* @params idW The ID of the first wall the edge was atatched to
+			* @params edgeID The ID of the edge to remove
+			* @params wallID The ID of the first wall the edge was atatched to
 			*/
-			void RemoveEdge(const size_t idE, const size_t idW);
+			void RemoveEdge(const size_t edgeID, const size_t wallID);
 
 			/**
 			* @brief Remove the edge with the given ID
 			* 
 			* @params idE The ID of the edge to remove
 			*/
-			void RemoveEdge(const size_t idE);
+			void RemoveEdge(const size_t edgeID);
 
 			/**
 			* @brief Record a change in the room geometry
