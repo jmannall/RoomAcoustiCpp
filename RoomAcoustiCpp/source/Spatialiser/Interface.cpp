@@ -259,5 +259,14 @@ namespace RAC
 				*bufferPtr = nullptr;
 		}
 #endif
+
+		////////////////////////////////////////
+
+		void UpdateImpulseResponseMode(const Real lerpFactor, const bool mode)
+		{
+			auto context = GetContext();
+			if (context)
+				context->UpdateImpulseResponseMode(lerpFactor, mode);
+		}
 	}
 }

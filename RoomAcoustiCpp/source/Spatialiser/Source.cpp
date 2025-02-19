@@ -41,7 +41,12 @@ namespace RAC
 				lock_guard<mutex> lock(tuneInMutex);
 				mSource = mCore->CreateSingleSourceDSP();
 				mSource->EnablePropagationDelay();
-				mSource->DisableInterpolation();
+
+				if (config.lerpFactor == 1.0)
+				{
+					mSource->DisableDistanceAttenuationSmoothingAnechoic();
+					mSource->DisableInterpolation();
+				}
 
 				//Select spatialisation mode
 				UpdateSpatialisationMode(config.spatialisationMode);
@@ -97,8 +102,34 @@ namespace RAC
 
 			{
 				lock_guard<mutex> lock(*imageSourcesMutex);
-				for (auto& it : mImageSources)
-					it.second.UpdateSpatialisationMode(mode);
+				for (auto& [key, imageSource] : mImageSources)
+					imageSource.UpdateSpatialisationMode(mode);
+			}
+		}
+
+		////////////////////////////////////////
+
+		void Source::UpdateImpulseResponseMode(const Real lerpFactor, const bool mode)
+		{
+			{
+				lock_guard<std::mutex> lock(*dataMutex);
+				mConfig.lerpFactor = lerpFactor;
+				if (mode)
+				{
+					mSource->DisableDistanceAttenuationSmoothingAnechoic();
+					mSource->DisableInterpolation();
+				}
+				else
+				{
+					mSource->EnableDistanceAttenuationSmoothingAnechoic();
+					mSource->EnableInterpolation();
+				}
+			}
+
+			{
+				lock_guard<mutex> lock(*imageSourcesMutex);
+				for (auto& [key, imageSource] : mImageSources)
+					imageSource.UpdateImpulseResponseMode(lerpFactor, mode);
 			}
 		}
 
@@ -109,8 +140,8 @@ namespace RAC
 			mConfig.diffractionModel = model;
 			{
 				lock_guard<mutex> lock(*imageSourcesMutex);
-				for (auto& it : mImageSources)
-					it.second.UpdateDiffractionModel(model);
+				for (auto& [key, imageSource] : mImageSources)
+					imageSource.UpdateDiffractionModel(model);
 			}
 		}
 
@@ -154,8 +185,8 @@ namespace RAC
 		{
 			{
 				lock_guard<mutex> lock(*imageSourcesMutex);
-				for (auto& it : mImageSources)
-					it.second.ProcessAudio(data, reverbInput, outputBuffer);
+				for (auto& [key, imageSource] : mImageSources)
+					imageSource.ProcessAudio(data, reverbInput, outputBuffer);
 			}
 
 			lock_guard<std::mutex> lock(*dataMutex);
@@ -302,7 +333,7 @@ namespace RAC
 				if (UpdateImageSource(vSource))
 					keys.push_back(key);
 			}
-			for (const auto& key : keys)
+			for (const std::string& key : keys)
 				currentImageSources.erase(key);
 		}
 

@@ -191,6 +191,14 @@ namespace RAC
 #ifdef USE_MOD_ART
 		void GetOutput_MOD_ART(float** bufferPtr, const float* data);
 #endif
+
+		/**
+		* @brief Sets the spatialiser to impulse response mode if mode is true
+		*
+		* @param lerpFactor New interpolation factor.
+		* @params mode True if disable 3DTI Interpolation, false otherwise.
+		*/
+		void UpdateImpulseResponseMode(const Real lerpFactor, const bool mode);
 	}
 }
 #endif

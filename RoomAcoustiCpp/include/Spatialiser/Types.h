@@ -175,6 +175,13 @@ namespace RAC
 			{
 				this->lerpFactor = std::max(std::min(this->lerpFactor, 1.0), 1.0 / static_cast<Real>(sampleRate));
 			};
+
+			Real UpdateLerpFactor(const Real lerpFactor)
+			{
+				this->lerpFactor = 96.0 * lerpFactor / fs;
+				this->lerpFactor = std::max(std::min(this->lerpFactor, 1.0), 1.0 / fs);
+				return this->lerpFactor;
+			}
 		};
 	}
 }

@@ -406,5 +406,23 @@ namespace RAC
 			mOutputBuffer.ResetBuffer();
 		}
 #endif
+
+		////////////////////////////////////////
+
+		void Context::UpdateImpulseResponseMode(const Real lerpFactor, const bool mode)
+		{
+			if (mode)
+			{
+				mConfig.lerpFactor = 1.0;
+				mReverb->UpdateLerpFactor(1.0);
+				mSources->UpdateImpulseResponseMode(1.0, mode);
+				return;
+			}
+
+			Real newLerpFactor = mConfig.UpdateLerpFactor(lerpFactor);
+
+			mReverb->UpdateLerpFactor(newLerpFactor);
+			mSources->UpdateImpulseResponseMode(newLerpFactor, mode);
+		}
 	}
 }

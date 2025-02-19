@@ -76,7 +76,6 @@ namespace RAC
 				mSource->DisableDistanceAttenuationAnechoic();
 				mSource->DisableNearFieldEffect();
 				mSource->DisableFarDistanceEffect();
-				mSource->DisableInterpolation();
 
 				//Select spatialisation mode
 				UpdateSpatialisationMode(mConfig.spatialisationMode);
@@ -264,6 +263,15 @@ namespace RAC
 
 		////////////////////////////////////////
 
+		void Reverb::UpdateLerpFactor(const Real lerpFactor)
+		{
+			mConfig.lerpFactor = lerpFactor;
+			for (ReverbSource& source : mReverbSources)
+				source.UpdateLerpFactor(lerpFactor);
+		}
+
+		////////////////////////////////////////
+
 		void Reverb::InitSources()
 		{
 			std::vector<Vec3> points;
@@ -358,7 +366,7 @@ namespace RAC
 					{
 						mFDN.ProcessOutput(data.GetRow(i), mCurrentGain);
 						j = 0;
-						for (auto& source : mReverbSources)
+						for (ReverbSource& source : mReverbSources)
 						{
 							source.AddInput(mFDN.GetOutput(j), i);
 							j++;
@@ -374,7 +382,7 @@ namespace RAC
 					{
 						mFDN.ProcessOutput(data.GetRow(i), mTargetGain);
 						j = 0;
-						for (auto& source : mReverbSources)
+						for (ReverbSource& source : mReverbSources)
 						{
 							source.AddInput(mFDN.GetOutput(j), i);
 							j++;
@@ -388,7 +396,7 @@ namespace RAC
 #endif
 
 				// Process buffer of each channel
-				for (auto& source : mReverbSources)
+				for (ReverbSource& source : mReverbSources)
 					source.ProcessAudio(outputBuffer);
 #ifdef PROFILE_AUDIO_THREAD
 				EndReverb();
@@ -402,14 +410,14 @@ namespace RAC
 		void Reverb::ProcessAudio_MOD_ART(const Matrix& data, Buffer& outputBuffer)
 		{
 			int j = 0;
-			for (auto& source : mReverbSources)
+			for (ReverbSource& source : mReverbSources)
 			{
 				source.AddInput(data.GetRow(j));
 				j++;
 			}
 
 			// Process buffer of each channel
-			for (auto& source : mReverbSources)
+			for (ReverbSource& source : mReverbSources)
 				source.ProcessAudio_MOD_ART(outputBuffer);
 		}
 #endif

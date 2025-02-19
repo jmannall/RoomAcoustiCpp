@@ -64,8 +64,18 @@ namespace RAC
 		{
 			mConfig.spatialisationMode = mode;
 			shared_lock<shared_mutex> lock(mSourceMutex);
-			for (auto& it : mSources)
-				it.second.UpdateSpatialisationMode(mode);
+			for (auto& [sourceID, source] : mSources)
+				source.UpdateSpatialisationMode(mode);
+		}
+
+		////////////////////////////////////////
+
+		void SourceManager::UpdateImpulseResponseMode(const Real lerpFactor, const bool mode)
+		{
+			mConfig.lerpFactor = lerpFactor;
+			shared_lock<shared_mutex> lock(mSourceMutex);
+			for (auto& [sourceID, source] : mSources)
+				source.UpdateImpulseResponseMode(lerpFactor, mode);
 		}
 
 		////////////////////////////////////////
@@ -74,8 +84,8 @@ namespace RAC
 		{
 			mConfig.diffractionModel = model;
 			shared_lock<shared_mutex> lock(mSourceMutex);
-			for (auto& it : mSources)
-				it.second.UpdateDiffractionModel(model);
+			for (auto& [sourceID, source] : mSources)
+				source.UpdateDiffractionModel(model);
 		}
 
 		////////////////////////////////////////
@@ -86,14 +96,14 @@ namespace RAC
 			assert(sourceData.size() == mSources.size()); // Ensure sourceData is up to date (size matches mSources)
 			int i = 0;
 			Vec4 orientation;
-			for (auto& it : mSources)
+			for (auto& [sourceID, source] : mSources)
 			{
-				sourceData[i].id = it.first;
-				sourceData[i].position = it.second.GetPosition();
-				sourceData[i].orientation = it.second.GetOrientation();
+				sourceData[i].id = sourceID;
+				sourceData[i].position = source.GetPosition();
+				sourceData[i].orientation = source.GetOrientation();
 				sourceData[i].forward = sourceData[i].orientation.Forward();
-				sourceData[i].directivity = it.second.GetDirectivity();
-				sourceData[i].hasChanged = it.second.HasChanged();
+				sourceData[i].directivity = source.GetDirectivity();
+				sourceData[i].hasChanged = source.HasChanged();
 				i++;
 			}
 			return sourceData;

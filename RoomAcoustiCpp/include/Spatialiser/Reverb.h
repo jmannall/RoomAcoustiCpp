@@ -54,9 +54,20 @@ namespace RAC
 			/**
 			* @brief Update the spatialisation mode for the HRTF processing
 			*
-			* @params New spatialisation mode
+			* @params mode New spatialisation mode
 			*/
 			void UpdateSpatialisationMode(const SpatialisationMode mode);
+
+			/**
+			* @brief Update the interpolation factor for interpolations
+			*
+			* @params lerpFactor New interpolation factor
+			*/
+			inline void UpdateLerpFactor(const Real lerpFactor)
+			{
+				lock_guard<mutex> lock(*mReflectionFilterMutex);
+				mConfig.lerpFactor = lerpFactor;
+			}
 
 			/**
 			* @brief Set position offset relative to the listener
@@ -177,9 +188,16 @@ namespace RAC
 			/**
 			* @brief Update the spatialisation mode for the HRTF processing
 			* 
-			* @params New spatialisation mode
+			* @params mode New spatialisation mode
 			*/
 			void UpdateSpatialisationMode(const SpatialisationMode mode);
+
+			/**
+			* @brief Update the interpolation factor for interpolations
+			*
+			* @params lerpFactor New interpolation factor
+			*/
+			void UpdateLerpFactor(const Real lerpFactor);
 
 			/**
 			* @brief Updates the reverb source positions relative to the listener

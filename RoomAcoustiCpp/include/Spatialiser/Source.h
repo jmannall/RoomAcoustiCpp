@@ -84,6 +84,14 @@ namespace RAC
 			void UpdateSpatialisationMode(const SpatialisationMode mode);
 
 			/**
+			* @brief Updates the interpolation settings for recording impulse responses
+			*
+			* @params lerpFactor New interpolation factor
+			* @params mode True if disable 3DTI Interpolation, false otherwise.
+			*/
+			void UpdateImpulseResponseMode(const Real lerpFactor, const bool mode);
+
+			/**
 			* @brief Updates the diffraction model
 			* 
 			* @params model The new diffraction model
@@ -133,7 +141,7 @@ namespace RAC
 			/**
 			* @return The current source directivity
 			*/
-			inline SourceDirectivity GetDirectivity() { lock_guard<mutex> lock(*dataMutex); return mDirectivity; }
+			inline SourceDirectivity GetDirectivity() const { lock_guard<mutex> lock(*dataMutex); return mDirectivity; }
 
 			/**
 			* @return True if the source has changed since the last check

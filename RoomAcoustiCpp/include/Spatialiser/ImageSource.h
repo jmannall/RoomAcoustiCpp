@@ -431,6 +431,14 @@ namespace RAC
 			void UpdateSpatialisationMode(const SpatialisationMode mode);
 
 			/**
+			* @brief Updates the interpolation settings for recording impulse responses
+			*
+			* @params lerpFactor New interpolation factor
+			* @params mode True if disable 3DTI Interpolation, false otherwise.
+			*/
+			void UpdateImpulseResponseMode(const Real lerpFactor, const bool mode);
+
+			/**
 			* @brief Update the diffraction model
 			* 
 			* @params model The new diffraction model

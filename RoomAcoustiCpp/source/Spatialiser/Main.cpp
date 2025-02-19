@@ -592,4 +592,18 @@ extern "C"
 	{
 		*buf = buffer;
 	}
+
+	/**
+	* Sets the spatialiser to impulse response mode if mode is true
+	*
+	* This function should be called if the output of a stationary source is being recorded.
+	* Call the function again with the original lerp factor to restore normal operation.
+	* 
+	* @param lerpFactor The default interpolation factor.
+	* @params mode True if disable 3DTI Interpolation, false otherwise.
+	*/
+	EXPORT void API RACUpdateImpulseResponseMode(float lerpFactor, bool mode)
+	{
+		UpdateImpulseResponseMode(static_cast<Real>(lerpFactor), mode);
+	}
 }

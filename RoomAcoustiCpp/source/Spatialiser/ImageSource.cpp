@@ -222,6 +222,26 @@ namespace RAC
 
 		////////////////////////////////////////
 
+		void ImageSource::UpdateImpulseResponseMode(const Real lerpFactor, const bool mode)
+		{
+			{
+				lock_guard<mutex> lock(*audioMutex);
+				mConfig.lerpFactor = lerpFactor;
+				if (mode)
+				{
+					mSource->DisableDistanceAttenuationSmoothingAnechoic();
+					mSource->DisableInterpolation();
+				}
+				else
+				{
+					mSource->EnableDistanceAttenuationSmoothingAnechoic();
+					mSource->EnableInterpolation();
+				}
+			}
+		}
+
+		////////////////////////////////////////
+
 		void ImageSource::UpdateDiffractionModel(const DiffractionModel model)
 		{
 			mOldDiffractionModel = mDiffractionModel;
@@ -321,8 +341,14 @@ namespace RAC
 				// Initialise source to core
 				mSource = mCore->CreateSingleSourceDSP();
 				mSource->EnablePropagationDelay();
+
+				if (mConfig.lerpFactor == 1.0)
+				{
+					mSource->DisableDistanceAttenuationSmoothingAnechoic();
+					mSource->DisableInterpolation();
+				}
+
 				mSource->SetSourceTransform(data.GetTransform());
-				mSource->DisableInterpolation();
 			}
 			//updateTransform = true;
 			isInitialised = true;

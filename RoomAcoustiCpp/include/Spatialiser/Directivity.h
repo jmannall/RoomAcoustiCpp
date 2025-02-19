@@ -14,7 +14,7 @@
 #include "Common/Complex.h"
 #include "Common/Coefficients.h"
 
-// #define HAS_GSL
+#define HAS_GSL
 
 #ifdef HAS_GSL
 // GSL headers
