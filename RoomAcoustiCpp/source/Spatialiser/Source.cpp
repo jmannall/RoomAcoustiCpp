@@ -71,6 +71,26 @@ namespace RAC
 			Reset();
 		}
 
+		void Source::InitReverbSendSource()
+		{
+			lock_guard<mutex> lock(tuneInMutex);
+			mReverbSendSource = mCore->CreateSingleSourceDSP();
+			mReverbSendSource->EnablePropagationDelay();
+			mReverbSendSource->DisableDistanceAttenuationAnechoic();
+			mReverbSendSource->SetSpatializationMode(Binaural::TSpatializationMode::NoSpatialization);
+			if (mConfig.lerpFactor == 1.0)
+			{
+				mReverbSendSource->DisableDistanceAttenuationSmoothingAnechoic();
+				mReverbSendSource->DisableInterpolation();
+			}
+		}
+
+		void Source::RemoveReverbSendSource()
+		{
+			lock_guard<mutex> lock(tuneInMutex);
+			mCore->RemoveSingleSourceDSP(mReverbSendSource);
+		}
+
 		////////////////////////////////////////
 
 		void Source::UpdateSpatialisationMode(const SpatialisationMode mode)
@@ -118,11 +138,23 @@ namespace RAC
 				{
 					mSource->DisableDistanceAttenuationSmoothingAnechoic();
 					mSource->DisableInterpolation();
+
+					if (mReverbSendSource)
+					{
+						mReverbSendSource->DisableDistanceAttenuationSmoothingAnechoic();
+						mReverbSendSource->DisableInterpolation();
+					}
 				}
 				else
 				{
 					mSource->EnableDistanceAttenuationSmoothingAnechoic();
 					mSource->EnableInterpolation();
+
+					if (mReverbSendSource)
+					{
+						mReverbSendSource->EnableDistanceAttenuationSmoothingAnechoic();
+						mReverbSendSource->EnableInterpolation();
+					}
 				}
 			}
 
@@ -161,7 +193,7 @@ namespace RAC
 					reverbEnergy = 0.5;
 					break;
 				case SourceDirectivity::genelec8020c:
-					reverbEnergy = 0.5;
+					reverbEnergy = 0.5;		// Approximation (Calculate from spherical harmonics?)
 					break;
 				default:
 					reverbEnergy = 1.0;
@@ -190,55 +222,38 @@ namespace RAC
 			}
 
 			lock_guard<std::mutex> lock(*dataMutex);
-			/*if (currentGain == 0.0 && targetGain == 0.0)
-				return;*/
 			if (directivityFilter.Invalid())
 				return;
 
-			Real gain;
-			if (feedsFDN)
-				gain = directivityFilter.GetDCGain(); // Adjusted gain
-
 #ifdef PROFILE_AUDIO_THREAD
 			BeginSource();
-			BeginReflection();
-#endif
-			directivityFilter.ProcessAudio(data, bStore, mConfig.numFrames, mConfig.lerpFactor);
-#ifdef PROFILE_AUDIO_THREAD
-			EndReflection();
 			BeginAirAbsorption();
 #endif
-			mAirAbsorption.ProcessAudio(bStore, bStore, mConfig.numFrames, mConfig.lerpFactor);
+			mAirAbsorption.ProcessAudio(data, bStore, mConfig.numFrames, mConfig.lerpFactor);
 #ifdef PROFILE_AUDIO_THREAD
 			EndAirAbsorption();
-#endif
-			if (feedsFDN && !directivityFilter.Invalid())
+
+			if (feedsFDN)
 			{
-				if (gain == 0.0)
-					gain = directivityFilter.GetDCGain(); // Adjusted gain
-				else
-					gain = (gain + directivityFilter.GetDCGain()) / 2.0; // Adjusted gain
-			}
-			/*if (currentGain == targetGain)
-			{
+				lock_guard<mutex> lock(tuneInMutex);
+				mReverbSendSource->SetSourceTransform(transform);
 				for (int i = 0; i < mConfig.numFrames; i++)
-					bInput[i] = static_cast<float>(currentGain * bStore[i]);
-			}
-			else if (Equals(currentGain, targetGain))
-			{
-				currentGain = targetGain;
-				for (int i = 0; i < mConfig.numFrames; i++)
-					bInput[i] = static_cast<float>(currentGain * bStore[i]);
-			}
-			else
-			{
+					bInput[i] = static_cast<float>(bStore[i]);
+				mReverbSendSource->SetBuffer(bInput);
+				mReverbSendSource->ProcessAnechoic(bOutput.left, bOutput.right);
 				for (int i = 0; i < mConfig.numFrames; i++)
 				{
-					bInput[i] = static_cast<float>(currentGain * bStore[i]);
-					currentGain = Lerp(currentGain, targetGain, mConfig.lerpFactor);
+					Real in = static_cast<Real>(bOutput.left[i]) / static_cast<Real>(mConfig.numFDNChannels) * reverbEnergy;
+					for (int j = 0; j < mConfig.numFDNChannels; j++)
+						reverbInput[i][j] += in;
 				}
-			}*/
-
+			}
+			BeginReflection();
+#endif
+			directivityFilter.ProcessAudio(bStore, bStore, mConfig.numFrames, mConfig.lerpFactor);
+#ifdef PROFILE_AUDIO_THREAD
+			EndReflection();
+#endif
 			for (int i = 0; i < mConfig.numFrames; i++)
 				bInput[i] = static_cast<float>(bStore[i]);
 
@@ -249,22 +264,7 @@ namespace RAC
 				lock_guard<mutex> lock(tuneInMutex);
 				mSource->SetSourceTransform(transform);
 				mSource->SetBuffer(bInput);
-
-				if (feedsFDN)
-				{
-					Real factor = 1.1 * mAirAbsorption.GetDistance() * reverbEnergy / gain; // Adjusted gain
-					factor /= static_cast<Real>(mConfig.numFDNChannels);
-
-					mSource->ProcessAnechoic(bMonoOutput, bOutput.left, bOutput.right);
-					for (int i = 0; i < mConfig.numFrames; i++)
-					{
-						Real in = static_cast<Real>(bMonoOutput[i]) * factor;
-						for (int j = 0; j < mConfig.numFDNChannels; j++)
-							reverbInput[i][j] += in;
-					}
-				}
-				else
-					mSource->ProcessAnechoic(bOutput.left, bOutput.right);
+				mSource->ProcessAnechoic(bOutput.left, bOutput.right);
 			}
 #ifdef PROFILE_AUDIO_THREAD
 			End3DTI();

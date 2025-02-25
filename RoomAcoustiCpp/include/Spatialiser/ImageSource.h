@@ -464,11 +464,6 @@ namespace RAC
 			*/
 			void ProcessAudio(const Buffer& data, Matrix& reverbInput, Buffer& outputBuffer);
 
-			/**
-			* @brief Prevents the 3DTI source from being destroyed when destructor called.
-			*/
-			inline void Deactivate() { mSource = nullptr; }
-
 		private:
 			/**
 			* @brief Initialises the image source with the given data

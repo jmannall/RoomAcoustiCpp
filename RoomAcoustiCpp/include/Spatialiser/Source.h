@@ -76,6 +76,10 @@ namespace RAC
 			*/
 			~Source();
 
+			void InitReverbSendSource();
+
+			void RemoveReverbSendSource();
+
 			/**
 			* @brief Update the spatialisation mode for the HRTF processing
 			* 
@@ -122,7 +126,16 @@ namespace RAC
 			*/
 			inline void UpdateData(const SourceAudioData source, const ImageSourceDataMap& vSources)
 			{ 
-				{ lock_guard<mutex> lock(*dataMutex); directivityFilter.SetGain(source.directivity); feedsFDN = source.feedsFDN; }
+				{
+					lock_guard<mutex> lock(*dataMutex); 
+					directivityFilter.SetGain(source.directivity);
+					feedsFDN = source.feedsFDN;
+
+					if (feedsFDN && !mReverbSendSource)
+						InitReverbSendSource();
+					else if (!feedsFDN && mReverbSendSource)
+						RemoveReverbSendSource();
+				}
 				targetImageSources = vSources;
 				UpdateImageSourceDataMap();
 				UpdateImageSources();
@@ -156,11 +169,6 @@ namespace RAC
 			* @params outputBuffer The output buffer to write to
 			*/
 			void ProcessAudio(const Buffer& data, Matrix& reverbInput, Buffer& outputBuffer);
-
-			/**
-			* @brief Prevents the 3DTI source from being destroyed when destructor called.
-			*/
-			inline void Deactivate() { mSource = nullptr; }
 
 			/**
 			* @brief Destroys all image sources
@@ -222,6 +230,8 @@ namespace RAC
 
 			Binaural::CCore* mCore;								// 3DTI core
 			shared_ptr<Binaural::CSingleSourceDSP> mSource;		// 3DTI source
+			shared_ptr<Binaural::CSingleSourceDSP> mReverbSendSource;	// 3DTI reverb send source
+
 			CTransform transform;								// 3DTI source transform
 			CMonoBuffer<float> bInput;							// 3DTI mono input buffer
 			CEarPair<CMonoBuffer<float>> bOutput;				// 3DTI stereo output buffer

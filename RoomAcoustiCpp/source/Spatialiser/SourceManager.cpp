@@ -34,7 +34,6 @@ namespace RAC
 			mSources.try_emplace(id, mCore, mConfig);
 			// mSources.insert_or_assign(id, source);
 			sourceData.emplace_back();
-			// source.Deactivate();
 			return id;
 		}
 
