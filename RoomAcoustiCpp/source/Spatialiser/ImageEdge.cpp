@@ -316,17 +316,39 @@ namespace RAC
 		Absorption ImageEdge::CalculateDirectivity(const SourceData& source, const Vec3& point) const
 		{
 			Absorption directivity(frequencyBands.Length());
+			Real ret = 0.0;
 			switch (source.directivity)
 			{
 			case SourceDirectivity::omni:
 			{ directivity = 1.0; break; }
-			case SourceDirectivity::cardioid:
+			case SourceDirectivity::subcardioid:
 			{
 				Real angle = acos(Dot(source.forward, UnitVector(point - source.position)));
-				Real ret = 0.5 * (1 + cos(angle));
-				if (ret < EPS)
-					directivity = EPS;
-				directivity = ret;
+				ret = 0.7 + 0.3 * cos(angle);
+				break;
+			}
+			case SourceDirectivity::cardioid:
+			{
+				Real angle = std::acos(Dot(source.forward, UnitVector(point - source.position)));
+				ret = 0.5 * (1 + std::cos(angle));
+				break;
+			}
+			case SourceDirectivity::supercardioid:
+			{
+				Real angle = std::acos(Dot(source.forward, UnitVector(point - source.position)));
+				ret = 0.37 + 0.63 * std::cos(angle);
+				break;
+			}
+			case SourceDirectivity::hypercardioid:
+			{
+				Real angle = std::acos(Dot(source.forward, UnitVector(point - source.position)));
+				ret = 0.25 + 0.75 * std::cos(angle);
+				break;
+			}
+			case SourceDirectivity::bidirectional:
+			{
+				Real angle = std::acos(Dot(source.forward, UnitVector(point - source.position)));
+				ret = std::abs(std::cos(angle));
 				break;
 			}
 #ifdef HAS_GSL
@@ -335,10 +357,10 @@ namespace RAC
 				Vec3 direction = UnitVector(point - source.position);
 				Vec3 localDirection = source.orientation.RotateVector(direction);
 
-				Real theta = acos(localDirection.z);
-				Real phi = atan2(localDirection.y, localDirection.x);
+				Real theta = std::acos(localDirection.z);
+				Real phi = -std::atan2(localDirection.x, localDirection.y); // -phi converts from left-handed coordinate system to right-handed coordinate system
+				// Debug::Log("Theta: " + RealToStr(Rad2Deg(theta)) + ", Phi: " + RealToStr(Rad2Deg(phi < 0.0 ? phi + PI_2: phi)), Colour::Yellow);
 
-				
 				directivity = GENELEC.Response(frequencyBands, theta, phi);
 				break;
 			}
@@ -346,6 +368,9 @@ namespace RAC
 			default:
 				directivity = 1.0;
 			}
+
+			if (ret != 0.0)
+				directivity = ret < EPS ? EPS : ret;
 			return directivity;
 		}
 

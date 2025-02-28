@@ -69,9 +69,9 @@ end
 idx(1,:) = 1;
 idx(end,:) = length(positions);
 
-%X = cosd(EL);
-%Y = sind(AZ) .* sind(EL);
-%Z = cosd(AZ) .* sind(EL);
+X = cosd(EL);
+Y = sind(AZ) .* sind(EL);
+Z = cosd(AZ) .* sind(EL);
 
 % Parameters
 fs = 44100;    % Sampling frequency (Hz)
@@ -129,12 +129,17 @@ for l = 0:lMax
         % Calculate spherical harmonic for each grid point
         for i = 1:numTheta
             for j = 1:numPhi
-                Y_lmStore{l^2 + l + m + 1}(i, j) = spharm(l, m, theta(i, j), phi(i, j));  % Compute Y_lm(theta, phi)
+                Y_lmStore{l^2 + l + m + 1}(i, j) = harmonicY(l, m, theta(i, j), phi(i, j));  % Compute Y_lm(theta, phi)
             end
         end
     end
 end
 
+%%
+close all
+
+f1 = figure;
+f2 = figure;
 sinTheta = sin(theta);  % same size as Theta
 for k = 1:numFreqBands
     f = targets{k};
@@ -159,6 +164,27 @@ for k = 1:numFreqBands
             break;
         end
     end
+    figure(f1)
+    subplot(3, 3, k);
+    surf(X, Y, Z, mag2db(abs(fReconstructed)), 'EdgeColor', 'none');  % 3D surface plot
+    colormap(jet);  % Color map for intensity
+    colorbar;  % Add color bar to indicate magnitude levels
+    axis equal;  % Ensure the plot is spherical
+    title(sprintf('Directivity at %d Hz', freqBands(k)));
+    xlabel('X'); ylabel('Y'); zlabel('Z');
+    clim([-40 0])
+    view([60 15])
+
+    figure(f2)
+    subplot(3, 3, k);
+    surf(X, Y, Z, mag2db(abs(f)), 'EdgeColor', 'none');  % 3D surface plot
+    colormap(jet);  % Color map for intensity
+    colorbar;  % Add color bar to indicate magnitude levels
+    axis equal;  % Ensure the plot is spherical
+    title(sprintf('Directivity at %d Hz', freqBands(k)));
+    xlabel('X'); ylabel('Y'); zlabel('Z');
+    clim([-40 0])
+    view([60 15])
 end
 %%
 a = deg2rad(0:10:350);
@@ -167,18 +193,18 @@ count = 0;
 
 dir = zeros(length(a) * length(e), numFreqBands);
 input = zeros(2, length(a) * length(e));
-for i = 1:length(a)
-    for j = 1:length(e)
+for i = 2:length(a)
+    for j = 2:length(e)
         count = count + 1;
         input(:,count) = [e(j), a(i)];
         dir(count,:) = CalculateDirectivity(a_lm, a(i), e(j));
     end
 end
 
+%%
 writematrix(freqBands, 'directivityFreq.csv');
 writematrix(input, 'genelecDirectivityInput.csv');
 writematrix(dir, 'genelecDirectivityOutput.csv');
-
 
 function dir = CalculateDirectivity(harmonics, azimuth, elevation)
     dir = zeros(1, length(harmonics));
@@ -186,7 +212,7 @@ function dir = CalculateDirectivity(harmonics, azimuth, elevation)
         order = sqrt(length(harmonics{k})) - 1;
         for l = 0:order
             for m = -l:l
-                Y_lm = spharm(l, m, elevation, azimuth);
+                Y_lm = harmonicY(l, m, elevation, azimuth);
                 dir(k) = dir(k) + (harmonics{k}(l^2 + l + m + 1) .* Y_lm);
             end
         end
@@ -203,9 +229,27 @@ function Ylm = spharm(l, m, theta, phi)
 
     % Compute the associated Legendre polynomial
     P_lm = legendre(l, cos(theta), 'unnorm');
-    
+
     % Extract the m-th order component from the output
     P_lm_m = P_lm(abs(m)+1);
-    E = exp(-1i*m*phi);        
+
+    E = exp(1i*abs(m)*phi);
+    if m < 0
+        % Include phase factor for negative m
+        E = conj(E);
+        if mod(m,2) == 1
+            E = -E;
+        end
+    end
+
     Ylm = C * P_lm_m .* E;
 end
+
+%%
+l = 2;
+m = 2;
+theta = 0.2;
+phi = 0.8;
+
+test = spharm(l, m, theta, -phi);
+test1 = harmonicY(l, m, theta, phi);

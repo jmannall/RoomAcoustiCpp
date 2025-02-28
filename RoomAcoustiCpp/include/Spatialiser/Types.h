@@ -73,7 +73,11 @@ namespace RAC
 		enum class SourceDirectivity
 		{
 			omni,
+			subcardioid,
 			cardioid,
+			supercardioid,
+			hypercardioid,
+			bidirectional,
 			genelec8020c
 		};
 

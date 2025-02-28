@@ -212,11 +212,12 @@ namespace RAC
 			AirAbsorption mAirAbsorption;			// Air absorption filter
 			SourceDirectivity mDirectivity;			// Source directivity
 			Buffer bStore;							// Internal audio buffer
+			Buffer bStoreReverb;					// Internal audio buffer reverb send
 
 			Real targetGain;				// Target source gain
 			Real currentGain;				// Current source gain
 			GraphicEQ directivityFilter;	// Directivity filter
-			Real reverbEnergy;				// Reverb energy based on directivity
+			GraphicEQ reverbInputFilter;	// Reverb energy based on directivity
 			bool feedsFDN;					// True if the source feeds the FDN
 
 			Vec3 currentPosition;			// Current source position

@@ -8,6 +8,7 @@
 // Spatialiser headers
 #include "Spatialiser/Source.h"
 #include "Spatialiser/Mutexes.h"
+#include "Spatialiser/Directivity.h"
 
 // DSP headers
 #include "DSP/Interpolate.h"
@@ -29,7 +30,8 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		Source::Source(Binaural::CCore* core, const Config& config) : mCore(core), mConfig(config), targetGain(0.0f), currentGain(0.0f), mAirAbsorption(mConfig.fs), mDirectivity(SourceDirectivity::omni), directivityFilter(config.frequencyBands, config.Q, config.fs), feedsFDN(false), hasChanged(true)
+		Source::Source(Binaural::CCore* core, const Config& config) : mCore(core), mConfig(config), targetGain(0.0f), currentGain(0.0f), mAirAbsorption(mConfig.fs), mDirectivity(SourceDirectivity::omni),
+			directivityFilter(config.frequencyBands, config.Q, config.fs), reverbInputFilter(config.frequencyBands, config.Q, config.fs), feedsFDN(false), hasChanged(true)
 		{
 			dataMutex = std::make_shared<std::mutex>();
 			imageSourcesMutex = std::make_shared<std::mutex>();
@@ -54,6 +56,7 @@ namespace RAC
 
 			ResetFDNSlots();
 			bStore.ResizeBuffer(mConfig.numFrames);
+			bStoreReverb.ResizeBuffer(mConfig.numFrames);
 			bInput = CMonoBuffer<float>(config.numFrames);
 			bOutput.left = CMonoBuffer<float>(mConfig.numFrames);
 			bOutput.right = CMonoBuffer<float>(mConfig.numFrames);
@@ -182,23 +185,34 @@ namespace RAC
 		void Source::UpdateDirectivity(const SourceDirectivity directivity)
 		{
 			{
+				Coefficients reverbInput = Coefficients(mConfig.frequencyBands.Length(), 1.0);
 				lock_guard<mutex> lock(*dataMutex);
 				mDirectivity = directivity;
+
 				switch (mDirectivity)
 				{
 				case SourceDirectivity::omni:
-					reverbEnergy = 1.0;
+					break;
+				case SourceDirectivity::subcardioid:
+					reverbInput = 1.0 / 1.3;	// 1 / Directivity Factor (DF) -> DF = 10 ^ (Directivity Index / 20) 
 					break;
 				case SourceDirectivity::cardioid:
-					reverbEnergy = 0.5;
+					reverbInput = 1.0 / 1.7;
+					break;
+				case SourceDirectivity::supercardioid:
+					reverbInput = 1.0 / 1.9;
+					break;
+				case SourceDirectivity::hypercardioid:
+					reverbInput = 0.5;
+					break;
+				case SourceDirectivity::bidirectional:
+					reverbInput = 1.0 / 1.7;
 					break;
 				case SourceDirectivity::genelec8020c:
-					reverbEnergy = 0.5;		// Approximation (Calculate from spherical harmonics?)
-					break;
-				default:
-					reverbEnergy = 1.0;
+					reverbInput = GENELEC.AverageResponse(mConfig.frequencyBands);
 					break;
 				}
+				reverbInputFilter.SetGain(6.0 * reverbInput / mConfig.numFDNChannels);
 			}
 			{ lock_guard<mutex> lock(*currentDataMutex); hasChanged = true; }
 		}
@@ -235,15 +249,21 @@ namespace RAC
 
 			if (feedsFDN)
 			{
-				lock_guard<mutex> lock(tuneInMutex);
-				mReverbSendSource->SetSourceTransform(transform);
+				reverbInputFilter.ProcessAudio(bStore, bStoreReverb, mConfig.numFrames, mConfig.lerpFactor);
+
 				for (int i = 0; i < mConfig.numFrames; i++)
-					bInput[i] = static_cast<float>(bStore[i]);
-				mReverbSendSource->SetBuffer(bInput);
-				mReverbSendSource->ProcessAnechoic(bOutput.left, bOutput.right);
+					bInput[i] = static_cast<float>(bStoreReverb[i]);
+
+				{
+					lock_guard<mutex> lock(tuneInMutex);
+					mReverbSendSource->SetSourceTransform(transform);
+					mReverbSendSource->SetBuffer(bInput);
+					mReverbSendSource->ProcessAnechoic(bOutput.left, bOutput.right);
+				}
+
 				for (int i = 0; i < mConfig.numFrames; i++)
 				{
-					Real in = static_cast<Real>(bOutput.left[i]) / static_cast<Real>(mConfig.numFDNChannels) * reverbEnergy;
+					Real in = static_cast<Real>(bOutput.left[i]);
 					for (int j = 0; j < mConfig.numFDNChannels; j++)
 						reverbInput[i][j] += in;
 				}

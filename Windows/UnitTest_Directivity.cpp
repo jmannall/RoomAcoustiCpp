@@ -6,6 +6,10 @@
 #include "UtilityFunctions.h"
 
 #include "Spatialiser/Directivity.h"
+#include "Common/Vec3.h"
+#include "Common/Matrix.h"
+
+#include "DSP/GraphicEQ.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 namespace RAC
@@ -29,7 +33,7 @@ namespace RAC
 			std::vector<Real> freq(inputFreq[0]);
 
 			int numTests = theta.size();
-			for (int i = 1; i < numTests; i++)
+			for (int i = 0; i < numTests; i++)
 			{
 				Absorption directivity = GENELEC.Response(freq, theta[i], phi[i]);
 

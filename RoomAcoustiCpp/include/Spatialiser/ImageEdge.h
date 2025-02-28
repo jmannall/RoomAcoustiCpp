@@ -155,6 +155,8 @@ namespace RAC
 			* @param point A point in the direction the source is emitting sound
 			*
 			* @return The directivity of the source
+			* 
+			* @remarks Directivities taken from: Eargle's the Microphone Book : From Mono to Stereo to Surround - a Guide to Microphone Design and Application
 			*/
 			Absorption CalculateDirectivity(const SourceData& source, const Vec3& point) const;
 
