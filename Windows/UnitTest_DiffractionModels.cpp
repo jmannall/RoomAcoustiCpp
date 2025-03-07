@@ -38,7 +38,7 @@ namespace RAC
 	{
 		int fs = 48000;
 		std::string filePath = _SOLUTIONDIR;
-		auto data = Parse2Dcsv(filePath + "UnitTestData\\diffractionPaths.csv");
+		auto data = Parse2Dcsv<double>(filePath + "UnitTestData\\diffractionPaths.csv");
 
 		std::vector<Real> zW(data[0]);
 		std::vector<Real> tW(data[1]);
@@ -101,7 +101,7 @@ namespace RAC
 	{
 		int fs = 48000;
 		std::string filePath = _SOLUTIONDIR;
-		auto data = Parse2Dcsv(filePath + "UnitTestData\\diffractionPaths.csv");
+		auto data = Parse2Dcsv<double>(filePath + "UnitTestData\\diffractionPaths.csv");
 
 		std::vector<Real> zW(data[0]);
 		std::vector<Real> tW(data[1]);
@@ -211,7 +211,7 @@ namespace RAC
 		{
 			int fs = 48000;
 			std::string filePath = _SOLUTIONDIR;
-			auto data = Parse2Dcsv(filePath + "UnitTestData\\diffractionPaths.csv");
+			auto data = Parse2Dcsv<double>(filePath + "UnitTestData\\diffractionPaths.csv");
 
 			std::vector<Real> zW(data[0]);
 			std::vector<Real> tW(data[1]);
@@ -230,10 +230,10 @@ namespace RAC
 				btm.AddIr(ir);
 			}
 
-			auto csv = Parse1Dcsv(filePath + "UnitTestData\\btm.csv");
+			auto csv = Parse1Dcsv<double>(filePath + "UnitTestData\\btm.csv");
 			for (int i = 0; i < ir.Length(); i++)
 			{
-				std::string error = "Incorrect Sample: " + IntToStr(i);
+				std::string error = "Incorrect Sample: " + ToStr(i);
 				std::wstring werror = std::wstring(error.begin(), error.end());
 				const wchar_t* werrorchar = werror.c_str();
 				Real tolerance = csv[i] * 0.1;

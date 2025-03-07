@@ -369,3 +369,5 @@ FodyWeavers.xsd
 /Windows/Intel® VTune™ Profiler Results
 /Windows/x64
 UnitTestData/CreateUnitTestData.m
+/UnitTestData/ImpulseResponses
+/UnitTestData/Scenes

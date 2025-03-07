@@ -365,21 +365,19 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Room::UpdateEdge(const size_t id, const Edge& edge)
+		bool Room::UpdateEdge(const size_t id, const Edge& edge)
 		{
 			if (IsCoplanarEdge(edge))
-			{
-				RemoveEdge(id);
-				return;
-			}
+				return true;
 
 			auto it = mEdges.find(id);
-			if (it == mEdges.end()) { return; } // case: edge does not exist
+			if (it == mEdges.end()) { return false; } // case: edge does not exist
 			else { it->second = edge; } // case: edge does exist
 
 #ifdef DEBUG_GEOMETRY
 			Debug::send_path(std::to_string(id) + "e", { edge.GetBase() }, edge.GetTop());
 #endif
+			return false;
 		}
 
 		////////////////////////////////////////
@@ -517,9 +515,15 @@ namespace RAC
 					FindEdges(ids.first, ids.second, edges, IDs);
 
 					if (edges.size() == 1)
-						UpdateEdge(IDs[0], edges[0]);
+					{
+						if (UpdateEdge(IDs[0], edges[0]))
+							removeIDs.push_back(edgeID);
+					}
 					else if (edges.size() > 1)
-						UpdateEdges(IDs, edges);
+					{
+						std::vector toRemove = UpdateEdges(IDs, edges);
+						removeIDs.insert(removeIDs.end(), toRemove.begin(), toRemove.end());
+					}
 					else
 						removeIDs.push_back(edgeID);
 				}

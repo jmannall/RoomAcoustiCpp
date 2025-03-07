@@ -16,7 +16,7 @@ template<> static std::wstring Microsoft::VisualStudio::CppUnitTestFramework::To
 {
 	std::string str = "Coefficients: ";
 	for (int i = 0; i < t.Length(); i++)
-		str += DoubleToStr(t[i]) + ", ";
+		str += ToStr(t[i]) + ", ";
 	std::wstring werror = std::wstring(str.begin(), str.end());
 	return werror;
 }
@@ -25,8 +25,8 @@ template<> static std::wstring Microsoft::VisualStudio::CppUnitTestFramework::To
 {
 	std::string str = "Absorption: ";
 	for (int i = 0; i < t.Length(); i++)
-		str += DoubleToStr(t[i]) + ", ";
-	str += "Area: " + DoubleToStr(t.mArea);
+		str += ToStr(t[i]) + ", ";
+	str += "Area: " + ToStr(t.mArea);
 	std::wstring werror = std::wstring(str.begin(), str.end());
 	return werror;
 }

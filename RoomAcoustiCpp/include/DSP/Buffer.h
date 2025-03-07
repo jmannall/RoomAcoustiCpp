@@ -10,6 +10,7 @@
 
 // C++ headers
 #include <vector>
+#include <assert.h>
 
 // Common headers
 #include "Common/Types.h"
@@ -100,7 +101,7 @@ namespace RAC
 			* @param i The index of the value to return
 			* @return The value at the specified index
 			*/
-			inline Real operator[](const int i) const { return mBuffer[i]; };
+			inline Real operator[](const int i) const { assert(i < mBuffer.size()); return mBuffer[i]; };
 
 			/**
 			* @brief Multiplies each sample in the buffer by a scalar value.

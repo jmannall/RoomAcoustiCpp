@@ -634,7 +634,7 @@ namespace RAC
 					if (currentLen > targetLen)
 					{
 						Real total = 0.0;
-						int i = targetLen - 1;
+						int i = targetLen;
 						while (i < currentLen && i > 14)
 						{
 							total += currentIr[i++];
@@ -652,8 +652,8 @@ namespace RAC
 							}
 							total = 0.0;
 						}
-						currentIr.ResizeBuffer(i + 1);
-						targetIr.ResizeBuffer(i + 1);	
+						currentIr.ResizeBuffer(i);
+						targetIr.ResizeBuffer(i);	
 					}
 					else if (currentLen < targetLen)
 						currentIr.ResizeBuffer(targetLen);

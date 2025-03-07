@@ -5,9 +5,6 @@
 *
 */
 
-// C++ headers
-#include <assert.h> 
-
 // DSP headers
 #include "DSP/Buffer.h"
 

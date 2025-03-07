@@ -234,8 +234,9 @@ namespace RAC
 			* 
 			* @params id The ID of the edge to update
 			* @params edge The new edge data
+			* @return true If edge should be removed, false otherwise
 			*/
-			void UpdateEdge(const size_t id, const Edge& edge);
+			bool UpdateEdge(const size_t id, const Edge& edge);
 
 			/**
 			* @brief Update the edges with the given IDs
@@ -243,14 +244,17 @@ namespace RAC
 			* @params IDs The IDs of the edges to update
 			* @params edges The new edge data
 			*/
-			inline void UpdateEdges(const std::vector<size_t>& IDs, const std::vector<Edge>& edges)
+			inline std::vector<size_t> UpdateEdges(const std::vector<size_t>& IDs, const std::vector<Edge>& edges)
 			{
+				std::vector<size_t> removeIDs;
 				int i = 0;
 				for (const Edge& edge : edges)
 				{
-					UpdateEdge(IDs[i], edge);
+					if (UpdateEdge(IDs[i], edge))
+						removeIDs.push_back(IDs[i]);
 					i++;
 				}
+				return removeIDs;
 			}
 
 			/**

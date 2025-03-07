@@ -24,9 +24,9 @@ namespace RAC
 
 		TEST_METHOD(GenelecDirectivity)
 		{
-			auto inputData = Parse2Dcsv(filePath + "genelecDirectivityInput.csv");
-			auto outputData = Parse2Dcsv(filePath + "genelecDirectivityOutput.csv");
-			auto inputFreq = Parse2Dcsv(filePath + "directivityFreq.csv");
+			auto inputData = Parse2Dcsv<double>(filePath + "genelecDirectivityInput.csv");
+			auto outputData = Parse2Dcsv<double>(filePath + "genelecDirectivityOutput.csv");
+			auto inputFreq = Parse2Dcsv<double>(filePath + "directivityFreq.csv");
 
 			std::vector<Real> theta(inputData[0]);
 			std::vector<Real> phi(inputData[1]);
@@ -39,7 +39,7 @@ namespace RAC
 
 				for (int j = 0; j < freq.size(); j++)
 				{
-					std::string error = "Test: " + IntToStr(i) + ", Incorrect Frequency : " + DoubleToStr(freq[j]);
+					std::string error = "Test: " + ToStr(i) + ", Incorrect Frequency : " + ToStr(freq[j]);
 					std::wstring werror = std::wstring(error.begin(), error.end());
 					const wchar_t* werrorchar = werror.c_str();
 					Assert::AreEqual(outputData[i][j], directivity[j], 10e-15, werrorchar);

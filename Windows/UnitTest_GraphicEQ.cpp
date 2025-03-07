@@ -44,8 +44,8 @@ namespace RAC
 		TEST_METHOD(ProcessGraphicEQ)
 		{
 			// std::string filePath = _SOLUTIONDIR;
-			auto inputData = Parse2Dcsv(filePath + "graphicEQInput.csv");
-			auto outputData = Parse2Dcsv(filePath + "graphicEQOutput.csv");
+			auto inputData = Parse2Dcsv<double>(filePath + "graphicEQInput.csv");
+			auto outputData = Parse2Dcsv<double>(filePath + "graphicEQOutput.csv");
 
 			std::vector<Real> g0(inputData[0]);
 			std::vector<Real> g1(inputData[1]);
@@ -75,7 +75,7 @@ namespace RAC
 
 				for (int j = 0; j < numFrames; j++)
 				{
-					std::string error = "Test: " + IntToStr(i) + ", Incorrect Sample : " + IntToStr(j);
+					std::string error = "Test: " + ToStr(i) + ", Incorrect Sample : " + ToStr(j);
 					std::wstring werror = std::wstring(error.begin(), error.end());
 					const wchar_t* werrorchar = werror.c_str();
 					Assert::AreEqual(outputData[i][j], out[j], 10e-16, werrorchar);
@@ -86,8 +86,8 @@ namespace RAC
 		TEST_METHOD(ProcessPeakingFilter)
 		{
 			// std::string filePath = _SOLUTIONDIR;
-			auto inputData = Parse2Dcsv(filePath + "peakingFilterInput.csv");
-			auto outputData = Parse2Dcsv(filePath + "peakingFilterOutput.csv");
+			auto inputData = Parse2Dcsv<double>(filePath + "peakingFilterInput.csv");
+			auto outputData = Parse2Dcsv<double>(filePath + "peakingFilterOutput.csv");
 
 			std::vector<Real> fc(inputData[0]);
 			std::vector<Real> g(inputData[1]);
@@ -112,7 +112,7 @@ namespace RAC
 
 				for (int j = 0; j < numFrames; j++)
 				{
-					std::string error = "Test: " + IntToStr(i) + ", Incorrect Sample : " + IntToStr(j);
+					std::string error = "Test: " + ToStr(i) + ", Incorrect Sample : " + ToStr(j);
 					std::wstring werror = std::wstring(error.begin(), error.end());
 					const wchar_t* werrorchar = werror.c_str();
 					Assert::AreEqual(outputData[i][j], out[j], 10e-16, werrorchar);
@@ -123,8 +123,8 @@ namespace RAC
 		TEST_METHOD(ProcessLowShelfFilter)
 		{
 			// std::string filePath = _SOLUTIONDIR;
-			auto inputData = Parse2Dcsv(filePath + "peakingFilterInput.csv");
-			auto outputData = Parse2Dcsv(filePath + "lowShelfFilterOutput.csv");
+			auto inputData = Parse2Dcsv<double>(filePath + "peakingFilterInput.csv");
+			auto outputData = Parse2Dcsv<double>(filePath + "lowShelfFilterOutput.csv");
 
 			std::vector<Real> fc(inputData[0]);
 			std::vector<Real> g(inputData[1]);
@@ -149,7 +149,7 @@ namespace RAC
 
 				for (int j = 0; j < numFrames; j++)
 				{
-					std::string error = "Test: " + IntToStr(i) + ", Incorrect Sample : " + IntToStr(j);
+					std::string error = "Test: " + ToStr(i) + ", Incorrect Sample : " + ToStr(j);
 					std::wstring werror = std::wstring(error.begin(), error.end());
 					const wchar_t* werrorchar = werror.c_str();
 					Assert::AreEqual(outputData[i][j], out[j], 10e-16, werrorchar);
@@ -160,8 +160,8 @@ namespace RAC
 		TEST_METHOD(ProcessHighShelfFilter)
 		{
 			// std::string filePath = _SOLUTIONDIR;
-			auto inputData = Parse2Dcsv(filePath + "peakingFilterInput.csv");
-			auto outputData = Parse2Dcsv(filePath + "highShelfFilterOutput.csv");
+			auto inputData = Parse2Dcsv<double>(filePath + "peakingFilterInput.csv");
+			auto outputData = Parse2Dcsv<double>(filePath + "highShelfFilterOutput.csv");
 
 			std::vector<Real> fc(inputData[0]);
 			std::vector<Real> g(inputData[1]);
@@ -186,7 +186,7 @@ namespace RAC
 
 				for (int j = 0; j < numFrames; j++)
 				{
-					std::string error = "Test: " + IntToStr(i) + ", Incorrect Sample : " + IntToStr(j);
+					std::string error = "Test: " + ToStr(i) + ", Incorrect Sample : " + ToStr(j);
 					std::wstring werror = std::wstring(error.begin(), error.end());
 					const wchar_t* werrorchar = werror.c_str();
 					Assert::AreEqual(outputData[i][j], out[j], 10e-16, werrorchar);

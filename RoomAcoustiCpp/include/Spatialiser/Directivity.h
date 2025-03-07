@@ -73,7 +73,6 @@ namespace RAC
 				for (int i = 0; i < frequencies.Length(); ++i)
 					output[i] = AverageResponse(frequencies[i]);
 				return output;
-
 			}
 
 		private:
