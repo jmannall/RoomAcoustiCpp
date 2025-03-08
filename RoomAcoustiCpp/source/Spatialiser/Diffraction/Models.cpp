@@ -733,9 +733,9 @@ namespace RAC
 				Real rhoOne = rho + 1.0;
 				Real rhoOneSq = rhoOne * rhoOne;
 				Real sinPsi = (mPath->sData.r + mPath->rData.r) / R0;
-				Real tempFact = rhoOneSq * sinPsi * sinPsi - 2.0 * rho;
-				Real sqrtB3 = SQRT_2 * R0 * rho / rhoOne / sqrt(tempFact);
-				Real temp3vec = -1.0 / sqrtB3 * atan(zRange / sqrtB3);
+				Complex tempFact = rhoOneSq * sinPsi * sinPsi - 2.0 * rho;
+				Complex sqrtB3 = SQRT_2 * R0 * rho / rhoOne / sqrt(tempFact);
+				Complex temp3vec = -1.0 / sqrtB3 * atan(zRange / sqrtB3);
 				ir[0] = 0.0;
 
 				for (int i = 0; i < 4; i++)
@@ -772,7 +772,7 @@ namespace RAC
 					sampleOneVec[i] = 2.0 / vSq * rho * (temp1_2vec + temp1vec * temp3vec);
 					// Check for special case - see EDwedge1st_ir.m
 					if (!singular)
-						ir[0] += sampleOneVec[i];
+						ir[0] += sampleOneVec[i].real();
 				}
 
 
@@ -876,6 +876,12 @@ namespace RAC
 				return (zn2 - zn1) / n * output;*/
 
 #ifdef _TEST
+				// Simpson's rule
+				Real fa = CalcIntegrand(zn1);
+				Real fc = CalcIntegrand(mid);
+				Real fb = CalcIntegrand(zn2);
+				return (zn2 - zn1) / 6.0 * (CalcIntegrand(zn1) + 4.0 * CalcIntegrand(mid) + CalcIntegrand(zn2));
+
 				// Quadstep simpson's rule
 				Real h = 0.13579 * (zn2 - zn1);
 

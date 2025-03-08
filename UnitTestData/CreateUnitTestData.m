@@ -20,7 +20,7 @@ zS = [1,	3.4,	3.2,	2,	    1.7];
 zR = [1,	4.2,	2.1,	2.5,	1.9];
 
 irOut = [];
-for i = 4:length(zW)
+for i = 1:length(zW)
     ir = SingleWedge(zW(i), tW(i), tS(i), tR(i), rS(i), rR(i), zS(i), zR(i), controlparameters, false);
     idx = find(ir.diff1 ~= 0, 1);
     storeIr{i} = ir.diff1(idx:end - 1);

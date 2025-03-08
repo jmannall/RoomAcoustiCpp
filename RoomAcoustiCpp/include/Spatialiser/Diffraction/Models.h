@@ -327,11 +327,11 @@ namespace RAC
 				Real sinTheta[4];
 				Real cosTheta[4];
 				bool singular;
-				Real temp1_2vec;
-				Real temp1vec;
+				Complex temp1_2vec;
+				Complex temp1vec;
 				Real sqrtB1vec;
 				Real fifactvec;
-				Real sampleOneVec[4];
+				Complex sampleOneVec[4];
 
 				Path lastPath;
 
