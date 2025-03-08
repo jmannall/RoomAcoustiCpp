@@ -26,9 +26,6 @@ namespace RAC
 	using namespace Common;
 	namespace Spatialiser
 	{
-		//////////////////// Data structures ////////////////////
-
-		typedef std::pair<bool, Real> IntersectionResult;
 
 		//////////////////// Utility functions ////////////////////
 
@@ -44,7 +41,7 @@ namespace RAC
 		* 
 		* @return A pair containing a boolean indicating if the line intersects the triangle and the distance to the intersection point
 		*/
-		IntersectionResult IntersectTriangle(const Vec3& v1, const Vec3& v2, const Vec3& v3, const Vec3& origin, const Vec3& dir, const bool returnIntersection);
+		std::pair<bool, Vec3> IntersectTriangle(const Vec3& v1, const Vec3& v2, const Vec3& v3, const Vec3& origin, const Vec3& dir, const bool returnIntersection);
 
 		/**
 		* Class that represents a Wall in the room
