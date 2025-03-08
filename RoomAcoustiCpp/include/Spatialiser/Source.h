@@ -8,6 +8,10 @@
 #ifndef RoomAcoustiCpp_Source_h
 #define RoomAcoustiCpp_Source_h
 
+#include<latch>
+#include "Common/ThreadPool.h"
+#include <tuple>
+
 // Common headers
 #include "Common/Matrix.h"
 #include "Common/Types.h" 
@@ -18,7 +22,7 @@
 #include "Spatialiser/Types.h"
 #include "Spatialiser/AirAbsorption.h"
 #include "Spatialiser/ImageSource.h"
-#include "Spatialiser/Mutexes.h"
+#include "Spatialiser/Globals.h"
 
 // 3DTI headers
 #include "BinauralSpatializer/Core.h"
@@ -175,7 +179,7 @@ namespace RAC
 			*/
 			inline void Reset()
 			{ 
-				{ lock_guard<std::mutex> lock(*imageSourcesMutex); mImageSources.clear(); }
+				{ lock_guard<std::mutex> lock(*imageSourcesMutex); mImageSources.clear(); threadResults.clear(); }
 				ResetFDNSlots();
 			}
 
@@ -207,6 +211,8 @@ namespace RAC
 			* @brief Resets the free FDN channel slots
 			*/
 			void ResetFDNSlots();
+
+			void ProcessDirect(const Buffer& data, Matrix& reverbInput, Buffer& outputBuffer);
 
 			Config mConfig;							// The spatialiser configuration
 			AirAbsorption mAirAbsorption;			// Air absorption filter
@@ -242,6 +248,8 @@ namespace RAC
 			shared_ptr<std::mutex> imageSourceDataMutex;		// Protects currentImageSources, targetImageSources
 			shared_ptr<std::mutex> imageSourcesMutex;			// Protects mImageSources
 			shared_ptr<std::mutex> currentDataMutex;			// Protects currentPosition, currentOrientation, hasChanged
+
+			std::vector<std::tuple<Buffer, Buffer, int>> threadResults;
 		};
 	}
 }

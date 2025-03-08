@@ -133,6 +133,14 @@ namespace RAC
 				return *this;
 			}
 
+			inline auto begin() { return mBuffer.begin(); }
+
+			inline auto end() { return mBuffer.end(); }
+
+			inline const auto begin() const { return mBuffer.begin(); }
+
+			inline const auto end() const { return mBuffer.end(); }
+
 		private:
 
 			std::vector<Real> mBuffer;		// Buffer data

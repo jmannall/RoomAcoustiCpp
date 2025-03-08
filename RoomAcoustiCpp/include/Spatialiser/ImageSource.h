@@ -36,6 +36,8 @@
 #include "BinauralSpatializer/SingleSourceDSP.h"
 #include "Common/Transform.h"
 
+#include "Unity/Debug.h"
+
 using namespace Common;
 namespace RAC
 {
@@ -462,7 +464,7 @@ namespace RAC
 			* @param reverbInput The reverb input buffer to write to
 			* @param outputBuffer The output buffer to write to
 			*/
-			void ProcessAudio(const Buffer& data, Matrix& reverbInput, Buffer& outputBuffer);
+			int ProcessAudio(const Buffer& data, Buffer& reverbInput, Buffer& outputBuffer);
 
 		private:
 			/**

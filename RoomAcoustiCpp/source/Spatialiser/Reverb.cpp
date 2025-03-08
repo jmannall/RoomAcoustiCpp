@@ -10,9 +10,11 @@
 #include "Common/Definitions.h"
 #endif
 
+#include <latch>
+
 // Spatialiser headers
 #include "Spatialiser/Reverb.h"
-#include "Spatialiser/Mutexes.h"
+#include "Spatialiser/Globals.h"
 
 // Unity headers
 #include "Unity/Debug.h"
@@ -177,15 +179,15 @@ namespace RAC
 				}
 				else
 				{
-					for (int i = 0; i < mConfig.numFrames; i++)
-						bInput[i] = static_cast<float>(targetGain * inputBuffer[i]);
+					std::transform(inputBuffer.begin(), inputBuffer.end(), bInput.begin(),
+						[&](auto value) { return static_cast<float>(value * targetGain); });
 				}
 			}
 #ifdef PROFILE_AUDIO_THREAD
 			Begin3DTI();
 #endif
 			{
-				lock_guard<mutex> lock(tuneInMutex);
+				// lock_guard<mutex> lock(tuneInMutex);
 				mSource->SetBuffer(bInput);
 
 				mSource->ProcessAnechoic(bOutput.left, bOutput.right);
@@ -197,8 +199,8 @@ namespace RAC
 			int j = 0;
 			for (int i = 0; i < mConfig.numFrames; i++)
 			{
-				outputBuffer[j++] += static_cast<Real>(bOutput.left[i]);
-				outputBuffer[j++] += static_cast<Real>(bOutput.right[i]);
+				outputBuffer[j++] = static_cast<Real>(bOutput.left[i]);
+				outputBuffer[j++] = static_cast<Real>(bOutput.right[i]);
 			}
 #ifdef PROFILE_AUDIO_THREAD
 			EndReverbSource();
@@ -300,8 +302,12 @@ namespace RAC
 			}
 
 			mReverbSources.reserve(mConfig.numFDNChannels);
+			threadResults.reserve(mConfig.numFDNChannels);
 			for (int i = 0; i < mConfig.numFDNChannels; i++)
+			{
 				mReverbSources.emplace_back(mCore, mConfig, points[i]);
+				threadResults.emplace_back(2 * mConfig.numFrames);
+			}
 		}
 
 		////////////////////////////////////////
@@ -309,8 +315,8 @@ namespace RAC
 		void Reverb::UpdateReverbSourcePositions(const Vec3& listenerPosition)
 		{
 			// tuneInMutex already locked by context
-			for (int i = 0; i < mConfig.numFDNChannels; i++)
-				mReverbSources[i].UpdatePosition(listenerPosition);
+			for (ReverbSource& reverbSource : mReverbSources)
+				reverbSource.UpdatePosition(listenerPosition);
 		}
 
 		////////////////////////////////////////
@@ -376,7 +382,7 @@ namespace RAC
 				}
 				else
 				{
-					int  j = 0;
+					int  j = 0;	
 					lock_guard <mutex> lock(mFDNMutex);
 					for (int i = 0; i < mConfig.numFrames; i++)
 					{
@@ -394,10 +400,27 @@ namespace RAC
 #ifdef PROFILE_AUDIO_THREAD
 				EndFDN();
 #endif
+				std::latch latch(mReverbSources.size());
 
-				// Process buffer of each channel
+				size_t index = 0;
 				for (ReverbSource& source : mReverbSources)
-					source.ProcessAudio(outputBuffer);
+				{
+					size_t threadIndex = index++; // Each thread gets a unique index
+					audioThreadPool->enqueue([&, threadIndex] {
+						source.ProcessAudio(threadResults[threadIndex]);
+						// No need for a mutex, each thread writes to a unique index
+
+						latch.count_down();
+						});
+				}
+
+				// Wait for all threads to finish
+				latch.wait();
+
+				// Now safely merge the results **sequentially**
+				for (const Buffer& localOutput : threadResults)
+					outputBuffer += localOutput;
+
 #ifdef PROFILE_AUDIO_THREAD
 				EndReverb();
 #endif

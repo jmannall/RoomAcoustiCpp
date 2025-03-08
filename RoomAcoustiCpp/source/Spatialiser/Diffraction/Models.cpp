@@ -41,8 +41,8 @@ namespace RAC
 				// Apply gain
 				if (currentGain == targetGain)
 				{
-					for (int i = 0; i < numFrames; i++)
-						outBuffer[i] = currentGain * inBuffer[i];
+					std::transform(inBuffer.begin(), inBuffer.end(), outBuffer.begin(),
+						[&](auto value) { return currentGain * value; });
 				}
 				else if (Equals(currentGain, targetGain))
 				{
@@ -50,8 +50,8 @@ namespace RAC
 						std::lock_guard<std::mutex> lock(*m);
 						currentGain = targetGain;
 					}
-					for (int i = 0; i < numFrames; i++)
-						outBuffer[i] = currentGain * inBuffer[i];
+					std::transform(inBuffer.begin(), inBuffer.end(), outBuffer.begin(),
+						[&](auto value) { return currentGain * value; });
 				}
 				else
 				{

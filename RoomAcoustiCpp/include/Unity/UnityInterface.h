@@ -15,6 +15,9 @@ IUnityProfiler* GetUnityProfiler();
 bool* GetDevBuild();
 
 #ifdef PROFILE_AUDIO_THREAD
+int RegisterAudioThread();
+void UnregisterAudioThread(int id);
+
 void BeginSource();
 void EndSource();
 
@@ -107,4 +110,5 @@ void BeginUpdateAudioData();
 void EndUpdateAudioData();
 
 #endif
+
 #endif

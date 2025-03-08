@@ -4,6 +4,8 @@
 #include "Unity/IUnityInterface.h"
 #include "Unity/IUnityProfiler.h"
 
+#include <unordered_map>
+
 static IUnityProfiler* unityProfiler = nullptr;
 static bool* isDevelopmentBuild = nullptr;
 
@@ -42,6 +44,10 @@ static const UnityProfilerMarkerDesc* lateReverbMarker = nullptr;
 static const UnityProfilerMarkerDesc* updateAudioDataMarker = nullptr;
 
 static UnityProfilerThreadId backgroundThreadID = 999;
+
+static std::unordered_map<int, UnityProfilerThreadId> audioThreadIDs;
+int nextThreadID = 0;
+
 #endif
 
 extern "C" void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API UnityPluginLoad(IUnityInterfaces * unityInterfaces)
@@ -91,6 +97,31 @@ extern "C" void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API UnityPluginUnload()
 }
 
 #ifdef PROFILE_AUDIO_THREAD
+int RegisterAudioThread()
+{
+	if (GetDevBuild())
+	{
+		auto [it, success] = audioThreadIDs.emplace(nextThreadID, nextThreadID);
+		if (!success)
+			return -1;
+		nextThreadID++;
+		GetUnityProfiler()->RegisterThread(&it->second, "Acoustics", "Audio Thread");
+		return it->first;
+	}
+	return -1;
+}
+
+void UnregisterAudioThread(int id)
+{
+	if (GetDevBuild())
+	{
+		auto it = audioThreadIDs.find(id);
+		if (it != audioThreadIDs.end())
+			GetUnityProfiler()->UnregisterThread(it->second);
+		audioThreadIDs.erase(it);
+	}
+}
+
 void BeginSource()
 {
 	if (GetDevBuild())

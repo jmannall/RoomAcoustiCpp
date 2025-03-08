@@ -6,7 +6,7 @@
 // Spatialiser headers
 #include "Spatialiser/Context.h"
 #include "Spatialiser/Types.h"
-#include "Spatialiser/Mutexes.h"
+#include "Spatialiser/Globals.h"
 
 // Unity headers
 #include "Unity/Debug.h"
@@ -23,8 +23,9 @@ namespace RAC
 	namespace Spatialiser
 	{
 
-		// Global mutex
+		// Globals
 		std::mutex tuneInMutex;
+		std::unique_ptr<ThreadPool> audioThreadPool = nullptr;
 
 #ifndef DISABLE_SOFA_SUPPORT
 #if defined(UNITY_WIN) || (defined(TARGET_OS_OSX) && !defined(TARGET_OS_IOS))
@@ -104,6 +105,7 @@ namespace RAC
 
 			// Start background thread after all systems are initialized
 			IEMThread = std::thread(BackgroundProcessor, this);
+			audioThreadPool = std::make_unique<ThreadPool>(std::thread::hardware_concurrency());
 
 			mInputBuffer = Buffer(mConfig.numFrames);
 			mOutputBuffer = Buffer(2 * mConfig.numFrames); // Stereo output buffer
@@ -124,6 +126,8 @@ namespace RAC
 
 			StopRunning();
 			IEMThread.join();
+			if (audioThreadPool)
+				audioThreadPool.reset();
 
 			mImageEdgeModel.reset();
 			mSources.reset();

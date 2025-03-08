@@ -7,7 +7,6 @@
 
 // Spatialiser headers
 #include "Spatialiser/Source.h"
-#include "Spatialiser/Mutexes.h"
 #include "Spatialiser/Directivity.h"
 
 // DSP headers
@@ -227,14 +226,8 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Source::ProcessAudio(const Buffer& data, Matrix& reverbInput, Buffer& outputBuffer)
+		void Source::ProcessDirect(const Buffer& data, Matrix& reverbInput, Buffer& outputBuffer)
 		{
-			{
-				lock_guard<mutex> lock(*imageSourcesMutex);
-				for (auto& [key, imageSource] : mImageSources)
-					imageSource.ProcessAudio(data, reverbInput, outputBuffer);
-			}
-
 			lock_guard<std::mutex> lock(*dataMutex);
 			if (directivityFilter.Invalid())
 				return;
@@ -246,13 +239,12 @@ namespace RAC
 			mAirAbsorption.ProcessAudio(data, bStore, mConfig.numFrames, mConfig.lerpFactor);
 #ifdef PROFILE_AUDIO_THREAD
 			EndAirAbsorption();
-
+#endif
 			if (feedsFDN)
 			{
 				reverbInputFilter.ProcessAudio(bStore, bStoreReverb, mConfig.numFrames, mConfig.lerpFactor);
-
-				for (int i = 0; i < mConfig.numFrames; i++)
-					bInput[i] = static_cast<float>(bStoreReverb[i]);
+				std::transform(bStoreReverb.begin(), bStoreReverb.end(), bInput.begin(),
+					[](auto value) { return static_cast<float>(value); });
 
 				{
 					lock_guard<mutex> lock(tuneInMutex);
@@ -268,14 +260,15 @@ namespace RAC
 						reverbInput[i][j] += in;
 				}
 			}
+#ifdef PROFILE_AUDIO_THREAD
 			BeginReflection();
 #endif
 			directivityFilter.ProcessAudio(bStore, bStore, mConfig.numFrames, mConfig.lerpFactor);
 #ifdef PROFILE_AUDIO_THREAD
 			EndReflection();
 #endif
-			for (int i = 0; i < mConfig.numFrames; i++)
-				bInput[i] = static_cast<float>(bStore[i]);
+			std::transform(bStore.begin(), bStore.end(), bInput.begin(),
+				[](auto value) { return static_cast<float>(value); });
 
 #ifdef PROFILE_AUDIO_THREAD
 			Begin3DTI();
@@ -299,6 +292,47 @@ namespace RAC
 #ifdef PROFILE_AUDIO_THREAD
 			EndSource();
 #endif
+		}
+
+		////////////////////////////////////////
+
+		void Source::ProcessAudio(const Buffer& data, Matrix& reverbInput, Buffer& outputBuffer)
+		{
+			{
+				lock_guard<mutex> lock(*imageSourcesMutex);
+				std::latch latch(mImageSources.size() + 1);
+
+				size_t index = 0;
+				for (auto& [key, imageSource] : mImageSources)
+				{
+					size_t threadIndex = index++; // Each thread gets a unique index
+					audioThreadPool->enqueue([&, threadIndex] {
+						std::get<2>(threadResults[threadIndex]) = imageSource.ProcessAudio(data, std::get<0>(threadResults[threadIndex]), std::get<1>(threadResults[threadIndex]));
+						// No need for a mutex, each thread writes to a unique index
+
+						latch.count_down();
+						});
+				}
+
+				audioThreadPool->enqueue([&] {
+					ProcessDirect(data, reverbInput, outputBuffer);
+					latch.count_down();
+					});
+
+				// Wait for all threads to finish
+				latch.wait();
+
+				// Now safely merge the results **sequentially**
+				for (const auto& [localReverb, localOutput, fdnChannel] : threadResults)
+				{
+					outputBuffer += localOutput;
+					if (fdnChannel != -1)
+					{
+						for (int i = 0; i < mConfig.numFrames; i++)
+							reverbInput[i][fdnChannel] += localReverb[i];
+					}
+				}
+			}
 		}
 
 		////////////////////////////////////////
@@ -353,6 +387,7 @@ namespace RAC
 				if (UpdateImageSource(vSource))
 					keys.push_back(key);
 			}
+
 			for (const std::string& key : keys)
 				currentImageSources.erase(key);
 		}
@@ -370,7 +405,10 @@ namespace RAC
 				{
 					unique_lock<mutex> lock(*imageSourcesMutex, defer_lock);
 					if (lock.try_lock())
+					{
 						mImageSources.try_emplace(data.GetKey(), mCore, mConfig, data, fdnChannel);
+						threadResults.resize(mImageSources.size(), { Buffer(mConfig.numFrames), Buffer(2 * mConfig.numFrames), -1 });
+					}
 					else
 					{
 #ifdef DEBUG_IMAGE_SOURCE
@@ -400,7 +438,12 @@ namespace RAC
 					{
 						unique_lock<mutex> lock(*imageSourcesMutex, defer_lock);
 						if (lock.try_lock())
+						{
 							n = mImageSources.erase(data.GetKey());
+							BeginFDN();
+							threadResults.resize(mImageSources.size(), { Buffer(mConfig.numFrames), Buffer(2 * mConfig.numFrames), -1 });
+							EndFDN();
+						}
 					}
 
 					if (n == 1) // Check vSource has been successfully erased

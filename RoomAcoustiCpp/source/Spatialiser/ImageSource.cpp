@@ -9,7 +9,7 @@
 
 // Spatialiser headers
 #include "Spatialiser/ImageSource.h"
-#include "Spatialiser/Mutexes.h"
+#include "Spatialiser/Globals.h"
 
 // Unity headers
 #include "Unity/UnityInterface.h"
@@ -118,9 +118,11 @@ namespace RAC
 		{
 			if (diffraction)
 			{
-				assert(i - diffractionIndex < mEdges.size());
 				if (i >= diffractionIndex)
+				{
+					assert(i - diffractionIndex < mEdges.size());
 					return mEdges[i - diffractionIndex].GetEdgeCoordinate(mDiffractionPath.GetApexZ());
+				}
 			}
 			assert(i < mPositions.size());
 			return mPositions[i];
@@ -183,6 +185,7 @@ namespace RAC
 
 		ImageSource::~ImageSource()
 		{
+			lock_guard<mutex> lock(*audioMutex);
 			mCore->RemoveSingleSourceDSP(mSource);
 		}
 
@@ -386,6 +389,7 @@ namespace RAC
 
 		void ImageSource::Remove()
 		{
+			// audioMutex already locked
 #ifdef DEBUG_IMAGE_SOURCE
 			Debug::Log("Remove virtual source", Colour::Red);
 #endif
@@ -398,15 +402,21 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void ImageSource::ProcessAudio(const Buffer& data, Matrix& reverbInput, Buffer& outputBuffer)
+		int ImageSource::ProcessAudio(const Buffer& data, Buffer& reverbInput, Buffer& outputBuffer)
 		{
 			lock_guard<mutex> lock(*audioMutex);
 
 			if (!isInitialised)
-				return;
+			{
+				std::fill(outputBuffer.begin(), outputBuffer.end(), 0.0);
+				return -1;
+			}
 
 			if (mCurrentGain == 0.0 && mTargetGain == 0.0)
-				return;
+			{
+				std::fill(outputBuffer.begin(), outputBuffer.end(), 0.0);
+				return -1;
+			}
 
 #ifdef PROFILE_AUDIO_THREAD
 			BeginVirtualSource();
@@ -452,14 +462,14 @@ namespace RAC
 #endif
 			if (mCurrentGain == mTargetGain)
 			{
-				for (int i = 0; i < mConfig.numFrames; i++)
-					bInput[i] = static_cast<float>(bStore[i] * mCurrentGain);
+				std::transform(bStore.begin(), bStore.end(), bInput.begin(),
+					[&](auto value) { return static_cast<float>(value * mCurrentGain); });
 			}
 			else if (Equals(mCurrentGain, mTargetGain))
 			{
 				mCurrentGain = mTargetGain;
-				for (int i = 0; i < mConfig.numFrames; i++)
-					bInput[i] = static_cast<float>(bStore[i] * mCurrentGain);
+				std::transform(bStore.begin(), bStore.end(), bInput.begin(),
+					[&](auto value) { return static_cast<float>(value * mCurrentGain); });
 			}
 			else
 			{
@@ -474,20 +484,24 @@ namespace RAC
 			Begin3DTI();
 #endif
 			{
-				lock_guard<mutex> lock(tuneInMutex);
+				// lock_guard<mutex> lock(tuneInMutex);
 				mSource->SetSourceTransform(transform);
 				mSource->SetBuffer(bInput);
-
+				
+				// lock_guard<mutex> lock(tuneInMutex);
 				if (feedsFDN)
 				{
 					{
 						mSource->ProcessAnechoic(bMonoOutput, bOutput.left, bOutput.right);
-						for (int i = 0; i < mConfig.numFrames; i++)
-							reverbInput[i][mFDNChannel] += static_cast<Real>(bMonoOutput[i]);
+						std::transform(bMonoOutput.begin(), bMonoOutput.end(), reverbInput.begin(),
+							[](auto value) { return static_cast<Real>(value); });
 					}
 				}
 				else
+				{
+					std::fill(reverbInput.begin(), reverbInput.end(), 0.0);
 					mSource->ProcessAnechoic(bOutput.left, bOutput.right);
+				}
 			}
 #ifdef PROFILE_AUDIO_THREAD
 			End3DTI();
@@ -495,12 +509,13 @@ namespace RAC
 			int j = 0;
 			for (int i = 0; i < mConfig.numFrames; i++)
 			{
-				outputBuffer[j++] += static_cast<Real>(bOutput.left[i]);
-				outputBuffer[j++] += static_cast<Real>(bOutput.right[i]);
+				outputBuffer[j++] = static_cast<Real>(bOutput.left[i]);
+				outputBuffer[j++] = static_cast<Real>(bOutput.right[i]);
 			}
 #ifdef PROFILE_AUDIO_THREAD
 			EndVirtualSource();
 #endif
+			return mFDNChannel;
 		}
 
 		////////////////////////////////////////

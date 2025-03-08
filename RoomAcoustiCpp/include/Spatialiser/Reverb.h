@@ -17,6 +17,7 @@
 // Common headers
 #include "Common/Types.h"
 #include "Common/Vec3.h"
+#include "Common/ThreadPool.h"
 
 // Spatialiser headers
 #include "Spatialiser/Types.h"
@@ -288,6 +289,8 @@ namespace RAC
 			std::atomic<Real> mCurrentGain;		// Current reverberation level
 
 			Binaural::CCore* mCore;		// 3DTI core
+
+			std::vector<Buffer> threadResults;
 		};
 	}
 }

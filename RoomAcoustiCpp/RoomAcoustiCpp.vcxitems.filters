@@ -209,7 +209,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\ImageEdge.h">
       <Filter>Header Files\Spatialiser</Filter>
     </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Mutexes.h">
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Globals.h">
       <Filter>Header Files\Spatialiser</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\AirAbsorption.h">
@@ -223,6 +223,9 @@
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Directivity.h">
       <Filter>Header Files\Spatialiser</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\ThreadPool.h">
+      <Filter>Header Files\Common</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

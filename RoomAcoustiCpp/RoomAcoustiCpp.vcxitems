@@ -45,6 +45,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Definitions.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Matrix.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\SphericalGeometries.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\ThreadPool.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Vec4.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\ScopedTimer.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Types.h" />
@@ -66,7 +67,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\ImageEdge.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\ImageSource.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Interface.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Mutexes.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Globals.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\SourceManager.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Reverb.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Room.h" />
