@@ -92,7 +92,6 @@ namespace RAC
 			inline void InitDelay(const int delayLength)
 			{ 
 				mT = static_cast<Real>(delayLength) / mConfig.fs;
-				std::lock_guard<std::mutex> lock(*mBufferMutex);
 				mBuffer.ResizeBuffer(delayLength);
 			}
 
@@ -119,7 +118,6 @@ namespace RAC
 			Config mConfig;									// The spatialiser configuration
 			Buffer mBuffer;									// The internal delay line
 			GraphicEQ mAbsorptionFilter;					// The absorption filter to match the target decay time
-			std::shared_ptr<std::mutex> mBufferMutex;		// Protects mBuffer
 
 			Real mT;		// The current delay in seconds
 			int idx;		// Current delay line read index

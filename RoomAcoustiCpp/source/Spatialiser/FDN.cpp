@@ -32,7 +32,6 @@ namespace RAC
 
 		Channel::Channel(const int delayLength, const Coefficients& T60, const Config& config) : mConfig(config), mAbsorptionFilter(config.frequencyBands, config.Q, config.fs), idx(0)
 		{
-			mBufferMutex = std::make_shared<std::mutex>();
 			InitDelay(delayLength);
 			InitAbsorption(T60);
 		}
@@ -50,8 +49,6 @@ namespace RAC
 
 		Real Channel::GetOutput(const Real input)
 		{
-			std::lock_guard<std::mutex> lock(*mBufferMutex);
-
 			if (idx >= mBuffer.Length())
 				idx = 0;
 			Real out = mAbsorptionFilter.GetOutput(mBuffer[idx]);

@@ -322,7 +322,7 @@ namespace RAC
 				// Wait for all threads to finish
 				latch.wait();
 
-				// Now safely merge the results **sequentially**
+				// Now safely merge the results
 				for (const auto& [localReverb, localOutput, fdnChannel] : threadResults)
 				{
 					outputBuffer += localOutput;
