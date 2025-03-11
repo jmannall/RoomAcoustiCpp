@@ -8,7 +8,7 @@
 #ifndef RoomAcoustiCpp_Source_h
 #define RoomAcoustiCpp_Source_h
 
-#include<latch>
+#include <latch>
 #include "Common/ThreadPool.h"
 #include <tuple>
 

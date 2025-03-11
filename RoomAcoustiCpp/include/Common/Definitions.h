@@ -145,7 +145,7 @@ namespace RAC
 		//////////////////// Utility Functions ////////////////////
 
 		/**
-		* @brief Returns the sign of x
+		* @return The sign of x
 		*/
 		inline Real Sign(const Real x) { return (x > 0) - (x < 0); }
 
@@ -164,6 +164,83 @@ namespace RAC
 		{
 			Real factor = Pow10(static_cast<Real>(dp));
 			return round(x * factor) / factor;
+		}
+
+		/**
+		* @return n! (factorial of n)
+		*/
+		inline Real Factorial(const int n)
+		{
+			if (n == 0 || n == 1)
+				return 1.0;
+			Real result = 1.0;
+			for (int i = 2; i <= n; ++i)
+				result *= i;
+			return result;
+		}
+
+		/**
+		* @return (n)!! = n * (n-2) * (n-4) * ... * (1 or 2) (double factorial of n)
+		*/
+		inline Real DoubleFactorial(const int n)
+		{
+			if (n <= 0)
+				return 1.0;  // By convention, 0!! = 1
+			Real result = 1.0;
+			for (int i = n; i > 1; i -= 2)
+				result *= i;
+			return result;
+		}
+
+		/**
+		* @brief Compute the Associated Legendre Polynomial P_l^m(x)
+		* 
+		* @params l The degree of the polynomial
+		* @params m The order of the polynomial
+		* @params x The value [cos(theta)] to evaluate the polynomial at
+		*/
+		inline Real LegendrePolynomial(const int l, const int m, const Real x)
+		{
+			// Base case: P_0^0(x) = 1
+			if (l == 0 && m == 0)
+				return 1.0;
+
+			// Compute P_m^m(x) using the relation:
+			// P_m^m(x) = (-1)^m * (2m-1)!! * (1-x^2)^(m/2)
+			if (l == m)
+			{
+				Real factorial = (m % 2 == 0 ? 1 : -1) * DoubleFactorial(2 * m - 1);
+				return factorial * std::pow(1.0 - x * x, m / 2.0);
+			}
+
+			// Compute P_(m+1)^m(x) using:
+			// P_(m+1)^m(x) = x * (2m + 1) * P_m^m(x)
+			if (l == m + 1)
+				return x * (2 * m + 1) * LegendrePolynomial(m, m, x);
+
+			// Use recurrence relation for higher l:
+			// P_l^m(x) = ( (2l-1) * x * P_(l-1)^m(x) - (l+m-1) * P_(l-2)^m(x) ) / (l-m)
+			Real P_lm1_m = LegendrePolynomial(l - 1, m, x);
+			Real P_lm2_m = LegendrePolynomial(l - 2, m, x);
+
+			return ((2 * l - 1) * x * P_lm1_m - (l + m - 1) * P_lm2_m) / (l - m);
+		}
+
+		/**
+		* @brief Compute the normalised spherical harmonic associated Legendre function
+		* 
+		* @params l The degree of the polynomial
+		* @params m The order of the polynomial
+		* @params x The value [cos(theta)] to evaluate the polynomial at
+		*/
+		inline Real NormalisedSHLegendrePlm(const int l, const int m, const Real x)
+		{
+			if (m > l)
+				return 0.0; // Convention: P_l^m(x) = 0 for m > l
+
+			Real Plm = LegendrePolynomial(l, m, x);
+			Real norm = std::sqrt((2.0 * l + 1.0) / (PI_4)*Factorial(l - m) / Factorial(l + m));
+			return norm * Plm;
 		}
 	}
 }
