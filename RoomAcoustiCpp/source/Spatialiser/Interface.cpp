@@ -65,6 +65,15 @@ namespace RAC
 
 		////////////////////////////////////////
 
+		void SetHeadphoneEQ(const Buffer& leftIR, const Buffer& rightIR)
+		{
+			auto context = GetContext();
+			if (context)
+				context->SetHeadphoneEQ(leftIR, rightIR);
+		}
+
+		////////////////////////////////////////
+
 		void UpdateSpatialisationMode(const SpatialisationMode mode)
 		{
 			auto context = GetContext();

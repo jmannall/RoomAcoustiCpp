@@ -82,7 +82,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		Context::Context(const Config& config) : mConfig(config), mIsRunning(true), IEMThread()
+		Context::Context(const Config& config) : mConfig(config), mIsRunning(true), IEMThread(), applyHeadphoneEQ(false), headphoneEQ(config.fs)
 		{
 #ifdef DEBUG_INIT
 			Debug::Log("Init Context", Colour::Green);
@@ -375,6 +375,10 @@ namespace RAC
 			{
 				while (lock.try_lock() == false) { std::this_thread::yield(); }
 			}
+
+			if (applyHeadphoneEQ)
+				headphoneEQ.ProcessAudio(mOutputBuffer, mOutputBuffer);
+			
 			// Copy output to send and set pointer
 			mSendBuffer = mOutputBuffer;
 			*bufferPtr = &mSendBuffer[0];

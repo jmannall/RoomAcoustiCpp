@@ -26,6 +26,7 @@
 #include "Spatialiser/Reverb.h"
 #include "Spatialiser/Room.h"
 #include "Spatialiser/ImageEdge.h"
+#include "Spatialiser/HeadphoneEQ.h"
 
 // 3DTI Headers
 #include "Common/Transform.h"
@@ -68,6 +69,14 @@ namespace RAC
 			*/
 			bool LoadSpatialisationFiles(const int hrtfResamplingStep, const std::vector<std::string>& filePaths);
 				
+			/**
+			* @brief Sets the headphone EQ filters.
+			*
+			* @param leftIR The impulse response for the left channel.
+			* @param rightIR The impulse response for the right channel.
+			*/
+			inline void SetHeadphoneEQ(const Buffer& leftIR, const Buffer& rightIR) { headphoneEQ.SetFilters(leftIR, rightIR); applyHeadphoneEQ = true; }
+
 			/**
 			* @brief Updates the spatialisation mode for each component of the spatialiser.
 			*
@@ -256,11 +265,13 @@ namespace RAC
 			/**
 			* Spatialiser
 			*/
-			Config mConfig;			// RAC Config
-			bool mIsRunning;		// Flag to check if the spatialiser is running
-			std::thread IEMThread;	// Background thread to run the image edge model
-			Vec3 listenerPosition;	// Stored listener position
-			Real headRadius;		// Stored head radius from 3DTI
+			Config mConfig;				// RAC Config
+			bool mIsRunning;			// Flag to check if the spatialiser is running
+			std::thread IEMThread;		// Background thread to run the image edge model
+			Vec3 listenerPosition;		// Stored listener position
+			Real headRadius;			// Stored head radius from 3DTI
+			bool applyHeadphoneEQ;		// Flag to apply headphone EQ
+			HeadphoneEQ headphoneEQ;	// Headphone EQ
 
 			/**
 			* 3DTI components

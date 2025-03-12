@@ -11,6 +11,7 @@
 #include "Common/Vec3.h"
 #include "Common/Vec4.h"
 #include "Common/Types.h"
+#include "DSP/Buffer.h"
 
 // Spatialiser headers
 #include "Spatialiser/Types.h"
@@ -18,6 +19,7 @@
 namespace RAC
 {
 	using namespace Common;
+	using namespace DSP;
 	namespace Spatialiser
 	{
 		/**
@@ -40,6 +42,14 @@ namespace RAC
 		* @param filePaths The file paths for HRTF files.
 		*/
 		bool LoadSpatialisationFiles(const int hrtfResamplingStep, const std::vector<std::string>& filePaths);
+
+		/**
+		* @brief Sets the headphone EQ filters.
+		*
+		* @param leftIR The impulse response for the left channel.
+		* @param rightIR The impulse response for the right channel.
+		*/
+		void SetHeadphoneEQ(const Buffer& leftIR, const Buffer& rightIR);
 
 		/**
 		* Sets the spatialisation mode for the HRTF processing.

@@ -239,7 +239,7 @@ namespace RAC
 				return 0.0; // Convention: P_l^m(x) = 0 for m > l
 
 			Real Plm = LegendrePolynomial(l, m, x);
-			Real norm = std::sqrt((2.0 * l + 1.0) / (PI_4)*Factorial(l - m) / Factorial(l + m));
+			Real norm = std::sqrt((2.0 * l + 1.0) / (PI_4) * Factorial(l - m) / Factorial(l + m));
 			return norm * Plm;
 		}
 	}

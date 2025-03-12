@@ -124,6 +124,23 @@ extern "C"
 	}
 
 	/**
+	* @brief Sets the headphone EQ filters.
+	*
+	* @param leftIR The impulse response for the left channel.
+	* @param rightIR The impulse response for the right channel.
+	*/
+	EXPORT void API RACSetHeadphoneEQ(const float* leftIR, const float* rightIR, int irLength)
+	{
+		std::vector<Real> left(irLength);
+		std::vector<Real> right(irLength);
+
+		std::transform(leftIR, leftIR + irLength, left.begin(), [](float f) { return static_cast<Real>(f); });
+		std::transform(rightIR, rightIR + irLength, right.begin(), [](float f) { return static_cast<Real>(f); });
+
+		SetHeadphoneEQ(left, right);
+	}
+
+	/**
 	* Sets the spatialisation mode (high quality, high performance or none).
 	*
 	* The mapping is as follows:
