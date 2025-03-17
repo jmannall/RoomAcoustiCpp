@@ -37,6 +37,12 @@
     <Filter Include="Source Files\DSP">
       <UniqueIdentifier>{6dbdf9af-0bc0-4b16-a505-df86882c6a32}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\NN">
+      <UniqueIdentifier>{2f9b7dac-b322-47c0-a624-bef1cc89105a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\NN">
+      <UniqueIdentifier>{71b87e4b-dd51-4948-9d66-89c889ae1188}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Context.cpp">
@@ -111,13 +117,27 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\ImageSource.cpp">
       <Filter>Source Files\Spatialiser</Filter>
     </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\elementwiseOperationInPlace.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\myBestNN.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\myNN_data.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\myNN_initialize.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\myNN_terminate.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\mySmallNN.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\predict.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\elementwiseOperationInPlace.cpp">
+      <Filter>Source Files\NN</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\myBestNN.cpp">
+      <Filter>Source Files\NN</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\myNN_data.cpp">
+      <Filter>Source Files\NN</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\myNN_initialize.cpp">
+      <Filter>Source Files\NN</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\myNN_terminate.cpp">
+      <Filter>Source Files\NN</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\mySmallNN.cpp">
+      <Filter>Source Files\NN</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\predict.cpp">
+      <Filter>Source Files\NN</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Types.h">
@@ -234,20 +254,44 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\ThreadPool.h">
       <Filter>Header Files\Common</Filter>
     </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\anonymous_function.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\elementwiseOperationInPlace.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\myBestNN.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\myNN_data.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\myNN_initialize.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\myNN_internal_types.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\myNN_terminate.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\myNN_types.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\mySmallNN.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\predict.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\rtwtypes.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\tmwtypes.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\HeadphoneEQ.h">
       <Filter>Header Files\Spatialiser</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\anonymous_function.h">
+      <Filter>Header Files\NN</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\elementwiseOperationInPlace.h">
+      <Filter>Header Files\NN</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\myBestNN.h">
+      <Filter>Header Files\NN</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\myNN_data.h">
+      <Filter>Header Files\NN</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\myNN_initialize.h">
+      <Filter>Header Files\NN</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\myNN_internal_types.h">
+      <Filter>Header Files\NN</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\myNN_terminate.h">
+      <Filter>Header Files\NN</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\myNN_types.h">
+      <Filter>Header Files\NN</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\mySmallNN.h">
+      <Filter>Header Files\NN</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\predict.h">
+      <Filter>Header Files\NN</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\rtwtypes.h">
+      <Filter>Header Files\NN</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\tmwtypes.h">
+      <Filter>Header Files\NN</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
