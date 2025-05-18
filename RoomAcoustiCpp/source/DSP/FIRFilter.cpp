@@ -18,55 +18,30 @@ namespace RAC
 
 		Real FIRFilter::GetOutput(const Real input)
 		{
-			inputLine[count] = input;
 			Real output = 0.0;
 			int index = count;
+			const int irLength = impulseResponse.Length();
 
-			if (filterTaps % 8 != 0)
+			inputLine[index] = input;
+			assert(inputLine.Length() == 2 * irLength);
+			inputLine[index + irLength] = input;
+
+			assert(irLength % 8 == 0);
+			// Assume length is always a multiple of 8
+			for (int i = 0; i < irLength; i += 8)
 			{
-				for (int i = 0; i < filterTaps; i++)
-				{
-					output += impulseResponse[i] * inputLine[index++];
-					if (index >= filterTaps) { index = 0; }
-				}
+				output += impulseResponse[i] * inputLine[index++];
+				output += impulseResponse[i + 1] * inputLine[index++];
+				output += impulseResponse[i + 2] * inputLine[index++];
+				output += impulseResponse[i + 3] * inputLine[index++];
+				output += impulseResponse[i + 4] * inputLine[index++];
+				output += impulseResponse[i + 5] * inputLine[index++];
+				output += impulseResponse[i + 6] * inputLine[index++];
+				output += impulseResponse[i + 7] * inputLine[index++];
 			}
-			else
-			{
-				// This is easier for the compiler to vectorise
-				Real result_a = 0.0;
-				Real result_b = 0.0;
-				Real result_c = 0.0;
-				Real result_d = 0.0;
-				Real result_e = 0.0;
-				Real result_f = 0.0;
-				Real result_g = 0.0;
-				Real result_h = 0.0;
-				int i = 0;
-				while (i < filterTaps)
-				{
-					if (index < (filterTaps - 8))
-					{
-						result_a += impulseResponse[i++] * inputLine[index++];
-						result_b += impulseResponse[i++] * inputLine[index++];
-						result_c += impulseResponse[i++] * inputLine[index++];
-						result_d += impulseResponse[i++] * inputLine[index++];
-						result_e += impulseResponse[i++] * inputLine[index++];
-						result_f += impulseResponse[i++] * inputLine[index++];
-						result_g += impulseResponse[i++] * inputLine[index++];
-						result_h += impulseResponse[i++] * inputLine[index++];
-					}
-					else
-					{
-						for (int k = 0; k < 8; k++)
-						{
-							output += impulseResponse[i++] * inputLine[index++];
-							if (index >= filterTaps) { index = 0; }
-						}
-					}
-				}
-				output += result_a + result_b + result_c + result_d + result_e + result_f + result_g + result_h;
-			}
-			if (--count < 0) { count = static_cast<int>(filterTaps) - 1; }
+
+			if (--count < 0)
+				count = irLength - 1; // Check all logic is correct, integrate new Wrap index function - double buffer size to avoid checks in process loop
 			return output;
 		}
 
@@ -74,16 +49,23 @@ namespace RAC
 
 		void FIRFilter::SetImpulseResponse(const Buffer& ir)
 		{
-			Resize(ir.Length());
-			for (int i = 0; i < ir.Length(); i++)
+			const int irLength = ir.Length();
+			Resize(irLength);
+			for (int i = 0; i < irLength; i++)
 				impulseResponse[i] = ir[i];
+			//count = impulseResponse.Length() - 1;
 		}
 
 		////////////////////////////////////////
 
 		void FIRFilter::IncreaseSize(const int length)
 		{
-			inputLine.ResizeBuffer(length);
+			const int oldLength = impulseResponse.Length();
+			assert(length % 8 == 0);
+			inputLine.ResizeBuffer(2 * length);
+
+			for (int i = count + oldLength; i < 2 * oldLength; i++)
+				inputLine[i] = 0.0;
 			impulseResponse.ResizeBuffer(length);
 		}
 
@@ -91,14 +73,12 @@ namespace RAC
 
 		void FIRFilter::DecreaseSize(const int length)
 		{
-			Buffer store = inputLine;
-			int index = count;
-			for (int i = 0; i < filterTaps; i++)
-			{
-				inputLine[i] = store[index++];
-				if (index >= filterTaps) { index = 0; }
-			}
-			inputLine.ResizeBuffer(length);
+			assert(length % 8 == 0);
+			for (int i = 0, index = count; i < length; i++, index++)
+				inputLine[i] = inputLine[index];
+			inputLine.ResizeBuffer(2 * length);
+			for (int i = 0, index = length; i < length; i++, index++)
+				inputLine[index] = inputLine[i];
 			impulseResponse.ResizeBuffer(length);
 			count = 0;
 		}

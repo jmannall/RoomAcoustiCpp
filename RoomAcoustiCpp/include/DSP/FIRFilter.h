@@ -30,7 +30,7 @@ namespace RAC
 			*
 			* @param impulseResponse The impulse response to initialise the FIRFilter with
 			*/
-			FIRFilter(const Buffer& ir) : impulseResponse(), filterTaps(impulseResponse.Length()), count(static_cast<int>(ir.Length()) - 1), inputLine() { SetImpulseResponse(ir); };
+			FIRFilter(const Buffer& ir) { SetImpulseResponse(ir); };
 			
 			/**
 			* @brief Default deconstructor
@@ -54,16 +54,16 @@ namespace RAC
 			*/
 			inline void Resize(int length)
 			{
+				int taps = impulseResponse.Length();
 				if (length % 8 != 0)
 					length += (8 - length % 8);
-				if (length != filterTaps)
-				{
-					if (length > filterTaps)
-						IncreaseSize(length);
-					else
-						DecreaseSize(length);
-					filterTaps = length;
-				}
+
+				if (length == taps)
+					return;
+				if (length > taps)
+					IncreaseSize(length);
+				else
+					DecreaseSize(length);
 			}
 
 			/**
@@ -74,7 +74,7 @@ namespace RAC
 				Lerp(impulseResponse, targetIr, lerpFactor);
 			}
 
-			inline Buffer GetImpulseResponse() const { return impulseResponse; }
+			inline const Buffer& GetImpulseResponse() const { return impulseResponse; }
 
 			/**
 			* @brief Sets the impulse response of the FIRFilter
@@ -82,6 +82,11 @@ namespace RAC
 			* @param ir The new impulse response to set
 			*/
 			void SetImpulseResponse(const Buffer& ir);
+
+			/**
+			* @brief Reset internal inputLine to zeros
+			*/
+			inline void Reset() { inputLine.ResetBuffer(); }
 
 		private:
 
@@ -104,7 +109,6 @@ namespace RAC
 			Buffer impulseResponse;		// Impulse response buffer
 			Buffer inputLine;			// Input line buffer
 
-			int filterTaps;		// Length of impulse response
 			int count;			// Index for the next sample entry to the input line buffer
 		};
 	}

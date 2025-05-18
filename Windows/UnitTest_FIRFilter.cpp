@@ -18,16 +18,31 @@ namespace RAC
 	{
 	public:
 
-		TEST_METHOD(Resize)
+		TEST_METHOD(DecreaseSize)
 		{
-			std::vector<Real> ir = { 1.0, 0.5, 0.0, 0.2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
-			Buffer impulseResponse = Buffer(ir);
+			Buffer impulseResponse = Buffer({ 1.0, 0.5, 0.0, 0.2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 });
 			FIRFilter filter = FIRFilter(impulseResponse);
 
 			filter.GetOutput(1.0);
 			filter.GetOutput(2.0);
-			std::vector<Real> ir2 = { 1.0, 0.5, 0.0, 0.2 };
-			Buffer impulseResponse2 = Buffer(ir2);
+			Buffer impulseResponse2 = Buffer({ 1.0, 0.5, 0.0, 0.2 });
+			filter.SetImpulseResponse(impulseResponse2);
+
+			std::vector<Real> input = { 1.0, 0.0, 2.0, 0.0, 0.0, 0.0 };
+			std::vector<Real> output = { 2.0, 0.7, 2.4, 1.2, 0.0, 0.4 };
+
+			for (int i = 0; i < input.size(); i++)
+				Assert::AreEqual(output[i], filter.GetOutput(input[i]), L"Wrong output");
+		}
+
+		TEST_METHOD(IncreaseSize)
+		{
+			Buffer impulseResponse = Buffer({ 1.0, 0.5, 0.0, 0.2 });
+			FIRFilter filter = FIRFilter(impulseResponse);
+
+			filter.GetOutput(1.0);
+			filter.GetOutput(2.0);
+			Buffer impulseResponse2 = Buffer({ 1.0, 0.5, 0.0, 0.2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 });
 			filter.SetImpulseResponse(impulseResponse2);
 
 			std::vector<Real> input = { 1.0, 0.0, 2.0, 0.0, 0.0, 0.0 };
