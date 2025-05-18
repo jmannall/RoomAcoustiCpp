@@ -344,6 +344,7 @@ namespace RAC
 				// Initialise source to core
 				mSource = mCore->CreateSingleSourceDSP();
 				mSource->EnablePropagationDelay();
+				mSource->DisableFarDistanceEffect();
 
 				if (mConfig.lerpFactor == 1.0)
 				{
@@ -423,36 +424,24 @@ namespace RAC
 #endif
 			if (diffraction)
 			{
-				{
+				
 #ifdef PROFILE_AUDIO_THREAD
-					BeginDiffraction();
+				BeginDiffraction();
 #endif
-					ProcessDiffraction(data, bStore);
+				ProcessDiffraction(data, bStore);
 #ifdef PROFILE_AUDIO_THREAD
-					EndDiffraction();
-#endif
-					if (reflection)
-					{
-#ifdef PROFILE_AUDIO_THREAD
-						BeginReflection();
-#endif
-						mFilter.ProcessAudio(bStore, bStore, mConfig.numFrames, mConfig.lerpFactor);
-#ifdef PROFILE_AUDIO_THREAD
-						EndReflection();
-#endif
-					}
-				}
-			}
-			else if (reflection)
-			{
-#ifdef PROFILE_AUDIO_THREAD
-				BeginReflection();
-#endif
-				mFilter.ProcessAudio(data, bStore, mConfig.numFrames, mConfig.lerpFactor);
-#ifdef PROFILE_AUDIO_THREAD
-				EndReflection();
+				EndDiffraction();
 #endif
 			}
+					
+#ifdef PROFILE_AUDIO_THREAD
+			BeginReflection();	// Always process as also includes directivity
+#endif
+			mFilter.ProcessAudio(data, bStore, mConfig.numFrames, mConfig.lerpFactor);
+#ifdef PROFILE_AUDIO_THREAD
+			EndReflection();
+#endif
+
 #ifdef PROFILE_AUDIO_THREAD
 			BeginAirAbsorption();
 #endif
