@@ -556,6 +556,9 @@ namespace RAC
 
 		Coefficients Room::GetReverbTime()
 		{
+			if (reverbFormula == ReverbFormula::Custom)
+				return T60;
+
 			if (mVolume <= 0.0)
 				return Coefficients(numAbsorptionBands);
 
@@ -578,7 +581,7 @@ namespace RAC
 			case(ReverbFormula::Eyring):
 				return Eyring(absorption, surfaceArea);
 			default:
-				return Coefficients(numAbsorptionBands);
+				return Sabine(absorption);
 			}
 		}
 

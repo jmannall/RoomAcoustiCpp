@@ -212,7 +212,7 @@ namespace RAC
 			/**
 			* @brief Run simple ray tracing and update the late reverberation reflection filters
 			*/
-			void UpdateLateReverbFilters();
+			bool UpdateLateReverbFilters(bool updateFilters);
 
 			/**
 			* @brief Erase old entries from the image source data map
@@ -245,6 +245,7 @@ namespace RAC
 			Coefficients frequencyBands;	// Frequency bands for graphic equalisers
 			bool currentCycle;				// Stores the current cycle of the currently processed source
 			bool configChanged;				// True if the image edge model configuration has changed since the last run
+			bool reverbRunning;				// True if the late reverb is running, false otherwise
 
 			std::mutex dataStoreMutex;				// Protects mListenerPositionStore, mIEMConfigStore
 		};

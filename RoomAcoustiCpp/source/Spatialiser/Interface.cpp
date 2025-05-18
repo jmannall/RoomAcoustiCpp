@@ -92,20 +92,20 @@ namespace RAC
 
 		////////////////////////////////////////
 
+		void UpdateReverbTime(const ReverbFormula model)
+		{
+			auto context = GetContext();
+			if (context)
+				context->UpdateReverbTime(model);
+		}
+
+		////////////////////////////////////////
+
 		void UpdateReverbTime(const Coefficients& T60)
 		{
 			auto context = GetContext();
 			if (context)
 				context->UpdateReverbTime(T60);
-		}
-
-		////////////////////////////////////////
-
-		void UpdateReverbTimeFormula(const ReverbFormula model)
-		{
-			auto context = GetContext();
-			if (context)
-				context->UpdateReverbTimeFormula(model);
 		}
 
 		////////////////////////////////////////
@@ -229,11 +229,22 @@ namespace RAC
 				context->RemoveWall(id);
 		}
 
+		////////////////////////////////////////
+
 		void UpdatePlanesAndEdges()
 		{
 			auto context = GetContext();
 			if (context)
 				context->UpdatePlanesAndEdges();
+		}
+
+		////////////////////////////////////////
+		
+		void UpdateLateReverbGain(const Real gain)
+		{
+			auto context = GetContext();
+			if (context)
+				context->UpdateLateReverbGain(gain);
 		}
 
 		////////////////////////////////////////

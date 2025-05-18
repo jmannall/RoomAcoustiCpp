@@ -191,10 +191,10 @@ namespace RAC
 
 			Assert::IsTrue(success, L"Failed to load spatialisation files");
 
-			IEMConfig iemConfig = IEMConfig(3, DirectSound::doCheck, true, DiffractionSound::none, DiffractionSound::none, true, 0.0);
+			IEMConfig iemConfig = IEMConfig(DirectSound::doCheck, 3, 0, 0, true, 0.0);
 			UpdateIEMConfig(iemConfig);
 			UpdateSpatialisationMode(SpatialisationMode::quality);
-			UpdateReverbTimeFormula(ReverbFormula::Eyring);
+			UpdateReverbTime(ReverbFormula::Eyring);
 			InitFDNMatrix(FDNMatrix::randomOrthogonal);
 			UpdateDiffractionModel(DiffractionModel::attenuate);
 
@@ -225,8 +225,8 @@ namespace RAC
 				"C:/Documents/GitHub/jmannall/RoomAcoustiCpp/SimulationData/LTC_FDN_Front.csv",
 				"C:/Documents/GitHub/jmannall/RoomAcoustiCpp/SimulationData/LTC_FDN_Side.csv" };
 
-			std::vector<IEMConfig> iemConfigs = { IEMConfig(3, DirectSound::doCheck, true, DiffractionSound::none, DiffractionSound::none, true, 0.0),
-				IEMConfig(0, DirectSound::doCheck, false, DiffractionSound::none, DiffractionSound::none, true, 0.0) };
+			std::vector<IEMConfig> iemConfigs = { IEMConfig(DirectSound::doCheck, 3, 0, 0, true, 0.0),
+							IEMConfig(DirectSound::doCheck, 0, 0, 0, true, 0.0) };
 
 			for (int t = 0; t < 2; t++)
 			{
@@ -309,10 +309,10 @@ namespace RAC
 
 			Assert::IsTrue(success, L"Failed to load spatialisation files");
 
-			IEMConfig iemConfig = IEMConfig(3, DirectSound::doCheck, true, DiffractionSound::none, DiffractionSound::none, true, 0.0);
+			IEMConfig iemConfig = IEMConfig(DirectSound::doCheck, 3, 0, 0, true, 0.0);
 			UpdateIEMConfig(iemConfig);
 			UpdateSpatialisationMode(SpatialisationMode::quality);
-			UpdateReverbTimeFormula(ReverbFormula::Sabine);
+			UpdateReverbTime(ReverbFormula::Sabine);
 			InitFDNMatrix(FDNMatrix::randomOrthogonal);
 			UpdateDiffractionModel(DiffractionModel::attenuate);
 

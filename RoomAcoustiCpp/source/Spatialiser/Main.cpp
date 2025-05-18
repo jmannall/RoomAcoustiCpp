@@ -203,26 +203,17 @@ extern "C"
 	* 0 -> none
 	* 1 -> doCheck
 	* 2 -> alwaysTrue
-	* 
-	* The diffracted sound is mapped as follows.
-	* 0 -> none
-	* 1 -> shadowZone
-	* 2 -> allZones
 	*
-	* @param order The maximum number of reflections or diffractions to consider in the IEM.
 	* @param dir Whether to consider direct sound.
-	* @param ref Whether to consider reflected sound.
-	* @param diff Whether to consider diffracted sound.
-	* @param refDiff Whether to consider combined reflected diffraction sound.
+	* @param reflOrder The maximum number of reflections in reflection only paths.
+	* @param shadowDiffOrder The maximum number of reflections or diffractions in shadowed diffraction paths.
+	* @param specularDiffOrder The maximum number of reflections or diffractions in specular diffraction paths.
 	* @param rev Whether to consider late reverberation.
 	*/
-	EXPORT void API RACUpdateIEMConfig(int order, int dir, bool ref, int diff, int refDiff, bool rev, float edgeLen)
+	EXPORT void API RACUpdateIEMConfig(int dir, int reflOrder, int shadowDiffOrder, int specularDiffOrder, bool rev, float edgeLen)
 	{
 		DirectSound direct = SelectDirectMode(dir);
-		DiffractionSound diffraction = SelectDiffractionMode(diff);
-		DiffractionSound reflectionDiffraction = SelectDiffractionMode(refDiff);
-
-		UpdateIEMConfig(IEMConfig(order, direct, ref, diffraction, reflectionDiffraction, rev, static_cast<Real>(edgeLen)));
+		UpdateIEMConfig(IEMConfig(direct, reflOrder, shadowDiffOrder, specularDiffOrder, rev, static_cast<Real>(edgeLen)));
 	}
 
 	/**
@@ -245,6 +236,7 @@ extern "C"
 	* The mapping is as follows:
 	* 0 -> Sabine
 	* 1 -> Eyring
+	* 2 -> Custom
 	* 
 	* @param id The ID corresponding to a reverb time formula.
 	*/
@@ -253,11 +245,13 @@ extern "C"
 		switch (id)
 		{
 			case(0):
-			{ UpdateReverbTimeFormula(ReverbFormula::Sabine); break; }
+			{ UpdateReverbTime(ReverbFormula::Sabine); break; }
 			case(1):
-			{ UpdateReverbTimeFormula(ReverbFormula::Eyring); break; }
+			{ UpdateReverbTime(ReverbFormula::Eyring); break; }
+			case(2):
+			{ UpdateReverbTime(ReverbFormula::Custom); break; }
 			default:
-			{ UpdateReverbTimeFormula(ReverbFormula::Sabine); break; }
+			{ UpdateReverbTime(ReverbFormula::Sabine); break; }
 		}
 	}
 
@@ -407,6 +401,7 @@ extern "C"
 	* 4 -> hypercardioid
 	* 5 -> bidirectional
 	* 6 -> genelec8020c
+	* 7 -> genelec8020c DTF
 	* 
 	* @param id The ID of the audio source to update.
 	* @param directivity The new directivity of the source.
@@ -429,6 +424,8 @@ extern "C"
 		{ UpdateSourceDirectivity(id, SourceDirectivity::bidirectional); break; }
 		case(6):
 		{ UpdateSourceDirectivity(id, SourceDirectivity::genelec8020c); break; }
+		case(7):
+		{ UpdateSourceDirectivity(id, SourceDirectivity::genelec8020cDTF); break; }
 		default:
 		{ UpdateSourceDirectivity(id, SourceDirectivity::omni); break; }
 		}
@@ -537,6 +534,16 @@ extern "C"
 	EXPORT void API RACUpdatePlanesAndEdges()
 	{
 		UpdatePlanesAndEdges();
+	}
+
+	/**
+	* Updates the late reverberation gain.
+	* 
+	* @param gain The new late reverberation gain.
+	*/
+	EXPORT void API RACUpdateLateReverbGain(float gain)
+	{
+		UpdateLateReverbGain(static_cast<Real>(gain));
 	}
 
 	/**

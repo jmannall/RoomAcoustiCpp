@@ -66,18 +66,18 @@ namespace RAC
 		void UpdateIEMConfig(const IEMConfig& config);
 
 		/**
+		* Updates the model in order to calculate the late reverberation time (T60).
+		*
+		* @param model The model used to calculate the late reverberation time.
+		*/
+		void UpdateReverbTime(const ReverbFormula model);
+
+		/**
 		* Overrides the current late reverberation time (T60).
 		*
 		* @param T60 The late reverberation time.
 		*/
 		void UpdateReverbTime(const Coefficients& T60);
-
-		/**
-		* Updates the model in order to calculate the late reverberation time (T60).
-		*
-		* @param model The model used to calculate the late reverberation time.
-		*/
-		void UpdateReverbTimeFormula(const ReverbFormula model);
 
 		/**
 		* Updates the FDN matrix used to process the late reverberation.
@@ -182,6 +182,13 @@ namespace RAC
 		* Updates the planes and edges of the room.
 		*/
 		void UpdatePlanesAndEdges();
+
+		/**
+		* Updates the late reverberation gain.
+		* 
+		* @param gain The new late reverberation gain.
+		*/
+		void UpdateLateReverbGain(const Real gain);
 
 		/**
 		* Submits an audio buffer to the audio source with the given ID.

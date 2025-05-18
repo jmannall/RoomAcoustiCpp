@@ -182,19 +182,20 @@ namespace RAC
 					std::transform(inputBuffer.begin(), inputBuffer.end(), bInput.begin(),
 						[&](auto value) { return static_cast<float>(value * targetGain); });
 				}
-			}
-#ifdef PROFILE_AUDIO_THREAD
-			Begin3DTI();
-#endif
-			{
-				// lock_guard<mutex> lock(tuneInMutex);
-				mSource->SetBuffer(bInput);
 
-				mSource->ProcessAnechoic(bOutput.left, bOutput.right);
-			}
 #ifdef PROFILE_AUDIO_THREAD
-			End3DTI();
+				Begin3DTI();
 #endif
+				{
+					// lock_guard<mutex> lock(tuneInMutex);
+					mSource->SetBuffer(bInput);
+
+					mSource->ProcessAnechoic(bOutput.left, bOutput.right);
+				}
+#ifdef PROFILE_AUDIO_THREAD
+				End3DTI();
+#endif
+			}
 
 			int j = 0;
 			for (int i = 0; i < mConfig.numFrames; i++)
@@ -321,11 +322,11 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Reverb::UpdateReflectionFilters(const std::vector<Absorption>& absorptions, const bool running)
+		bool Reverb::UpdateReflectionFilters(const std::vector<Absorption>& absorptions, const bool running)
 		{
 			{
 				if (valid && running)
-					mTargetGain = 1.0;
+					mTargetGain.store(reverbGain.load());
 				else
 				{
 					mTargetGain = 0.0;
@@ -338,7 +339,7 @@ namespace RAC
 						}
 						for (ReverbSource& source : mReverbSources)
 							source.Reset();
-						return;
+						return false;
 					}
 				}
 				runFDN = true;
@@ -346,6 +347,7 @@ namespace RAC
 
 			for (int i = 0; i < mConfig.numFDNChannels; i++)
 				mReverbSources[i].UpdateReflectionFilter(absorptions[i]);
+			return true;
 		}
 
 		////////////////////////////////////////
@@ -374,7 +376,7 @@ namespace RAC
 						j = 0;
 						for (ReverbSource& source : mReverbSources)
 						{
-							source.AddInput(mFDN.GetOutput(j), i);
+							source.AddInput(mCurrentGain * mFDN.GetOutput(j), i);
 							j++;
 						}
 						mCurrentGain = Lerp(mCurrentGain, mTargetGain, mConfig.lerpFactor);
@@ -390,7 +392,7 @@ namespace RAC
 						j = 0;
 						for (ReverbSource& source : mReverbSources)
 						{
-							source.AddInput(mFDN.GetOutput(j), i);
+							source.AddInput(mCurrentGain * mFDN.GetOutput(j), i);
 							j++;
 						}
 					}
@@ -457,6 +459,7 @@ namespace RAC
 #endif
 				lock_guard <mutex> lock(mFDNMutex);
 				mFDN.UpdateT60(T60);
+				valid = true;
 			}
 			else
 			{
@@ -469,26 +472,14 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Reverb::UpdateFDNParameters(const Coefficients& T60, const Vec& dimensions)
+		void Reverb::UpdateFDNDelayLines(const Vec& dimensions, const Coefficients& T60)
 		{
-			if (T60 > 0.0)
 			{
-#ifdef DEBUG_INIT
-				Debug::Log("Init FDN: [" + RealToStr(T60[0]) + ", " + RealToStr(T60[1]) + ", " +
-					RealToStr(T60[2]) + ", " + RealToStr(T60[3]) + ", " + RealToStr(T60[4]) + "]", Colour::Green);
-#endif
 				lock_guard <mutex> lock(mFDNMutex);
 				mFDN.Reset();
-				mFDN.UpdateParameters(T60, dimensions);
-				valid = true;
+				mFDN.UpdateDelayLines(dimensions);
 			}
-			else
-			{
-				valid = false;
-#ifdef DEBUG_INIT
-				Debug::Log("FDN reverb failed to initialise. T60 equal to or less than 0s.", Colour::Red);
-#endif
-			}
+			UpdateReverbTime(T60);
 		}
 	}
 }

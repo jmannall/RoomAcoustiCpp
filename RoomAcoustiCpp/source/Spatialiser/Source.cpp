@@ -41,6 +41,7 @@ namespace RAC
 			{
 				lock_guard<mutex> lock(tuneInMutex);
 				mSource = mCore->CreateSingleSourceDSP();
+				mSource->DisableFarDistanceEffect();
 				mSource->EnablePropagationDelay();
 
 				if (config.lerpFactor == 1.0)
@@ -246,12 +247,10 @@ namespace RAC
 				std::transform(bStoreReverb.begin(), bStoreReverb.end(), bInput.begin(),
 					[](auto value) { return static_cast<float>(value); });
 
-				{
-					lock_guard<mutex> lock(tuneInMutex);
-					mReverbSendSource->SetSourceTransform(transform);
-					mReverbSendSource->SetBuffer(bInput);
-					mReverbSendSource->ProcessAnechoic(bOutput.left, bOutput.right);
-				}
+				// lock_guard<mutex> lock(tuneInMutex);
+				mReverbSendSource->SetSourceTransform(transform);
+				mReverbSendSource->SetBuffer(bInput);
+				mReverbSendSource->ProcessAnechoic(bOutput.left, bOutput.right);
 
 				for (int i = 0; i < mConfig.numFrames; i++)
 				{
@@ -273,12 +272,10 @@ namespace RAC
 #ifdef PROFILE_AUDIO_THREAD
 			Begin3DTI();
 #endif
-			{
-				lock_guard<mutex> lock(tuneInMutex);
-				mSource->SetSourceTransform(transform);
-				mSource->SetBuffer(bInput);
-				mSource->ProcessAnechoic(bOutput.left, bOutput.right);
-			}
+			// lock_guard<mutex> lock(tuneInMutex);
+			mSource->SetSourceTransform(transform);
+			mSource->SetBuffer(bInput);
+			mSource->ProcessAnechoic(bOutput.left, bOutput.right);
 #ifdef PROFILE_AUDIO_THREAD
 			End3DTI();
 #endif

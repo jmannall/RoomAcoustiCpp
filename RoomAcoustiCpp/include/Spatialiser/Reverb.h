@@ -125,7 +125,7 @@ namespace RAC
 			/**
 			* @brief Reset the internal buffers to zero
 			*/
-			inline void Reset() { lock_guard<mutex> lock(*mReflectionFilterMutex); mReflectionFilter.ClearBuffers(); }
+			inline void Reset() { lock_guard<mutex> lock(*mReflectionFilterMutex); mReflectionFilter.ClearBuffers(); mSource->ResetSourceBuffers(); }
 
 #ifdef _TEST
 #pragma optimize("", off)
@@ -213,7 +213,7 @@ namespace RAC
 			* @params absorptions New reflection filter target gains
 			* @params running True if including late reveberation in audio prcoessing, false otherwise
 			*/
-			void UpdateReflectionFilters(const std::vector<Absorption>& absorptions, bool running);
+			bool UpdateReflectionFilters(const std::vector<Absorption>& absorptions, bool running);
 
 			/**
 			* @brief Processes a single audio buffer
@@ -242,12 +242,12 @@ namespace RAC
 			inline void InitFDNMatrix(const FDNMatrix& matrixType) { mFDN.InitFDNMatrix(matrixType); }
 
 			/**
-			* @brief Updates the FDN target T60 and the delay line lengths
+			* @brief Updates the FDN delay line lengths
 			*
-			* @params T60 The new decay time
 			* @params dimensions The new primary room dimensions that determine the delay line lengths
+			* @params T60 The target T60 in order to update the absorption filters for the given delay lengths
 			*/
-			void UpdateFDNParameters(const Coefficients& T60, const Vec& dimensions);
+			void UpdateFDNDelayLines(const Vec& dimensions, const Coefficients& T60);
 
 			/**
 			* @brief Resets the FDN and ReverbSources internal buffers to zero
@@ -271,6 +271,8 @@ namespace RAC
 					directions.emplace_back(100.0 * reverbSource.GetShift());
 			}
 
+			inline void SetReverbGain(const Real gain) { reverbGain = gain; }
+
 		private:
 			/**
 			* @brief Initialse the ReverbSources
@@ -285,6 +287,7 @@ namespace RAC
 
 			std::atomic<bool> valid;			// True if T60 > 0.0 and T60 < 20.0 seconds
 			std::atomic<bool> runFDN;			// True if audio thread should process late revebreration
+			std::atomic<Real> reverbGain;		// Reverberation Gain
 			std::atomic<Real> mTargetGain;		// Target reverberation level
 			std::atomic<Real> mCurrentGain;		// Current reverberation level
 

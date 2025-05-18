@@ -198,10 +198,18 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Context::UpdateReverbTimeFormula(const ReverbFormula model)
+		void Context::UpdateReverbTime(const ReverbFormula model)
 		{
-			Coefficients T60 = mRoom->UpdateReverbTimeFormula(model);
-			UpdateReverbTime(T60);
+			mRoom->UpdateReverbTimeFormula(model);
+			mReverb->UpdateReverbTime(mRoom->GetReverbTime());
+		}
+
+		////////////////////////////////////////
+
+		void Context::UpdateReverbTime(const Coefficients& T60)
+		{
+			mRoom->UpdateReverbTime(T60);
+			mReverb->UpdateReverbTime(T60);
 		}
 
 		////////////////////////////////////////
@@ -224,10 +232,10 @@ namespace RAC
 				defaultDimensions[0] = 2.5; // Assume height
 				defaultDimensions[1] = 4.0; // Assume width
 				defaultDimensions[2] = volume / 10.0; // Calculate depth
-				mReverb->UpdateFDNParameters(T60, defaultDimensions);
+				mReverb->UpdateFDNDelayLines(defaultDimensions, T60);
 			}
 			else
-				mReverb->UpdateFDNParameters(T60, dimensions);
+				mReverb->UpdateFDNDelayLines(dimensions, T60);
 		}
 
 		////////////////////////////////////////
@@ -326,7 +334,7 @@ namespace RAC
 		void Context::UpdateWallAbsorption(size_t id, const Absorption& absorption)
 		{
 			mRoom->UpdateWallAbsorption(id, absorption);
-			UpdateReverbTime(mRoom->GetReverbTime());
+			mReverb->UpdateReverbTime(mRoom->GetReverbTime());
 		}
 
 		////////////////////////////////////////
@@ -370,14 +378,14 @@ namespace RAC
 			{
 				mReverb->ProcessAudio(mReverbInput, mOutputBuffer);
 				mReverbInput.Reset();
+
+				if (applyHeadphoneEQ)
+					headphoneEQ.ProcessAudio(mOutputBuffer, mOutputBuffer);
 			}
 			if (!lock.owns_lock())
 			{
 				while (lock.try_lock() == false) { std::this_thread::yield(); }
 			}
-
-			if (applyHeadphoneEQ)
-				headphoneEQ.ProcessAudio(mOutputBuffer, mOutputBuffer);
 			
 			// Copy output to send and set pointer
 			mSendBuffer = mOutputBuffer;
@@ -419,10 +427,13 @@ namespace RAC
 
 		void Context::UpdateImpulseResponseMode(const Real lerpFactor, const bool mode)
 		{
+			unique_lock<mutex> lock(audioMutex);
+
 			if (mode)
 			{
 				mConfig.lerpFactor = 1.0;
 				mReverb->UpdateLerpFactor(1.0);
+				headphoneEQ.Reset();
 				mSources->UpdateImpulseResponseMode(1.0, mode);
 				return;
 			}

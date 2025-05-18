@@ -38,15 +38,6 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Channel::UpdateParameters(const Coefficients& T60, const int delayLength)
-		{
-			InitDelay(delayLength);
-			if (T60 > 0.0)
-				InitAbsorption(T60);
-		}
-
-		////////////////////////////////////////
-
 		Real Channel::GetOutput(const Real input)
 		{
 			if (idx >= mBuffer.Length())
@@ -139,11 +130,11 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void FDN::UpdateParameters(const Coefficients& T60, const Vec& dimensions)
+		void FDN::UpdateDelayLines(const Vec& dimensions)
 		{
 			std::vector<int> delayLengths = CalculateTimeDelay(dimensions);
 			for (int i = 0; i < mConfig.numFDNChannels; i++)
-				mChannels[i].UpdateParameters(T60, delayLengths[i]);
+				mChannels[i].UpdateDelayLine(delayLengths[i]);
 		}
 
 		////////////////////////////////////////
@@ -240,7 +231,7 @@ namespace RAC
 					Debug::Log("Y was nan", Colour::Red);
 				++i;
 			}
-			y *= gain;
+			// y *= gain;
 #ifdef PROFILE_DETAILED
 			EndFDNChannel();
 			BeginFDNMatrix();

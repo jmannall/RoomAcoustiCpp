@@ -49,7 +49,8 @@ namespace RAC
 		enum class ReverbFormula
 		{
 			Sabine,
-			Eyring
+			Eyring,
+			Custom
 		};
 
 		enum class FDNMatrix
@@ -78,7 +79,8 @@ namespace RAC
 			supercardioid,
 			hypercardioid,
 			bidirectional,
-			genelec8020c
+			genelec8020c,
+			genelec8020cDTF
 		};
 
 		enum class SpatialisationMode { quality, performance, none };
@@ -92,20 +94,14 @@ namespace RAC
 		/**
 		* @brief Configuration struct for the image edge model
 		*/
-		struct IEMConfig
+		class IEMConfig
 		{
-			int order;										// Maximum reflection/diffraction order of the IEM
-			DirectSound direct;								// Direct sound visibiilty model
-			DiffractionSound diffraction;					// Diffraction sound validity model
-			DiffractionSound diffractedReflections;			// Diffraction sound validity model for reflections
-			bool reflections;								// Reflection flag
-			bool lateReverb;								// Late reverberation flag
-			Real minEdgeLength;								// Minimum edge length for diffraction
+		public:
 
 			/**
 			* @brief Default constructor for the IEMConfig class
 			*/
-			IEMConfig() : IEMConfig(0, DirectSound::doCheck, false, DiffractionSound::none, DiffractionSound::none, false, 0.0) {};
+			IEMConfig() : IEMConfig(DirectSound::doCheck, 0, 0, 0, false, 0.0) {};
 
 			/**
 			* @brief Constructor for the IEMConfig class
@@ -118,9 +114,24 @@ namespace RAC
 			* @param lateReverb The late reverberation flag
 			* @param minEdgeLength The minimum edge length for diffraction
 			*/
-			IEMConfig(int order, DirectSound direct, bool reflections, DiffractionSound diffraction, DiffractionSound diffractedReflections, bool lateReverb, Real minEdgeLength) : 
-				order(order), direct(direct), reflections(reflections), diffraction(diffraction), diffractedReflections(diffractedReflections),
-				lateReverb(lateReverb), minEdgeLength(minEdgeLength) {};
+			IEMConfig(DirectSound direct, int reflOrder, int shadowDiffOrder, int specularDiffOrder, bool lateReverb, Real minEdgeLength) : 
+				direct(direct), reflOrder(reflOrder), shadowDiffOrder(shadowDiffOrder), specularDiffOrder(specularDiffOrder),
+				lateReverb(lateReverb), minEdgeLength(minEdgeLength)
+			{
+				maxOrder = std::max(std::max(reflOrder, shadowDiffOrder), specularDiffOrder);
+			};
+
+			int MaxOrder() { return maxOrder; }
+
+			DirectSound direct;								// Direct sound visibiilty model
+			int reflOrder;									// Maximum number of reflections in reflection only paths
+			int shadowDiffOrder;							// Maximum number of reflections or diffractions in shadowed diffraction paths
+			int specularDiffOrder;							// Maximum number of reflections or diffractions in specular diffraction paths
+			bool lateReverb;								// Late reverberation flag
+			Real minEdgeLength;								// Minimum edge length for diffraction
+
+		private:
+			int maxOrder;									// Maximum order of the IEM
 		};
 
 		/**

@@ -41,7 +41,7 @@ namespace RAC
 			* 
 			* @params numFrequencyBands The number of frequency bands to use
 			*/
-			Room(const int numFrequencyBands) : nextPlane(0), nextWall(0), nextEdge(0), reverbFormula(ReverbFormula::Sabine), mVolume(0.0), numAbsorptionBands(numFrequencyBands), hasChanged(true) {}
+			Room(const int numFrequencyBands) : nextPlane(0), nextWall(0), nextEdge(0), reverbFormula(ReverbFormula::Sabine), mVolume(0.0), T60(numFrequencyBands), numAbsorptionBands(numFrequencyBands), hasChanged(true) {}
 			
 			/**
 			* @brief Default deconstructor
@@ -53,7 +53,14 @@ namespace RAC
 			* 
 			* @params formula The new reverb time formula
 			*/
-			inline Coefficients UpdateReverbTimeFormula(const ReverbFormula formula) { reverbFormula = formula; return GetReverbTime(); }
+			inline void UpdateReverbTimeFormula(const ReverbFormula formula) { reverbFormula = formula; }
+
+			/**
+			* @brief Update the reverb time formula and recalculates the reverb time
+			*
+			* @params formula The new reverb time formula
+			*/
+			inline void UpdateReverbTime(const Coefficients& t) { reverbFormula = ReverbFormula::Custom; T60 = t; }
 
 			/**
 			* @brief Add a wall to the room
@@ -317,6 +324,7 @@ namespace RAC
 			std::atomic<bool> hasChanged;		// True if the room geometry has changed since last check
 
 			Real mVolume;						// The volume of the room
+			Coefficients T60;					// The custom reverberation time of the room
 			ReverbFormula reverbFormula;		// The formula used to calculate the reverb time
 			int numAbsorptionBands;				// The number of frequency bands to use for late reverberation
 

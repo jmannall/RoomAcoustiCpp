@@ -122,7 +122,7 @@ namespace RAC
 		Init(config);
 		UpdateIEMConfig(iemConfig);
 		UpdateImpulseResponseMode(config.lerpFactor, true);
-		UpdateReverbTimeFormula(ReverbFormula::Sabine);
+		UpdateReverbTime(ReverbFormula::Sabine);
 		InitFDNMatrix(FDNMatrix::randomOrthogonal);
 		bool filesLoaded = false;
 
@@ -264,7 +264,7 @@ namespace RAC
 		TEST_METHOD(CR2)
 		{
 			std::string scene = "CR2 small room (seminar room)";
-			IEMConfig iemConfig(3, DirectSound::doCheck, true, DiffractionSound::allZones, DiffractionSound::shadowZone, true, 0.0);
+			IEMConfig iemConfig(DirectSound::doCheck, 3, 3, 1, true, 0.0);
 
 			std::vector<IRResult> results = RunScene(scene, iemConfig, DiffractionModel::btm);
 			for (IRResult result : results)
@@ -278,7 +278,7 @@ namespace RAC
 		TEST_METHOD(RS1)
 		{
 			std::string scene = "RS1 single reflection (infinite plate)";
-			IEMConfig iemConfig(6, DirectSound::doCheck, true, DiffractionSound::allZones, DiffractionSound::allZones, false, 0.0);
+			IEMConfig iemConfig(DirectSound::doCheck, 6, 6, 6, true, 0.0);
 
 			std::vector<IRResult> results = RunScene(scene, iemConfig, DiffractionModel::btm);
 			for (IRResult result : results)
@@ -292,7 +292,7 @@ namespace RAC
 		TEST_METHOD(RS2)
 		{
 			std::string scene = "RS2 single reflection (finite plate)";
-			IEMConfig iemConfig(6, DirectSound::doCheck, true, DiffractionSound::allZones, DiffractionSound::allZones, false, 0.0);
+			IEMConfig iemConfig(DirectSound::doCheck, 6, 6, 6, true, 0.0);
 
 			std::vector<IRResult> results = RunScene(scene, iemConfig, DiffractionModel::btm);
 			for (IRResult result : results)
@@ -306,7 +306,7 @@ namespace RAC
 		TEST_METHOD(RS3)
 		{
 			std::string scene = "RS3 multiple reflection (parallel finite plates)";
-			IEMConfig iemConfig(6, DirectSound::doCheck, true, DiffractionSound::allZones, DiffractionSound::allZones, false, 0.0);
+			IEMConfig iemConfig(DirectSound::doCheck, 6, 6, 6, true, 0.0);
 
 			std::vector<IRResult> results = RunScene(scene, iemConfig, DiffractionModel::btm);
 			for (IRResult result : results)
@@ -320,7 +320,7 @@ namespace RAC
 		TEST_METHOD(RS4)
 		{
 			std::string scene = "RS4 single reflection (reflector array)";
-			IEMConfig iemConfig(6, DirectSound::doCheck, true, DiffractionSound::allZones, DiffractionSound::allZones, false, 0.0);
+			IEMConfig iemConfig(DirectSound::doCheck, 6, 6, 6, true, 0.0);
 
 			std::vector<IRResult> results = RunScene(scene, iemConfig, DiffractionModel::btm);
 			for (IRResult result : results)
@@ -334,7 +334,7 @@ namespace RAC
 		TEST_METHOD(RS5)
 		{
 			std::string scene = "RS5 diffraction (infinite wedge)";
-			IEMConfig iemConfig(6, DirectSound::doCheck, true, DiffractionSound::allZones, DiffractionSound::allZones, false, 0.0);
+			IEMConfig iemConfig(DirectSound::doCheck, 6, 6, 6, true, 0.0);
 
 			std::vector<IRResult> results = RunScene(scene, iemConfig, DiffractionModel::btm);
 			for (IRResult result : results)
@@ -348,7 +348,7 @@ namespace RAC
 		TEST_METHOD(RS5_LPF)
 		{
 			std::string scene = "RS5 LPF";
-			IEMConfig iemConfig(6, DirectSound::doCheck, true, DiffractionSound::allZones, DiffractionSound::allZones, false, 0.0);
+			IEMConfig iemConfig(DirectSound::doCheck, 6, 6, 6, true, 0.0);
 
 			std::vector<IRResult> results = RunScene(scene, iemConfig, DiffractionModel::lowPass);
 			for (IRResult result : results)
@@ -362,7 +362,7 @@ namespace RAC
 		TEST_METHOD(RS5_NNBest)
 		{
 			std::string scene = "RS5 NNBest";
-			IEMConfig iemConfig(6, DirectSound::doCheck, true, DiffractionSound::allZones, DiffractionSound::allZones, false, 0.0);
+			IEMConfig iemConfig(DirectSound::doCheck, 6, 6, 6, true, 0.0);
 
 			std::vector<IRResult> results = RunScene(scene, iemConfig, DiffractionModel::nnBest);
 			for (IRResult result : results)
@@ -376,7 +376,7 @@ namespace RAC
 		TEST_METHOD(RS5_NNSmall)
 		{
 			std::string scene = "RS5 NNSmall";
-			IEMConfig iemConfig(6, DirectSound::doCheck, true, DiffractionSound::allZones, DiffractionSound::allZones, false, 0.0);
+			IEMConfig iemConfig(DirectSound::doCheck, 6, 6, 6, true, 0.0);
 
 			std::vector<IRResult> results = RunScene(scene, iemConfig, DiffractionModel::nnSmall);
 			for (IRResult result : results)
@@ -390,7 +390,7 @@ namespace RAC
 		TEST_METHOD(RS5_UDFA)
 		{
 			std::string scene = "RS5 UDFA";
-			IEMConfig iemConfig(6, DirectSound::doCheck, true, DiffractionSound::allZones, DiffractionSound::allZones, false, 0.0);
+			IEMConfig iemConfig(DirectSound::doCheck, 6, 6, 6, true, 0.0);
 
 			std::vector<IRResult> results = RunScene(scene, iemConfig, DiffractionModel::udfa);
 			for (IRResult result : results)
@@ -404,7 +404,7 @@ namespace RAC
 		TEST_METHOD(RS5_UDFAI)
 		{
 			std::string scene = "RS5 UDFAI";
-			IEMConfig iemConfig(6, DirectSound::doCheck, true, DiffractionSound::allZones, DiffractionSound::allZones, false, 0.0);
+			IEMConfig iemConfig(DirectSound::doCheck, 6, 6, 6, true, 0.0);
 
 			std::vector<IRResult> results = RunScene(scene, iemConfig, DiffractionModel::udfai);
 			for (IRResult result : results)
@@ -418,7 +418,7 @@ namespace RAC
 		TEST_METHOD(RS5_UTD)
 		{
 			std::string scene = "RS5 UTD";
-			IEMConfig iemConfig(6, DirectSound::doCheck, true, DiffractionSound::allZones, DiffractionSound::allZones, false, 0.0);
+			IEMConfig iemConfig(DirectSound::doCheck, 6, 6, 6, true, 0.0);
 
 			std::vector<IRResult> results = RunScene(scene, iemConfig, DiffractionModel::utd);
 			for (IRResult result : results)
@@ -432,7 +432,7 @@ namespace RAC
 		TEST_METHOD(RS6)
 		{
 			std::string scene = "RS6 diffraction (finite body)";
-			IEMConfig iemConfig(6, DirectSound::doCheck, true, DiffractionSound::allZones, DiffractionSound::allZones, false, 0.0);
+			IEMConfig iemConfig(DirectSound::doCheck, 6, 6, 6, true, 0.0);
 
 			std::vector<IRResult> results = RunScene(scene, iemConfig, DiffractionModel::btm);
 			for (IRResult result : results)

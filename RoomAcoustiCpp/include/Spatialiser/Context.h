@@ -104,18 +104,18 @@ namespace RAC
 			inline void UpdateIEMConfig(const IEMConfig& config) { mImageEdgeModel->UpdateIEMConfig(config); }
 
 			/**
-			* @brief Updates the reverb time.
+			* Updates the model in order to calculate the late reverberation time (T60).
 			*
-			* @param T60 The new reverb time.
+			* @param model The model used to calculate the late reverberation time.
 			*/
-			inline void UpdateReverbTime(const Coefficients& T60) { mReverb->UpdateReverbTime(T60); }
+			void UpdateReverbTime(const ReverbFormula model);
 
 			/**
-			* @brief Updates the reverb time model.
+			* Overrides the current late reverberation time (T60).
 			*
-			* @param model The new reverb time model.
+			* @param T60 The late reverberation time.
 			*/
-			void UpdateReverbTimeFormula(const ReverbFormula model);
+			void UpdateReverbTime(const Coefficients& T60);
 
 			/**
 			* @brief Updates the feedback delay network (FDN) model.
@@ -231,6 +231,13 @@ namespace RAC
 			* @brief Updates the planes and edges of the room.
 			*/
 			void UpdatePlanesAndEdges();
+
+			/**
+			* @brief Updates the late reverb gain.
+			* 
+			* @param gain The new late reverb gain.
+			*/
+			inline void UpdateLateReverbGain(const Real gain) { mReverb->SetReverbGain(gain); }
 
 			/**
 			* @brief Sends an audio buffer to a source and adds the output to mOutputBuffer.

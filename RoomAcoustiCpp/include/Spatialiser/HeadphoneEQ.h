@@ -55,6 +55,8 @@ namespace RAC
 				}
 			}
 
+			inline void Reset() { leftFilter.Reset(); rightFilter.Reset(); }
+
 		private:
 			FIRFilter leftFilter;		// FIR filter for the left channel
 			FIRFilter rightFilter;		// FIR filter for the right channel

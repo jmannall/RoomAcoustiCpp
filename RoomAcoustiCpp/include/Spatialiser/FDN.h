@@ -53,13 +53,12 @@ namespace RAC
 			~Channel() {};
 
 			/**
-			* @brief Updates the target T60 and the delay line lengths
+			* @brief Updates the delay line length
 			* @details Currently no delay line interpolation implemented
 			*
-			* @params T60 The new decay time
 			* @params delayLength The new delay in samples
 			*/
-			void UpdateParameters(const Coefficients& T60, const int delayLength);
+			inline void UpdateDelayLine(const int delayLength) { InitDelay(delayLength); }
 
 			/**
 			* @brief Initialises the absorption filter with a given target T60
@@ -75,14 +74,6 @@ namespace RAC
 			* @params T60 The new target decay time
 			*/
 			inline void UpdateAbsorption(const Coefficients& T60) { mAbsorptionFilter.SetGain(CalcGain(T60)); }
-
-			/**
-			* @brief Calculates the filter gain coefficients required for a give T60
-			* 
-			* @params T60 The target decay time
-			* @return The required filter gain coefficients
-			*/
-			inline Coefficients CalcGain(const Coefficients& T60) { return (-3.0 * mT / T60).Pow10(); } // 20 * log10(H(f)) = -60 * t / t60(f);
 			
 			/**
 			* @brief Initialises the delay line
@@ -114,6 +105,14 @@ namespace RAC
 			Real GetOutput(const Real input);
 
 		private:
+
+			/**
+			* @brief Calculates the filter gain coefficients required for a give T60
+			*
+			* @params T60 The target decay time
+			* @return The required filter gain coefficients
+			*/
+			inline Coefficients CalcGain(const Coefficients& T60) { return (-3.0 * mT / T60).Pow10(); } // 20 * log10(H(f)) = -60 * t / t60(f);
 
 			Config mConfig;									// The spatialiser configuration
 			Buffer mBuffer;									// The internal delay line
@@ -169,13 +168,12 @@ namespace RAC
 			void UpdateT60(const Coefficients& T60);
 
 			/**
-			* @brief Updates the target T60 and the delay line lengths
+			* @brief Updates the delay line lengths
 			* @details Currently no delay line interpolation implemented
 			* 
-			* @params T60 The new decay time
 			* @params dimensions The new primary room dimensions that determine the delay line lengths
 			*/
-			void UpdateParameters(const Coefficients& T60, const Vec& dimensions);
+			void UpdateDelayLines(const Vec& dimensions);
 
 			/**
 			* @brief Resets all internal FDN buffers to zero
