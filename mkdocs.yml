@@ -1,0 +1,10 @@
+theme:
+  name: readthedocs
+  highlightjs: true
+  hljs_languages:
+    - yaml
+    - rust
+site_name: RoomAcoustiC++
+nav:
+  - Home: index.md
+  - About: about.md
