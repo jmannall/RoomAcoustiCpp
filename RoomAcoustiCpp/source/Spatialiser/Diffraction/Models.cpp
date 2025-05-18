@@ -877,10 +877,10 @@ namespace RAC
 
 #ifdef _TEST
 				// Simpson's rule
-				Real fa = CalcIntegrand(zn1);
+				/*Real fa = CalcIntegrand(zn1);
 				Real fc = CalcIntegrand(mid);
 				Real fb = CalcIntegrand(zn2);
-				return (zn2 - zn1) / 6.0 * (CalcIntegrand(zn1) + 4.0 * CalcIntegrand(mid) + CalcIntegrand(zn2));
+				return (zn2 - zn1) / 6.0 * (CalcIntegrand(zn1) + 4.0 * CalcIntegrand(mid) + CalcIntegrand(zn2));*/
 
 				// Quadstep simpson's rule
 				Real h = 0.13579 * (zn2 - zn1);

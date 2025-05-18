@@ -26,27 +26,6 @@
     <ClCompile Include="Test.cpp">
       <Filter>UnitTest</Filter>
     </ClCompile>
-    <ClCompile Include="..\RoomAcoustiCpp\codegen\lib\myNN\source\elementwiseOperationInPlace.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\RoomAcoustiCpp\codegen\lib\myNN\source\myBestNN.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\RoomAcoustiCpp\codegen\lib\myNN\source\myNN_data.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\RoomAcoustiCpp\codegen\lib\myNN\source\myNN_initialize.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\RoomAcoustiCpp\codegen\lib\myNN\source\myNN_terminate.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\RoomAcoustiCpp\codegen\lib\myNN\source\mySmallNN.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\RoomAcoustiCpp\codegen\lib\myNN\source\predict.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="UnitTest_GraphicEQ.cpp">
       <Filter>UnitTest</Filter>
     </ClCompile>
@@ -73,47 +52,11 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\framework.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\RoomAcoustiCpp\codegen\lib\myNN\include\anonymous_function.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\RoomAcoustiCpp\codegen\lib\myNN\include\elementwiseOperationInPlace.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\RoomAcoustiCpp\codegen\lib\myNN\include\myBestNN.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\RoomAcoustiCpp\codegen\lib\myNN\include\myNN_data.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\RoomAcoustiCpp\codegen\lib\myNN\include\myNN_initialize.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\RoomAcoustiCpp\codegen\lib\myNN\include\myNN_internal_types.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\RoomAcoustiCpp\codegen\lib\myNN\include\myNN_terminate.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\RoomAcoustiCpp\codegen\lib\myNN\include\myNN_types.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\RoomAcoustiCpp\codegen\lib\myNN\include\mySmallNN.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\RoomAcoustiCpp\codegen\lib\myNN\include\predict.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\RoomAcoustiCpp\codegen\lib\myNN\include\rtwtypes.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\RoomAcoustiCpp\codegen\lib\myNN\include\tmwtypes.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\UtilityFunctions.h">
       <Filter>UnitTest</Filter>
+    </ClInclude>
+    <ClInclude Include="..\RoomAcoustiCpp\codegen\lib\myNN\include\omp.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
