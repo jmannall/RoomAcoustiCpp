@@ -92,6 +92,7 @@ namespace RAC
 		{
 			lock_guard<mutex> lock(tuneInMutex);
 			mCore->RemoveSingleSourceDSP(mReverbSendSource);
+			mReverbSendSource.reset();
 		}
 
 		////////////////////////////////////////

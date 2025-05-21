@@ -185,8 +185,11 @@ namespace RAC
 
 		ImageSource::~ImageSource()
 		{
-			lock_guard<mutex> lock(*audioMutex);
-			mCore->RemoveSingleSourceDSP(mSource);
+			if (mSource != nullptr)
+			{
+				lock_guard<mutex> lock(*audioMutex);
+				mCore->RemoveSingleSourceDSP(mSource);
+			}
 		}
 
 		////////////////////////////////////////
@@ -397,6 +400,7 @@ namespace RAC
 			{
 				lock_guard<mutex> lock(tuneInMutex);
 				mCore->RemoveSingleSourceDSP(mSource);
+				mSource.reset();
 			}
 			isInitialised = false;
 		}
@@ -422,18 +426,6 @@ namespace RAC
 #ifdef PROFILE_AUDIO_THREAD
 			BeginVirtualSource();
 #endif
-			if (diffraction)
-			{
-				
-#ifdef PROFILE_AUDIO_THREAD
-				BeginDiffraction();
-#endif
-				ProcessDiffraction(data, bStore);
-#ifdef PROFILE_AUDIO_THREAD
-				EndDiffraction();
-#endif
-			}
-					
 #ifdef PROFILE_AUDIO_THREAD
 			BeginReflection();	// Always process as also includes directivity
 #endif
@@ -441,6 +433,18 @@ namespace RAC
 #ifdef PROFILE_AUDIO_THREAD
 			EndReflection();
 #endif
+
+			if (diffraction)
+			{
+				
+#ifdef PROFILE_AUDIO_THREAD
+				BeginDiffraction();
+#endif
+				ProcessDiffraction(bStore, bStore);
+#ifdef PROFILE_AUDIO_THREAD
+				EndDiffraction();
+#endif
+			}
 
 #ifdef PROFILE_AUDIO_THREAD
 			BeginAirAbsorption();

@@ -490,6 +490,7 @@ namespace RAC
 			size_t size = sp[0].size();
 			size_t counter = 0;
 			int order;
+			bool feedsFDN = mIEMConfig.MaxOrder() == 1 && mIEMConfig.lateReverb;
 
 			for (const auto& [edgeID, edge] : mEdges)
 			{
@@ -545,7 +546,7 @@ namespace RAC
 				Debug::send_path(imageSource.GetKey(), { imageSource.GetApex() }, position);
 #endif
 
-				InitImageSource(source, imageSource.GetApex(), imageSource, imageSources, order == 1 && mIEMConfig.lateReverb);
+				InitImageSource(source, imageSource.GetApex(), imageSource, imageSources, feedsFDN);
 			}
 #ifdef PROFILE_BACKGROUND_THREAD
 			EndFirstOrderDiff();
@@ -562,7 +563,7 @@ namespace RAC
 #endif
 			size_t size = sp[0].size();
 
-			bool feedsFDN = mIEMConfig.reflOrder == 1 && mIEMConfig.lateReverb;
+			bool feedsFDN = mIEMConfig.MaxOrder() == 1 && mIEMConfig.lateReverb;
 			Vec3 position;
 			std::vector<Vec3> intersections = std::vector<Vec3>(1, Vec3());
 			for (const auto& [planeID, plane] : mPlanes)
@@ -623,6 +624,7 @@ namespace RAC
 			{
 				int refOrder = refIdx + 1;
 				int prevRefIdx = refIdx - 1;
+				const bool feedsFDN = mIEMConfig.MaxOrder() == refOrder && mIEMConfig.lateReverb;
 
 				std::vector<Vec3> intersections;
 				size_t capacity = intersections.capacity();
@@ -711,7 +713,7 @@ namespace RAC
 							position = imageSource.GetTransform().GetPosition();
 							Debug::send_path(imageSource.GetKey(), intersections, position);
 #endif
-							InitImageSource(source, intersections[0], imageSource, imageSources, mIEMConfig.reflOrder == refOrder && mIEMConfig.lateReverb);
+							InitImageSource(source, intersections[0], imageSource, imageSources, feedsFDN);
 						}
 						// HOD reflections (post diffraction)
 						else if (refIdx < mIEMConfig.shadowDiffOrder || refIdx < mIEMConfig.specularDiffOrder)
@@ -794,7 +796,7 @@ namespace RAC
 							position = imageSource.GetTransform().GetPosition();
 							Debug::send_path(imageSource.GetKey(), intersections, position);
 #endif
-							InitImageSource(source, intersections[0], imageSource, imageSources, order == refOrder && mIEMConfig.lateReverb);
+							InitImageSource(source, intersections[0], imageSource, imageSources, feedsFDN);
 						}
 					}
 				}
@@ -897,7 +899,7 @@ namespace RAC
 						position = imageSource.GetTransform().GetPosition();
 						Debug::send_path(imageSource.GetKey(), intersections, position);
 #endif
-						InitImageSource(source, intersections[0], imageSource, imageSources, order == refOrder && mIEMConfig.lateReverb);
+						InitImageSource(source, intersections[0], imageSource, imageSources, feedsFDN);
 					}
 				}
 #ifdef PROFILE_BACKGROUND_THREAD

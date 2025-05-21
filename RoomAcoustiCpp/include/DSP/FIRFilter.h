@@ -30,7 +30,7 @@ namespace RAC
 			*
 			* @param impulseResponse The impulse response to initialise the FIRFilter with
 			*/
-			FIRFilter(const Buffer& ir) { SetImpulseResponse(ir); };
+			FIRFilter(const Buffer& ir) : count(0) { SetImpulseResponse(ir); };
 			
 			/**
 			* @brief Default deconstructor
