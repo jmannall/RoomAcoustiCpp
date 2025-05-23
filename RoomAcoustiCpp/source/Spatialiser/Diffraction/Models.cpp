@@ -597,9 +597,8 @@ namespace RAC
 
 			//////////////////// BTM class ////////////////////
 
-			BTM::BTM(Path* path, int fs) : Model(path), firFilter(currentIr), lastPath()
+			BTM::BTM(Path* path, int fs) : Model(path), firFilter(Buffer(1), 2048), lastPath()
 			{
-				m = std::make_shared<std::mutex>();
 				samplesPerMetre = fs * INV_SPEED_OF_SOUND;
 				UpdateParameters();
 			};
@@ -614,53 +613,11 @@ namespace RAC
 				if (mPath->valid)
 				{
 					CalcBTM();
-					std::lock_guard<std::mutex> lock(*m);
+					if (ir.Length() > maxIrLength)
+						ir.ResizeBuffer(maxIrLength);
 					if (ir.Valid())
-						targetIr = ir;
-					int currentLen = currentIr.Length();
-					int targetLen = targetIr.Length();
-
-					if (currentLen % 8 != 0)
-					{
-						currentLen += 8 - currentLen % 8;
-						currentIr.ResizeBuffer(currentLen);
-					}
-					if (targetLen % 8 != 0)
-					{
-						targetLen += 8 - targetLen % 8;
-						targetIr.ResizeBuffer(targetLen);
-					}
-
-					if (currentLen > targetLen)
-					{
-						Real total = 0.0;
-						int i = targetLen;
-						while (i < currentLen && i > 14)
-						{
-							total += currentIr[i++];
-							total += currentIr[i++];
-							total += currentIr[i++];
-							total += currentIr[i++];
-							total += currentIr[i++];
-							total += currentIr[i++];
-							total += currentIr[i++];
-							total += currentIr[i++];
-							if (total <= MIN_VALUE)
-							{
-								i -= 8;
-								break;
-							}
-							total = 0.0;
-						}
-						currentIr.ResizeBuffer(i);
-						targetIr.ResizeBuffer(i);	
-					}
-					else if (currentLen < targetLen)
-						currentIr.ResizeBuffer(targetLen);
-
-					firFilter.Resize(currentIr.Length());
+						firFilter.SetTargetIR(ir);
 				}
-				// else do nothing
 			}
 
 			void BTM::InitParameters()
@@ -668,13 +625,10 @@ namespace RAC
 				if (mPath->valid)
 				{
 					CalcBTM();
-					std::lock_guard<std::mutex> lock(*m);
+					if (ir.Length() > maxIrLength)
+						ir.ResizeBuffer(maxIrLength);
 					if (ir.Valid())
-					{
-						targetIr = ir;
-						currentIr = ir;
-						firFilter.SetImpulseResponse(currentIr);
-					}
+						firFilter.SetTargetIR(ir);
 				}
 			}
 
@@ -946,24 +900,10 @@ namespace RAC
 
 			void BTM::ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const int numFrames, const Real lerpFactor)
 			{
-				if (currentIr == targetIr)
-				{
-					for (int i = 0; i < numFrames; i++)
-						outBuffer[i] = firFilter.GetOutput(inBuffer[i]);
-				}
-				else
-				{
-					std::lock_guard<std::mutex> lock(*m);
-
-					FlushDenormals();
-					for (int i = 0; i < numFrames; i++)
-					{
-						outBuffer[i] = firFilter.GetOutput(inBuffer[i]);
-						firFilter.UpdateImpulseResponse(targetIr, lerpFactor);
-					}
-					NoFlushDenormals();
-					currentIr = firFilter.GetImpulseResponse();
-				}
+				FlushDenormals();	// Only needed if interpolating but expensive to call every sample
+				for (int i = 0; i < numFrames; i++)
+					outBuffer[i] = firFilter.GetOutput(inBuffer[i], lerpFactor);
+				NoFlushDenormals();
 			}
 		}
 	}

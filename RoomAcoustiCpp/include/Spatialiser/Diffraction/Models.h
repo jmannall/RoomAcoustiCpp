@@ -303,8 +303,7 @@ namespace RAC
 
 				Real samplesPerMetre;
 				Buffer ir;
-				Buffer targetIr;
-				Buffer currentIr;
+				static constexpr size_t maxIrLength = 2048;
 				FIRFilter firFilter;
 				Real dSSq;
 				Real dRSq;
@@ -334,8 +333,6 @@ namespace RAC
 				Complex sampleOneVec[4];
 
 				Path lastPath;
-
-				std::shared_ptr<std::mutex> m;
 			};
 		}
 	}

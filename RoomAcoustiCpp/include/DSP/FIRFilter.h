@@ -14,23 +14,38 @@
 
 // Common headers
 #include "Common/Types.h"
+#include "Common/ReleasePool.h"
 
 namespace RAC
 {
 	namespace DSP
 	{
 		/**
-		* @brief Class that implements a Finite Impulse Response filter
+		* @brief Class that implements a lock free Finite Impulse Response filter with variable length
 		*/
 		class FIRFilter
 		{
 		public:
 			/**
-			* @brief Constructor that initialises the FIRFilter with a given impulse response
+			* @brief Constructor that initialises the FIRFilter with a given impulse response and maximum size
 			*
 			* @param impulseResponse The impulse response to initialise the FIRFilter with
+			* @param maxSize The maximum size of the FIRFilter
 			*/
-			FIRFilter(const Buffer& ir) : count(0) { SetImpulseResponse(ir); };
+			FIRFilter(const Buffer& ir, const int maxSize) : maxFilterLength((maxSize % 8 == 0) ? maxSize : (maxSize + (8 - maxSize % 8))), count(0), inputLine(2 * maxFilterLength), currentIR(maxFilterLength)
+			{
+				if (!SetTargetIR(ir))
+					return;
+
+				assert(ir.Length() <= maxSize);
+
+				irLength = targetIR.load()->Length();
+				oldIrLength = irLength;
+
+				std::copy(ir.begin(), ir.end(), currentIR.begin());
+				irsEqual.store(true);
+				initialised.store(true);
+			};
 			
 			/**
 			* @brief Default deconstructor
@@ -41,76 +56,50 @@ namespace RAC
 			* @brief Returns the output of the FIRFilter given an input
 			*
 			* @param input The input to the FIRFilter
+			* @param lerpFactor The lerp factor for interpolation
 			* @return The output of the FIRFilter
 			*/
-			Real GetOutput(const Real input);
+			Real GetOutput(const Real input, const Real lerpFactor);
 
 			/**
-			* @brief Resizes the impulse response and input line of the FIRFilter
-			* 
-			* @details If the new length is not a multiple of 8, it is rounded up to the nearest multiple of 8 to allow for vectorisation in the GetOutput function.
-			* 
-			* @param length The new length of the impulse response
-			*/
-			inline void Resize(int length)
-			{
-				int taps = impulseResponse.Length();
-				if (length % 8 != 0)
-					length += (8 - length % 8);
-
-				if (length == taps)
-					return;
-				if (length > taps)
-					IncreaseSize(length);
-				else
-					DecreaseSize(length);
-			}
-
-			/**
-			* @brief Updates the impulse response of the FIRFilter using linear interpolation
-			*/
-			inline void UpdateImpulseResponse(const Buffer& targetIr, const Real lerpFactor)
-			{
-				Lerp(impulseResponse, targetIr, lerpFactor);
-			}
-
-			inline const Buffer& GetImpulseResponse() const { return impulseResponse; }
-
-			/**
-			* @brief Sets the impulse response of the FIRFilter
+			* @brief Atomically sets the new target impulse response
 			*
-			* @param ir The new impulse response to set
+			* @param ir The new target impulse response
+			* @return True if the target impulse response was set successfully, false otherwise
 			*/
-			void SetImpulseResponse(const Buffer& ir);
+			bool SetTargetIR(const Buffer& ir);
 
 			/**
-			* @brief Reset internal inputLine to zeros
+			* @brief Set flag to clear input line to zeros next time GetOutput is called
 			*/
-			inline void Reset() { inputLine.ResetBuffer(); }
+			inline void Reset() { clearInputLine.store(true); }
 
 		private:
 
-			/**
-			* @brief Increases the size of the impulse response and input line of the FIRFilter
-			* @details New samples are initialised to 0.
-			*
-			* @param length The new length of the impulse response
+			/*
+			* @brief Interpolates the current impulse response with the target impulse response
+			* 
+			* @param lerpFactor The lerp factor for interpolation
 			*/
-			void IncreaseSize(const int length);
+			void InterpolateIR(const Real lerpFactor);
+				
+            const int maxFilterLength;	// Maximum filter length
 
-			/**
-			* @brief Decreases the size of the impulse response and input line of the FIRFilter
-			* @details The input line is shifted to ensure the most recent samples are retained.
-			*
-			* @param length The new length of the impulse response
-			*/
-			void DecreaseSize(const int length);
+			std::atomic<std::shared_ptr<const Buffer>> targetIR;	// Target impulse response
 
-			Buffer impulseResponse;		// Impulse response buffer
-			Buffer inputLine;			// Input line buffer
+			Buffer currentIR;	// Current impulse response buffer (should only be accessed from the audio thread)
+			Buffer inputLine;	// Input line buffer (should only be accessed from the audio thread)
 
-			int count;			// Index for the next sample entry to the input line buffer
+			size_t irLength;		// Length of the current impulse response (should only be accessed from the audio thread)
+			size_t oldIrLength;		// Previous length of the impulse response (should only be accessed from the audio thread)
+			int count;				// Index for the next sample entry to the input line buffer (should only be accessed from the audio thread)
+
+			std::atomic<bool> clearInputLine;	// Flag to clear input line
+			std::atomic<bool> irsEqual;			// Flag to check if the current impulse response is equal to the target impulse response
+			std::atomic<bool> initialised;		// Flag to check if the FIRFilter is initialised
+
+			static ReleasePool releasePool;		// Garbage collector for shared pointers after atomic replacement
 		};
 	}
 }
-#endif
+#endif // DSP_FIRFilter_h

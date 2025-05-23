@@ -115,7 +115,10 @@ namespace RAC
 #ifdef PROFILE_DETAILED
 			BeginLerp();
 #endif
-			int len = start.Length();
+			int len = end.Length();
+
+			assert(start.Length() >= len);
+			assert(len % 8 == 0);
 
 			if (len % 8 != 0)
 			{
@@ -159,6 +162,24 @@ namespace RAC
 #ifdef PROFILE_DETAILED
 			EndLerp();
 #endif		
+		}
+
+		inline void Lerp(Buffer& start, const size_t& startIdx, const size_t& endIdx, const Real factor)
+		{
+			assert(0.0 < factor && factor <= 1.0);
+
+#ifdef PROFILE_DETAILED
+			BeginLerp();
+#endif
+			assert(start.Length() >= endIdx);
+			assert(start.Length() >= startIdx);
+
+			for (size_t i = startIdx; i < endIdx; i++)
+				start[i] *= (1.0 - factor);
+
+#ifdef PROFILE_DETAILED
+			EndLerp();
+#endif
 		}
 
 		/**
@@ -215,6 +236,20 @@ namespace RAC
 				return false;
 			for (int i = 0; i < u.Length(); i++)
 				if (u[i] > v[i] + EPS || u[i] < v[i] - EPS)
+					return false;
+			return true;
+		}
+
+		inline bool Equals(const Buffer& u, const Buffer& v, const int length)
+		{
+			assert(v.Length() == length);
+			assert(u.Length() >= length);
+
+			for (int i = 0; i < length; i++)
+				if (u[i] > v[i] + EPS || u[i] < v[i] - EPS)
+					return false;
+			for (int i = length; i < u.Length(); i++)
+				if (u[i] > EPS || u[i] < -EPS)
 					return false;
 			return true;
 		}

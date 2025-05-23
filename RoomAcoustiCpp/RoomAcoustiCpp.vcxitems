@@ -63,8 +63,10 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Complex.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Definitions.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Matrix.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\ReleasePool.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\SphericalGeometries.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\ThreadPool.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Timer.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Vec4.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\ScopedTimer.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Types.h" />

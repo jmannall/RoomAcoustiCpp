@@ -84,7 +84,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		Context::Context(const Config& config) : mConfig(config), mIsRunning(true), IEMThread(), applyHeadphoneEQ(false), headphoneEQ(config.fs)
+		Context::Context(const Config& config) : mConfig(config), mIsRunning(true), IEMThread(), applyHeadphoneEQ(false), headphoneEQ(config.fs, config.lerpFactor, 2048)
 		{
 #ifdef DEBUG_INIT
 			Debug::Log("Init Context", Colour::Green);

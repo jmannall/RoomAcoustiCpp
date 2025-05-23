@@ -14,73 +14,97 @@ namespace RAC
 	{
 		//////////////////// FIRFilter ////////////////////
 
+		ReleasePool FIRFilter::releasePool;
+
 		////////////////////////////////////////
 
-		Real FIRFilter::GetOutput(const Real input)
+		Real FIRFilter::GetOutput(const Real input, const Real lerpFactor)
 		{
+			if (!initialised.load())
+				return 0.0;
+
+			if (!irsEqual.load())
+				InterpolateIR(lerpFactor);
+
+			if (clearInputLine.load())
+			{
+				inputLine.ResetBuffer();
+				clearInputLine.store(false);
+			}
+
 			Real output = 0.0;
 			int index = count;
-			const int irLength = impulseResponse.Length();
 
+			// Using a double buffer size to avoid checks in process loop
 			inputLine[index] = input;
-			assert(inputLine.Length() == 2 * irLength);
-			inputLine[index + irLength] = input;
+			inputLine[index + maxFilterLength] = input;
 
+			assert(currentIR.Length() >= irLength);
 			assert(irLength % 8 == 0);
+
 			// Assume length is always a multiple of 8
 			for (int i = 0; i < irLength; i += 8)
 			{
-				output += impulseResponse[i] * inputLine[index++];
-				output += impulseResponse[i + 1] * inputLine[index++];
-				output += impulseResponse[i + 2] * inputLine[index++];
-				output += impulseResponse[i + 3] * inputLine[index++];
-				output += impulseResponse[i + 4] * inputLine[index++];
-				output += impulseResponse[i + 5] * inputLine[index++];
-				output += impulseResponse[i + 6] * inputLine[index++];
-				output += impulseResponse[i + 7] * inputLine[index++];
+				output += currentIR[i] * inputLine[index++];
+				output += currentIR[i + 1] * inputLine[index++];
+				output += currentIR[i + 2] * inputLine[index++];
+				output += currentIR[i + 3] * inputLine[index++];
+				output += currentIR[i + 4] * inputLine[index++];
+				output += currentIR[i + 5] * inputLine[index++];
+				output += currentIR[i + 6] * inputLine[index++];
+				output += currentIR[i + 7] * inputLine[index++];
 			}
 
 			if (--count < 0)
-				count = irLength - 1; // Check all logic is correct, integrate new Wrap index function - double buffer size to avoid checks in process loop
+				count = maxFilterLength - 1;
+
 			return output;
 		}
 
 		////////////////////////////////////////
 
-		void FIRFilter::SetImpulseResponse(const Buffer& ir)
+		bool FIRFilter::SetTargetIR(const Buffer& ir)
 		{
-			const int irLength = ir.Length();
-			Resize(irLength);
-			for (int i = 0; i < irLength; i++)
-				impulseResponse[i] = ir[i];
-			//count = impulseResponse.Length() - 1;
+			int length = ir.Length();
+
+			// Pad to multiple of 8
+			if (length % 8 != 0)
+				length += (8 - length % 8);
+
+			if (length > maxFilterLength)
+				return false;
+			assert(length <= maxFilterLength);
+
+			std::shared_ptr<Buffer> irCopy = std::make_shared<Buffer>(ir);
+			irCopy->ResizeBuffer(length);
+
+			releasePool.Add(irCopy);
+
+			targetIR.store(irCopy);
+			irsEqual.store(false);
+
+			return true;
 		}
 
 		////////////////////////////////////////
 
-		void FIRFilter::IncreaseSize(const int length)
+		void FIRFilter::InterpolateIR(const Real lerpFactor)
 		{
-			const int oldLength = impulseResponse.Length();
-			assert(length % 8 == 0);
-			inputLine.ResizeBuffer(2 * length);
+			std::shared_ptr<const Buffer> ir = targetIR.load();
 
-			for (int i = count + oldLength; i < 2 * oldLength; i++)
-				inputLine[i] = 0.0;
-			impulseResponse.ResizeBuffer(length);
-		}
+			irLength = ir->Length();
 
-		////////////////////////////////////////
+			Lerp(currentIR, *ir, lerpFactor);
+			if (irLength < oldIrLength)
+				Lerp(currentIR, irLength, oldIrLength, lerpFactor);
 
-		void FIRFilter::DecreaseSize(const int length)
-		{
-			assert(length % 8 == 0);
-			for (int i = 0, index = count; i < length; i++, index++)
-				inputLine[i] = inputLine[index];
-			inputLine.ResizeBuffer(2 * length);
-			for (int i = 0, index = length; i < length; i++, index++)
-				inputLine[index] = inputLine[i];
-			impulseResponse.ResizeBuffer(length);
-			count = 0;
+			if (Equals(currentIR, *ir, irLength))
+			{
+				std::copy(ir->begin(), ir->end(), currentIR.begin());
+
+				oldIrLength = irLength;
+				irsEqual.store(true);
+			}
 		}
 	}
 }

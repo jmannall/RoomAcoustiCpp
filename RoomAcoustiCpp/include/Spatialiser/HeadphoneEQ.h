@@ -26,7 +26,7 @@ namespace RAC
 			*
 			* @param fs The sample rate
 			*/
-			HeadphoneEQ(int fs) : leftFilter(fs), rightFilter(fs) {};
+			HeadphoneEQ(const int fs, const int lerpFactor, const int maxFilterLength) : leftFilter(fs, maxFilterLength), rightFilter(fs, maxFilterLength), lerpFactor(lerpFactor){};
 
 			/**
 			* @brief Set the FIR filter impulse responses for the left and right channels
@@ -36,8 +36,8 @@ namespace RAC
 			*/
 			inline void SetFilters(const Buffer& leftIR, const Buffer& rightIR)
 			{
-				leftFilter.SetImpulseResponse(leftIR);
-				rightFilter.SetImpulseResponse(rightIR);
+				leftFilter.SetTargetIR(leftIR);
+				rightFilter.SetTargetIR(rightIR);
 			}
 
 			/**
@@ -50,8 +50,8 @@ namespace RAC
 			{
 				for (int i = 0; i < inputBuffer.Length(); i += 2)
 				{
-					outputBuffer[i] = leftFilter.GetOutput(inputBuffer[i]);
-					outputBuffer[i + 1] = rightFilter.GetOutput(inputBuffer[i + 1]);
+					outputBuffer[i] = leftFilter.GetOutput(inputBuffer[i], lerpFactor);
+					outputBuffer[i + 1] = rightFilter.GetOutput(inputBuffer[i + 1], lerpFactor);
 				}
 			}
 
@@ -59,7 +59,9 @@ namespace RAC
 
 		private:
 			FIRFilter leftFilter;		// FIR filter for the left channel
-			FIRFilter rightFilter;		// FIR filter for the right channel
+			FIRFilter rightFilter;	// FIR filter for the right channel
+
+			int lerpFactor;
 		};
 	}
 }

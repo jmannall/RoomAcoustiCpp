@@ -293,5 +293,11 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\tmwtypes.h">
       <Filter>Header Files\NN</Filter>
     </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\ReleasePool.h">
+      <Filter>Header Files\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Timer.h">
+      <Filter>Header Files\Common</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
