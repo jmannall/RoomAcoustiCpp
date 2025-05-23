@@ -32,6 +32,29 @@
 #include "Common/Transform.h"
 #include "BinauralSpatializer/3DTI_BinauralSpatializer.h"
 
+
+#include <chrono>
+#include <filesystem>
+#include <ctime>
+
+inline std::string GetTimestampedLogPath() {
+	// Get current time
+	auto now = std::chrono::system_clock::now();
+	std::time_t time_now = std::chrono::system_clock::to_time_t(now);
+
+	// Create a tm structure to hold the local time
+	std::tm local_time;
+	localtime_s(&local_time, &time_now); // Correct usage of localtime_s
+
+	// Format time into string: YYYY-MM-DD_HH-MM-SS
+	std::stringstream ss;
+	ss << std::put_time(&local_time, "%Y-%m-%d_%H-%M-%S");
+	std::string timestamp = ss.str();
+
+	// Full log file path
+	return timestamp + "_RoomAcoustiCpp_log.txt";
+}
+
 namespace RAC
 {
 	using namespace Common;
@@ -305,7 +328,9 @@ namespace RAC
 			std::shared_ptr<SourceManager> mSources;	// Source manager class
 			std::shared_ptr<ImageEdge> mImageEdgeModel;	// Image edge class
 
-			std::mutex audioMutex; // Mutex for audio processing
+			std::mutex audioMutex;		// Mutex for audio processing
+
+			std::string logFile;		// Log file path
 		};
 	}
 }

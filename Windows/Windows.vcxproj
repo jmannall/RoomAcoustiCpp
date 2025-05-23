@@ -40,7 +40,9 @@
     <ClCompile Include="UnitTest_Matrix.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="UnitTest_Regression.cpp" />
+    <ClCompile Include="UnitTest_Regression.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\RoomAcoustiCpp\codegen\lib\myNN\include\omp.h" />

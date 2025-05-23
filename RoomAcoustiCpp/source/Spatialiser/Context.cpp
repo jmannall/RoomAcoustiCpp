@@ -16,6 +16,7 @@
 #include "HRTF/HRTFFactory.h"
 #include "HRTF/HRTFCereal.h"
 #include "ILD/ILDCereal.h"
+#include "Common/ErrorHandler.h"
 
 namespace RAC
 {
@@ -37,6 +38,7 @@ namespace RAC
 
 		void BackgroundProcessor(Context* context)
 		{
+
 #ifdef DEBUG_INIT
 	Debug::Log("Begin background thread", Colour::Green);
 #endif
@@ -88,6 +90,11 @@ namespace RAC
 			Debug::Log("Init Context", Colour::Green);
 #endif
 
+			CErrorHandler::Instance().SetAssertMode(ASSERT_MODE_CONTINUE);
+			CErrorHandler::Instance().SetVerbosityMode(VERBOSITYMODE_ERRORSANDWARNINGS);
+			logFile = GetTimestampedLogPath();
+			CErrorHandler::Instance().SetErrorLogFile(logFile, true);
+
 			// Set dsp settings
 			mCore.SetAudioState({ mConfig.fs, mConfig.numFrames });
 
@@ -121,8 +128,20 @@ namespace RAC
 		Context::~Context()
 		{
 #ifdef DEBUG_REMOVE
-	Debug::Log("Exit Context", Colour::Red);
+			Debug::Log("Exit Context", Colour::Red);
 #endif
+
+			CErrorHandler::Instance().SetErrorLogFile(logFile, false); // Disable logging to file
+
+            if (!logFile.empty())
+			{
+				std::ifstream f(logFile);
+				if (f.good() && f.peek() == std::ifstream::traits_type::eof())
+				{
+					f.close();
+					std::remove(logFile.c_str());
+				}
+            }
 
 			StopRunning();
 			IEMThread.join();
