@@ -348,6 +348,7 @@ namespace RAC
 				mSource = mCore->CreateSingleSourceDSP();
 				mSource->EnablePropagationDelay();
 				mSource->DisableFarDistanceEffect();
+				mSource->DisableNearFieldEffect();
 
 				if (mConfig.lerpFactor == 1.0)
 				{

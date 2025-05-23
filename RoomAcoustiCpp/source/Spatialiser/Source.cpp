@@ -80,6 +80,8 @@ namespace RAC
 			mReverbSendSource = mCore->CreateSingleSourceDSP();
 			mReverbSendSource->EnablePropagationDelay();
 			mReverbSendSource->DisableDistanceAttenuationAnechoic();
+			mReverbSendSource->DisableFarDistanceEffect();
+			mReverbSendSource->DisableNearFieldEffect();
 			mReverbSendSource->SetSpatializationMode(Binaural::TSpatializationMode::NoSpatialization);
 			if (mConfig.lerpFactor == 1.0)
 			{
