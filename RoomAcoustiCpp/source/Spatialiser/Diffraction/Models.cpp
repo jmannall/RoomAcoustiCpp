@@ -88,7 +88,7 @@ namespace RAC
 				if (currentGain == targetGain)
 				{
 					for (int i = 0; i < numFrames; i++)
-						outBuffer[i] = currentGain * filter.GetOutput(inBuffer[i]);
+						outBuffer[i] = currentGain * filter.GetOutput(inBuffer[i], lerpFactor);
 				}
 				else if (Equals(currentGain, targetGain))
 				{
@@ -97,14 +97,14 @@ namespace RAC
 						currentGain = targetGain;
 					}
 					for (int i = 0; i < numFrames; i++)
-						outBuffer[i] = currentGain * filter.GetOutput(inBuffer[i]);
+						outBuffer[i] = currentGain * filter.GetOutput(inBuffer[i], lerpFactor);
 				}
 				else
 				{
 					std::lock_guard<std::mutex> lock(*m);
 					for (int i = 0; i < numFrames; i++)
 					{
-						outBuffer[i] = currentGain * filter.GetOutput(inBuffer[i]);
+						outBuffer[i] = currentGain * filter.GetOutput(inBuffer[i], lerpFactor);
 						currentGain = Lerp(currentGain, targetGain, lerpFactor);
 					}
 				}
@@ -113,10 +113,13 @@ namespace RAC
 
 			//////////////////// UDFA class ////////////////////
 
-			UDFA::UDFA(Path* path, int fs) : Model(path), numFilters(4), ft(numFilters + 1), gt(numFilters + 1), fi(numFilters), gi(numFilters), current(2 * numFilters + 1), target(2 * numFilters + 1)
+			UDFA::UDFA(Path* path, int fs) : Model(path), numFilters(4), ft(numFilters + 1), gt(numFilters + 1), fi(numFilters), gi(numFilters), target(2 * numFilters)
 			{
 				m = std::make_shared<std::mutex>();
-				filters = std::vector<HighShelf>(numFilters, HighShelf(fs));
+				filters.clear();
+				filters.reserve(numFilters);
+				for (int i = 0; i < numFilters; i++)
+					filters.emplace_back(std::make_unique<HighShelf>(fs));
 				CalcF(fs);
 				UpdateParameters();
 			};
@@ -170,13 +173,14 @@ namespace RAC
 					target[5] = params.g[1];
 					target[6] = params.g[2];
 					target[7] = params.g[3];
-					target[2 * numFilters] = params.gain;
+					targetGain = params.gain;
 				}
 				else
 				{
 					std::lock_guard<std::mutex> lock(*m);
-					target[2 * numFilters] = 0.0;
+					targetGain = 0.0;
 				}
+				UpdateFilterParameters();
 			}
 
 			void UDFA::UpdateConstants()
@@ -239,50 +243,40 @@ namespace RAC
 			void UDFA::UpdateFilterParameters()
 			{
 				for (int i = 0; i < numFilters; i++)
-					filters[i].UpdateParameters(current[i], current[i + 4]);
+					filters[i]->SetTargetParameters(target[i], target[i + 4]);
 			}
 
 			void UDFA::ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const int numFrames, const Real lerpFactor)
 			{
 				FlushDenormals();
+				for (int i = 0; i < numFrames; i++)
+				{
+					outBuffer[i] = filters[0]->GetOutput(inBuffer[i], lerpFactor);
+					for (int j = 1; j < numFilters; j++)
+						outBuffer[i] = filters[j]->GetOutput(outBuffer[i], lerpFactor);
+				}
 				// Apply filter
-				if (current == target)
+				if (currentGain == targetGain)
 				{
 					for (int i = 0; i < numFrames; i++)
-					{
-						outBuffer[i] = filters[0].GetOutput(inBuffer[i]);
-						for (int j = 1; j < numFilters; j++)
-							outBuffer[i] = filters[j].GetOutput(outBuffer[i]);
-						outBuffer[i] *= current[2 * numFilters];
-					}
+						outBuffer[i] *= currentGain;
 				}
-				else if (Equals(current, target))
+				else if (Equals(currentGain, targetGain))
 				{
 					{
 						std::lock_guard<std::mutex> lock(*m);
-						current = target;
-						UpdateFilterParameters();
+						currentGain = targetGain;
 					}
 					for (int i = 0; i < numFrames; i++)
-					{
-						outBuffer[i] = filters[0].GetOutput(inBuffer[i]);
-						for (int j = 1; j < numFilters; j++)
-							outBuffer[i] = filters[j].GetOutput(outBuffer[i]);
-						outBuffer[i] *= current[2 * numFilters];
-					}
+						outBuffer[i] *= currentGain;
 				}
 				else
 				{
 					std::lock_guard<std::mutex> lock(*m);
 					for (int i = 0; i < numFrames; i++)
 					{
-						outBuffer[i] = filters[0].GetOutput(inBuffer[i]);
-						for (int j = 1; j < numFilters; j++)
-							outBuffer[i] = filters[j].GetOutput(outBuffer[i]);
-						outBuffer[i] *= current[2 * numFilters];
-
-						Lerp(current, target, lerpFactor);
-						UpdateFilterParameters();
+						outBuffer[i] *= currentGain;
+						Lerp(currentGain, targetGain, lerpFactor);
 					}
 				}
 				NoFlushDenormals();
@@ -316,7 +310,7 @@ namespace RAC
 					target[5] = params.g[1];
 					target[6] = params.g[2];
 					target[7] = params.g[3];
-					target[8] = params.gain;
+					targetGain = params.gain;
 				}
 				else
 				{
@@ -375,6 +369,7 @@ namespace RAC
 					std::lock_guard<std::mutex> lock(*m);
 					target = 0.0;
 				}
+				filter.SetTargetParameters(target);
 			}
 
 			void NN::OrderZP()
@@ -426,31 +421,8 @@ namespace RAC
 			void NN::ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const int numFrames, const Real lerpFactor)
 			{
 				FlushDenormals();
-				if (current == target)
-				{
-					for (int i = 0; i < numFrames; i++)
-						outBuffer[i] = filter.GetOutput(inBuffer[i]);
-				}
-				else if (Equals(current, target))
-				{
-					{
-						std::lock_guard<std::mutex> lock(*m);
-						current = target;
-						filter.UpdateParameters(current);
-					}
-					for (int i = 0; i < numFrames; i++)
-						outBuffer[i] = filter.GetOutput(inBuffer[i]);
-				}
-				else
-				{
-					std::lock_guard<std::mutex> lock(*m);
-					for (int i = 0; i < numFrames; i++)
-					{
-						outBuffer[i] = filter.GetOutput(inBuffer[i]);
-						Lerp(current, target, lerpFactor);
-						filter.UpdateParameters(current);
-					}
-				}
+				for (int i = 0; i < numFrames; i++)
+					outBuffer[i] = filter.GetOutput(inBuffer[i], lerpFactor);
 				NoFlushDenormals();
 			}
 
@@ -570,7 +542,7 @@ namespace RAC
 				if (current == target)
 				{
 					for (int i = 0; i < numFrames; i++)
-						outBuffer[i] = lrFilter.GetOutput(inBuffer[i]);
+						outBuffer[i] = lrFilter.GetOutput(inBuffer[i], lerpFactor);
 				}
 				else if (Equals(current, target))
 				{
@@ -580,14 +552,14 @@ namespace RAC
 						lrFilter.UpdateParameters(current);
 					}
 					for (int i = 0; i < numFrames; i++)
-						outBuffer[i] = lrFilter.GetOutput(inBuffer[i]);
+						outBuffer[i] = lrFilter.GetOutput(inBuffer[i], lerpFactor);
 				}
 				else
 				{
 					std::lock_guard<std::mutex> lock(*m);
 					for (int i = 0; i < numFrames; i++)
 					{
-						outBuffer[i] = lrFilter.GetOutput(inBuffer[i]);
+						outBuffer[i] = lrFilter.GetOutput(inBuffer[i], lerpFactor);
 						Lerp(current, target, lerpFactor);
 						lrFilter.UpdateParameters(current);
 					}

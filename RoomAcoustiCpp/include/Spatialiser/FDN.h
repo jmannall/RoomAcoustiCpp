@@ -102,7 +102,7 @@ namespace RAC
 			* @brief input The next audio sample input to the delay line
 			* @return The next output from the channel
 			*/
-			Real GetOutput(const Real input);
+			Real GetOutput(const Real input, const Real lerpFactor);
 
 		private:
 
@@ -150,7 +150,7 @@ namespace RAC
 			* @params data Multichannel audio input data
 			* @params gain Late reverberation gain
 			*/
-			void ProcessOutput(const std::vector<Real>& data, const Real gain);
+			void ProcessOutput(const std::vector<Real>& data, const Real gain, const Real LerpFactor);
 
 			/**
 			* @brief Retrieve the last processed output for a given FDN channel
@@ -181,8 +181,8 @@ namespace RAC
 			inline void Reset()
 			{ 
 				x.Reset(); y.Reset();  
-				for (Channel& channel : mChannels)
-					channel.Reset();
+				for (auto& channel : mChannels)
+					channel->Reset();
 			}
 
 			/**
@@ -265,7 +265,7 @@ namespace RAC
 			void ProcessSquare();
 
 			Config mConfig;						// Spatialiser configuration
-			std::vector<Channel> mChannels;		// Internal delay line channels
+			std::vector<std::unique_ptr<Channel>> mChannels;		// Internal delay line channels
 
 			Rowvec x;					// Next input audio buffer
 			Rowvec y;					// Previous output audio buffer

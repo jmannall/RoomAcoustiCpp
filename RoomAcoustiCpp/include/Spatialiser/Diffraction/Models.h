@@ -84,7 +84,7 @@ namespace RAC
 				Real fc;
 				Real targetGain;
 				Real currentGain;
-				LowPass filter;
+				LowPass1 filter;
 
 				std::shared_ptr<std::mutex> m;
 			};
@@ -122,7 +122,7 @@ namespace RAC
 				void UpdateFilterParameters();
 
 				int numFilters;
-				std::vector<HighShelf> filters;
+				std::vector<std::unique_ptr<HighShelf>> filters;
 
 				Coefficients ft;
 				Coefficients gt;
@@ -134,7 +134,9 @@ namespace RAC
 
 				UDFAParameters params;
 				Coefficients target;
-				Coefficients current;
+
+				Real currentGain;
+				Real targetGain;
 
 				std::shared_ptr<std::mutex> m;
 			};

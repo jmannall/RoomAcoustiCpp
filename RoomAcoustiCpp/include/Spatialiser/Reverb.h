@@ -255,8 +255,8 @@ namespace RAC
 			inline void ResetFDN()
 			{ 
 				mFDN.Reset(); 
-				for (ReverbSource& reverbSource : mReverbSources)
-					reverbSource.Reset();
+				for (auto& reverbSource : mReverbSources)
+					reverbSource->Reset();
 			}
 
 			/**
@@ -267,8 +267,8 @@ namespace RAC
 			inline void GetReverbSourceDirections(std::vector<Vec3>& directions) const
 			{
 				directions.reserve(mReverbSources.size());
-				for (const ReverbSource& reverbSource : mReverbSources)
-					directions.emplace_back(100.0 * reverbSource.GetShift());
+				for (const auto& reverbSource : mReverbSources)
+					directions.emplace_back(100.0 * reverbSource->GetShift());
 			}
 
 			inline void SetReverbGain(const Real gain) { reverbGain = gain; }
@@ -283,7 +283,7 @@ namespace RAC
 			Coefficients mT60;								// Target decay time
 			FDN mFDN;										// FDN used to processing late reverbation
 			std::mutex mFDNMutex;							// Protects mFDN
-			std::vector<ReverbSource> mReverbSources;		// Reverb sources to binauralise the FDN output
+			std::vector<std::unique_ptr<ReverbSource>> mReverbSources;		// Reverb sources to binauralise the FDN output
 
 			std::atomic<bool> valid;			// True if T60 > 0.0 and T60 < 20.0 seconds
 			std::atomic<bool> runFDN;			// True if audio thread should process late revebreration

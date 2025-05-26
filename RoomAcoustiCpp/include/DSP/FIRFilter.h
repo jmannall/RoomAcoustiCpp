@@ -32,7 +32,8 @@ namespace RAC
 			* @param impulseResponse The impulse response to initialise the FIRFilter with
 			* @param maxSize The maximum size of the FIRFilter
 			*/
-			FIRFilter(const Buffer& ir, const int maxSize) : maxFilterLength((maxSize % 8 == 0) ? maxSize : (maxSize + (8 - maxSize % 8))), count(0), inputLine(2 * maxFilterLength), currentIR(maxFilterLength)
+			FIRFilter(const Buffer& ir, const int maxSize) : maxFilterLength((maxSize % 8 == 0) ? maxSize : (maxSize + (8 - maxSize % 8))),
+				inputLine(2 * maxFilterLength), currentIR(maxFilterLength)
 			{
 				if (!SetTargetIR(ir))
 					return;
@@ -77,7 +78,7 @@ namespace RAC
 		private:
 
 			/*
-			* @brief Interpolates the current impulse response with the target impulse response
+			* @brief Linearly interpolates the current impulse response with the target impulse response
 			* 
 			* @param lerpFactor The lerp factor for interpolation
 			*/
@@ -92,7 +93,7 @@ namespace RAC
 
 			size_t irLength;		// Length of the current impulse response (should only be accessed from the audio thread)
 			size_t oldIrLength;		// Previous length of the impulse response (should only be accessed from the audio thread)
-			int count;				// Index for the next sample entry to the input line buffer (should only be accessed from the audio thread)
+			int count{ 0 };			// Index for the next sample entry to the input line buffer (should only be accessed from the audio thread)
 
 			std::atomic<bool> clearInputLine;	// Flag to clear input line
 			std::atomic<bool> irsEqual;			// Flag to check if the current impulse response is equal to the target impulse response

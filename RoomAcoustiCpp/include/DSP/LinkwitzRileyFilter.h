@@ -10,6 +10,7 @@
 
 // C++ headers
 #include <cassert>
+#include <memory>
 
 // DSP headers
 #include "DSP/IIRFilter.h"
@@ -23,6 +24,7 @@ namespace RAC
 	using namespace Common;
 	namespace DSP
 	{
+		// NOTE!!! default values of Peaking filters 1000Hz, 1.0 gain. Not good for lr filter
 		class LinkwitzRiley
 		{
 		public:
@@ -56,7 +58,7 @@ namespace RAC
 			* @param input The input to the LinkwitzRiley Filter
 			* @return The output of the LinkwitzRiley Filter
 			*/
-			Real GetOutput(const Real input);
+			Real GetOutput(const Real input, const Real lerpFactor);
 
 			/**
 			* @brief Updates the gain parameters of the LinkwitzRiley filter
@@ -86,7 +88,7 @@ namespace RAC
 
 			Coefficients fc;						// Filter band cut off frequencies
 			Coefficients gains;						// Filter band gains
-			std::vector<PassFilter> filters;		// PassFilter sections
+			std::vector<std::unique_ptr<IIRFilter2Param1>> filters;		// PassFilter sections
 		};
 	}
 }

@@ -1,12 +1,17 @@
 /*
 * @class IIRFilter
 *
-* @brief Declaration of base IIRFilter class and derived HighShelf, LowPass, ZPKFilter, BandFilter and PassFilter classes
+* @brief Declaration of IIRFilter, IIRFilter1, IIRFilter2 and IIRFilter2Param1 base classes
+* and derived HighShelf, LowPass1, PeakHighShelf, PeakLowShelf, PeakingFilter, ZPKFilter, LowPass and HighPass classes
 *
 */
 
 #ifndef DSP_IIRFilter_h
 #define DSP_IIRFilter_h
+
+// C++ headers
+#include <atomic>
+#include <memory>
 
 // DSP headers
 #include "DSP/Buffer.h"
@@ -14,6 +19,7 @@
 // Common headers
 #include "Common/Types.h"
 #include "Common/Coefficients.h"
+#include "Common/ReleasePool.h"
 
 namespace RAC
 {
@@ -33,9 +39,8 @@ namespace RAC
 			* @param filterOrder The order of the filter
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
-			IIRFilter(const int filterOrder, const int sampleRate) : order(filterOrder),
-				T(1.0 / static_cast<Real>(sampleRate)), b(filterOrder + 1),
-				a(filterOrder + 1), x(filterOrder + 1), y(filterOrder + 1) {};
+			IIRFilter(const int filterOrder, const int sampleRate) : order(filterOrder), T(1.0 / static_cast<Real>(sampleRate)),
+				b(filterOrder + 1), a(filterOrder + 1), y(filterOrder + 1) {};
 			
 			/**
 			* @brief Default deconstructor
@@ -48,12 +53,12 @@ namespace RAC
 			* @param input The input to the IIRFilter
 			* @return The output of the IIRFilter
 			*/
-			Real GetOutput(const Real input);
+			Real GetOutput(const Real input, const Real lerpFactor);
 
 			/**
-			* @brief Resets the input and output buffers to zeros.
+			* @brief Set flag to clear buffers to zeros next time GetOutput is called
 			*/
-			inline void ClearBuffers() { x.ResetBuffer(); y.ResetBuffer(); }
+			inline void ClearBuffers() { clearBuffers.store(true); }
 
 			/**
 			* @brief Returns the filter response at given frequencies
@@ -64,14 +69,26 @@ namespace RAC
 			std::vector<Real> GetFrequencyResponse(const std::vector<Real>& frequencies) const;
 
 		protected:
+			/**
+			* @brief Pure virtual function to lineraly interpolates filter parameters. Must be overloaded in the derived classes
+			*
+			* @param lerpFactor The lerp factor for interpolation
+			*/
+			virtual void InterpolateParameters(const Real lerpFactor) = 0;
 
-			int order;		// Order of the filter
-			Real T;			// Sample rate time period
+			const int order;		// Order of the filter
+			const Real T;			// Sample rate time period
 
 			Coefficients b;		// Numerator coefficients
 			Coefficients a;		// Denominator coefficients
-			Buffer x;			// Input buffer
 			Buffer y;			// Output buffer
+
+			std::atomic<bool> parametersEqual{ false };		// Flag to indicate if the current parameters are equal to the target parameters
+			std::atomic<bool> initialised{ false };			// Flag to indicate if the filter has been initialised
+
+		private:
+			std::atomic<bool> clearBuffers{ false };		// Flag to clear the output buffers to zeros next time GetOutput is called
+
 		};
 
 		/**
@@ -87,9 +104,7 @@ namespace RAC
 			*
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
-			IIRFilter1(const int sampleRate) : order(1),
-				T(1.0 / static_cast<Real>(sampleRate)), y0(0.0), y1(0.0),
-				a0(0.0), a1(0.0), b0(0.0), b1(0.0) {};
+			IIRFilter1(const int sampleRate) : T(1.0 / static_cast<Real>(sampleRate)) {};
 
 			/**
 			* @brief Default deconstructor
@@ -102,12 +117,12 @@ namespace RAC
 			* @param input The input to the IIRFilter
 			* @return The output of the IIRFilter
 			*/
-			Real GetOutput(const Real input);
+			Real GetOutput(const Real input, const Real lerpFactor);
 
 			/**
-			* @brief Resets the output buffers to zeros.
+			* @brief Set flag to clear buffers to zeros next time GetOutput is called
 			*/
-			inline void ClearBuffers() { y0 = 0.0; y1 = 0.0; }
+			inline void ClearBuffers() { clearBuffers.store(true); }
 
 			/**
 			* @brief Returns the filter response at given frequencies
@@ -118,16 +133,25 @@ namespace RAC
 			std::vector<Real> GetFrequencyResponse(const std::vector<Real>& frequencies) const;
 
 		protected:
+			/**
+			* @brief Pure virtual function to lineraly interpolates filter parameters. Must be overloaded in the derived classes
+			*
+			* @param lerpFactor The lerp factor for interpolation
+			*/
+			virtual void InterpolateParameters(const Real lerpFactor) = 0;
 
-			int order;		// Order of the filter
-			Real T;			// Sample rate time period
+			const Real T;				// Sample rate time period
 
-			Real a0;		// First Denominator coefficient
-			Real a1;		// Second Denominator coefficient
-			Real b0;		// First Numerator coefficient
-			Real b1;		// Second Numerator coefficient
-			Real y0;		// Current output
-			Real y1;		// Previous output
+			Real a0{ 0.0 }, a1{ 0.0 };		// Denominator coefficients (should only be accessed from the audio thread)
+			Real b0{ 0.0 }, b1{ 0.0 };		// Numerator coefficients (should only be accessed from the audio thread)
+			Real y0{ 0.0 };					// Outputs (should only be accessed from the audio thread)
+
+			std::atomic<bool> parametersEqual{ false };		// Flag to indicate if the current parameters are equal to the target parameters
+			std::atomic<bool> initialised{ false };			// Flag to indicate if the filter has been initialised
+		
+		private:
+			std::atomic<bool> clearBuffers{ false };		// Flag to clear the output buffers to zeros next time GetOutput is called
+
 		};
 
 		/**
@@ -143,9 +167,7 @@ namespace RAC
 			*
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
-			IIRFilter2(const int sampleRate) : order(2),
-				T(1.0 / static_cast<Real>(sampleRate)), y0(0.0), y1(0.0), y2(0.0),
-				a0(0.0), a1(0.0), a2(0.0), b0(0.0), b1(0.0), b2(0.0) {};
+			IIRFilter2(const int sampleRate) : T(1.0 / static_cast<Real>(sampleRate)) {};
 
 			/**
 			* @brief Default deconstructor
@@ -158,12 +180,12 @@ namespace RAC
 			* @param input The input to the IIRFilter
 			* @return The output of the IIRFilter
 			*/
-			Real GetOutput(const Real input);
+			Real GetOutput(const Real input, const Real lerpFactor);
 
 			/**
-			* @brief Resets the output buffers to zeros.
+			* @brief Set flag to clear buffers to zeros next time GetOutput is called
 			*/
-			inline void ClearBuffers() { y0 = 0.0; y1 = 0.0; y2 = 0.0; }
+			inline void ClearBuffers() { clearBuffers.store(true); }
 
 			/**
 			* @brief Returns the filter response at given frequencies
@@ -174,19 +196,25 @@ namespace RAC
 			std::vector<Real> GetFrequencyResponse(const std::vector<Real>& frequencies) const;
 
 		protected:
+			/**
+			* @brief Pure virtual function to lineraly interpolates filter parameters. Must be overloaded in the derived classes
+			*
+			* @param lerpFactor The lerp factor for interpolation
+			*/
+			virtual void InterpolateParameters(const Real lerpFactor) = 0;
 
-			int order;		// Order of the filter	
-			Real T;			// Sample rate time period
+			const Real T;				// Sample rate time period
 
-			Real a0;		// First Denominator coefficient
-			Real a1;		// Second Denominator coefficient
-			Real a2;		// Third Denominator coefficient
-			Real b0;		// First Numerator coefficient
-			Real b1;		// Second Numerator coefficient
-			Real b2;		// Third Numerator coefficient
-			Real y0;		// Current output
-			Real y1;		// Previous output
-			Real y2;		// Previous previous output
+			Real a0{ 0.0 }, a1{ 0.0 }, a2{ 0.0 };		// Denominator coefficients (should only be accessed from the audio thread)
+			Real b0{ 0.0 }, b1{ 0.0 }, b2{ 0.0 };		// Numerator coefficients (should only be accessed from the audio thread)
+			Real y0{ 0.0 }, y1{ 0.0 };					// Outputs (should only be accessed from the audio thread)
+		
+			std::atomic<bool> parametersEqual{ false };		// Flag to indicate if the current parameters are equal to the target parameters
+			std::atomic<bool> initialised{ false };			// Flag to indicate if the filter has been initialised
+		
+		private:
+			std::atomic<bool> clearBuffers{ false };		// Flag to clear the output buffers to zeros next time GetOutput is called
+		
 		};
 
 		/**
@@ -200,7 +228,7 @@ namespace RAC
 			*
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
-			HighShelf(const int sampleRate) : IIRFilter1(sampleRate) { UpdateParameters(1000.0, 1.0); };
+			HighShelf(const int sampleRate) : HighShelf(1000.0, 1.0, sampleRate) {};
 
 			/**
 			* @brief Constructor that initialises an 1st order high shelf filter with a given cut off frequency and shelf gain
@@ -209,7 +237,15 @@ namespace RAC
 			* @param gain The shelf gain of the filter (linear)
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
-			HighShelf(const Real fc, const Real gain, const int sampleRate) : IIRFilter1(sampleRate) { UpdateParameters(fc, gain); };
+			HighShelf(const Real fc, const Real gain, const int sampleRate) : IIRFilter1(sampleRate),
+				targetFc(fc), targetGain(gain), currentFc(fc), currentGain(gain)
+			{
+				assert(fc < static_cast<Real>(sampleRate) / 2.0); // Ensure cut off frequency is less than Nyquist frequency
+
+				UpdateCoefficients(currentFc, currentGain);
+				parametersEqual.store(true);
+				initialised.store(true);
+			};
 
 			/**
 			* @brief Default deconstructor
@@ -217,18 +253,39 @@ namespace RAC
 			~HighShelf() {};
 
 			/**
-			* @brief Updates the parameters of the high shelf filter
+			* @brief Atomically sets the target parameters of the high shelf filter
 			* 
 			* @param fc The cut off frequency of the filter
 			* @param gain The shelf gain of the filter (linear)
 			*/
-			void UpdateParameters(const Real fc, const Real gain);
+			inline void SetTargetParameters(const Real fc, const Real gain) { targetFc.store(fc); targetGain.store(gain), parametersEqual.store(false); }
+
+		private:
+			/**
+			* @brief Linearly interpolates the current fc and gain with the target fc and gain
+			* 
+			* @param lerpFactor The lerp factor for interpolation
+			*/
+			void InterpolateParameters(const Real lerpFactor) override;
+
+			/**
+			* @brief Updates the parameters of the high shelf filter
+			*
+			* @param fc The cut off frequency of the filter
+			* @param gain The shelf gain of the filter (linear)
+			*/
+			void UpdateCoefficients(const Real fc, const Real gain);
+
+			std::atomic<Real> targetFc;		// Target cut off frequency
+			std::atomic<Real> targetGain;	// Target shelf gain
+			Real currentFc;					// Current cut off frequency
+			Real currentGain;				// Current shelf gain
 		};
 
 		/**
 		* @brief Class that implements a 1st order low pass IIR filter
 		*/
-		class LowPass : public IIRFilter1
+		class LowPass1 : public IIRFilter1
 		{
 		public:
 			/**
@@ -236,7 +293,7 @@ namespace RAC
 			*
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
-			LowPass(const int sampleRate) : IIRFilter1(sampleRate) { UpdateParameters(1000.0); };
+			LowPass1(const int sampleRate) : LowPass1(1000.0, sampleRate) {};
 			
 			/**
 			* @brief Constructor that initialises an 1st order low pass filter with a given cut off frequency
@@ -244,25 +301,95 @@ namespace RAC
 			* @param fc The cut off frequency of the filter
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
-			LowPass(const Real fc, const int sampleRate) : IIRFilter1(sampleRate) { UpdateParameters(fc); };
+			LowPass1(const Real fc, const int sampleRate) : IIRFilter1(sampleRate), targetFc(fc), currentFc(fc)
+			{ 
+				assert(fc < static_cast<Real>(sampleRate) / 2.0); // Ensure cut off frequency is less than Nyquist frequency
+
+				UpdateCoefficients(currentFc);
+				parametersEqual.store(true);
+				initialised.store(true);
+			};
 
 			/**
 			* @brief Default deconstructor
 			*/
-			~LowPass() {};
+			~LowPass1() {};
+
+			/**
+			* @brief Atomically sets the target cut-off frequency of the filter
+			*
+			* @param fc The cut off frequency of the filter
+			*/
+			inline void SetTargetFc(const Real fc) { targetFc.store(fc); parametersEqual.store(false); }
+
+		private:
+			/**
+			* @brief Linearly interpolates the current fc with the target fc
+			*
+			* @param lerpFactor The lerp factor for interpolation
+			*/
+			void InterpolateParameters(const Real lerpFactor) override;
 
 			/**
 			* @brief Updates the parameters of the low pass filter
 			*
 			* @param fc The cut off frequency of the filter
 			*/
-			void UpdateParameters(const Real fc);
+			void UpdateCoefficients(const Real fc);
+
+			std::atomic<Real> targetFc;	// Target cut off frequency
+			Real currentFc;
+		};
+
+		/**
+		* @brief Class that implements a 2nd-order IIR filter with one parameter
+		*/
+		class IIRFilter2Param1 : public IIRFilter2
+		{
+		public:
+			/**
+			* @brief Constructor that intialises a default pass filter with a given cut off frequency and sample rate
+			*
+			* @param fc The cut off frequency of the filter
+			* @param sampleRate The sample rate for calculating filter coefficients
+			*/
+			IIRFilter2Param1(const Real parameter, const int sampleRate) : IIRFilter2(sampleRate),
+				current(parameter), target(parameter) {
+			};
+
+			~IIRFilter2Param1() {};
+
+		protected:
+			/**
+			* @brief Atomically sets the target parameter of the filter
+			*
+			* @param parameter The target parameter of the filter
+			*/
+			inline void SetTargetParameter(const Real parameter) { target.store(parameter); parametersEqual.store(false); }
+
+			/**
+			* @brief Updates the parameters of the low pass filter
+			*
+			* @param fc The cut off frequency of the filter
+			*/
+			virtual void UpdateCoefficients(const Real fc) = 0;
+
+		private:
+			/**
+			* @brief Linearly interpolates the current parameter with the target parameter
+			*
+			* @param lerpFactor The lerp factor for interpolation
+			*/
+			void InterpolateParameters(const Real lerpFactor) override;
+
+			std::atomic<Real> target;
+			Real current;
 		};
 
 		/**
 		* @brief Class that implements a 2nd order high shelf IIR filter (used by GraphicEQ)
 		*/
-		class PeakHighShelf : public IIRFilter2
+		class PeakHighShelf : public IIRFilter2Param1
 		{
 		public:
 			/**
@@ -272,7 +399,7 @@ namespace RAC
 			* @param Q The quality factor of the filter
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
-			PeakHighShelf(const Real fc, const Real Q, const int sampleRate) : IIRFilter2(sampleRate) { SetParameters(fc, Q); }
+			PeakHighShelf(const Real fc, const Real Q, const int sampleRate) : PeakHighShelf(fc, 1.0, Q, sampleRate) {}
 
 			/**
 			* @brief Constructor that initialises an 2nd order high shelf filter with a given cut off frequency and shelf gain
@@ -282,7 +409,15 @@ namespace RAC
 			* @param Q The quality factor of the filter
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
-			PeakHighShelf(const Real fc, const Real gain, const Real Q, const int sampleRate) : IIRFilter2(sampleRate) { SetParameters(fc, Q); UpdateGain(gain); }
+			PeakHighShelf(const Real fc, const Real gain, const Real Q, const int sampleRate) : IIRFilter2Param1(gain, sampleRate),
+				cosOmega(cos(PI_2 * fc * T)), alpha(sin(PI_2 * fc * T) / Q) // sin(omega) / (2 * Q) (factor of two cancelled out in UpdateGain)
+			{ 
+				assert(fc < static_cast<Real>(sampleRate) / 2.0); // Ensure cut off frequency is less than Nyquist frequency
+
+				UpdateCoefficients(gain);
+				parametersEqual.store(true);
+				initialised.store(true);
+			}
 
 			/**
 			* @brief Default deconstructor
@@ -290,29 +425,28 @@ namespace RAC
 			~PeakHighShelf() {};
 
 			/**
-			* @brief Updates the gain of the high shelf filter
+			* @brief Atomically sets the target gain of the filter
 			*
-			* @param gain The shelf gain of the filter (linear)
+			* @param parameter The target gain of the filter
 			*/
-			void UpdateGain(const Real gain);
+			inline void SetTargetGain(const Real gain) { SetTargetParameter(gain); }
 
 		private:
 			/**
-			* @brief Sets the cut off frequency of the high shelf filter
+			* @brief Updates the parameters of the low pass filter
 			*
-			* @param fs The cut off frequency of the filter
-			* @param Q The quality factor of the filter
+			* @param fc The cut off frequency of the filter
 			*/
-			void SetParameters(const Real fc, const Real Q);
+			void UpdateCoefficients(const Real gain) override;
 
-			Real cosOmega;		// Cos of the cut off frequency
-			Real alpha;			// Alpha value for the filter
+			const Real cosOmega;		// Cos of the cut off frequency
+			const Real alpha;			// Alpha value for the filter
 		};
 
 		/**
 		* @brief Class that implements a 2nd order low shelf IIR filter (used by GraphicEQ)
 		*/
-		class PeakLowShelf : public IIRFilter2
+		class PeakLowShelf : public IIRFilter2Param1
 		{
 		public:
 			/**
@@ -322,7 +456,7 @@ namespace RAC
 			* @param Q The quality factor of the filter
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
-			PeakLowShelf(const Real fc, const Real Q, const int sampleRate) : IIRFilter2(sampleRate) { SetParameters(fc, Q); }
+			PeakLowShelf(const Real fc, const Real Q, const int sampleRate) : PeakLowShelf(fc, 1.0, Q, sampleRate) {}
 
 			/**
 			* @brief Constructor that initialises an 2nd order low shelf filter with a given cut off frequency and shelf gain
@@ -332,7 +466,15 @@ namespace RAC
 			* @param Q The quality factor of the filter
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
-			PeakLowShelf(const Real fc, const Real gain, const Real Q, const int sampleRate) : IIRFilter2(sampleRate) { SetParameters(fc, Q); UpdateGain(gain); }
+			PeakLowShelf(const Real fc, const Real gain, const Real Q, const int sampleRate) : IIRFilter2Param1(gain, sampleRate),
+				cosOmega(cos(PI_2 * fc * T)), alpha(sin(PI_2 * fc * T) / Q) // sin(omega) / (2 * Q) (factor of two cancelled out in UpdateGain)
+			{
+				assert(fc < static_cast<Real>(sampleRate) / 2.0); // Ensure cut off frequency is less than Nyquist frequency
+
+				UpdateCoefficients(gain);
+				parametersEqual.store(true);
+				initialised.store(true);
+			}
 
 			/**
 			* @brief Default deconstructor
@@ -340,29 +482,28 @@ namespace RAC
 			~PeakLowShelf() {};
 
 			/**
-			* @brief Updates the gain of the low shelf filter
+			* @brief Atomically sets the target gain of the filter
 			*
-			* @param gain The shelf gain of the filter (linear)
+			* @param parameter The target gain of the filter
 			*/
-			void UpdateGain(const Real gain);
+			inline void SetTargetGain(const Real gain) { SetTargetParameter(gain); }
 
 		private:
 			/**
-			* @brief Sets the cut off frequency of the low shelf filter
+			* @brief Updates the parameters of the low pass filter
 			*
-			* @param fs The cut off frequency of the filter
-			* @param Q The quality factor of the filter
+			* @param fc The cut off frequency of the filter
 			*/
-			void SetParameters(const Real fc, const Real Q);
+			void UpdateCoefficients(const Real gain);
 
-			Real cosOmega;		// Cos of the cut off frequency
-			Real alpha;			// Alpha value for the filter
+			const Real cosOmega;		// Cos of the cut off frequency
+			const Real alpha;			// Alpha value for the filter
 		};
 
 		/**
 		* @brief Class that implements a 2nd order peaking IIR filter (used by GraphicEQ)
 		*/
-		class PeakingFilter : public IIRFilter2
+		class PeakingFilter : public IIRFilter2Param1
 		{
 		public:
 			/**
@@ -372,7 +513,7 @@ namespace RAC
 			* @param Q The quality factor of the filter
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
-			PeakingFilter(const Real fc, const Real Q, const int sampleRate) : IIRFilter2(sampleRate) { SetParameters(fc, Q); }
+			PeakingFilter(const Real fc, const Real Q, const int sampleRate) : PeakingFilter(fc, 1.0, Q, sampleRate) {}
 
 			/**
 			* @brief Constructor that initialises an 2nd order peaking filter with a given cut off frequency and gain
@@ -382,7 +523,15 @@ namespace RAC
 			* @param Q The quality factor of the filter
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
-			PeakingFilter(const Real fc, const Real gain, const Real Q, const int sampleRate) : IIRFilter2(sampleRate) { SetParameters(fc, Q); UpdateGain(gain); }
+			PeakingFilter(const Real fc, const Real gain, const Real Q, const int sampleRate) : IIRFilter2Param1(gain, sampleRate),
+				cosOmega(-2.0 * cos(PI_2 * fc * T)), alpha(sin(PI_2* fc* T) / (2.0 * Q))
+			{
+				assert(fc < static_cast<Real>(sampleRate) / 2.0); // Ensure cut off frequency is less than Nyquist frequency
+
+				UpdateCoefficients(gain);
+				parametersEqual.store(true);
+				initialised.store(true);
+			}
 
 			/**
 			* @brief Default deconstructor
@@ -390,23 +539,22 @@ namespace RAC
 			~PeakingFilter() {};
 
 			/**
-			* @brief Updates the gain of the peaking filter
+			* @brief Atomically sets the target gain of the filter
 			*
-			* @param gain The gain of the filter (linear)
+			* @param parameter The target gain of the filter
 			*/
-			void UpdateGain(const Real gain);
+			inline void SetTargetGain(const Real gain) { SetTargetParameter(gain); }
 
 		private:
 			/**
-			* @brief Sets the center frequency of the peaking filter
+			* @brief Updates the parameters of the peaking filter
 			*
-			* @param fs The center frequency of the filter
-			* @param Q The quality factor of the filter
+			* @param fc The cut off frequency of the filter
 			*/
-			void SetParameters(const Real fc, const Real Q);
+			void UpdateCoefficients(const Real gain);
 
-			Real cosOmega;		// Cos of the cut off frequency
-			Real alpha;			// Alpha value for the filter
+			const Real cosOmega;		// Cos of the cut off frequency
+			const Real alpha;			// Alpha value for the filter
 		};
 
 		/**
@@ -420,7 +568,7 @@ namespace RAC
 			*
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
-			ZPKFilter(const int& sampleRate) : IIRFilter2(sampleRate) { a0 = 1.0; UpdateParameters(Coefficients(std::vector<Real>({ 0.25, -0.99, 0.99, -0.25, 0.0 }))); };
+			ZPKFilter(const int sampleRate) : ZPKFilter(Coefficients({ 0.25, -0.99, 0.99, -0.25, 0.0 }), sampleRate) {};
 			
 			/**
 			* @brief Constructor that initialises a second order IIRFilter with a given sample rate
@@ -428,82 +576,140 @@ namespace RAC
 			* @param zpk The poles, zeros and gain of the filter
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
-			ZPKFilter(const Coefficients& zpk, const int& sampleRate) : IIRFilter2(sampleRate) { a0 = 1.0; UpdateParameters(zpk); };
+			ZPKFilter(const Coefficients& zpk, const int& sampleRate) : IIRFilter2(sampleRate),
+				currentZPK(zpk)
+			{
+				SetTargetParameters(zpk);
+
+				a0 = 1.0;
+				UpdateCoefficients(currentZPK);
+				parametersEqual.store(true);
+				initialised.store(true);
+			};
 
 			/**
-			* @brief Updates the parameters of the IIR filter
-			* 
-			* @param zpk The new poles, zeros and gain of the filter
+			* @brief Atomically sets the target ZPK parameters of the filter
+			*
+			* @param parameter The target ZPK parameters of the filter
 			*/
-			void UpdateParameters(const Coefficients& zpk);
+			void SetTargetParameters(const Coefficients& zpk);
+
+		private:
+			/**
+			* @brief Linearly interpolates the current ZPK parameters with the target ZPK parameters
+			*
+			* @param lerpFactor The lerp factor for interpolation
+			*/
+			void InterpolateParameters(const Real lerpFactor) override;
+
+			/**
+			* @brief Updates the parameters of the low pass filter
+			*
+			* @param fc The cut off frequency of the filter
+			*/
+			void UpdateCoefficients(const Coefficients& zpk);
+
+			std::atomic<std::shared_ptr<Coefficients>> targetZPK;	// Target ZPK parameters
+			Coefficients currentZPK;								// Current ZPK parameters
+
+			static ReleasePool releasePool;		// ReleasePool for managing memory of shared pointers
 		};
 
 		/**
 		* @brief Class that implements a low or high pass IIR filter (used by LinkwitzRiley filter)
 		*/
-		class PassFilter : public IIRFilter2
+		class LowPass : public IIRFilter2Param1
 		{
 		public:
 			/**
 			* @brief Constructor that intialises a default pass filter with a given sample rate
-			* 
-			* @param isLowPass True if the filter is a low pass filter, false if it is a high pass filter
+			*
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
-			PassFilter(const bool isLowPass, const int sampleRate) : IIRFilter2(sampleRate) { a0 = 1.0; SetUpdatePointer(isLowPass); };
+			LowPass(const int sampleRate) : LowPass(1000.0, sampleRate) {}
 			
+
 			/**
 			* @brief Constructor that intialises a default pass filter with a given cut off frequency and sample rate
 			*
 			* @param fc The cut off frequency of the filter
-			* @param isLowPass True if the filter is a low pass filter, false if it is a high pass filter
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
-			PassFilter(const Real fc, const bool isLowPass, const int sampleRate) : IIRFilter2(sampleRate)
-			{ 
-				a0 = 1.0;
-				SetUpdatePointer(isLowPass);
-				UpdateParameters(fc);
-			};
+			LowPass(const Real fc, const int sampleRate) : IIRFilter2Param1(fc, sampleRate)
+			{
+				UpdateCoefficients(fc);
+				parametersEqual.store(true);
+				initialised.store(true);
+			}
 
 			/**
-			* @brief Updates the parameters of the pass filter
-			* 
-			* @param fc The new cut off frequency of the filter
+			* @brief Default deconstructor
 			*/
-			void UpdateParameters(const Real fc) { (this->*UpdatePass)(fc); };
+			~LowPass() {};
+
+			/**
+			* @brief Atomically sets the target cut-of frequency parameter of the filter
+			*
+			* @param parameter The target cut-off frequency of the filter
+			*/
+			inline void SetTargetFc(const Real fc) { SetTargetParameter(fc); }
 
 		private:
-			/**
-			* @brief Sets the function pointer to the correct update function
-			*
-			* @param isLowPass True if the filter is a low pass filter, false if it is a high pass filter
-			*/
-			inline void SetUpdatePointer(bool isLowPass)
-			{
-				if (isLowPass)
-					UpdatePass = &PassFilter::UpdateLowPass;
-				else
-					UpdatePass = &PassFilter::UpdateHighPass;
-			};
-
-			/**
-			* @brief Updates the parameters of the low pass filter
-			* 
-			* @param fc The cut off frequency of the filter
-			*/
-			void UpdateLowPass(const Real fc);
-
 			/**
 			* @brief Updates the parameters of the high pass filter
 			*
 			* @param fc The cut off frequency of the filter
 			*/
-			void UpdateHighPass(const Real fc);
+			void UpdateCoefficients(const Real fc) override;
+		};
 
-			void (PassFilter::* UpdatePass)(const Real fc);		// Function pointer to the update function
+		/**
+		* @brief Class that implements a low or high pass IIR filter (used by LinkwitzRiley filter)
+		*/
+		class HighPass : public IIRFilter2Param1
+		{
+		public:
+			/**
+			* @brief Constructor that intialises a default pass filter with a given sample rate
+			*
+			* @param sampleRate The sample rate for calculating filter coefficients
+			*/
+			HighPass(const int sampleRate) : HighPass(1000.0, sampleRate) {};
+
+			/**
+			* @brief Constructor that intialises a default pass filter with a given cut off frequency and sample rate
+			*
+			* @param fc The cut off frequency of the filter
+			* @param sampleRate The sample rate for calculating filter coefficients
+			*/
+			HighPass(const Real fc, const int sampleRate) : IIRFilter2Param1(fc, sampleRate)
+			{
+				UpdateCoefficients(fc);
+				parametersEqual.store(true);
+				initialised.store(true);
+			}
+
+			/**
+			* @brief Default deconstructor
+			*/
+			~HighPass() {};
+
+			/**
+			* @brief Atomically sets the target cut-of frequency parameter of the filter
+			*
+			* @param parameter The target cut-off frequency of the filter
+			*/
+			inline void SetTargetFc(const Real fc) { SetTargetParameter(fc); }
+
+		private:
+			/**
+			* @brief Updates the parameters of the high pass filter
+			*
+			* @param fc The cut off frequency of the filter
+			*/
+			void UpdateCoefficients(const Real fc) override;
 		};
 	}
 }
 
-#endif
+#endif // DSP_IIRFilter_h

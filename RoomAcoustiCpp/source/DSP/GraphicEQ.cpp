@@ -37,7 +37,7 @@ namespace RAC
 		void GraphicEQ::InitFilters(const Coefficients& fc, const Real Q, const int sampleRate)
 		{
 			for (int i = 0; i < numFilters - 2; i++)
-				peakingFilters.push_back(PeakingFilter(fc[i], Q, sampleRate));
+				peakingFilters.push_back(std::make_unique<PeakingFilter>(fc[i], Q, sampleRate));
 		}
 
 		////////////////////////////////////////
@@ -57,29 +57,29 @@ namespace RAC
 			std::vector<Real> out = std::vector<Real>(f.size(), 0.0);
 			int j = 0;
 
-			lowShelf.UpdateGain(p);
+			lowShelf.SetTargetGain(p);
 			out = lowShelf.GetFrequencyResponse(f);
-			lowShelf.UpdateGain(0.0);
+			lowShelf.SetTargetGain(0.0);
 
 			for (int i = 0; i < out.size(); i++)
 				filterResponseMatrix[j][i] += out[i];
 
 			j++;
 
-			for (PeakingFilter& filter : peakingFilters)
+			for (auto& filter : peakingFilters)
 			{
-				filter.UpdateGain(p);
-				out = filter.GetFrequencyResponse(f);
-				filter.UpdateGain(1.0);
+				filter->SetTargetGain(p);
+				out = filter->GetFrequencyResponse(f);
+				filter->SetTargetGain(1.0);
 
 				for (int i = 0; i < out.size(); i++)
 					filterResponseMatrix[j][i] += out[i];
 				j++;
 			}
 
-			highShelf.UpdateGain(p);
+			highShelf.SetTargetGain(p);
 			out = highShelf.GetFrequencyResponse(f);
-			highShelf.UpdateGain(0.0);
+			highShelf.SetTargetGain(0.0);
 
 			for (int i = 0; i < out.size(); i++)
 				filterResponseMatrix[j][i] += out[i];
@@ -95,7 +95,6 @@ namespace RAC
 			SetGain(targetBandGains);
 			currentFilterGains = targetFilterGains;
 			equal = true;
-			UpdateParameters();
 		}
 
 		////////////////////////////////////////
@@ -142,6 +141,8 @@ namespace RAC
 
 			if (targetFilterGains != currentFilterGains)
 				equal = false;
+
+			UpdateParameters();
 		}
 
 		////////////////////////////////////////
@@ -156,29 +157,29 @@ namespace RAC
 
 			int i = 1;
 
-			lowShelf.UpdateGain(currentFilterGains[i]);
+			lowShelf.SetTargetGain(currentFilterGains[i]);
 			i++;
 
-			for (PeakingFilter& filter : peakingFilters)
+			for (auto& filter : peakingFilters)
 			{
-				filter.UpdateGain(currentFilterGains[i]);
+				filter->SetTargetGain(currentFilterGains[i]);
 				i++;
 			}
 
-			highShelf.UpdateGain(currentFilterGains[i]);
+			highShelf.SetTargetGain(currentFilterGains[i]);
 		}
 
 		////////////////////////////////////////
 
-		Real GraphicEQ::GetOutput(const Real input)
+		Real GraphicEQ::GetOutput(const Real input, const Real lerpFactor)
 		{
 			if (!valid)
 				return 0.0;
 
-			Real out = lowShelf.GetOutput(input);
-			for (PeakingFilter& filter : peakingFilters)
-				out = filter.GetOutput(out);
-			out = highShelf.GetOutput(out);
+			Real out = lowShelf.GetOutput(input, lerpFactor);
+			for (auto& filter : peakingFilters)
+				out = filter->GetOutput(out, lerpFactor);
+			out = highShelf.GetOutput(out, lerpFactor);
 			out *= currentFilterGains[0];
 			return out;
 		}
@@ -191,28 +192,8 @@ namespace RAC
 				return;
 
 			FlushDenormals();
-			if (equal)
-			{
-				for (int i = 0; i < numFrames; i++)
-					outBuffer[i] = GetOutput(inBuffer[i]);
-			}
-			else if (Equals(currentFilterGains, targetFilterGains))
-			{
-				currentFilterGains = targetFilterGains;
-				equal = true;
-				UpdateParameters();
-				for (int i = 0; i < numFrames; i++)
-					outBuffer[i] = GetOutput(inBuffer[i]);
-			}
-			else
-			{
-				for (int i = 0; i < numFrames; i++)
-				{
-					outBuffer[i] = GetOutput(inBuffer[i]);
-					Lerp(currentFilterGains, targetFilterGains, lerpFactor);
-					UpdateParameters();
-				}
-			}
+			for (int i = 0; i < numFrames; i++)
+				outBuffer[i] = GetOutput(inBuffer[i], lerpFactor);
 			NoFlushDenormals();
 		}
 	}

@@ -85,6 +85,8 @@ namespace RAC
 
 		TEST_METHOD(ProcessPeakingFilter)
 		{
+			const Real lerpFactor = 0.5;
+
 			// std::string filePath = _SOLUTIONDIR;
 			auto inputData = Parse2Dcsv<double>(filePath + "peakingFilterInput.csv");
 			auto outputData = Parse2Dcsv<double>(filePath + "peakingFilterOutput.csv");
@@ -106,7 +108,7 @@ namespace RAC
 				PeakingFilter peakingFilter = PeakingFilter(fc[i], g[i], Q, fs);
 
 				for (int i = 0; i < numFrames; ++i)
-					out[i] = peakingFilter.GetOutput(in[i]);
+					out[i] = peakingFilter.GetOutput(in[i], lerpFactor);
 
 				// AppendBufferToCSV(filePath + "peakingFilterOutput.csv", out);
 
@@ -122,6 +124,8 @@ namespace RAC
 
 		TEST_METHOD(ProcessLowShelfFilter)
 		{
+			const Real lerpFactor = 0.5;
+
 			// std::string filePath = _SOLUTIONDIR;
 			auto inputData = Parse2Dcsv<double>(filePath + "peakingFilterInput.csv");
 			auto outputData = Parse2Dcsv<double>(filePath + "lowShelfFilterOutput.csv");
@@ -143,7 +147,7 @@ namespace RAC
 				PeakLowShelf lowShelfFilter = PeakLowShelf(fc[i], g[i], Q, fs);
 
 				for (int i = 0; i < numFrames; ++i)
-					out[i] = lowShelfFilter.GetOutput(in[i]);
+					out[i] = lowShelfFilter.GetOutput(in[i], lerpFactor);
 
 				// AppendBufferToCSV(filePath + "lowShelfFilterOutput.csv", out);
 
@@ -159,6 +163,8 @@ namespace RAC
 
 		TEST_METHOD(ProcessHighShelfFilter)
 		{
+			const Real lerpFactor = 0.5;
+
 			// std::string filePath = _SOLUTIONDIR;
 			auto inputData = Parse2Dcsv<double>(filePath + "peakingFilterInput.csv");
 			auto outputData = Parse2Dcsv<double>(filePath + "highShelfFilterOutput.csv");
@@ -180,7 +186,7 @@ namespace RAC
 				PeakHighShelf highShelfFilter = PeakHighShelf(fc[i], g[i], Q, fs);
 
 				for (int i = 0; i < numFrames; ++i)
-					out[i] = highShelfFilter.GetOutput(in[i]);
+					out[i] = highShelfFilter.GetOutput(in[i], lerpFactor);
 
 				// AppendBufferToCSV(filePath + "UnitTestData\\highShelfFilterOutput.csv", out);
 

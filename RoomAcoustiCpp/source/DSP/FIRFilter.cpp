@@ -90,21 +90,22 @@ namespace RAC
 
 		void FIRFilter::InterpolateIR(const Real lerpFactor)
 		{
-			std::shared_ptr<const Buffer> ir = targetIR.load();
+			irsEqual.store(true); // Prevents issues in case targetIR updated during this function call
+			const std::shared_ptr<const Buffer> ir = targetIR.load();
 
 			irLength = ir->Length();
 
 			Lerp(currentIR, *ir, lerpFactor);
 			if (irLength < oldIrLength)
-				Lerp(currentIR, irLength, oldIrLength, lerpFactor);
+				Lerp(currentIR, irLength, oldIrLength, lerpFactor); // Interpolate end of old ir towards zero
 
 			if (Equals(currentIR, *ir, irLength))
 			{
 				std::copy(ir->begin(), ir->end(), currentIR.begin());
-
 				oldIrLength = irLength;
-				irsEqual.store(true);
+				return;
 			}
+			irsEqual.store(false);
 		}
 	}
 }

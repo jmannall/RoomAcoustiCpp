@@ -4,6 +4,9 @@
 * @brief Declaration of Graphic EQ class
 * 
 * @remarks Based after Efficient Multi-Band Digital Audio Graphic Equalizer with Accurate Frequency Response Control. Oliver R, Jot J. 2015
+* This appears to have typos in the formulae. Instead see Audio EQ Cookbook:
+* https://webaudio.github.io/Audio-EQ-Cookbook/Audio-EQ-Cookbook.txt
+* https://www.w3.org/TR/audio-eq-cookbook/#intro
 * 
 */
 
@@ -99,7 +102,7 @@ namespace RAC
 			* @param input The input to the GraphicEQ
 			* @return The output of the GraphicEQ
 			*/
-			Real GetOutput(const Real input);
+			Real GetOutput(const Real input, const Real lerpFactor);
 
 			/**
 			* @brief Processes an input buffer and updates the output buffer
@@ -117,8 +120,8 @@ namespace RAC
 			inline void ClearBuffers()
 			{
 				lowShelf.ClearBuffers();
-				for (PeakingFilter& filter : peakingFilters)
-					filter.ClearBuffers();
+				for (auto& filter : peakingFilters)
+					filter->ClearBuffers();
 				highShelf.ClearBuffers();
 			}
 
@@ -158,7 +161,7 @@ namespace RAC
 			int numFilters;									// Number of filters
 			PeakLowShelf lowShelf;							// Low-shelf filter
 			PeakHighShelf highShelf;						// High-shelf filter
-			std::vector<PeakingFilter> peakingFilters;		// Peaking filters
+			std::vector<std::unique_ptr<PeakingFilter>> peakingFilters;		// Peaking filters
 
 			Coefficients lastInput;				// Previous target filter gains
 			Coefficients targetFilterGains;		// Target filter gains

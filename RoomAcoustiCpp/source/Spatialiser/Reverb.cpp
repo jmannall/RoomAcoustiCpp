@@ -260,8 +260,8 @@ namespace RAC
 		{
 			mConfig.spatialisationMode = mode;
 			lock_guard<mutex> lock(tuneInMutex);
-			for (ReverbSource& source : mReverbSources)
-				source.UpdateSpatialisationMode(mode);
+			for (auto& source : mReverbSources)
+				source->UpdateSpatialisationMode(mode);
 		}
 
 		////////////////////////////////////////
@@ -269,8 +269,8 @@ namespace RAC
 		void Reverb::UpdateLerpFactor(const Real lerpFactor)
 		{
 			mConfig.lerpFactor = lerpFactor;
-			for (ReverbSource& source : mReverbSources)
-				source.UpdateLerpFactor(lerpFactor);
+			for (auto& source : mReverbSources)
+				source->UpdateLerpFactor(lerpFactor);
 		}
 
 		////////////////////////////////////////
@@ -306,7 +306,7 @@ namespace RAC
 			threadResults.reserve(mConfig.numFDNChannels);
 			for (int i = 0; i < mConfig.numFDNChannels; i++)
 			{
-				mReverbSources.emplace_back(mCore, mConfig, points[i]);
+				mReverbSources.emplace_back(std::make_unique<ReverbSource>(mCore, mConfig, points[i]));
 				threadResults.emplace_back(2 * mConfig.numFrames);
 			}
 		}
@@ -316,8 +316,8 @@ namespace RAC
 		void Reverb::UpdateReverbSourcePositions(const Vec3& listenerPosition)
 		{
 			// tuneInMutex already locked by context
-			for (ReverbSource& reverbSource : mReverbSources)
-				reverbSource.UpdatePosition(listenerPosition);
+			for (auto& reverbSource : mReverbSources)
+				reverbSource->UpdatePosition(listenerPosition);
 		}
 
 		////////////////////////////////////////
@@ -337,8 +337,8 @@ namespace RAC
 							std::lock_guard<std::mutex> lock(mFDNMutex);
 							mFDN.Reset();
 						}
-						for (ReverbSource& source : mReverbSources)
-							source.Reset();
+						for (auto& source : mReverbSources)
+							source->Reset();
 						return false;
 					}
 				}
@@ -346,7 +346,7 @@ namespace RAC
 			}
 
 			for (int i = 0; i < mConfig.numFDNChannels; i++)
-				mReverbSources[i].UpdateReflectionFilter(absorptions[i]);
+				mReverbSources[i]->UpdateReflectionFilter(absorptions[i]);
 			return true;
 		}
 
@@ -372,11 +372,11 @@ namespace RAC
 					lock_guard <mutex> lock(mFDNMutex);
 					for (int i = 0; i < mConfig.numFrames; i++)
 					{
-						mFDN.ProcessOutput(data.GetRow(i), mCurrentGain);
+						mFDN.ProcessOutput(data.GetRow(i), mCurrentGain, mConfig.lerpFactor);
 						j = 0;
-						for (ReverbSource& source : mReverbSources)
+						for (auto& source : mReverbSources)
 						{
-							source.AddInput(mCurrentGain * mFDN.GetOutput(j), i);
+							source->AddInput(mCurrentGain * mFDN.GetOutput(j), i);
 							j++;
 						}
 						mCurrentGain = Lerp(mCurrentGain, mTargetGain, mConfig.lerpFactor);
@@ -388,11 +388,11 @@ namespace RAC
 					lock_guard <mutex> lock(mFDNMutex);
 					for (int i = 0; i < mConfig.numFrames; i++)
 					{
-						mFDN.ProcessOutput(data.GetRow(i), mTargetGain);
+						mFDN.ProcessOutput(data.GetRow(i), mTargetGain, mConfig.lerpFactor);
 						j = 0;
-						for (ReverbSource& source : mReverbSources)
+						for (auto& source : mReverbSources)
 						{
-							source.AddInput(mCurrentGain * mFDN.GetOutput(j), i);
+							source->AddInput(mCurrentGain * mFDN.GetOutput(j), i);
 							j++;
 						}
 					}
@@ -405,11 +405,11 @@ namespace RAC
 				std::latch latch(mReverbSources.size());
 
 				size_t index = 0;
-				for (ReverbSource& source : mReverbSources)
+				for (auto& source : mReverbSources)
 				{
 					size_t threadIndex = index++; // Each thread gets a unique index
 					audioThreadPool->enqueue([&, threadIndex] {
-						source.ProcessAudio(threadResults[threadIndex]);
+						source->ProcessAudio(threadResults[threadIndex]);
 						// No need for a mutex, each thread writes to a unique index
 
 						latch.count_down();
@@ -435,15 +435,15 @@ namespace RAC
 		void Reverb::ProcessAudio_MOD_ART(const Matrix& data, Buffer& outputBuffer)
 		{
 			int j = 0;
-			for (ReverbSource& source : mReverbSources)
+			for (auto& source : mReverbSources)
 			{
-				source.AddInput(data.GetRow(j));
+				source->AddInput(data.GetRow(j));
 				j++;
 			}
 
 			// Process buffer of each channel
-			for (ReverbSource& source : mReverbSources)
-				source.ProcessAudio_MOD_ART(outputBuffer);
+			for (auto& source : mReverbSources)
+				source->ProcessAudio_MOD_ART(outputBuffer);
 		}
 #endif
 

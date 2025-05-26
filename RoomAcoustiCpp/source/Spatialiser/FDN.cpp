@@ -38,11 +38,11 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		Real Channel::GetOutput(const Real input)
+		Real Channel::GetOutput(const Real input, const Real lerpFactor)
 		{
 			if (idx >= mBuffer.Length())
 				idx = 0;
-			Real out = mAbsorptionFilter.GetOutput(mBuffer[idx]);
+			Real out = mAbsorptionFilter.GetOutput(mBuffer[idx], lerpFactor);
 			mAbsorptionFilter.UpdateParameters(mConfig.lerpFactor);
 			mBuffer[idx] = input;
 			++idx;
@@ -116,7 +116,7 @@ namespace RAC
 			std::vector<int> delayLengths = CalculateTimeDelay(dimensions);
 			mChannels.reserve(mConfig.numFDNChannels);
 			for (int i = 0; i < mConfig.numFDNChannels; i++)
-				mChannels.push_back(Channel(delayLengths[i], T60, mConfig));
+				mChannels.push_back(std::make_unique<Channel>(delayLengths[i], T60, mConfig));
 			InitFDNMatrix(FDNMatrix::householder);
 		}
 
@@ -125,7 +125,7 @@ namespace RAC
 		void FDN::UpdateT60(const Coefficients& T60)
 		{
 			for (int i = 0; i < mConfig.numFDNChannels; i++)
-				mChannels[i].UpdateAbsorption(T60);
+				mChannels[i]->UpdateAbsorption(T60);
 		}
 
 		////////////////////////////////////////
@@ -134,7 +134,7 @@ namespace RAC
 		{
 			std::vector<int> delayLengths = CalculateTimeDelay(dimensions);
 			for (int i = 0; i < mConfig.numFDNChannels; i++)
-				mChannels[i].UpdateDelayLine(delayLengths[i]);
+				mChannels[i]->UpdateDelayLine(delayLengths[i]);
 		}
 
 		////////////////////////////////////////
@@ -215,18 +215,18 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void FDN::ProcessOutput(const std::vector<Real>& data, const Real gain)
+		void FDN::ProcessOutput(const std::vector<Real>& data, const Real gain, const Real lerpFactor)
 		{
 #ifdef PROFILE_DETAILED
 			BeginFDNChannel();
 #endif
 
 			int i = 0;
-			for (Channel& channel : mChannels)
+			for (auto& channel : mChannels)
 			{
 				if (isnan(x[i]))
 					Debug::Log("X was nan", Colour::Red);
-				y[i] = channel.GetOutput(x[i] + data[i]);
+				y[i] = channel->GetOutput(x[i] + data[i], lerpFactor);
 				if (isnan(y[i]))
 					Debug::Log("Y was nan", Colour::Red);
 				++i;

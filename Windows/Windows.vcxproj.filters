@@ -50,6 +50,24 @@
     <ClCompile Include="UnitTest_Regression.cpp">
       <Filter>UnitTest</Filter>
     </ClCompile>
+    <ClCompile Include="UnitTest_LowPass.cpp">
+      <Filter>UnitTest</Filter>
+    </ClCompile>
+    <ClCompile Include="UnitTest_HighShelf.cpp">
+      <Filter>UnitTest</Filter>
+    </ClCompile>
+    <ClCompile Include="UnitTest_PeakHighShelf.cpp">
+      <Filter>UnitTest</Filter>
+    </ClCompile>
+    <ClCompile Include="UnitTest_PeakLowShelf.cpp">
+      <Filter>UnitTest</Filter>
+    </ClCompile>
+    <ClCompile Include="UnitTest_PeakingFilter.cpp">
+      <Filter>UnitTest</Filter>
+    </ClCompile>
+    <ClCompile Include="UnitTest_ZPKFilter.cpp">
+      <Filter>UnitTest</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\UtilityFunctions.h">
