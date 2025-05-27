@@ -61,19 +61,11 @@ namespace RAC
 			inline void UpdateDelayLine(const int delayLength) { InitDelay(delayLength); }
 
 			/**
-			* @brief Initialises the absorption filter with a given target T60
-			* @details No interpolation of the absorption filter coefficients
-			* 
-			* @params T60 The target decay time
-			*/
-			inline void InitAbsorption(const Coefficients& T60) { mAbsorptionFilter.InitParameters(CalcGain(T60)); }
-
-			/**
 			* @brief Updates the absorption filter for a given target T60
 			*
 			* @params T60 The new target decay time
 			*/
-			inline void UpdateAbsorption(const Coefficients& T60) { mAbsorptionFilter.SetGain(CalcGain(T60)); }
+			inline void UpdateAbsorption(const Coefficients& T60) { mAbsorptionFilter.SetTargetGains(CalcGain(T60)); }
 			
 			/**
 			* @brief Initialises the delay line
@@ -112,13 +104,14 @@ namespace RAC
 			* @params T60 The target decay time
 			* @return The required filter gain coefficients
 			*/
-			inline Coefficients CalcGain(const Coefficients& T60) { return (-3.0 * mT / T60).Pow10(); } // 20 * log10(H(f)) = -60 * t / t60(f);
+			inline Coefficients CalcGain(const Coefficients& T60) const { return (-3.0 * mT / T60).Pow10(); } // 20 * log10(H(f)) = -60 * t / t60(f);
+
+			Real mT;		// The current delay in seconds
 
 			Config mConfig;									// The spatialiser configuration
 			Buffer mBuffer;									// The internal delay line
 			GraphicEQ mAbsorptionFilter;					// The absorption filter to match the target decay time
 
-			Real mT;		// The current delay in seconds
 			int idx;		// Current delay line read index
 
 		};

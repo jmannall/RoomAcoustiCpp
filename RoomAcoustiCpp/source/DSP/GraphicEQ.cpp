@@ -18,71 +18,129 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		GraphicEQ::GraphicEQ(const Coefficients& fc, const Real Q, const int sampleRate) : numFilters(fc.Length() + 2), lowShelf(std::max((fc[0] / 2.0)* sqrt(fc[0] / (fc[0] / 2.0)), 20.0), Q, sampleRate), highShelf(std::min(fc[numFilters - 3] * sqrt((2.0 * fc[numFilters - 3]) / fc[numFilters - 3]), 20000.0), Q, sampleRate),
-			dbGains(numFilters), inputGains(numFilters), targetFilterGains(numFilters + 1), currentFilterGains(numFilters + 1), lastInput(fc.Length()), filterResponseMatrix(numFilters, numFilters), equal(false), valid(false)
-		{
-			InitFilters(fc, Q, sampleRate);
-			InitMatrix(fc);
-		}
-
-		////////////////////////////////////////
-
-		GraphicEQ::GraphicEQ(const Coefficients& gain, const Coefficients& fc, const Real Q, const int sampleRate) : GraphicEQ(fc, Q, sampleRate)
+		GraphicEQ::GraphicEQ(const Coefficients& gain, const Coefficients& fc, const Real Q, const int sampleRate) :
+			numFilters(gain.Length() + 2), filterResponseMatrix(numFilters, numFilters), previousInput(numFilters)
 		{ 
-			InitParameters(gain);
+			assert(gain.Length() == fc.Length());
+
+			Coefficients f = CreateFrequencyVector(fc);
+			InitMatrix(f, Q, sampleRate);
+			auto targetGains = CalculateGains(gain);
+
+			// Increasing the low shelf frequency by SQRT_2 creates a smoother response at low frequencies
+			lowShelf = std::make_unique<PeakLowShelf>(f[0] * SQRT_2, targetGains.first[0], Q, sampleRate);
+			for (int i = 1; i < numFilters - 1; i++)
+				peakingFilters.emplace_back(std::make_unique<PeakingFilter>(f[i], targetGains.first[i], Q, sampleRate));
+			// (same as fc[numFilters - 1] * 2 / SQRT_2 ) Decreasing the high shelf frequency by SQRT_2 creates a smoother response at high frequencies
+			highShelf = std::make_unique<PeakHighShelf>(f[numFilters - 2] * SQRT_2, targetGains.first[numFilters - 1], Q, sampleRate);
+
+			targetGain.store(targetGains.second);
+			currentGain = targetGains.second;
+
+			gainsEqual.store(true);
+			initialised.store(true);
 		}
 
 		////////////////////////////////////////
 
-		void GraphicEQ::InitFilters(const Coefficients& fc, const Real Q, const int sampleRate)
+		void GraphicEQ::SetTargetGains(const Coefficients& gains)
 		{
-			for (int i = 0; i < numFilters - 2; i++)
-				peakingFilters.push_back(std::make_unique<PeakingFilter>(fc[i], Q, sampleRate));
+			assert(gains.Length() == peakingFilters.size());
+
+			if (gains == previousInput)
+				return; // No change in gains
+			previousInput = gains;
+
+			const auto targetGains = CalculateGains(gains);
+			targetGain.store(targetGains.second);
+			gainsEqual.store(false);
+			lowShelf->SetTargetGain(targetGains.first[0]);
+			for (int i = 1; i < numFilters - 1; i++)
+				peakingFilters[i - 1]->SetTargetGain(targetGains.first[i]);
+			highShelf->SetTargetGain(targetGains.first[numFilters - 1]);
 		}
 
 		////////////////////////////////////////
 
-		void GraphicEQ::InitMatrix(const Coefficients& fc)
+		std::pair<Rowvec, Real> GraphicEQ::CalculateGains(const Coefficients& gains) const
 		{
-			std::vector<Real> f = std::vector<Real>(numFilters, 0.0);
+			assert(gains.Length() + 2 == numFilters);
 
-			f[0] = std::max(fc[0] / 2.0, 20.0);
+			// Check the gains have changed?
+
+			Rowvec inputGains(std::vector<Real>(numFilters, 1.0));
+			if (gains == 0)
+				return std::make_pair(inputGains, 0.0);
+
+			if (gains.Length() == 1)
+			{
+				inputGains[0] = gains[0];
+				inputGains[1] = gains[0];
+				inputGains[2] = gains[0];
+			}
+			else
+			{
+				inputGains[0] = (gains[0] + gains[1]) / 2.0; // Low shelf gain
+				for (int i = 1; i < numFilters - 1; i++)
+					inputGains[i] = gains[i - 1]; // Peaking filter gains
+				inputGains[numFilters - 1] = (gains[numFilters - 4] + gains[numFilters - 3]) / 2.0; // High shelf gain
+			}
+			inputGains.Max(EPS); // Prevent log10(0)
+			inputGains.Log10();
+
+			// Remove average filter gain. Improves DC and nyquist response, and simplifies interpolation if filter shape is consistent
+			Real meandBGain = inputGains.Mean();
+			inputGains -= meandBGain;
+
+			inputGains = inputGains * filterResponseMatrix;
+			inputGains.Pow10();
+
+			return std::make_pair(inputGains, Pow10(meandBGain));
+		}
+
+		////////////////////////////////////////
+
+		Coefficients GraphicEQ::CreateFrequencyVector(const Coefficients& fc) const
+		{
+			Coefficients f(numFilters);
+			f[0] = std::max(fc[0] / 2, 20.0);
 			for (int i = 1; i < numFilters - 1; i++)
 				f[i] = fc[i - 1];
-			f[numFilters - 1] = std::min(2.0 * fc[numFilters - 3], 20000.0);
+			f[numFilters - 1] = std::min(fc[numFilters - 3] * 2.0, 20000.0);
+			return f;
+		}
+
+		////////////////////////////////////////
+
+		void GraphicEQ::InitMatrix(const Coefficients& fc, const Real Q, const Real fs)
+		{
+			assert(fc.Length() == numFilters);
 
 			Real pdb = 6.0;
 			Real p = pow(10.0, pdb / 20.0);
 
-			std::vector<Real> out = std::vector<Real>(f.size(), 0.0);
-			int j = 0;
+			Coefficients out(numFilters);
 
-			lowShelf.SetTargetGain(p);
-			out = lowShelf.GetFrequencyResponse(f);
-			lowShelf.SetTargetGain(0.0);
+			const PeakLowShelf tempLowShelf(fc[0] * SQRT_2, p, Q, fs); // Times SQRT_2. See constructor
+			out = tempLowShelf.GetFrequencyResponse(fc);
 
-			for (int i = 0; i < out.size(); i++)
-				filterResponseMatrix[j][i] += out[i];
+			for (int i = 0; i < numFilters; i++)
+				filterResponseMatrix[0][i] += out[i];
 
-			j++;
-
-			for (auto& filter : peakingFilters)
+			for (int j = 1; j < numFilters - 1; j++)
 			{
-				filter->SetTargetGain(p);
-				out = filter->GetFrequencyResponse(f);
-				filter->SetTargetGain(1.0);
+				const PeakingFilter tempPeakingFilter(fc[j], p, Q, fs);
+				out = tempPeakingFilter.GetFrequencyResponse(fc);
 
-				for (int i = 0; i < out.size(); i++)
+				for (int i = 0; i < out.Length(); i++)
 					filterResponseMatrix[j][i] += out[i];
-				j++;
 			}
 
-			highShelf.SetTargetGain(p);
-			out = highShelf.GetFrequencyResponse(f);
-			highShelf.SetTargetGain(0.0);
+			const PeakHighShelf tempHighShelf(fc[numFilters - 2] * SQRT_2, p, Q, fs); // Times SQRT_2. See constructor
+			out = tempHighShelf.GetFrequencyResponse(fc);
 
-			for (int i = 0; i < out.size(); i++)
-				filterResponseMatrix[j][i] += out[i];
+			for (int i = 0; i < out.Length(); i++)
+				filterResponseMatrix[numFilters - 1][i] += out[i];
 
 			filterResponseMatrix.Inverse();
 			filterResponseMatrix *= pdb;
@@ -90,97 +148,19 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void GraphicEQ::InitParameters(const Coefficients& targetBandGains)
-		{
-			SetGain(targetBandGains);
-			currentFilterGains = targetFilterGains;
-			equal = true;
-		}
-
-		////////////////////////////////////////
-
-		void GraphicEQ::SetGain(const Coefficients& targetBandGains)
-		{
-			if (targetBandGains == lastInput)
-				return;
-
-			lastInput = targetBandGains;
-			if (targetBandGains == 0)
-			{
-				inputGains.Reset();
-				targetFilterGains[0] = 0;
-			}
-			else
-			{
-				if (!valid)
-				{
-					valid = true;
-					ClearBuffers();
-				}
-
-				// when dB is used here. Factors of 20 are cancelled out.
-				Real g = (targetBandGains[0] + targetBandGains[1]) / 2.0;
-				dbGains[0] = std::max(g, EPS); // Prevent log10(0)
-
-				for (int i = 1; i < numFilters - 1; i++)
-					dbGains[i] = std::max(targetBandGains[i - 1], EPS); // Prevent log10(0)
-
-				g = (targetBandGains[numFilters - 4] + targetBandGains[numFilters - 3]) / 2.0;
-				dbGains[numFilters - 1] = std::max(g, EPS); // Prevent log10(0)
-
-				dbGains.Log10();
-				Real meandBGain = dbGains.Sum() / dbGains.Cols();
-				targetFilterGains[0] = Pow10(meandBGain); // 10 ^ mean(dbGains);
-				dbGains -= meandBGain; // dbGains - mean(dbGains);
-
-				Mulitply(inputGains, dbGains, filterResponseMatrix);
-				inputGains.Pow10();
-			}
-			for (int i = 0; i < numFilters; i++)
-				targetFilterGains[i + 1] = inputGains[i];
-
-			if (targetFilterGains != currentFilterGains)
-				equal = false;
-
-			UpdateParameters();
-		}
-
-		////////////////////////////////////////
-
-		void GraphicEQ::UpdateParameters()
-		{
-			if (currentFilterGains[0] == 0.0)
-			{
-				valid = false;
-				return;
-			}
-
-			int i = 1;
-
-			lowShelf.SetTargetGain(currentFilterGains[i]);
-			i++;
-
-			for (auto& filter : peakingFilters)
-			{
-				filter->SetTargetGain(currentFilterGains[i]);
-				i++;
-			}
-
-			highShelf.SetTargetGain(currentFilterGains[i]);
-		}
-
-		////////////////////////////////////////
-
 		Real GraphicEQ::GetOutput(const Real input, const Real lerpFactor)
 		{
-			if (!valid)
+			if (!initialised.load())
 				return 0.0;
 
-			Real out = lowShelf.GetOutput(input, lerpFactor);
+			if (!gainsEqual.load())
+				InterpolateGain(lerpFactor);
+
+			Real out = lowShelf->GetOutput(input, lerpFactor);
 			for (auto& filter : peakingFilters)
 				out = filter->GetOutput(out, lerpFactor);
-			out = highShelf.GetOutput(out, lerpFactor);
-			out *= currentFilterGains[0];
+			out = highShelf->GetOutput(out, lerpFactor);
+			out *= currentGain;
 			return out;
 		}
 
@@ -188,13 +168,29 @@ namespace RAC
 
 		void GraphicEQ::ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const int numFrames, const Real lerpFactor)
 		{
-			if (!valid)
+			if (!initialised.load())
+				return;
+
+			if (currentGain == 0.0 && gainsEqual.load())
 				return;
 
 			FlushDenormals();
 			for (int i = 0; i < numFrames; i++)
 				outBuffer[i] = GetOutput(inBuffer[i], lerpFactor);
 			NoFlushDenormals();
+		}
+
+		////////////////////////////////////////
+
+		void GraphicEQ::InterpolateGain(const Real lerpFactor)
+		{
+			gainsEqual.store(true); // Prevents issues in case targetGain updated during this function call
+			const Real gain = targetGain.load();
+			currentGain = Lerp(currentGain, gain, lerpFactor);
+			if (Equals(currentGain, gain))
+				currentGain = gain;
+			else
+				gainsEqual.store(false);
 		}
 	}
 }

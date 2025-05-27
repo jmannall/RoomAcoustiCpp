@@ -119,5 +119,27 @@ namespace RAC
 					data[i][j] = RAC::Common::Pow10(data[i][j]);
 			}
 		}
+
+		////////////////////////////////////////
+
+		void Matrix::Max(const Real min)
+		{
+			for (int i = 0; i < rows; i++)
+			{
+				for (int j = 0; j < cols; j++)
+					data[i][j] = std::max(min, data[i][j]);
+			}
+		}
+
+		////////////////////////////////////////
+
+		void Matrix::Min(const Real max)
+		{
+			for (int i = 0; i < rows; i++)
+			{
+				for (int j = 0; j < cols; j++)
+					data[i][j] = std::min(max, data[i][j]);
+			}
+		}
 	}
 }

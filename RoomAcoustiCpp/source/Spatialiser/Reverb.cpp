@@ -134,14 +134,14 @@ namespace RAC
 
 			if (mAbsorption > EPS)
 			{
-				if (filterInitialised)
-					mReflectionFilter.SetGain(mAbsorption);
-				else
+				// if (filterInitialised)
+				mReflectionFilter.SetTargetGains(mAbsorption);
+				/*else
 				{
 					mReflectionFilter.InitParameters(mAbsorption);
 					filterInitialised = true;
 					targetGain = 1.0;
-				}
+				}*/
 			}
 			else
 			{

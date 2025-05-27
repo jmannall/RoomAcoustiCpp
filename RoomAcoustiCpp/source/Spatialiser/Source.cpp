@@ -217,7 +217,7 @@ namespace RAC
 					reverbInput = GENELEC.AverageResponse(mConfig.frequencyBands);
 					break;
 				}
-				reverbInputFilter.SetGain(6.0 * reverbInput / mConfig.numFDNChannels);
+				reverbInputFilter.SetTargetGains(6.0 * reverbInput / mConfig.numFDNChannels);
 			}
 			{ lock_guard<mutex> lock(*currentDataMutex); hasChanged = true; }
 		}
@@ -235,8 +235,8 @@ namespace RAC
 		void Source::ProcessDirect(const Buffer& data, Matrix& reverbInput, Buffer& outputBuffer)
 		{
 			lock_guard<std::mutex> lock(*dataMutex);
-			if (directivityFilter.Invalid())
-				return;
+			/*if (directivityFilter.Invalid())
+				return;*/
 
 #ifdef PROFILE_AUDIO_THREAD
 			BeginSource();

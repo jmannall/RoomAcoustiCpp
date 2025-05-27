@@ -43,10 +43,10 @@ namespace RAC
 			* @param Q The Q factor for the filters
 			* @param sampleRate The sample rate for calculating the filter coefficients
 			*/
-			GraphicEQ(const Coefficients& fc, const Real Q, const int sampleRate);
+			GraphicEQ(const Coefficients& fc, const Real Q, const int sampleRate) : GraphicEQ(Coefficients(fc.Length(), 0.0), fc, Q, sampleRate) {}
 
 			/**
-			* Constructor that initialises the GraphicEQ with given gains, frequency bands, Q factor and sample rate
+			* @brief Constructor that initialises the GraphicEQ with given gains, frequency bands, Q factor and sample rate
 			*
 			* @param gain The gain for each filter band
 			* @param fc The filter band center frequencies
@@ -61,40 +61,11 @@ namespace RAC
 			~GraphicEQ() {};
 
 			/**
-			* @brief Initialises the filter parameters with the given gains
-			*
-			* @param targetBandGains The target gains for each frequency band
+			* @brief Sets new target gains for each filter in the GraphicEQ
+			* 
+			* @param gains The target response for the GraphicEQ
 			*/
-			void InitParameters(const Coefficients& targetBandGains);
-
-			/**
-			* @brief Interpolates between the current and target gains and updates the filter parameters
-			*
-			* @param lerpFactor The linear interpolation factor
-			*/
-			inline void UpdateParameters(const Real lerpFactor)
-			{
-				if (equal)
-					return;
-				if (Equals(currentFilterGains, targetFilterGains))
-				{
-					currentFilterGains = targetFilterGains;
-					equal = true;
-					UpdateParameters();
-				}
-				else
-				{
-					Lerp(currentFilterGains, targetFilterGains, lerpFactor);
-					UpdateParameters();
-				}
-			}
-
-			/**
-			* @brief Sets the current gains of the filter bank
-			*
-			* @param targetBandGains The target gains for each frequency band
-			*/
-			void SetGain(const Coefficients& targetBandGains);
+			void SetTargetGains(const Coefficients& gains);
 
 			/**
 			* @brief Returns the output of the GraphicEQ given an input
@@ -119,60 +90,60 @@ namespace RAC
 			*/
 			inline void ClearBuffers()
 			{
-				lowShelf.ClearBuffers();
+				lowShelf->ClearBuffers();
 				for (auto& filter : peakingFilters)
 					filter->ClearBuffers();
-				highShelf.ClearBuffers();
+				highShelf->ClearBuffers();
 			}
 
-			/**
-			* @return True if the filter is invalid, false otherwise
-			*/
-			inline bool Invalid() { return !valid; }
-
-			/**
-			* @return The overall gain of the filter
-			*/
-			inline Real GetDCGain() { return currentFilterGains[0]; }
-
 		private:
-
 			/**
-			* @brief Updates the filter parameters using the current gain
-			*/
-			void UpdateParameters();
-
-			/**
-			* @brief Initialises the filter bands with the given center frequencies and Q factor
+			* @brief Initialises a matrix representing the filter responses used to calculate the gain parameters for the filters
 			*
 			* @param fc The filter band center frequencies
-			* @param Q The Q factor
-			* @param sampleRate The sample rate for calculating the filter coefficients
+			* @param Q The Q factor for the filters
+			* @param fs The sample rate for calculating the filter coefficients
 			*/
-			void InitFilters(const Coefficients& fc, const Real Q, const int sampleRate);
+			void InitMatrix(const Coefficients& fc, const Real Q, const Real fs);
 
 			/**
-			* @brief Initialises the matrix used to calculate the input gains
-			*
-			* @param fc The filter band center frequencies
+			* @brief Calculates the filter gains based on the target filter response
+			* 
+			* @param gains The target response for the GraphicEQ
+			* @returns A pair containing the calculated gain for each filter and a DC gain
 			*/
-			void InitMatrix(const Coefficients& fc);
+			std::pair<Rowvec, Real> CalculateGains(const Coefficients& gains) const;
 
-			int numFilters;									// Number of filters
-			PeakLowShelf lowShelf;							// Low-shelf filter
-			PeakHighShelf highShelf;						// High-shelf filter
+			/**
+			* @brief Creates a frequency vector based on the target response center frequencies
+			* 
+			* @param fc The filter band center frequencies
+			* @returns A frequency vector for calculating the filter responses
+			*/
+			Coefficients CreateFrequencyVector(const Coefficients& fc) const;
+
+			/**
+			* @brief Linearly interpolates the current gain with the target gain
+			*
+			* @param lerpFactor The lerp factor for interpolation
+			*/
+			void InterpolateGain(const Real lerpFactor);
+
+			const int numFilters;			// Number of filters
+			Coefficients previousInput;		// Previous target response to check if they have changed
+
+			std::unique_ptr<PeakLowShelf> lowShelf;							// Low-shelf filter
 			std::vector<std::unique_ptr<PeakingFilter>> peakingFilters;		// Peaking filters
+			std::unique_ptr<PeakHighShelf> highShelf;						// High-shelf filter
 
-			Coefficients lastInput;				// Previous target filter gains
-			Coefficients targetFilterGains;		// Target filter gains
-			Coefficients currentFilterGains;	// Current filter gains
+			Matrix filterResponseMatrix;	// Matrix used to calculate the filter gains
 
-			Matrix filterResponseMatrix;		// Matrix used to calculate the targetFilterGains
-			Rowvec dbGains;						// Stores dB gains during SetGain()
-			Rowvec inputGains;					// Stores gain values during SetGain()
+			std::atomic<Real> targetGain;	// Target DC gain
+			Real currentGain;				// Current DC gain (should only be accessed from the audio thread)
 
-			bool equal;		// True if currentFilterGains == targetFilterGains
-			bool valid;		// True if currentFilterGains[0] != 0
+			std::atomic<bool> initialised{ false };		// True if the GraphicEQ has been initialised
+			std::atomic<bool> gainsEqual{ false };		// True if the currentGain and targetGain are known to be equal
+
 		};
 	}
 }

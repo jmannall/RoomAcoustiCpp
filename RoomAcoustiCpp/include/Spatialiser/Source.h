@@ -132,7 +132,7 @@ namespace RAC
 			{ 
 				{
 					lock_guard<mutex> lock(*dataMutex); 
-					directivityFilter.SetGain(source.directivity);
+					directivityFilter.SetTargetGains(source.directivity);
 					feedsFDN = source.feedsFDN;
 
 					if (feedsFDN && !mReverbSendSource)

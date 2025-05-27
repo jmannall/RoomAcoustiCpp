@@ -176,6 +176,8 @@ namespace RAC
 
 			Real Sum() const;
 
+			inline Real Mean() const { return Sum() / cols; }
+
 			/**
 			* @brief Access the vector at the specified index
 			*

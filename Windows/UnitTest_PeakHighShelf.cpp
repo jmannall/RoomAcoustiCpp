@@ -120,5 +120,44 @@ namespace RAC
 			for (int i = 0; i < input.size(); i++)
 				Assert::AreEqual(output[i], filter.GetOutput(input[i], lerpFactor), EPS, L"Wrong output");
 		}
+
+		TEST_METHOD(Process)
+		{
+			const Real lerpFactor = 0.5;
+
+			// std::string filePath = _SOLUTIONDIR;
+			auto inputData = Parse2Dcsv<double>(filePath + "peakingFilterInput.csv");
+			auto outputData = Parse2Dcsv<double>(filePath + "lowShelfFilterOutput.csv");
+
+			std::vector<Real> fc(inputData[0]);
+			std::vector<Real> g(inputData[1]);
+
+			Real Q = 0.98;
+			int fs = 48e3;
+			int numFrames = 256;
+			Buffer out = Buffer(numFrames);
+			Buffer in = Buffer(numFrames);
+			in[0] = 1.0;
+
+			int numTests = fc.size();
+			std::vector<Coefficients> gains = std::vector<Coefficients>(numTests, Coefficients(5));
+			for (int i = 0; i < numTests; i++)
+			{
+				PeakLowShelf lowShelfFilter = PeakLowShelf(fc[i], g[i], Q, fs);
+
+				for (int i = 0; i < numFrames; ++i)
+					out[i] = lowShelfFilter.GetOutput(in[i], lerpFactor);
+
+				// AppendBufferToCSV(filePath + "lowShelfFilterOutput.csv", out);
+
+				for (int j = 0; j < numFrames; j++)
+				{
+					std::string error = "Test: " + ToStr(i) + ", Incorrect Sample : " + ToStr(j);
+					std::wstring werror = std::wstring(error.begin(), error.end());
+					const wchar_t* werrorchar = werror.c_str();
+					Assert::AreEqual(outputData[i][j], out[j], 10e-16, werrorchar);
+				}
+			}
+		}
 	};
 }

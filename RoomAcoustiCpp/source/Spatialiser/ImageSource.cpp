@@ -331,7 +331,7 @@ namespace RAC
 			diffraction = data.IsDiffraction();
 
 			if (reflection) // Set reflection filter
-				mFilter.InitParameters(data.GetAbsorption());
+				mFilter.SetTargetGains(data.GetAbsorption());
 
 			// Set btm currentIr
 			if (diffraction)
@@ -371,7 +371,7 @@ namespace RAC
 		{
 			// audioMutex already locked
 			if (reflection) // Update reflection filter
-				mFilter.SetGain(data.GetAbsorption());
+				mFilter.SetTargetGains(data.GetAbsorption());
 
 			if (diffraction)
 			{

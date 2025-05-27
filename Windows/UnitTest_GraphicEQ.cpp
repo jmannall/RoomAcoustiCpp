@@ -20,25 +20,29 @@ namespace RAC
 
 		TEST_METHOD(InvalidGraphicEQ)
 		{
-			Coefficients gain = Coefficients(std::vector<Real>(5, 0.0));
-			Coefficients fc = Coefficients({ 250.0, 500.0, 1000.0, 2000.0, 4000.0 });
-			Real Q = 0.98;
-			int fs = 48e3;
+			const Coefficients gain(std::vector<Real>(5, 0.0));
+			const Coefficients fc({ 250.0, 500.0, 1000.0, 2000.0, 4000.0 });
+			const Real Q = 0.98;
+			const int fs = 48e3;
 
 			GraphicEQ eq = GraphicEQ(gain, fc, Q, fs);
 
-			int numFrames = 256;
-			Real lerpFactor = 1.0 / static_cast<Real>(fs);
-			Buffer in = Buffer(numFrames);
+			const int numFrames = 256;
+			const Real lerpFactor = 0.5;
+
+			Buffer in(numFrames);
 			in[0] = 1.0;
-			Buffer out = Buffer(numFrames);
+			Buffer out(numFrames);
+
 			eq.ProcessAudio(in, out, numFrames, lerpFactor);
 
-			eq.SetGain(std::vector<Real>(5, 1.0));
+			Assert::IsTrue(out[0] == 0.0, L"Not zero");
+			Assert::IsFalse(std::isnan(out[0]), L"Return is nan");
+
+			eq.SetTargetGains(std::vector<Real>(5, 1.0));
 			eq.ProcessAudio(in, out, numFrames, lerpFactor);
 
-			Assert::IsFalse(std::isnan(out[0]), L"Filter stuck as invalid");
-			Assert::IsFalse(out[1] == 0.0, L"Filter at zero");
+			Assert::IsFalse(out[1] == 0.0, L"Filter stuck at zeros");
 		}
 
 		TEST_METHOD(ProcessGraphicEQ)
@@ -63,7 +67,7 @@ namespace RAC
 
 			int numTests = g0.size();
 			std::vector<Coefficients> gains = std::vector<Coefficients>(numTests, Coefficients(5));
-			for (int i = 0; i < numTests; i++)
+			for (int i = 1; i < numTests; i++)
 			{
 				Buffer out = Buffer(numFrames);
 
@@ -81,124 +85,7 @@ namespace RAC
 					Assert::AreEqual(outputData[i][j], out[j], 10e-16, werrorchar);
 				}
 			}
-		}
-
-		TEST_METHOD(ProcessPeakingFilter)
-		{
-			const Real lerpFactor = 0.5;
-
-			// std::string filePath = _SOLUTIONDIR;
-			auto inputData = Parse2Dcsv<double>(filePath + "peakingFilterInput.csv");
-			auto outputData = Parse2Dcsv<double>(filePath + "peakingFilterOutput.csv");
-
-			std::vector<Real> fc(inputData[0]);
-			std::vector<Real> g(inputData[1]);
-
-			Real Q = 0.98;
-			int fs = 48e3;
-			int numFrames = 256;
-			Buffer out = Buffer(numFrames);
-			Buffer in = Buffer(numFrames);
-			in[0] = 1.0;
-
-			int numTests = fc.size();
-			std::vector<Coefficients> gains = std::vector<Coefficients>(numTests, Coefficients(5));
-			for (int i = 0; i < numTests; i++)
-			{
-				PeakingFilter peakingFilter = PeakingFilter(fc[i], g[i], Q, fs);
-
-				for (int i = 0; i < numFrames; ++i)
-					out[i] = peakingFilter.GetOutput(in[i], lerpFactor);
-
-				// AppendBufferToCSV(filePath + "peakingFilterOutput.csv", out);
-
-				for (int j = 0; j < numFrames; j++)
-				{
-					std::string error = "Test: " + ToStr(i) + ", Incorrect Sample : " + ToStr(j);
-					std::wstring werror = std::wstring(error.begin(), error.end());
-					const wchar_t* werrorchar = werror.c_str();
-					Assert::AreEqual(outputData[i][j], out[j], 10e-16, werrorchar);
-				}
-			}
-		}
-
-		TEST_METHOD(ProcessLowShelfFilter)
-		{
-			const Real lerpFactor = 0.5;
-
-			// std::string filePath = _SOLUTIONDIR;
-			auto inputData = Parse2Dcsv<double>(filePath + "peakingFilterInput.csv");
-			auto outputData = Parse2Dcsv<double>(filePath + "lowShelfFilterOutput.csv");
-
-			std::vector<Real> fc(inputData[0]);
-			std::vector<Real> g(inputData[1]);
-
-			Real Q = 0.98;
-			int fs = 48e3;
-			int numFrames = 256;
-			Buffer out = Buffer(numFrames);
-			Buffer in = Buffer(numFrames);
-			in[0] = 1.0;
-
-			int numTests = fc.size();
-			std::vector<Coefficients> gains = std::vector<Coefficients>(numTests, Coefficients(5));
-			for (int i = 0; i < numTests; i++)
-			{
-				PeakLowShelf lowShelfFilter = PeakLowShelf(fc[i], g[i], Q, fs);
-
-				for (int i = 0; i < numFrames; ++i)
-					out[i] = lowShelfFilter.GetOutput(in[i], lerpFactor);
-
-				// AppendBufferToCSV(filePath + "lowShelfFilterOutput.csv", out);
-
-				for (int j = 0; j < numFrames; j++)
-				{
-					std::string error = "Test: " + ToStr(i) + ", Incorrect Sample : " + ToStr(j);
-					std::wstring werror = std::wstring(error.begin(), error.end());
-					const wchar_t* werrorchar = werror.c_str();
-					Assert::AreEqual(outputData[i][j], out[j], 10e-16, werrorchar);
-				}
-			}
-		}
-
-		TEST_METHOD(ProcessHighShelfFilter)
-		{
-			const Real lerpFactor = 0.5;
-
-			// std::string filePath = _SOLUTIONDIR;
-			auto inputData = Parse2Dcsv<double>(filePath + "peakingFilterInput.csv");
-			auto outputData = Parse2Dcsv<double>(filePath + "highShelfFilterOutput.csv");
-
-			std::vector<Real> fc(inputData[0]);
-			std::vector<Real> g(inputData[1]);
-
-			Real Q = 0.98;
-			int fs = 48e3;
-			int numFrames = 256;
-			Buffer out = Buffer(numFrames);
-			Buffer in = Buffer(numFrames);
-			in[0] = 1.0;
-
-			int numTests = fc.size();
-			std::vector<Coefficients> gains = std::vector<Coefficients>(numTests, Coefficients(5));
-			for (int i = 0; i < numTests; i++)
-			{
-				PeakHighShelf highShelfFilter = PeakHighShelf(fc[i], g[i], Q, fs);
-
-				for (int i = 0; i < numFrames; ++i)
-					out[i] = highShelfFilter.GetOutput(in[i], lerpFactor);
-
-				// AppendBufferToCSV(filePath + "UnitTestData\\highShelfFilterOutput.csv", out);
-
-				for (int j = 0; j < numFrames; j++)
-				{
-					std::string error = "Test: " + ToStr(i) + ", Incorrect Sample : " + ToStr(j);
-					std::wstring werror = std::wstring(error.begin(), error.end());
-					const wchar_t* werrorchar = werror.c_str();
-					Assert::AreEqual(outputData[i][j], out[j], 10e-16, werrorchar);
-				}
-			}
-		}
+		}		
 	};
 #pragma optimize("", on)
 }

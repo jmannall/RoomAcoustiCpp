@@ -30,10 +30,10 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		Channel::Channel(const int delayLength, const Coefficients& T60, const Config& config) : mConfig(config), mAbsorptionFilter(config.frequencyBands, config.Q, config.fs), idx(0)
+		Channel::Channel(const int delayLength, const Coefficients& T60, const Config& config) : mT(static_cast<Real>(delayLength) / config.fs), 
+			mConfig(config), mAbsorptionFilter(CalcGain(T60), config.frequencyBands, config.Q, config.fs), idx(0)
 		{
-			InitDelay(delayLength);
-			InitAbsorption(T60);
+			mBuffer.ResizeBuffer(delayLength);
 		}
 
 		////////////////////////////////////////
@@ -43,7 +43,6 @@ namespace RAC
 			if (idx >= mBuffer.Length())
 				idx = 0;
 			Real out = mAbsorptionFilter.GetOutput(mBuffer[idx], lerpFactor);
-			mAbsorptionFilter.UpdateParameters(mConfig.lerpFactor);
 			mBuffer[idx] = input;
 			++idx;
 			return out;

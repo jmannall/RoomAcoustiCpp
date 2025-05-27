@@ -96,8 +96,8 @@ namespace RAC
 			int count{ 0 };			// Index for the next sample entry to the input line buffer (should only be accessed from the audio thread)
 
 			std::atomic<bool> clearInputLine;	// Flag to clear input line
-			std::atomic<bool> irsEqual;			// Flag to check if the current impulse response is equal to the target impulse response
-			std::atomic<bool> initialised;		// Flag to check if the FIRFilter is initialised
+			std::atomic<bool> irsEqual;			// True if the current impulse response is known to be equal to the target impulse response
+			std::atomic<bool> initialised;		// True if the filter has been initialised, false otherwise
 
 			static ReleasePool releasePool;		// Garbage collector for shared pointers after atomic replacement
 		};

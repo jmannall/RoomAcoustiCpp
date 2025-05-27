@@ -64,12 +64,12 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		std::vector<Real> IIRFilter::GetFrequencyResponse(const std::vector<Real>& frequencies) const
+		Coefficients IIRFilter::GetFrequencyResponse(const Coefficients& frequencies) const
 		{
 			Real omega;
 			Complex e;
-			std::vector<Real> magnitudes(frequencies.size(), 0.0);
-			for (int i = 0; i < frequencies.size(); i++)
+			std::vector<Real> magnitudes(frequencies.Length(), 0.0);
+			for (int i = 0; i < frequencies.Length(); i++)
 			{
 				omega = PI_2 * frequencies[i] * T;
 				Complex num = b[0];
@@ -124,12 +124,12 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		std::vector<Real> IIRFilter2::GetFrequencyResponse(const std::vector<Real>& frequencies) const
+		Coefficients IIRFilter2::GetFrequencyResponse(const Coefficients& frequencies) const
 		{
 			Real omega;
 			Complex e;
-			std::vector<Real> magnitudes(frequencies.size(), 0.0);
-			for (int i = 0; i < frequencies.size(); i++)
+			Coefficients magnitudes(frequencies.Length(), 0.0);
+			for (int i = 0; i < frequencies.Length(); i++)
 			{
 				omega = PI_2 * frequencies[i] * T;
 				Complex num = b0;
@@ -181,12 +181,12 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		std::vector<Real> IIRFilter1::GetFrequencyResponse(const std::vector<Real>& frequencies) const
+		Coefficients IIRFilter1::GetFrequencyResponse(const Coefficients& frequencies) const
 		{
 			Real omega;
 			Complex e;
-			std::vector<Real> magnitudes(frequencies.size(), 0.0);
-			for (int i = 0; i < frequencies.size(); i++)
+			std::vector<Real> magnitudes(frequencies.Length(), 0.0);
+			for (int i = 0; i < frequencies.Length(); i++)
 			{
 				omega = PI_2 * frequencies[i] * T;
 				Complex num = b0;
@@ -334,6 +334,8 @@ namespace RAC
 
 		void PeakingFilter::UpdateCoefficients(const Real gain)
 		{
+			assert(gain != 0.0);
+
 			const Real A = sqrt(gain);
 			const Real v1 = alpha * A;
 			const Real v2 = alpha / A;
@@ -355,7 +357,7 @@ namespace RAC
 
 		void ZPKFilter::SetTargetParameters(const Coefficients& zpk)
 		{
-			std::shared_ptr<Coefficients> zpkCopy = std::make_shared<Coefficients>(zpk);
+			const std::shared_ptr<Coefficients> zpkCopy = std::make_shared<Coefficients>(zpk);
 
 			releasePool.Add(zpkCopy);
 

@@ -244,6 +244,14 @@ namespace RAC
 				return valid;
 			}
 
+			inline auto begin() { return mCoefficients.begin(); }
+
+			inline auto end() { return mCoefficients.end(); }
+
+			inline const auto begin() const { return mCoefficients.begin(); }
+
+			inline const auto end() const { return mCoefficients.end(); }
+
 		protected:
 			std::vector<Real> mCoefficients; // Stored coefficients
 		};

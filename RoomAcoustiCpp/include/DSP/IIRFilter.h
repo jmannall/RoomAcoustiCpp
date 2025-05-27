@@ -61,12 +61,13 @@ namespace RAC
 			inline void ClearBuffers() { clearBuffers.store(true); }
 
 			/**
-			* @brief Returns the filter response at given frequencies
+			* @brief Returns the filter response at given frequencies.
+			* Not thread-safe, should only be called when GetOutput is not being called.
 			*
 			* @param frequencies The frequencies at which to calculate the response
 			* @return The frequency response of the filter
 			*/
-			std::vector<Real> GetFrequencyResponse(const std::vector<Real>& frequencies) const;
+			Coefficients GetFrequencyResponse(const Coefficients& frequencies) const;
 
 		protected:
 			/**
@@ -83,8 +84,8 @@ namespace RAC
 			Coefficients a;		// Denominator coefficients
 			Buffer y;			// Output buffer
 
-			std::atomic<bool> parametersEqual{ false };		// Flag to indicate if the current parameters are equal to the target parameters
-			std::atomic<bool> initialised{ false };			// Flag to indicate if the filter has been initialised
+			std::atomic<bool> parametersEqual{ false };		// True if the current parameters are known to be equal to the target parameters
+			std::atomic<bool> initialised{ false };			// True if the filter has been initialised, false otherwise
 
 		private:
 			std::atomic<bool> clearBuffers{ false };		// Flag to clear the output buffers to zeros next time GetOutput is called
@@ -125,12 +126,13 @@ namespace RAC
 			inline void ClearBuffers() { clearBuffers.store(true); }
 
 			/**
-			* @brief Returns the filter response at given frequencies
+			* @brief Returns the filter response at given frequencies.
+			* Not thread-safe, should only be called when GetOutput is not being called.
 			*
 			* @param frequencies The frequencies at which to calculate the response
 			* @return The frequency response of the filter
 			*/
-			std::vector<Real> GetFrequencyResponse(const std::vector<Real>& frequencies) const;
+			Coefficients GetFrequencyResponse(const Coefficients& frequencies) const;
 
 		protected:
 			/**
@@ -146,8 +148,8 @@ namespace RAC
 			Real b0{ 0.0 }, b1{ 0.0 };		// Numerator coefficients (should only be accessed from the audio thread)
 			Real y0{ 0.0 };					// Outputs (should only be accessed from the audio thread)
 
-			std::atomic<bool> parametersEqual{ false };		// Flag to indicate if the current parameters are equal to the target parameters
-			std::atomic<bool> initialised{ false };			// Flag to indicate if the filter has been initialised
+			std::atomic<bool> parametersEqual{ false };		// True if the current parameters are known to be equal to the target parameters
+			std::atomic<bool> initialised{ false };			// True if the filter has been initialised, false otherwise
 		
 		private:
 			std::atomic<bool> clearBuffers{ false };		// Flag to clear the output buffers to zeros next time GetOutput is called
@@ -188,12 +190,13 @@ namespace RAC
 			inline void ClearBuffers() { clearBuffers.store(true); }
 
 			/**
-			* @brief Returns the filter response at given frequencies
+			* @brief Returns the filter response at given frequencies.
+			* Not thread-safe, should only be called when GetOutput is not being called.
 			*
 			* @param frequencies The frequencies at which to calculate the response
 			* @return The frequency response of the filter
 			*/
-			std::vector<Real> GetFrequencyResponse(const std::vector<Real>& frequencies) const;
+			Coefficients GetFrequencyResponse(const Coefficients& frequencies) const;
 
 		protected:
 			/**
@@ -209,8 +212,8 @@ namespace RAC
 			Real b0{ 0.0 }, b1{ 0.0 }, b2{ 0.0 };		// Numerator coefficients (should only be accessed from the audio thread)
 			Real y0{ 0.0 }, y1{ 0.0 };					// Outputs (should only be accessed from the audio thread)
 		
-			std::atomic<bool> parametersEqual{ false };		// Flag to indicate if the current parameters are equal to the target parameters
-			std::atomic<bool> initialised{ false };			// Flag to indicate if the filter has been initialised
+			std::atomic<bool> parametersEqual{ false };		// True if the current parameters are known to be equal to the target parameters
+			std::atomic<bool> initialised{ false };			// True if the filter has been initialised, false otherwise
 		
 		private:
 			std::atomic<bool> clearBuffers{ false };		// Flag to clear the output buffers to zeros next time GetOutput is called

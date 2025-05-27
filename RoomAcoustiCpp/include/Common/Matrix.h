@@ -143,6 +143,20 @@ namespace RAC
 			void Pow10();
 
 			/**
+			* @brief Applies the max function to each element in the matrix
+			*
+			* @param min The minimum value
+			*/
+			void Max(const Real min);
+
+			/**
+			* @brief Applies the min function to each element in the matrix
+			*
+			* @param max The maximum value
+			*/
+			void Min(const Real max);
+
+			/**
 			* @brief Access the matrix row at the specified index
 			* 
 			* @param r The index of the row to return
