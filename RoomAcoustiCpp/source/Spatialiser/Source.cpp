@@ -16,6 +16,8 @@
 #include "Unity/Debug.h"
 #include "Unity/UnityInterface.h"
 
+#include <mutex>
+
 using namespace Common;
 namespace RAC
 {
@@ -39,7 +41,7 @@ namespace RAC
 
 			// Initialise source to core
 			{
-				lock_guard<mutex> lock(tuneInMutex);
+				unique_lock<shared_mutex> lock(tuneInMutex);
 				mSource = mCore->CreateSingleSourceDSP();
 				mSource->DisableFarDistanceEffect();
 				mSource->EnablePropagationDelay();
@@ -68,7 +70,7 @@ namespace RAC
 		Source::~Source()
 		{
 			{
-				lock_guard<mutex> lock(tuneInMutex);
+				unique_lock<shared_mutex> lock(tuneInMutex);
 				mCore->RemoveSingleSourceDSP(mSource);
 			}
 			Reset();
@@ -76,7 +78,7 @@ namespace RAC
 
 		void Source::InitReverbSendSource()
 		{
-			lock_guard<mutex> lock(tuneInMutex);
+			unique_lock<shared_mutex> lock(tuneInMutex);
 			mReverbSendSource = mCore->CreateSingleSourceDSP();
 			mReverbSendSource->EnablePropagationDelay();
 			mReverbSendSource->DisableDistanceAttenuationAnechoic();
@@ -92,7 +94,7 @@ namespace RAC
 
 		void Source::RemoveReverbSendSource()
 		{
-			lock_guard<mutex> lock(tuneInMutex);
+			unique_lock<shared_mutex> lock(tuneInMutex);
 			mCore->RemoveSingleSourceDSP(mReverbSendSource);
 			mReverbSendSource.reset();
 		}
@@ -251,10 +253,12 @@ namespace RAC
 					[](auto value) { return static_cast<float>(value); });
 
 				// lock_guard<mutex> lock(tuneInMutex);
-				mReverbSendSource->SetSourceTransform(transform);
-				mReverbSendSource->SetBuffer(bInput);
-				mReverbSendSource->ProcessAnechoic(bOutput.left, bOutput.right);
-
+				{
+					shared_lock<shared_mutex> lock(tuneInMutex);
+					mReverbSendSource->SetSourceTransform(transform);
+					mReverbSendSource->SetBuffer(bInput);
+					mReverbSendSource->ProcessAnechoic(bOutput.left, bOutput.right);
+				}
 				for (int i = 0; i < mConfig.numFrames; i++)
 				{
 					Real in = static_cast<Real>(bOutput.left[i]);
@@ -275,10 +279,12 @@ namespace RAC
 #ifdef PROFILE_AUDIO_THREAD
 			Begin3DTI();
 #endif
-			// lock_guard<mutex> lock(tuneInMutex);
-			mSource->SetSourceTransform(transform);
-			mSource->SetBuffer(bInput);
-			mSource->ProcessAnechoic(bOutput.left, bOutput.right);
+			{
+				shared_lock<shared_mutex> lock(tuneInMutex);
+				mSource->SetSourceTransform(transform);
+				mSource->SetBuffer(bInput);
+				mSource->ProcessAnechoic(bOutput.left, bOutput.right);
+			}
 #ifdef PROFILE_AUDIO_THREAD
 			End3DTI();
 #endif

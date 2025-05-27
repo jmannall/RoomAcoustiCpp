@@ -56,7 +56,7 @@ namespace RAC
 	Debug::Log("Remove reverb source", Colour::Red);
 #endif
 			{
-				lock_guard<mutex> lock(tuneInMutex);
+				unique_lock<shared_mutex> lock(tuneInMutex);
 				mCore->RemoveSingleSourceDSP(mSource);
 			}
 		}
@@ -69,7 +69,7 @@ namespace RAC
 			Debug::Log("Init reverb source", Colour::Green);
 #endif
 			{
-				lock_guard<mutex> lock(tuneInMutex);
+				unique_lock<shared_mutex> lock(tuneInMutex);
 
 				// Initialise source to core
 				mSource = mCore->CreateSingleSourceDSP();
@@ -223,7 +223,7 @@ namespace RAC
 			Begin3DTI();
 #endif
 			{
-				lock_guard<mutex> lock(tuneInMutex);
+				shared_lock<shared_mutex> lock(tuneInMutex);
 				mSource->SetBuffer(bInput);
 
 				mSource->ProcessAnechoic(bOutput.left, bOutput.right);
@@ -259,7 +259,7 @@ namespace RAC
 		void Reverb::UpdateSpatialisationMode(const SpatialisationMode mode)
 		{
 			mConfig.spatialisationMode = mode;
-			lock_guard<mutex> lock(tuneInMutex);
+			unique_lock<shared_mutex> lock(tuneInMutex);
 			for (auto& source : mReverbSources)
 				source->UpdateSpatialisationMode(mode);
 		}

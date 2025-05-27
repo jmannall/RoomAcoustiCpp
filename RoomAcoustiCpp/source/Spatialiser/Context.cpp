@@ -25,7 +25,7 @@ namespace RAC
 	{
 
 		// Globals
-		std::mutex tuneInMutex;
+		std::shared_mutex tuneInMutex;
 		std::unique_ptr<ThreadPool> audioThreadPool = nullptr;
 
 #ifndef DISABLE_SOFA_SUPPORT
@@ -156,7 +156,7 @@ namespace RAC
 			// Terminate NNs
 			myNN_terminate();
 
-			lock_guard<mutex> audioLock(tuneInMutex);
+			unique_lock<shared_mutex> lock(tuneInMutex);
 			mCore.RemoveListener();
 		}
 
@@ -164,7 +164,7 @@ namespace RAC
 
 		bool Context::LoadSpatialisationFiles(const int hrtfResamplingStep, const std::vector<std::string>& filePaths)
 		{
-			lock_guard<mutex> lock(tuneInMutex);
+			unique_lock<shared_mutex> lock(tuneInMutex);
 
 #ifdef DEBUG_HRTF
 			Debug::Log("HRTF resampling step: " + mCore.GetHRTFResamplingStep(), Colour::Blue);
@@ -272,7 +272,7 @@ namespace RAC
 			transform.SetPosition(CVector3(static_cast<float>(position.x), static_cast<float>(position.y), static_cast<float>(position.z)));
 			
 			{
-				lock_guard<mutex> lock(tuneInMutex);
+				unique_lock<shared_mutex> lock(tuneInMutex);
 				mListener->SetListenerTransform(transform);
 				mReverb->UpdateReverbSourcePositions(position);
 			}

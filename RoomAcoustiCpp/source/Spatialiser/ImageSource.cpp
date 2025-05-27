@@ -199,7 +199,7 @@ namespace RAC
 			mConfig.spatialisationMode = mode;
 			if (isInitialised)
 			{
-				lock_guard<mutex> lock(tuneInMutex);
+				unique_lock<shared_mutex> lock(tuneInMutex);
 				switch (mode)
 				{
 				case SpatialisationMode::quality:
@@ -342,7 +342,7 @@ namespace RAC
 			}
 
 			{
-				lock_guard<mutex> lock(tuneInMutex);
+				shared_lock<shared_mutex> lock(tuneInMutex);
 
 				// Initialise source to core
 				mSource = mCore->CreateSingleSourceDSP();
@@ -399,7 +399,7 @@ namespace RAC
 			Debug::Log("Remove virtual source", Colour::Red);
 #endif
 			{
-				lock_guard<mutex> lock(tuneInMutex);
+				unique_lock<shared_mutex> lock(tuneInMutex);
 				mCore->RemoveSingleSourceDSP(mSource);
 				mSource.reset();
 			}
@@ -478,10 +478,10 @@ namespace RAC
 			Begin3DTI();
 #endif
 			{
-				// lock_guard<mutex> lock(tuneInMutex);
+				shared_lock<shared_mutex> lock(tuneInMutex);
 				mSource->SetSourceTransform(transform);
 				mSource->SetBuffer(bInput);
-				
+			
 				// lock_guard<mutex> lock(tuneInMutex);
 				if (feedsFDN)
 				{
