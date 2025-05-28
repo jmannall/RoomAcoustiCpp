@@ -428,7 +428,7 @@ namespace RAC
 
 			//////////////////// UTD class ////////////////////
 
-			UTD::UTD(Path* path, int fs) : Model(path), lrFilter(fs), k(4), g(4), gSB(4), target(4), current(4), params(4)
+			UTD::UTD(Path* path, int fs) : Model(path), lrFilter(fs), k(4), g(4), gSB(4), target({ 0.0, 0.0, 0.0, 0.0 }), current(4), params(4)
 			{
 				m = std::make_shared<std::mutex>();
 				auto test1 = lrFilter.fm / SPEED_OF_SOUND;
@@ -439,8 +439,8 @@ namespace RAC
 				for (int i = 0; i < 4; i++)
 					E[i] = exp(-1.0 * imUnit * PI_1 / 4.0) / (2.0 * sqrt(PI_2 * k[i]));
 				UpdateParameters();
-				current = target;
-				lrFilter.UpdateParameters(current);
+				// current = target;
+				lrFilter.SetTargetGains(target);
 			}
 
 			void UTD::UpdateParameters()
@@ -449,12 +449,18 @@ namespace RAC
 				{
 					CalcUTD();
 					std::lock_guard<std::mutex> lock(*m);
-					target = params;
+					target[0] = params[0];
+					target[1] = params[1];
+					target[2] = params[2];
+					target[3] = params[3];
 				}
 				else
 				{
 					std::lock_guard<std::mutex> lock(*m);
-					target = 0.0;
+					target[0] = 0.0;
+					target[1] = 0.0;
+					target[2] = 0.0;
+					target[3] = 0.0;
 				}
 			}
 
@@ -539,31 +545,8 @@ namespace RAC
 			void UTD::ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const int numFrames, const Real lerpFactor)
 			{
 				FlushDenormals();
-				if (current == target)
-				{
-					for (int i = 0; i < numFrames; i++)
-						outBuffer[i] = lrFilter.GetOutput(inBuffer[i], lerpFactor);
-				}
-				else if (Equals(current, target))
-				{
-					{
-						std::lock_guard<std::mutex> lock(*m);
-						current = target;
-						lrFilter.UpdateParameters(current);
-					}
-					for (int i = 0; i < numFrames; i++)
-						outBuffer[i] = lrFilter.GetOutput(inBuffer[i], lerpFactor);
-				}
-				else
-				{
-					std::lock_guard<std::mutex> lock(*m);
-					for (int i = 0; i < numFrames; i++)
-					{
-						outBuffer[i] = lrFilter.GetOutput(inBuffer[i], lerpFactor);
-						Lerp(current, target, lerpFactor);
-						lrFilter.UpdateParameters(current);
-					}
-				}
+				for (int i = 0; i < numFrames; i++)
+					outBuffer[i] = lrFilter.GetOutput(inBuffer[i], lerpFactor);
 				NoFlushDenormals();
 			}
 

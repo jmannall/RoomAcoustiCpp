@@ -66,10 +66,8 @@ namespace RAC
 		{
 			assert(gains.Length() + 2 == numFilters);
 
-			// Check the gains have changed?
-
 			Rowvec inputGains(std::vector<Real>(numFilters, 1.0));
-			if (gains == 0)
+			if (gains <= 0.0)
 				return std::make_pair(inputGains, 0.0);
 
 			if (gains.Length() == 1)

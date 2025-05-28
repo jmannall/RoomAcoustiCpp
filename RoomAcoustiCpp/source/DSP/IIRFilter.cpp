@@ -290,6 +290,8 @@ namespace RAC
 
 		void PeakHighShelf::UpdateCoefficients(const Real gain)
 		{
+			assert(gain > 0.0);
+
 			const Real A = sqrt(gain);
 			const Real v1 = A + 1.0;
 			const Real v2 = A - 1.0;
@@ -312,6 +314,8 @@ namespace RAC
 
 		void PeakLowShelf::UpdateCoefficients(const Real gain)
 		{
+			assert(gain > 0.0);
+
 			const Real A = sqrt(gain);
 			const Real v1 = A + 1.0;
 			const Real v2 = A - 1.0;
@@ -334,7 +338,7 @@ namespace RAC
 
 		void PeakingFilter::UpdateCoefficients(const Real gain)
 		{
-			assert(gain != 0.0);
+			assert(gain > 0.0);
 
 			const Real A = sqrt(gain);
 			const Real v1 = alpha * A;

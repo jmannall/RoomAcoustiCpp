@@ -5,6 +5,9 @@
 *
 */
 
+// C++ headers
+#include <array>
+
 // DSP headers
 #include "DSP/LinkwitzRileyFilter.h"
 
@@ -14,9 +17,11 @@ namespace RAC
 	{
 		//////////////////// LinkwitzRiley ////////////////////
 
+		ReleasePool LinkwitzRiley::releasePool;
+
 		////////////////////////////////////////
 
-		void LinkwitzRiley::InitFilters(const int sampleRate)
+		void LinkwitzRiley::InitFilters(const int sampleRate, const std::array<Real, 3>& fc)
 		{
 			filters.clear();
             filters.reserve(20);
@@ -55,33 +60,46 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void LinkwitzRiley::CalcMidFrequencies()
+		Real LinkwitzRiley::GetOutput(const Real input, const Real lerpFactor)
 		{
-			fm[0] = sqrt(20.0 * fc[0]);
-			fm[1] = sqrt(fc[0] * fc[1]);
-			fm[2] = sqrt(fc[1] * fc[2]);
-			fm[3] = sqrt(fc[2] * 20000.0);
+			if (!initialised.load())
+				return 0.0;
+
+			if (!gainsEqual.load())
+				InterpolateGains(lerpFactor);
+
+			std::array<Real, 2> midResult = {
+				filters[1]->GetOutput(filters[0]->GetOutput(input, lerpFactor), lerpFactor),
+				filters[11]->GetOutput(filters[10]->GetOutput(input, lerpFactor), lerpFactor) };
+
+			midResult[0] = filters[3]->GetOutput(filters[2]->GetOutput(midResult[0], lerpFactor), lerpFactor) + filters[5]->GetOutput(filters[4]->GetOutput(midResult[0], lerpFactor), lerpFactor);
+			midResult[1] = filters[13]->GetOutput(filters[12]->GetOutput(midResult[1], lerpFactor), lerpFactor) + filters[15]->GetOutput(filters[14]->GetOutput(midResult[1], lerpFactor), lerpFactor);
+
+			std::array<Real, 4> out = {
+				currentGains[0] * filters[7]->GetOutput(filters[6]->GetOutput(midResult[0], lerpFactor), lerpFactor),
+				currentGains[1] * filters[9]->GetOutput(filters[8]->GetOutput(midResult[0], lerpFactor), lerpFactor),
+				currentGains[2] * filters[17]->GetOutput(filters[16]->GetOutput(midResult[1], lerpFactor), lerpFactor),
+				currentGains[3] * filters[19]->GetOutput(filters[18]->GetOutput(midResult[1], lerpFactor), lerpFactor) };
+
+			return out[0] + out[1] + out[2] + out[3];
 		}
 
 		////////////////////////////////////////
 
-		Real LinkwitzRiley::GetOutput(const Real input, const Real lerpFactor)
+		void LinkwitzRiley::InterpolateGains(const Real lerpFactor)
 		{
-			Real mid[2];
-			mid[0] = filters[1]->GetOutput(filters[0]->GetOutput(input, lerpFactor), lerpFactor);
-			mid[1] = filters[11]->GetOutput(filters[10]->GetOutput(input, lerpFactor), lerpFactor);
+			gainsEqual.store(true); // Prevents issues in case targetGains updated during this function call
+			const std::shared_ptr<const Coefficients> gain = targetGains.load();
 
-			mid[0] = filters[3]->GetOutput(filters[2]->GetOutput(mid[0], lerpFactor), lerpFactor) + filters[5]->GetOutput(filters[4]->GetOutput(mid[0], lerpFactor), lerpFactor);
-			mid[1] = filters[13]->GetOutput(filters[12]->GetOutput(mid[1], lerpFactor), lerpFactor) + filters[15]->GetOutput(filters[14]->GetOutput(mid[1], lerpFactor), lerpFactor);
-
-			Real out[4];
-			out[0] = gains[0] * filters[7]->GetOutput(filters[6]->GetOutput(mid[0], lerpFactor), lerpFactor);
-			out[1] = gains[1] * filters[9]->GetOutput(filters[8]->GetOutput(mid[0], lerpFactor), lerpFactor);
-			out[2] = gains[2] * filters[17]->GetOutput(filters[16]->GetOutput(mid[1], lerpFactor), lerpFactor);
-			out[3] = gains[3] * filters[19]->GetOutput(filters[18]->GetOutput(mid[1], lerpFactor), lerpFactor);
-
-			return out[0] + out[1] + out[2] + out[3];
+			Lerp(currentGains, *gain, lerpFactor);
+			if (Equals(currentGains, *gain))
+			{
+				currentGains = *gain;
+				return;
+			}
+			gainsEqual.store(false);
 		}
+
 	}
 }
 

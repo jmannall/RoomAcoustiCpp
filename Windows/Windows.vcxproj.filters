@@ -68,6 +68,9 @@
     <ClCompile Include="UnitTest_ZPKFilter.cpp">
       <Filter>UnitTest</Filter>
     </ClCompile>
+    <ClCompile Include="UnitTest_LinkwitzRileyFilter.cpp">
+      <Filter>UnitTest</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\UtilityFunctions.h">

@@ -254,7 +254,7 @@ namespace RAC
 				/*Real g[4];
 				Real gSB[4];*/
 				Coefficients params;
-				Coefficients target;
+				std::array<Real, 4> target;
 				Coefficients current;
 
 				std::shared_ptr<std::mutex> m;

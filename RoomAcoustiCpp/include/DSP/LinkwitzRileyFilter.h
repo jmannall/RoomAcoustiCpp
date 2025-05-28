@@ -14,6 +14,7 @@
 
 // DSP headers
 #include "DSP/IIRFilter.h"
+#include "DSP/Interpolate.h"
 
 // Common headers
 #include "Common/Types.h"
@@ -33,19 +34,32 @@ namespace RAC
 			*
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
-			LinkwitzRiley(const int sampleRate) : fm(4), fc(std::vector<Real>({ 176.0, 775.0, 3408.0 })),
-				gains(4, 1.0) { InitFilters(sampleRate); CalcMidFrequencies(); }
+			LinkwitzRiley(const int sampleRate) : LinkwitzRiley({ 1.0, 1.0, 1.0}, { 176.0, 775.0, 3408.0 }, sampleRate) {}
+
+			/**
+			* @brief Constructor that initialises a default Linkwitz Riley filterbank
+			*
+			* @param gains The filter band gains
+			* @param sampleRate The sample rate for calculating filter coefficients
+			*/
+			LinkwitzRiley(const std::array<Real, 4> gains, const int sampleRate) : LinkwitzRiley(gains, { 176.0, 775.0, 3408.0 }, sampleRate) {}
 
 			/**
 			* @brief Constructor that initialises a Linkwitz Riley filterbank with three cutoff frequencies
 			*
-			* @param fc0 The first cutoff frequency
-			* @param fc1 The second cutoff frequency
-			* @param fc2 The third cutoff frequency
+			* @param gains The filter band gains
+			* @param fc The cutoff frequencies
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
-			LinkwitzRiley(const Real fc0, const Real fc1, const Real fc2, const int sampleRate) : fm(4),
-				fc({ fc0, fc1, fc2 }), gains(4, 1.0) { InitFilters(sampleRate); CalcMidFrequencies(); }
+			LinkwitzRiley(const std::array<Real, 4> gains, const std::array<Real, 3> fc, const int sampleRate) :
+				fm(CalculateMidFrequencies(fc)), currentGains(gains)
+			{
+				InitFilters(sampleRate, fc);
+				SetTargetGains(gains);
+
+				gainsEqual.store(true);
+				initialised.store(true);
+			}
 
 			/**
 			* @brief Default deconstructor
@@ -61,34 +75,63 @@ namespace RAC
 			Real GetOutput(const Real input, const Real lerpFactor);
 
 			/**
-			* @brief Updates the gain parameters of the LinkwitzRiley filter
+			* @brief Updates the target gains of the LinkwitzRiley filter
 			*
-			* @param filterGains The new gain parameters
+			* @param gains The new target gain parameters
 			*/
-			inline void UpdateParameters(const Coefficients& filterGains)
+			inline void SetTargetGains(const std::array<Real, 4>& gains)
 			{
-				assert(filterGains.Length() == gains.Length());
-				gains = filterGains;
+				std::shared_ptr<Coefficients> gainsCopy = std::make_shared<Coefficients>(gains);
+
+				releasePool.Add(gainsCopy);
+				targetGains.store(gainsCopy);
+				gainsEqual.store(false);
 			};
 
-			Coefficients fm;		// Filter band mid frequencies
+			/**
+			* @brief Resets the filter buffers
+			*/
+			inline void ClearBuffers()
+			{
+				for (auto& filter : filters)
+					filter->ClearBuffers();
+			}
+
+			const Coefficients fm;		// Filter band mid frequencies
 
 		private:
 			/**
 			* @brief Intialises the PassFilter sections
 			*
 			* @param sampleRate The samplerate for calculating filter coefficients
+			* @param fc The cutoff frequencies for the filters
 			*/
-			void InitFilters(const int sampleRate);
+			void InitFilters(const int sampleRate, const std::array<Real, 3>& fc);
 
 			/**
-			* @brief Calculate the pass band center frequencies 
+			* @brief Calculate the pass band center frequencies
+			* 
+			* @param fc The cutoff frequencies of the filters
 			*/
-			void CalcMidFrequencies();
+			inline Coefficients CalculateMidFrequencies(const std::array<Real, 3>& fc)
+			{ return Coefficients({ std::sqrt(20.0 * fc[0]), std::sqrt(fc[0] * fc[1]), std::sqrt(fc[1] * fc[2]), std::sqrt(fc[2] * 20000.0)}); }
 
-			Coefficients fc;						// Filter band cut off frequencies
-			Coefficients gains;						// Filter band gains
+			/*
+			* @brief Linearly interpolates the current gains with the target gains
+			*
+			* @param lerpFactor The lerp factor for interpolation
+			*/
+			void InterpolateGains(const Real lerpFactor);
+
+			std::atomic<std::shared_ptr<Coefficients>> targetGains;		// Target filter band gains
+			Coefficients currentGains;									// Current filter band gains (should only be accessed from the audio thread)
+
 			std::vector<std::unique_ptr<IIRFilter2Param1>> filters;		// PassFilter sections
+
+			std::atomic<bool> initialised{ false };		// True if the filter has been initialised, false otherwise
+			std::atomic<bool> gainsEqual{ false };		// True if the current gains are know to be equal to the target gains
+
+			static ReleasePool releasePool;		// ReleasePool for managing memory of shared pointers
 		};
 	}
 }

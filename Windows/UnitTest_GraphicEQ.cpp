@@ -18,7 +18,7 @@ namespace RAC
 	{
 	public:
 
-		TEST_METHOD(InvalidGraphicEQ)
+		TEST_METHOD(Invalid)
 		{
 			const Coefficients gain(std::vector<Real>(5, 0.0));
 			const Coefficients fc({ 250.0, 500.0, 1000.0, 2000.0, 4000.0 });
@@ -45,7 +45,7 @@ namespace RAC
 			Assert::IsFalse(out[1] == 0.0, L"Filter stuck at zeros");
 		}
 
-		TEST_METHOD(ProcessGraphicEQ)
+		TEST_METHOD(Process)
 		{
 			// std::string filePath = _SOLUTIONDIR;
 			auto inputData = Parse2Dcsv<double>(filePath + "graphicEQInput.csv");
@@ -85,7 +85,61 @@ namespace RAC
 					Assert::AreEqual(outputData[i][j], out[j], 10e-16, werrorchar);
 				}
 			}
-		}		
+		}	
+
+		TEST_METHOD(IsInterpolating)
+		{
+			const Coefficients gain(std::vector<Real>(5, 0.7));
+			const Coefficients fc({ 250.0, 500.0, 1000.0, 2000.0, 4000.0 });
+			const Real Q = 0.98;
+			const int fs = 48e3;
+
+			const Real lerpFactor = 0.5;
+
+
+			GraphicEQ eq = GraphicEQ(gain, fc, Q, fs);
+
+			eq.SetTargetGains(std::vector<Real>(5, 0.3));
+
+			Real out = eq.GetOutput(1.0, lerpFactor);
+			Assert::AreNotEqual(0.7, out, 10e-16, L"Wrong output");
+		}
+
+		TEST_METHOD(ClearBuffers)
+		{
+			const Coefficients gain({0.3, 0.4, 0.25, 0.21, 0.4});
+			const Coefficients fc({ 250.0, 500.0, 1000.0, 2000.0, 4000.0 });
+			const Real Q = 0.98;
+			const int fs = 48e3;
+
+			const Real lerpFactor = 0.5;
+
+			GraphicEQ eq = GraphicEQ(gain, fc, Q, fs);
+
+			for (int i = 0; i < 11; i++)
+				eq.GetOutput(rand(), lerpFactor);
+
+			eq.ClearBuffers();
+
+			Real out = eq.GetOutput(0.0, lerpFactor);
+
+			Assert::AreEqual(0.0, out, L"Wrong output");
+		}
+
+		TEST_METHOD(NegativeGain)
+		{
+			const Coefficients gain({ -0.8, -0.4, -0.15, -0.83, -0.75 });
+			const Coefficients fc({ 250.0, 500.0, 1000.0, 2000.0, 4000.0 });
+			const Real Q = 0.98;
+			const int fs = 48e3;
+
+			const Real lerpFactor = 0.5;
+
+			GraphicEQ eq = GraphicEQ(gain, fc, Q, fs);
+			Real out = eq.GetOutput(1.0, lerpFactor);
+
+			Assert::AreEqual(0.0, out, L"Wrong output");
+		}
 	};
 #pragma optimize("", on)
 }

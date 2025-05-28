@@ -50,6 +50,14 @@ namespace RAC
 			Coefficients(const std::vector<Real>& coefficients) : mCoefficients(coefficients) {}
 
 			/**
+			* @brief Constructor that initialises the Coefficients from a std::array
+			*
+			* @param coefficients The array of coefficients
+			*/
+			template <size_t N>
+			Coefficients(const std::array<Real, N>& coefficients) : mCoefficients(coefficients.begin(), coefficients.end()) {}
+
+			/**
 			* @brief Default deconstructor
 			*/
 			~Coefficients() {};
@@ -239,6 +247,42 @@ namespace RAC
 				while (valid&& i < mCoefficients.size())
 				{
 					valid = mCoefficients[i] > a;
+					i++;
+				}
+				return valid;
+			}
+
+			/**
+			* @brief Determines whether coefficient entries are less or equal to a given value
+			*
+			* @param a The test value
+			* @return True if all entries are less than or equal to a, false otherwise
+			*/
+			inline bool operator<=(const Real a) const
+			{
+				bool valid = true;
+				int i = 0;
+				while (valid && i < mCoefficients.size())
+				{
+					valid = mCoefficients[i] <= a;
+					i++;
+				}
+				return valid;
+			}
+
+			/**
+			* @brief Determines whether coefficient entries are greater than or equal to a given value
+			*
+			* @param a The test value
+			* @return True if all entries are greater than or equal to a, false otherwise
+			*/
+			inline bool operator>=(const Real a) const
+			{
+				bool valid = true;
+				int i = 0;
+				while (valid && i < mCoefficients.size())
+				{
+					valid = mCoefficients[i] >= a;
 					i++;
 				}
 				return valid;
