@@ -315,7 +315,7 @@ namespace RAC
 			Buffer mInputBuffer;	// Audio input buffer
 			Buffer mOutputBuffer;	// Audio output buffer
 			Matrix mReverbInput;	// Audio reverb input matrix
-			BufferF mSendBuffer;	// Audio send buffer (float)
+			std::vector<float> mSendBuffer;	// Audio send buffer (float)
 
 #ifdef USE_MOD_ART
 			Matrix mMOD_ARTReverbInput;	// Audio reverb MOD_ART input matrix

@@ -43,23 +43,5 @@ namespace RAC
 					return false;
 			return true;
 		}
-
-		//////////////////// BufferF ////////////////////
-
-		////////////////////////////////////////
-
-		void BufferF::ResizeBuffer(const int numSamples)
-		{
-			size_t size = mBuffer.size();
-			if (size == numSamples)
-				return;
-			if (size < numSamples)
-			{
-				mBuffer.reserve(numSamples);
-				mBuffer.insert(mBuffer.end(), numSamples - size, 0.0);
-			}
-			else
-				mBuffer.resize(numSamples);
-		}
 	}
 }

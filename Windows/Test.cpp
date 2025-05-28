@@ -210,10 +210,10 @@ namespace RAC
 			std::vector<Vec3> sourcePositions = { Vec3(5.47, 1.62, 4.5), Vec3(3.72, 1.62, 3.25) };
 			std::vector<Vec4> sourceOrientations = { AzimuthElevationToQuaternion(270.0, 0.0), AzimuthElevationToQuaternion(0.0, 0.0) };
 
-			BufferF in = BufferF(numFrames);
-			BufferF out = BufferF(2 * numFrames);
-			BufferF left = BufferF(fs);
-			BufferF right = BufferF(fs);
+			std::vector<float> in(numFrames, 0.0);
+			std::vector<float> out(2 * numFrames, 0.0);
+			std::vector<float> left(fs, 0.0);
+			std::vector<float> right(fs, 0.0);
 
 			float* outPtr = &out[0];
 
@@ -275,8 +275,8 @@ namespace RAC
 							ResetFDN();
 							RemoveSource(sourceID);
 
-							WriteDataEntry(file, &left[0], left.Length(), i * listenerStepPostition, j * listenerStepRotation);
-							WriteDataEntry(file, &right[0], right.Length(), i * listenerStepPostition, j * listenerStepRotation);
+							WriteDataEntry(file, &left[0], left.size(), i * listenerStepPostition, j * listenerStepRotation);
+							WriteDataEntry(file, &right[0], right.size(), i * listenerStepPostition, j * listenerStepRotation);
 						}
 					}
 				}
@@ -337,10 +337,10 @@ namespace RAC
 			UpdateSourceDirectivity(sourceID, SourceDirectivity::omni);
 
 			Sleep(1000);
-			BufferF in = BufferF(numFrames);
-			BufferF out = BufferF(2 * numFrames);
-			BufferF left = BufferF(fs);
-			BufferF right = BufferF(fs);
+			std::vector<float> in(numFrames, 0.0);
+			std::vector<float> out(2 * numFrames, 0.0);
+			std::vector<float> left(fs, 0.0);
+			std::vector<float> right(fs, 0.0);
 
 			float* outPtr = &out[0];
 

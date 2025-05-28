@@ -116,7 +116,7 @@ namespace RAC
 
 			mInputBuffer = Buffer(mConfig.numFrames);
 			mOutputBuffer = Buffer(2 * mConfig.numFrames); // Stereo output buffer
-			mSendBuffer = BufferF(2 * mConfig.numFrames);
+			mSendBuffer = std::vector<float>(2 * mConfig.numFrames, 0.0);
 			mReverbInput = Matrix(mConfig.numFrames, mConfig.numFDNChannels);
 #ifdef USE_MOD_ART
 			mMOD_ARTReverbInput = Matrix(mConfig.numFDNChannels, mConfig.numFrames);
@@ -407,7 +407,8 @@ namespace RAC
 			}
 			
 			// Copy output to send and set pointer
-			mSendBuffer = mOutputBuffer;
+			std::transform(mOutputBuffer.begin(), mOutputBuffer.end(), mSendBuffer.begin(),
+				[&](auto value) { return static_cast<float>(value); });
 			*bufferPtr = &mSendBuffer[0];
 
 			// Reset output buffer
@@ -434,7 +435,8 @@ namespace RAC
 				while (lock.try_lock() == false) { std::this_thread::yield(); }
 			}
 			// Copy output to send and set pointer
-			mSendBuffer = mOutputBuffer;
+			std::transform(mOutputBuffer.begin(), mOutputBuffer.end(), mSendBuffer.begin(),
+				[&](auto value) { return static_cast<float>(value); });
 			*bufferPtr = &mSendBuffer[0];
 
 			// Reset output buffer
