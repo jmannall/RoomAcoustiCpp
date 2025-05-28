@@ -103,6 +103,7 @@ namespace RAC
 
 		/**
 		* Performs a linear interpolation of two buffers classes
+		* @details if start is longer than end, the remaining samples are interpolated to zero.
 		*
 		* @params start The current buffer to be interpolated
 		* @params end The target buffer
@@ -115,71 +116,16 @@ namespace RAC
 #ifdef PROFILE_DETAILED
 			BeginLerp();
 #endif
-			int len = end.Length();
+			assert(start.Length() >= end.Length());
 
-			assert(start.Length() >= len);
-			assert(len % 8 == 0);
+			// If the start buffer is longer than the end buffer, the remaining samples are interpolating to zero
+			start *= (1.0 - factor);
+			for (int i = 0; i < end.Length(); i++)
+				start[i] += factor * end[i];
 
-			if (len % 8 != 0)
-			{
-				for (int i = 0; i < len; i++)
-				{
-					start[i] *= (1.0 - factor);
-					start[i] += factor * end[i];
-				}
-			}
-			else
-			{
-				int i = 0;
-				while (i < len)
-				{
-					start[i] *= (1.0 - factor);
-					start[i] += factor * end[i];
-					i++;
-					start[i] *= (1.0 - factor);
-					start[i] += factor * end[i];
-					i++;
-					start[i] *= (1.0 - factor);
-					start[i] += factor * end[i];
-					i++;
-					start[i] *= (1.0 - factor);
-					start[i] += factor * end[i];
-					i++;
-					start[i] *= (1.0 - factor);
-					start[i] += factor * end[i];
-					i++;
-					start[i] *= (1.0 - factor);
-					start[i] += factor * end[i];
-					i++;
-					start[i] *= (1.0 - factor);
-					start[i] += factor * end[i];
-					i++;
-					start[i] *= (1.0 - factor);
-					start[i] += factor * end[i];
-					i++;
-				}
-			}
 #ifdef PROFILE_DETAILED
 			EndLerp();
 #endif		
-		}
-
-		inline void Lerp(Buffer& start, const size_t& startIdx, const size_t& endIdx, const Real factor)
-		{
-			assert(0.0 < factor && factor <= 1.0);
-
-#ifdef PROFILE_DETAILED
-			BeginLerp();
-#endif
-			assert(start.Length() >= endIdx);
-			assert(start.Length() >= startIdx);
-
-			for (size_t i = startIdx; i < endIdx; i++)
-				start[i] *= (1.0 - factor);
-
-#ifdef PROFILE_DETAILED
-			EndLerp();
-#endif
 		}
 
 		/**
@@ -196,12 +142,11 @@ namespace RAC
 #ifdef PROFILE_DETAILED
 			BeginLerp();
 #endif			
-			size_t len = start.Length();
-			for (int i = 0; i < len; i++)
-			{
-				start[i] *= (1.0 - factor);
-				start[i] += factor * end[i];
-			}
+			assert(start.Length() == end.Length());
+			
+			start *= (1.0 - factor);
+			start += factor * end;
+
 #ifdef PROFILE_DETAILED
 			EndLerp();
 #endif		
@@ -240,6 +185,13 @@ namespace RAC
 			return true;
 		}
 
+		/**
+		* Checks for equality between two buffers
+		* 
+		* @param u Buffer 1
+		* @param v Buffer 2
+		* @returns True if equal within the threshold EPS, false otherwise
+		*/
 		inline bool Equals(const Buffer& u, const Buffer& v, const int length)
 		{
 			assert(v.Length() == length);

@@ -96,8 +96,6 @@ namespace RAC
 			irLength = ir->Length();
 
 			Lerp(currentIR, *ir, lerpFactor);
-			if (irLength < oldIrLength)
-				Lerp(currentIR, irLength, oldIrLength, lerpFactor); // Interpolate end of old ir towards zero
 
 			if (Equals(currentIR, *ir, irLength))
 			{
