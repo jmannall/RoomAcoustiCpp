@@ -16,11 +16,11 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Buffer::ResizeBuffer(const int numSamples)
+		void Buffer::ResizeBuffer(const size_t numSamples)
 		{
 			assert(numSamples >= 0);
 
-			int size = Length();
+			size_t size = Length();
 			if (size == numSamples)
 				return;
 			if (size < numSamples)
@@ -28,10 +28,8 @@ namespace RAC
 				mBuffer.reserve(numSamples);
 				mBuffer.insert(mBuffer.end(), numSamples - size, 0.0);
 			}
-			else if (numSamples > 0)
-				mBuffer.resize(numSamples);
 			else
-				mBuffer.reserve(1);
+				mBuffer.resize(numSamples);
 		}
 
 		////////////////////////////////////////

@@ -33,14 +33,14 @@ namespace RAC
 			/**
 			* @brief Default constructor that initialises buffer with 1 sample.
 			*/
-			Buffer() { ResizeBuffer(1); };
+			Buffer() : mBuffer(1, 0.0) {};
 
 			/**
 			* @brief Constructor that initialises the buffer with a specified number of samples
 			*
 			* @param length The number of samples to initialise the buffer with.
 			*/
-			Buffer(const int length) { ResizeBuffer(length); };
+			Buffer(const int length) : mBuffer(length, 0.0) {};
 
 			/**
 			* Constructor that initialises the buffer with a vector of Real values.
@@ -55,7 +55,7 @@ namespace RAC
 			~Buffer() {};
 
 			/**
-			* @brief Resets all samples in the buffer to 0.
+			* @brief Sets all samples in the buffer to 0.
 			*/
 			inline void ResetBuffer() { std::fill(mBuffer.begin(), mBuffer.end(), 0.0); };
 
@@ -64,15 +64,16 @@ namespace RAC
 			* 
 			* @return The length of the buffer
 			*/
-			inline int Length() const { return static_cast<int>(mBuffer.size()); }
+			inline size_t Length() const { return mBuffer.size(); }
 
 			/**
 			* @brief Resizes the buffer to a specified number of samples.
 			* @details If the new size is larger than the current size, the new samples are initialised to 0.
+			* If it is smaller, the buffer is truncated.
 			* 
 			* @param numSamples The number of samples to resize the buffer to.
 			*/
-			void ResizeBuffer(const int numSamples);
+			void ResizeBuffer(const size_t numSamples);
 
 			/**
 			* @brief Checks if the buffer is valid.
@@ -81,11 +82,6 @@ namespace RAC
 			* @return False if the buffer contains nan values, true otherwise
 			*/
 			bool Valid();
-
-			/**
-			* Returns the buffer as a vector of Real values.
-			*/
-			std::vector<Real> GetBuffer() { return mBuffer; }
 
 			/**
 			* @brief Access the buffer at the specified index
