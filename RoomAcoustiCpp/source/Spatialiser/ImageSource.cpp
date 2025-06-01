@@ -379,7 +379,7 @@ namespace RAC
 				UpdateDiffraction();
 			}
 
-			mAirAbsorption.SetDistance(data.GetDistance());
+			mAirAbsorption.SetTargetDistance(data.GetDistance());
 
 			if (data.IsFeedingFDN() != feedsFDN)
 			{

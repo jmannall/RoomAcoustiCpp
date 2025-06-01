@@ -4,6 +4,7 @@
 * @brief Declaration of AirAbsorption class
 *
 * @remark Based after Implementation and perceptual evaluation of a simulation method for coupled rooms in higher order ambisonics. Grimm G et al. 2014
+* @note Error in paper eq (1). should be y_k = a_1 * x_k - (1 - a_1) * y_k
 *
 */
 
@@ -22,46 +23,26 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		Real AirAbsorption::GetOutput(const Real input)
+		void AirAbsorption::ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const int numFrames, const Real lerpFactor)
 		{
-			Real v = input;
-			Real output = 0.0;
-
-			v += y * a;
-			y = v;
-			output += v * b;
-
-			return output;
+			FlushDenormals();
+			for (int i = 0; i < numFrames; i++)
+				outBuffer[i] = GetOutput(inBuffer[i], lerpFactor);
+			NoFlushDenormals();
 		}
 
 		////////////////////////////////////////
 
-		void AirAbsorption::ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const int numFrames, const Real lerpFactor)
+		void AirAbsorption::InterpolateParameters(const Real lerpFactor)
 		{
-			FlushDenormals();
-			if (equal)
-			{
-				for (int i = 0; i < numFrames; i++)
-					outBuffer[i] = GetOutput(inBuffer[i]);
-			}
-			else if (Equals(currentDistance, targetDistance))
-			{
-				currentDistance = targetDistance;
-				equal = true;
-				UpdateParameters();
-				for (int i = 0; i < numFrames; i++)
-					outBuffer[i] = GetOutput(inBuffer[i]);
-			}
+			parametersEqual.store(true); // Prevents issues in case targetFc/Gain updated during this function call
+			const Real distance = targetDistance.load();
+			currentDistance = Lerp(currentDistance, distance, lerpFactor);
+			if (Equals(currentDistance, distance))
+				currentDistance = distance;
 			else
-			{
-				for (int i = 0; i < numFrames; i++)
-				{
-					outBuffer[i] = GetOutput(inBuffer[i]);
-					currentDistance = Lerp(currentDistance, targetDistance, lerpFactor);
-					UpdateParameters();
-				}
-			}
-			NoFlushDenormals();
+				parametersEqual.store(false);
+			UpdateCoefficients(currentDistance);
 		}
 	}
 }

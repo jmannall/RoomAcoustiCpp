@@ -4,7 +4,8 @@
 * @brief Declaration of AirAbsorption class
 *
 * @remark Based after Implementation and perceptual evaluation of a simulation method for coupled rooms in higher order ambisonics. Grimm G et al. 2014
-* 
+* @note Error in paper eq (1). should be y_k = a_1 * x_k - (1 - a_1) * y_k
+*
 */
 
 #ifndef RoomAcoustiCpp_AirAbsorption_h
@@ -15,6 +16,7 @@
 
 // DSP headers
 #include "DSP/Buffer.h"
+#include "DSP/IIRFilter.h"
 
 namespace RAC
 {
@@ -24,15 +26,9 @@ namespace RAC
 		/**
 		* @brief Class that implements an air absorption filter
 		*/
-		class AirAbsorption
+		class AirAbsorption : public IIRFilter1
 		{
 		public:
-			/**
-			* @brief Constructor that initialises the AirAbsorption with a given sample rate
-			*
-			* @param sampleRate The sample rate for calculating the filter coefficients
-			*/
-			AirAbsorption(const int sampleRate) : AirAbsorption(0.0, sampleRate) {}
 
 			/**
 			* @brief Constructor that initialises the AirAbsorption with a given distance and sample rate
@@ -40,10 +36,14 @@ namespace RAC
 			* @param distance The distance for calculating the filter coefficients
 			* @param sampleRate The sample rate for calculating the filter coefficients
 			*/
-			AirAbsorption(const Real distance, const int sampleRate) : x(0), y(0), currentDistance(distance), targetDistance(distance), a(0.0), b(0.0), equal(true)
+			AirAbsorption(const Real distance, const int sampleRate) : IIRFilter1(sampleRate), currentDistance(distance), targetDistance(distance),
+				constant(static_cast<Real>(sampleRate) / (SPEED_OF_SOUND * 7782.0))
 			{
-				constant = static_cast<Real>(sampleRate) / (SPEED_OF_SOUND * 7782.0);
-				UpdateParameters();
+				a0 = 1.0; b1 = 0.0; // Not used by this filter
+				UpdateCoefficients(distance);
+
+				parametersEqual.store(true);
+				initialised.store(true);
 			}
 
 			/**
@@ -56,36 +56,13 @@ namespace RAC
 			*
 			* @param distance The new target distance
 			*/
-			inline void SetDistance(const Real distance)
+			inline void SetTargetDistance(const Real distance)
 			{ 
-				targetDistance = distance;
-				if (currentDistance != targetDistance)
-					equal = false;
+				assert(distance > 0.0);
+
+				targetDistance.store(distance);
+				parametersEqual.store(false);
 			}
-
-			/**
-			* @brief Updates the filter coefficients
-			*/
-			inline void UpdateParameters()
-			{
-				b = exp(-currentDistance * constant);
-				a = 1 - b;
-			}
-
-			/**
-			* @brief Gets the current distance
-			*
-			* @return The current distance
-			*/
-			inline Real GetDistance() const { return currentDistance; }
-
-			/**
-			* @brief Returns the output of the AirAbsorption filter given an input
-			*
-			* @param input The input to the AirAbsorption filter
-			* @return The output of the AirAbsorption filter
-			*/
-			Real GetOutput(const Real input);
 
 			/**
 			* @brief Processes an input buffer and updates the output buffer
@@ -93,27 +70,31 @@ namespace RAC
 			* @param inBuffer The input buffer
 			* @param outBuffer The output buffer
 			* @param numFrames The number of frames in the buffer
-			* @param lerpFactor The linear interpolation factor
+			* @param lerpFactor The interpolation factor (0.0 to 1.0)
 			*/
 			void ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const int numFrames, const Real lerpFactor);
-						
-			/**
-			* @brief Resets the filter buffers
-			*/
-			inline void ClearBuffers() { x = 0.0; y = 0.0; }
 
 		private:
+			/**
+			* @brief Updates the filter coefficients
+			*/
+			inline void UpdateCoefficients(Real distance)
+			{
+				b0 = exp(-distance * constant);
+				a1 = b0 - 1;
+			}
 
-			Real constant;		// Air absorption constant
+			/**
+			 * @brief Interpolates between the current distance and target distance using linear interpolation
+			 * 
+			 * @param lerpFactor The interpolation factor (0.0 to 1.0)
+			 */
+			void InterpolateParameters(const Real lerpFactor) override;
 
-			Real x;		// Previous input
-			Real y;		// Previous output
-			Real b;		// Numerator coefficient
-			Real a;		// Denominator coefficient
+			const Real constant;		// Constant used for calculating filter coefficients
 
-			Real currentDistance;		// Current distance
-			Real targetDistance;		// Target distance
-			bool equal;					// True if the current and target distances are equal
+			std::atomic<Real> targetDistance;		// Target distance
+			Real currentDistance;					// Current distance (should only be accessed from the audio thread)
 		};
 	}
 }

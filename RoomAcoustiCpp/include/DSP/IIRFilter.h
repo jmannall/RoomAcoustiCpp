@@ -341,7 +341,7 @@ namespace RAC
 			void UpdateCoefficients(const Real fc);
 
 			std::atomic<Real> targetFc;	// Target cut off frequency
-			Real currentFc;
+			Real currentFc;				// Current cut off frequency
 		};
 
 		/**
@@ -373,9 +373,9 @@ namespace RAC
 			/**
 			* @brief Updates the parameters of the low pass filter
 			*
-			* @param fc The cut off frequency of the filter
+			* @param parameter The control parameter of the filter
 			*/
-			virtual void UpdateCoefficients(const Real fc) = 0;
+			virtual void UpdateCoefficients(const Real parameter) = 0;
 
 		private:
 			/**
@@ -385,8 +385,8 @@ namespace RAC
 			*/
 			void InterpolateParameters(const Real lerpFactor) override;
 
-			std::atomic<Real> target;
-			Real current;
+			std::atomic<Real> target;	// Target filter parameter
+			Real current;				// Current filter parameter
 		};
 
 		/**
@@ -700,7 +700,7 @@ namespace RAC
 			/**
 			* @brief Atomically sets the target cut-of frequency parameter of the filter
 			*
-			* @param parameter The target cut-off frequency of the filter
+			* @param fc The target cut-off frequency of the filter
 			*/
 			inline void SetTargetFc(const Real fc) { SetTargetParameter(fc); }
 

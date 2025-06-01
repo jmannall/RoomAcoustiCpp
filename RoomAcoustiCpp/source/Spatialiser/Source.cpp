@@ -31,7 +31,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		Source::Source(Binaural::CCore* core, const Config& config) : mCore(core), mConfig(config), targetGain(0.0f), currentGain(0.0f), mAirAbsorption(mConfig.fs), mDirectivity(SourceDirectivity::omni),
+		Source::Source(Binaural::CCore* core, const Config& config) : mCore(core), mConfig(config), targetGain(0.0f), currentGain(0.0f), mAirAbsorption(1.0, mConfig.fs), mDirectivity(SourceDirectivity::omni),
 			directivityFilter(config.frequencyBands, config.Q, config.fs), reverbInputFilter(config.frequencyBands, config.Q, config.fs), feedsFDN(false), hasChanged(true)
 		{
 			dataMutex = std::make_shared<std::mutex>();
@@ -347,7 +347,7 @@ namespace RAC
 		{
 			{
 				lock_guard<std::mutex>lock(*dataMutex);
-				mAirAbsorption.SetDistance(distance);
+				mAirAbsorption.SetTargetDistance(distance);
 			}
 			{
 				lock_guard<std::mutex>lock(*currentDataMutex);
