@@ -256,28 +256,6 @@ extern "C"
 	}
 
 	/**
-	* Updates the FDN matrix used to process the late reverberation.
-	*
-	* The mapping is as follows:
-	* 0 -> Householder
-	* 1 -> Random orthogonal
-	*
-	* @param id The ID corresponding to a FDN matrix type.
-	*/
-	EXPORT void API RACUpdateFDNModel(int id)
-	{
-		switch (id)
-		{
-		case(0):
-		{ InitFDNMatrix(FDNMatrix::householder); break; }
-		case(1):
-		{ InitFDNMatrix(FDNMatrix::randomOrthogonal); break; }
-		default:
-		{ InitFDNMatrix(FDNMatrix::householder); break; }
-		}
-	}
-
-	/**
 	* Updates the model used to process diffraction.
 	*
 	* The mapping is as follows:
@@ -323,17 +301,31 @@ extern "C"
 	* This function should be called when the volume or dimensions of the room changes and after all walls have been initialised.
 	* It will reset the Feedback Delay Network (FDN) so should be considered a new room rather than a dynamic change.
 	* 
+	* The mapping is as follows:
+	* 0 -> Householder
+	* 1 -> Random orthogonal
+	* 
 	* @param volume The volume (m^3) of the room.
 	* @param dim The dimensions (m) of the room for the delay lines.
 	* @param numDimensions The number of dimensions provided in the dim parameter. This must be a factor of numFDNChannels set in RACInit. 
+	* @param id The ID corresponding to a FDN matrix type.
 	*/
-	EXPORT void API RACUpdateRoom(float volume, const float* dim, int numDimensions)
+	EXPORT void API RACUpdateRoom(float volume, const float* dim, int numDimensions, int id)
 	{
 		Vec dimensions = Vec(numDimensions);
 		for (int i = 0; i < numDimensions; i++)
 			dimensions[i] = static_cast<Real>(dim[i]);
 
-		UpdateRoom(static_cast<Real>(volume), dimensions);
+		FDNMatrix fdnMatrix = FDNMatrix::householder; // Default to householder matrix
+		switch (id)
+		{
+		case(0):
+		{ fdnMatrix = FDNMatrix::householder; break; }
+		case(1):
+		{ fdnMatrix = FDNMatrix::randomOrthogonal; break; }
+		}
+
+		InitLateReverb(static_cast<Real>(volume), dimensions, fdnMatrix);
 	}
 
 	/**
@@ -590,31 +582,6 @@ extern "C"
 #endif
 		return true;
 	}
-
-#ifdef USE_MOD_ART
-	EXPORT bool API RACProcessOutput_MOD_ART(const float* data)
-	{
-		GetOutput_MOD_ART(&buffer, data);
-		if (!buffer)
-		{
-#ifdef DEBUG_AUDIO_THREAD
-			Debug::Log("Process Output Failed", Colour::Orange);
-#endif
-			return false;
-		}
-		if (std::isnan(*buffer))
-		{
-#ifdef DEBUG_AUDIO_THREAD
-			Debug::Log("Process Output is NaN", Colour::Orange);
-#endif
-			return false;
-		}
-#ifdef DEBUG_AUDIO_THREAD
-		Debug::Log("Process Output Success", Colour::Orange);
-#endif
-		return true;
-	}
-#endif
 
 	/**
 	* Returns a pointer to the output buffer of the spatialiser.

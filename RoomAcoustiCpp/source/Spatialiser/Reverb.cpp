@@ -36,16 +36,17 @@ namespace RAC
 
 		//////////////////// ReverbSource class ////////////////////
 
+		ReleasePool ReverbSource::releasePool;
+
 		////////////////////////////////////////
 
-		ReverbSource::ReverbSource(Binaural::CCore* core, const Config& config, const Vec3& shift) : mCore(core), mConfig(config), mReflectionFilter(config.frequencyBands, config.Q, config.fs),
-			mAbsorption(config.frequencyBands.Length()), mShift(shift), filterInitialised(false), targetGain(0.0), currentGain(0.0), inputBuffer(mConfig.numFrames)
+		ReverbSource::ReverbSource(Binaural::CCore* core, const Config& config, const Vec3& shift) : mCore(core), mShift(shift)
 		{
-			mReflectionFilterMutex = std::make_shared<std::mutex>();
-			bInput = CMonoBuffer<float>(mConfig.numFrames);
-			bOutput.left = CMonoBuffer<float>(mConfig.numFrames);
-			bOutput.right = CMonoBuffer<float>(mConfig.numFrames);
-			Init();
+			bInput = CMonoBuffer<float>(config.numFrames);
+			bOutput.left = CMonoBuffer<float>(config.numFrames);
+			bOutput.right = CMonoBuffer<float>(config.numFrames);
+			InitSource();
+			UpdateSpatialisationMode(config.spatialisationMode);
 		}
 
 		////////////////////////////////////////
@@ -63,7 +64,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void ReverbSource::Init()
+		void ReverbSource::InitSource()
 		{
 #ifdef DEBUG_INIT
 			Debug::Log("Init reverb source", Colour::Green);
@@ -78,9 +79,6 @@ namespace RAC
 				mSource->DisableDistanceAttenuationAnechoic();
 				mSource->DisableNearFieldEffect();
 				mSource->DisableFarDistanceEffect();
-
-				//Select spatialisation mode
-				UpdateSpatialisationMode(mConfig.spatialisationMode);
 			}
 			
 		}
@@ -89,7 +87,6 @@ namespace RAC
 
 		void ReverbSource::UpdateSpatialisationMode(const SpatialisationMode mode)
 		{
-			mConfig.spatialisationMode = mode;
 			switch (mode)
 			{
 			case SpatialisationMode::quality:
@@ -119,86 +116,48 @@ namespace RAC
 
 		void ReverbSource::UpdatePosition(const Vec3& listenerPosition)
 		{
-			// tuneInMutex already locked by context
-			CTransform transform;
-			transform.SetPosition(CVector3(static_cast<float>(listenerPosition.x + mShift.x), static_cast<float>(listenerPosition.y + mShift.y), static_cast<float>(listenerPosition.z + mShift.z)));
-			mSource->SetSourceTransform(transform);
+			CTransform newTransform;
+			const Vec3 position = listenerPosition + mShift;
+			newTransform.SetPosition(CVector3(static_cast<float>(position.x), static_cast<float>(position.y), static_cast<float>(position.z)));
+			const shared_ptr<CTransform> newTransformCopy = make_shared<CTransform>(newTransform);
+
+			releasePool.Add(newTransformCopy);
+			transform.store(newTransformCopy);
 		}
 
 		////////////////////////////////////////
 
-		void ReverbSource::UpdateReflectionFilter(const Coefficients& absorption)
-		{
-			lock_guard<mutex> lock(*mReflectionFilterMutex);
-			mAbsorption = absorption;
-
-			if (mAbsorption > EPS)
-			{
-				// if (filterInitialised)
-				mReflectionFilter.SetTargetGains(mAbsorption);
-				/*else
-				{
-					mReflectionFilter.InitParameters(mAbsorption);
-					filterInitialised = true;
-					targetGain = 1.0;
-				}*/
-			}
-			else
-			{
-				filterInitialised = false;
-				targetGain = 0.0;
-			}
-		}
-
-		////////////////////////////////////////
-
-		void ReverbSource::ProcessAudio(Buffer& outputBuffer)
+		void ReverbSource::ProcessAudio(const Buffer& data, Buffer& outputBuffer)
 		{
 #ifdef PROFILE_AUDIO_THREAD
 			BeginReverbSource();
 #endif
+
+			if (clearBuffers.load())
 			{
-				lock_guard<mutex> lock(*mReflectionFilterMutex);
-#ifdef PROFILE_AUDIO_THREAD
-				BeginReflection();
-#endif
-				mReflectionFilter.ProcessAudio(inputBuffer, inputBuffer, mConfig.numFrames, mConfig.lerpFactor);
-
-#ifdef PROFILE_AUDIO_THREAD
-				EndReflection();
-#endif
-				if (currentGain > targetGain + EPS || currentGain < targetGain - EPS)
-				{
-					FlushDenormals();
-					for (int i = 0; i < mConfig.numFrames; i++)
-					{
-						bInput[i] = static_cast<float>(currentGain * inputBuffer[i]);
-						currentGain = Lerp(currentGain, targetGain, mConfig.lerpFactor);
-					}
-					NoFlushDenormals();
-				}
-				else
-				{
-					std::transform(inputBuffer.begin(), inputBuffer.end(), bInput.begin(),
-						[&](auto value) { return static_cast<float>(value * targetGain); });
-				}
-
-#ifdef PROFILE_AUDIO_THREAD
-				Begin3DTI();
-#endif
-				{
-					// lock_guard<mutex> lock(tuneInMutex);
-					mSource->SetBuffer(bInput);
-
-					mSource->ProcessAnechoic(bOutput.left, bOutput.right);
-				}
-#ifdef PROFILE_AUDIO_THREAD
-				End3DTI();
-#endif
+				mSource->ResetSourceBuffers(); // Think this reallocates memory
+				clearBuffers.store(false);
 			}
 
+			std::transform(data.begin(), data.end(), bInput.begin(),
+				[&](auto value) { return static_cast<float>(value); });
+
+#ifdef PROFILE_AUDIO_THREAD
+			Begin3DTI();
+#endif
+			{
+				shared_lock<shared_mutex> lock(tuneInMutex);
+				mSource->SetSourceTransform(*transform.load());
+				mSource->SetBuffer(bInput);
+				mSource->ProcessAnechoic(bOutput.left, bOutput.right);
+			}
+
+#ifdef PROFILE_AUDIO_THREAD
+			End3DTI();
+#endif
+
 			int j = 0;
-			for (int i = 0; i < mConfig.numFrames; i++)
+			for (int i = 0; i < data.Length(); i++)
 			{
 				outputBuffer[j++] = static_cast<Real>(bOutput.left[i]);
 				outputBuffer[j++] = static_cast<Real>(bOutput.right[i]);
@@ -208,51 +167,9 @@ namespace RAC
 #endif
 		}
 
-		////////////////////////////////////////
-
-#ifdef USE_MOD_ART
-		void ReverbSource::ProcessAudio_MOD_ART(Buffer& outputBuffer)
-		{
-#ifdef PROFILE_AUDIO_THREAD
-			BeginReverbSource();
-#endif
-			for (int i = 0; i < mConfig.numFrames; i++)
-				bInput[i] = static_cast<float>(inputBuffer[i]);
-
-#ifdef PROFILE_AUDIO_THREAD
-			Begin3DTI();
-#endif
-			{
-				shared_lock<shared_mutex> lock(tuneInMutex);
-				mSource->SetBuffer(bInput);
-
-				mSource->ProcessAnechoic(bOutput.left, bOutput.right);
-			}
-#ifdef PROFILE_AUDIO_THREAD
-			End3DTI();
-#endif
-
-			int j = 0;
-			for (int i = 0; i < mConfig.numFrames; i++)
-			{
-				outputBuffer[j++] += static_cast<Real>(bOutput.left[i]);
-				outputBuffer[j++] += static_cast<Real>(bOutput.right[i]);
-			}
-#ifdef PROFILE_AUDIO_THREAD
-			EndReverbSource();
-#endif
-		}
-#endif
-
 		//////////////////// Reverb class ////////////////////
 
-		////////////////////////////////////////
-
-		Reverb::Reverb(Binaural::CCore* core, const Config& config, const Vec& dimensions, const Coefficients& T60) : mFDN(T60, dimensions, config), mCore(core), mConfig(config),
-			valid(false), runFDN(false), mTargetGain(0.0), mCurrentGain(0.0), mT60(T60)
-		{
-			InitSources();
-		}
+		ReleasePool Reverb::releasePool;
 
 		////////////////////////////////////////
 
@@ -269,21 +186,21 @@ namespace RAC
 		void Reverb::UpdateLerpFactor(const Real lerpFactor)
 		{
 			mConfig.lerpFactor = lerpFactor;
-			for (auto& source : mReverbSources)
-				source->UpdateLerpFactor(lerpFactor);
 		}
 
 		////////////////////////////////////////
 
-		void Reverb::InitSources()
+		void Reverb::InitSources(Binaural::CCore* core)
 		{
+			// Distribute reverb sources around the listener
 			std::vector<Vec3> points;
-			switch (mConfig.numFDNChannels)
+			points.reserve(mConfig.numLateReverbChannels);
+			switch (mConfig.numLateReverbChannels)
 			{
 			case 1:
-			{ points.push_back(Vec3(0.0, 0.0, 1.0)); break; }
+			{ points.emplace_back(0.0, 0.0, 1.0); break; }
 			case 2:
-			{ points.push_back(Vec3(-1.0, 0.0, 0.0)); points.push_back(Vec3(1.0, 0.0, 0.0)); break; }
+			{ points.emplace_back(-1.0, 0.0, 0.0); points.emplace_back(1.0, 0.0, 0.0); break; }
 			case 4:
 			{ Tetrahedron(points, true); break; }
 			case 6:
@@ -302,11 +219,11 @@ namespace RAC
 			{ Icosahedron(points, true); Dodecahedron(points, true); break; }
 			}
 
-			mReverbSources.reserve(mConfig.numFDNChannels);
-			threadResults.reserve(mConfig.numFDNChannels);
-			for (int i = 0; i < mConfig.numFDNChannels; i++)
+			mReverbSources.reserve(mConfig.numLateReverbChannels);
+			threadResults.reserve(mConfig.numLateReverbChannels);
+			for (int i = 0; i < mConfig.numLateReverbChannels; i++)
 			{
-				mReverbSources.emplace_back(std::make_unique<ReverbSource>(mCore, mConfig, points[i]));
+				mReverbSources.emplace_back(std::make_unique<ReverbSource>(core, mConfig, points[i]));
 				threadResults.emplace_back(2 * mConfig.numFrames);
 			}
 		}
@@ -315,171 +232,97 @@ namespace RAC
 
 		void Reverb::UpdateReverbSourcePositions(const Vec3& listenerPosition)
 		{
-			// tuneInMutex already locked by context
 			for (auto& reverbSource : mReverbSources)
 				reverbSource->UpdatePosition(listenerPosition);
 		}
 
 		////////////////////////////////////////
 
-		bool Reverb::UpdateReflectionFilters(const std::vector<Absorption>& absorptions, const bool running)
-		{
-			{
-				if (valid && running)
-					mTargetGain.store(reverbGain.load());
-				else
-				{
-					mTargetGain = 0.0;
-					if (mCurrentGain < EPS)
-					{
-						runFDN = false;
-						{
-							std::lock_guard<std::mutex> lock(mFDNMutex);
-							mFDN.Reset();
-						}
-						for (auto& source : mReverbSources)
-							source->Reset();
-						return false;
-					}
-				}
-				runFDN = true;
-			}
-
-			for (int i = 0; i < mConfig.numFDNChannels; i++)
-				mReverbSources[i]->UpdateReflectionFilter(absorptions[i]);
-			return true;
-		}
-
-		////////////////////////////////////////
-
 		void Reverb::ProcessAudio(const Matrix& data, Buffer& outputBuffer)
 		{
-			if (runFDN)
+			if (!running.load())
+				return;
+
+#ifdef PROFILE_AUDIO_THREAD
+			BeginReverb();
+#endif
+			mFDN.load()->ProcessAudio(data, reverbOutputs);
+			
+			std::latch latch(mReverbSources.size());
+			size_t index = 0;
+			for (auto& source : mReverbSources)
 			{
-#ifdef PROFILE_AUDIO_THREAD
-				BeginReverb();
-#endif
-				// Process FDN and save to buffer
-				
-#ifdef PROFILE_AUDIO_THREAD
-				BeginFDN();
-#endif					
-				FlushDenormals();
+				size_t threadIndex = index++; // Each thread gets a unique index
+				audioThreadPool->enqueue([&, threadIndex] {
+					source->ProcessAudio(reverbOutputs[threadIndex], threadResults[threadIndex]);
+					// No need for a mutex, each thread writes to a unique index
 
-				if (mCurrentGain > mTargetGain + EPS || mCurrentGain < mTargetGain - EPS)
-				{
-					int j = 0;
-					lock_guard <mutex> lock(mFDNMutex);
-					for (int i = 0; i < mConfig.numFrames; i++)
-					{
-						mFDN.ProcessOutput(data.GetRow(i), mCurrentGain, mConfig.lerpFactor);
-						j = 0;
-						for (auto& source : mReverbSources)
-						{
-							source->AddInput(mCurrentGain * mFDN.GetOutput(j), i);
-							j++;
-						}
-						mCurrentGain = Lerp(mCurrentGain, mTargetGain, mConfig.lerpFactor);
-					}
-				}
-				else
-				{
-					int  j = 0;	
-					lock_guard <mutex> lock(mFDNMutex);
-					for (int i = 0; i < mConfig.numFrames; i++)
-					{
-						mFDN.ProcessOutput(data.GetRow(i), mTargetGain, mConfig.lerpFactor);
-						j = 0;
-						for (auto& source : mReverbSources)
-						{
-							source->AddInput(mCurrentGain * mFDN.GetOutput(j), i);
-							j++;
-						}
-					}
-				}
+					latch.count_down();
+					});
+			}
 
-				NoFlushDenormals();
-#ifdef PROFILE_AUDIO_THREAD
-				EndFDN();
-#endif
-				std::latch latch(mReverbSources.size());
+			// Wait for all threads to finish
+			latch.wait();
 
-				size_t index = 0;
-				for (auto& source : mReverbSources)
-				{
-					size_t threadIndex = index++; // Each thread gets a unique index
-					audioThreadPool->enqueue([&, threadIndex] {
-						source->ProcessAudio(threadResults[threadIndex]);
-						// No need for a mutex, each thread writes to a unique index
-
-						latch.count_down();
-						});
-				}
-
-				// Wait for all threads to finish
-				latch.wait();
-
-				// Now safely merge the results **sequentially**
-				for (const Buffer& localOutput : threadResults)
-					outputBuffer += localOutput;
+			// Now safely merge the results **sequentially**
+			for (const Buffer& localOutput : threadResults)
+				outputBuffer += localOutput;
 
 #ifdef PROFILE_AUDIO_THREAD
 				EndReverb();
 #endif
-			}
 		}
 
 		////////////////////////////////////////
 
-#ifdef USE_MOD_ART
-		void Reverb::ProcessAudio_MOD_ART(const Matrix& data, Buffer& outputBuffer)
+		void Reverb::SetTargetT60(const Coefficients& T60)
 		{
-			int j = 0;
-			for (auto& source : mReverbSources)
-			{
-				source->AddInput(data.GetRow(j));
-				j++;
-			}
+			if (!initialised.load())
+				return;
 
-			// Process buffer of each channel
-			for (auto& source : mReverbSources)
-				source->ProcessAudio_MOD_ART(outputBuffer);
-		}
-#endif
-
-		////////////////////////////////////////
-
-		void Reverb::UpdateReverbTime(const Coefficients& T60)
-		{
-			if (T60 > 0.0)
-			{
 #ifdef DEBUG_INIT
-				Debug::Log("Init FDN: [" + RealToStr(T60[0]) + ", " + RealToStr(T60[1]) + ", " +
-					RealToStr(T60[2]) + ", " + RealToStr(T60[3]) + ", " + RealToStr(T60[4]) + "]", Colour::Green);
+			Debug::Log("Init FDN: [" + RealToStr(T60[0]) + ", " + RealToStr(T60[1]) + ", " +
+				RealToStr(T60[2]) + ", " + RealToStr(T60[3]) + ", " + RealToStr(T60[4]) + "]", Colour::Green);
 #endif
-				lock_guard <mutex> lock(mFDNMutex);
-				mFDN.UpdateT60(T60);
-				valid = true;
+			mFDN.load()->SetTargetT60(T60);
+		}
+
+		////////////////////////////////////////
+
+		void Reverb::InitLateReverb(const Coefficients& T60, const Vec& dimensions, const FDNMatrix matrix)
+		{
+            std::shared_ptr<FDN> fdn;
+            switch (matrix)
+            {
+            case FDNMatrix::householder:
+                fdn = std::make_shared<HouseHolderFDN>(T60, dimensions, mConfig);
+                break;
+            case FDNMatrix::randomOrthogonal:
+                fdn = std::make_shared<RandomOrthogonalFDN>(T60, dimensions, mConfig);
+                break;
+            default:
+                fdn = std::make_shared<FDN>(T60, dimensions, mConfig);
+                break;
+            }
+			releasePool.Add(fdn);
+            mFDN.store(fdn);
+			initialised.store(true);
+		}
+
+		////////////////////////////////////////
+
+		void Reverb::UpdateReflectionFilters(const std::vector<Absorption>& absorptions)
+		{
+			if (!initialised.load())
+				return;
+			bool isZero = mFDN.load()->SetTargetReflectionFilters(absorptions);
+			if (isZero)
+			{
+				mFDN.load()->Reset();
+				running.store(false);
 			}
 			else
-			{
-				valid = false;
-#ifdef DEBUG_INIT
-				Debug::Log("FDN reverb failed to initialise. T60 equal to or less than 0s.", Colour::Red);
-#endif
-			}
-		}
-
-		////////////////////////////////////////
-
-		void Reverb::UpdateFDNDelayLines(const Vec& dimensions, const Coefficients& T60)
-		{
-			{
-				lock_guard <mutex> lock(mFDNMutex);
-				mFDN.Reset();
-				mFDN.UpdateDelayLines(dimensions);
-			}
-			UpdateReverbTime(T60);
+				running.store(true);
 		}
 	}
 }

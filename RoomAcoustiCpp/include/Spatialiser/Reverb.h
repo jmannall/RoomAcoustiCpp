@@ -18,6 +18,7 @@
 #include "Common/Types.h"
 #include "Common/Vec3.h"
 #include "Common/ThreadPool.h"
+#include "Common/ReleasePool.h"
 
 // Spatialiser headers
 #include "Spatialiser/Types.h"
@@ -40,7 +41,7 @@ namespace RAC
 		public:
 			/**
 			* @brief Constructor that intialises a reverb source with a given position offset
-			* 
+			*
 			* @params core The 3DTI processing core
 			* @params config The spatialiser configuration
 			* @params shift The position offset relative to the listener
@@ -60,101 +61,46 @@ namespace RAC
 			void UpdateSpatialisationMode(const SpatialisationMode mode);
 
 			/**
-			* @brief Update the interpolation factor for interpolations
-			*
-			* @params lerpFactor New interpolation factor
-			*/
-			inline void UpdateLerpFactor(const Real lerpFactor)
-			{
-				lock_guard<mutex> lock(*mReflectionFilterMutex);
-				mConfig.lerpFactor = lerpFactor;
-			}
-
-			/**
-			* @brief Set position offset relative to the listener
-			*/
-			inline void SetShift(const Vec3& shift) { mShift = shift; }
-
-			/**
 			* @return The position shift relative to the listener
 			*/
 			inline Vec3 GetShift() const { return mShift; }
 
 			/**
-			* @brief Updates the absolute position of the reverb source so maintain a correct shift relative to the listener
-			* 
+			* @brief Updates the absolute position of the reverb source to maintain a correct shift relative to the listener
+			*
 			* @params listenerPosition The current listener position
 			*/
 			void UpdatePosition(const Vec3& listenerPosition);
 
 			/**
-			* @brief Update the reflection filter for directional dependent reverberation level
-			* 
-			* @params absorption New reflection filter target gain
-			*/
-			void UpdateReflectionFilter(const Coefficients& absorption);
-
-			/**
-			* @brief Add an input to the reverb source input buffer
-			* 
-			* @params in The input value
-			* @params i The buffer sample index to write to
-			*/
-			void AddInput(const Real in, const int& i) { inputBuffer[i] = in; }
-
-			/**
-			* @brief Update the reverb source input buffer
-			*
-			* @params in The new input buffer
-			*/
-#ifdef USE_MOD_ART
-			void AddInput(const Buffer& in) { inputBuffer = in; }
-#endif
-
-			/**
 			* @brief Process the current reverb source audio buffer
-			* 
+			*
 			* @params outputBuffer The output buffer to write to
 			*/
-			void ProcessAudio(Buffer& outputBuffer);
-
-#ifdef USE_MOD_ART
-			void ProcessAudio_MOD_ART(Buffer& outputBuffer);
-#endif
+			void ProcessAudio(const Buffer& data, Buffer& outputBuffer);
 
 			/**
 			* @brief Reset the internal buffers to zero
 			*/
-			inline void Reset() { lock_guard<mutex> lock(*mReflectionFilterMutex); mReflectionFilter.ClearBuffers(); mSource->ResetSourceBuffers(); }
-
-#ifdef _TEST
-#pragma optimize("", off)
-			inline Coefficients GetAbsorption() const { return mAbsorption; }
-#pragma optimize("", on)
-#endif
+			inline void Reset() { clearBuffers.store(true); }
 
 		private:
 			/**
 			* @brief Initialises the reverb source
 			*/
-			void Init();
+			void InitSource();
 
-			Config mConfig;		// Spatialiser configuration
-			Vec3 mShift;		// Position shift relative to the listener
-
-			Buffer inputBuffer;		// Input buffer
-			Real targetGain;		// Target gain
-			Real currentGain;		// Current gain
-
-			bool filterInitialised;									// True if the reflection filter has been initialised
-			Coefficients mAbsorption;								// Reflection filter target gain
-			GraphicEQ mReflectionFilter;							// Frequency dependent reflection filter
-			std::shared_ptr<std::mutex> mReflectionFilterMutex;		// Protects mReflectionFilter
+			const Vec3 mShift;		// Position shift relative to the listener
 
 			Binaural::CCore* mCore;								// 3DTI core
 			shared_ptr<Binaural::CSingleSourceDSP> mSource;		// 3DTI source
+			std::atomic<shared_ptr<const CTransform>> transform;		// 3DTI source transform
 			CMonoBuffer<float> bInput;							// 3DTI Input buffer	
 			CEarPair<CMonoBuffer<float>> bOutput;				// 3DTI Output buffer
+
+			std::atomic<bool> clearBuffers{ false };		// Flag to clear buffers to zeros next time ProcessAudio is called
+
+			static ReleasePool releasePool;
 		};
 
 		/**
@@ -169,8 +115,11 @@ namespace RAC
 			* @params core The 3DTI processing core
 			* @params config The spatialiser configuration
 			*/
-			Reverb(Binaural::CCore* core, const Config& config) : Reverb(core, config, Vec({ 2.5, 4.0, 6.0 }), Coefficients(config.frequencyBands.Length())) {}
-			
+			Reverb(Binaural::CCore* core, const Config& config) : mConfig(config)
+			{
+				InitSources(core);
+			}
+
 			/**
 			* @brief Constructor that intialises late reveberation with a target T60 and given primary room dimensions
 			*
@@ -179,7 +128,7 @@ namespace RAC
 			* @params dimensions Primary room dimensions that determine delay line lengths
 			* @params T60 Target decay time
 			*/
-			Reverb(Binaural::CCore* core, const Config& config, const Vec& dimensions, const Coefficients& T60);
+			// Reverb(Binaural::CCore* core, const Config& config, const Vec& dimensions, const Coefficients& T60) {}
 
 			/**
 			* @brief Default deconstructor
@@ -188,7 +137,7 @@ namespace RAC
 
 			/**
 			* @brief Update the spatialisation mode for the HRTF processing
-			* 
+			*
 			* @params mode New spatialisation mode
 			*/
 			void UpdateSpatialisationMode(const SpatialisationMode mode);
@@ -202,66 +151,32 @@ namespace RAC
 
 			/**
 			* @brief Updates the reverb source positions relative to the listener
-			* 
+			*
 			* @params listenerPosition The listener position
 			*/
 			void UpdateReverbSourcePositions(const Vec3& listenerPosition);
 
 			/**
-			* @brief Update reflection filters for directional dependent reverberation level
-			* 
-			* @params absorptions New reflection filter target gains
-			* @params running True if including late reveberation in audio prcoessing, false otherwise
-			*/
-			bool UpdateReflectionFilters(const std::vector<Absorption>& absorptions, bool running);
-
-			/**
 			* @brief Processes a single audio buffer
-			* 
+			*
 			* @params data Multichannel audio data input
 			* @params ouputBuffer Stereo output buffer to write to
 			*/
 			void ProcessAudio(const Matrix& data, Buffer& outputBuffer);
 
-#ifdef USE_MOD_ART
-			void ProcessAudio_MOD_ART(const Matrix& data, Buffer& outputBuffer);
-#endif
-
-			/**
-			* @brief Updates the target T60
-			*
-			* @params T60 The new decay time
-			*/
-			void UpdateReverbTime(const Coefficients& T60);
-
-			/**
-			* @brief Initialises the FDN matrix
-			*
-			* @params matrixType The new FDN matrix type
-			*/
-			inline void InitFDNMatrix(const FDNMatrix& matrixType) { mFDN.InitFDNMatrix(matrixType); }
-
-			/**
-			* @brief Updates the FDN delay line lengths
-			*
-			* @params dimensions The new primary room dimensions that determine the delay line lengths
-			* @params T60 The target T60 in order to update the absorption filters for the given delay lengths
-			*/
-			void UpdateFDNDelayLines(const Vec& dimensions, const Coefficients& T60);
-
 			/**
 			* @brief Resets the FDN and ReverbSources internal buffers to zero
 			*/
-			inline void ResetFDN()
-			{ 
-				mFDN.Reset(); 
+			inline void Reset()
+			{
 				for (auto& reverbSource : mReverbSources)
 					reverbSource->Reset();
+				mFDN.load()->Reset();
 			}
 
 			/**
 			* @brief Calculate the end limits for reverb source directions
-			* 
+			*
 			* @params directions The vector to add reverb source directions to
 			*/
 			inline void GetReverbSourceDirections(std::vector<Vec3>& directions) const
@@ -271,29 +186,44 @@ namespace RAC
 					directions.emplace_back(100.0 * reverbSource->GetShift());
 			}
 
-			inline void SetReverbGain(const Real gain) { reverbGain = gain; }
+			inline void SetReverbGain(const Real gain) { /*reverbGain = gain;*/ }
+
+			/**
+			* @brief Updates the target T60
+			*
+			* @params T60 The new decay time
+			*/
+			void SetTargetT60(const Coefficients& T60);
+
+			void InitLateReverb(const Coefficients& T60, const Vec& dimensions, const FDNMatrix matrix);
+
+			/**
+			* @brief Update reflection filters for directional dependent reverberation level
+			*
+			* @params absorptions New reflection filter target gains
+			* @params running True if including late reveberation in audio prcoessing, false otherwise
+			*/
+			void UpdateReflectionFilters(const std::vector<Absorption>& absorptions);
 
 		private:
 			/**
 			* @brief Initialse the ReverbSources
 			*/
-			void InitSources();
+			void InitSources(Binaural::CCore* core);
+
+			std::atomic<std::shared_ptr<FDN>> mFDN;		// FDN for late reverberation processing
 
 			Config mConfig;									// Spatialiser configuration
-			Coefficients mT60;								// Target decay time
-			FDN mFDN;										// FDN used to processing late reverbation
-			std::mutex mFDNMutex;							// Protects mFDN
+			// Coefficients mT60;								// Target decay time
 			std::vector<std::unique_ptr<ReverbSource>> mReverbSources;		// Reverb sources to binauralise the FDN output
 
-			std::atomic<bool> valid;			// True if T60 > 0.0 and T60 < 20.0 seconds
-			std::atomic<bool> runFDN;			// True if audio thread should process late revebreration
-			std::atomic<Real> reverbGain;		// Reverberation Gain
-			std::atomic<Real> mTargetGain;		// Target reverberation level
-			std::atomic<Real> mCurrentGain;		// Current reverberation level
-
-			Binaural::CCore* mCore;		// 3DTI core
+			std::atomic<bool> initialised{ false };		// True if T60 > 0.0 and T60 < 20.0 seconds
+			std::atomic<bool> running{ false };			// True if audio thread should process late reverberation
 
 			std::vector<Buffer> threadResults;
+			std::vector<Buffer> reverbOutputs;
+
+			static ReleasePool releasePool;
 		};
 	}
 }

@@ -78,6 +78,26 @@ namespace RAC
 			// Perform row operations
 			for (int i = 0; i < rows; i++)
 			{
+				// Find the row with the largest absolute value in column i
+				int maxRow = i;
+				Real maxVal = std::abs(data[i][i]);
+				for (int r = i + 1; r < rows; r++)
+				{
+					if (std::abs(data[r][i]) > maxVal)
+					{
+						maxVal = std::abs(data[r][i]);
+						maxRow = r;
+					}
+				}
+
+				// If pivot is too small, matrix is singular
+				if (std::abs(data[maxRow][i]) < 1e-12)
+					continue; // Matrix is singular, cannot invert
+
+				// Swap rows if needed
+				if (maxRow != i)
+					std::swap(data[i], data[maxRow]);
+
 				// Divide row by pivot
 				Real pivot = data[i][i];
 				for (int j = 0; j < 2 * cols; j++)

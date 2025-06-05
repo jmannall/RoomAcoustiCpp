@@ -139,9 +139,9 @@ namespace RAC
 		*/
 		struct Config
 		{
-			int fs;					// Sample rate
-			int numFrames;			// Number of frames per audio callback
-			int numFDNChannels;		// Number of FDN channels for late reverbration
+			int fs;							// Sample rate
+			int numFrames;					// Number of frames per audio callback
+			int numLateReverbChannels;		// Number of channels for late reverbration
 
 			/**
 			* @details 1 means DSP parameters are lerped over only 1 audio callback,
@@ -158,34 +158,34 @@ namespace RAC
 			/**
 			* @brief Default constructor for the Config class
 			*/
-			Config() : Config(44100, 512, 12, 2.0, 0.98, Coefficients({ 250.0, 500.0, 1000.0, 20000.0 }), DiffractionModel::btm, SpatialisationMode::none) {}
+			Config() : Config(48000, 512, 12, 2.0, 0.98, Coefficients({ 250.0, 500.0, 1000.0, 2000.0 }), DiffractionModel::btm, SpatialisationMode::none) {}
 
 			/**
 			* @brief Constructor for the Config class
 			* 
 			* @param sampleRate The sample rate
 			* @param numFrames The number of frames per audio callback
-			* @param numFDNChannels The number of FDN channels for late reverberation
+			* @param numLateReverbChannels The number of FDN channels for late reverberation
 			* @param lerpFactor The linear interpolation factor for audio processing
 			* @param Q The Q factor for the GraphicEQ
 			* @param fBands The frequency bands for the GraphicEQ
 			*/
-			Config(int sampleRate, int numFrames, int numFDNChannels, Real lerpFactor, Real Q, Coefficients fBands) : Config(sampleRate, numFrames, numFDNChannels, lerpFactor, Q, fBands, DiffractionModel::btm, SpatialisationMode::none) {}
+			Config(int sampleRate, int numFrames, int numLateReverbChannels, Real lerpFactor, Real Q, Coefficients fBands) : Config(sampleRate, numFrames, numLateReverbChannels, lerpFactor, Q, fBands, DiffractionModel::btm, SpatialisationMode::none) {}
 
 			/**
 			* @brief Constructor for the Config class
 			* 
 			* @param sampleRate The sample rate
 			* @param numFrames The number of frames per audio callback
-			* @param numFDNChannels The number of FDN channels for late reverberation
+			* @param numLateReverbChannels The number of FDN channels for late reverberation
 			* @param lerpFactor The linear interpolation factor for audio processing
 			* @param Q The Q factor for the GraphicEQ
 			* @param fBands The frequency bands for the GraphicEQ
 			* @param model The diffraction model
 			* @param mode The spatialisation mode
 			*/
-			Config(int sampleRate, int numFrames, int numFDNChannels, Real lerpFactor, Real Q, Coefficients fBands, DiffractionModel model, SpatialisationMode mode) : 
-				fs(sampleRate), numFrames(numFrames), numFDNChannels(numFDNChannels), lerpFactor(96.0 * lerpFactor / static_cast<Real>(sampleRate)),
+			Config(int sampleRate, int numFrames, int numLateReverbChannels, Real lerpFactor, Real Q, Coefficients fBands, DiffractionModel model, SpatialisationMode mode) : 
+				fs(sampleRate), numFrames(numFrames), numLateReverbChannels(numLateReverbChannels), lerpFactor(96.0 * lerpFactor / static_cast<Real>(sampleRate)),
 				Q(Q), frequencyBands(fBands), diffractionModel(model), spatialisationMode(mode)
 			{
 				this->lerpFactor = std::max(std::min(this->lerpFactor, 1.0), 1.0 / static_cast<Real>(sampleRate));

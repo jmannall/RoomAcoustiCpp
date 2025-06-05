@@ -1,7 +1,7 @@
 /*
-* @class FDN, Channel
+* @class FDN, FDNChannel
 *
-* @brief Declaration of FDN and Channel classes
+* @brief Declaration of FDN and FDNChannel classes
 *
 */
 
@@ -35,7 +35,7 @@ namespace RAC
 		/**
 		* @brief Implements an FDN Channel with a delay and absorption
 		*/
-		class Channel
+		class FDNChannel
 		{
 		public:
 			/**
@@ -45,37 +45,35 @@ namespace RAC
 			* @params T60 Target decay time
 			* @params config Configuration of the spatialiser
 			*/
-			Channel(const int delayLength, const Coefficients& T60, const Config& config);
+			FDNChannel(const int delayLength, const Coefficients& T60, const Config& config) :
+				mT(static_cast<Real>(delayLength) / config.fs), mBuffer(delayLength),
+				mAbsorptionFilter(CalculateFilterGains(T60), config.frequencyBands, config.Q, config.fs),
+				mReflectionFilter(config.frequencyBands, config.Q, config.fs), idx(0) {}
 
 			/**
 			* @brief Default deconstructor
 			*/
-			~Channel() {};
+			~FDNChannel() {};
 
 			/**
-			* @brief Updates the delay line length
-			* @details Currently no delay line interpolation implemented
-			*
-			* @params delayLength The new delay in samples
-			*/
-			inline void UpdateDelayLine(const int delayLength) { InitDelay(delayLength); }
-
-			/**
-			* @brief Updates the absorption filter for a given target T60
+			* @brief Sets the target T60 and updates the absorption filter gains
 			*
 			* @params T60 The new target decay time
 			*/
-			inline void UpdateAbsorption(const Coefficients& T60) { mAbsorptionFilter.SetTargetGains(CalcGain(T60)); }
+			inline void SetTargetT60(const Coefficients& T60)
+			{
+				mAbsorptionFilter.SetTargetGains(CalculateFilterGains(T60));
+			}
 			
 			/**
-			* @brief Initialises the delay line
+			* @brief Sets the target reflection filter gains
 			* 
-			* @params delayLength The delay line length in samples
+			* @params gains The target reflection filter gains
+			* @return True if all current and target reflection gains are zero, false otherwise
 			*/
-			inline void InitDelay(const int delayLength)
-			{ 
-				mT = static_cast<Real>(delayLength) / mConfig.fs;
-				mBuffer.ResizeBuffer(delayLength);
+			inline bool SetTargetReflectionFilter(const Coefficients& gains)
+			{
+				return mReflectionFilter.SetTargetGains(gains);
 			}
 
 			/**
@@ -83,9 +81,22 @@ namespace RAC
 			*/
 			inline void Reset()
 			{ 
-				idx = 0; 
-				mBuffer.ResetBuffer();
+				clearBuffers.store(true);
 				mAbsorptionFilter.ClearBuffers();
+				mReflectionFilter.ClearBuffers();
+			}
+
+			/**
+			* @brief Process the output reflection filter
+			* 
+			* @params data The input audio data to process
+			* @params outptuBuffer The output buffer to write to
+			* @params numFrames The number of frames in the input data
+			* @params lerpFactor The linear interpolation factor
+			*/
+			inline void ProcessOutput(const Buffer& data, Buffer& outputBuffer, const int numFrames, const Real lerpFactor)
+			{
+				mReflectionFilter.ProcessAudio(data, outputBuffer, numFrames, lerpFactor);
 			}
 
 			/**
@@ -104,15 +115,16 @@ namespace RAC
 			* @params T60 The target decay time
 			* @return The required filter gain coefficients
 			*/
-			inline Coefficients CalcGain(const Coefficients& T60) const { return (-3.0 * mT / T60).Pow10(); } // 20 * log10(H(f)) = -60 * t / t60(f);
+			inline Coefficients CalculateFilterGains(const Coefficients& T60) const { return (-3.0 * mT / T60).Pow10(); } // 20 * log10(H(f)) = -60 * t / t60(f);
 
-			Real mT;		// The current delay in seconds
+			const Real mT;		// The current delay in seconds
+			Buffer mBuffer;		// The internal delay line
+			int idx;			// Current delay line read index
 
-			Config mConfig;									// The spatialiser configuration
-			Buffer mBuffer;									// The internal delay line
-			GraphicEQ mAbsorptionFilter;					// The absorption filter to match the target decay time
+			GraphicEQ mAbsorptionFilter;		// The absorption filter to match the target decay time
+			GraphicEQ mReflectionFilter;		// The reflection filter on the FDN output
 
-			int idx;		// Current delay line read index
+			std::atomic<bool> clearBuffers{ false };		// Flag to clear buffers to zeros next time GetOutput is called
 
 		};
 
@@ -130,78 +142,67 @@ namespace RAC
 			* @params dimensions Primary room dimensions that determine delay line lengths
 			* @params config The spatialiser configuration
 			*/
-			FDN(const Coefficients& T60, const Vec& dimensions, const Config& config);
+			FDN(const Coefficients& T60, const Vec& dimensions, const Config& config) : FDN(T60, dimensions, config, InitMatrix(config.numLateReverbChannels)) {}
 
 			/**
 			* @brief Default deconstructor
 			*/
-			~FDN() {}
-
-			/**
-			* @brief Process a single FDN sample
-			* 
-			* @params data Multichannel audio input data
-			* @params gain Late reverberation gain
-			*/
-			void ProcessOutput(const std::vector<Real>& data, const Real gain, const Real LerpFactor);
-
-			/**
-			* @brief Retrieve the last processed output for a given FDN channel
-			*
-			* @params i The channel number
-			* @return The last processed sample
-			*/
-			inline Real GetOutput(const int i) const { assert(i < y.Cols()); return y[i]; }
+			virtual ~FDN() {}
 
 			/**
 			* @brief Updates the target T60
 			* 
 			* @params T60 The new decay time
 			*/
-			void UpdateT60(const Coefficients& T60);
+			void SetTargetT60(const Coefficients& T60);
 
 			/**
-			* @brief Updates the delay line lengths
-			* @details Currently no delay line interpolation implemented
+			* @brief Sets the target reflection filters for each channel
 			* 
-			* @params dimensions The new primary room dimensions that determine the delay line lengths
+			* @params gains The target reflection filter gains for each channel
+			* @return True if all channels have zero target reflection gains, false otherwise
 			*/
-			void UpdateDelayLines(const Vec& dimensions);
+			inline bool SetTargetReflectionFilters(const std::vector<Absorption>& gains)
+			{
+				assert(gains.size() == mChannels.size());
+
+				bool isZero = true;
+				for (size_t i = 0; i < mChannels.size(); i++)
+					isZero = mChannels[i]->SetTargetReflectionFilter(gains[i]) && isZero;
+				return isZero;
+			}
+
+			/**
+			* @brief Processes a single audio buffer
+			* 
+			* @params data Multichannel audio data input (numChannels x numFrames)
+			* @params outputBuffers Output buffers to write to
+			*/
+			void ProcessAudio(const Matrix& data, std::vector<Buffer>& outputBuffers);
 
 			/**
 			* @brief Resets all internal FDN buffers to zero
 			*/
 			inline void Reset()
 			{ 
-				x.Reset(); y.Reset();  
+				clearBuffers.store(true); 
 				for (auto& channel : mChannels)
 					channel->Reset();
 			}
 
+		protected:
 			/**
-			* @brief Initialises the FDN matrix
-			* 
-			* @params matrixType The new FDN matrix type
+			* @brief 
 			*/
-			inline void InitFDNMatrix(const FDNMatrix& matrixType)
-			{
-				switch (matrixType)
-				{
-				case FDNMatrix::householder:
-				{ 
-					Init = &FDN::InitHouseHolder;
-					Process = &FDN::ProcessHouseholder;
-					break;
-				}
-				case FDNMatrix::randomOrthogonal:
-				{ 
-					Init = &FDN::InitRandomOrthogonal;
-					Process = &FDN::ProcessSquare;
-					break;
-				}
-				}
-				InitMatrix();
-			}
+			FDN(const Coefficients& T60, const Vec& dimensions, const Config& config, const Matrix& matrix);
+
+			/**
+			* @brief Processes a square feedback matrix
+			*/
+			void ProcessSquare();
+
+			Rowvec x;	// Next input audio buffer
+			Rowvec y;	// Previous output audio buffer
 
 		private:
 			/**
@@ -213,57 +214,116 @@ namespace RAC
 			std::vector<int> CalculateTimeDelay(const Vec& dimensions);
 
 			/**
-			* @brief Runs the currently selected matrix Init function
+			* @brief Initialises a default diagonal matrix
+			* 
+			* @params numChannels The number of channels in the FDN
+			* @return A diagonal matrix with ones on the diagonal
 			*/
-			void InitMatrix() { (this->*Init)(); };
-
-			/**
-			* @brief Init matrix function pointer
-			*/
-			void (FDN::* Init)();
+			static inline Matrix InitMatrix(const size_t numChannels)
+			{
+				Matrix matrix = Matrix(numChannels, numChannels);
+				for (int i = 0; i < matrix.Rows(); i++)
+					matrix[i][i] = 1.0;		// Initialise diagonal to 1.0
+				return matrix;
+			}
 
 			/**
 			* @brief Runs the currently selected matrix Process function
 			*/
-			inline void ProcessMatrix() { (this->*Process)(); };
+			virtual inline void ProcessMatrix() { ProcessSquare(); };
 
 			/**
-			* @brief Process matrix function pointer
+			* @brief Checks if a set of numbers is mutually prime
+			* 
+			* @params numbers The set of numbers to check
 			*/
-			void (FDN::* Process)();
+			static bool IsSetMutuallyPrime(const std::vector<int>& numbers);
 
 			/**
-			* @brief Initialises the householder factor for effciently processing a householder matrix
+			* @brief Checks if a single entry in a set of numbers is mutually prime with all other entries
+			* 
+			* @params numbers The set of numbers to check
+			* @params idx The index of the entry to check
 			*/
-			inline void InitHouseHolder() { houseHolderFactor = 2.0 / mConfig.numFDNChannels; }
+			static bool IsEntryMutuallyPrime(const std::vector<int>& numbers, int idx);
 
 			/**
-			* @brief Initialises a random orthogonal matrix
+			* @brief Makes a set of numbers mutually prime by iteratively adjusting each entry
+			* 
+			* @params numbers The set of numbers to adjust
 			*/
-			void InitRandomOrthogonal();
+			static void MakeSetMutuallyPrime(std::vector<int>& numbers);
+
+			const Matrix feedbackMatrix;	// Feedback matrix
+			// TO DO: Needs updating e.g UpdateLerpFactor or pass variables to relevant functions
+			Config mConfig;					// Spatialiser configuration
+
+			std::vector<std::unique_ptr<FDNChannel>> mChannels;		// Internal delay line channels
+
+			std::atomic<bool> clearBuffers{ false };		// Flag to clear buffers to zeros next time GetOutput is called
+		};
+
+		class HouseHolderFDN : public FDN
+		{
+		public:
+			/**
+			* @brief Initialises an FDN with a target T60 and given primary room dimensions
+			* @details Initialises with a householder matrix
+			*
+			* @params T60 Target decay time
+			* @params dimensions Primary room dimensions that determine delay line lengths
+			* @params config The spatialiser configuration
+			*/
+			HouseHolderFDN(const Coefficients& T60, const Vec& dimensions, const Config& config)
+				: FDN(T60, dimensions, config, Matrix()), houseHolderFactor(2.0 / static_cast<Real>(config.numLateReverbChannels))
+			{}
 
 			/**
-			* @brief Optimises processing of a householder feedback matrix
+			* @brief Default deconstructor
 			*/
-			inline void ProcessHouseholder()
+			~HouseHolderFDN() {}
+
+			/**
+			* @brief Processes a householder matrix
+			*/
+			inline void ProcessMatrix() override
 			{
 				Real entry = houseHolderFactor * y.Sum();
 				for (int i = 0; i < y.Cols(); i++)
 					x[i] = entry - y[i];
 			}
 
-			/**
-			* @brief Processes a square feedback matrix
-			*/
-			void ProcessSquare();
-
-			Config mConfig;						// Spatialiser configuration
-			std::vector<std::unique_ptr<Channel>> mChannels;		// Internal delay line channels
-
-			Rowvec x;					// Next input audio buffer
-			Rowvec y;					// Previous output audio buffer
-			Matrix feedbackMatrix;		// Feedback matrix
+		private:
 			Real houseHolderFactor;		// Precomputed factor for processing a householder matrix
+
+		};
+
+		class RandomOrthogonalFDN : public FDN
+		{
+		public:
+			/**
+			* @brief Initialises an FDN with a target T60 and given primary room dimensions
+			* @details Initialises with a random orthogonal matrix
+			*
+			* @params T60 Target decay time
+			* @params dimensions Primary room dimensions that determine delay line lengths
+			* @params config The spatialiser configuration
+			*/
+			RandomOrthogonalFDN(const Coefficients& T60, const Vec& dimensions, const Config& config)
+				: FDN(T60, dimensions, config, InitMatrix(config.numLateReverbChannels)) {}
+
+			/**
+			* @brief Default deconstructor
+			*/
+			~RandomOrthogonalFDN() {}
+
+			/**
+			* @brief Initialises a random orthogonal matrix
+			* 
+			* @params numChannels The number of channels in the FDN
+			* @return A random orthogonal matrix
+			*/
+			static Matrix InitMatrix(const size_t numChannels);
 		};
 	}
 }

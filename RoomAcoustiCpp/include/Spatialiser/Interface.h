@@ -80,13 +80,6 @@ namespace RAC
 		void UpdateReverbTime(const Coefficients& T60);
 
 		/**
-		* Updates the FDN matrix used to process the late reverberation.
-		*
-		* @param model The matrix used within the FDN.
-		*/
-		void InitFDNMatrix(const FDNMatrix matrixType);
-
-		/**
 		* Updates the model used to process diffraction.
 		*
 		* @param model The diffraction model.
@@ -99,7 +92,7 @@ namespace RAC
 		* @param volume The volume of the room.
 		* @param dimensions The dimensions of the room for the delay lines.
 		*/
-		void UpdateRoom(const Real volume, const Vec& dimensions);
+		void InitLateReverb(const Real volume, const Vec& dimensions, FDNMatrix matrix);
 
 		/**
 		* Clears the internal FDN buffers.
@@ -204,10 +197,6 @@ namespace RAC
 		* @param bufferPtr A pointer to a float pointer. This will be set to point to the output buffer.
 		*/
 		void GetOutput(float** bufferPtr);
-
-#ifdef USE_MOD_ART
-		void GetOutput_MOD_ART(float** bufferPtr, const float* data);
-#endif
 
 		/**
 		* @brief Sets the spatialiser to impulse response mode if mode is true

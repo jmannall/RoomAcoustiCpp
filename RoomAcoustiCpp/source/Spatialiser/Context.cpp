@@ -117,10 +117,7 @@ namespace RAC
 			mInputBuffer = Buffer(mConfig.numFrames);
 			mOutputBuffer = Buffer(2 * mConfig.numFrames); // Stereo output buffer
 			mSendBuffer = std::vector<float>(2 * mConfig.numFrames, 0.0);
-			mReverbInput = Matrix(mConfig.numFrames, mConfig.numFDNChannels);
-#ifdef USE_MOD_ART
-			mMOD_ARTReverbInput = Matrix(mConfig.numFDNChannels, mConfig.numFrames);
-#endif
+			mReverbInput = Matrix(mConfig.numLateReverbChannels, mConfig.numFrames);
 		}
 
 		////////////////////////////////////////
@@ -220,7 +217,7 @@ namespace RAC
 		void Context::UpdateReverbTime(const ReverbFormula model)
 		{
 			mRoom->UpdateReverbTimeFormula(model);
-			mReverb->UpdateReverbTime(mRoom->GetReverbTime());
+			mReverb->SetTargetT60(mRoom->GetReverbTime());
 		}
 
 		////////////////////////////////////////
@@ -228,7 +225,7 @@ namespace RAC
 		void Context::UpdateReverbTime(const Coefficients& T60)
 		{
 			mRoom->UpdateReverbTime(T60);
-			mReverb->UpdateReverbTime(T60);
+			mReverb->SetTargetT60(T60);
 		}
 
 		////////////////////////////////////////
@@ -241,7 +238,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Context::UpdateRoom(const Real volume, const Vec& dimensions)
+		void Context::InitLateReverb(const Real volume, const Vec& dimensions, const FDNMatrix matrix)
 		{
 			Coefficients T60 = mRoom->GetReverbTime(volume);
 			if (dimensions.Rows() == 0)
@@ -251,10 +248,10 @@ namespace RAC
 				defaultDimensions[0] = 2.5; // Assume height
 				defaultDimensions[1] = 4.0; // Assume width
 				defaultDimensions[2] = volume / 10.0; // Calculate depth
-				mReverb->UpdateFDNDelayLines(defaultDimensions, T60);
+				mReverb->InitLateReverb(T60, defaultDimensions, matrix);
 			}
 			else
-				mReverb->UpdateFDNDelayLines(dimensions, T60);
+				mReverb->InitLateReverb(T60, dimensions, matrix);
 		}
 
 		////////////////////////////////////////
@@ -274,8 +271,8 @@ namespace RAC
 			{
 				unique_lock<shared_mutex> lock(tuneInMutex);
 				mListener->SetListenerTransform(transform);
-				mReverb->UpdateReverbSourcePositions(position);
 			}
+			mReverb->UpdateReverbSourcePositions(position);
 			mImageEdgeModel->SetListenerPosition(position);
 		}
 
@@ -353,7 +350,7 @@ namespace RAC
 		void Context::UpdateWallAbsorption(size_t id, const Absorption& absorption)
 		{
 			mRoom->UpdateWallAbsorption(id, absorption);
-			mReverb->UpdateReverbTime(mRoom->GetReverbTime());
+			mReverb->SetTargetT60(mRoom->GetReverbTime());
 		}
 
 		////////////////////////////////////////
@@ -412,37 +409,8 @@ namespace RAC
 			*bufferPtr = &mSendBuffer[0];
 
 			// Reset output buffer
-			mOutputBuffer.ResetBuffer();
+			mOutputBuffer.Reset();
 		}
-
-		////////////////////////////////////////
-
-#ifdef USE_MOD_ART
-		void Context::GetOutput_MOD_ART(float** bufferPtr, const float* data)
-		{
-			for (int i = 0; i < mConfig.numFDNChannels; i++)
-			{
-				for (int j = 0; j < mConfig.numFrames; j++)
-					mMOD_ARTReverbInput[i][j] = data[i + j * mConfig.numFDNChannels];
-			}
-
-			// Process reverb
-			unique_lock<mutex> lock(audioMutex, std::defer_lock);
-			if (lock.try_lock())
-				mReverb->ProcessAudio_MOD_ART(mMOD_ARTReverbInput, mOutputBuffer);
-			if (!lock.owns_lock())
-			{
-				while (lock.try_lock() == false) { std::this_thread::yield(); }
-			}
-			// Copy output to send and set pointer
-			std::transform(mOutputBuffer.begin(), mOutputBuffer.end(), mSendBuffer.begin(),
-				[&](auto value) { return static_cast<float>(value); });
-			*bufferPtr = &mSendBuffer[0];
-
-			// Reset output buffer
-			mOutputBuffer.ResetBuffer();
-		}
-#endif
 
 		////////////////////////////////////////
 

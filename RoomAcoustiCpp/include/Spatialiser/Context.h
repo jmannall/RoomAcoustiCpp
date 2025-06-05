@@ -141,13 +141,6 @@ namespace RAC
 			void UpdateReverbTime(const Coefficients& T60);
 
 			/**
-			* @brief Updates the feedback delay network (FDN) model.
-			*
-			* @param model The new FDN model.
-			*/
-			inline void InitFDNMatrix(const FDNMatrix matrixType) { mReverb->InitFDNMatrix(matrixType); }
-
-			/**
 			* @brief Updates the diffraction model.
 			*
 			* @param model The new diffraction model.
@@ -174,9 +167,9 @@ namespace RAC
 			* @param volume The volume of the room used to predict the reverberation time.
 			* @param dimensions The dimensions of the room used to set the FDN delay lines.
 			*/
-			void UpdateRoom(const Real volume, const Vec& dimensions);
+			void InitLateReverb(const Real volume, const Vec& dimensions, const FDNMatrix matrix);
 
-			inline void ResetFDN() { mReverb->ResetFDN(); }
+			inline void ResetFDN() { mReverb->Reset(); }
 
 			/**
 			* @brief Update the listener position and orientation.

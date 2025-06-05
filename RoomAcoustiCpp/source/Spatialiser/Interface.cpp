@@ -110,15 +110,6 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void InitFDNMatrix(const FDNMatrix matrixType)
-		{
-			auto context = GetContext();
-			if (context)
-				context->InitFDNMatrix(matrixType);
-		}
-
-		////////////////////////////////////////
-
 		void UpdateDiffractionModel(const DiffractionModel model)
 		{
 			auto context = GetContext();
@@ -128,11 +119,11 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void UpdateRoom(const Real volume, const Vec& dimensions)
+		void InitLateReverb(const Real volume, const Vec& dimensions, const FDNMatrix matrix)
 		{
 			auto context = GetContext();
 			if (context)
-				context->UpdateRoom(volume, dimensions);
+				context->InitLateReverb(volume, dimensions, matrix);
 		}
 
 		////////////////////////////////////////
@@ -266,19 +257,6 @@ namespace RAC
 			else
 				*bufferPtr = nullptr;
 		}
-
-		////////////////////////////////////////
-
-#ifdef USE_MOD_ART
-		void GetOutput_MOD_ART(float** bufferPtr, const float* data)
-		{
-			auto context = GetContext();
-			if (context)
-				context->GetOutput_MOD_ART(bufferPtr, data);
-			else
-				*bufferPtr = nullptr;
-		}
-#endif
 
 		////////////////////////////////////////
 

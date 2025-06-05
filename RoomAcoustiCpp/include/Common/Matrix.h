@@ -54,7 +54,11 @@ namespace RAC
 			/**
 			* @brief Reset the matrix to zeros
 			*/
-			inline void Reset() { std::fill(data.begin(), data.end(), std::vector<Real>(cols, 0.0)); }
+			inline void Reset()
+			{
+				for (auto& row : data)
+					std::fill(row.begin(), row.end(), 0.0);
+			}
 
 			/**
 			* @brief Update data for a column of the matrix

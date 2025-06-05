@@ -21,42 +21,42 @@ namespace RAC
 		{
 			if (one)
 			{
-				vertices.push_back(Vec3(1.0, 1.0, 1.0));
-				vertices.push_back(Vec3(1.0, -1.0, -1.0));
-				vertices.push_back(Vec3(-1.0, 1.0, -1.0));
-				vertices.push_back(Vec3(-1.0, -1.0, 1.0));
+				vertices.emplace_back(1.0, 1.0, 1.0);
+				vertices.emplace_back(1.0, -1.0, -1.0);
+				vertices.emplace_back(-1.0, 1.0, -1.0);
+				vertices.emplace_back(-1.0, -1.0, 1.0);
 			}
 			else
 			{
-				vertices.push_back(Vec3(-1.0, -1.0, -1.0));
-				vertices.push_back(Vec3(-1.0, 1.0, 1.0));
-				vertices.push_back(Vec3(1.0, -1.0, 1.0));
-				vertices.push_back(Vec3(1.0, 1.0, -1.0));
+				vertices.emplace_back(-1.0, -1.0, -1.0);
+				vertices.emplace_back(-1.0, 1.0, 1.0);
+				vertices.emplace_back(1.0, -1.0, 1.0);
+				vertices.emplace_back(1.0, 1.0, -1.0);
 			}
 		}
 
 		inline void Octahedron(std::vector<Vec3>& vertices)
 		{
-			vertices.push_back(Vec3(1.0, 0.0, 0.0));
-			vertices.push_back(Vec3(0.0, 1.0, 0.0));
-			vertices.push_back(Vec3(0.0, 0.0, 1.0));
+			vertices.emplace_back(1.0, 0.0, 0.0);
+			vertices.emplace_back(0.0, 1.0, 0.0);
+			vertices.emplace_back(0.0, 0.0, 1.0);
 
-			vertices.push_back(Vec3(-1.0, 0.0, 0.0));
-			vertices.push_back(Vec3(0.0, -1.0, 0.0));
-			vertices.push_back(Vec3(0.0, 0.0, -1.0));
+			vertices.emplace_back(-1.0, 0.0, 0.0);
+			vertices.emplace_back(0.0, -1.0, 0.0);
+			vertices.emplace_back(0.0, 0.0, -1.0);
 		}
 
 		inline void Cube(std::vector<Vec3>& vertices)
 		{
-			vertices.push_back(Vec3(1.0, 1.0, 1.0));
-			vertices.push_back(Vec3(1.0, -1.0, 1.0));
-			vertices.push_back(Vec3(1.0, 1.0, -1.0));
-			vertices.push_back(Vec3(1.0, -1.0, -1.0));
+			vertices.emplace_back(1.0, 1.0, 1.0);
+			vertices.emplace_back(1.0, -1.0, 1.0);
+			vertices.emplace_back(1.0, 1.0, -1.0);
+			vertices.emplace_back(1.0, -1.0, -1.0);
 
-			vertices.push_back(Vec3(-1.0, -1.0, -1.0));
-			vertices.push_back(Vec3(-1.0, 1.0, -1.0));
-			vertices.push_back(Vec3(-1.0, -1.0, 1.0));
-			vertices.push_back(Vec3(-1.0, 1.0, 1.0));
+			vertices.emplace_back(-1.0, -1.0, -1.0);
+			vertices.emplace_back(-1.0, 1.0, -1.0);
+			vertices.emplace_back(-1.0, -1.0, 1.0);
+			vertices.emplace_back(-1.0, 1.0, 1.0);
 		}
 
 		inline void Icosahedron(std::vector<Vec3>& vertices, bool one)
@@ -65,39 +65,39 @@ namespace RAC
 
 			if (one)
 			{
-				vertices.push_back(Vec3(0.0, phi, 1.0));
-				vertices.push_back(Vec3(phi, 1.0, 0.0));
-				vertices.push_back(Vec3(1.0, 0.0, phi));
+				vertices.emplace_back(0.0, phi, 1.0);
+				vertices.emplace_back(phi, 1.0, 0.0);
+				vertices.emplace_back(1.0, 0.0, phi);
 
-				vertices.push_back(Vec3(0.0, phi, -1.0));
-				vertices.push_back(Vec3(phi, -1.0, 0.0));
-				vertices.push_back(Vec3(-1.0, 0.0, phi));
+				vertices.emplace_back(0.0, phi, -1.0);
+				vertices.emplace_back(phi, -1.0, 0.0);
+				vertices.emplace_back(-1.0, 0.0, phi);
 
-				vertices.push_back(Vec3(0.0, -phi, -1.0));
-				vertices.push_back(Vec3(-phi, -1.0, 0.0));
-				vertices.push_back(Vec3(-1.0, 0.0, -phi));
+				vertices.emplace_back(0.0, -phi, -1.0);
+				vertices.emplace_back(-phi, -1.0, 0.0);
+				vertices.emplace_back(-1.0, 0.0, -phi);
 
-				vertices.push_back(Vec3(0.0, -phi, 1.0));
-				vertices.push_back(Vec3(-phi, 1.0, 0.0));
-				vertices.push_back(Vec3(1.0, 0.0, -phi));
+				vertices.emplace_back(0.0, -phi, 1.0);
+				vertices.emplace_back(-phi, 1.0, 0.0);
+				vertices.emplace_back(1.0, 0.0, -phi);
 			}
 			else
 			{
-				vertices.push_back(Vec3(0.0, 1.0, phi));
-				vertices.push_back(Vec3(1.0, phi, 0.0));
-				vertices.push_back(Vec3(phi, 0.0, 1.0));
+				vertices.emplace_back(0.0, 1.0, phi);
+				vertices.emplace_back(1.0, phi, 0.0);
+				vertices.emplace_back(phi, 0.0, 1.0);
 
-				vertices.push_back(Vec3(0.0, -1.0, phi));
-				vertices.push_back(Vec3(-1.0, phi, 0.0));
-				vertices.push_back(Vec3(phi, 0.0, -1.0));
+				vertices.emplace_back(0.0, -1.0, phi);
+				vertices.emplace_back(-1.0, phi, 0.0);
+				vertices.emplace_back(phi, 0.0, -1.0);
 
-				vertices.push_back(Vec3(0.0, 1.0, -phi));
-				vertices.push_back(Vec3(1.0, -phi, 0.0));
-				vertices.push_back(Vec3(-phi, 0.0, 1.0));
+				vertices.emplace_back(0.0, 1.0, -phi);
+				vertices.emplace_back(1.0, -phi, 0.0);
+				vertices.emplace_back(-phi, 0.0, 1.0);
 
-				vertices.push_back(Vec3(0.0, 1.0, -phi));
-				vertices.push_back(Vec3(1.0, -phi, 0.0));
-				vertices.push_back(Vec3(-phi, 0.0, 1.0));
+				vertices.emplace_back(0.0, 1.0, -phi);
+				vertices.emplace_back(1.0, -phi, 0.0);
+				vertices.emplace_back(-phi, 0.0, 1.0);
 			}
 		}
 
@@ -109,39 +109,39 @@ namespace RAC
 			Cube(vertices);
 			if (one)
 			{
-				vertices.push_back(Vec3(0.0, invphi, phi));
-				vertices.push_back(Vec3(invphi, phi, 0.0));
-				vertices.push_back(Vec3(phi, 0.0, invphi));
+				vertices.emplace_back(0.0, invphi, phi);
+				vertices.emplace_back(invphi, phi, 0.0);
+				vertices.emplace_back(phi, 0.0, invphi);
 
-				vertices.push_back(Vec3(0.0, -invphi, phi));
-				vertices.push_back(Vec3(-invphi, phi, 0.0));
-				vertices.push_back(Vec3(phi, 0.0, -invphi));
+				vertices.emplace_back(0.0, -invphi, phi);
+				vertices.emplace_back(-invphi, phi, 0.0);
+				vertices.emplace_back(phi, 0.0, -invphi);
 
-				vertices.push_back(Vec3(0.0, -invphi, -phi));
-				vertices.push_back(Vec3(-invphi, -phi, 0.0));
-				vertices.push_back(Vec3(-phi, 0.0, -invphi));
+				vertices.emplace_back(0.0, -invphi, -phi);
+				vertices.emplace_back(-invphi, -phi, 0.0);
+				vertices.emplace_back(-phi, 0.0, -invphi);
 
-				vertices.push_back(Vec3(0.0, invphi, -phi));
-				vertices.push_back(Vec3(invphi, -phi, 0.0));
-				vertices.push_back(Vec3(-phi, 0.0, invphi));
+				vertices.emplace_back(0.0, invphi, -phi);
+				vertices.emplace_back(invphi, -phi, 0.0);
+				vertices.emplace_back(-phi, 0.0, invphi);
 			}
 			else
 			{
-				vertices.push_back(Vec3(0.0, phi, invphi));
-				vertices.push_back(Vec3(phi, invphi, 0.0));
-				vertices.push_back(Vec3(invphi, 0.0, phi));
+				vertices.emplace_back(0.0, phi, invphi);
+				vertices.emplace_back(phi, invphi, 0.0);
+				vertices.emplace_back(invphi, 0.0, phi);
 
-				vertices.push_back(Vec3(0.0, phi, -invphi));
-				vertices.push_back(Vec3(phi, -invphi, 0.0));
-				vertices.push_back(Vec3(-invphi, 0.0, phi));
+				vertices.emplace_back(0.0, phi, -invphi);
+				vertices.emplace_back(phi, -invphi, 0.0);
+				vertices.emplace_back(-invphi, 0.0, phi);
 
-				vertices.push_back(Vec3(0.0, -phi, -invphi));
-				vertices.push_back(Vec3(-phi, -invphi, 0.0));
-				vertices.push_back(Vec3(-invphi, 0.0, -phi));
+				vertices.emplace_back(0.0, -phi, -invphi);
+				vertices.emplace_back(-phi, -invphi, 0.0);
+				vertices.emplace_back(-invphi, 0.0, -phi);
 
-				vertices.push_back(Vec3(0.0, -phi, invphi));
-				vertices.push_back(Vec3(-phi, invphi, 0.0));
-				vertices.push_back(Vec3(invphi, 0.0, -phi));
+				vertices.emplace_back(0.0, -phi, invphi);
+				vertices.emplace_back(-phi, invphi, 0.0);
+				vertices.emplace_back(invphi, 0.0, -phi);
 			}
 		}
 	}

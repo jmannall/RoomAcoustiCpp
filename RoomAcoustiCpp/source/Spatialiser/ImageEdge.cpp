@@ -946,13 +946,15 @@ namespace RAC
 
 		bool ImageEdge::UpdateLateReverbFilters(bool updateFilters)
 		{
-			if (!mIEMConfig.lateReverb || !updateFilters)
+			if (!mIEMConfig.lateReverb)
 			{
 #ifdef PROFILE_BACKGROUND_THREAD
 				BeginUpdateAudioData();
 #endif
+				for (int j = 0; j < reverbDirections.size(); j++)
+					reverbAbsorptions[j] = 0.0;
 				std::shared_ptr<Reverb> sharedReverb = mReverb.lock();
-				bool reverbRunning = sharedReverb->UpdateReflectionFilters(reverbAbsorptions, mIEMConfig.lateReverb);
+				sharedReverb->UpdateReflectionFilters(reverbAbsorptions);
 #ifdef PROFILE_BACKGROUND_THREAD
 				EndUpdateAudioData();
 #endif
@@ -1012,7 +1014,7 @@ namespace RAC
 			BeginUpdateAudioData();
 #endif
 			std::shared_ptr<Reverb> sharedReverb = mReverb.lock();
-			sharedReverb->UpdateReflectionFilters(reverbAbsorptions, mIEMConfig.lateReverb);
+			sharedReverb->UpdateReflectionFilters(reverbAbsorptions);
 #ifdef PROFILE_BACKGROUND_THREAD
 			EndUpdateAudioData();
 #endif

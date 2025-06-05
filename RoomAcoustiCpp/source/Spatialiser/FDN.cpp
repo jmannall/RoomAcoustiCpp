@@ -30,16 +30,14 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		Channel::Channel(const int delayLength, const Coefficients& T60, const Config& config) : mT(static_cast<Real>(delayLength) / config.fs), 
-			mConfig(config), mAbsorptionFilter(CalcGain(T60), config.frequencyBands, config.Q, config.fs), idx(0)
+		Real FDNChannel::GetOutput(const Real input, const Real lerpFactor)
 		{
-			mBuffer.ResizeBuffer(delayLength);
-		}
+			if (clearBuffers.load())
+			{
+				mBuffer.Reset();
+				clearBuffers.store(false);
+			}
 
-		////////////////////////////////////////
-
-		Real Channel::GetOutput(const Real input, const Real lerpFactor)
-		{
 			if (idx >= mBuffer.Length())
 				idx = 0;
 			Real out = mAbsorptionFilter.GetOutput(mBuffer[idx], lerpFactor);
@@ -48,11 +46,11 @@ namespace RAC
 			return out;
 		}
 
-		//////////////////// FDN utility functions ////////////////////
+		//////////////////// FDN class ////////////////////
 
 		////////////////////////////////////////
 
-		bool IsSetMutuallyPrime(const std::vector<int>& numbers)
+		bool FDN::IsSetMutuallyPrime(const std::vector<int>& numbers)
 		{
 			for (int i = 0; i < numbers.size(); ++i)
 			{
@@ -67,7 +65,8 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		bool IsEntryMutuallyPrime(const std::vector<int>& numbers, int idx) {
+		bool FDN::IsEntryMutuallyPrime(const std::vector<int>& numbers, int idx)
+		{
 			for (int i = 0; i < numbers.size(); ++i)
 			{
 				if (i == idx)
@@ -80,7 +79,8 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void MakeSetMutuallyPrime(std::vector<int>& numbers) {
+		void FDN::MakeSetMutuallyPrime(std::vector<int>& numbers)
+		{
 			for (int i = 0; i < numbers.size(); ++i)
 			{
 				int limit = static_cast<int>(round(0.1 * numbers[i]));
@@ -106,34 +106,25 @@ namespace RAC
 			}
 		}
 
-		//////////////////// FDN class ////////////////////
-
 		////////////////////////////////////////
 
-		FDN::FDN(const Coefficients& T60, const Vec& dimensions, const Config& config) : mConfig(config), x(config.numFDNChannels), y(config.numFDNChannels), feedbackMatrix(config.numFDNChannels, config.numFDNChannels)
+		FDN::FDN(const Coefficients& T60, const Vec& dimensions, const Config& config, const Matrix& matrix) : mConfig(config), x(config.numLateReverbChannels),
+			y(config.numLateReverbChannels), feedbackMatrix(matrix)
 		{
+			assert(T60 > 0);
+			
 			std::vector<int> delayLengths = CalculateTimeDelay(dimensions);
-			mChannels.reserve(mConfig.numFDNChannels);
-			for (int i = 0; i < mConfig.numFDNChannels; i++)
-				mChannels.push_back(std::make_unique<Channel>(delayLengths[i], T60, mConfig));
-			InitFDNMatrix(FDNMatrix::householder);
+			mChannels.reserve(config.numLateReverbChannels);
+			for (int i = 0; i < config.numLateReverbChannels; i++)
+				mChannels.push_back(std::make_unique<FDNChannel>(delayLengths[i], T60, config));
 		}
 
 		////////////////////////////////////////
 
-		void FDN::UpdateT60(const Coefficients& T60)
+		void FDN::SetTargetT60(const Coefficients& T60)
 		{
-			for (int i = 0; i < mConfig.numFDNChannels; i++)
-				mChannels[i]->UpdateAbsorption(T60);
-		}
-
-		////////////////////////////////////////
-
-		void FDN::UpdateDelayLines(const Vec& dimensions)
-		{
-			std::vector<int> delayLengths = CalculateTimeDelay(dimensions);
-			for (int i = 0; i < mConfig.numFDNChannels; i++)
-				mChannels[i]->UpdateDelayLine(delayLengths[i]);
+			for (int i = 0; i < mChannels.size(); i++)
+				mChannels[i]->SetTargetT60(T60);
 		}
 
 		////////////////////////////////////////
@@ -142,21 +133,22 @@ namespace RAC
 		{
 			assert(dimensions.Rows() >  0);
 
-			Vec t = Vec(mConfig.numFDNChannels);
-			std::vector<int> delays = std::vector<int>(mConfig.numFDNChannels);
+			Vec t = Vec(mConfig.numLateReverbChannels);
+			std::vector<int> delays = std::vector<int>(mConfig.numLateReverbChannels);
 			if (dimensions.Rows() > 0)
 			{
-				Real idx = static_cast<Real>(mConfig.numFDNChannels) / static_cast<Real>(dimensions.Rows());
+				Real idx = static_cast<Real>(mConfig.numLateReverbChannels) / static_cast<Real>(dimensions.Rows());
 
-				assert(dimensions.Rows() <= mConfig.numFDNChannels);
+				assert(dimensions.Rows() <= mConfig.numLateReverbChannels);
 				assert(idx == floor(idx)); // length of dimensions must be a multiple of mNumChannels
 
 				t.RandomUniformDistribution(-0.1, 0.1f);
 				t *= dimensions.Mean();
 
 				int k = 0;
-				for (int j = 0; j < mConfig.numFDNChannels / idx; ++j)
+				for (int j = 0; j < mConfig.numLateReverbChannels / idx; ++j)
 				{
+					assert(dimensions[j] > 0.0);
 					for (int i = 0; i < idx; ++i)
 					{
 						t[k] += dimensions[j];
@@ -164,10 +156,10 @@ namespace RAC
 					}
 				}
 				t *= INV_SPEED_OF_SOUND;
-				t.Max(1.0 / mConfig.fs);
+				t.Max(1.0 / static_cast<Real>(mConfig.fs));
 
-				for (int i = 0; i < mConfig.numFDNChannels; i++)
-					delays[i] = static_cast<int>(round(t[i] * mConfig.fs));
+				for (int i = 0; i < mConfig.numLateReverbChannels; i++)
+					delays[i] = static_cast<int>(round(t[i] * static_cast<Real>(mConfig.fs)));
 				if (!IsSetMutuallyPrime(delays))
 					MakeSetMutuallyPrime(delays);
 			}
@@ -176,68 +168,81 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void FDN::InitRandomOrthogonal()
+		Matrix RandomOrthogonalFDN::InitMatrix(const size_t numChannels)
 		{
-			feedbackMatrix = Matrix(mConfig.numFDNChannels, mConfig.numFDNChannels);
+			Matrix matrix = Matrix(numChannels, numChannels);
 
-			Vec vector = Vec(mConfig.numFDNChannels);
+			Vec vector = Vec(numChannels);
 			vector.RandomUniformDistribution(-1.0, 1.0);
 			vector.Normalise();
-			feedbackMatrix.AddColumn(vector.GetColumn(0), 0);
+			matrix.AddColumn(vector.GetColumn(0), 0);
 
 			Real tol = 0.000001;
-			for (int j = 1; j < mConfig.numFDNChannels; ++j)
+			for (int j = 1; j < numChannels; ++j)
 			{
 				Real norm = 0;
 				while (norm < tol)
 				{
 					vector.RandomUniformDistribution(-1.0, 1.0);
 
-					Matrix section = Matrix(mConfig.numFDNChannels, j);
+					Matrix section = Matrix(numChannels, j);
 
-					for (int i = 0; i < mConfig.numFDNChannels; ++i)
+					for (int i = 0; i < numChannels; ++i)
 					{
 						for (int k = 0; k < j; k++)
-							section[i][k] = feedbackMatrix[i][k];
-						std::vector<Real> test = feedbackMatrix[i];
+							section[i][k] = matrix[i][k];
+						std::vector<Real> test = matrix[i];
 						Real x = test[0];
-						Real y = feedbackMatrix[i][0];
+						Real y = matrix[i][0];
 					}
 
 					vector -= section * (section.Transpose() * vector);
 					norm = vector.CalculateNormal();
 				}
 				vector /= norm;
-				feedbackMatrix.AddColumn(vector.GetColumn(0), j);
+				matrix.AddColumn(vector.GetColumn(0), j);
 			}
+			return matrix;
 		}
 
 		////////////////////////////////////////
 
-		void FDN::ProcessOutput(const std::vector<Real>& data, const Real gain, const Real lerpFactor)
+		void FDN::ProcessAudio(const Matrix& data, std::vector<Buffer>& outputBuffers)
 		{
-#ifdef PROFILE_DETAILED
-			BeginFDNChannel();
-#endif
-
-			int i = 0;
-			for (auto& channel : mChannels)
+#ifdef PROFILE_AUDIO_THREAD
+			BeginFDN();
+#endif					
+			if (clearBuffers.load())
 			{
-				if (isnan(x[i]))
-					Debug::Log("X was nan", Colour::Red);
-				y[i] = channel->GetOutput(x[i] + data[i], lerpFactor);
-				if (isnan(y[i]))
-					Debug::Log("Y was nan", Colour::Red);
-				++i;
+				x.Reset();
+				y.Reset();
+				clearBuffers.store(false);
 			}
-			// y *= gain;
-#ifdef PROFILE_DETAILED
-			EndFDNChannel();
-			BeginFDNMatrix();
-#endif
-			ProcessMatrix();
-#ifdef PROFILE_DETAILED
-			EndFDNMatrix();
+
+			FlushDenormals();
+
+			// Process feedback loop
+			for (int i = 0; i < mConfig.numFrames; i++)
+			{
+				for (int j = 0; j < mConfig.numLateReverbChannels; j++)
+				{
+					if (isnan(x[j]))
+						Debug::Log("X was nan", Colour::Red);
+					y[j] = mChannels[j]->GetOutput(x[j] + data[j][i], mConfig.lerpFactor);
+					outputBuffers[j][i] = y[j];
+					if (isnan(y[j]))
+						Debug::Log("Y was nan", Colour::Red);
+				}
+				ProcessMatrix();
+			}
+
+			// Process output filters
+			for (int i = 0; i < mConfig.numLateReverbChannels; i++)
+				mChannels[i]->ProcessOutput(outputBuffers[i], outputBuffers[i], mConfig.numFrames, mConfig.lerpFactor);
+			
+			NoFlushDenormals();
+#ifdef PROFILE_AUDIO_THREAD
+			EndFDN();
 #endif
 		}
 
@@ -245,13 +250,11 @@ namespace RAC
 
 		void FDN::ProcessSquare()
 		{
-			Real sum = 0.0;
 			for (int j = 0; j < feedbackMatrix.Cols(); ++j)
 			{
-				sum = 0.0;
+				x[j] = 0.0;
 				for (int k = 0; k < feedbackMatrix.Rows(); ++k)
-					sum += y[k] * feedbackMatrix[k][j];
-				x[j] = sum;
+					x[j] += y[k] * feedbackMatrix[k][j];
 			}
 		}
 	}
