@@ -5,6 +5,9 @@
 *
 */
 
+// C++ headers
+#include <random>
+
 // Common headers
 #include "Common/Matrix.h"
 #include "Common/Definitions.h"
@@ -14,6 +17,8 @@ namespace RAC
 	namespace Common
 	{
 		//////////////////// Matrix ////////////////////
+
+		static std::default_random_engine generator(100); // Seed the generator
 
 		////////////////////////////////////////
 
@@ -139,6 +144,30 @@ namespace RAC
 			{
 				for (int j = 0; j < cols; j++)
 					data[i][j] = std::min(max, data[i][j]);
+			}
+		}
+
+		////////////////////////////////////////
+
+		void Matrix::RandomUniformDistribution()
+		{
+			std::uniform_real_distribution<Real> distribution; // a 0, b 1
+			for (int i = 0; i < rows; i++)
+			{
+				for (int j = 0; j < cols; j++)
+					data[i][j] = distribution(generator);
+			}
+		}
+
+		////////////////////////////////////////
+
+		void Matrix::RandomUniformDistribution(Real a, Real b)
+		{
+			std::uniform_real_distribution<Real> distribution(a, b);
+			for (int i = 0; i < rows; i++)
+			{
+				for (int j = 0; j < cols; j++)
+					data[i][j] = distribution(generator);
 			}
 		}
 	}

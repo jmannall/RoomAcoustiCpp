@@ -156,6 +156,10 @@ namespace RAC
 			*/
 			void Min(const Real max);
 
+			void RandomUniformDistribution();
+
+			void RandomUniformDistribution(Real a, Real b);
+
 			/**
 			* @brief Access the matrix row at the specified index
 			* 
