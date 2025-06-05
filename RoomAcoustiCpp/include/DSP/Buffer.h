@@ -57,7 +57,7 @@ namespace RAC
 			/**
 			* @brief Sets all samples in the buffer to 0.
 			*/
-			inline void ResetBuffer() { std::fill(mBuffer.begin(), mBuffer.end(), 0.0); };
+			inline void Reset() { std::fill(mBuffer.begin(), mBuffer.end(), 0.0); };
 
 			/**
 			* @brief Returns the length of the buffer.

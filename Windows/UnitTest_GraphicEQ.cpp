@@ -99,10 +99,13 @@ namespace RAC
 
 			GraphicEQ eq = GraphicEQ(gain, fc, Q, fs);
 
+			Real out = eq.GetOutput(1.0, lerpFactor);
+			Assert::AreEqual(0.7, out, 10e-16, L"Wrong output");
+
 			eq.SetTargetGains(std::vector<Real>(5, 0.3));
 
-			Real out = eq.GetOutput(1.0, lerpFactor);
-			Assert::AreNotEqual(0.7, out, 10e-16, L"Wrong output");
+			out = eq.GetOutput(1.0, lerpFactor);
+			Assert::AreNotEqual(0.7, out, 0.1, L"Is not interpolating");
 		}
 
 		TEST_METHOD(ClearBuffers)
@@ -139,6 +142,40 @@ namespace RAC
 			Real out = eq.GetOutput(1.0, lerpFactor);
 
 			Assert::AreEqual(0.0, out, L"Wrong output");
+
+			const int numFrames = 256;
+			Buffer in(numFrames);
+			Buffer outBuffer(numFrames);
+			outBuffer[0] = 1.0;
+			in[0] = 1.0;
+			eq.ProcessAudio(in, outBuffer, numFrames, lerpFactor);
+			Assert::AreEqual(0.0, outBuffer[0], L"Output buffer not zeroed");
+
+		}
+
+		TEST_METHOD(IsZero)
+		{
+			const Coefficients gain(std::vector<Real>(5, 0.7));
+			const Coefficients fc({ 250.0, 500.0, 1000.0, 2000.0, 4000.0 });
+			const Real Q = 0.98;
+			const int fs = 48e3;
+
+			const Real lerpFactor = 0.5;
+
+			GraphicEQ eq = GraphicEQ(gain, fc, Q, fs);
+
+			bool isZero = eq.SetTargetGains(std::vector<Real>(5, 0.0));
+			Assert::IsFalse(isZero, L"True when not zero");
+
+			eq.GetOutput(RandomValue(), lerpFactor);
+			isZero = eq.SetTargetGains(std::vector<Real>(5, 0.0));
+			Assert::IsFalse(isZero, L"True when not zero");
+
+			for (int i = 0; i < 1e3; i++)
+				eq.GetOutput(RandomValue(), lerpFactor);
+
+			isZero = eq.SetTargetGains(std::vector<Real>(5, 0.0));
+			Assert::IsTrue(isZero, L"False when zero");
 		}
 	};
 #pragma optimize("", on)

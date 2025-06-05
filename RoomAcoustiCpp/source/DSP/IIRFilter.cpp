@@ -41,7 +41,7 @@ namespace RAC
 
 			if (clearBuffers.load())
 			{
-				y.ResetBuffer();
+				y.Reset();
 				clearBuffers.store(false);
 			}
 

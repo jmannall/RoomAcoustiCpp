@@ -37,7 +37,7 @@ namespace RAC
 		{
 		public:
 			/**
-			* @brief Constructor that initialises the GraphicEQ with given frequency bands, Q factor and sample rate
+			* @brief Constructor that initialises the GraphicEQ with a default gain zero and the given frequency bands, Q factor and sample rate
 			*
 			* @param fc The filter band center frequencies
 			* @param Q The Q factor for the filters
@@ -48,7 +48,7 @@ namespace RAC
 			/**
 			* @brief Constructor that initialises the GraphicEQ with given gains, frequency bands, Q factor and sample rate
 			*
-			* @param gain The gain for each filter band
+			* @param gain The target gain for each center frequency
 			* @param fc The filter band center frequencies
 			* @param Q The Q factor for the filters
 			* @param sampleRate The sample rate for calculating the filter coefficients
@@ -61,11 +61,12 @@ namespace RAC
 			~GraphicEQ() {};
 
 			/**
-			* @brief Sets new target gains for each filter in the GraphicEQ
+			* @brief Sets new target gains for each center frequency
 			* 
 			* @param gains The target response for the GraphicEQ
+			* @return True if the target and current gains are currently zero, false otherwise
 			*/
-			void SetTargetGains(const Coefficients& gains);
+			bool SetTargetGains(const Coefficients& gains);
 
 			/**
 			* @brief Returns the output of the GraphicEQ given an input
@@ -99,7 +100,8 @@ namespace RAC
 		private:
 			/**
 			* @brief Initialises a matrix representing the filter responses used to calculate the gain parameters for the filters
-			*
+			* @ details: TO DO: Matrix inverse can behave badly if fc is not sensible eg: 250, 500 1e3, 20e3 20e3.
+			* 
 			* @param fc The filter band center frequencies
 			* @param Q The Q factor for the filters
 			* @param fs The sample rate for calculating the filter coefficients

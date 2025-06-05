@@ -28,7 +28,7 @@ namespace RAC
 
 			if (clearInputLine.load())
 			{
-				inputLine.ResetBuffer();
+				inputLine.Reset();
 				clearInputLine.store(false);
 			}
 

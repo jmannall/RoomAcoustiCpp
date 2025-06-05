@@ -32,7 +32,7 @@ namespace RAC
 			for (int i = 1; i < numFilters - 1; i++)
 				peakingFilters.emplace_back(std::make_unique<PeakingFilter>(f[i], targetGains.first[i], Q, sampleRate));
 			// (same as fc[numFilters - 1] * 2 / SQRT_2 ) Decreasing the high shelf frequency by SQRT_2 creates a smoother response at high frequencies
-			highShelf = std::make_unique<PeakHighShelf>(f[numFilters - 2] * SQRT_2, targetGains.first[numFilters - 1], Q, sampleRate);
+			highShelf = std::make_unique<PeakHighShelf>(std::min(f[numFilters - 2] * SQRT_2, 20000.0), targetGains.first[numFilters - 1], Q, sampleRate);
 
 			targetGain.store(targetGains.second);
 			currentGain = targetGains.second;
@@ -43,12 +43,16 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void GraphicEQ::SetTargetGains(const Coefficients& gains)
+		bool GraphicEQ::SetTargetGains(const Coefficients& gains)
 		{
 			assert(gains.Length() == peakingFilters.size());
 
 			if (gains == previousInput)
-				return; // No change in gains
+			{
+				if (gainsEqual.load() && gains <= 0.0) // Gains currently zero
+					return true;
+				return false; // No change in gains
+			}
 			previousInput = gains;
 
 			const auto targetGains = CalculateGains(gains);
@@ -58,6 +62,7 @@ namespace RAC
 			for (int i = 1; i < numFilters - 1; i++)
 				peakingFilters[i - 1]->SetTargetGain(targetGains.first[i]);
 			highShelf->SetTargetGain(targetGains.first[numFilters - 1]);
+			return false;
 		}
 
 		////////////////////////////////////////
@@ -134,7 +139,7 @@ namespace RAC
 					filterResponseMatrix[j][i] += out[i];
 			}
 
-			const PeakHighShelf tempHighShelf(fc[numFilters - 2] * SQRT_2, p, Q, fs); // Times SQRT_2. See constructor
+			const PeakHighShelf tempHighShelf(std::min(fc[numFilters - 2] * SQRT_2, 20000.0), p, Q, fs); // Times SQRT_2. See constructor
 			out = tempHighShelf.GetFrequencyResponse(fc);
 
 			for (int i = 0; i < out.Length(); i++)
@@ -170,7 +175,10 @@ namespace RAC
 				return;
 
 			if (currentGain == 0.0 && gainsEqual.load())
+			{
+				outBuffer.Reset();
 				return;
+			}
 
 			FlushDenormals();
 			for (int i = 0; i < numFrames; i++)

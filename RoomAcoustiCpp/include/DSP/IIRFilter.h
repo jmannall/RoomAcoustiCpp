@@ -45,7 +45,7 @@ namespace RAC
 			/**
 			* @brief Default deconstructor
 			*/
-			~IIRFilter() {};
+			virtual ~IIRFilter() {};
 
 			/**
 			* @brief Returns the output of the IIRFilter given an input
@@ -70,13 +70,6 @@ namespace RAC
 			Coefficients GetFrequencyResponse(const Coefficients& frequencies) const;
 
 		protected:
-			/**
-			* @brief Pure virtual function to lineraly interpolates filter parameters. Must be overloaded in the derived classes
-			*
-			* @param lerpFactor The lerp factor for interpolation
-			*/
-			virtual void InterpolateParameters(const Real lerpFactor) = 0;
-
 			const int order;		// Order of the filter
 			const Real T;			// Sample rate time period
 
@@ -88,6 +81,13 @@ namespace RAC
 			std::atomic<bool> initialised{ false };			// True if the filter has been initialised, false otherwise
 
 		private:
+			/**
+			* @brief Pure virtual function to lineraly interpolates filter parameters. Must be overloaded in the derived classes
+			*
+			* @param lerpFactor The lerp factor for interpolation
+			*/
+			virtual void InterpolateParameters(const Real lerpFactor) = 0;
+
 			std::atomic<bool> clearBuffers{ false };		// Flag to clear the output buffers to zeros next time GetOutput is called
 
 		};
@@ -110,7 +110,7 @@ namespace RAC
 			/**
 			* @brief Default deconstructor
 			*/
-			~IIRFilter1() {};
+			virtual ~IIRFilter1() {};
 
 			/**
 			* @brief Returns the output of the IIRFilter given an input
@@ -135,13 +135,6 @@ namespace RAC
 			Coefficients GetFrequencyResponse(const Coefficients& frequencies) const;
 
 		protected:
-			/**
-			* @brief Pure virtual function to lineraly interpolates filter parameters. Must be overloaded in the derived classes
-			*
-			* @param lerpFactor The lerp factor for interpolation
-			*/
-			virtual void InterpolateParameters(const Real lerpFactor) = 0;
-
 			const Real T;				// Sample rate time period
 
 			Real a0{ 0.0 }, a1{ 0.0 };		// Denominator coefficients (should only be accessed from the audio thread)
@@ -152,6 +145,13 @@ namespace RAC
 			std::atomic<bool> initialised{ false };			// True if the filter has been initialised, false otherwise
 		
 		private:
+			/**
+			* @brief Pure virtual function to lineraly interpolates filter parameters. Must be overloaded in the derived classes
+			*
+			* @param lerpFactor The lerp factor for interpolation
+			*/
+			virtual void InterpolateParameters(const Real lerpFactor) = 0;
+
 			std::atomic<bool> clearBuffers{ false };		// Flag to clear the output buffers to zeros next time GetOutput is called
 
 		};
@@ -174,7 +174,7 @@ namespace RAC
 			/**
 			* @brief Default deconstructor
 			*/
-			~IIRFilter2() {};
+			virtual ~IIRFilter2() {};
 
 			/**
 			* @brief Returns the output of the IIRFilter given an input
@@ -199,13 +199,6 @@ namespace RAC
 			Coefficients GetFrequencyResponse(const Coefficients& frequencies) const;
 
 		protected:
-			/**
-			* @brief Pure virtual function to lineraly interpolates filter parameters. Must be overloaded in the derived classes
-			*
-			* @param lerpFactor The lerp factor for interpolation
-			*/
-			virtual void InterpolateParameters(const Real lerpFactor) = 0;
-
 			const Real T;				// Sample rate time period
 
 			Real a0{ 0.0 }, a1{ 0.0 }, a2{ 0.0 };		// Denominator coefficients (should only be accessed from the audio thread)
@@ -216,6 +209,13 @@ namespace RAC
 			std::atomic<bool> initialised{ false };			// True if the filter has been initialised, false otherwise
 		
 		private:
+			/**
+			* @brief Pure virtual function to lineraly interpolates filter parameters. Must be overloaded in the derived classes
+			*
+			* @param lerpFactor The lerp factor for interpolation
+			*/
+			virtual void InterpolateParameters(const Real lerpFactor) = 0;
+
 			std::atomic<bool> clearBuffers{ false };		// Flag to clear the output buffers to zeros next time GetOutput is called
 		
 		};
@@ -360,7 +360,7 @@ namespace RAC
 				current(parameter), target(parameter) {
 			};
 
-			~IIRFilter2Param1() {};
+			virtual ~IIRFilter2Param1() {};
 
 		protected:
 			/**
