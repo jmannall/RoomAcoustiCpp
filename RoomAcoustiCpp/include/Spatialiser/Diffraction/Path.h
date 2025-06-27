@@ -20,25 +20,35 @@ namespace RAC
 
 			//////////////////// Data structs ////////////////////
 
-			struct SRData
-			{
-				Vec3 point{ 0.0, 0.0, 0.0 };
-				Real r{ 0.0 }, z{ 0.0 }, t{ 0.0 }, d{ 0.0 };
-				bool rot{ true };
-				SRData() {}
-			};
-
-			struct EdgeData
-			{
-				Real z{ 0.0 }, t{ 0.0 };
-				EdgeData() {}
-			};
-
 			//////////////////// Path class ////////////////////
 
 			class Path // Currently only supports up to 1st order diffraction
 			{
+				/**
+				* @brief Struct that stores edge data
+				*/
+				struct EdgeData
+				{
+					Real z{ 0.0 };	// Length
+					Real t{ 0.0 };	// Theta 
+					EdgeData() {}
+				};
+
 			public:
+				/**
+				* @brief Struct that stores source or receiver data
+				*/
+				struct SRData
+				{
+					Vec3 point{ 0.0, 0.0, 0.0 };	// Coordinate in space
+					Real r{ 0.0 };					// Radius
+					Real z{ 0.0 };					// z coordinate
+					Real t{ 0.0 };					// Theta
+					Real d{ 0.0 };					// Distance
+					bool rot{ true };				// Rotation used to correct theta
+					SRData() {}
+				};
+
 				/**
 				* @breif Default constructor
 				*/

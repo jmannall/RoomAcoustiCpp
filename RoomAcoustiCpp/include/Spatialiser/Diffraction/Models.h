@@ -727,7 +727,7 @@ namespace RAC
 				* @param zW The length of the edge
 				* @param input The input to assign the r and z values to
 				*/
-				void AssignInputRZ(const SRData& one, const SRData& two, Real zW, Input& input) const;
+				void AssignInputRZ(const Path::SRData& one, const Path::SRData& two, Real zW, Input& input) const;
 
 				std::function<void(const float*, float*, float*, float*)> nnFunction;	// Function pointer to the neural network function
 				ZPKFilter filter;														// ZPK filter

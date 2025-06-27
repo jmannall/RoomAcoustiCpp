@@ -105,7 +105,7 @@ namespace RAC
 
 			////////////////////////////////////////
 
-			void NN::AssignInputRZ(const SRData& one, const SRData& two, Real zW, Input& input) const
+			void NN::AssignInputRZ(const Path::SRData& one, const Path::SRData& two, Real zW, Input& input) const
 			{
 				assert(one.r <= two.r);
 
