@@ -153,9 +153,8 @@ namespace RAC
 				Real zA{ 0.0 }, phi{ 0.0 };		// Apex z coordinate and phi angle
 
 			private:
-
 				/**
-				* @
+				* @brief Calculate the parameters describing the diffraction path
 				*/
 				void CalculateParameters();
 
