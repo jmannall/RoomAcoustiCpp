@@ -53,13 +53,13 @@ namespace RAC
 				Assert::AreEqual(vec[i], buffer[i], L"Buffer not initialised to correct values");
 		}
 
-		TEST_METHOD(ResetBuffer)
+		TEST_METHOD(Reset)
 		{
 			const size_t length = 128;
 			const std::vector<Real> vec = CreateRandomVector(length);
 			Buffer buffer(vec);
 
-			buffer.ResetBuffer();
+			buffer.Reset();
 			for (int i = 0; i < length; i++)
 				Assert::AreEqual(0.0, buffer[i], L"Buffer not reset to zero");
 		}

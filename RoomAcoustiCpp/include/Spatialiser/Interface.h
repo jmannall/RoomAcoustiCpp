@@ -28,7 +28,7 @@ namespace RAC
 		* @param config The configuration of the spatialiser.
 		* @return True if the initialization was successful, false otherwise.
 		*/
-		bool Init(const Config& config);
+		bool Init(const std::shared_ptr<Config> config);
 
 		/**
 		* Exits and cleans up the spatialiser.
@@ -77,7 +77,7 @@ namespace RAC
 		*
 		* @param T60 The late reverberation time.
 		*/
-		void UpdateReverbTime(const Coefficients& T60);
+		void UpdateReverbTime(const Coefficients<>& T60);
 
 		/**
 		* Updates the model used to process diffraction.
@@ -145,7 +145,7 @@ namespace RAC
 		* @param absorption The frequency absorption coefficients.
 		* @return The ID of the new wall.
 		*/
-		size_t InitWall(const Vertices& vData, const Absorption& absorption);
+		size_t InitWall(const Vertices& vData, const Absorption<>& absorption);
 		
 		/**
 		* Updates the position and orientation of the wall with the given ID.
@@ -161,7 +161,7 @@ namespace RAC
 		* @param id The ID of the wall to update.
 		* @param absorption The new absortion of the wall.
 		*/
-		void UpdateWallAbsorption(size_t id, const Absorption& absorption);
+		void UpdateWallAbsorption(size_t id, const Absorption<>& absorption);
 
 		/**
 		* Removes the wall with the given ID.

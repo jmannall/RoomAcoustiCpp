@@ -23,10 +23,10 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void AirAbsorption::ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const int numFrames, const Real lerpFactor)
+		void AirAbsorption::ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const Real lerpFactor)
 		{
 			FlushDenormals();
-			for (int i = 0; i < numFrames; i++)
+			for (int i = 0; i < inBuffer.Length(); i++)
 				outBuffer[i] = GetOutput(inBuffer[i], lerpFactor);
 			NoFlushDenormals();
 		}

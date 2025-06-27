@@ -75,7 +75,7 @@ namespace RAC
 			* 
 			* @param config The configuration for the spatialiser.
 			*/
-			Context(const Config& config);
+			Context(const std::shared_ptr<Config> config);
 
 			/**
 			* @brief Default deconstructor.
@@ -138,7 +138,7 @@ namespace RAC
 			*
 			* @param T60 The late reverberation time.
 			*/
-			void UpdateReverbTime(const Coefficients& T60);
+			void UpdateReverbTime(const Coefficients<>& T60);
 
 			/**
 			* @brief Updates the diffraction model.
@@ -218,7 +218,7 @@ namespace RAC
 			* 
 			* @return The ID of the new wall.
 			*/
-			size_t InitWall(const Vertices& vData, const Absorption& absorption);
+			size_t InitWall(const Vertices& vData, const Absorption<>& absorption);
 			
 			/**
 			* @brief Updates the position of a wall.
@@ -234,7 +234,7 @@ namespace RAC
 			* @param id The ID of the wall to update.
 			* @param absorption The new absorption of the wall.
 			*/
-			void UpdateWallAbsorption(size_t id, const Absorption& absorption);
+			void UpdateWallAbsorption(size_t id, const Absorption<>& absorption);
 
 			/**
 			* @brief Removes a wall from the spatialiser.
@@ -288,7 +288,7 @@ namespace RAC
 			/**
 			* Spatialiser
 			*/
-			Config mConfig;				// RAC Config
+			const std::shared_ptr<Config> mConfig;				// RAC Config
 			bool mIsRunning;			// Flag to check if the spatialiser is running
 			std::thread IEMThread;		// Background thread to run the image edge model
 			Vec3 listenerPosition;		// Stored listener position

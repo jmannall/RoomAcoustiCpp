@@ -67,14 +67,14 @@ namespace RAC
 			* @param frequencies The frequencies at which to calculate the response
 			* @return The frequency response of the filter
 			*/
-			Coefficients GetFrequencyResponse(const Coefficients& frequencies) const;
+			Coefficients<> GetFrequencyResponse(const Coefficients<>& frequencies) const;
 
 		protected:
 			const int order;		// Order of the filter
 			const Real T;			// Sample rate time period
 
-			Coefficients b;		// Numerator coefficients
-			Coefficients a;		// Denominator coefficients
+			Coefficients<> b;		// Numerator coefficients
+			Coefficients<> a;		// Denominator coefficients
 			Buffer y;			// Output buffer
 
 			std::atomic<bool> parametersEqual{ false };		// True if the current parameters are known to be equal to the target parameters
@@ -132,7 +132,7 @@ namespace RAC
 			* @param frequencies The frequencies at which to calculate the response
 			* @return The frequency response of the filter
 			*/
-			Coefficients GetFrequencyResponse(const Coefficients& frequencies) const;
+			Coefficients<> GetFrequencyResponse(const Coefficients<>& frequencies) const;
 
 		protected:
 			const Real T;				// Sample rate time period
@@ -196,7 +196,7 @@ namespace RAC
 			* @param frequencies The frequencies at which to calculate the response
 			* @return The frequency response of the filter
 			*/
-			Coefficients GetFrequencyResponse(const Coefficients& frequencies) const;
+			Coefficients<> GetFrequencyResponse(const Coefficients<>& frequencies) const;
 
 		protected:
 			const Real T;				// Sample rate time period
@@ -565,13 +565,14 @@ namespace RAC
 		*/
 		class ZPKFilter : public IIRFilter2
 		{
+			using Parameters = Coefficients<std::array<Real, 5>>;
 		public:
 			/**
 			* @brief Constructor that initialises a default second order IIRFilter with a given sample rate
 			*
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
-			ZPKFilter(const int sampleRate) : ZPKFilter(Coefficients({ 0.25, -0.99, 0.99, -0.25, 0.0 }), sampleRate) {};
+			ZPKFilter(const int sampleRate) : ZPKFilter(Parameters({ 0.25, -0.99, 0.99, -0.25, 0.0 }), sampleRate) {};
 			
 			/**
 			* @brief Constructor that initialises a second order IIRFilter with a given sample rate
@@ -579,7 +580,7 @@ namespace RAC
 			* @param zpk The poles, zeros and gain of the filter
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
-			ZPKFilter(const Coefficients& zpk, const int& sampleRate) : IIRFilter2(sampleRate),
+			ZPKFilter(const Parameters& zpk, const int& sampleRate) : IIRFilter2(sampleRate),
 				currentZPK(zpk)
 			{
 				SetTargetParameters(zpk);
@@ -595,7 +596,9 @@ namespace RAC
 			*
 			* @param parameter The target ZPK parameters of the filter
 			*/
-			void SetTargetParameters(const Coefficients& zpk);
+			void SetTargetParameters(const Parameters& zpk);
+
+			void SetTargetGain(const Real k);
 
 		private:
 			/**
@@ -610,10 +613,10 @@ namespace RAC
 			*
 			* @param fc The cut off frequency of the filter
 			*/
-			void UpdateCoefficients(const Coefficients& zpk);
+			void UpdateCoefficients(const Parameters& zpk);
 
-			std::atomic<std::shared_ptr<Coefficients>> targetZPK;	// Target ZPK parameters
-			Coefficients currentZPK;								// Current ZPK parameters
+			std::atomic<std::shared_ptr<Parameters>> targetZPK;	// Target ZPK parameters
+			Parameters currentZPK;								// Current ZPK parameters
 
 			static ReleasePool releasePool;		// ReleasePool for managing memory of shared pointers
 		};
@@ -711,6 +714,65 @@ namespace RAC
 			* @param fc The cut off frequency of the filter
 			*/
 			void UpdateCoefficients(const Real fc) override;
+		};
+
+		/**
+		* @brief Class that implements a 1st order high shelf IIR filter
+		*/
+		class HighShelfMatched : public IIRFilter1
+		{
+		public:
+
+			/**
+			* @brief Constructor that initialises an 1st order high shelf filter with a given cut off frequency and shelf gain
+			*
+			* @param fc The cut off frequency of the filter
+			* @param gain The shelf gain of the filter (linear)
+			* @param sampleRate The sample rate for calculating filter coefficients
+			*/
+			HighShelfMatched(const Real fc, const Real gain, const int sampleRate) : IIRFilter1(sampleRate),
+				targetFc(fc), targetGain(gain), currentFc(fc), currentGain(gain)
+			{
+				assert(fc < static_cast<Real>(sampleRate) / 2.0); // Ensure cut off frequency is less than Nyquist frequency
+
+				UpdateCoefficients(currentFc, currentGain);
+				parametersEqual.store(true);
+				initialised.store(true);
+			};
+
+			/**
+			* @brief Default deconstructor
+			*/
+			~HighShelfMatched() {};
+
+			/**
+			* @brief Atomically sets the target parameters of the high shelf filter
+			*
+			* @param fc The cut off frequency of the filter
+			* @param gain The shelf gain of the filter (linear)
+			*/
+			inline void SetTargetParameters(const Real fc, const Real gain) { targetFc.store(fc); targetGain.store(gain), parametersEqual.store(false); }
+
+		private:
+			/**
+			* @brief Linearly interpolates the current fc and gain with the target fc and gain
+			*
+			* @param lerpFactor The lerp factor for interpolation
+			*/
+			void InterpolateParameters(const Real lerpFactor) override;
+
+			/**
+			* @brief Updates the parameters of the high shelf filter
+			*
+			* @param fc The cut off frequency of the filter
+			* @param gain The shelf gain of the filter (linear)
+			*/
+			void UpdateCoefficients(const Real fc, const Real gain);
+
+			std::atomic<Real> targetFc;		// Target cut off frequency
+			std::atomic<Real> targetGain;	// Target shelf gain
+			Real currentFc;					// Current cut off frequency
+			Real currentGain;				// Current shelf gain
 		};
 	}
 }

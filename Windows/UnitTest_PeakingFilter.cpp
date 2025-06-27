@@ -114,7 +114,7 @@ namespace RAC
 			PeakingFilter filter(fc, gain, Q, fs);
 
 			for (int i = 0; i < 11; i++)
-				filter.GetOutput(rand(), lerpFactor);
+				filter.GetOutput(RandomValue(), lerpFactor);
 			filter.ClearBuffers();
 
 			for (int i = 0; i < input.size(); i++)
@@ -140,7 +140,7 @@ namespace RAC
 			in[0] = 1.0;
 
 			int numTests = fc.size();
-			std::vector<Coefficients> gains = std::vector<Coefficients>(numTests, Coefficients(5));
+			std::vector<Coefficients<>> gains = std::vector<Coefficients<>>(numTests, Coefficients(5));
 			for (int i = 0; i < numTests; i++)
 			{
 				PeakingFilter peakingFilter = PeakingFilter(fc[i], g[i], Q, fs);

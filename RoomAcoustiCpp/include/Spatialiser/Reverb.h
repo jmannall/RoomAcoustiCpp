@@ -46,7 +46,7 @@ namespace RAC
 			* @params config The spatialiser configuration
 			* @params shift The position offset relative to the listener
 			*/
-			ReverbSource(Binaural::CCore* core, const Config& config, const Vec3& shift);
+			ReverbSource(Binaural::CCore* core, const std::shared_ptr<Config> config, const Vec3& shift);
 
 			/**
 			* @brief Default deconstructor
@@ -115,9 +115,12 @@ namespace RAC
 			* @params core The 3DTI processing core
 			* @params config The spatialiser configuration
 			*/
-			Reverb(Binaural::CCore* core, const Config& config) : mConfig(config)
+			Reverb(Binaural::CCore* core, const std::shared_ptr<Config> config) : threadResults(config->numLateReverbChannels, Buffer(2 * config->numFrames)), reverbOutputs(config->numLateReverbChannels, Buffer(config->numFrames))
 			{
-				InitSources(core);
+				const std::vector<Vec3> points = CalculateSourcePositions(config->numLateReverbChannels);
+				mReverbSources.reserve(config->numLateReverbChannels);
+				for (int i = 0; i < config->numLateReverbChannels; i++)
+					mReverbSources.emplace_back(std::make_unique<ReverbSource>(core, config, points[i]));
 			}
 
 			/**
@@ -143,13 +146,6 @@ namespace RAC
 			void UpdateSpatialisationMode(const SpatialisationMode mode);
 
 			/**
-			* @brief Update the interpolation factor for interpolations
-			*
-			* @params lerpFactor New interpolation factor
-			*/
-			void UpdateLerpFactor(const Real lerpFactor);
-
-			/**
 			* @brief Updates the reverb source positions relative to the listener
 			*
 			* @params listenerPosition The listener position
@@ -162,7 +158,7 @@ namespace RAC
 			* @params data Multichannel audio data input
 			* @params ouputBuffer Stereo output buffer to write to
 			*/
-			void ProcessAudio(const Matrix& data, Buffer& outputBuffer);
+			void ProcessAudio(const Matrix& data, Buffer& outputBuffer, const Real lerpFactor);
 
 			/**
 			* @brief Resets the FDN and ReverbSources internal buffers to zero
@@ -193,9 +189,9 @@ namespace RAC
 			*
 			* @params T60 The new decay time
 			*/
-			void SetTargetT60(const Coefficients& T60);
+			void SetTargetT60(const Coefficients<>& T60);
 
-			void InitLateReverb(const Coefficients& T60, const Vec& dimensions, const FDNMatrix matrix);
+			void InitLateReverb(const Coefficients<>& T60, const Vec& dimensions, const FDNMatrix matrix, const std::shared_ptr<Config> config);
 
 			/**
 			* @brief Update reflection filters for directional dependent reverberation level
@@ -203,17 +199,15 @@ namespace RAC
 			* @params absorptions New reflection filter target gains
 			* @params running True if including late reveberation in audio prcoessing, false otherwise
 			*/
-			void UpdateReflectionFilters(const std::vector<Absorption>& absorptions);
+			void UpdateReflectionFilters(const std::vector<Absorption<>>& absorptions);
 
 		private:
-			/**
-			* @brief Initialse the ReverbSources
-			*/
-			void InitSources(Binaural::CCore* core);
+
+			std::vector<Vec3> CalculateSourcePositions(const int numLateReverbChannels) const;
 
 			std::atomic<std::shared_ptr<FDN>> mFDN;		// FDN for late reverberation processing
 
-			Config mConfig;									// Spatialiser configuration
+			// Config mConfig;									// Spatialiser configuration
 			// Coefficients mT60;								// Target decay time
 			std::vector<std::unique_ptr<ReverbSource>> mReverbSources;		// Reverb sources to binauralise the FDN output
 

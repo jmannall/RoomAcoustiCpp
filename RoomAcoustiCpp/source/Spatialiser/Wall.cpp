@@ -136,7 +136,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		Wall::Wall(const Vertices& vData, const Absorption& absorption) : mPlaneId(0), mAbsorption(absorption)
+		Wall::Wall(const Vertices& vData, const Absorption<>& absorption) : mPlaneId(0), mAbsorption(absorption)
 		{
 			Update(vData);
 

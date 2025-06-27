@@ -28,13 +28,14 @@ namespace RAC
 		// NOTE!!! default values of Peaking filters 1000Hz, 1.0 gain. Not good for lr filter
 		class LinkwitzRiley
 		{
+			typedef Coefficients<std::array<Real, 4>> Parameters;
 		public:
 			/**
 			* @brief Constructor that initialises a default Linkwitz Riley filterbank
 			*
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
-			LinkwitzRiley(const int sampleRate) : LinkwitzRiley({ 1.0, 1.0, 1.0}, { 176.0, 775.0, 3408.0 }, sampleRate) {}
+			LinkwitzRiley(const int sampleRate) : LinkwitzRiley(Parameters(1.0), { 176.0, 775.0, 3408.0 }, sampleRate) {}
 
 			/**
 			* @brief Constructor that initialises a default Linkwitz Riley filterbank
@@ -42,7 +43,7 @@ namespace RAC
 			* @param gains The filter band gains
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
-			LinkwitzRiley(const std::array<Real, 4> gains, const int sampleRate) : LinkwitzRiley(gains, { 176.0, 775.0, 3408.0 }, sampleRate) {}
+			LinkwitzRiley(const Parameters& gains, const int sampleRate) : LinkwitzRiley(gains, { 176.0, 775.0, 3408.0 }, sampleRate) {}
 
 			/**
 			* @brief Constructor that initialises a Linkwitz Riley filterbank with three cutoff frequencies
@@ -51,7 +52,7 @@ namespace RAC
 			* @param fc The cutoff frequencies
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
-			LinkwitzRiley(const std::array<Real, 4> gains, const std::array<Real, 3> fc, const int sampleRate) :
+			LinkwitzRiley(const Parameters& gains, const std::array<Real, 3> fc, const int sampleRate) :
 				fm(CalculateMidFrequencies(fc)), currentGains(gains)
 			{
 				InitFilters(sampleRate, fc);
@@ -79,9 +80,9 @@ namespace RAC
 			*
 			* @param gains The new target gain parameters
 			*/
-			inline void SetTargetGains(const std::array<Real, 4>& gains)
+			inline void SetTargetGains(const Parameters& gains)
 			{
-				std::shared_ptr<Coefficients> gainsCopy = std::make_shared<Coefficients>(gains);
+				std::shared_ptr<Parameters> gainsCopy = std::make_shared<Parameters>(gains);
 
 				releasePool.Add(gainsCopy);
 				targetGains.store(gainsCopy);
@@ -93,11 +94,15 @@ namespace RAC
 			*/
 			inline void ClearBuffers()
 			{
-				for (auto& filter : filters)
+				for (auto& filter : lowPassFilters)
+					filter->ClearBuffers();
+				for (auto& filter : highPassFilters)
 					filter->ClearBuffers();
 			}
 
-			const Coefficients fm;		// Filter band mid frequencies
+			static inline Parameters DefaultFM() { return CalculateMidFrequencies({ 176.0, 775.0, 3408.0 }); }
+
+			const Parameters fm;		// Filter band mid frequencies
 
 		private:
 			/**
@@ -110,11 +115,13 @@ namespace RAC
 
 			/**
 			* @brief Calculate the pass band center frequencies
-			* 
+			*
 			* @param fc The cutoff frequencies of the filters
 			*/
-			inline Coefficients CalculateMidFrequencies(const std::array<Real, 3>& fc)
-			{ return Coefficients({ std::sqrt(20.0 * fc[0]), std::sqrt(fc[0] * fc[1]), std::sqrt(fc[1] * fc[2]), std::sqrt(fc[2] * 20000.0)}); }
+			static inline Parameters CalculateMidFrequencies(const std::array<Real, 3>& fc)
+			{
+				return Parameters({ std::sqrt(20.0 * fc[0]), std::sqrt(fc[0] * fc[1]), std::sqrt(fc[1] * fc[2]), std::sqrt(fc[2] * 20000.0) });
+			}
 
 			/*
 			* @brief Linearly interpolates the current gains with the target gains
@@ -123,10 +130,11 @@ namespace RAC
 			*/
 			void InterpolateGains(const Real lerpFactor);
 
-			std::atomic<std::shared_ptr<Coefficients>> targetGains;		// Target filter band gains
-			Coefficients currentGains;									// Current filter band gains (should only be accessed from the audio thread)
-
-			std::vector<std::unique_ptr<IIRFilter2Param1>> filters;		// PassFilter sections
+			std::atomic<std::shared_ptr<Parameters>> targetGains;		// Target filter band gains
+			Parameters currentGains;									// Current filter band gains (should only be accessed from the audio thread)
+			
+			std::array<std::optional<LowPass>, 10> lowPassFilters;		// LowFilter sections
+			std::array<std::optional<HighPass>, 10> highPassFilters;	// HighPass sections
 
 			std::atomic<bool> initialised{ false };		// True if the filter has been initialised, false otherwise
 			std::atomic<bool> gainsEqual{ false };		// True if the current gains are know to be equal to the target gains

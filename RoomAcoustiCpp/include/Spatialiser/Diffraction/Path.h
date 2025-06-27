@@ -93,6 +93,7 @@ namespace RAC
 				bool rValid;
 				bool valid;
 				bool inShadow;
+				bool inRelfZone;
 
 				// Variables
 				SRData sData;

@@ -27,7 +27,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		ImageEdge::ImageEdge(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const Coefficients& frequencyBands) :
+		ImageEdge::ImageEdge(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const Coefficients<>& frequencyBands) :
 			mRoom(room), mSourceManager(sourceManager), mReverb(reverb), frequencyBands(frequencyBands), currentCycle(false), configChanged(true), reverbRunning(false)
 		{
 			sp = std::vector<std::vector<ImageSourceData>>();
@@ -35,7 +35,7 @@ namespace RAC
 
 			shared_ptr<Reverb> sharedReverb = mReverb.lock();
 			sharedReverb->GetReverbSourceDirections(reverbDirections);
-			reverbAbsorptions = std::vector<Absorption>(static_cast<int>(reverbDirections.size()), Absorption(frequencyBands.Length()));
+			reverbAbsorptions = std::vector<Absorption<>>(static_cast<int>(reverbDirections.size()), Absorption(frequencyBands.Length()));
 		}
 
 		////////////////////////////////////////
@@ -137,7 +137,7 @@ namespace RAC
 		{
 			int bounceIdx = static_cast<int>(intersections.size()) - 1;
 			imageSource.ResetAbsorption();
-			Absorption& absorption = imageSource.GetAbsorption();
+			Absorption<>& absorption = imageSource.GetAbsorption();
 			bool valid = false;
 			if (imageSource.IsReflection(bounceIdx))
 			{
@@ -193,7 +193,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		bool ImageEdge::LinePlaneIntersection(const Vec3& start, const Vec3& end, const Plane& plane, Absorption& absorption, Vec3& intersection) const
+		bool ImageEdge::LinePlaneIntersection(const Vec3& start, const Vec3& end, const Plane& plane, Absorption<>& absorption, Vec3& intersection) const
 		{
 			if (plane.LinePlaneIntersection(start, end))
 			{
@@ -205,7 +205,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		bool ImageEdge::LineWallIntersection(const Vec3& start, const Vec3& end, const std::vector<size_t>& wallIDs, Absorption& absorption, Vec3& intersection) const
+		bool ImageEdge::LineWallIntersection(const Vec3& start, const Vec3& end, const std::vector<size_t>& wallIDs, Absorption<>& absorption, Vec3& intersection) const
 		{
 			for (const size_t wallID : wallIDs)
 			{
@@ -313,7 +313,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		Absorption ImageEdge::CalculateDirectivity(const SourceData& source, const Vec3& point) const
+		Absorption<> ImageEdge::CalculateDirectivity(const SourceData& source, const Vec3& point) const
 		{
 			Absorption directivity(frequencyBands.Length());
 			Real ret = 0.0;
@@ -929,9 +929,6 @@ namespace RAC
 			Absorption directivity(frequencyBands.Length());
 			directivity = CalculateDirectivity(source, intersection);
 			imageSource.AddAbsorption(directivity);
-
-			/*Real directivity = CalculateDirectivity(source, intersection);
-			imageSource.SetDirectivity(directivity);*/
 
 			imageSource.SetDistance(mListenerPosition);
 			imageSource.Visible(feedsFDN);

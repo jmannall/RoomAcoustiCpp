@@ -26,7 +26,7 @@ namespace RAC
 			*
 			* @param fs The sample rate
 			*/
-			HeadphoneEQ(const int fs, const int lerpFactor, const int maxFilterLength) : leftFilter(fs, maxFilterLength), rightFilter(fs, maxFilterLength), lerpFactor(lerpFactor){};
+			HeadphoneEQ(const int fs, const int maxFilterLength) : leftFilter(fs, maxFilterLength), rightFilter(fs, maxFilterLength) {};
 
 			/**
 			* @brief Set the FIR filter impulse responses for the left and right channels
@@ -46,7 +46,7 @@ namespace RAC
 			* @params inputBuffer The input audio buffer
 			* @params outputBuffer The output buffer to write to
 			*/
-			inline void ProcessAudio(const Buffer& inputBuffer, Buffer& outputBuffer)
+			inline void ProcessAudio(const Buffer& inputBuffer, Buffer& outputBuffer, const Real lerpFactor)
 			{
 				for (int i = 0; i < inputBuffer.Length(); i += 2)
 				{
@@ -59,9 +59,7 @@ namespace RAC
 
 		private:
 			FIRFilter leftFilter;		// FIR filter for the left channel
-			FIRFilter rightFilter;	// FIR filter for the right channel
-
-			int lerpFactor;
+			FIRFilter rightFilter;		// FIR filter for the right channel
 		};
 	}
 }

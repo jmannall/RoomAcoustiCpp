@@ -64,7 +64,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		Coefficients IIRFilter::GetFrequencyResponse(const Coefficients& frequencies) const
+		Coefficients<> IIRFilter::GetFrequencyResponse(const Coefficients<>& frequencies) const
 		{
 			Real omega;
 			Complex e;
@@ -124,7 +124,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		Coefficients IIRFilter2::GetFrequencyResponse(const Coefficients& frequencies) const
+		Coefficients<> IIRFilter2::GetFrequencyResponse(const Coefficients<>& frequencies) const
 		{
 			Real omega;
 			Complex e;
@@ -181,7 +181,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		Coefficients IIRFilter1::GetFrequencyResponse(const Coefficients& frequencies) const
+		Coefficients<> IIRFilter1::GetFrequencyResponse(const Coefficients<>& frequencies) const
 		{
 			Real omega;
 			Complex e;
@@ -359,9 +359,9 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void ZPKFilter::SetTargetParameters(const Coefficients& zpk)
+		void ZPKFilter::SetTargetParameters(const Parameters& zpk)
 		{
-			const std::shared_ptr<Coefficients> zpkCopy = std::make_shared<Coefficients>(zpk);
+			const std::shared_ptr<Parameters> zpkCopy = std::make_shared<Parameters>(zpk);
 
 			releasePool.Add(zpkCopy);
 
@@ -369,9 +369,16 @@ namespace RAC
 			parametersEqual.store(false);
 		}
 
+		void ZPKFilter::SetTargetGain(const Real k)
+		{
+			Parameters zpk = *targetZPK.load();
+			zpk[4] = k;
+			SetTargetParameters(zpk);
+		}
+
 		////////////////////////////////////////
 
-		void ZPKFilter::UpdateCoefficients(const Coefficients& zpk) // z[0 - 1], p[2 - 3], k[4]
+		void ZPKFilter::UpdateCoefficients(const Parameters& zpk) // z[0 - 1], p[2 - 3], k[4]
 		{
 			b0 = zpk[4];
 			b1 = -zpk[4] * (zpk[0] + zpk[1]);
@@ -386,7 +393,7 @@ namespace RAC
 		void ZPKFilter::InterpolateParameters(const Real lerpFactor)
 		{
 			parametersEqual.store(true); // Prevents issues in case targetZPK updated during this function call
-			std::shared_ptr<const Coefficients> zpk = targetZPK.load();
+			std::shared_ptr<const Parameters> zpk = targetZPK.load();
 			Lerp(currentZPK, *zpk, lerpFactor);
 			if (Equals(currentZPK, *zpk))
 				currentZPK = *zpk;
@@ -430,5 +437,51 @@ namespace RAC
 			b1 = -2.0 * omega_sq * a0;
 			b2 = omega_sq * a0;
 		}	
+
+		//////////////////// HighSelfMatched ////////////////////
+
+		////////////////////////////////////////
+
+		void HighShelfMatched::InterpolateParameters(const Real lerpFactor)
+		{
+			parametersEqual.store(true); // Prevents issues in case targetFc/Gain updated during this function call
+			const Real fc = targetFc.load();
+			const Real gain = targetGain.load();
+			currentFc = Lerp(currentFc, fc, lerpFactor);
+			currentGain = Lerp(currentGain, gain, lerpFactor);
+			if (Equals(currentFc, fc) && Equals(currentGain, gain))
+			{
+				currentFc = fc;
+				currentGain = gain;
+			}
+			else
+				parametersEqual.store(false);
+			UpdateCoefficients(currentFc, currentGain);
+		}
+
+		////////////////////////////////////////
+
+		void HighShelfMatched::UpdateCoefficients(const Real fc, const Real gain)
+		{
+			constexpr static Real fm = 0.9;
+			constexpr static Real fmSq = 1.0 / (fm * fm);
+			Real newFc = 2 * fc * T;
+			newFc *= newFc;
+			Real Phim = 1 - cos(PI_1 * fm);
+			Phim = 1 / Phim;
+
+			Real alpha = 2.0 / PI_SQ * (fmSq + 1 / (gain * newFc)) - Phim;
+			Real beta = 2.0 / PI_SQ * (fmSq + gain / newFc) - Phim;
+
+			a1 = -alpha / (1 + alpha + sqrt(1 + 2 * alpha));
+			Real bAll = -beta / (1 + beta + sqrt(1 + 2 * beta));
+			b0 = (1 + alpha) / (1 + bAll);
+			b1 = bAll * b0;
+
+			Real DCg = (b0 + b1) / (1 + a1);
+
+			b0 /= DCg;
+			b1 /= DCg;
+		}
 	}
 }

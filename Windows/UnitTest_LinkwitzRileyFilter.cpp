@@ -54,7 +54,7 @@ namespace RAC
 			LinkwitzRiley filter = LinkwitzRiley(gain, fs);
 
 			for (int i = 0; i < 20; i++)
-				filter.GetOutput(rand(), lerpFactor);
+				filter.GetOutput(RandomValue(), lerpFactor);
 
 			filter.ClearBuffers();
 

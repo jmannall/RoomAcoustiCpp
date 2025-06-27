@@ -31,6 +31,7 @@
 
 // DSP headers
 #include "DSP/GraphicEQ.h"
+#include "DSP/Parameter.h"
 
 // 3DTI headers
 #include "BinauralSpatializer/SingleSourceDSP.h"
@@ -101,7 +102,7 @@ namespace RAC
 			* @param numFrequencyBands The number of frequency bands for applying wall absorption
 			*/
 			ImageSourceData(int numFrequencyBands, int sourceID) : valid(false), visible(false), feedsFDN(false), reflection(false), diffraction(false),
-				mAbsorption(numFrequencyBands), mDirectivity(1.0), distance(0.0), lastUpdatedCycle(false), idKey{ '0' }, sourceKey{ 's' }, reflectionKey { 'r' }, diffractionKey{ 'd' }
+				mAbsorption(numFrequencyBands), distance(0.0), lastUpdatedCycle(false), idKey{ '0' }, sourceKey{ 's' }, reflectionKey { 'r' }, diffractionKey{ 'd' }
 			{
 				AddSourceID(sourceID);
 			};
@@ -112,18 +113,11 @@ namespace RAC
 			~ImageSourceData() {};
 
 			/**
-			* @brief Sets the directivity of the image source
-			* 
-			* @param directivity The directivity to add
-			*/
-			inline void SetDirectivity(const Real directivity) { mDirectivity = directivity; }
-
-			/**
 			* @brief Adds absorption to the image source
 			* 
 			* @param absorption The absorption to add
 			*/
-			inline void AddAbsorption(const Absorption& absorption) { mAbsorption *= absorption; }
+			inline void AddAbsorption(const Absorption<>& absorption) { mAbsorption *= absorption; }
 
 			/**
 			* @brief Resets the absorption of the image source to 1
@@ -133,17 +127,12 @@ namespace RAC
 			/**
 			* @return A reference to the absorption of the image source
 			*/
-			inline Absorption& GetAbsorption() { return mAbsorption; }
+			inline Absorption<>& GetAbsorption() { return mAbsorption; }
 
 			/**
 			* @return The absorption of the image source
 			*/
-			inline const Absorption& GetAbsorption() const { return mAbsorption; }
-
-			/**
-			* @return The directivity of the image source
-			*/
-			inline Real GetDirectivity() const { return mDirectivity; }
+			inline const Absorption<>& GetAbsorption() const { return mAbsorption; }
 
 			/**
 			* @brief Adds a reflection to the image source path
@@ -385,8 +374,7 @@ namespace RAC
 			Vec4 previousPlane;						// Previous reflected plane information where: w -> D, x, y, z -> Normal
 
 			Diffraction::Path mDiffractionPath;			// Diffraction path of the image source
-			Absorption mAbsorption;						// Wall absorption of the image source
-			Real mDirectivity;							// Directivity of the image source
+			Absorption<> mAbsorption;						// Wall absorption of the image source
 			Real distance;								// Distance of the image source from the listener
 			CTransform transform;						// 3DTI transform of the image source
 
@@ -413,7 +401,7 @@ namespace RAC
 			* @param data The image source data
 			* @param fdnChannel The FDN channel to feed, -1 if the image source does not feed the FDN
 			*/
-			ImageSource(Binaural::CCore* core, const Config& config, const ImageSourceData& data, const int fdnChannel);
+			ImageSource(Binaural::CCore* core, const std::shared_ptr<Config>& config, const ImageSourceData& data, const int fdnChannel);
 
 			/**
 			* @brief Default deconstructor
@@ -438,14 +426,14 @@ namespace RAC
 			* @params lerpFactor New interpolation factor
 			* @params mode True if disable 3DTI Interpolation, false otherwise.
 			*/
-			void UpdateImpulseResponseMode(const Real lerpFactor, const bool mode);
+			void UpdateImpulseResponseMode(const bool mode);
 
 			/**
 			* @brief Update the diffraction model
 			* 
 			* @params model The new diffraction model
 			*/
-			void UpdateDiffractionModel(const DiffractionModel model);
+			void UpdateDiffractionModel(const DiffractionModel model, const int fs);
 
 			/**
 			* @brief Update the image source
@@ -464,7 +452,7 @@ namespace RAC
 			* @param reverbInput The reverb input buffer to write to
 			* @param outputBuffer The output buffer to write to
 			*/
-			int ProcessAudio(const Buffer& data, Buffer& reverbInput, Buffer& outputBuffer);
+			int ProcessAudio(const Buffer& data, Buffer& reverbInput, Buffer& outputBuffer, const Real lerpFactor);
 
 		private:
 			/**
@@ -472,7 +460,7 @@ namespace RAC
 			* 
 			* @param data The image source data
 			*/
-			void Init(const ImageSourceData& data);
+			void Init(const ImageSourceData& data, const bool impulseReponseMode, const SpatialisationMode spatialisationMode);
 
 			/**
 			* @brief Updates the image source with the given data
@@ -488,15 +476,6 @@ namespace RAC
 			void Remove();
 
 			/**
-			* @brief Updated the diffraction path and target parameters of the current diffraction model
-			*/
-			inline void UpdateDiffraction()
-			{
-				mDiffractionModel->UpdatePath(&mDiffractionPath);
-				mDiffractionModel->UpdateParameters();
-			}
-
-			/**
 			* @brief Process a single audio frame using the current diffraction model
 			* 
 			* @details Applies a cross fase if the diffraction model has been changed
@@ -504,9 +483,8 @@ namespace RAC
 			* @params inBuffer The input audio buffer
 			* @params outBuffer The output audio buffer to write to
 			*/
-			void ProcessDiffraction(const Buffer& inBuffer, Buffer& outBuffer);
+			void ProcessDiffraction(const Buffer& inBuffer, Buffer& outBuffer, const Real lerpFactor);
 
-			Config mConfig;			// Spatialiser configuration
 			bool feedsFDN;			// True if the image source feeds the FDN, false otherwise
 			int mFDNChannel;		// The FDN channel the image source feeds, -1 if the image source does not feed the FDN
 
@@ -516,37 +494,32 @@ namespace RAC
 			CEarPair<CMonoBuffer<float>> bOutput;		// 3DTI Stero Output buffer
 			CMonoBuffer<float> bMonoOutput;				// 3DTI Mono output buffer
 
-			Real mCurrentGain;					// Current gain of the image source
-			Real mTargetGain;					// Target gain of the image source
+			Parameter gain;
 			GraphicEQ mFilter;					// Frequency dependent reflection filter
 			AirAbsorption mAirAbsorption;		// Air absorption filter
 
 			Diffraction::Path mDiffractionPath;				// Diffraction path
-			Diffraction::Attenuate attenuate;				// Diffraction model: Attenuate
-			Diffraction::LPF lowPass;						// Diffraction model: LPF
-			Diffraction::UDFA udfa;							// Diffraction model: UDFA
-			Diffraction::UDFAI udfai;						// Diffraction model: UDFAI
-			Diffraction::NNSmall nnSmall;					// Diffraction model: NNSmall
-			Diffraction::NNBest nnBest;						// Diffraction model: NNBest
-			Diffraction::UTD utd;							// Diffraction model: UTD
-			Diffraction::BTM btm;							// Diffraction model: BTM
-			Diffraction::Model* mDiffractionModel;			// Current diffraction model
-			Diffraction::Model* mOldDiffractionModel;		// Previous diffraction model
+			DiffractionModel currentDiffractionModel;	// Current diffraction model
+			std::shared_ptr<Diffraction::Model> activeModel;
+			std::shared_ptr<Diffraction::Model> fadeModel{ nullptr };					// Diffraction model A and B for crossfading
+			std::atomic<std::shared_ptr<Diffraction::Model>> incomingModel{ nullptr };
+			std::atomic<std::shared_ptr<Diffraction::Model>> nextModel{ nullptr };
 
-			bool isCrossFading;				// True if currently crossfading between diffraction models, false otherwise		
-			int crossfadeLengthSamples;		// Length of diffraction model crossfase in samples
-			int crossfadeCounter;			// Counter for the diffraction model crossfase
+			Parameter diffractionGain;			// Gain for diffraction model A
 
+			bool useModelA;
+			std::atomic<bool> isCrossFading;				// True if currently crossfading between diffraction models, false otherwise
+			std::atomic<bool> newModel;
 
-			bool isInitialised;				// True if the image source has been initialised, false otherwise
-			bool reflection;				// True if the image source path includes any reflections, false otherwise
-			bool diffraction;				// True if the image source path includes any diffractions, false otherwise
+			std::atomic<bool> isInitialised{ false };				// True if the image source has been initialised, false otherwise
+			const bool reflection;				// True if the image source path includes any reflections, false otherwise
+			const bool diffraction;				// True if the image source path includes any diffractions, false otherwise
 
 			Binaural::CCore* mCore;								// 3DTI processing core
 			shared_ptr<Binaural::CSingleSourceDSP> mSource;		// 3DTI source
 			CTransform transform;								// 3DTI source transform
 
-			shared_ptr<std::mutex> audioMutex;		// Prevents concurrent audio and update operations
+			static ReleasePool releasePool;
 		};
 	}
 }

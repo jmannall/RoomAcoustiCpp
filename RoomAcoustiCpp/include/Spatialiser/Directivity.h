@@ -53,17 +53,17 @@ namespace RAC
 			*
 			* @return The directivity at the given frequency for a given direction
 			*/
-			inline Absorption Response(const Coefficients& frequencies, Real theta, Real phi) const
+			inline Absorption<> Response(const Coefficients<>& frequencies, Real theta, Real phi) const
 			{
-				Absorption output(frequencies.Length());
+				Absorption<> output(frequencies.Length());
 				for (int i = 0; i < frequencies.Length(); ++i)
 					output[i] = SingleResponse(frequencies[i], theta, phi);
 				return output;
 			}
 
-			inline Coefficients AverageResponse(const Coefficients& frequencies) const
+			inline Coefficients<> AverageResponse(const Coefficients<>& frequencies) const
 			{
-				Coefficients output(frequencies.Length());
+				Coefficients<> output(frequencies.Length());
 				for (int i = 0; i < frequencies.Length(); ++i)
 					output[i] = AverageResponse(frequencies[i]);
 				return output;

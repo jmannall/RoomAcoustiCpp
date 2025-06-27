@@ -65,8 +65,9 @@ namespace RAC
 			const Real p1 = -0.99;
 			const Real p2 = 0.43;
 			const Real k = 0.5;
+			Coefficients zpk = Coefficients<std::array<Real, 5>>({ z1, z2, p1, p2, k });
 
-			ZPKFilter filter(Coefficients({ z1, z2, p1, p2, k }), fs);
+			ZPKFilter filter(zpk, fs);
 
 			std::vector<Real> input = { 0.9, -0.1, 0.2, 0.0, -0.3, 0.0, 3.0, 2.1, -0.22, 2.0, 0.0, -0.2 };
 			std::vector<Real> output = ProcessZPKFilter(z1, z2, p1, p2, k, input);
@@ -85,16 +86,18 @@ namespace RAC
 			const Real p1 = -0.99;
 			const Real p2 = 0.43;
 			const Real k = 0.5;
+			const Coefficients zpk = Coefficients<std::array<Real, 5>>({ z1, z2, p1, p2, k });
 
-			ZPKFilter filter(Coefficients({ z1, z2, p1, p2, k }), fs);
+			ZPKFilter filter(zpk, fs);
 
 			const Real newZ1 = -0.3;
 			const Real newZ2 = -0.7;
 			const Real newP1 = -0.1;
 			const Real newP2 = 0.2;
 			const Real newK = 0.9;
+			const Coefficients newZPK = Coefficients<std::array<Real, 5>>({ newZ1, newZ2, newP1, newP2, newK });
 
-			filter.SetTargetParameters(Coefficients({ newZ1, newZ2, newP1, newP2, newK }));
+			filter.SetTargetParameters(newZPK);
 
 			std::vector<Real> input = { 1.0, 1.2, 0.2, 0.1, -0.3, -0.2, 0.0, 0.0, 0.0, 2.0, 0.0, -0.2 };
 			std::vector<Real> output = ProcessZPKFilter(z1, z2, p1, p2, k, input);
@@ -117,10 +120,11 @@ namespace RAC
 			std::vector<Real> input = { 1.0, 0.0, 0.2, 0.5, 0.0, 0.3, 0.4, 0.2 };
 			std::vector<Real> output = ProcessZPKFilter(z1, z2, p1, p2, k, input);
 
-			ZPKFilter filter(Coefficients({ z1, z2, p1, p2, k }), fs);
+			Coefficients zpk = Coefficients<std::array<Real, 5>>({ z1, z2, p1, p2, k });
+			ZPKFilter filter(zpk, fs);
 
 			for (int i = 0; i < 11; i++)
-				filter.GetOutput(rand(), lerpFactor);
+				filter.GetOutput(RandomValue(), lerpFactor);
 			filter.ClearBuffers();
 
 			for (int i = 0; i < input.size(); i++)

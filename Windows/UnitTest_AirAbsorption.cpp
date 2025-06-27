@@ -80,7 +80,7 @@ namespace RAC
 			const std::vector<Real> output = ProcessAirAbsorption(distance, fs, input);
 
 			for (int i = 0; i < 11; i++)
-				filter.GetOutput(rand(), lerpFactor);
+				filter.GetOutput(RandomValue(), lerpFactor);
 			filter.ClearBuffers();
 
 			for (int i = 0; i < input.size(); i++)

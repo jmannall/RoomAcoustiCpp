@@ -554,7 +554,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		Coefficients Room::GetReverbTime()
+		Coefficients<> Room::GetReverbTime()
 		{
 			if (reverbFormula == ReverbFormula::Custom)
 				return T60;
@@ -587,7 +587,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		Coefficients Room::Sabine(const Coefficients& absorption)
+		Coefficients<> Room::Sabine(const Coefficients<>& absorption)
 		{
 			Real factor = 24.0 * log(10.0) / SPEED_OF_SOUND;
 			return factor * mVolume / absorption;
@@ -595,7 +595,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		Coefficients Room::Eyring(const Coefficients& absorption, const Real& surfaceArea)
+		Coefficients<> Room::Eyring(const Coefficients<>& absorption, const Real& surfaceArea)
 		{
 			Real factor = 24.0 * log(10.0) / SPEED_OF_SOUND;
 			return -factor * mVolume / ((1 - absorption / surfaceArea).Log() * surfaceArea);

@@ -60,7 +60,7 @@ namespace RAC
 			*
 			* @params formula The new reverb time formula
 			*/
-			inline void UpdateReverbTime(const Coefficients& t) { reverbFormula = ReverbFormula::Custom; T60 = t; }
+			inline void UpdateReverbTime(const Coefficients<>& t) { reverbFormula = ReverbFormula::Custom; T60 = t; }
 
 			/**
 			* @brief Add a wall to the room
@@ -87,7 +87,7 @@ namespace RAC
 			* @params id The ID of the wall to update
 			* @params absorption The new absorption of the wall
 			*/
-			inline void UpdateWallAbsorption(const size_t id, const Absorption& absorption)
+			inline void UpdateWallAbsorption(const size_t id, const Absorption<>& absorption)
 			{
 				std::lock_guard<std::mutex> lock(mWallMutex);
 				auto it = mWalls.find(id);
@@ -122,7 +122,7 @@ namespace RAC
 			/**
 			* @return The predicted reverb time of the room
 			*/
-			Coefficients GetReverbTime();
+			Coefficients<> GetReverbTime();
 
 			/**
 			* @brief Get the predicted reverb time of the room with a given volume
@@ -130,7 +130,7 @@ namespace RAC
 			* @params volume The volume of the room
 			* @return The predicted reverb time of the room
 			*/
-			Coefficients GetReverbTime(const Real volume) { mVolume = volume; return GetReverbTime(); }
+			Coefficients<> GetReverbTime(const Real volume) { mVolume = volume; return GetReverbTime(); }
 
 			/**
 			* @return True if the room geometry has changed since last check, false otherwise
@@ -311,7 +311,7 @@ namespace RAC
 			* @params absorption The total absorption of the room
 			* @return The reverb time of the room
 			*/
-			Coefficients Sabine(const Coefficients& absorption);
+			Coefficients<> Sabine(const Coefficients<>& absorption);
 
 			/**
 			* @brief Calculate the reverb time of the room using the Eyring formula
@@ -319,12 +319,12 @@ namespace RAC
 			* @params absorption The total absorption of the room
 			* @params surfaceArea The surface area of the room
 			*/
-			Coefficients Eyring(const Coefficients& absorption, const Real& surfaceArea);
+			Coefficients<> Eyring(const Coefficients<>& absorption, const Real& surfaceArea);
 
 			std::atomic<bool> hasChanged;		// True if the room geometry has changed since last check
 
 			Real mVolume;						// The volume of the room
-			Coefficients T60;					// The custom reverberation time of the room
+			Coefficients<> T60;					// The custom reverberation time of the room
 			ReverbFormula reverbFormula;		// The formula used to calculate the reverb time
 			int numAbsorptionBands;				// The number of frequency bands to use for late reverberation
 

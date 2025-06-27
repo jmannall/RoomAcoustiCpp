@@ -23,39 +23,36 @@ namespace RAC
 
 		void LinkwitzRiley::InitFilters(const int sampleRate, const std::array<Real, 3>& fc)
 		{
-			filters.clear();
-            filters.reserve(20);
-
 			// First Split Low
-			filters.emplace_back(std::make_unique<LowPass>(fc[1], sampleRate));
-			filters.emplace_back(std::make_unique<LowPass>(fc[1], sampleRate));
+			lowPassFilters[0].emplace(fc[1], sampleRate);
+			lowPassFilters[1].emplace(fc[1], sampleRate);
 			// Split High (for phase?)
-			filters.emplace_back(std::make_unique<LowPass>(fc[2], sampleRate));
-			filters.emplace_back(std::make_unique<LowPass>(fc[2], sampleRate));
+			lowPassFilters[2].emplace(fc[2], sampleRate);
+			lowPassFilters[3].emplace(fc[2], sampleRate);
 			// Split Low (for phase?)
-			filters.emplace_back(std::make_unique<HighPass>(fc[2], sampleRate));
-			filters.emplace_back(std::make_unique<HighPass>(fc[2], sampleRate));
+			highPassFilters[0].emplace(fc[2], sampleRate);
+			highPassFilters[1].emplace(fc[2], sampleRate);
 			// Second Split Low
-			filters.emplace_back(std::make_unique<LowPass>(fc[0], sampleRate));
-			filters.emplace_back(std::make_unique<LowPass>(fc[0], sampleRate));
+			lowPassFilters[4].emplace(fc[0], sampleRate);
+			lowPassFilters[5].emplace(fc[0], sampleRate);
 			// Second Split High
-			filters.emplace_back(std::make_unique<HighPass>(fc[0], sampleRate));
-			filters.emplace_back(std::make_unique<HighPass>(fc[0], sampleRate));
+			highPassFilters[2].emplace(fc[0], sampleRate);
+			highPassFilters[3].emplace(fc[0], sampleRate);
 			// First Split High
-			filters.emplace_back(std::make_unique<HighPass>(fc[1], sampleRate));
-			filters.emplace_back(std::make_unique<HighPass>(fc[1], sampleRate));
+			highPassFilters[4].emplace(fc[1], sampleRate);
+			highPassFilters[5].emplace(fc[1], sampleRate);
 			// Split Low (for phase?)
-			filters.emplace_back(std::make_unique<LowPass>(fc[0], sampleRate));
-			filters.emplace_back(std::make_unique<LowPass>(fc[0], sampleRate));
+			lowPassFilters[6].emplace(fc[0], sampleRate);
+			lowPassFilters[7].emplace(fc[0], sampleRate);
 			// Split High (for phase?)
-			filters.emplace_back(std::make_unique<HighPass>(fc[0], sampleRate));
-			filters.emplace_back(std::make_unique<HighPass>(fc[0], sampleRate));
+			highPassFilters[6].emplace(fc[0], sampleRate);
+			highPassFilters[7].emplace(fc[0], sampleRate);
 			// Second Split Low
-			filters.emplace_back(std::make_unique<LowPass>(fc[2], sampleRate));
-			filters.emplace_back(std::make_unique<LowPass>(fc[2], sampleRate));
+			lowPassFilters[8].emplace(fc[2], sampleRate);
+			lowPassFilters[9].emplace(fc[2], sampleRate);
 			// Second Split High
-			filters.emplace_back(std::make_unique<HighPass>(fc[2], sampleRate));
-			filters.emplace_back(std::make_unique<HighPass>(fc[2], sampleRate));
+			highPassFilters[8].emplace(fc[2], sampleRate);
+			highPassFilters[9].emplace(fc[2], sampleRate);
 		}
 
 		////////////////////////////////////////
@@ -69,17 +66,17 @@ namespace RAC
 				InterpolateGains(lerpFactor);
 
 			std::array<Real, 2> midResult = {
-				filters[1]->GetOutput(filters[0]->GetOutput(input, lerpFactor), lerpFactor),
-				filters[11]->GetOutput(filters[10]->GetOutput(input, lerpFactor), lerpFactor) };
+				lowPassFilters[1]->GetOutput(lowPassFilters[0]->GetOutput(input, lerpFactor), lerpFactor),
+				highPassFilters[5]->GetOutput(highPassFilters[4]->GetOutput(input, lerpFactor), lerpFactor) };
 
-			midResult[0] = filters[3]->GetOutput(filters[2]->GetOutput(midResult[0], lerpFactor), lerpFactor) + filters[5]->GetOutput(filters[4]->GetOutput(midResult[0], lerpFactor), lerpFactor);
-			midResult[1] = filters[13]->GetOutput(filters[12]->GetOutput(midResult[1], lerpFactor), lerpFactor) + filters[15]->GetOutput(filters[14]->GetOutput(midResult[1], lerpFactor), lerpFactor);
+			midResult[0] = lowPassFilters[3]->GetOutput(lowPassFilters[2]->GetOutput(midResult[0], lerpFactor), lerpFactor) + highPassFilters[1]->GetOutput(highPassFilters[0]->GetOutput(midResult[0], lerpFactor), lerpFactor);
+			midResult[1] = lowPassFilters[7]->GetOutput(lowPassFilters[6]->GetOutput(midResult[1], lerpFactor), lerpFactor) + highPassFilters[7]->GetOutput(highPassFilters[6]->GetOutput(midResult[1], lerpFactor), lerpFactor);
 
 			std::array<Real, 4> out = {
-				currentGains[0] * filters[7]->GetOutput(filters[6]->GetOutput(midResult[0], lerpFactor), lerpFactor),
-				currentGains[1] * filters[9]->GetOutput(filters[8]->GetOutput(midResult[0], lerpFactor), lerpFactor),
-				currentGains[2] * filters[17]->GetOutput(filters[16]->GetOutput(midResult[1], lerpFactor), lerpFactor),
-				currentGains[3] * filters[19]->GetOutput(filters[18]->GetOutput(midResult[1], lerpFactor), lerpFactor) };
+				currentGains[0] * lowPassFilters[5]->GetOutput(lowPassFilters[4]->GetOutput(midResult[0], lerpFactor), lerpFactor),
+				currentGains[1] * highPassFilters[3]->GetOutput(highPassFilters[2]->GetOutput(midResult[0], lerpFactor), lerpFactor),
+				currentGains[2] * lowPassFilters[9]->GetOutput(lowPassFilters[8]->GetOutput(midResult[1], lerpFactor), lerpFactor),
+				currentGains[3] * highPassFilters[9]->GetOutput(highPassFilters[8]->GetOutput(midResult[1], lerpFactor), lerpFactor) };
 
 			return out[0] + out[1] + out[2] + out[3];
 		}
@@ -89,7 +86,7 @@ namespace RAC
 		void LinkwitzRiley::InterpolateGains(const Real lerpFactor)
 		{
 			gainsEqual.store(true); // Prevents issues in case targetGains updated during this function call
-			const std::shared_ptr<const Coefficients> gain = targetGains.load();
+			const std::shared_ptr<const Parameters> gain = targetGains.load();
 
 			Lerp(currentGains, *gain, lerpFactor);
 			if (Equals(currentGains, *gain))

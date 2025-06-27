@@ -11,8 +11,7 @@ using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 //////////////////// Assert templates ////////////////////
 
-
-template<> static std::wstring Microsoft::VisualStudio::CppUnitTestFramework::ToString<RAC::Common::Coefficients>(const RAC::Common::Coefficients& t)
+template<> static std::wstring Microsoft::VisualStudio::CppUnitTestFramework::ToString<RAC::Common::Coefficients<std::vector<double>>>(const RAC::Common::Coefficients<std::vector<double>>& t)
 {
 	std::string str = "Coefficients: ";
 	for (int i = 0; i < t.Length(); i++)
@@ -21,7 +20,7 @@ template<> static std::wstring Microsoft::VisualStudio::CppUnitTestFramework::To
 	return werror;
 }
 
-template<> static std::wstring Microsoft::VisualStudio::CppUnitTestFramework::ToString<RAC::Common::Absorption>(const RAC::Common::Absorption& t)
+template<> static std::wstring Microsoft::VisualStudio::CppUnitTestFramework::ToString<RAC::Common::Absorption<std::vector<double>>>(const RAC::Common::Absorption<std::vector<double>>& t)
 {
 	std::string str = "Absorption: ";
 	for (int i = 0; i < t.Length(); i++)

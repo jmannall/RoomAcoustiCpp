@@ -61,7 +61,6 @@ namespace RAC
 
 		void SourceManager::UpdateSpatialisationMode(const SpatialisationMode mode)
 		{
-			mConfig.spatialisationMode = mode;
 			shared_lock<shared_mutex> lock(mSourceMutex);
 			for (auto& [sourceID, source] : mSources)
 				source.UpdateSpatialisationMode(mode);
@@ -71,7 +70,6 @@ namespace RAC
 
 		void SourceManager::UpdateImpulseResponseMode(const Real lerpFactor, const bool mode)
 		{
-			mConfig.lerpFactor = lerpFactor;
 			shared_lock<shared_mutex> lock(mSourceMutex);
 			for (auto& [sourceID, source] : mSources)
 				source.UpdateImpulseResponseMode(lerpFactor, mode);
@@ -81,10 +79,9 @@ namespace RAC
 
 		void SourceManager::UpdateDiffractionModel(const DiffractionModel model)
 		{
-			mConfig.diffractionModel = model;
 			shared_lock<shared_mutex> lock(mSourceMutex);
 			for (auto& [sourceID, source] : mSources)
-				source.UpdateDiffractionModel(model);
+				source.UpdateDiffractionModel(model, mConfig->fs);
 		}
 
 		////////////////////////////////////////

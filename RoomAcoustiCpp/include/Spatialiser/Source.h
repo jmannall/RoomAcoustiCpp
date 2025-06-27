@@ -41,7 +41,7 @@ namespace RAC
 
 		struct SourceAudioData
 		{
-			Absorption directivity;
+			Absorption<> directivity;
 			bool feedsFDN;
 
 			SourceAudioData(int len, bool feedsFDN) : directivity(len), feedsFDN(feedsFDN) {}
@@ -73,14 +73,14 @@ namespace RAC
 			* @param core The 3DTI processing core
 			* @param config The spatialiser configuration
 			*/
-			Source(Binaural::CCore* core, const Config& config);
+			Source(Binaural::CCore* core, const std::shared_ptr<Config>& config);
 
 			/**
 			* @brief Default deconstructor
 			*/
 			~Source();
 
-			void InitReverbSendSource();
+			void InitReverbSendSource(const bool impulseResponseMode);
 
 			void RemoveReverbSendSource();
 
@@ -104,14 +104,14 @@ namespace RAC
 			* 
 			* @params model The new diffraction model
 			*/
-			void UpdateDiffractionModel(const DiffractionModel model);
+			void UpdateDiffractionModel(const DiffractionModel model, const int fs);
 
 			/**
 			* @brief Updates the source directivity
 			* 
 			* @params directivity The new source directivity
 			*/
-			void UpdateDirectivity(const SourceDirectivity directivity);
+			void UpdateDirectivity(const SourceDirectivity directivity, const Coefficients<>& frequencyBands, const int numLateReverbChannels);
 
 			/**
 			* @brief Updates the source position and orientation
@@ -128,7 +128,7 @@ namespace RAC
 			* @params source The source audio DSP parameters
 			* @params vSources The current image sources
 			*/
-			inline void UpdateData(const SourceAudioData source, const ImageSourceDataMap& vSources)
+			inline void UpdateData(const SourceAudioData source, const ImageSourceDataMap& vSources, const std::shared_ptr<Config>& config)
 			{ 
 				{
 					lock_guard<mutex> lock(*dataMutex); 
@@ -136,13 +136,13 @@ namespace RAC
 					feedsFDN = source.feedsFDN;
 
 					if (feedsFDN && !mReverbSendSource)
-						InitReverbSendSource();
+						InitReverbSendSource(config->GetImpulseResponseMode());
 					else if (!feedsFDN && mReverbSendSource)
 						RemoveReverbSendSource();
 				}
 				targetImageSources = vSources;
 				UpdateImageSourceDataMap();
-				UpdateImageSources();
+				UpdateImageSources(config);
 			}
 
 			/**
@@ -172,7 +172,7 @@ namespace RAC
 			* @params reverbInput The reverb input buffer to write to
 			* @params outputBuffer The output buffer to write to
 			*/
-			void ProcessAudio(const Buffer& data, Matrix& reverbInput, Buffer& outputBuffer);
+			void ProcessAudio(const Buffer& data, Matrix& reverbInput, Buffer& outputBuffer, const Real lerpFactor);
 
 			/**
 			* @brief Destroys all image sources
@@ -192,7 +192,7 @@ namespace RAC
 			/**
 			* @brief Updates the audio thread image sources from the current image sources
 			*/
-			void UpdateImageSources();
+			void UpdateImageSources(const std::shared_ptr<Config>& config);
 
 			/**
 			* @brief Updates the audio thread data for a given image source
@@ -200,21 +200,21 @@ namespace RAC
 			* @params data The new image source data
 			* @return True if the image was destroyed successfully, false otherwise
 			*/
-			bool UpdateImageSource(const ImageSourceData& data);
+			bool UpdateImageSource(const ImageSourceData& data, const std::shared_ptr<Config>& config);
 
 			/**
 			* @return The next free FDN channel
 			*/
-			int AssignFDNChannel();
+			int AssignFDNChannel(const int numLateReverbChannels);
 
 			/**
 			* @brief Resets the free FDN channel slots
 			*/
 			void ResetFDNSlots();
 
-			void ProcessDirect(const Buffer& data, Matrix& reverbInput, Buffer& outputBuffer);
+			void ProcessDirect(const Buffer& data, Matrix& reverbInput, Buffer& outputBuffer, const Real lerpFactor);
 
-			Config mConfig;							// The spatialiser configuration
+			// Config mConfig;							// The spatialiser configuration
 			AirAbsorption mAirAbsorption;			// Air absorption filter
 			SourceDirectivity mDirectivity;			// Source directivity
 			Buffer bStore;							// Internal audio buffer

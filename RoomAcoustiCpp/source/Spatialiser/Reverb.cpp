@@ -40,13 +40,13 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		ReverbSource::ReverbSource(Binaural::CCore* core, const Config& config, const Vec3& shift) : mCore(core), mShift(shift)
+		ReverbSource::ReverbSource(Binaural::CCore* core, const std::shared_ptr<Config> config, const Vec3& shift) : mCore(core), mShift(shift)
 		{
-			bInput = CMonoBuffer<float>(config.numFrames);
-			bOutput.left = CMonoBuffer<float>(config.numFrames);
-			bOutput.right = CMonoBuffer<float>(config.numFrames);
+			bInput = CMonoBuffer<float>(config->numFrames);
+			bOutput.left = CMonoBuffer<float>(config->numFrames);
+			bOutput.right = CMonoBuffer<float>(config->numFrames);
 			InitSource();
-			UpdateSpatialisationMode(config.spatialisationMode);
+			UpdateSpatialisationMode(config->GetSpatialisationMode());
 		}
 
 		////////////////////////////////////////
@@ -175,7 +175,6 @@ namespace RAC
 
 		void Reverb::UpdateSpatialisationMode(const SpatialisationMode mode)
 		{
-			mConfig.spatialisationMode = mode;
 			unique_lock<shared_mutex> lock(tuneInMutex);
 			for (auto& source : mReverbSources)
 				source->UpdateSpatialisationMode(mode);
@@ -183,19 +182,12 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Reverb::UpdateLerpFactor(const Real lerpFactor)
-		{
-			mConfig.lerpFactor = lerpFactor;
-		}
-
-		////////////////////////////////////////
-
-		void Reverb::InitSources(Binaural::CCore* core)
+		std::vector<Vec3> Reverb::CalculateSourcePositions(const int numLateReverbChannels) const
 		{
 			// Distribute reverb sources around the listener
 			std::vector<Vec3> points;
-			points.reserve(mConfig.numLateReverbChannels);
-			switch (mConfig.numLateReverbChannels)
+			points.reserve(numLateReverbChannels);
+			switch (numLateReverbChannels)
 			{
 			case 1:
 			{ points.emplace_back(0.0, 0.0, 1.0); break; }
@@ -218,14 +210,7 @@ namespace RAC
 			case 32:
 			{ Icosahedron(points, true); Dodecahedron(points, true); break; }
 			}
-
-			mReverbSources.reserve(mConfig.numLateReverbChannels);
-			threadResults.reserve(mConfig.numLateReverbChannels);
-			for (int i = 0; i < mConfig.numLateReverbChannels; i++)
-			{
-				mReverbSources.emplace_back(std::make_unique<ReverbSource>(core, mConfig, points[i]));
-				threadResults.emplace_back(2 * mConfig.numFrames);
-			}
+			return points;
 		}
 
 		////////////////////////////////////////
@@ -238,7 +223,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Reverb::ProcessAudio(const Matrix& data, Buffer& outputBuffer)
+		void Reverb::ProcessAudio(const Matrix& data, Buffer& outputBuffer, const Real lerpFactor)
 		{
 			if (!running.load())
 				return;
@@ -246,7 +231,7 @@ namespace RAC
 #ifdef PROFILE_AUDIO_THREAD
 			BeginReverb();
 #endif
-			mFDN.load()->ProcessAudio(data, reverbOutputs);
+			mFDN.load()->ProcessAudio(data, reverbOutputs, lerpFactor);
 			
 			std::latch latch(mReverbSources.size());
 			size_t index = 0;
@@ -275,7 +260,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Reverb::SetTargetT60(const Coefficients& T60)
+		void Reverb::SetTargetT60(const Coefficients<>& T60)
 		{
 			if (!initialised.load())
 				return;
@@ -289,19 +274,19 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Reverb::InitLateReverb(const Coefficients& T60, const Vec& dimensions, const FDNMatrix matrix)
+		void Reverb::InitLateReverb(const Coefficients<>& T60, const Vec& dimensions, const FDNMatrix matrix, const std::shared_ptr<Config> config)
 		{
             std::shared_ptr<FDN> fdn;
             switch (matrix)
             {
             case FDNMatrix::householder:
-                fdn = std::make_shared<HouseHolderFDN>(T60, dimensions, mConfig);
+                fdn = std::make_shared<HouseHolderFDN>(T60, dimensions, config);
                 break;
             case FDNMatrix::randomOrthogonal:
-                fdn = std::make_shared<RandomOrthogonalFDN>(T60, dimensions, mConfig);
+                fdn = std::make_shared<RandomOrthogonalFDN>(T60, dimensions, config);
                 break;
             default:
-                fdn = std::make_shared<FDN>(T60, dimensions, mConfig);
+                fdn = std::make_shared<FDN>(T60, dimensions, config);
                 break;
             }
 			releasePool.Add(fdn);
@@ -311,7 +296,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Reverb::UpdateReflectionFilters(const std::vector<Absorption>& absorptions)
+		void Reverb::UpdateReflectionFilters(const std::vector<Absorption<>>& absorptions)
 		{
 			if (!initialised.load())
 				return;

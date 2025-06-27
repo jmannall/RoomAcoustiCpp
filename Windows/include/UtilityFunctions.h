@@ -8,6 +8,7 @@
 #include <vector>
 #include <iostream>
 #include <filesystem>
+#include <random>
 
 const std::string dir = _SOLUTIONDIR;
 const std::string filePath = dir + "UnitTestData\\";
@@ -151,6 +152,20 @@ inline std::vector<std::string> ListDirectoryFiles(const std::string& directoryP
 	}
 
 	return files;
+}
+
+static std::default_random_engine generator(100); // Seed the generator
+
+inline double RandomValue()
+{
+	std::uniform_real_distribution<double> distribution(-1.0, 1.0);
+	return distribution(generator);
+}
+
+inline double RandomValue(const double a, const double b)
+{
+	std::uniform_real_distribution<double> distribution(a, b);
+	return distribution(generator);
 }
 
 #endif

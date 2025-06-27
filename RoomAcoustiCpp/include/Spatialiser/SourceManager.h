@@ -40,7 +40,7 @@ namespace RAC
 			* @params core The 3DTI processing core
 			* @params config The spatialiser configuration
 			*/
-			SourceManager(Binaural::CCore* core, const Config& config) : mSources(), mEmptySlots(), mCore(core), mConfig(config), nextSource(0) {};
+			SourceManager(Binaural::CCore* core, const std::shared_ptr<Config> config) : mSources(), mEmptySlots(), mCore(core), mConfig(config), nextSource(0) {};
 			
 			/**
 			* @brief Default deconstructor
@@ -80,7 +80,7 @@ namespace RAC
 				shared_lock<shared_mutex> lock(mSourceMutex);
 				auto it = mSources.find(id);
 				if (it != mSources.end()) // case: source does exist
-					it->second.UpdateDirectivity(directivity);
+					it->second.UpdateDirectivity(directivity, mConfig->frequencyBands, mConfig->numLateReverbChannels);
 			}
 
 			/**
@@ -137,7 +137,7 @@ namespace RAC
 			{
 				shared_lock<shared_mutex> lock(mSourceMutex);
 				auto it = mSources.find(id);
-				if (it != mSources.end()) { it->second.UpdateData(source, vSources); } // case: source does exist
+				if (it != mSources.end()) { it->second.UpdateData(source, vSources, mConfig); } // case: source does exist
 			}
 
 			/**
@@ -148,12 +148,12 @@ namespace RAC
 			* @params reverbInput The reverb input matrix to write to
 			* @params outputBuffer The output audio buffer to write to
 			*/
-			inline void ProcessAudio(const size_t id, const Buffer& data, Matrix& reverbInput, Buffer& outputBuffer)
+			inline void ProcessAudio(const size_t id, const Buffer& data, Matrix& reverbInput, Buffer& outputBuffer, const Real lerpFactor)
 			{
 				shared_lock<shared_mutex> lock(mSourceMutex);
 				auto it = mSources.find(id);
 				if (it != mSources.end()) // case: source does exist
-					it->second.ProcessAudio(data, reverbInput, outputBuffer);
+					it->second.ProcessAudio(data, reverbInput, outputBuffer, lerpFactor);
 			}
 
 		private:
@@ -162,7 +162,7 @@ namespace RAC
 			*/
 			inline void Reset() { mSources.clear(); mEmptySlots.clear(); }
 
-			Config mConfig;			// Spatialiser configuration
+			std::shared_ptr<Config> mConfig;			// Spatialiser configuration
 
 			SourceMap mSources;							// Stored sources
 			std::vector<size_t> mEmptySlots;			// Available source IDs
@@ -173,6 +173,19 @@ namespace RAC
 			Binaural::CCore* mCore;			// 3DTI processing core
 
 			std::shared_mutex mSourceMutex;		// Protects mSources
+
+			/*
+			* Fixed array of image sources to process over. Ensure can process audio and be updated thread safe.
+			* Can be initialised and removed threadsafe. What if remove while audio being processed?
+			* List<bool> of which image sources to process
+			* imageSources contain a shared pointer to the input data for its source. - Is this efficient?
+			* mSources controls the root input data - thread safe as never write and read at same time.
+			* Modify to be generic for direct, reflection and diffraction.
+			* Subclasses?
+			*/
+			//std::array<ImageSource, 256> imageSources;
+			//std::array<bool, 256> process;
+
 		};
 	}
 }

@@ -69,11 +69,15 @@ namespace RAC
 			void Path::UpdateBaMa()
 			{
 				bA = fabs(rData.t - sData.t);
-				mA = fmin(sData.t, rData.t);
+				mA = fmin(sData.t, wData.t - rData.t);
 				if (bA > PI_1)
 					inShadow = true;
 				else
 					inShadow = false;
+				if (2 * mA + bA <= PI_1)
+					inRelfZone = true;
+				else
+					inRelfZone = false;
 			}
 
 			void Path::ValidPath()

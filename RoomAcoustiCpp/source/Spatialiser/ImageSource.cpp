@@ -160,24 +160,68 @@ namespace RAC
 
 		//////////////////// ImageSource class ////////////////////
 
+		ReleasePool ImageSource::releasePool;
+
 		////////////////////////////////////////
 
-		ImageSource::ImageSource(Binaural::CCore* core, const Config& config, const ImageSourceData& data, int fdnChannel) : mCore(core), mSource(nullptr), mConfig(config), mFDNChannel(fdnChannel),
-			mCurrentGain(0.0f), mTargetGain(0.0f), mFilter(data.GetAbsorption(), config.frequencyBands, config.Q, config.fs), mAirAbsorption(data.GetDistance(), mConfig.fs), feedsFDN(data.IsFeedingFDN()), bStore(config.numFrames), bDiffStore(config.numFrames),
-			attenuate(&mDiffractionPath), lowPass(&mDiffractionPath, config.fs), udfa(&mDiffractionPath, config.fs), udfai(&mDiffractionPath, config.fs), nnSmall(&mDiffractionPath), nnBest(&mDiffractionPath), utd(&mDiffractionPath, config.fs), btm(&mDiffractionPath, config.fs),
-			reflection(data.IsReflection()), diffraction(data.IsDiffraction()), transform(data.GetTransform()), isInitialised(false), isCrossFading(false), mDiffractionModel(nullptr), mOldDiffractionModel(nullptr),
-			crossfadeCounter(0), crossfadeLengthSamples(static_cast<int>(round(mConfig.fs * 0.01)))
+		ImageSource::ImageSource(Binaural::CCore* core, const std::shared_ptr<Config>& config, const ImageSourceData& data, int fdnChannel) : mCore(core), mSource(nullptr), mFDNChannel(fdnChannel),
+			gain(0.0), mFilter(data.GetAbsorption(), config->frequencyBands, config->Q, config->fs), mAirAbsorption(data.GetDistance(), config->fs), feedsFDN(data.IsFeedingFDN()), bStore(config->numFrames), bDiffStore(config->numFrames), mDiffractionPath(data.GetDiffractionPath()),
+			reflection(data.IsReflection()), diffraction(data.IsDiffraction()), transform(data.GetTransform()), isCrossFading(false),
+			currentDiffractionModel(config->GetDiffractionModel()), diffractionGain(0.0)
 		{
-			UpdateDiffractionModel(config.diffractionModel);
-			
-			audioMutex = std::make_shared<std::mutex>();
+			diffractionGain.Reset(1.0);			
+			switch (currentDiffractionModel)
+			{
+			case DiffractionModel::attenuate:
+			{
+				activeModel = std::make_shared<Diffraction::Attenuate>(mDiffractionPath);
+				break;
+			}
+			case DiffractionModel::lowPass:
+			{
+				activeModel = std::make_shared<Diffraction::LPF>(mDiffractionPath, config->fs);
+				break;
+			}
+			case DiffractionModel::udfa:
+			{
+				activeModel = std::make_shared<Diffraction::UDFA>(mDiffractionPath, config->fs);
+				break;
+			}
+			case DiffractionModel::udfai:
+			{
+				activeModel = std::make_shared<Diffraction::UDFAI>(mDiffractionPath, config->fs);
+				break;
+			}
+			case DiffractionModel::nnSmall:
+			{
+				activeModel = std::make_shared<Diffraction::NNSmall>(mDiffractionPath);
+				break;
+			}
+			case DiffractionModel::nnBest:
+			{
+				activeModel = std::make_shared<Diffraction::NNBest>(mDiffractionPath);
+				break;
+			}
+			case DiffractionModel::utd:
+			{
+				activeModel = std::make_shared<Diffraction::UTD>(mDiffractionPath, config->fs);
+				break;
+			}
+			case DiffractionModel::btm:
+			{
+				activeModel = std::make_shared<Diffraction::BTM>(mDiffractionPath, config->fs);
+				break;
+			}
+			}
+			releasePool.Add(activeModel);
 
-			bInput = CMonoBuffer<float>(mConfig.numFrames);
-			bOutput.left = CMonoBuffer<float>(mConfig.numFrames);
-			bOutput.right = CMonoBuffer<float>(mConfig.numFrames);
-			bMonoOutput = CMonoBuffer<float>(mConfig.numFrames);
-			bDiffStore.ResizeBuffer(std::min(mConfig.numFrames, crossfadeLengthSamples));
+			bInput = CMonoBuffer<float>(config->numFrames);
+			bOutput.left = CMonoBuffer<float>(config->numFrames);
+			bOutput.right = CMonoBuffer<float>(config->numFrames);
+			bMonoOutput = CMonoBuffer<float>(config->numFrames);
+			bDiffStore = Buffer(config->numFrames);
 
+			Init(data, config->GetImpulseResponseMode(), config->GetSpatialisationMode());
 			Update(data, fdnChannel);
 		}
 
@@ -186,18 +230,14 @@ namespace RAC
 		ImageSource::~ImageSource()
 		{
 			if (mSource != nullptr)
-			{
-				lock_guard<mutex> lock(*audioMutex);
 				mCore->RemoveSingleSourceDSP(mSource);
-			}
 		}
 
 		////////////////////////////////////////
 
 		void ImageSource::UpdateSpatialisationMode(const SpatialisationMode mode)
 		{
-			mConfig.spatialisationMode = mode;
-			if (isInitialised)
+			if (isInitialised.load())
 			{
 				unique_lock<shared_mutex> lock(tuneInMutex);
 				switch (mode)
@@ -228,11 +268,9 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void ImageSource::UpdateImpulseResponseMode(const Real lerpFactor, const bool mode)
+		void ImageSource::UpdateImpulseResponseMode(const bool mode)
 		{
 			{
-				lock_guard<mutex> lock(*audioMutex);
-				mConfig.lerpFactor = lerpFactor;
 				if (mode)
 				{
 					mSource->DisableDistanceAttenuationSmoothingAnechoic();
@@ -248,72 +286,80 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void ImageSource::UpdateDiffractionModel(const DiffractionModel model)
+		void ImageSource::UpdateDiffractionModel(const DiffractionModel model, const int fs)
 		{
-			mOldDiffractionModel = mDiffractionModel;
-			mConfig.diffractionModel = model;
+			if (currentDiffractionModel == model)
+				return;
+			currentDiffractionModel = model;
+
 			switch (model)
 			{
 			case DiffractionModel::attenuate:
-			{ mDiffractionModel = &attenuate; break; }
-			case DiffractionModel::lowPass:
-			{ mDiffractionModel = &lowPass; break; }
-			case DiffractionModel::udfa:
-			{ mDiffractionModel = &udfa; break; }
-			case DiffractionModel::udfai:
-			{ mDiffractionModel = &udfai; break; }
-			case DiffractionModel::nnBest:
-			{ mDiffractionModel = &nnBest; break; }
-			case DiffractionModel::nnSmall:
-			{ mDiffractionModel = &nnSmall; break; }
-			case DiffractionModel::utd:
-			{ mDiffractionModel = &utd; break; }
-			case DiffractionModel::btm:
-			{ mDiffractionModel = &btm; break; }
-			default:
-				mDiffractionModel = &btm;
+			{ 
+				nextModel.store(std::make_shared<Diffraction::Attenuate>(mDiffractionPath));
+				break;
 			}
-			UpdateDiffraction();
-
-			if (mOldDiffractionModel == mDiffractionModel)
-				return;
-
-			if (mOldDiffractionModel == nullptr)
-				return;
-
-			isCrossFading = true;
-			crossfadeCounter = 0;
+			case DiffractionModel::lowPass:
+			{
+				nextModel.store(std::make_shared<Diffraction::LPF>(mDiffractionPath, fs));
+				break;
+			}
+			case DiffractionModel::udfa:
+			{
+				nextModel.store(std::make_shared<Diffraction::UDFA>(mDiffractionPath, fs));
+				break;
+			}
+			case DiffractionModel::udfai:
+			{
+				nextModel.store(std::make_shared<Diffraction::UDFAI>(mDiffractionPath, fs));
+				break;
+			}
+			case DiffractionModel::nnSmall:
+			{
+				nextModel.store(std::make_shared<Diffraction::NNSmall>(mDiffractionPath));
+				break;
+			}
+			case DiffractionModel::nnBest:
+			{
+				nextModel.store(std::make_shared<Diffraction::NNBest>(mDiffractionPath));
+				break;
+			}
+			case DiffractionModel::utd:
+			{
+				nextModel.store(std::make_shared<Diffraction::UTD>(mDiffractionPath, fs));
+				break;
+			}
+			case DiffractionModel::btm:
+			{
+				nextModel.store(std::make_shared<Diffraction::BTM>(mDiffractionPath, fs));
+				break;
+			}
+			}
+			releasePool.Add(nextModel.load());
+			if (!isCrossFading.load())
+			{
+				incomingModel = nextModel.exchange(nullptr);
+				isCrossFading.store(true);
+			}
 		}
 
 		////////////////////////////////////////
 
 		bool ImageSource::Update(const ImageSourceData& data, int& fdnChannel)
 		{
-			if (data.IsVisible()) // Process virtual source - Init if doesn't exist
+			if (data.IsVisible())
 			{
-				unique_lock<mutex> lck(*audioMutex, std::defer_lock);
-				if (lck.try_lock())
-				{
-					mTargetGain = data.GetDirectivity();
-					if (!isInitialised)
-						Init(data);
-					UpdateParameters(data, fdnChannel);
-				}
+				gain.SetTarget(1.0);
+				UpdateParameters(data, fdnChannel);
 			}
 			else
 			{
-				unique_lock<mutex> lck(*audioMutex, std::defer_lock);
-				if (lck.try_lock())
+				gain.SetTarget(0.0);
+				if (gain.IsZero())
 				{
-					mTargetGain = 0.0f;
-					// mDirectivityStore = mCurrentGain;
-					if (mCurrentGain < 0.0001)
-					{
-						if (isInitialised)
-							Remove();
-						lck.unlock();
-						return true;
-					}
+					if (isInitialised.load())
+						Remove();
+					return true;
 				}
 			}
 			return false;
@@ -321,26 +367,12 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void ImageSource::Init(const ImageSourceData& data)
+		void ImageSource::Init(const ImageSourceData& data, const bool impulseReponseMode, const SpatialisationMode spatialisationMode)
 		{
 			// audioMutex already locked
 #ifdef DEBUG_IMAGE_SOURCE
 			Debug::Log("Init virtual source", Colour::Green);
 #endif
-			reflection = data.IsReflection();
-			diffraction = data.IsDiffraction();
-
-			if (reflection) // Set reflection filter
-				mFilter.SetTargetGains(data.GetAbsorption());
-
-			// Set btm currentIr
-			if (diffraction)
-			{
-				mDiffractionPath = data.GetDiffractionPath();
-				btm.UpdatePath(&mDiffractionPath);
-				btm.InitParameters();
-			}
-
 			{
 				shared_lock<shared_mutex> lock(tuneInMutex);
 
@@ -350,7 +382,7 @@ namespace RAC
 				mSource->DisableFarDistanceEffect();
 				mSource->DisableNearFieldEffect();
 
-				if (mConfig.lerpFactor == 1.0)
+				if (impulseReponseMode)
 				{
 					mSource->DisableDistanceAttenuationSmoothingAnechoic();
 					mSource->DisableInterpolation();
@@ -359,10 +391,9 @@ namespace RAC
 				mSource->SetSourceTransform(data.GetTransform());
 			}
 			//updateTransform = true;
-			isInitialised = true;
+			isInitialised.store(true);
 
-			//Select spatialisation mode
-			UpdateSpatialisationMode(mConfig.spatialisationMode);
+			UpdateSpatialisationMode(spatialisationMode);
 		}
 
 		////////////////////////////////////////
@@ -370,13 +401,25 @@ namespace RAC
 		void ImageSource::UpdateParameters(const ImageSourceData& data, int& fdnChannel)
 		{
 			// audioMutex already locked
-			if (reflection) // Update reflection filter
-				mFilter.SetTargetGains(data.GetAbsorption());
+			// Update reflection/directivity filter
+			mFilter.SetTargetGains(data.GetAbsorption());
 
 			if (diffraction)
 			{
 				mDiffractionPath = data.GetDiffractionPath();
-				UpdateDiffraction();
+				activeModel->SetTargetParameters(mDiffractionPath);
+				std::shared_ptr<Diffraction::Model> temp = incomingModel.load();
+				if (temp)
+					temp->SetTargetParameters(mDiffractionPath);
+				temp = nextModel.load();
+				if (temp)
+					temp->SetTargetParameters(mDiffractionPath);
+				if (isCrossFading.load())
+				{
+					temp = fadeModel;
+					if (temp)
+						temp->SetTargetParameters(mDiffractionPath);
+				}
 			}
 
 			mAirAbsorption.SetTargetDistance(data.GetDistance());
@@ -403,26 +446,25 @@ namespace RAC
 				mCore->RemoveSingleSourceDSP(mSource);
 				mSource.reset();
 			}
-			isInitialised = false;
+			isInitialised.store(false);
 		}
 
 		////////////////////////////////////////
 
-		int ImageSource::ProcessAudio(const Buffer& data, Buffer& reverbInput, Buffer& outputBuffer)
+		int ImageSource::ProcessAudio(const Buffer& data, Buffer& reverbInput, Buffer& outputBuffer, const Real lerpFactor)
 		{
-			lock_guard<mutex> lock(*audioMutex);
-
-			if (!isInitialised)
+			if (!isInitialised.load())
 			{
 				std::fill(outputBuffer.begin(), outputBuffer.end(), 0.0);
 				return -1;
 			}
 
-			if (mCurrentGain == 0.0 && mTargetGain == 0.0)
+			if (gain.IsZero())
 			{
 				std::fill(outputBuffer.begin(), outputBuffer.end(), 0.0);
 				return -1;
 			}
+			const int numFrames = data.Length();
 
 #ifdef PROFILE_AUDIO_THREAD
 			BeginVirtualSource();
@@ -430,7 +472,7 @@ namespace RAC
 #ifdef PROFILE_AUDIO_THREAD
 			BeginReflection();	// Always process as also includes directivity
 #endif
-			mFilter.ProcessAudio(data, bStore, mConfig.numFrames, mConfig.lerpFactor);
+			mFilter.ProcessAudio(data, bStore, lerpFactor);
 #ifdef PROFILE_AUDIO_THREAD
 			EndReflection();
 #endif
@@ -441,7 +483,7 @@ namespace RAC
 #ifdef PROFILE_AUDIO_THREAD
 				BeginDiffraction();
 #endif
-				ProcessDiffraction(bStore, bStore);
+				ProcessDiffraction(bStore, bStore, lerpFactor);
 #ifdef PROFILE_AUDIO_THREAD
 				EndDiffraction();
 #endif
@@ -450,30 +492,14 @@ namespace RAC
 #ifdef PROFILE_AUDIO_THREAD
 			BeginAirAbsorption();
 #endif
-			mAirAbsorption.ProcessAudio(bStore, bStore, mConfig.numFrames, mConfig.lerpFactor);
+			mAirAbsorption.ProcessAudio(bStore, bStore, lerpFactor);
 #ifdef PROFILE_AUDIO_THREAD
 			EndAirAbsorption();
 #endif
-			if (mCurrentGain == mTargetGain)
-			{
-				std::transform(bStore.begin(), bStore.end(), bInput.begin(),
-					[&](auto value) { return static_cast<float>(value * mCurrentGain); });
-			}
-			else if (Equals(mCurrentGain, mTargetGain))
-			{
-				mCurrentGain = mTargetGain;
-				std::transform(bStore.begin(), bStore.end(), bInput.begin(),
-					[&](auto value) { return static_cast<float>(value * mCurrentGain); });
-			}
-			else
-			{
-				for (int i = 0; i < mConfig.numFrames; i++)
-				{
-					bInput[i] = static_cast<float>(bStore[i] * mCurrentGain);
-					mCurrentGain = Lerp(mCurrentGain, mTargetGain, mConfig.lerpFactor);
-				}
-			}
-		
+
+			for (int i = 0; i < numFrames; i++)
+				bInput[i] = static_cast<float>(bStore[i] * gain.Use(lerpFactor));
+
 #ifdef PROFILE_AUDIO_THREAD
 			Begin3DTI();
 #endif
@@ -501,7 +527,7 @@ namespace RAC
 			End3DTI();
 #endif
 			int j = 0;
-			for (int i = 0; i < mConfig.numFrames; i++)
+			for (int i = 0; i < numFrames; i++)
 			{
 				outputBuffer[j++] = static_cast<Real>(bOutput.left[i]);
 				outputBuffer[j++] = static_cast<Real>(bOutput.right[i]);
@@ -514,32 +540,37 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void ImageSource::ProcessDiffraction(const Buffer& inBuffer, Buffer& outBuffer)
+		void ImageSource::ProcessDiffraction(const Buffer& inBuffer, Buffer& outBuffer, const Real lerpFactor)
 		{
-			if (isCrossFading)
+			activeModel->ProcessAudio(inBuffer, outBuffer, lerpFactor);
+			
+			if (!isCrossFading.load())
+				return;
+
+			if (auto newModel = incomingModel.exchange(nullptr))
+				fadeModel = newModel;
+
+			fadeModel->ProcessAudio(inBuffer, bDiffStore, lerpFactor);
+
+			Real factor = 0.0;
+			for (int i = 0; i < inBuffer.Length(); i++)
 			{
-				assert(mOldDiffractionModel != nullptr);
-
-				mOldDiffractionModel->ProcessAudio(inBuffer, bDiffStore, bDiffStore.Length(), mConfig.lerpFactor);
-				mDiffractionModel->ProcessAudio(inBuffer, outBuffer, mConfig.numFrames, mConfig.lerpFactor);
-
-				for (int i = 0; i < bDiffStore.Length(); ++i)
-				{
-					float crossfadeFactor = static_cast<float>(crossfadeCounter) / crossfadeLengthSamples;
-					outBuffer[i] *= crossfadeFactor;
-					outBuffer[i] += bDiffStore[i] * (1.0f - crossfadeFactor);
-					++crossfadeCounter;
-
-					if (crossfadeCounter >= crossfadeLengthSamples)
-					{
-						isCrossFading = false;
-						mOldDiffractionModel = nullptr;
-						return;
-					}
-				}
+				factor = diffractionGain.Use(0.03);	// Interpolation from one to zero takes 454 samples at 48kHz
+				outBuffer[i] *= 1.0f - factor;
+				outBuffer[i] += bDiffStore[i] * factor;
 			}
-			else
-				mDiffractionModel->ProcessAudio(inBuffer, outBuffer, mConfig.numFrames, mConfig.lerpFactor);
+
+			if (diffractionGain.IsZero())
+			{
+				diffractionGain.Reset(1.0);
+
+				fadeModel.swap(activeModel);
+
+				if (auto queued = nextModel.exchange(nullptr))
+					incomingModel.store(queued);
+				else
+					isCrossFading.store(false);
+			}
 		}
 	}
 }

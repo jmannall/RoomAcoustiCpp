@@ -25,7 +25,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		bool Init(const Config& config)
+		bool Init(const std::shared_ptr<Config> config)
 		{
 			if (context) // Delete any existing context
 			{
@@ -101,7 +101,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void UpdateReverbTime(const Coefficients& T60)
+		void UpdateReverbTime(const Coefficients<>& T60)
 		{
 			auto context = GetContext();
 			if (context)
@@ -184,7 +184,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		size_t InitWall(const Vertices& vData, const Absorption& absorption)
+		size_t InitWall(const Vertices& vData, const Absorption<>& absorption)
 		{
 			auto context = GetContext();
 			if (context)
@@ -204,7 +204,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void UpdateWallAbsorption(size_t id, const Absorption& absorption)
+		void UpdateWallAbsorption(size_t id, const Absorption<>& absorption)
 		{
 			auto context = GetContext();
 			if (context)

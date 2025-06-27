@@ -43,7 +43,7 @@ namespace RAC
 			* @param Q The Q factor for the filters
 			* @param sampleRate The sample rate for calculating the filter coefficients
 			*/
-			GraphicEQ(const Coefficients& fc, const Real Q, const int sampleRate) : GraphicEQ(Coefficients(fc.Length(), 0.0), fc, Q, sampleRate) {}
+			GraphicEQ(const Coefficients<>& fc, const Real Q, const int sampleRate) : GraphicEQ(Coefficients<>(fc.Length(), 0.0), fc, Q, sampleRate) {}
 
 			/**
 			* @brief Constructor that initialises the GraphicEQ with given gains, frequency bands, Q factor and sample rate
@@ -53,7 +53,7 @@ namespace RAC
 			* @param Q The Q factor for the filters
 			* @param sampleRate The sample rate for calculating the filter coefficients
 			*/
-			GraphicEQ(const Coefficients& gain, const Coefficients& fc, const Real Q, const int sampleRate);
+			GraphicEQ(const Coefficients<>& gain, const Coefficients<>& fc, const Real Q, const int sampleRate);
 
 			/**
 			* @brief Default deconstructor
@@ -66,7 +66,7 @@ namespace RAC
 			* @param gains The target response for the GraphicEQ
 			* @return True if the target and current gains are currently zero, false otherwise
 			*/
-			bool SetTargetGains(const Coefficients& gains);
+			bool SetTargetGains(const Coefficients<>& gains);
 
 			/**
 			* @brief Returns the output of the GraphicEQ given an input
@@ -84,7 +84,7 @@ namespace RAC
 			* @param numFrames The number of frames in the buffer
 			* @param lerpFactor The linear interpolation factor
 			*/
-			void ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const int numFrames, const Real lerpFactor);
+			void ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const Real lerpFactor);
 
 			/**
 			* @brief Resets the filter buffers
@@ -106,7 +106,7 @@ namespace RAC
 			* @param Q The Q factor for the filters
 			* @param fs The sample rate for calculating the filter coefficients
 			*/
-			void InitMatrix(const Coefficients& fc, const Real Q, const Real fs);
+			void InitMatrix(const Coefficients<>& fc, const Real Q, const Real fs);
 
 			/**
 			* @brief Calculates the filter gains based on the target filter response
@@ -114,7 +114,7 @@ namespace RAC
 			* @param gains The target response for the GraphicEQ
 			* @returns A pair containing the calculated gain for each filter and a DC gain
 			*/
-			std::pair<Rowvec, Real> CalculateGains(const Coefficients& gains) const;
+			std::pair<Rowvec, Real> CalculateGains(const Coefficients<>& gains) const;
 
 			/**
 			* @brief Creates a frequency vector based on the target response center frequencies
@@ -122,7 +122,7 @@ namespace RAC
 			* @param fc The filter band center frequencies
 			* @returns A frequency vector for calculating the filter responses
 			*/
-			Coefficients CreateFrequencyVector(const Coefficients& fc) const;
+			Coefficients<> CreateFrequencyVector(const Coefficients<>& fc) const;
 
 			/**
 			* @brief Linearly interpolates the current gain with the target gain
@@ -132,7 +132,7 @@ namespace RAC
 			void InterpolateGain(const Real lerpFactor);
 
 			const int numFilters;			// Number of filters
-			Coefficients previousInput;		// Previous target response to check if they have changed
+			Coefficients<> previousInput;		// Previous target response to check if they have changed
 
 			std::unique_ptr<PeakLowShelf> lowShelf;							// Low-shelf filter
 			std::vector<std::unique_ptr<PeakingFilter>> peakingFilters;		// Peaking filters

@@ -13,6 +13,7 @@
 
 // Spatialiser headers
 #include "Spatialiser/FDN.h"
+#include "Spatialiser/Globals.h"
 
 // Unity headers
 #include "Unity/UnityInterface.h"
@@ -108,20 +109,20 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		FDN::FDN(const Coefficients& T60, const Vec& dimensions, const Config& config, const Matrix& matrix) : mConfig(config), x(config.numLateReverbChannels),
-			y(config.numLateReverbChannels), feedbackMatrix(matrix)
+		FDN::FDN(const Coefficients<>& T60, const Vec& dimensions, const std::shared_ptr<Config> config, const Matrix& matrix) : x(config->numLateReverbChannels),
+			y(config->numLateReverbChannels), feedbackMatrix(matrix)
 		{
 			assert(T60 > 0);
 			
-			std::vector<int> delayLengths = CalculateTimeDelay(dimensions);
-			mChannels.reserve(config.numLateReverbChannels);
-			for (int i = 0; i < config.numLateReverbChannels; i++)
+			std::vector<int> delayLengths = CalculateTimeDelay(dimensions, config->numLateReverbChannels, config->fs);
+			mChannels.reserve(config->numLateReverbChannels);
+			for (int i = 0; i < config->numLateReverbChannels; i++)
 				mChannels.push_back(std::make_unique<FDNChannel>(delayLengths[i], T60, config));
 		}
 
 		////////////////////////////////////////
 
-		void FDN::SetTargetT60(const Coefficients& T60)
+		void FDN::SetTargetT60(const Coefficients<>& T60)
 		{
 			for (int i = 0; i < mChannels.size(); i++)
 				mChannels[i]->SetTargetT60(T60);
@@ -129,24 +130,24 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		std::vector<int> FDN::CalculateTimeDelay(const Vec& dimensions)
+		std::vector<int> FDN::CalculateTimeDelay(const Vec& dimensions, const int numLateReverbChannels, const int fs)
 		{
 			assert(dimensions.Rows() >  0);
 
-			Vec t = Vec(mConfig.numLateReverbChannels);
-			std::vector<int> delays = std::vector<int>(mConfig.numLateReverbChannels);
+			Vec t = Vec(numLateReverbChannels);
+			std::vector<int> delays = std::vector<int>(numLateReverbChannels);
 			if (dimensions.Rows() > 0)
 			{
-				Real idx = static_cast<Real>(mConfig.numLateReverbChannels) / static_cast<Real>(dimensions.Rows());
+				Real idx = static_cast<Real>(numLateReverbChannels) / static_cast<Real>(dimensions.Rows());
 
-				assert(dimensions.Rows() <= mConfig.numLateReverbChannels);
+				assert(dimensions.Rows() <= numLateReverbChannels);
 				assert(idx == floor(idx)); // length of dimensions must be a multiple of mNumChannels
 
 				t.RandomUniformDistribution(-0.1, 0.1f);
 				t *= dimensions.Mean();
 
 				int k = 0;
-				for (int j = 0; j < mConfig.numLateReverbChannels / idx; ++j)
+				for (int j = 0; j < numLateReverbChannels / idx; ++j)
 				{
 					assert(dimensions[j] > 0.0);
 					for (int i = 0; i < idx; ++i)
@@ -156,10 +157,10 @@ namespace RAC
 					}
 				}
 				t *= INV_SPEED_OF_SOUND;
-				t.Max(1.0 / static_cast<Real>(mConfig.fs));
+				t.Max(1.0 / static_cast<Real>(fs));
 
-				for (int i = 0; i < mConfig.numLateReverbChannels; i++)
-					delays[i] = static_cast<int>(round(t[i] * static_cast<Real>(mConfig.fs)));
+				for (int i = 0; i < numLateReverbChannels; i++)
+					delays[i] = static_cast<int>(round(t[i] * static_cast<Real>(fs)));
 				if (!IsSetMutuallyPrime(delays))
 					MakeSetMutuallyPrime(delays);
 			}
@@ -207,7 +208,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void FDN::ProcessAudio(const Matrix& data, std::vector<Buffer>& outputBuffers)
+		void FDN::ProcessAudio(const Matrix& data, std::vector<Buffer>& outputBuffers, const Real lerpFactor)
 		{
 #ifdef PROFILE_AUDIO_THREAD
 			BeginFDN();
@@ -222,13 +223,13 @@ namespace RAC
 			FlushDenormals();
 
 			// Process feedback loop
-			for (int i = 0; i < mConfig.numFrames; i++)
+			for (int i = 0; i < data.Cols(); i++)
 			{
-				for (int j = 0; j < mConfig.numLateReverbChannels; j++)
+				for (int j = 0; j < mChannels.size(); j++)
 				{
 					if (isnan(x[j]))
 						Debug::Log("X was nan", Colour::Red);
-					y[j] = mChannels[j]->GetOutput(x[j] + data[j][i], mConfig.lerpFactor);
+					y[j] = mChannels[j]->GetOutput(x[j] + data[j][i], lerpFactor);
 					outputBuffers[j][i] = y[j];
 					if (isnan(y[j]))
 						Debug::Log("Y was nan", Colour::Red);
@@ -237,8 +238,8 @@ namespace RAC
 			}
 
 			// Process output filters
-			for (int i = 0; i < mConfig.numLateReverbChannels; i++)
-				mChannels[i]->ProcessOutput(outputBuffers[i], outputBuffers[i], mConfig.numFrames, mConfig.lerpFactor);
+			for (int i = 0; i < mChannels.size(); i++)
+				mChannels[i]->ProcessOutput(outputBuffers[i], outputBuffers[i], lerpFactor);
 			
 			NoFlushDenormals();
 #ifdef PROFILE_AUDIO_THREAD

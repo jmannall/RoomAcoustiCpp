@@ -113,7 +113,7 @@ namespace RAC
 		std::vector<std::vector<float>> absorptionData = Parse2Dcsv<float>(filePath + "Scenes\\" + scene + "\\Absorption.csv");
 
 		Coefficients fBands = Coefficients(std::vector<double>(data.begin() + 7, data.end()));
-		Config config = Config(data[0], data[1], data[2], data[3], data[4], fBands, diffractionModel, SpatialisationMode::none);
+		std::shared_ptr<Config> config = std::make_shared<Config>(data[0], data[1], data[2], data[3], data[4], fBands, diffractionModel, SpatialisationMode::none);
 
 		std::shared_ptr<MATLABEngine> matlabPtr = LoadMATLAB();
 
@@ -121,9 +121,8 @@ namespace RAC
 
 		Init(config);
 		UpdateIEMConfig(iemConfig);
-		UpdateImpulseResponseMode(config.lerpFactor, true);
+		UpdateImpulseResponseMode(config->GetLerpFactor(), true);
 		UpdateReverbTime(ReverbFormula::Sabine);
-		InitFDNMatrix(FDNMatrix::randomOrthogonal);
 		bool filesLoaded = false;
 
 		std::vector<size_t> wallIDs(verticesData.size());
@@ -147,10 +146,10 @@ namespace RAC
 			wallIDs[i] = InitWall(vertices, absorption);
 		}
 
-		UpdateRoom(145.0f, Vec({ 8.444f, 6.038f, 2.988f }));
+		InitLateReverb(145.0f, Vec({ 8.444f, 6.038f, 2.988f }), FDNMatrix::randomOrthogonal);
 		UpdatePlanesAndEdges();
 
-		std::vector<float> input(config.numFrames);
+		std::vector<float> input(config->numFrames);
 
 		RegisterIEMCallback(OnIEMCompleted);
 
@@ -208,7 +207,7 @@ namespace RAC
 				if (mode == SpatialisationMode::none && listenerNames[j][0].find("None") == std::string::npos)
 					continue;
 
-				int numBuffers = irData[fileCounter].size() / (2 * config.numFrames);
+				int numBuffers = irData[fileCounter].size() / (2 * config->numFrames);
 				if (mode == SpatialisationMode::none)
 					numBuffers *= 2;
 
@@ -238,14 +237,14 @@ namespace RAC
 					input[0] = 0.0;
 					GetOutput(&outputPtr);
 
-					for (int l = 0; l < config.numFrames; l++)
+					for (int l = 0; l < config->numFrames; l++)
 					{
 						output[count++] = outputPtr[2 * l];
 						if (mode != SpatialisationMode::none)
 							output[count++] = outputPtr[2 * l + 1];
 					}
 				}
-				results.push_back(AssessImpulseResponse(matlabPtr, irData[fileCounter], output, config.fs));
+				results.push_back(AssessImpulseResponse(matlabPtr, irData[fileCounter], output, config->fs));
 
 				RemoveSource(sourceID);
 				fileCounter++;

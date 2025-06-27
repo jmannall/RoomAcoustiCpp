@@ -90,11 +90,11 @@ extern "C"
 		else { numFDNChannels = 32; }
 
 		numAbsorptionBands = numBands;
-		Coefficients frequencyBands = Coefficients(static_cast<size_t>(numBands));
+		Coefficients frequencyBands = Coefficients(numBands);
 		for (int i = 0; i < numBands; i++)
 			frequencyBands[i] = static_cast<Real>(fBands[i]);
 
-		Config config = Config(fs, numFrames, numFDNChannels, static_cast<Real>(lerpFactor), static_cast<Real>(Q), frequencyBands);
+		std::shared_ptr<Config> config = std::make_shared<Config>(fs, numFrames, numFDNChannels, static_cast<Real>(lerpFactor), static_cast<Real>(Q), frequencyBands);
 		return Init(config);
 	}
 
@@ -219,11 +219,11 @@ extern "C"
 	/**
 	* Updates the late reverberation time (T60).
 	*
-	* @param t60 The late reverberation time.
+	* @param t60 The late reverberation time.s
 	*/
 	EXPORT void API RACUpdateReverbTime(const float* t60)
 	{
-		Coefficients T60 = Coefficients(static_cast<size_t>(numAbsorptionBands));
+		Coefficients T60 = Coefficients<>(static_cast<size_t>(numAbsorptionBands));
 		for (int i = 0; i < numAbsorptionBands; i++)
 			T60[i] = static_cast<Real>(t60[i]);
 

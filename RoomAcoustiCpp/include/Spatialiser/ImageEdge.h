@@ -40,7 +40,7 @@ namespace RAC
 			* @param reverb Pointer to the late reverb class
 			* @param frequencyBands Frequency bands for graphic equalisers
 			*/
-			ImageEdge(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const Coefficients& numFrequencyBands);
+			ImageEdge(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const Coefficients<>& numFrequencyBands);
 			
 			/**
 			* @brief Default deconstructor
@@ -52,7 +52,27 @@ namespace RAC
 			* 
 			* @param config The new configuration
 			*/
-			inline void UpdateIEMConfig(const IEMConfig& config) { lock_guard<std::mutex> lock(dataStoreMutex); mIEMConfigStore = config; configChanged = true; }
+			inline void UpdateIEMConfig(const IEMConfig& config)
+			{
+				lock_guard<std::mutex> lock(dataStoreMutex);
+				mIEMConfigStore = config;
+				specularDiffractionStore = config.specularDiffOrder;
+				if (!doSpecularDiffraction)
+					mIEMConfigStore.specularDiffOrder = 0;
+				configChanged = true;
+			}
+
+			inline void UpdateDiffractionModel(const DiffractionModel model)
+			{
+				lock_guard<std::mutex> lock(dataStoreMutex);
+				bool store = doSpecularDiffraction;
+				if (model == DiffractionModel::btm || model == DiffractionModel::udfa)
+					doSpecularDiffraction = true;
+				else
+					doSpecularDiffraction = false;
+				mIEMConfigStore.specularDiffOrder = doSpecularDiffraction ? specularDiffractionStore : 0;
+				configChanged = store != doSpecularDiffraction;
+			}
 
 			/**
 			* @brief Updates the stored listener position
@@ -91,7 +111,7 @@ namespace RAC
 			*
 			* @return True if a valid intersection is found, false otherwise
 			*/
-			bool LinePlaneIntersection(const Vec3& start, const Vec3& end, const Plane& plane, Absorption& absorption, Vec3& intersection) const;
+			bool LinePlaneIntersection(const Vec3& start, const Vec3& end, const Plane& plane, Absorption<>& absorption, Vec3& intersection) const;
 
 			/**
 			* @brief Locate intersection between a line and a collection of walls
@@ -104,7 +124,7 @@ namespace RAC
 			* 
 			* @return True if a valid intersection is found, false otherwise
 			*/
-			bool LineWallIntersection(const Vec3& start, const Vec3& end, const std::vector<size_t>& wallIDs, Absorption& absorption, Vec3& intersection) const;
+			bool LineWallIntersection(const Vec3& start, const Vec3& end, const std::vector<size_t>& wallIDs, Absorption<>& absorption, Vec3& intersection) const;
 
 			/**
 			* @brief Check for obstructions along an image source path
@@ -158,7 +178,7 @@ namespace RAC
 			* 
 			* @remarks Directivities taken from: Eargle's the Microphone Book : From Mono to Stereo to Surround - a Guide to Microphone Design and Application
 			*/
-			Absorption CalculateDirectivity(const SourceData& source, const Vec3& point) const;
+			Absorption<> CalculateDirectivity(const SourceData& source, const Vec3& point) const;
 
 			/**
 			* @brief Run the image edge model for the given source
@@ -236,13 +256,15 @@ namespace RAC
 
 			IEMConfig mIEMConfig;					// The image edge model configuration (can be accessed freely)
 			IEMConfig mIEMConfigStore;				// Stores the image edge model configuration (Mutex must be locked to access)
+			int specularDiffractionStore;			// Stores the specular diffraction order (Mutex must be locked to access)
+			bool doSpecularDiffraction;
 			Vec3 mListenerPosition;					// The listener position (can be accessed freely)
 			Vec3 mListenerPositionStore;			// Stores the listener position (Mutex must be locked to access)
 
 			std::vector<Vec3> reverbDirections;				// The directions of the late reverb sources
-			std::vector<Absorption> reverbAbsorptions;		// The absorption coefficients of the late reverb sources
+			std::vector<Absorption<>> reverbAbsorptions;		// The absorption coefficients of the late reverb sources
 
-			Coefficients frequencyBands;	// Frequency bands for graphic equalisers
+			Coefficients<> frequencyBands;	// Frequency bands for graphic equalisers
 			bool currentCycle;				// Stores the current cycle of the currently processed source
 			bool configChanged;				// True if the image edge model configuration has changed since the last run
 			bool reverbRunning;				// True if the late reverb is running, false otherwise

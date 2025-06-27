@@ -72,7 +72,7 @@ namespace RAC
 			* @param numFrames The number of frames in the buffer
 			* @param lerpFactor The interpolation factor (0.0 to 1.0)
 			*/
-			void ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const int numFrames, const Real lerpFactor);
+			void ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const Real lerpFactor);
 
 		private:
 			/**

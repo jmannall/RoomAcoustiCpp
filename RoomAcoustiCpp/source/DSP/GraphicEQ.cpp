@@ -18,7 +18,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		GraphicEQ::GraphicEQ(const Coefficients& gain, const Coefficients& fc, const Real Q, const int sampleRate) :
+		GraphicEQ::GraphicEQ(const Coefficients<>& gain, const Coefficients<>& fc, const Real Q, const int sampleRate) :
 			numFilters(gain.Length() + 2), filterResponseMatrix(numFilters, numFilters), previousInput(numFilters)
 		{ 
 			assert(gain.Length() == fc.Length());
@@ -43,15 +43,15 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		bool GraphicEQ::SetTargetGains(const Coefficients& gains)
+		bool GraphicEQ::SetTargetGains(const Coefficients<>& gains)
 		{
 			assert(gains.Length() == peakingFilters.size());
 
-			if (gains == previousInput)
+			if (gains == previousInput) // No change in gains
 			{
 				if (gainsEqual.load() && gains <= 0.0) // Gains currently zero
 					return true;
-				return false; // No change in gains
+				return false;
 			}
 			previousInput = gains;
 
@@ -67,7 +67,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		std::pair<Rowvec, Real> GraphicEQ::CalculateGains(const Coefficients& gains) const
+		std::pair<Rowvec, Real> GraphicEQ::CalculateGains(const Coefficients<>& gains) const
 		{
 			assert(gains.Length() + 2 == numFilters);
 
@@ -103,7 +103,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		Coefficients GraphicEQ::CreateFrequencyVector(const Coefficients& fc) const
+		Coefficients<> GraphicEQ::CreateFrequencyVector(const Coefficients<>& fc) const
 		{
 			Coefficients f(numFilters);
 			f[0] = std::max(fc[0] / 2, 20.0);
@@ -115,7 +115,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void GraphicEQ::InitMatrix(const Coefficients& fc, const Real Q, const Real fs)
+		void GraphicEQ::InitMatrix(const Coefficients<>& fc, const Real Q, const Real fs)
 		{
 			assert(fc.Length() == numFilters);
 
@@ -169,10 +169,13 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void GraphicEQ::ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const int numFrames, const Real lerpFactor)
+		void GraphicEQ::ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const Real lerpFactor)
 		{
 			if (!initialised.load())
+			{
+				outBuffer.Reset();
 				return;
+			}
 
 			if (currentGain == 0.0 && gainsEqual.load())
 			{
@@ -181,7 +184,7 @@ namespace RAC
 			}
 
 			FlushDenormals();
-			for (int i = 0; i < numFrames; i++)
+			for (int i = 0; i < inBuffer.Length(); i++)
 				outBuffer[i] = GetOutput(inBuffer[i], lerpFactor);
 			NoFlushDenormals();
 		}

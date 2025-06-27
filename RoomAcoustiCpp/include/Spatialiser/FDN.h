@@ -45,10 +45,10 @@ namespace RAC
 			* @params T60 Target decay time
 			* @params config Configuration of the spatialiser
 			*/
-			FDNChannel(const int delayLength, const Coefficients& T60, const Config& config) :
-				mT(static_cast<Real>(delayLength) / config.fs), mBuffer(delayLength),
-				mAbsorptionFilter(CalculateFilterGains(T60), config.frequencyBands, config.Q, config.fs),
-				mReflectionFilter(config.frequencyBands, config.Q, config.fs), idx(0) {}
+			FDNChannel(const int delayLength, const Coefficients<>& T60, const std::shared_ptr<Config> config) :
+				mT(static_cast<Real>(delayLength) / config->fs), mBuffer(delayLength),
+				mAbsorptionFilter(CalculateFilterGains(T60), config->frequencyBands, config->Q, config->fs),
+				mReflectionFilter(config->frequencyBands, config->Q, config->fs), idx(0) {}
 
 			/**
 			* @brief Default deconstructor
@@ -60,7 +60,7 @@ namespace RAC
 			*
 			* @params T60 The new target decay time
 			*/
-			inline void SetTargetT60(const Coefficients& T60)
+			inline void SetTargetT60(const Coefficients<>& T60)
 			{
 				mAbsorptionFilter.SetTargetGains(CalculateFilterGains(T60));
 			}
@@ -71,7 +71,7 @@ namespace RAC
 			* @params gains The target reflection filter gains
 			* @return True if all current and target reflection gains are zero, false otherwise
 			*/
-			inline bool SetTargetReflectionFilter(const Coefficients& gains)
+			inline bool SetTargetReflectionFilter(const Coefficients<>& gains)
 			{
 				return mReflectionFilter.SetTargetGains(gains);
 			}
@@ -94,9 +94,9 @@ namespace RAC
 			* @params numFrames The number of frames in the input data
 			* @params lerpFactor The linear interpolation factor
 			*/
-			inline void ProcessOutput(const Buffer& data, Buffer& outputBuffer, const int numFrames, const Real lerpFactor)
+			inline void ProcessOutput(const Buffer& data, Buffer& outputBuffer, const Real lerpFactor)
 			{
-				mReflectionFilter.ProcessAudio(data, outputBuffer, numFrames, lerpFactor);
+				mReflectionFilter.ProcessAudio(data, outputBuffer, lerpFactor);
 			}
 
 			/**
@@ -115,7 +115,7 @@ namespace RAC
 			* @params T60 The target decay time
 			* @return The required filter gain coefficients
 			*/
-			inline Coefficients CalculateFilterGains(const Coefficients& T60) const { return (-3.0 * mT / T60).Pow10(); } // 20 * log10(H(f)) = -60 * t / t60(f);
+			inline Coefficients<> CalculateFilterGains(const Coefficients<>& T60) const { return (-3.0 * mT / T60).Pow10(); } // 20 * log10(H(f)) = -60 * t / t60(f);
 
 			const Real mT;		// The current delay in seconds
 			Buffer mBuffer;		// The internal delay line
@@ -142,7 +142,7 @@ namespace RAC
 			* @params dimensions Primary room dimensions that determine delay line lengths
 			* @params config The spatialiser configuration
 			*/
-			FDN(const Coefficients& T60, const Vec& dimensions, const Config& config) : FDN(T60, dimensions, config, InitMatrix(config.numLateReverbChannels)) {}
+			FDN(const Coefficients<>& T60, const Vec& dimensions, const std::shared_ptr<Config> config) : FDN(T60, dimensions, config, InitMatrix(config->numLateReverbChannels)) {}
 
 			/**
 			* @brief Default deconstructor
@@ -154,7 +154,7 @@ namespace RAC
 			* 
 			* @params T60 The new decay time
 			*/
-			void SetTargetT60(const Coefficients& T60);
+			void SetTargetT60(const Coefficients<>& T60);
 
 			/**
 			* @brief Sets the target reflection filters for each channel
@@ -162,7 +162,7 @@ namespace RAC
 			* @params gains The target reflection filter gains for each channel
 			* @return True if all channels have zero target reflection gains, false otherwise
 			*/
-			inline bool SetTargetReflectionFilters(const std::vector<Absorption>& gains)
+			inline bool SetTargetReflectionFilters(const std::vector<Absorption<>>& gains)
 			{
 				assert(gains.size() == mChannels.size());
 
@@ -178,7 +178,7 @@ namespace RAC
 			* @params data Multichannel audio data input (numChannels x numFrames)
 			* @params outputBuffers Output buffers to write to
 			*/
-			void ProcessAudio(const Matrix& data, std::vector<Buffer>& outputBuffers);
+			void ProcessAudio(const Matrix& data, std::vector<Buffer>& outputBuffers, const Real lerpFactor);
 
 			/**
 			* @brief Resets all internal FDN buffers to zero
@@ -194,7 +194,7 @@ namespace RAC
 			/**
 			* @brief 
 			*/
-			FDN(const Coefficients& T60, const Vec& dimensions, const Config& config, const Matrix& matrix);
+			FDN(const Coefficients<>& T60, const Vec& dimensions, const std::shared_ptr<Config> config, const Matrix& matrix);
 
 			/**
 			* @brief Processes a square feedback matrix
@@ -211,7 +211,7 @@ namespace RAC
 			* @params dimensions Primary room dimensions
 			* @return Sample delays for each FDN channel
 			*/
-			std::vector<int> CalculateTimeDelay(const Vec& dimensions);
+			std::vector<int> CalculateTimeDelay(const Vec& dimensions, const int numLateReverbChannels, const int fs);
 
 			/**
 			* @brief Initialises a default diagonal matrix
@@ -255,8 +255,6 @@ namespace RAC
 			static void MakeSetMutuallyPrime(std::vector<int>& numbers);
 
 			const Matrix feedbackMatrix;	// Feedback matrix
-			// TO DO: Needs updating e.g UpdateLerpFactor or pass variables to relevant functions
-			Config mConfig;					// Spatialiser configuration
 
 			std::vector<std::unique_ptr<FDNChannel>> mChannels;		// Internal delay line channels
 
@@ -274,8 +272,8 @@ namespace RAC
 			* @params dimensions Primary room dimensions that determine delay line lengths
 			* @params config The spatialiser configuration
 			*/
-			HouseHolderFDN(const Coefficients& T60, const Vec& dimensions, const Config& config)
-				: FDN(T60, dimensions, config, Matrix()), houseHolderFactor(2.0 / static_cast<Real>(config.numLateReverbChannels))
+			HouseHolderFDN(const Coefficients<>& T60, const Vec& dimensions, const std::shared_ptr<Config> config)
+				: FDN(T60, dimensions, config, Matrix()), houseHolderFactor(2.0 / static_cast<Real>(config->numLateReverbChannels))
 			{}
 
 			/**
@@ -309,8 +307,8 @@ namespace RAC
 			* @params dimensions Primary room dimensions that determine delay line lengths
 			* @params config The spatialiser configuration
 			*/
-			RandomOrthogonalFDN(const Coefficients& T60, const Vec& dimensions, const Config& config)
-				: FDN(T60, dimensions, config, InitMatrix(config.numLateReverbChannels)) {}
+			RandomOrthogonalFDN(const Coefficients<>& T60, const Vec& dimensions, const std::shared_ptr<Config> config)
+				: FDN(T60, dimensions, config, InitMatrix(config->numLateReverbChannels)) {}
 
 			/**
 			* @brief Default deconstructor

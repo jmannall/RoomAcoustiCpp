@@ -84,28 +84,27 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		Context::Context(const Config& config) : mConfig(config), mIsRunning(true), IEMThread(), applyHeadphoneEQ(false), headphoneEQ(config.fs, config.lerpFactor, 2048)
+		Context::Context(const std::shared_ptr<Config> config) : mConfig(config), mIsRunning(true), IEMThread(), applyHeadphoneEQ(false), headphoneEQ(config->fs, 2048)
 		{
 #ifdef DEBUG_INIT
 			Debug::Log("Init Context", Colour::Green);
 #endif
-
 			CErrorHandler::Instance().SetAssertMode(ASSERT_MODE_CONTINUE);
 			CErrorHandler::Instance().SetVerbosityMode(VERBOSITYMODE_ERRORSANDWARNINGS);
 			logFile = GetTimestampedLogPath();
 			CErrorHandler::Instance().SetErrorLogFile(logFile, true);
 
 			// Set dsp settings
-			mCore.SetAudioState({ mConfig.fs, mConfig.numFrames });
+			mCore.SetAudioState({ mConfig->fs, mConfig->numFrames });
 
 			// Create listener
 			mListener = mCore.CreateListener();
 			headRadius = mListener->GetHeadRadius();
 
 			mReverb = std::make_shared<Reverb>(&mCore, mConfig);
-			mRoom = std::make_shared<Room>(mConfig.frequencyBands.Length());
+			mRoom = std::make_shared<Room>(mConfig->frequencyBands.Length());
 			mSources = std::make_shared<SourceManager>(&mCore, mConfig);
-			mImageEdgeModel = std::make_shared<ImageEdge>(mRoom, mSources, mReverb, mConfig.frequencyBands);
+			mImageEdgeModel = std::make_shared<ImageEdge>(mRoom, mSources, mReverb, mConfig->frequencyBands);
 			
 			// Initialize NNs
 			myNN_initialize();
@@ -114,10 +113,10 @@ namespace RAC
 			IEMThread = std::thread(BackgroundProcessor, this);
 			audioThreadPool = std::make_unique<ThreadPool>(std::thread::hardware_concurrency());
 
-			mInputBuffer = Buffer(mConfig.numFrames);
-			mOutputBuffer = Buffer(2 * mConfig.numFrames); // Stereo output buffer
-			mSendBuffer = std::vector<float>(2 * mConfig.numFrames, 0.0);
-			mReverbInput = Matrix(mConfig.numLateReverbChannels, mConfig.numFrames);
+			mInputBuffer = Buffer(mConfig->numFrames);
+			mOutputBuffer = Buffer(2 * mConfig->numFrames); // Stereo output buffer
+			mSendBuffer = std::vector<float>(2 * mConfig->numFrames, 0.0);
+			mReverbInput = Matrix(mConfig->numLateReverbChannels, mConfig->numFrames);
 		}
 
 		////////////////////////////////////////
@@ -207,7 +206,7 @@ namespace RAC
 
 		void Context::UpdateSpatialisationMode(const SpatialisationMode mode)
 		{
-			mConfig.spatialisationMode = mode;
+			mConfig->spatialisationMode.store(mode);
 			mReverb->UpdateSpatialisationMode(mode);
 			mSources->UpdateSpatialisationMode(mode);
 		}
@@ -222,7 +221,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Context::UpdateReverbTime(const Coefficients& T60)
+		void Context::UpdateReverbTime(const Coefficients<>& T60)
 		{
 			mRoom->UpdateReverbTime(T60);
 			mReverb->SetTargetT60(T60);
@@ -232,7 +231,8 @@ namespace RAC
 
 		void Context::UpdateDiffractionModel(const DiffractionModel model)
 		{
-			mConfig.diffractionModel = model;
+			mConfig->diffractionModel.store(model);
+			mImageEdgeModel->UpdateDiffractionModel(model);
 			mSources->UpdateDiffractionModel(model);
 		}
 
@@ -248,10 +248,10 @@ namespace RAC
 				defaultDimensions[0] = 2.5; // Assume height
 				defaultDimensions[1] = 4.0; // Assume width
 				defaultDimensions[2] = volume / 10.0; // Calculate depth
-				mReverb->InitLateReverb(T60, defaultDimensions, matrix);
+				mReverb->InitLateReverb(T60, defaultDimensions, matrix, mConfig);
 			}
 			else
-				mReverb->InitLateReverb(T60, dimensions, matrix);
+				mReverb->InitLateReverb(T60, dimensions, matrix, mConfig);
 		}
 
 		////////////////////////////////////////
@@ -326,7 +326,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		size_t Context::InitWall(const Vertices& vData, const Absorption& absorption)
+		size_t Context::InitWall(const Vertices& vData, const Absorption<>& absorption)
 		{
 #ifdef DEBUG_INIT
 	Debug::Log("Init Wall", Colour::Green);
@@ -347,7 +347,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Context::UpdateWallAbsorption(size_t id, const Absorption& absorption)
+		void Context::UpdateWallAbsorption(size_t id, const Absorption<>& absorption)
 		{
 			mRoom->UpdateWallAbsorption(id, absorption);
 			mReverb->SetTargetT60(mRoom->GetReverbTime());
@@ -378,9 +378,9 @@ namespace RAC
 			unique_lock<mutex> lock(audioMutex, std::defer_lock);
 			if (lock.try_lock())
 			{
-				for (int i = 0; i < mConfig.numFrames; i++)
+				for (int i = 0; i < mConfig->numFrames; i++)
 					mInputBuffer[i] = static_cast<Real>(data[i]);
-				mSources->ProcessAudio(id, mInputBuffer, mReverbInput, mOutputBuffer);				
+				mSources->ProcessAudio(id, mInputBuffer, mReverbInput, mOutputBuffer, mConfig->GetLerpFactor());				
 			}
 		}
 
@@ -388,15 +388,16 @@ namespace RAC
 
 		void Context::GetOutput(float** bufferPtr)
 		{
+			const Real lerpFactor = mConfig->GetLerpFactor();
 			// Process reverb
 			unique_lock<mutex> lock(audioMutex, std::defer_lock);
 			if (lock.try_lock())
 			{
-				mReverb->ProcessAudio(mReverbInput, mOutputBuffer);
+				mReverb->ProcessAudio(mReverbInput, mOutputBuffer, lerpFactor);
 				mReverbInput.Reset();
 
 				if (applyHeadphoneEQ)
-					headphoneEQ.ProcessAudio(mOutputBuffer, mOutputBuffer);
+					headphoneEQ.ProcessAudio(mOutputBuffer, mOutputBuffer, lerpFactor);
 			}
 			if (!lock.owns_lock())
 			{
@@ -420,16 +421,14 @@ namespace RAC
 
 			if (mode)
 			{
-				mConfig.lerpFactor = 1.0;
-				mReverb->UpdateLerpFactor(1.0);
-				headphoneEQ.Reset();
+				mConfig->lerpFactor.store(1.0);
+				headphoneEQ.Reset();		// TO DO: Should this be here?
 				mSources->UpdateImpulseResponseMode(1.0, mode);
 				return;
 			}
 
-			Real newLerpFactor = mConfig.UpdateLerpFactor(lerpFactor);
+			Real newLerpFactor = mConfig->UpdateLerpFactor(lerpFactor);
 
-			mReverb->UpdateLerpFactor(newLerpFactor);
 			mSources->UpdateImpulseResponseMode(newLerpFactor, mode);
 		}
 	}

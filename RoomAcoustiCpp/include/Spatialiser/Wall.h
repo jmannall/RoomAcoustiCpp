@@ -63,7 +63,7 @@ namespace RAC
 			* @param vData The vertices of the wall.
 			* @param absorption The material absorption property of the wall.
 			*/
-			Wall(const Vertices& vData, const Absorption& absorption);
+			Wall(const Vertices& vData, const Absorption<>& absorption);
 
 			/**
 			* Default deconstructor.
@@ -127,7 +127,7 @@ namespace RAC
 			*
 			* @return The material absorption properties of the wall
 			*/
-			inline Absorption GetAbsorption() const { return mAbsorption; }
+			inline Absorption<> GetAbsorption() const { return mAbsorption; }
 
 			/**
 			* @brief Returns the area of the wall
@@ -201,7 +201,7 @@ namespace RAC
 			*
 			* @param absorption The new absorption of the wall
 			*/
-			inline void Update(const Absorption& absorption) { Real area = GetArea(); mAbsorption = absorption; mAbsorption.mArea = area; }
+			inline void Update(const Absorption<>& absorption) { Real area = GetArea(); mAbsorption = absorption; mAbsorption.mArea = area; }
 
 		private:
 			/**
@@ -212,7 +212,7 @@ namespace RAC
 			Vertices mVertices;				// Vertices of the wall
 			Vec3 mNormal;					// Normal of the wall
 			Real d;							// Distance of the wall from the origin along the normal direction
-			Absorption mAbsorption;			// Material absorption of the wall
+			Absorption<> mAbsorption;			// Material absorption of the wall
 
 			size_t mPlaneId;				// ID of the plane the wall is part of
 			std::vector<size_t> mEdges;		// IDs of connected edges

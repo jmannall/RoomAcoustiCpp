@@ -135,7 +135,8 @@ namespace RAC
 		* @params end The target coefficients
 		* @params factor The interpolation factor (must be between 0 and 1)
 		*/
-		inline void Lerp(Coefficients& start, const Coefficients& end, const Real factor)
+		template<typename T>
+		inline void Lerp(Coefficients<T>& start, const Coefficients<T>& end, const Real factor)
 		{
 			assert(0.0 < factor && factor <= 1.0);
 
@@ -161,9 +162,9 @@ namespace RAC
 		* @params b Value 2
 		* @returns True if equal within the threshold EPS, false otherwise
 		*/
-		inline bool Equals(const Real a, const Real b)
+		inline bool Equals(const Real a, const Real b, const Real threshold = EPS)
 		{
-			if (a > b + EPS || a < b - EPS)
+			if (a > b + threshold || a < b - threshold)
 				return false;
 			return true;
 		}
@@ -175,12 +176,13 @@ namespace RAC
 		* @params v Coefficients 2
 		* @returns True if equal within the threshold EPS, false otherwise
 		*/
-		inline bool Equals(const Coefficients& u, const Coefficients& v)
+		template<typename T>
+		inline bool Equals(const Coefficients<T>& u, const Coefficients<T>& v, const Real threshold = EPS)
 		{
 			if (u.Length() != v.Length())
 				return false;
 			for (int i = 0; i < u.Length(); i++)
-				if (u[i] > v[i] + EPS || u[i] < v[i] - EPS)
+				if (u[i] > v[i] + threshold || u[i] < v[i] - threshold)
 					return false;
 			return true;
 		}
@@ -192,16 +194,16 @@ namespace RAC
 		* @param v Buffer 2
 		* @returns True if equal within the threshold EPS, false otherwise
 		*/
-		inline bool Equals(const Buffer& u, const Buffer& v, const int length)
+		inline bool Equals(const Buffer& u, const Buffer& v, const int length, const Real threshold = EPS)
 		{
 			assert(v.Length() == length);
 			assert(u.Length() >= length);
 
 			for (int i = 0; i < length; i++)
-				if (u[i] > v[i] + EPS || u[i] < v[i] - EPS)
+				if (u[i] > v[i] + threshold || u[i] < v[i] - threshold)
 					return false;
 			for (int i = length; i < u.Length(); i++)
-				if (u[i] > EPS || u[i] < -EPS)
+				if (u[i] > threshold || u[i] < -threshold)
 					return false;
 			return true;
 		}

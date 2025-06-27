@@ -20,7 +20,7 @@ namespace RAC
 
 	//////////////////// Create functions ////////////////////
 
-	void CreateShoebox(const Vec3& pos, Absorption absorbtion)
+	void CreateShoebox(const Vec3& pos, Absorption<> absorbtion)
 	{
 		int numVert = 4;
 
@@ -176,7 +176,7 @@ namespace RAC
 			Real q = 0.98;
 			Coefficients fBands = Coefficients({ 125.0, 250.0, 500.0, 1000.0, 2000.0, 4000.0, 8000.0 });
 
-			Config config = Config(fs, numFrames, numFDNChannels, lerpFactor, q, fBands);
+			std::shared_ptr<Config> config = std::make_shared<Config>(fs, numFrames, numFDNChannels, lerpFactor, q, fBands);
 
 			bool init = Init(config);
 
@@ -195,7 +195,6 @@ namespace RAC
 			UpdateIEMConfig(iemConfig);
 			UpdateSpatialisationMode(SpatialisationMode::quality);
 			UpdateReverbTime(ReverbFormula::Eyring);
-			InitFDNMatrix(FDNMatrix::randomOrthogonal);
 			UpdateDiffractionModel(DiffractionModel::attenuate);
 
 			// Absorption absorption = Absorption({ 0.222, 0.258, 0.405, 0.378, 0.284, 0.270, 0.277 }); // Sabine
@@ -205,7 +204,7 @@ namespace RAC
 
 			Real volume = 105.0;
 			Vec dimensions = Vec({ 7.0, 2.5, 6.0 });
-			UpdateRoom(volume, dimensions);
+			InitLateReverb(volume, dimensions, FDNMatrix::randomOrthogonal);
 
 			std::vector<Vec3> sourcePositions = { Vec3(5.47, 1.62, 4.5), Vec3(3.72, 1.62, 3.25) };
 			std::vector<Vec4> sourceOrientations = { AzimuthElevationToQuaternion(270.0, 0.0), AzimuthElevationToQuaternion(0.0, 0.0) };
@@ -294,7 +293,7 @@ namespace RAC
 			Real q = 0.98;
 			Coefficients fBands = Coefficients({ 125.0, 250.0, 500.0, 1000.0, 2000.0, 4000.0, 8000.0 });
 
-			Config config = Config(fs, numFrames, numFDNChannels, lerpFactor, q, fBands);
+			std::shared_ptr<Config> config = std::make_shared<Config>(fs, numFrames, numFDNChannels, lerpFactor, q, fBands);
 
 			bool init = Init(config);
 
@@ -313,7 +312,6 @@ namespace RAC
 			UpdateIEMConfig(iemConfig);
 			UpdateSpatialisationMode(SpatialisationMode::quality);
 			UpdateReverbTime(ReverbFormula::Sabine);
-			InitFDNMatrix(FDNMatrix::randomOrthogonal);
 			UpdateDiffractionModel(DiffractionModel::attenuate);
 
 			Absorption absorption = Absorption({ 0.222, 0.258, 0.405, 0.378, 0.284, 0.270, 0.277 });
@@ -322,7 +320,7 @@ namespace RAC
 
 			Real volume = 105.0;
 			Vec dimensions = Vec({ 7.0, 2.5, 6.0 });
-			UpdateRoom(volume, dimensions);
+			InitLateReverb(volume, dimensions, FDNMatrix::randomOrthogonal);
 
 			Vec3 sourcePosition = Vec3(5.47, 1.62, 4.5);
 			Vec3 sourcePosition2 = Vec3(2.21, 1.52, 1.3);

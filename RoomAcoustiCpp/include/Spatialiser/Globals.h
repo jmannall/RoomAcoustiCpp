@@ -17,7 +17,7 @@ namespace RAC
 {
 	namespace Spatialiser
 	{
-		extern std::shared_mutex tuneInMutex;							// Global 3DTI Mutex
+		extern std::shared_mutex tuneInMutex;					// Global 3DTI Mutex
 		extern std::unique_ptr<ThreadPool> audioThreadPool;		// Global Audio Thread Pool
 	}
 }

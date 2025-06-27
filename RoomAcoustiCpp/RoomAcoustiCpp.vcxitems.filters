@@ -299,5 +299,8 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Timer.h">
       <Filter>Header Files\Common</Filter>
     </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\Parameter.h">
+      <Filter>Header Files\DSP</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

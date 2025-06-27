@@ -134,27 +134,14 @@ namespace RAC
 			int maxOrder;									// Maximum order of the IEM
 		};
 
+		// class Context;
+
 		/**
 		* @brief Configuration struct for RAC
 		*/
-		struct Config
+		class Config
 		{
-			int fs;							// Sample rate
-			int numFrames;					// Number of frames per audio callback
-			int numLateReverbChannels;		// Number of channels for late reverbration
-
-			/**
-			* @details 1 means DSP parameters are lerped over only 1 audio callback,
-			* 5 means lerped over 5 separate audio callbacks. Must be greater than 0
-			*/
-			Real lerpFactor;		// Linear interpolation factor for audio processing
-
-			Real Q;								// Q factor for the GraphicEQ
-			Coefficients frequencyBands;		// Frequency bands for the GraphicEQ
-
-			DiffractionModel diffractionModel;			// Diffraction model
-			SpatialisationMode spatialisationMode;		// Spatialisation mode
-
+		public:
 			/**
 			* @brief Default constructor for the Config class
 			*/
@@ -162,7 +149,7 @@ namespace RAC
 
 			/**
 			* @brief Constructor for the Config class
-			* 
+			*
 			* @param sampleRate The sample rate
 			* @param numFrames The number of frames per audio callback
 			* @param numLateReverbChannels The number of FDN channels for late reverberation
@@ -170,11 +157,11 @@ namespace RAC
 			* @param Q The Q factor for the GraphicEQ
 			* @param fBands The frequency bands for the GraphicEQ
 			*/
-			Config(int sampleRate, int numFrames, int numLateReverbChannels, Real lerpFactor, Real Q, Coefficients fBands) : Config(sampleRate, numFrames, numLateReverbChannels, lerpFactor, Q, fBands, DiffractionModel::btm, SpatialisationMode::none) {}
+			Config(int sampleRate, int numFrames, int numLateReverbChannels, Real lerpFactor, Real Q, Coefficients<> fBands) : Config(sampleRate, numFrames, numLateReverbChannels, lerpFactor, Q, fBands, DiffractionModel::btm, SpatialisationMode::none) {}
 
 			/**
 			* @brief Constructor for the Config class
-			* 
+			*
 			* @param sampleRate The sample rate
 			* @param numFrames The number of frames per audio callback
 			* @param numLateReverbChannels The number of FDN channels for late reverberation
@@ -184,18 +171,55 @@ namespace RAC
 			* @param model The diffraction model
 			* @param mode The spatialisation mode
 			*/
-			Config(int sampleRate, int numFrames, int numLateReverbChannels, Real lerpFactor, Real Q, Coefficients fBands, DiffractionModel model, SpatialisationMode mode) : 
+			Config(int sampleRate, int numFrames, int numLateReverbChannels, Real lerpFactor, Real Q, Coefficients<> fBands, DiffractionModel model, SpatialisationMode mode) :
 				fs(sampleRate), numFrames(numFrames), numLateReverbChannels(numLateReverbChannels), lerpFactor(96.0 * lerpFactor / static_cast<Real>(sampleRate)),
 				Q(Q), frequencyBands(fBands), diffractionModel(model), spatialisationMode(mode)
 			{
-				this->lerpFactor = std::max(std::min(this->lerpFactor, 1.0), 1.0 / static_cast<Real>(sampleRate));
+				// this->lerpFactor = std::max(std::min(this->lerpFactor, 1.0), 1.0 / static_cast<Real>(sampleRate));
 			};
 
+			bool GetImpulseResponseMode() const { return impulseResponseMode.load(); }
+
+			bool CompareImpulseResponseMode(const bool mode) const { return impulseResponseMode.load() != mode; }
+
+			SpatialisationMode GetSpatialisationMode() const { return spatialisationMode.load(); }
+			
+			bool CompareSpatialisationMode(const SpatialisationMode mode) const { return spatialisationMode.load() != mode; }
+
+			DiffractionModel GetDiffractionModel() const { return diffractionModel.load(); }
+
+			Real GetLerpFactor() const { return lerpFactor.load(); }
+
+
+			const int fs;							// Sample rate
+			const int numFrames;					// Number of frames per audio callback
+			const int numLateReverbChannels;		// Number of channels for late reverbration
+
+			const Real Q;								// Q factor for the GraphicEQ
+			const Coefficients<> frequencyBands;		// Frequency bands for the GraphicEQ
+
+		private:
+
+			friend class Context;		// Allow Context to access private members	
+
+			/**
+			* @details 1 means DSP parameters are lerped over only 1 audio callback,
+			* 5 means lerped over 5 separate audio callbacks. Must be greater than 0
+			*/
+			std::atomic<Real> lerpFactor;		// Linear interpolation factor for audio processing
+
+			std::atomic<DiffractionModel> diffractionModel;			// Diffraction model
+			std::atomic<SpatialisationMode> spatialisationMode;		// Spatialisation mode
+
+			std::atomic<bool> impulseResponseMode;
+
+			
 			Real UpdateLerpFactor(const Real lerpFactor)
 			{
-				this->lerpFactor = 96.0 * lerpFactor / fs;
-				this->lerpFactor = std::max(std::min(this->lerpFactor, 1.0), 1.0 / fs);
-				return this->lerpFactor;
+				Real factor = 96.0 * lerpFactor / fs;
+				factor = std::max(std::min(factor, 1.0), 1.0 / fs);
+				this->lerpFactor.store(factor);
+				return factor;
 			}
 		};
 	}

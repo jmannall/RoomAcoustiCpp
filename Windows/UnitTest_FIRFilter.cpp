@@ -87,7 +87,7 @@ namespace RAC
 			FIRFilter filter(ir, 8);
 
 			for (int i = 0; i < 11; i++)
-				filter.GetOutput(rand(), lerpFactor);
+				filter.GetOutput(RandomValue(), lerpFactor);
 			filter.Reset();
 
 			for (int i = 0; i < input.size(); i++)

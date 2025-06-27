@@ -34,13 +34,13 @@ namespace RAC
 			in[0] = 1.0;
 			Buffer out(numFrames);
 
-			eq.ProcessAudio(in, out, numFrames, lerpFactor);
+			eq.ProcessAudio(in, out, lerpFactor);
 
 			Assert::IsTrue(out[0] == 0.0, L"Not zero");
 			Assert::IsFalse(std::isnan(out[0]), L"Return is nan");
 
 			eq.SetTargetGains(std::vector<Real>(5, 1.0));
-			eq.ProcessAudio(in, out, numFrames, lerpFactor);
+			eq.ProcessAudio(in, out, lerpFactor);
 
 			Assert::IsFalse(out[1] == 0.0, L"Filter stuck at zeros");
 		}
@@ -66,14 +66,14 @@ namespace RAC
 			in[0] = 1.0;
 
 			int numTests = g0.size();
-			std::vector<Coefficients> gains = std::vector<Coefficients>(numTests, Coefficients(5));
+			std::vector<Coefficients<>> gains = std::vector<Coefficients<>>(numTests, Coefficients(5));
 			for (int i = 1; i < numTests; i++)
 			{
 				Buffer out = Buffer(numFrames);
 
 				Coefficients gain = Coefficients({ g0[i], g1[i], g2[i], g3[i], g4[i] });
 				GraphicEQ eq = GraphicEQ(gain, fc, Q, fs);
-				eq.ProcessAudio(in, out, numFrames, lerpFactor);
+				eq.ProcessAudio(in, out, lerpFactor);
 
 				// AppendBufferToCSV(filePath + "graphicEQOutput.csv", out);
 
@@ -120,7 +120,7 @@ namespace RAC
 			GraphicEQ eq = GraphicEQ(gain, fc, Q, fs);
 
 			for (int i = 0; i < 11; i++)
-				eq.GetOutput(rand(), lerpFactor);
+				eq.GetOutput(RandomValue(), lerpFactor);
 
 			eq.ClearBuffers();
 
@@ -148,7 +148,7 @@ namespace RAC
 			Buffer outBuffer(numFrames);
 			outBuffer[0] = 1.0;
 			in[0] = 1.0;
-			eq.ProcessAudio(in, outBuffer, numFrames, lerpFactor);
+			eq.ProcessAudio(in, outBuffer, lerpFactor);
 			Assert::AreEqual(0.0, outBuffer[0], L"Output buffer not zeroed");
 
 		}
