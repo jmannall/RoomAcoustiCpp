@@ -22,20 +22,16 @@ namespace RAC
 
 			struct SRData
 			{
-				Vec3 point;
-				Real r;
-				Real z;
-				Real t;
-				Real d;
-				bool rot;
-				SRData() : r(0.0), z(0.0), t(0.0), d(0.0), rot(true) {}
+				Vec3 point{ 0.0, 0.0, 0.0 };
+				Real r{ 0.0 }, z{ 0.0 }, t{ 0.0 }, d{ 0.0 };
+				bool rot{ true };
+				SRData() {}
 			};
 
-			struct WData
+			struct EdgeData
 			{
-				Real z;
-				Real t;
-				WData() : z(0.0), t(0.0) {}
+				Real z{ 0.0 }, t{ 0.0 };
+				EdgeData() {}
 			};
 
 			//////////////////// Path class ////////////////////
@@ -43,92 +39,201 @@ namespace RAC
 			class Path // Currently only supports up to 1st order diffraction
 			{
 			public:
-				// Load and Destroy
-				Path() : zValid(false), sValid(false), rValid(false), valid(false), inShadow(false), bA(0.0), mA(0.0), zA(0.0), phi(0.0) {};
-				Path(const Vec3& source, const Vec3& receiver, const Edge& edge);
+				/**
+				* @breif Default constructor
+				*/
+				Path() {};
+
+				/**
+				* @brief Constructor that initailises a diffarction path
+				* 
+				* @param source The source position
+				* @param receiver The receiver position
+				* @param edge The edge that the path diffracts via
+				*/
+				Path(const Vec3& source, const Vec3& receiver, const Edge& edge) : mEdge(edge)
+				{
+					UpdateParameters(source, receiver);
+				}
+
+				/**
+				* @brief Default deconstructor
+				*/
 				~Path() {};
 
-				// Updates
-				void UpdateParameters(const Vec3& source, const Vec3& receiver, const Edge& edge);
-				void UpdateParameters(const Vec3& source, const Vec3& receiver);
-				void UpdateParameters(const Vec3& receiver);
+				/**
+				* @brief Update the path parameters
+				* 
+				* @param source The source position
+				* @param receiver The receiver position
+				* @param edge The edge that the path diffracts via
+				*/
+				inline void UpdateParameters(const Vec3& source, const Vec3& receiver, const Edge& edge)
+				{
+					mEdge = edge;
+					UpdateParameters(source, receiver);
+				}
+				
+				/**
+				* @brief Update the path parameters
+				*
+				* @param source The source position
+				* @param receiver The receiver position
+				*/
+				inline void UpdateParameters(const Vec3& source, const Vec3& receiver)
+				{
+					sData.point = source;
+					rData.point = receiver;
+					CalculateParameters();
+				}
+
+				/**
+				* @brief Reflect the stored edge in a plane
+				* 
+				* @param plane The plane the reflect the edge in
+				*/
 				void ReflectEdgeInPlane(const Plane& plane) { mEdge.ReflectInPlane(plane); }
 
-				// Getters
+				/**
+				* @brief Returns the distance between the source and receiver for a given z coordinate
+				* 
+				* @param z The z coordinate to calculate the distance for
+				* @return The distance between the source and receiver
+				*/
 				inline Real GetD(Real z) const
 				{ 
 					Real sZ = z - sData.z;
 					Real rZ = z - rData.z;
 					return sqrt(sData.r * sData.r + sZ * sZ) + sqrt(rData.r * rData.r + rZ * rZ);
 				}
-				inline Real GetMaxD() const { return std::max(GetD(0), GetD(wData.z)); }
-				inline Vec3 GetApex() const
-				{
-					if (zA < 0)
-						return mEdge.GetEdgeCoord(0);
-					else if (zA > wData.z)
-						return mEdge.GetEdgeCoord(wData.z);
-					else
-						return mEdge.GetEdgeCoord(zA); // precalculate at update?
-				}
 
+				/**
+				* @return The maximum distance between the source and receiver via the edge
+				*/
+				inline Real GetMaxD() const { return std::max(GetD(0), GetD(eData.z)); }
+
+				/**
+				* @return The minimum distance between the source and receiver via the edge
+				* 
+				* @remarks Could precalculate at update?
+				*/
+				inline Vec3 GetApex() const { return mEdge.GetEdgeCoord(GetApexZ()); }
+
+				/**
+				* @return The z coordinate of the apex point
+				*/
 				inline Real GetApexZ() const
 				{
 					if (zA < 0)
 						return 0;
-					else if (zA > wData.z)
-						return wData.z;
+					else if (zA > eData.z)
+						return eData.z;
 					else
 						return zA;
 				}
 
-				// Edge
+				/**
+				* @return The edge that the path diffracts via
+				*/
 				const inline Edge& GetEdge() const { return mEdge; }
-				inline Vec3 CalculateVirtualPostion() const { return rData.point + (sData.d + rData.d) * (mEdge.GetEdgeCoord(zA) - rData.point) / rData.d; }
-				inline Vec3 CalculateVirtualRPostion() const { return sData.point + (sData.d + rData.d) * (mEdge.GetEdgeCoord(zA) - sData.point) / sData.d; }
 
-				// Booleans
-				bool zValid;
-				bool sValid;
-				bool rValid;
-				bool valid;
-				bool inShadow;
-				bool inRelfZone;
+				/**
+				* @return The virtual position of the source. This projects the source from the receiver via the apex over the distance dR + dS.
+				*/
+				inline Vec3 CalculateVirtualPostion() const { return rData.point + (sData.d + rData.d) * (GetApex() - rData.point) / rData.d; }
 
-				// Variables
-				SRData sData;
-				SRData rData;
-				WData wData;
-				Real bA;
-				Real mA;
-				Real zA;
-				Real phi;
+				bool zValid{ false };								// True is the apex point is on the physical edge, false otherwise
+				bool sValid{ false }, rValid{ false };				// True if the source and receiver are in exterioir region of the wedge, false otherwise
+				bool valid{ false };								// True if the path is valid, false otherwise
+				bool inRelfZone{ false }, inShadowZone{ false };	// True if the receiver is in the reflection zone or shadow zone, false otherwise
+
+				SRData sData, rData;			// Source and receiver data
+				EdgeData eData;					// Edge data
+				Real mA{ 0.0 }, bA{ 0.0 };		// Minimum and bending angle
+				Real zA{ 0.0 }, phi{ 0.0 };		// Apex z coordinate and phi angle
 
 			private:
 
-				// Updates
-				void UpdateParameters();
-				void UpdateWData();
-				void UpdateBaMa();
+				/**
+				* @
+				*/
+				void CalculateParameters();
 
-				// Caluculations
-				void CalcR();
-				void CalcR(SRData* data);
-				void CalcZ();
-				void CalcZ(SRData* data);
-				void CalcT();
-				void CalcT(SRData* data);
+				/**
+				* @brief Update the source and receiver r values
+				*/
+				inline void CalculateR() { CalculateR(&sData); CalculateR(&rData); }
+
+				/**
+				* @brief Update the source and receiver z values
+				*/
+				inline void CalculateZ() { CalculateZ(&sData); CalculateZ(&rData); }
+
+				/**
+				* @brief Update the r value for the given SRData
+				*/
+				inline void CalculateR(SRData* data) { data->r = (Cross(mEdge.GetAP(data->point), mEdge.GetEdgeVector())).Length(); }
+				
+				/**
+				* @brief Update the z value for the given SRData
+				*/
+				inline void CalculateZ(SRData* data)
+				{
+					Vec3 AP = mEdge.GetAP(data->point);
+					data->z = AP.Length() * Dot(UnitVector(AP), mEdge.GetEdgeVector());
+				}
+
+				/**
+				* @brief Update the source and receiver theta values
+				*/
+				inline void CalculateT()
+				{
+					CalculateT(&sData);
+					CalculateT(&rData);
+					CorrectT();
+				}
+
+				/**
+				* @brief Update the theta value for the given SRData
+				*/
+				void CalculateT(SRData* data);
+
+				/**
+				* @brief Correct the rotation of the source and receiver t values
+				*/
 				void CorrectT();
-				void CalcApex();
-				void CalcD();
-				void CalcD(SRData* data);
 
+				/**
+				* @brief Update the source and receiver d values
+				*/
+				inline void CalculateD() { CalculateD(&sData); CalculateD(&rData); }
+
+				/**
+				* @brief Update the d value for the given SRData
+				*/
+				inline void CalculateD(SRData* data) { data->d = (data->point - GetApex()).Length(); }
+
+				/**
+				* @brief Calculate the zA value and phi angle
+				*/
+				void CalculateApex();
+
+				/**
+				* @brief Calculate the bending and minimum angle. Determine if it is in the shadow or reflection zone.
+				*/
+				void CalculateBaMa();
+
+				/**
+				* @brief Check if the path is valid
+				*/
 				void ValidPath();
 
-				// Member variables
-				Edge mEdge;
+				Edge mEdge;		// Edge the path diffracts via
 			};
 
+			/**
+			* @return True if paths are identical, false otherwise
+			*/
 			inline bool operator==(const Path& u, const Path& v)
 			{
 				if (u.valid != v.valid)
@@ -148,9 +253,9 @@ namespace RAC
 				if (u.phi != v.phi)
 					return false;
 
-				if (u.wData.t != v.wData.t)
+				if (u.eData.t != v.eData.t)
 					return false;
-				if (u.wData.z != v.wData.z)
+				if (u.eData.z != v.eData.z)
 					return false;
 				
 				return true;

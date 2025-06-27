@@ -4,9 +4,6 @@
 *
 */
 
-// Common headers
-#include "Common/Definitions.h"
-
 // Spatialiser headers
 #include "Spatialiser/Diffraction/Path.h"
 
@@ -16,132 +13,37 @@ namespace RAC
 	{
 		namespace Diffraction
 		{
-			Path::Path(const Vec3& source, const Vec3& receiver, const Edge& edge) : zValid(false), sValid(false), rValid(false), valid(false), inShadow(false), mEdge(edge)
-			{
-				UpdateParameters(source, receiver);
-			}
+			//////////////////// Path Class ////////////////////
 
-			void Path::UpdateParameters(const Vec3& source, const Vec3& receiver, const Edge& edge)
-			{
-				sData.point = source;
-				rData.point = receiver;
-				mEdge = edge;
-				UpdateParameters();
-			}
+			////////////////////////////////////////
 
-			void Path::UpdateParameters(const Vec3& source, const Vec3& receiver)
+			void Path::CalculateParameters()
 			{
-				sData.point = source;
-				rData.point = receiver;
-				UpdateParameters();
-			}
-
-			void Path::UpdateParameters(const Vec3& receiver)
-			{
-				rData.point = receiver;
-				CalcR(&rData);
-				CalcZ(&rData);
-				CalcT(&rData);
-				CorrectT();
-				CalcApex();
-				CalcD();
+				eData.t = mEdge.GetExteriorAngle();
+				eData.z = mEdge.GetLength();
+				CalculateR();
+				CalculateZ();
+				CalculateT();
+				CalculateApex();
+				CalculateD();	// Uses zA
+				CalculateBaMa();
 				ValidPath();
 			}
 
-			void Path::UpdateParameters()
+			////////////////////////////////////////
+
+			void Path::CalculateT(SRData* data)
 			{
-				UpdateWData();
-				CalcR();
-				CalcZ();
-				CalcT();
-				CalcApex();
-				CalcD();
-				UpdateBaMa();
-				ValidPath();
+				Vec3 k = UnitVector(data->point - mEdge.GetEdgeCoord(data->z));
+				data->t = acos(Dot(k, mEdge.GetEdgeNormal()));
+				data->rot = signbit(Dot(Cross(k, mEdge.GetEdgeNormal()), mEdge.GetEdgeVector()));
 			}
 
-			void Path::UpdateWData()
-			{
-				wData.t = mEdge.GetExteriorAngle();
-				wData.z = mEdge.GetLength();
-			}
-
-			void Path::UpdateBaMa()
-			{
-				bA = fabs(rData.t - sData.t);
-				mA = fmin(sData.t, wData.t - rData.t);
-				if (bA > PI_1)
-					inShadow = true;
-				else
-					inShadow = false;
-				if (2 * mA + bA <= PI_1)
-					inRelfZone = true;
-				else
-					inRelfZone = false;
-			}
-
-			void Path::ValidPath()
-			{
-				valid = true;
-				if ((zA < 0) || (zA > wData.z))	// Config control over allow virtual zA?
-				{
-					zValid = false;
-					valid = false;
-				}
-				else
-					zValid = true;
-
-				if ((sData.t < 0) || (sData.t > wData.t))
-				{
-					sValid = false;
-					valid = false;
-				}
-				else
-					sValid = true;
-
-				if ((rData.t < 0) || (rData.t > wData.t))
-				{
-					rValid = false;
-					valid = false;
-				}
-				else
-					rValid = true;
-			}
-
-			void Path::CalcR()
-			{
-				CalcR(&sData);
-				CalcR(&rData);
-			}
-
-			void Path::CalcR(SRData* data)
-			{
-				data->r = (Cross(mEdge.GetAP(data->point), mEdge.GetEdgeVector())).Length();
-			}
-
-			void Path::CalcZ()
-			{
-				CalcZ(&sData);
-				CalcZ(&rData);
-			}
-
-			void Path::CalcZ(SRData* data)
-			{
-				Vec3 AP = mEdge.GetAP(data->point);
-				data->z = AP.Length() * Dot(UnitVector(AP), mEdge.GetEdgeVector());
-			}
-
-			void Path::CalcT()
-			{
-				CalcT(&sData);
-				CalcT(&rData);
-
-				CorrectT();
-			}
+			////////////////////////////////////////
 
 			void Path::CorrectT()
 			{
-				Real halfThetaW = wData.t / 2.0;
+				Real halfThetaW = eData.t / 2.0;
 				if (sData.rot == rData.rot)
 				{
 					if (sData.t > rData.t)
@@ -162,33 +64,53 @@ namespace RAC
 				}
 			}
 
-			void Path::CalcT(SRData* data)
-			{
-				Vec3 k = UnitVector(data->point - mEdge.GetEdgeCoord(data->z));
-				data->t = acos(Dot(k, mEdge.GetEdgeNormal()));
-				data->rot = signbit(Dot(Cross(k, mEdge.GetEdgeNormal()), mEdge.GetEdgeVector()));
-			}
+			////////////////////////////////////////
 
-			void Path::CalcApex()
+			void Path::CalculateApex()
 			{
-				Real dZ = fabs(rData.z - sData.z) * sData.r / (sData.r + rData.r);
-				if (sData.z > rData.z)
-					zA = sData.z - dZ;
-				else
-					zA = sData.z + dZ;
+				Real dZ = abs(rData.z - sData.z) * sData.r / (sData.r + rData.r);
+				zA = sData.z > rData.z ? sData.z - dZ : sData.z + dZ;
 				phi = atan(sData.r / dZ);
 			}
 
-			void Path::CalcD()
+			////////////////////////////////////////
+
+			void Path::CalculateBaMa()
 			{
-				CalcD(&sData);
-				CalcD(&rData);
+				bA = abs(rData.t - sData.t);
+				mA = std::min(sData.t, eData.t - rData.t);
+				inShadowZone = bA > PI_1;
+				inRelfZone = 2 * mA + bA <= PI_1;
 			}
 
-			void Path::CalcD(SRData* data)
+			////////////////////////////////////////
+
+			void Path::ValidPath()
 			{
-				Vec3 apex = mEdge.GetEdgeCoord(zA);
-				data->d = (data->point - mEdge.GetEdgeCoord(zA)).Length();
+				valid = true;
+				if ((zA < 0) || (zA > eData.z))	// Config control over allow virtual zA?
+				{
+					zValid = false;
+					valid = false;
+				}
+				else
+					zValid = true;
+
+				if ((sData.t < 0) || (sData.t > eData.t))
+				{
+					sValid = false;
+					valid = false;
+				}
+				else
+					sValid = true;
+
+				if ((rData.t < 0) || (rData.t > eData.t))
+				{
+					rValid = false;
+					valid = false;
+				}
+				else
+					rValid = true;
 			}
 		}
 	}

@@ -58,7 +58,7 @@ namespace RAC
 
 			void NN::SetTargetParameters(const Path& path)
 			{
-				if (!(path.valid && path.inShadow))
+				if (!(path.valid && path.inShadowZone))
 				{
 					filter.SetTargetGain(0.0);
 					return;
@@ -74,7 +74,7 @@ namespace RAC
 			{
 				Input input = CalculateInput(path);
 				Parameters output = RunNN(input);
-				if (!path.inShadow)
+				if (!path.inShadowZone)
 					output.data[4] = 0.0;
 				return output;
 			}
@@ -84,8 +84,8 @@ namespace RAC
 			NN::Input NN::CalculateInput(const Path& path) const
 			{
 				Input input;
-				input[0] = static_cast<float>(path.wData.t);
-				if (path.inShadow)
+				input[0] = static_cast<float>(path.eData.t);
+				if (path.inShadowZone)
 				{
 					input[1] = static_cast<float>(path.bA);
 					input[2] = static_cast<float>(path.mA);
@@ -93,13 +93,13 @@ namespace RAC
 				else
 				{
 					input[1] = static_cast<float>(PI_1);
-					input[2] = static_cast<float>(std::min(path.mA, path.wData.t - PI_1));
+					input[2] = static_cast<float>(std::min(path.mA, path.eData.t - PI_1));
 				}
-				input[3] = static_cast<float>(path.wData.z);
+				input[3] = static_cast<float>(path.eData.z);
 				if (path.sData.r < path.rData.r)
-					AssignInputRZ(path.sData, path.rData, path.wData.z, input);
+					AssignInputRZ(path.sData, path.rData, path.eData.z, input);
 				else
-					AssignInputRZ(path.rData, path.sData, path.wData.z, input);
+					AssignInputRZ(path.rData, path.sData, path.eData.z, input);
 				return input;
 			}
 
@@ -145,10 +145,10 @@ namespace RAC
 
 			UTD::Parameters UTD::CalculateUTD(const Path& path) const
 			{
-				if (!path.valid || !path.inShadow)
+				if (!path.valid || !path.inShadowZone)
 					return 0.0;
 
-				Real n = path.wData.t / PI_1; // fig. 5b (KP)
+				Real n = path.eData.t / PI_1; // fig. 5b (KP)
 				Real B0 = sin(path.phi); // fig. 5a (KP)
 				Real dSR = path.sData.d + path.rData.d;
 				Real A = sqrt(path.sData.d * path.rData.d * dSR) * n * B0; // eq. 23 and 25 (excluding E) (spherical wave) (KP)
@@ -161,7 +161,7 @@ namespace RAC
 					g[i] = abs(AD * (EqHalf(path.rData.t - path.sData.t, k[i], n, L) + EqHalf(path.rData.t + path.sData.t, k[i], n, L))); // eq. 25
 					gSB[i] = abs(AD * (EqHalf(PI_EPS, k[i], n, L) + EqHalf(2 * path.sData.t + PI_EPS, k[i], n, L)));
 				}
-				Real idx = (path.bA - PI_1) / (path.wData.t - path.sData.t - PI_1);
+				Real idx = (path.bA - PI_1) / (path.eData.t - path.sData.t - PI_1);
 				Coefficients<std::array<Real, 4>> oldGains = (1.0 - idx) * g / gSB + idx * g * dSR;
 				return Pow(g / gSB, 1.0 - idx) * Pow(g * dSR, idx);
 			}

@@ -123,7 +123,7 @@ namespace RAC
 				* @param path The path to calculate the gain from
 				* @return 1.0 if the path is valid and the receiver is in the shadow zone, otherwise 0.0
 				*/
-				inline Real CalculateGain(const Path& path) const { return (path.valid && path.inShadow) ? 1.0 : 0.0; }
+				inline Real CalculateGain(const Path& path) const { return (path.valid && path.inShadowZone) ? 1.0 : 0.0; }
 			
 				Parameter gain;		// Gain parameter
 			};
@@ -172,7 +172,7 @@ namespace RAC
 				* @param path The path to calculate the gain from
 				* @return 1.0 if the path is valid and the receiver is in the shadow zone, otherwise 0.0
 				*/
-				inline Real CalculateGain(const Path& path) const { return (path.valid && path.inShadow) ? 1.0 : 0.0; }
+				inline Real CalculateGain(const Path& path) const { return (path.valid && path.inShadowZone) ? 1.0 : 0.0; }
 
 				LowPass1 filter;	// Low-pass filter with cutoff frequency of 1000Hz
 				Parameter gain;		// Gain parameter
@@ -272,7 +272,7 @@ namespace RAC
 					*/
 					Constants(const Path& path)
 					{
-						Real v = PI_1 / path.wData.t;
+						Real v = PI_1 / path.eData.t;
 						Real cosVpi = cos(v * PI_1);
 						Real sinVpi = sin(v * PI_1);
 
@@ -300,7 +300,7 @@ namespace RAC
 						}
 						else
 						{
-							if (!path.inShadow) // eq. 2
+							if (!path.inShadowZone) // eq. 2
 								gain1 = -gain1;
 							if (path.inRelfZone)
 								gain2 = -gain2;
@@ -308,7 +308,7 @@ namespace RAC
 
 						Real d = path.sData.d + path.rData.d;
 						tDiffBase = (path.GetD(0.0) - d) / SPEED_OF_SOUND;	// Sec III. A
-						tDiffTop = (path.GetD(path.wData.z) - d) / SPEED_OF_SOUND;
+						tDiffTop = (path.GetD(path.eData.z) - d) / SPEED_OF_SOUND;
 					}
 
 					/**
@@ -343,7 +343,7 @@ namespace RAC
 				*/
 				UDFABase(const Path& path, const int fs) : ft(CalcFT(fs)), fi(CalcFI())
 				{
-					if (!path.valid || (model == UDFAModel::SingleTerm && !path.inShadow))
+					if (!path.valid || (model == UDFAModel::SingleTerm && !path.inShadowZone))
 					{
 						for (int j= 0; j < numUDFAFilters; j++)
 							InitFilters(FilterParameters(), j, fs);
@@ -372,7 +372,7 @@ namespace RAC
 				*/
 				void SetTargetParameters(const Path& path) override
 				{
-					if (!path.valid || (model == UDFAModel::SingleTerm && !path.inShadow))
+					if (!path.valid || (model == UDFAModel::SingleTerm && !path.inShadowZone))
 					{
 						for (int i = 0; i < numUDFAFilters; i++)
 							gain[i]->SetTarget(0.0);
@@ -970,9 +970,9 @@ namespace RAC
 						dz = zSRel - zRRel;
 						dzSq = dz * dz;
 
-						v = PI_1 / path.wData.t;
+						v = PI_1 / path.eData.t;
 						vSq = v * v;
-						edgeHi = path.wData.z - path.zA;
+						edgeHi = path.eData.z - path.zA;
 						edgeLo = -path.zA;
 
 						Real plus = path.sData.t + path.rData.t;
@@ -1020,7 +1020,7 @@ namespace RAC
 				* @param path The path to set the target parameters from
 				* @param fs The sample rate for calculating BTM response
 				*/
-				BTM(const Path& path, int fs) : Model(), samplesPerMetre(fs* INV_SPEED_OF_SOUND), firFilter(CalculateBTM(path), maxIrLength)
+				BTM(const Path& path, int fs) : Model(), lastPath(path), samplesPerMetre(fs* INV_SPEED_OF_SOUND), firFilter(CalculateBTM(path), maxIrLength)
 				{
 					isInitialised.store(true);
 				};

@@ -529,7 +529,7 @@ namespace RAC
 				if (!imageSource.GetDiffractionPath().valid)
 					continue;
 
-				if (imageSource.GetDiffractionPath().inShadow)
+				if (imageSource.GetDiffractionPath().inShadowZone)
 					order = mIEMConfig.shadowDiffOrder;
 				else
 					order = mIEMConfig.specularDiffOrder;
@@ -780,7 +780,7 @@ namespace RAC
 							if (!imageSource.GetDiffractionPath().valid)
 								continue;
 
-							order = imageSource.GetDiffractionPath().inShadow ? mIEMConfig.shadowDiffOrder : mIEMConfig.specularDiffOrder;
+							order = imageSource.GetDiffractionPath().inShadowZone ? mIEMConfig.shadowDiffOrder : mIEMConfig.specularDiffOrder;
 
 							if (order < refOrder)
 								continue;
@@ -883,7 +883,7 @@ namespace RAC
 						if (!imageSource.GetDiffractionPath().valid)
 							continue;
 
-						order = imageSource.GetDiffractionPath().inShadow ? mIEMConfig.shadowDiffOrder : mIEMConfig.specularDiffOrder;
+						order = imageSource.GetDiffractionPath().inShadowZone ? mIEMConfig.shadowDiffOrder : mIEMConfig.specularDiffOrder;
 
 						if (order < refOrder)
 							continue;

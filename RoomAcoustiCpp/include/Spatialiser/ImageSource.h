@@ -374,7 +374,7 @@ namespace RAC
 			Vec4 previousPlane;						// Previous reflected plane information where: w -> D, x, y, z -> Normal
 
 			Diffraction::Path mDiffractionPath;			// Diffraction path of the image source
-			Absorption<> mAbsorption;						// Wall absorption of the image source
+			Absorption<> mAbsorption;					// Wall absorption of the image source
 			Real distance;								// Distance of the image source from the listener
 			CTransform transform;						// 3DTI transform of the image source
 
