@@ -43,7 +43,7 @@ namespace RAC
 				b(filterOrder + 1), a(filterOrder + 1), y(filterOrder + 1) {};
 			
 			/**
-			* @brief Default deconstructor
+			* @brief Default virtual deconstructor
 			*/
 			virtual ~IIRFilter() {};
 
@@ -51,6 +51,7 @@ namespace RAC
 			* @brief Returns the output of the IIRFilter given an input
 			*
 			* @param input The input to the IIRFilter
+			* @param lerpFactor The lerp factor for interpolation
 			* @return The output of the IIRFilter
 			*/
 			Real GetOutput(const Real input, const Real lerpFactor);
@@ -718,6 +719,9 @@ namespace RAC
 
 		/**
 		* @brief Class that implements a 1st order high shelf IIR filter
+		* 
+		* @remarks Based on Matched One-Pole Digital Shelving Filters Vicanek M 2019.
+		* Improved frequency match at large fc values compared to HighShelf class
 		*/
 		class HighShelfMatched : public IIRFilter1
 		{

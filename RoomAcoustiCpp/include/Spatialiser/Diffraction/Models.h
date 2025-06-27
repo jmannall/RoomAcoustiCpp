@@ -1,6 +1,7 @@
 /*
+* @class Model, Attenuate, LPF, UDFABase, UDFA, UDFAI, NN, NNBest, NNSmall, UTD, BTM
 *
-*  \Diffraction models
+* @brief Diffraction model classes with base class Model
 *
 */
 
@@ -40,13 +41,36 @@ namespace RAC
 	{
 		namespace Diffraction
 		{
+			/**
+			* @brief Base class for all diffraction models
+			*/
 			class Model
 			{
 			public:
+				/**
+				* @brief Default constructor
+				*/
 				Model() {};
+
+				/**
+				* @brief Defualt virtual deconstructor
+				*/
 				virtual ~Model() {};
 
+				/**
+				* @breif Pure virtual function to set target parameters based on the given path. Must be overloaded in the derived classes
+				* 
+				* @param path The path to set the target parameters from
+				*/
 				virtual void SetTargetParameters(const Path& path) = 0;
+
+				/**
+				* @brief Pure virtual function to process audio buffers. Must be overloaded in the derived classes
+				* 
+				* @param inBuffer The input audio buffer
+				* @param outBuffer The output audio buffer to write to
+				* @param lerpFactor The lerp factor for interpolation
+				*/
 				virtual void ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const Real lerpFactor) = 0;
 
 			protected:
@@ -54,101 +78,198 @@ namespace RAC
 			};
 
 			//////////////////// Attenuate class ////////////////////
-
+			
+			/**
+			* @brief Class that applies an on/off attenuation based on whether the receiver is in the shadow zone
+			*/
 			class Attenuate : public Model
 			{
 			public:
+				/**
+				* @brief Constructor that initialises the Attenuate model with a given path
+				* 
+				* @param path The path to set the target parameters from
+				*/
 				Attenuate(const Path& path) : Model(), gain(CalculateGain(path))
 				{
 					isInitialised.store(true);
 				};
 
+				/**
+				* @brief Default deconstructor
+				*/
 				~Attenuate() {};
 
+				/**
+				* @brief Set the target gain based on the given path
+				* 
+				* @param path The path to set the target parameters from
+				*/
 				inline void SetTargetParameters(const Path& path) override { gain.SetTarget(CalculateGain(path)); }
 
+				/**
+				* @brief Processes the input audio buffer and applies the attenuation
+				* 
+				* @param inBuffer The input audio buffer
+				* @param outBuffer The output audio buffer to write to
+				* @param lerpFactor The lerp factor for interpolation
+				*/
 				void ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const Real lerpFactor) override;
 			private:
 
+				/**
+				* @brief Calculates the gain based on the path
+				* 
+				* @param path The path to calculate the gain from
+				* @return 1.0 if the path is valid and the receiver is in the shadow zone, otherwise 0.0
+				*/
 				inline Real CalculateGain(const Path& path) const { return (path.valid && path.inShadow) ? 1.0 : 0.0; }
 			
-				Parameter gain;
+				Parameter gain;		// Gain parameter
 			};
 
 			//////////////////// LPF class ////////////////////
 
+			/**
+			* @brief Class that applies a low-pass filter when the receiver is in the shadow zone
+			*/
 			class LPF : public Model
 			{
 			public:
+				/**
+				* @brief Constructor that initialises the LPF model with a given path and sample rate
+				*/
 				LPF(const Path& path, const int fs) : Model(), gain(CalculateGain(path)), filter(1000.0, fs)
 				{
 					isInitialised.store(true);
 				}
 
+				/**
+				* @brief Default deconstructor
+				*/
 				~LPF() {};
 
+				/**
+				* @brief Set the target gain based on the given path
+				* 
+				* @param path The path to set the target parameters from
+				*/
 				inline void SetTargetParameters(const Path& path) override { gain.SetTarget(CalculateGain(path)); }
 
+				/**
+				* @brief Processes the input audio buffer and applies the low-pass filter
+				* 
+				* @param inBuffer The input audio buffer
+				* @param outBuffer The output audio buffer to write to
+				* @param lerpFactor The lerp factor for interpolation
+				*/
 				void ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const Real lerpFactor) override;
 			private:
 
+				/**
+				* @brief Calculates the gain based on the path
+				*
+				* @param path The path to calculate the gain from
+				* @return 1.0 if the path is valid and the receiver is in the shadow zone, otherwise 0.0
+				*/
 				inline Real CalculateGain(const Path& path) const { return (path.valid && path.inShadow) ? 1.0 : 0.0; }
 
-				LowPass1 filter;
-				Parameter gain;
+				LowPass1 filter;	// Low-pass filter with cutoff frequency of 1000Hz
+				Parameter gain;		// Gain parameter
 			};
 
 			//////////////////// UDFA class ////////////////////
 
+			/**
+			* @brief Currently implemented UDFAModels
+			*/
 			enum UDFAModel
 			{
 				Pierce,
 				SingleTerm
 			};
 
+			/**
+			* @brief Base class for UDFAModels. Currently assumes the apex point lies on the edge
+			* 
+			* @remark Based after A Universal Filter Approximation of Edge Diffraction for Geometrical Acoustics. Kirsch C and Ewert S 2023
+			*/
 			template <UDFAModel model>
 			class UDFABase : public Model
 			{
-				static constexpr int numShelvingFilters{ 4 };
-				static constexpr int numUDFAFilters = model == UDFAModel::SingleTerm ? 2 : 4;
+				static constexpr int numShelvingFilters{ 4 };	// Number of shelving filters used to approximate each UDFA filter
+				static constexpr int numUDFAFilters = model == UDFAModel::SingleTerm ? 2 : 4;	// Number of UDFA filters used in the model
 				
-				using ParametersI = Coefficients<std::array<Real, numShelvingFilters>>;
-				using ParametersT = Coefficients<std::array<Real, numShelvingFilters + 1>>;
+				using ParametersI = Coefficients<std::array<Real, numShelvingFilters>>;			// Parameters type for the shelving filters
+				using ParametersT = Coefficients<std::array<Real, numShelvingFilters + 1>>;		// Parameters type for the target parameters
 
+				/**
+				* @brief Struct that stores the target shelving filter parameters for each UDFA filter
+				*/
 				struct FilterParameters
 				{
-					Coefficients<std::array<Real, numShelvingFilters>> fc;
-					Coefficients<std::array<Real, numShelvingFilters>> g;
-					Real gain;
+					ParametersI fc;		// Cut-off frequencies
+					ParametersI g;		// Shelving gains
+					Real gain;			// Gain
+
+					/**
+					* @brief Default constructor with a flat frequency response and zero gain.
+					*/
 					FilterParameters() : gain(0.0), fc({ 45.0, 350.0, 2800.0, 21700.0 }), g({ 1.0, 1.0, 1.0, 1.0 }) {}
 				};
 
+				/**
+				* @brief Struct that calculates the UDFA filter parameters for a finite edge
+				*/
 				struct Parameters
 				{
-					Real fc;
-					Real gain;
-					Real blend{ 1.44 };
-					Real Q{ 0.2 };
+					Real fc;				// Cut-off frequency
+					Real gain;				// Gain
+					Real blend{ 1.44 };		// Blend factor for the filter
+					Real Q{ 0.2 };			// Q factor for the filter
 
-					Parameters(Real f, Real g, Real tDiff) : fc(f), gain(g) {
-						Real halfGain = CalculateHalfGain(fc, tDiff);
+					/**
+					* @brief Constructor that initialises the parameters for a given cut-off frequency, gain and time difference
+					* 
+					* @param f Cut-off frequency for an infinite edge
+					* @param g Gain for an infinite edge
+					* @param tDiff Time difference between the apex path and path via the top or base of the edge
+					*/
+					Parameters(Real f, Real g, Real tDiff) : fc(f), gain(g)
+					{
+						Real halfGain = CalculateHalfGain(fc, tDiff); // eq. 10
 						Real halfGainSq = halfGain * halfGain;
-						fc *= (1.0 / halfGainSq);
+						fc *= (1.0 / halfGainSq); // eq. 11
 						gain *= halfGain;
-						blend = 1.0 + (blend - 1.0) * halfGainSq;
-						Q = 0.5 + (Q - 0.5) * halfGainSq;
+						blend = 1.0 + (blend - 1.0) * halfGainSq; // eq. 12a
+						Q = 0.5 + (Q - 0.5) * halfGainSq; // eq. 12b
 					}
 
+					/**
+					* @brief Calculate the DC gain for a half wedge (eq. 10)
+					* 
+					* @param fc Cut-off frequency for an infinite edge
+					* @param tDiff Time delay between the apex path and path via the top or base of the edge
+					* @return The DC gain for a half wedge
+					*/
 					inline Real CalculateHalfGain(Real fc, Real tDiff) const {
-						return (2 / PI_1) * atan(PI_1 * sqrt(2.0 * fc * tDiff));
-					}
+						return (2 / PI_1) * atan(PI_1 * sqrt(2.0 * fc * tDiff)); }
 				};
 
-				struct Constants {
-					Real tDiffBase{ 0.0 }, tDiffTop{ 0.0 };
-					Real fc1{ 0.0 }, fc2{ 0.0 };
-					Real gain1{ 0.0 }, gain2{ 0.0 };
+				/**
+				* @brief Struct that calculates the UDFA filter parameters for an infinite edge
+				*/
+				struct Constants
+				{
+					Real tDiffBase{ 0.0 }, tDiffTop{ 0.0 };		// Time difference between the apex path and path via the top or base of the edge
+					Real fc1{ 0.0 }, fc2{ 0.0 };				// Cut-off frequencies
+					Real gain1{ 0.0 }, gain2{ 0.0 };			// Gains
 
+					/**
+					* @brief Constructor that calculates the UDFA filter parameters for a given path
+					* 
+					* @param path The path to calculate the parameters from
+					*/
 					Constants(const Path& path)
 					{
 						Real v = PI_1 / path.wData.t;
@@ -159,52 +280,73 @@ namespace RAC
 						Real cosVt2 = cos(v * (path.rData.t + path.sData.t));
 
 						Real dStar = 2.0 * path.sData.r * path.rData.r / (path.sData.d + path.rData.d);
-						Real front = 2.0 * SPEED_OF_SOUND / (PI_SQ * dStar);
+						Real front = 2.0 * SPEED_OF_SOUND / (PI_SQ * dStar); // eq. 4
 
-						Real nV1 = CalcNv(cosVt1, v, cosVpi);
+						Real nV1 = CalcNv(cosVt1, v, cosVpi); // eq. 5
 						Real nV2 = CalcNv(cosVt2, v, cosVpi);
 
-						fc1 = front * nV1 * nV1;
+						fc1 = front * nV1 * nV1; // eq. 4
 						fc2 = front * nV2 * nV2;
 
-						gain1 = CalcGv(cosVt1, cosVpi, sinVpi);
+						gain1 = CalcGv(cosVt1, cosVpi, sinVpi); // eq. 3
 						gain2 = CalcGv(cosVt2, cosVpi, sinVpi);
 
 						if constexpr (model == UDFAModel::SingleTerm)
 						{
+							// Factor of 0.5 already accounted for in CalcGv
 							Real fcTerm = gain1 * sqrt(fc1) + gain2 * sqrt(fc2);
-							fc1 = fcTerm * fcTerm;
+							fc1 = fcTerm * fcTerm; // eq. 7
 							gain1 = 1.0;
 						}
 						else
 						{
-							if (!path.inShadow)
+							if (!path.inShadow) // eq. 2
 								gain1 = -gain1;
 							if (path.inRelfZone)
 								gain2 = -gain2;
 						}
 
 						Real d = path.sData.d + path.rData.d;
-						tDiffBase = (path.GetD(0.0) - d) / SPEED_OF_SOUND;
+						tDiffBase = (path.GetD(0.0) - d) / SPEED_OF_SOUND;	// Sec III. A
 						tDiffTop = (path.GetD(path.wData.z) - d) / SPEED_OF_SOUND;
 					}
 
+					/**
+					* @brief Calculate the factor Nv (eq. 5)
+					*
+					* @param cosVt cos(v*theta) where theta = theta_r plus/minus theta_s
+					* @param v The exterior wedge index
+					* @param cosVpi cos(v*pi) where v is the exterior wedge index
+					*/
 					inline Real CalcNv(Real cosVt, Real v, Real cosVpi) const {
 						return (v * sqrt(1 - cosVpi * cosVt)) / (cosVpi - cosVt);
 					}
 
+					/**
+					* @brief Calculate the gain for an infinite wedge (eq. 3)
+					*
+					* @param cosVt cos(v*theta) where theta = theta_r plus/minus theta_s
+					* @param cosVpi cos(v*pi) where v is the exterior wedge index
+					* @param sinVpi sin(v*pi) where v is the exterior wedge index
+					*/
 					inline Real CalcGv(Real cosVt, Real cosVpi, Real sinVpi) const {
 						return 0.5 * sinVpi / sqrt(1 - cosVpi * cosVt);
 					}
 				};
 
 			public:
+				/**
+				* @brief Constructor that initialises shelving filters based on the given path and sample rate
+				* 
+				* @params path The path to set the target parameters from
+				* @params fs The sample rate for calculating filter coefficients
+				*/
 				UDFABase(const Path& path, const int fs) : ft(CalcFT(fs)), fi(CalcFI())
 				{
 					if (!path.valid || (model == UDFAModel::SingleTerm && !path.inShadow))
 					{
 						for (int j= 0; j < numUDFAFilters; j++)
-							PopulateFilters(FilterParameters(), j, fs);
+							InitFilters(FilterParameters(), j, fs);
 					}
 					else
 					{
@@ -212,14 +354,22 @@ namespace RAC
 						for (int j = 0; j < numUDFAFilters; j++)
 						{
 							FilterParameters fp = CalculateParameters(parameters[j]);
-							PopulateFilters(fp, j, fs);
+							InitFilters(fp, j, fs);
 						}
 					}
 					isInitialised.store(true);
 				}
 
+				/**
+				* @brief Default deconstructor
+				*/
 				~UDFABase() {}
 
+				/**
+				* @brief Set the target parameters based on the given path
+				* 
+				* @param path The path to set the target parameters from
+				*/
 				void SetTargetParameters(const Path& path) override
 				{
 					if (!path.valid || (model == UDFAModel::SingleTerm && !path.inShadow))
@@ -230,7 +380,6 @@ namespace RAC
 					}
 
 					std::array<Parameters, numUDFAFilters> parameters = CalculateUDFAParameters(path);
-
 					for (int j = 0; j < numUDFAFilters; j++)
 					{
 						FilterParameters filterParameters = CalculateParameters(parameters[j]);
@@ -240,12 +389,17 @@ namespace RAC
 					}
 				}
 
+				/**
+				* @brief Processes the input audio buffer and applies the UDFA filters
+				* 
+				* @param inBuffer The input audio buffer
+				* @param outBuffer The output audio buffer to write to
+				* @param lerpFactor The lerp factor for interpolation
+				*/
 				void ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const Real lerpFactor) override
 				{
 					if (!isInitialised.load())
 						return;
-
-					const int totalFilters = static_cast<int>(filters.size());
 
 					FlushDenormals();
 					for (int i = 0; i < inBuffer.Length(); i++)
@@ -265,13 +419,25 @@ namespace RAC
 
 			private:
 
-				inline void PopulateFilters(const FilterParameters& fp, const int j, const int fs)
+				/**
+				* @brief Initialises the shelving filters approximating a single UDFA filter
+				* 
+				* @param fp The target shelving filter parameters
+				* @param j The index of the UDFA filter
+				*/
+				inline void InitFilters(const FilterParameters& fp, const int j, const int fs)
 				{
 					gain[j].emplace(fp.gain);
 					for (int i = 0; i < numShelvingFilters; i++)
 						filters[j * numShelvingFilters + i].emplace(fp.fc[i], fp.g[i], fs);
 				}
 
+				/**
+				* @brief Calculates the UDFA filter parameters for a finite edge based on the given path
+				* 
+				* @param path The path to calculate the parameters from
+				* @return An array of Parameters for each UDFA filter
+				*/
 				std::array<Parameters, numUDFAFilters> CalculateUDFAParameters(const Path& path) const
 				{
 					Constants constants(path);
@@ -295,22 +461,34 @@ namespace RAC
 						assert(false && "Invalid UDFAModel specified.");
 				}
 
+				/**
+				* @brief Calculates the target shelving filter parameters for each UDFA filter
+				* 
+				* @param parameters The parameters of the UDFA filter
+				* @return FilterParameters containing the target shelving filter parameters
+				*/
 				FilterParameters CalculateParameters(const Parameters& parameters) const
 				{
 					ParametersT gt = CalcGT(parameters);
-					ParametersI gi = CalcGI(gt, parameters);
+					ParametersI gd = CalcGD(gt, parameters);
 
 					FilterParameters filterParameters;
 					for (int i = 0; i < numShelvingFilters; i++)
 						filterParameters.g[i] = gt[i + 1] / gt[i];
 
-					const Coefficients giSq = gi * gi;
-					const Coefficients gSq = filterParameters.g * filterParameters.g;
-					filterParameters.fc = fi * ((giSq - gSq) / (filterParameters.g * (1.0 - giSq))).Sqrt() * (1.0 + gSq / 12.0);
-					filterParameters.gain = gt[0] * parameters.gain / 2;
+					const ParametersI gdSq = gd * gd;
+					const ParametersI gSq = filterParameters.g * filterParameters.g;
+					filterParameters.fc = fi * ((gdSq - gSq) / (filterParameters.g * (1.0 - gdSq))).Sqrt() * (1.0 + gSq / 12.0); // eq. 20
+					filterParameters.gain = gt[0] * parameters.gain * 0.5;
 					return filterParameters;
 				}
 
+				/**
+				* @brief Calculates logarimically space frequencies based on the number of shelving filters (sec IV)
+				* 
+				* @param fs The sample rate to determine the maximum target frequency
+				* @return A ParametersT containing the target frequencies
+				*/
 				inline ParametersT CalcFT(int fs) const
 				{
 					ParametersT f(numShelvingFilters + 1);
@@ -324,6 +502,11 @@ namespace RAC
 					return f;
 				}
 
+				/**
+				* @brief Calculate the geometric centre between two consecutive target frequencies (sec IV)
+				* 
+				* @return A ParametersI containing the intermediate frequencies
+				*/
 				inline ParametersI CalcFI() const
 				{
 					ParametersI f(numShelvingFilters);
@@ -332,6 +515,12 @@ namespace RAC
 					return f;
 				}
 
+				/**
+				* @brief Calculates the gain of a given UDFA filter at the target frequencies
+				* 
+				* @param parameters The UDFA filter parameters
+				* @return A ParametersT containing the target gains
+				*/
 				inline ParametersT CalcGT(const Parameters& parameters) const
 				{
 					ParametersT gt = ParametersT(numShelvingFilters + 1);
@@ -340,16 +529,37 @@ namespace RAC
 					return gt;
 				}
 
-				inline ParametersI CalcGI(const ParametersT& gt, const Parameters& parameters) const
+				/**
+				* @brief Calculate intermediate gain step where gd is the ratio between the gains at the intermediate frequency and the previous target frequency (sec IV)
+				*
+				* @param gt The gains at the target frequencies
+				* @param parameters The UDFA filter parameters
+				* @return A ParametersI containing the intermediate gains
+				*/
+				inline ParametersI CalcGD(const ParametersT& gt, const Parameters& parameters) const
 				{
-					ParametersI gi = ParametersI(numShelvingFilters);
+					ParametersI gd = ParametersI(numShelvingFilters);
 					for (int i = 0; i < numShelvingFilters; i++)
-						gi[i] = CalcG(fi[i], parameters) / gt[i];
-					return gi;
+						gd[i] = CalcG(fi[i], parameters) / gt[i];
+					return gd;
 				}
 
+				/**
+				* @brief Calculates the gain at a given frequency using the UDFA filter parameters
+				* 
+				* @param f The frequency to calculate the gain for
+				* @param parameters The UDFA filter parameters
+				* @return The gain at the given frequency
+				*/
 				inline Real CalcG(Real f, const Parameters& parameters) const { return abs(CalcUDFA(f, parameters)); }
 
+				/**
+				* @brief Calculates the filter response at a given frequency using the UDFA filter parameters
+				*
+				* @param f The frequency to calculate the gain for
+				* @param parameters The UDFA filter parameters
+				* @return The complex valued response at the given frequency
+				*/
 				inline Complex CalcUDFA(Real f, const Parameters& parameters) const
 				{
 					Real alpha = 0.5;
@@ -358,37 +568,64 @@ namespace RAC
 				}
 
 			private:
-				const ParametersT ft;
-				const ParametersI fi;
+				const ParametersT ft;	// Target frequencies
+				const ParametersI fi;	// Intermediate frequencies (geometric centre of ft)
 
-				std::array<std::optional<Parameter>, numUDFAFilters> gain;
-				std::array<std::optional<HighShelfMatched>, numShelvingFilters * numUDFAFilters> filters;
+				std::array<std::optional<Parameter>, numUDFAFilters> gain;									// Gain for each UDFA filter approximation
+				std::array<std::optional<HighShelfMatched>, numShelvingFilters* numUDFAFilters> filters;	// Shelving filters approximating each the UDFA filters
 			};
 
-
+			/**
+			* @brief Class that implements the two-term pierce solution UDFA model
+			*/
 			class UDFA : public UDFABase<UDFAModel::Pierce>
 			{
 			public:
+				/**
+				* @brief Constructor that intialises the UDFABase base class
+				*
+				* @params path The path to set the target parameters from
+				* @params fs The sample rate for calculating filter coefficients
+				*/
 				UDFA(const Path& path, int fs) : UDFABase(path, fs) {}
 			};
 
+			/**
+			* @brief Class that implements the single-term solution UDFA model
+			*/
 			class UDFAI : public UDFABase<UDFAModel::SingleTerm>
 			{
 			public:
+				/**
+				* @brief Constructor that intialises the UDFABase base class
+				*
+				* @params path The path to set the target parameters from
+				* @params fs The sample rate for calculating filter coefficients
+				*/
 				UDFAI(const Path& path, int fs) : UDFABase(path, fs) {}
 			};
 
 			//////////////////// NN class ////////////////////
 
-			class NN : public Model	// Only accurate at 48kHz
+			/**
+			* @brief Class that implements a neural network based diffraction model
+			* 
+			* @remark Based after Efficient diffraction modeling using neural networks and infinite impulse response filters. Mannall J et al. 2023
+			* Current models only accurate at 48kHz sample rate
+			*/
+			class NN : public Model
 			{	
-				static constexpr int numInputs = 8;	// Number of inputs to the neural network
-				using Input = std::array<float, numInputs>;
+				static constexpr int numInputs = 8;			// Number of inputs to the neural network
+				
+				using Input = std::array<float, numInputs>;		// Input type for the neural network
 
+				/**
+				* @brief Struct that stores the output parameters from the neural network
+				*/
 				struct Parameters
 				{
 				public:
-					Coefficients<std::array<Real, 5>> data{ 0.0 };
+					Coefficients<std::array<Real, 5>> data{ 0.0 };	// Output parameters (z1, z2, p1, p2, k)
 
 					Parameters(float z[2], float p[2], float k)
 					{
@@ -418,6 +655,12 @@ namespace RAC
 				};
 
 			public:
+				/**
+				* @brief Constructor that initialises the neural network with a given path
+				* 
+				* @param path The path to set the target parameters from
+				* @param nnFunction The function pointer to the neural network function
+				*/
 				NN(const Path& path, void(*nnFunction)(const float*, float*, float*, float*)) : nnFunction(nnFunction), Model(), filter(CalculateParameters(path).data, 48000)
 				{
 					if (!path.valid)
@@ -425,110 +668,292 @@ namespace RAC
 					isInitialised.store(true);
 				};
 
+				/**
+				* @brief Default virtual deconstructor
+				*/
 				virtual ~NN() {};
 
+				/**
+				* @brief Set the target parameters based on the given path
+				* 
+				* @param path The path to set the target parameters from
+				*/
 				void SetTargetParameters(const Path& path) override;
+
+				/**
+				* @brief Processes the input audio buffer and applies the ZPK filter
+				* 
+				* @param inBuffer The input audio buffer
+				* @param outBuffer The output audio buffer to write to
+				* @param lerpFactor The lerp factor for interpolation
+				*/
 				void ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const Real lerpFactor) override;
 
 			private:
+				/**
+				* @brief Run the neural network with the given input
+				* 
+				* @param input The input to the neural network
+				* @return The output parameters from the neural network
+				*/
 				inline Parameters RunNN(const Input& input) const
 				{
 					float z[2], p[2], k;
 					nnFunction(input.data(), z, p, &k);
 					return Parameters(z, p, k);
 				}
+
+				/**
+				* @brief Calculate the target filter parameters based on the given path
+				* 
+				* @param path The path to calculate the target parameters from
+				* @return Parameters containing the target filter parameters
+				*/
 				Parameters CalculateParameters(const Path& path) const;
-				Input CalcInput(const Path& path) const;
+
+				/**
+				* @brief Calculate the input to the neural network based on the given path
+				* 
+				* @param path The path to calculate the input from
+				* @return Input containing the neural network input parameters
+				*/
+				Input CalculateInput(const Path& path) const;
+
+				/**
+				* @brief Assign the r and z values based on such that z1 is less than zW / 2. Ensures reciprocity
+				* 
+				* @param one The SRData with shortest r value
+				* @param two The SRData with longest r value
+				* @param zW The length of the edge
+				* @param input The input to assign the r and z values to
+				*/
 				void AssignInputRZ(const SRData& one, const SRData& two, Real zW, Input& input) const;
 
-				std::function<void(const float*, float*, float*, float*)> nnFunction;
-				ZPKFilter filter;
+				std::function<void(const float*, float*, float*, float*)> nnFunction;	// Function pointer to the neural network function
+				ZPKFilter filter;														// ZPK filter
 			};
 
+			/**
+			* @brief Class that implements the best neural network model (~10kFLOPS)
+			*/
 			class NNBest : public NN
 			{
 			public:
+				/**
+				* @brief Constructor that intialises the NN base class
+				*
+				* @params path The path to set the target parameters from
+				*/
 				NNBest(const Path& path) : NN(path, &myBestNN) {};
 
+				/**
+				* @brief Default deconstructor
+				*/
 				~NNBest() {};
 			};
 
+			/**
+			* @brief Class that implements the small neural network model (~2kFLOPS)
+			*/
 			class NNSmall : public NN
 			{
 			public:
+				/**
+				* @brief Constructor that intialises the NN base class
+				*
+				* @params path The path to set the target parameters from
+				*/
 				NNSmall(const Path& path) : NN(path, &mySmallNN) {};
 
+				/**
+				* @brief Default deconstructor
+				*/
 				~NNSmall() {};
 			};
 
 			//////////////////// UTD class ////////////////////
 
+			/**
+			* @brief Class that implements the Uniform Theory of Diffraction (UTD) model using a Linkwitz Riley filterbank
+			* 
+			* @remark Based after A uniform geometrical theory of diffraction for an edge in a perfectly conducting surface. Kouyoumjian R and Pathak P 1974 10.1109/PROC.1974.9651,
+			* Sound diffraction by a many-sided barrier or pillar. Kawai T 1981 10.1016/0022-460X(81)90370-9,
+			* High-order diffraction and diffuse reflections for interactive sound propagation in large environments. Schissler et al. 2014,
+			* Fast Diffraction Pathfinding for Dynamic Sound Propagation. Schissler et al. 2021
+			*/
 			class UTD : public Model
 			{
-				typedef Coefficients<std::array<Real, 4>> Parameters;
+				using Parameters = Coefficients<std::array<Real, 4>>;	// Parameters type that stores 4 values
 
+				/**
+				* @brief Initialises the constants E used in the UTD calculations
+				*/
 				constexpr std::array<Complex, 4> InitE()
 				{
 					std::array<Complex, 4> E;
 					for (int i = 0; i < 4; ++i)
-						E[i] = std::exp(-imUnit * (PI_1 / 4.0)) / (2.0 * std::sqrt(PI_2 * k[i]));
+						E[i] = std::exp(-imUnit * (PI_1 / 4.0)) / (2.0 * std::sqrt(PI_2 * k[i])); // eq. 25
 					return E;
 				}
 
 			public:
-				UTD(const Path& path, int fs);
+				/**
+				* @brief Constructor that initialises the UTD model with a given path and sample rate
+				* 
+				* @param path The path to set the target parameters from
+				* @param fs The sample rate for calculating filter coefficients
+				*/
+				UTD(const Path& path, int fs) : Model(), lrFilter(CalculateUTD(path), fs)
+				{
+					isInitialised.store(true);
+				}
+
+				/**
+				* @brief Default deconstructor
+				*/
 				~UTD() {};
 
-				void SetTargetParameters(const Path& path) override;
+				/**
+				* @brief Set the target parameters based on the given path
+				* 
+				* @param path The path to set the target parameters from
+				*/
+				inline void SetTargetParameters(const Path& path) override { lrFilter.SetTargetGains(CalculateUTD(path)); }
+
+				/**
+				* @brief Processes the input audio buffer and applies the LinkwitzRiley filter
+				* 
+				* @param inBuffer The input audio buffer
+				* @param outBuffer The output audio buffer to write to
+				* @param lerpFactor The lerp factor for interpolation
+				*/
 				void ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const Real lerpFactor) override;
 
 			private:
-				Parameters CalcUTD(const Path& path);
-				inline Complex EqHalf(Real t, const int i, Real n, Real L) { return EqQuarter(t, true, i, n, L) + EqQuarter(t, false, i, n, L); }
-				Complex EqQuarter(Real t, bool plus, const int i, Real n, Real L);
-				Real PM(Real t, bool plus);
-				Real CalcTArg(Real t, bool plus, Real n);
-				Real Apm(Real t, bool plus, Real n);
-				Complex FuncF(Real x);
+				/**
+				* @brief Calculates the UTD gain parameters for a given path
+				* 
+				* @param path The path to calculate the parameters from
+				*/
+				Parameters CalculateUTD(const Path& path) const;
 
-				const Parameters k = LinkwitzRiley::DefaultFM() * PI_2 / SPEED_OF_SOUND;
-				const std::array<Complex, 4> E = InitE();
+				/**
+				* @brief Calculate the coefficient parts for either thetaR plus/minus thetaS
+				* 
+				* @param t Either thetaR + thetaS or thetaR - thetaS
+				* @param k The wave number
+				* @param n The exterior wedge index
+				* @param L Distance parameter
+				* @return Complex value coefficient
+				*/
+				inline Complex EqHalf(Real t, Real k, Real n, Real L) const { return EqQuarter(t, true, k, n, L) + EqQuarter(t, false, k, n, L); }
+				
+				/**
+				* @brief Calculate the coefficient parts for either thetaR plus/minus thetaS
+				*
+				* @param t Either thetaR + thetaS or thetaR - thetaS
+				* @param plus True if calculating pi + t, false if calculating pi - t
+				* @param k The wave number
+				* @param n The exterior wedge index
+				* @param L Distance parameter
+				* @return Complex value coefficient
+				*/
+				Complex EqQuarter(Real t, bool plus, Real k, Real n, Real L) const;
 
-				LinkwitzRiley lrFilter;
+				/**
+				* @brief Flip the sign of t if required
+				* 
+				* @param t The theta value to flip
+				* @param plus True if calculating pi + t, false if calculating pi - t
+				* @return t if plus is true, -t if plus is false
+				*/
+				inline Real PM(Real t, bool plus) const { if (plus) return t; else return -t; }
+
+				
+
+				/**
+				* @brief Calculate the alpha value for either thetaR plus/minus thetaS
+				* 
+				* @param t Either thetaR + thetaS or thetaR - thetaS
+				* @param plus True if calculating pi + t, false if calculating pi - t
+				* @param n The exterior wedge index
+				* @return The alpha value for the given parameters
+				*/
+				Real AlphaPM(Real t, bool plus, Real n) const;
+
+				/**
+				* @brief Calculate the cosine input for AlphaPM from t
+				*
+				* @param t Either thetaR + thetaS or thetaR - thetaS
+				* @param plus True if calculating pi + t, false if calculating pi - t
+				* @param n The exterior wedge index
+				* @return The cosine input for AlphaPM
+				*/
+				Real CalculateAlphaPMCosineInput(Real t, bool plus, Real n) const;
+
+				/**
+				* @brief Calculate the Fresnel integral for a given x value
+				* 
+				* @param x The x value to calculate the Fresnel integral for
+				* @return The complex valued Fresnel integral value
+				*/
+				Complex FresnelIntegral(Real x) const;
+
+				const Parameters k = LinkwitzRiley::DefaultFM() * PI_2 / SPEED_OF_SOUND;	// Wave numbers for calculating UTD gains
+				const std::array<Complex, 4> E = InitE();									// Coefficients for the UTD calculation
+
+				LinkwitzRiley lrFilter;		// Linkwitz Riley filterbank
 			};
 
 			//////////////////// BTM class ////////////////////
 
-			struct IntegralLimits
-			{
-				Real p, m;
-				IntegralLimits() : p(0.0), m(0.0) {}
-				IntegralLimits(Real _p, Real _m) : p(_p), m(_m) {}
-			};
-
+			
+			/**
+			* @brief Class that implements the BTMS model (Biot-Tolstoy-Medwin-Svensson)
+			* 
+			* @remark Based after An analytic secondary source model of edge diffraction impulse responses. Svensson U et al. 1999 10.1121/1.428071,
+			* Ported from Edge diffraction Matlab toolbox (EDtoolbox) by upsvensson https://github.com/upsvensson/Edge-diffraction-Matlab-toolbox
+			*/
 			class BTM : public Model
 			{
-				using Parameters = Coefficients<std::array<Real, 4>>;
+				using Parameters = Coefficients<std::array<Real, 4>>; // Parameters type that stores 4 values
 
+				/**
+				* @brief Struct that stores the limits for the integral calculation
+				*/
+				struct IntegralLimits
+				{
+					Real p, m;
+					IntegralLimits(Real p = 0.0, Real m = 0.0) : p(p), m(m) {}
+				};
+
+				/**
+				* @brief Struct that calculates parameters used in the BTMS model
+				*/
 				struct Constants
 				{
-					Real R0{ 0.0 }, R0Sq{ 0.0 };
-					Real dSSq{ 0.0 }, dRSq{ 0.0 };
-					Real rr{ 0.0 };
-					Real zSRel{ 0.0 }, zRRel{ 0.0 };
-					Real dz{ 0.0 }, dzSq{ 0.0 };
-					Real v{ 0.0 }, vSq{ 0.0 };
-					Real rSSq{ 0.0 }, rRSq{ 0.0 };
-					Real edgeHi{ 0.0 }, edgeLo{ 0.0 };
-					Parameters theta{ 0.0 }, thetaSq{ 0.0 }, vTheta{ 0.0 };
-					Parameters sinTheta{ 0.0 }, cosTheta{ 0.0 }, absTheta{ 0.0 };
-					Real zRange{ 0.0 }, zRangeApex{ 0.0 };
-					bool splitIntegral{ true };
-					Real rho{ 0.0 }, rhoSq{ 0.0 }, rhoOne{ 0.0 }, rhoOneSq{ 0.0 };
-					Real R0rho{ 0.0 };
-					Real sinPsi{ 0.0 }, cospsi{ 0.0 };
-					Real factor{ 0.0 };
+					Real dSSq{ 0.0 }, dRSq{ 0.0 };	// dS * dS and dR * dR
+					Real rSSq{ 0.0 }, rRSq{ 0.0 };	// rS * rS and rR * rR
+					Real rr{ 0.0 };					// rS * rR
+					Real R0{ 0.0 }, R0Sq{ 0.0 };	// dS + dR and R0 * R0
 
+					Real zSRel{ 0.0 }, zRRel{ 0.0 };	// zS - zA and zR - zA
+					Real dz{ 0.0 }, dzSq{ 0.0 };		// zS - zR (dZ) and dZ * dZ
+
+					Real v{ 0.0 }, vSq{ 0.0 };			// Exterioir wedge index (v) and v * v
+					Real edgeHi{ 0.0 }, edgeLo{ 0.0 };	// Length of each edge half from apex
+
+					Parameters theta{ 0.0 }, thetaSq{ 0.0 }, vTheta{ 0.0 };			// PI plus/minus (thetaR plus/minus thetaS), v * theta
+					Parameters sinTheta{ 0.0 }, cosTheta{ 0.0 }, absTheta{ 0.0 };	// sin(v * theta), cos(v * theta) and abs(v * theta)
+					
+					Real zRange{ 0.0 }, zRangeApex{ 0.0 };	// z length of first sample
+					bool splitIntegral{ true };				// True if first sample is split into two parts, false otherwise
+					
+					Real rho{ 0.0 }, rhoSq{ 0.0 };			// rR / rS, rho * rho
+					Real rhoOne{ 0.0 }, rhoOneSq{ 0.0 };	// rho * rho, rho + 1.0 and (rho + 1.0) * (rho + 1.0)
+					Real R0rho{ 0.0 };						// R0 * rho
+					
+					Real factor{ 0.0 };		// Commonly used factor
 
 					Constants(const Path& path, const Real samplesPerMetre)
 					{
@@ -537,14 +962,16 @@ namespace RAC
 						rSSq = path.sData.r * path.sData.r;
 						rRSq = path.rData.r * path.rData.r;
 						rr = path.sData.r * path.rData.r;
+						R0 = path.sData.d + path.rData.d;
+						R0Sq = R0 * R0;
 
 						zSRel = path.sData.z - path.zA;
 						zRRel = path.rData.z - path.zA;
 						dz = zSRel - zRRel;
 						dzSq = dz * dz;
+
 						v = PI_1 / path.wData.t;
 						vSq = v * v;
-
 						edgeHi = path.wData.z - path.zA;
 						edgeLo = -path.zA;
 
@@ -557,8 +984,6 @@ namespace RAC
 						sinTheta = Sin(vTheta);
 						cosTheta = Cos(vTheta);
 
-						R0 = path.sData.d + path.rData.d;
-						R0Sq = R0 * R0;
 						int n0 = (int)round(samplesPerMetre * R0);
 						Real x = (n0 + 0.5) / samplesPerMetre;
 						Real xSq = x * x;
@@ -581,43 +1006,121 @@ namespace RAC
 						rhoSq = rho * rho;
 						rhoOne = rho + 1.0;
 						rhoOneSq = rhoOne * rhoOne;
-						sinPsi = (path.sData.r + path.rData.r) / R0;
-						cospsi = (path.rData.z - path.sData.z) / R0;
-						factor = rhoOneSq * sinPsi * sinPsi - 2.0 * rho;
-
 						R0rho = R0 * rho;
+
+						Real sinPsi = (path.sData.r + path.rData.r) / R0;
+						factor = rhoOneSq * sinPsi * sinPsi - 2.0 * rho;
 					}
 				};
 
 			public:
-				BTM(const Path& path, int fs);
+				/**
+				* @brief Constructor that initialises the BTM model with a given path and sample rate
+				* 
+				* @param path The path to set the target parameters from
+				* @param fs The sample rate for calculating BTM response
+				*/
+				BTM(const Path& path, int fs) : Model(), samplesPerMetre(fs* INV_SPEED_OF_SOUND), firFilter(CalculateBTM(path), maxIrLength)
+				{
+					isInitialised.store(true);
+				};
+
+				/**
+				* @brief Default deconstructor
+				*/
 				~BTM() {};
 
+				/**
+				* @brief Set the target impulse response based on the given path
+				*/
 				void SetTargetParameters(const Path& path) override;
+
+				/**
+				* @brief Processes the input audio buffer and applies the FIR filter
+				* 
+				* @param inBuffer The input audio buffer
+				* @param outBuffer The output audio buffer to write to
+				* @param lerpFactor The lerp factor for interpolation
+				*/
 				void ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const Real lerpFactor) override;
 
 			private:
+				/**
+				* @brief Calculates the impulse response for the BTM model based on the given path
+				* 
+				* @param path The path to calculate the impulse response for
+				*/
+				Buffer CalculateBTM(const Path& path);
+
+				/**
+				* @brief Analytical solution for the first sample in skew case (i.e rS != rS and zS != zR)
+				*
+				* @param path The path to calculate the first sample for
+				* @param constants The constants used in the BTMS calculation
+				* @return The value for the first sample
+				*/
 				Real SkewCase(const Path& path, const Constants& constants);
 
+				/**
+				* @brief Analytical solution for the first sample in non skew case (i.e rS == rS or zS == zR)
+				*
+				* @param path The path to calculate the first sample for
+				* @param constants The constants used in the BTMS calculation
+				* @return The value for the first sample
+				*/
 				Real NonSkewCase(const Path& path, const Constants& constants);
 
-				inline Real CalculateGain(const Path& path) const
-				{
-					return path.valid ? 1.0 : 0.0;
-				}
-				Buffer CalcBTM(const Path& path);
-				Real CalcSample(int n, const Constants& constants);
-				IntegralLimits CalcLimits(Real delta, const Constants& constants);
-				Real QuadStep(Real x1, Real x3, Real y1, Real y3, Real y5, const Constants& constants);
-				Real CalcIntegral(Real zn1, Real zn2, const Constants& constants);
-				Real CalcIntegrand(Real z, const Constants& constants);
+				/**
+				* @brief Calculate the sample value for a given index n
+				* 
+				* @param n The index of the sample to calculate
+				* @param constants The constants used in the BTMS calculation
+				*/
+				Real CalculateSample(int n, const Constants& constants);
 
-				Real samplesPerMetre;
-				static constexpr size_t maxIrLength = 2048;
-				Path lastPath;
+				/**
+				* @brief Calculate the limits for the integral calculation
+				* 
+				* @param delta The delta value for the integral calculation
+				* @param constants The constants used in the BTMS calculation
+				*/
+				IntegralLimits CalculateLimits(Real delta, const Constants& constants);
+				
+				/**
+				* @brief Calculates adaptive Simpson quadrature
+				* 
+				* @param x1 lower limit
+				* @param x3 upper limit
+				* @param y1 value at x1
+				* @param y2 value at x2
+				* @param y3 value at x3
+				* @param constants The constants used in the BTMS calculation
+				* @return The value of the integral
+				*/
+				Real QuadStep(Real x1, Real x3, Real y1, Real y2, Real y3, const Constants& constants);
+				
+				/**
+				* @brief Calculates the integral value for a given range using Quadstep simpson's rule
+				* 
+				* @param zn1 The lower limit of the integral
+				* @param zn2 The upper limit of the integral
+				* @param constants The constants used in the BTMS calculation
+				*/
+				Real CalculateIntegral(Real zn1, Real zn2, const Constants& constants);
 
-				FIRFilter firFilter;
+				/**
+				* @brief Calculates the integrand for the integral calculation
+				* 
+				* @param z The z value to calculate the integrand for
+				* @param constants The constants used in the BTMS calculation
+				*/
+				Real CalculateIntegrand(Real z, const Constants& constants);
 
+				Real samplesPerMetre;		// Samples per metre based on the sample rate
+				Path lastPath;				// Previous path used to calculate the impulse response
+
+				static constexpr size_t maxIrLength = 2048;		// Maximum length of the impulse response
+				FIRFilter firFilter;							// FIRFilter
 			};
 		}
 	}

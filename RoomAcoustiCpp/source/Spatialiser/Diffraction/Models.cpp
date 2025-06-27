@@ -4,17 +4,8 @@
 *
 */
 
-// Common headers
-
 // Spatialiser headers
 #include "Spatialiser/Diffraction/Models.h"
-#include "Spatialiser/Types.h"
-
-// Unity headers
-#include "Unity/UnityInterface.h"
-
-// DSP headers
-#include "DSP/Interpolate.h"
 
 namespace RAC
 {
@@ -61,175 +52,9 @@ namespace RAC
 				NoFlushDenormals();
 			}
 
-			//////////////////// UDFA class ////////////////////
-
-			////////////////////////////////////////
-
-			//UDFA::UDFA(const Path& path, const int fs) : Model(), ft(CalcFT(fs)), fi(CalcFI())
-			//{
-			//	if (!path.valid)
-			//		return;
-
-			//	Constants constants(path, false); // Infinite edge parameters. Pierce two term solutions
-
-			//	std::array<Parameters, numUDFAFilters> parameters = {	// Adjust for finite edge
-			//		Parameters(constants.fc1, constants.gain1, constants.tDiffBase),
-			//		Parameters(constants.fc1, constants.gain1, constants.tDiffTop),
-			//		Parameters(constants.fc2, constants.gain2, constants.tDiffBase),
-			//		Parameters(constants.fc2, constants.gain2, constants.tDiffTop) };
-
-			//	for (int j = 0; j < numUDFAFilters; j++)
-			//	{
-			//		FilterParameters filterParameters = CalculateParameters(parameters[j]);
-			//		gain[j].emplace(filterParameters.gain);
-			//		for (int i = 0; i < numShelvingFilters; i++)
-			//			filters[j * numShelvingFilters + i].emplace(filterParameters.fc[i], filterParameters.g[i], fs);
-			//	}
-			//	isInitialised.store(true);
-			//};
-
-			//////////////////////////////////////////
-
-			//void UDFA::SetTargetParameters(const Path& path)
-			//{
-			//	if (!path.valid)
-			//	{
-			//		for (int i = 0; i < numUDFAFilters; i++)
-			//			gain[i]->SetTarget(0.0);
-			//		return;
-			//	}
-
-			//	Constants constants(path, isUDFAI); // Infinite edge parameters.
-
-			//	std::array<Parameters, 4> parameters = {	// Adjust for finite edge
-			//		Parameters(constants.fc1, constants.gain1, constants.tDiffBase),
-			//		Parameters(constants.fc1, constants.gain1, constants.tDiffTop),
-			//		Parameters(constants.fc2, constants.gain2, constants.tDiffBase),
-			//		Parameters(constants.fc2, constants.gain2, constants.tDiffTop) };
-
-			//	for (int j = 0; j < numUDFAFilters; j++)
-			//	{
-			//		FilterParameters filterParameters = CalculateParameters(parameters[j]);
-			//		gain[j]->SetTarget(filterParameters.gain);
-			//		for (int i = 0; i < numShelvingFilters; i++)
-			//			filters[j * numShelvingFilters + i]->SetTargetParameters(filterParameters.fc[i], filterParameters.g[i]);
-			//	}
-			//};
-
-			//////////////////////////////////////////
-
-			//UDFA::ParametersT UDFA::CalcFT(int fs) const
-			//{
-			//	ParametersT f(numShelvingFilters + 1);
-			//	Real fMin = log10(10.0);
-			//	Real fMax = log10(static_cast<Real>(fs));
-
-			//	Real delta = (fMax - fMin) / numShelvingFilters;
-
-			//	for (int i = 0; i <= numShelvingFilters; i++)
-			//		f[i] = pow(10.0, fMin + delta * i);
-			//	return f;
-			//}
-
-			//////////////////////////////////////////
-
-			//UDFA::ParametersI UDFA::CalcFI() const
-			//{
-			//	ParametersI f(numShelvingFilters);
-			//	for (int i = 0; i < numShelvingFilters; i++)
-			//		f[i] = ft[i] * sqrt(ft[i + 1] / ft[i]);
-			//	return f;
-			//}
-
-			//////////////////////////////////////////
-
-			//UDFA::FilterParameters UDFA::CalculateParameters(const Parameters& parameters) const
-			//{
-			//	ParametersT gt = CalcGT(parameters);
-			//	ParametersI gi = CalcGI(gt, parameters);
-
-			//	FilterParameters filterParameters;
-			//	for (int i = 0; i < numShelvingFilters; i++)
-			//		filterParameters.g[i] = gt[i + 1] / gt[i];
-
-			//	const Coefficients giSq = gi * gi;
-			//	const Coefficients gSq = filterParameters.g * filterParameters.g;
-			//	filterParameters.fc = fi * ((giSq - gSq) / (filterParameters.g * (1.0 - giSq))).Sqrt() * (1.0 + gSq / 12.0);
-			//	filterParameters.gain = gt[0] * parameters.gain / 2;
-			//	return filterParameters;
-			//}
-
-			//////////////////////////////////////////
-
-			//UDFA::ParametersT UDFA::CalcGT(const Parameters& parameters) const
-			//{
-			//	ParametersT gt = ParametersT(numShelvingFilters + 1);
-			//	for (int i = 0; i < numShelvingFilters + 1; i++)
-			//		gt[i] = CalcG(ft[i], parameters);
-			//	return gt;
-			//}
-
-			//////////////////////////////////////////
-
-			//UDFA::ParametersI UDFA::CalcGI(const ParametersT& gt, const Parameters& parameters) const
-			//{
-			//	ParametersI gi = ParametersI(numShelvingFilters);
-			//	for (int i = 0; i < numShelvingFilters; i++)
-			//		gi[i] = CalcG(fi[i], parameters) / gt[i];
-			//	return gi;
-			//}
-
-			//////////////////////////////////////////
-
-			//Complex UDFA::CalcUDFA(Real f, const Parameters& parameters) const
-			//{
-			//	Real alpha = 0.5;
-			//	Real r = 1.6;
-			//	return pow(pow(imUnit * f / parameters.fc, 2.0 / parameters.blend) + pow(imUnit * f / (parameters.Q * parameters.fc), 1.0 / (pow(parameters.blend, r))) + Complex(1.0, 0.0), -alpha * parameters.blend / 2.0);
-			//}
-
-			//////////////////////////////////////////
-
-			//void UDFA::ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const Real lerpFactor)
-			//{
-			//	outBuffer.Reset();
-			//	if (!isInitialised.load())
-			//		return;
-
-			//	const int totalFilters = static_cast<int>(filters.size());
-
-			//	FlushDenormals();
-			//	for (int i = 0; i < inBuffer.Length(); i++)
-			//	{
-			//		for (int j = 0; j < numUDFAFilters; j++)
-			//		{
-			//			Real out = filters[j * numShelvingFilters]->GetOutput(inBuffer[i], lerpFactor);
-			//			for (int k = 1; k < numShelvingFilters; k++)
-			//				out = filters[j * numShelvingFilters + k]->GetOutput(out, lerpFactor);
-			//			outBuffer[i] += out * gain[j]->Use(lerpFactor);
-			//		}
-			//	}
-			//	NoFlushDenormals();
-			//}
-
-			//////////////////// UDFA-I class ////////////////////
-
-			////////////////////////////////////////
-
-
-			////////////////////////////////////////
-
-			//Complex UDFAI::CalcH(Real z, Real t, Real f, Real tDiff, const Constants& constants) const
-			//{
-			//	// Real fc = constants.front;
-			//	Real fc = 100.0;
-			//	Real g = (2 / PI_1) * atan(PI_1 * sqrt(2 * fc * tDiff));
-			//	Real gSq = g * g;
-			//	fc *= (1.0 / gSq);
-			//	return g * CalcUDFA(f, fc, gSq);
-			//}
-
 			//////////////////// NN class ////////////////////
+
+			////////////////////////////////////////
 
 			void NN::SetTargetParameters(const Path& path)
 			{
@@ -247,7 +72,7 @@ namespace RAC
 
 			NN::Parameters NN::CalculateParameters(const Path& path) const
 			{
-				Input input = CalcInput(path);
+				Input input = CalculateInput(path);
 				Parameters output = RunNN(input);
 				if (!path.inShadow)
 					output.data[4] = 0.0;
@@ -256,7 +81,7 @@ namespace RAC
 
 			////////////////////////////////////////
 
-			NN::Input NN::CalcInput(const Path& path) const
+			NN::Input NN::CalculateInput(const Path& path) const
 			{
 				Input input;
 				input[0] = static_cast<float>(path.wData.t);
@@ -282,6 +107,8 @@ namespace RAC
 
 			void NN::AssignInputRZ(const SRData& one, const SRData& two, Real zW, Input& input) const
 			{
+				assert(one.r <= two.r);
+
 				input[4] = static_cast<float>(one.r);
 				input[5] = static_cast<float>(two.r);
 				if (one.z < zW / 2)
@@ -314,95 +141,87 @@ namespace RAC
 
 			//////////////////// UTD class ////////////////////
 
-			UTD::UTD(const Path& path, int fs) : Model(), lrFilter(CalcUTD(path), fs)
-			{
-				isInitialised.store(true);
-			}
+			////////////////////////////////////////
 
-			void UTD::SetTargetParameters(const Path& path)
-			{
-				Parameters gains = CalcUTD(path);
-				lrFilter.SetTargetGains(gains);
-			}
-
-			UTD::Parameters UTD::CalcUTD(const Path& path)
+			UTD::Parameters UTD::CalculateUTD(const Path& path) const
 			{
 				if (!path.valid || !path.inShadow)
 					return 0.0;
 
-				Real n = path.wData.t / PI_1;
-				Real B0 = sin(path.phi);
+				Real n = path.wData.t / PI_1; // fig. 5b (KP)
+				Real B0 = sin(path.phi); // fig. 5a (KP)
 				Real dSR = path.sData.d + path.rData.d;
-				Real temp = sqrt(path.sData.d * path.rData.d * dSR) * n * B0;
-				Real L = path.sData.d * path.rData.d * B0 * B0 / (dSR);
-
-				Real idx = (path.bA - PI_1) / ((Real)path.wData.t - (Real)path.sData.t - PI_1);
+				Real A = sqrt(path.sData.d * path.rData.d * dSR) * n * B0; // eq. 23 and 25 (excluding E) (spherical wave) (KP)
+				Real L = path.sData.d * path.rData.d * B0 * B0 / dSR; // eq. 32 (spherical wave) (KP)
 
 				Parameters g{ 0.0 }, gSB{ 0.0 };
 				for (int i = 0; i < 4; i++)
 				{
-					Complex A = -exp(-imUnit * k[i] * dSR) * E[i] / temp;
-					g[i] = abs(A * (EqHalf(path.rData.t - path.sData.t, i, n, L) + EqHalf(path.rData.t + path.sData.t, i, n, L)));
-					gSB[i] = abs(A * (EqHalf(PI_EPS, i, n, L) + EqHalf(2 * path.sData.t + PI_EPS, i, n, L)));
+					Complex AD = -exp(-imUnit * k[i] * dSR) * E[i] / A;
+					g[i] = abs(AD * (EqHalf(path.rData.t - path.sData.t, k[i], n, L) + EqHalf(path.rData.t + path.sData.t, k[i], n, L))); // eq. 25
+					gSB[i] = abs(AD * (EqHalf(PI_EPS, k[i], n, L) + EqHalf(2 * path.sData.t + PI_EPS, k[i], n, L)));
 				}
+				Real idx = (path.bA - PI_1) / (path.wData.t - path.sData.t - PI_1);
 				Coefficients<std::array<Real, 4>> oldGains = (1.0 - idx) * g / gSB + idx * g * dSR;
 				return Pow(g / gSB, 1.0 - idx) * Pow(g * dSR, idx);
 			}
 
-			Complex UTD::EqQuarter(Real t, bool plus, const int i, Real n, Real L)
+			////////////////////////////////////////
+
+			Complex UTD::EqQuarter(Real t, bool plus, Real k, Real n, Real L) const
 			{
-				Real cotArg = (PI_1 + PM(t, plus)) / (2.0 * n);
+				Real cotArg = (PI_1 + PM(t, plus)) / (2.0 * n); // eq. 25 (KP)
 				if (fabs(cotArg) < 0.001f)
 				{
-					Real tArg = PM(-CalcTArg(t, plus, n), plus);
+					Real tArg = PM(-CalculateAlphaPMCosineInput(t, plus, n), plus);
 					Real eps = PI_1 + tArg;
 					if (eps == 0.0)
 						eps = 0.001f;
-					Real kL2 = 2.0 * k[i] * L;
+					Real kL2 = 2.0 * k * L;
 					return n * exp(imUnit * PI_1 / 4.0) * (sqrt(PI_1 * kL2) * Sign(eps) - kL2 * eps * exp(imUnit * PI_1 / 4.0));
 				}
-				return cot(cotArg) * FuncF(k[i] * L * Apm(t, plus, n));
+				return cot(cotArg) * FresnelIntegral(k * L * AlphaPM(t, plus, n));
 			}
 
-			Real UTD::PM(Real t, bool plus)
+			////////////////////////////////////////
+
+			Real UTD::AlphaPM(Real t, bool plus, Real n) const
 			{
-				if (plus)
-					return t;
-				else
-					return -t;
+				Real arg = CalculateAlphaPMCosineInput(t, plus, n);
+				Real cosValue = cos(arg / 2.0);
+				return 2.0 * cosValue * cosValue; // eq. 27 (KP)
 			}
 
-			Real UTD::Apm(Real t, bool plus, Real n)
-			{
-				Real tArg = CalcTArg(t, plus, n);
-				Real cosArg = cos(tArg / 2.0);
-				return 2.0 * cosArg * cosArg;
-			}
+			////////////////////////////////////////
 
-			Real UTD::CalcTArg(Real t, bool plus, Real n)
+			Real UTD::CalculateAlphaPMCosineInput(Real t, bool plus, Real n) const
 			{
 				Real N;
 				Real PI_2n = PI_2 * n;
 				if (plus)
-					N = round((PI_1 + t) / PI_2n);
+					N = round((PI_1 + t) / PI_2n); // eq. 28a (KP)
 				else
-					N = round((-PI_1 + t) / PI_2n);
+					N = round((-PI_1 + t) / PI_2n); // eq. 28b (KP)
 				return PI_2n * N - t;
 			}
 
-			Complex UTD::FuncF(Real x)
+			////////////////////////////////////////
+
+			Complex UTD::FresnelIntegral(Real x) const
 			{
-				Real temp = 0.0;
 				Real sqrtX = sqrt(x);
+				Complex output = exp(imUnit * PI_1 / 4.0 * (1.0 - sqrtX / (x + 1.4))); // eq. 22 (K)
 				if (x < 0.8)
-					temp = sqrt(PI_1 * x) * (1.0 - (sqrtX / (0.7 * sqrtX + 1.2)));
+					output *= sqrt(PI_1 * x) * (1.0 - (sqrtX / (0.7 * sqrtX + 1.2))); // eq. 22 (K)
 				else
 				{
 					Real store = x + 1.25;
-					temp = 1 - 0.8 / (store * store);
+					output *= 1 - 0.8 / (store * store); // eq. 22 (K)
 				}
-				return temp * exp(imUnit * PI_1 / 4.0 * (1.0 - sqrtX / (x + 1.4)));
+				return output;
 			}
+
+			////////////////////////////////////////
 
 			void UTD::ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const Real lerpFactor)
 			{
@@ -414,12 +233,7 @@ namespace RAC
 
 			//////////////////// BTM class ////////////////////
 
-			BTM::BTM(const Path& path, int fs) : Model(), samplesPerMetre(fs* INV_SPEED_OF_SOUND), firFilter(CalcBTM(path), maxIrLength)
-			{
-				if (!path.valid)
-					return;
-				isInitialised.store(true);
-			};
+			////////////////////////////////////////
 
 			void BTM::SetTargetParameters(const Path& path)
 			{
@@ -430,12 +244,14 @@ namespace RAC
 				if (!path.valid)
 					return;
 
-				Buffer ir = CalcBTM(path);
+				Buffer ir = CalculateBTM(path);
 				if (ir.Length() > maxIrLength)
 					ir.ResizeBuffer(maxIrLength);
 				if (ir.Valid())
 					firFilter.SetTargetIR(ir);
 			}
+
+			////////////////////////////////////////
 
 			Real BTM::NonSkewCase(const Path& path, const Constants& constants)
 			{
@@ -499,9 +315,12 @@ namespace RAC
 				return output;
 			}
 
+			////////////////////////////////////////
+
 			Real BTM::SkewCase(const Path& path, const Constants& constants)
 			{
 				Real output = 0.0;
+				Real cosPhi = (path.rData.z - path.sData.z) / constants.R0;
 				for (int i = 0; i < constants.theta.Length(); i++)
 				{
 					bool singularterm = constants.absTheta[i] < 10.0 * DBL_MIN || abs(constants.absTheta[i] - PI_2) < 10.0 * DBL_MIN;
@@ -536,7 +355,7 @@ namespace RAC
 
 					Real B3 = 2.0 * constants.R0Sq * constants.rhoSq / constants.rhoOne / constants.rhoOne / constants.factor;
 					Real B1vec = sqrtB1vec * sqrtB1vec;
-					Real B2 = -2.0 * constants.R0 * (1 - constants.rho) * constants.rho * constants.cospsi / constants.rhoOne / constants.factor;
+					Real B2 = -2.0 * constants.R0 * (1 - constants.rho) * constants.rho * cosPhi / constants.rhoOne / constants.factor;
 					Real E1vec = 4.0 * constants.R0Sq * constants.rhoSq * constants.rho * constants.sinTheta[i] / constants.vSq / pow(constants.rhoOne, 4.0) / constants.factor;
 					
 					Real multfact = -E1vec * B2 / (B1vec * B2 * B2 + (B1vec - B3) * (B1vec - B3));
@@ -564,7 +383,9 @@ namespace RAC
 				return output;
 			}
 
-			Buffer BTM::CalcBTM(const Path& path)
+			////////////////////////////////////////
+
+			Buffer BTM::CalculateBTM(const Path& path)
 			{
 				if (!path.valid)
 					return Buffer();
@@ -582,35 +403,29 @@ namespace RAC
 					ir[0] = SkewCase(path, constants);
 
 				if (constants.splitIntegral)
-					ir[0] += CalcIntegral(constants.zRange, constants.zRangeApex, constants);
+					ir[0] += CalculateIntegral(constants.zRange, constants.zRangeApex, constants);
 
 
 				Real d = path.sData.d + path.rData.d; // Remove 1 / r as applied by HRTF processing
 				ir[0] *= -constants.v * d / PI_2; // Multiply by 2 for pos and neg wedge part - add check for edge hi and lo?
 
 				for (int i = 1; i < irLen; i++)
-				{
-					int n = n0 + i;
-					ir[i] = d * CalcSample(n, constants);
-				}
+					ir[i] = d * CalculateSample(n0 + i, constants);
 				return ir;
 			}
 
-			Real BTM::CalcSample(int n, const Constants& constants)
-			{
-				IntegralLimits zn1 = CalcLimits((n - 0.5) / samplesPerMetre, constants);
-				IntegralLimits zn2 = CalcLimits((n + 0.5) / samplesPerMetre, constants);
+			////////////////////////////////////////
 
-				if (isnan(zn2.p))
-				{
-					// Both limits of integration are imaginary
-					// Entire sample has no existing edge
-					return 0.0;
-				}
-				if (isnan(zn1.p))
-				{
-					// Only lower limit of integration is imaginary
-					// Instead start integrating at apex point
+			Real BTM::CalculateSample(int n, const Constants& constants)
+			{
+				IntegralLimits zn1 = CalculateLimits((n - 0.5) / samplesPerMetre, constants);
+				IntegralLimits zn2 = CalculateLimits((n + 0.5) / samplesPerMetre, constants);
+
+				if (isnan(zn2.p))	// Both limits of integration are imaginary
+					return 0.0;		// Entire sample has no existing edge
+
+				if (isnan(zn1.p))	// Only lower limit of integration is imaginary
+				{					// Instead start integrating at apex point
 					zn1.p = 0.0;
 					zn1.m = 0.0;
 				}
@@ -618,38 +433,26 @@ namespace RAC
 				// Check ranges against edge boundries
 				// The two ranges are [zn2.m, zn1.m] and [zn1.p, zn2.p] (neg to pos)
 
-				Real output = 0.0;
-				if (zn2.m >= constants.edgeLo)
-				{
-					if (zn2.p <= constants.edgeHi)
-					{
-						output = CalcIntegral(zn1.p, zn2.p, constants);
-						output *= -constants.v / PI_2;
-					}
+				if (zn2.m < constants.edgeLo)
+					zn2.m = constants.edgeLo;
 
-					else
-					{
-						output += CalcIntegral(zn2.m, zn1.m, constants);
-						if (zn1.p < constants.edgeHi)
-							output += CalcIntegral(zn1.p, constants.edgeHi, constants);
-						output *= -constants.v / PI_4;
-					}
-				}
-				else
-				{
-					if (zn1.m > constants.edgeLo)
-						output += CalcIntegral(constants.edgeLo, zn1.m, constants);
-					if (zn2.p <= constants.edgeHi)
-						output += CalcIntegral(zn1.p, zn2.p, constants);
-					else if (zn1.p < constants.edgeHi)
-						output += CalcIntegral(zn1.p, constants.edgeHi, constants);
-					output *= -constants.v / PI_4;
-				}
+				if (zn1.m < constants.edgeLo)
+					zn1.m = constants.edgeLo;
 
-				return output;
+				if (zn1.p > constants.edgeHi)
+					zn1.p = constants.edgeHi;
+
+				if (zn2.p > constants.edgeHi)
+					zn2.p = constants.edgeHi;
+
+				Real output = CalculateIntegral(zn2.m, zn1.m, constants) * 0.5;
+				output += CalculateIntegral(zn1.p, zn2.p, constants) * 0.5;
+				return -constants.v / PI_2 * output;
 			}
 
-			IntegralLimits BTM::CalcLimits(Real delta, const Constants& constants)
+			////////////////////////////////////////
+
+			BTM::IntegralLimits BTM::CalculateLimits(Real delta, const Constants& constants)
 			{
 				Real dSq = delta * delta;
 				Real kq = constants.dSSq - constants.dRSq - dSq;
@@ -666,29 +469,36 @@ namespace RAC
 				return IntegralLimits((-bq + sq) / 2.0, (-bq - sq) / 2.0);
 			}
 
-			Real BTM::QuadStep(Real x1, Real x3, Real y1, Real y3, Real y5, const Constants& constants)
+			////////////////////////////////////////
+
+			Real BTM::QuadStep(Real x1, Real x3, Real y1, Real y2, Real y3, const Constants& constants)
 			{
 				Real x2 = (x1 + x3) / 2.0;
-				Real y2 = CalcIntegrand((x1 + x2) / 2, constants);
-				Real y4 = CalcIntegrand((x3 + x2) / 2, constants);
+				Real y12 = CalculateIntegrand((x1 + x2) / 2, constants);
+				Real y23 = CalculateIntegrand((x3 + x2) / 2, constants);
 
 				Real tempVec = (x3 - x1) / 6.0;
-				Real yTemp = y1 + 2.0 * y3 + y5;
-				Real output = tempVec * (yTemp + 2.0 * y3);
-				yTemp = tempVec / 2.0 * (yTemp + 4 * y2 + 4 * y4);
+				Real yTemp = y1 + 2.0 * y2 + y3;
+				Real output = tempVec * (yTemp + 2.0 * y2);
+				yTemp = tempVec / 2.0 * (yTemp + 4 * y12 + 4 * y23);
 				output = yTemp + (yTemp - output) / 15;
 
 				if (std::abs(yTemp - output) > 1e-11)
 				{
-					Real output1 = QuadStep(x1, x2, y1, y2, y3, constants);
-					Real output2 = QuadStep(x2, x3, y3, y4, y5, constants);
+					Real output1 = QuadStep(x1, x2, y1, y12, y2, constants);
+					Real output2 = QuadStep(x2, x3, y2, y23, y3, constants);
 					return output1 + output2;
 				}
 				return output;
 			}
 
-			Real BTM::CalcIntegral(Real zn1, Real zn2, const Constants& constants)
+			////////////////////////////////////////
+
+			Real BTM::CalculateIntegral(Real zn1, Real zn2, const Constants& constants)
 			{
+				if (zn1 == zn2)	// If the two limits are the same then return 0
+					return 0.0;
+
 				// Quadstep simpson's rule
 				Real h = 0.13579 * (zn2 - zn1);
 
@@ -700,13 +510,13 @@ namespace RAC
 				Real x6 = zn2 - h;
 				Real x7 = zn2;
 
-				Real y1 = CalcIntegrand(x1, constants);
-				Real y2 = CalcIntegrand(x2, constants);
-				Real y3 = CalcIntegrand(x3, constants);
-				Real y4 = CalcIntegrand(x4, constants);
-				Real y5 = CalcIntegrand(x5, constants);
-				Real y6 = CalcIntegrand(x6, constants);
-				Real y7 = CalcIntegrand(x7, constants);
+				Real y1 = CalculateIntegrand(x1, constants);
+				Real y2 = CalculateIntegrand(x2, constants);
+				Real y3 = CalculateIntegrand(x3, constants);
+				Real y4 = CalculateIntegrand(x4, constants);
+				Real y5 = CalculateIntegrand(x5, constants);
+				Real y6 = CalculateIntegrand(x6, constants);
+				Real y7 = CalculateIntegrand(x7, constants);
 
 				Real output1 = QuadStep(x1, x3, y1, y2, y3, constants);
 				Real output2 = QuadStep(x3, x5, y3, y4, y5, constants);
@@ -728,7 +538,9 @@ namespace RAC
 				return (zn2 - zn1) / n * output;*/
 			}
 
-			Real BTM::CalcIntegrand(Real z, const Constants& constants)
+			////////////////////////////////////////
+
+			Real BTM::CalculateIntegrand(Real z, const Constants& constants)
 			{
 				Real dzS = z - constants.zSRel;
 				Real dzR = z - constants.zRRel;
@@ -748,6 +560,8 @@ namespace RAC
 				Real Btotal = Sum(constants.sinTheta / (coshvtheta - constants.cosTheta));
 				return Btotal / ml;
 			}
+
+			////////////////////////////////////////
 
 			void BTM::ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const Real lerpFactor)
 			{
