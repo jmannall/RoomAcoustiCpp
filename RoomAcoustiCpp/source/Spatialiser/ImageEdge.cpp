@@ -55,6 +55,7 @@ namespace RAC
 			}
 
 			shared_ptr<SourceManager> sharedSource = mSourceManager.lock();
+			sharedSource->ResetUnusedSources();
 			mSources = sharedSource->GetSourceData();
 
 #ifdef PROFILE_BACKGROUND_THREAD
@@ -82,13 +83,13 @@ namespace RAC
 			if (imageSources.size() != mSources.size())
 			{
 				imageSources.resize(mSources.size());
-				mSourceAudioDatas.resize(mSources.size(), SourceAudioData(frequencyBands.Length(), false));
+				mSourceAudioDatas.resize(mSources.size(), Source::AudioData(frequencyBands.Length(), false));
 				mCurrentCycles.resize(mSources.size());
 				doIEM = true;
 			}
 
 			int i = 0;
-			for (SourceData& source : mSources)
+			for (Source::Data& source : mSources)
 			{
 				if (doIEM || source.hasChanged)
 				{
@@ -313,7 +314,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		Absorption<> ImageEdge::CalculateDirectivity(const SourceData& source, const Vec3& point) const
+		Absorption<> ImageEdge::CalculateDirectivity(const Source::Data& source, const Vec3& point) const
 		{
 			Absorption directivity(frequencyBands.Length());
 			Real ret = 0.0;
@@ -385,7 +386,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void ImageEdge::ReflectPointInRoom(const SourceData& source, SourceAudioData& direct, ImageSourceDataMap& imageSources)
+		void ImageEdge::ReflectPointInRoom(const Source::Data& source, Source::AudioData& direct, ImageSourceDataMap& imageSources)
 		{
 
 #ifdef PROFILE_BACKGROUND_THREAD
@@ -482,7 +483,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		size_t ImageEdge::FirstOrderDiffraction(const SourceData& source, ImageSourceDataMap& imageSources)
+		size_t ImageEdge::FirstOrderDiffraction(const Source::Data& source, ImageSourceDataMap& imageSources)
 		{
 #ifdef PROFILE_BACKGROUND_THREAD
 			BeginFirstOrderDiff();
@@ -556,7 +557,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		size_t ImageEdge::FirstOrderReflections(const SourceData& source, ImageSourceDataMap& imageSources, size_t counter)
+		size_t ImageEdge::FirstOrderReflections(const Source::Data& source, ImageSourceDataMap& imageSources, size_t counter)
 		{
 #ifdef PROFILE_BACKGROUND_THREAD
 			BeginFirstOrderRef();
@@ -612,7 +613,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void ImageEdge::HigherOrderPaths(const SourceData& source, ImageSourceDataMap& imageSources)
+		void ImageEdge::HigherOrderPaths(const Source::Data& source, ImageSourceDataMap& imageSources)
 		{
 			// Check for first order reflections in sp
 			if (sp[0].size() == 0)
@@ -924,7 +925,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void ImageEdge::InitImageSource(const SourceData& source, const Vec3& intersection, ImageSourceData& imageSource, ImageSourceDataMap& imageSources, bool feedsFDN)
+		void ImageEdge::InitImageSource(const Source::Data& source, const Vec3& intersection, ImageSourceData& imageSource, ImageSourceDataMap& imageSources, bool feedsFDN)
 		{
 			Absorption directivity(frequencyBands.Length());
 			directivity = CalculateDirectivity(source, intersection);
@@ -933,7 +934,7 @@ namespace RAC
 			imageSource.SetDistance(mListenerPosition);
 			imageSource.Visible(feedsFDN);
 			imageSource.UpdateCycle(currentCycle);
-			imageSources.insert_or_assign(imageSource.GetKey(), imageSource);
+			imageSources.insert_or_assign(imageSource.GetKey(), std::pair<int, ImageSourceData>(-1, imageSource));
 		}
 
 		////////////////////////////////////////
@@ -1024,7 +1025,7 @@ namespace RAC
 		{
 			for (auto it = imageSources.begin(); it != imageSources.end();)
 			{
-				if (it->second.UpdatedThisCycle(currentCycle))
+				if (it->second.second.UpdatedThisCycle(currentCycle))
 					++it;
 				else
 				{

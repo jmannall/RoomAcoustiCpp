@@ -20,6 +20,7 @@
 #include "Common/Vec3.h"
 #include "Common/Vec4.h"
 #include "Common/Matrix.h"
+#include "Common/Access.h"
 
 // Spatialiser headers
 #include "Spatialiser/Wall.h"
@@ -37,6 +38,7 @@
 #include "BinauralSpatializer/SingleSourceDSP.h"
 #include "Common/Transform.h"
 
+// Unity headers
 #include "Unity/Debug.h"
 
 using namespace Common;
@@ -45,55 +47,54 @@ namespace RAC
 	using namespace Common;
 	namespace Spatialiser
 	{
-
-		/**
-		* @brief Records a reflection or diffraction in the path of an image source
-		*/
-		struct Part
-		{
-			bool isReflection;		// True if the part is a reflection, false if it is a diffraction
-			size_t id;				// ID of the reflecting plane or diffracting edge
-
-			/**
-			* @brief Constructor that initialises the part
-			* 
-			* @param id The ID of the reflecting plane or diffracting edge
-			* @param isReflection True if the part is a reflection, false if it is a diffraction
-			*/
-			Part(const size_t id, const bool isReflection) : id(id), isReflection(isReflection) {};
-		};
-
-		/**
-		* @brief Stores the base and edge vector of an image edge
-		*/
-		struct ImageEdgeData
-		{
-			Vec3 base;				// Base coordinate of the image edge
-			Vec3 edgeVector;		// Vector from the base to the top of the image edge
-
-			/**
-			* @brief Constructor that initialises the ImageEdgeData
-			*
-			* @param base The base coordinate of the image edge
-			* @param edgeVector The vector from the base to the top of the image edge
-			*/
-			ImageEdgeData(const Vec3& base, const Vec3& edgeVector) : base(base), edgeVector(edgeVector) {};
-
-			/**
-			* @brief Returns the coordinate of the edge at the given z coordinate
-			* 
-			* @param z The z coordinate of the edge
-			* 
-			* @return The coordinate of the edge at the given z coordinate
-			*/
-			Vec3 GetEdgeCoordinate(const Real z) const { return base + z * edgeVector; }
-		};
-
 		/**
 		* @brief Stores data used to create an image source
 		*/
 		class ImageSourceData
 		{
+			/**
+			* @brief Records a reflection or diffraction in the path of an image source
+			*/
+			struct Part
+			{
+				bool isReflection;		// True if the part is a reflection, false if it is a diffraction
+				size_t id;				// ID of the reflecting plane or diffracting edge
+
+				/**
+				* @brief Constructor that initialises the part
+				*
+				* @param id The ID of the reflecting plane or diffracting edge
+				* @param isReflection True if the part is a reflection, false if it is a diffraction
+				*/
+				Part(const size_t id, const bool isReflection) : id(id), isReflection(isReflection) {};
+			};
+
+			/**
+			* @brief Stores the base and edge vector of an image edge
+			*/
+			struct ImageEdgeData
+			{
+				Vec3 base;				// Base coordinate of the image edge
+				Vec3 edgeVector;		// Vector from the base to the top of the image edge
+
+				/**
+				* @brief Constructor that initialises the ImageEdgeData
+				*
+				* @param base The base coordinate of the image edge
+				* @param edgeVector The vector from the base to the top of the image edge
+				*/
+				ImageEdgeData(const Vec3& base, const Vec3& edgeVector) : base(base), edgeVector(edgeVector) {};
+
+				/**
+				* @brief Returns the coordinate of the edge at the given z coordinate
+				*
+				* @param z The z coordinate of the edge
+				*
+				* @return The coordinate of the edge at the given z coordinate
+				*/
+				Vec3 GetEdgeCoordinate(const Real z) const { return base + z * edgeVector; }
+			};
+
 		public:
 
 			/**
@@ -156,8 +157,7 @@ namespace RAC
 			/**
 			* @brief Returns the ID of the plane or edge at the given index within the image source path
 			* 
-			* @parmas i The index of the reflection or diffraction within the image source path
-			* 
+			* @param i The index of the reflection or diffraction within the image source path
 			* @return The ID of the plane or edge at the given index
 			*/
 			inline size_t GetID(int i) const { assert(i < pathParts.size()); return pathParts[i].id; }
@@ -165,8 +165,7 @@ namespace RAC
 			/**
 			* @brief Returns whether given index within the image source path is a reflection or diffraction
 			*
-			* @parmas i The index of the reflection or diffraction within the image source path
-			*
+			* @param i The index of the reflection or diffraction within the image source path
 			* @return True if the part is a reflection, false if it is a diffraction
 			*/
 			inline bool IsReflection(int i) const { assert(i < pathParts.size()); return pathParts[i].isReflection; }
@@ -175,6 +174,18 @@ namespace RAC
 			* @return The string key representing the image source path
 			*/
 			inline std::string GetKey() const { return key; }
+
+			/**
+			* @return The index of the corresponding image source
+			*/
+			inline int GetArrayID() const { return arrayID; }
+
+			/**
+			* @brief Update the index of the corresponding image source
+			* 
+			* @param id The index of the corresponding image source
+			*/
+			inline void UpdateArrayID(const int id) { arrayID = id; }
 
 			/**
 			* @brief Sets the 3DTI transform and stores the source position
@@ -200,7 +211,6 @@ namespace RAC
 			* @brief Returns the position of the image source or image edge apex point at the given index
 			* 
 			* @param i The index of the position to return
-			* 
 			* @return The position of the image source or image edge apex point at the given index
 			*/
 			Vec3 GetPosition(int i) const;
@@ -361,6 +371,8 @@ namespace RAC
 			*/
 			void AddSourceID(const size_t id);
 
+			int arrayID{ -1 };
+
 			std::string key;							// String key that defines the image source path
 			std::array<char, 21> idKey;					// Char that stores the ID of a plane, edge or source
 			std::array<char, 1> sourceKey;				// Char that stores the source key
@@ -389,79 +401,133 @@ namespace RAC
 		/**
 		* @brief Represents an image source and processes its audio
 		*/
-		class ImageSource // Divide into sub classes types: reflection, diffraction, both?
+		class ImageSource : public Access // Divide into sub classes types: reflection, diffraction, both?
 		{
 		public:
 
 			/**
-			* @brief Constructor that initialises the virtual source
+			* @brief Default constructor
 			* 
 			* @param core The 3DTI processing core
-			* @param config The spatialiser configuration
-			* @param data The image source data
+			*/
+			ImageSource(Binaural::CCore* core) : Access(), mCore(core) {}
+
+			/**
+			* @brief Default deconstructor. Removes the image source from the 3DTI processing core
+			*/
+			~ImageSource()
+			{
+				if (mSource)
+					RemoveSource();
+			}
+
+			/**
+			* @brief Reset and initialise the image source with the given configuration and data
+			* 
+			* @param inputBuffer Pointer to the source input buffer
+			* @param config The current RAC configuration
+			* @param data The image source data to initialise with
 			* @param fdnChannel The FDN channel to feed, -1 if the image source does not feed the FDN
 			*/
-			ImageSource(Binaural::CCore* core, const std::shared_ptr<Config>& config, const ImageSourceData& data, const int fdnChannel);
+			void Init(const Buffer* inputBuffer, const std::shared_ptr<Config>& config, const ImageSourceData& data, int fdnChannel);
 
 			/**
-			* @brief Default deconstructor
-			*/
-			~ImageSource();
-
-			/**
-			* @return The FDN channel the image source feeds, -1 if the image source does not feed the FDN
-			*/
-			inline int GetFDNChannel() const { return mFDNChannel; }
-
-			/**
-			* @brief Update the spatialisation mode for the HRTF processing
+			* @brief Update the image source and remove if no longer visible
 			*
-			* @params New spatialisation mode
-			*/
-			void UpdateSpatialisationMode(const SpatialisationMode mode);
-
-			/**
-			* @brief Updates the interpolation settings for recording impulse responses
-			*
-			* @params lerpFactor New interpolation factor
-			* @params mode True if disable 3DTI Interpolation, false otherwise.
-			*/
-			void UpdateImpulseResponseMode(const bool mode);
-
-			/**
-			* @brief Update the diffraction model
-			* 
-			* @params model The new diffraction model
-			*/
-			void UpdateDiffractionModel(const DiffractionModel model, const int fs);
-
-			/**
-			* @brief Update the image source
-			* 
 			* @params data The new image source data
-			* @params fdnChannel The FDN channel to feed, gets updated to the previous channel if feedsFDN has changed
-			* 
+			* @params fdnChannel The FDN channel to feed, gets updated to the previous FDN channel if feedsFDN has changed
+			*
 			* @return True if the image source should be removed
 			*/
 			bool Update(const ImageSourceData& data, int& fdnChannel);
 
 			/**
+			* @brief Remove the image source from any audio processing
+			*/
+			inline void Remove() { PreventAccess(); }
+
+			/**
+			* @return The FDN channel the image source feeds, -1 if the image source does not feed the FDN
+			*/
+			inline int GetFDNChannel() const { return mFDNChannel.load(); }
+
+			/**
+			* @brief Updates the target spatialisation mode for the HRTF processing
+			*
+			* @params mode The new spatialisation mode
+			*/
+			inline void UpdateSpatialisationMode(const SpatialisationMode mode) { spatialisationMode.store(mode); }
+
+			/**
+			* @brief Updates the target impulse response mode
+			*
+			* @params mode True if disable 3DTI Interpolation, false otherwise.
+			*/
+			inline void UpdateImpulseResponseMode(const bool mode) { impulseResponseMode.store(mode); }
+			
+			/**
+			* @brief Update the diffraction model
+			* 
+			* @params model The new diffraction model
+			* @params fs The sample rate used to initialise the diffraction model
+			*/
+			void UpdateDiffractionModel(const DiffractionModel model, const int fs);
+
+			/**
 			* @brief Process a single audio frame
 			* 
-			* @param data The audio data to process
-			* @param reverbInput The reverb input buffer to write to
 			* @param outputBuffer The output buffer to write to
+			* @param reverbInput The reverb input buffer to write to
+			* @param lerpFactor The lerp factor for interpolation
 			*/
-			int ProcessAudio(const Buffer& data, Buffer& reverbInput, Buffer& outputBuffer, const Real lerpFactor);
+			void ProcessAudio(Buffer& outputBuffer, Matrix& reverbInput, const Real lerpFactor);
+
+			/**
+			* @brief Resets the image source by clearing the buffers and removing the source from the 3DTI processing core
+			*/
+			void Reset();
 
 		private:
 			/**
-			* @brief Initialises the image source with the given data
-			* 
-			* @param data The image source data
+			* @brief Update the spatialisation mode for the HRTF processing
+			*
+			* @params New spatialisation mode
 			*/
-			void Init(const ImageSourceData& data, const bool impulseReponseMode, const SpatialisationMode spatialisationMode);
+			void SetSpatialisationMode(const SpatialisationMode mode);
 
+			/**
+			* @brief Updates the interpolation settings for recording impulse responses
+			*
+			* @params mode True if disable 3DTI Interpolation, false otherwise.
+			*/
+			void SetImpulseResponseMode(const bool mode);
+
+			/**
+			* @brief Check that configuration parameters have not changed since initialisation and AllowAccess
+			*
+			* @param config The current RAC configuration
+			*/
+			void LateInit(const std::shared_ptr<Config>& config);
+
+			/**
+			* @brief Reset diffraction models and initialise the diffraction model with the given path
+			*
+			* @params model The diffraction model to initialise
+			* @params path The diffraction path to initialise the model with
+			* @params fs The sample rate used to initialise the diffraction model
+			*/
+			void InitDiffractionModel(const DiffractionModel model, const Diffraction::Path& path, const int fs);
+
+			/**
+			* @brief Initialises the image source in the 3DTI processing core
+			*/
+			void InitSource();
+
+			/**
+			* @brief Romeves the image source from the 3DTI processing core
+			*/
+			void RemoveSource();
+			
 			/**
 			* @brief Updates the image source with the given data
 			* 
@@ -471,9 +537,11 @@ namespace RAC
 			void UpdateParameters(const ImageSourceData& data, int& fdnChannel);
 
 			/**
-			* @brief Romeves the image source from the 3DTI processing core
+			* @brief Stores the position and rotation source
+			* 
+			* @params newTransform The transform to update the image source with
 			*/
-			void Remove();
+			void UpdateTransform(const CTransform& newTransform);
 
 			/**
 			* @brief Process a single audio frame using the current diffraction model
@@ -482,44 +550,64 @@ namespace RAC
 			* 
 			* @params inBuffer The input audio buffer
 			* @params outBuffer The output audio buffer to write to
+			* @params lerpFactor The lerp factor for interpolation
 			*/
 			void ProcessDiffraction(const Buffer& inBuffer, Buffer& outBuffer, const Real lerpFactor);
 
-			bool feedsFDN;			// True if the image source feeds the FDN, false otherwise
-			int mFDNChannel;		// The FDN channel the image source feeds, -1 if the image source does not feed the FDN
+			/**
+			* @brief Initialises the internal audio buffers
+			*
+			* @param numFrames The number of frames per audio buffer
+			*/
+			void InitBuffers(int numFrames);
 
+			/**
+			* @brief Clears the internal audio buffers
+			*/
+			void ClearBuffers();
+
+			/**
+			* @brief Clears all shared and unique pointers
+			*/
+			void ClearPointers();
+
+			std::atomic<bool> feedsFDN{ false };	// True if the image source feeds the FDN, false otherwise
+			std::atomic<int> mFDNChannel{ -1 };		// The FDN channel the image source feeds, -1 if the image source does not feed the FDN
+
+			const Buffer* inputBuffer{ nullptr };
 			Buffer bStore;								// Internal working buffer
 			Buffer bDiffStore;							// Internal diffraction crossfade buffer
 			CMonoBuffer<float> bInput;					// 3DTI Input buffer
 			CEarPair<CMonoBuffer<float>> bOutput;		// 3DTI Stero Output buffer
-			CMonoBuffer<float> bMonoOutput;				// 3DTI Mono output buffer
+			CMonoBuffer<float> bMonoOutput;				// 3DTI Mono output buffer for reverb send
 
-			Parameter gain;
-			GraphicEQ mFilter;					// Frequency dependent reflection filter
-			AirAbsorption mAirAbsorption;		// Air absorption filter
+			Parameter gain{ 0.0 };								// 1.0 if the source is visible, 0.0 otherwise
+			std::unique_ptr<GraphicEQ> mFilter;					// Frequency dependent reflection and directivity filter
+			std::unique_ptr<AirAbsorption> mAirAbsorption;		// Air absorption filter
 
-			Diffraction::Path mDiffractionPath;				// Diffraction path
-			DiffractionModel currentDiffractionModel;	// Current diffraction model
-			std::shared_ptr<Diffraction::Model> activeModel;
-			std::shared_ptr<Diffraction::Model> fadeModel{ nullptr };					// Diffraction model A and B for crossfading
-			std::atomic<std::shared_ptr<Diffraction::Model>> incomingModel{ nullptr };
-			std::atomic<std::shared_ptr<Diffraction::Model>> nextModel{ nullptr };
+			Parameter diffractionGain{ 1.0 };											// Gain for crossfading diffracton models
+			Diffraction::Path mDiffractionPath;											// Diffraction path
+			std::atomic<DiffractionModel> currentDiffractionModel;						// Current diffraction model
+			std::shared_ptr<Diffraction::Model> activeModel;							// Active diffraction model for processing audio
+			std::shared_ptr<Diffraction::Model> fadeModel{ nullptr };					// Next active diffraction model 
+			std::atomic<std::shared_ptr<Diffraction::Model>> incomingModel{ nullptr };	// Incoming diffraction model after ongoing crossfade
+			std::atomic<std::shared_ptr<Diffraction::Model>> nextModel{ nullptr };		// Queued diffraction model
+			std::atomic<bool> isCrossFading{ false };									// True if currently crossfading between diffraction models, false otherwise
 
-			Parameter diffractionGain;			// Gain for diffraction model A
+			bool reflection{ false };					// True if the image source path includes any reflections, false otherwise
+			bool diffraction{ false };					// True if the image source path includes any diffractions, false otherwise
 
-			bool useModelA;
-			std::atomic<bool> isCrossFading;				// True if currently crossfading between diffraction models, false otherwise
-			std::atomic<bool> newModel;
+			std::atomic<bool> impulseResponseMode{ false };		// True if the image source should be in impulse response mode, false otherwise
+			bool currentImpulseResponseMode{ false };			// True if the image source is in impulse response mode, false otherwise
 
-			std::atomic<bool> isInitialised{ false };				// True if the image source has been initialised, false otherwise
-			const bool reflection;				// True if the image source path includes any reflections, false otherwise
-			const bool diffraction;				// True if the image source path includes any diffractions, false otherwise
+			std::atomic<SpatialisationMode> spatialisationMode{ SpatialisationMode::none };		// Target spatialisation mode
+			SpatialisationMode currentSpatialisationMode{ SpatialisationMode::none };			// Current spatialisation mode
 
-			Binaural::CCore* mCore;								// 3DTI processing core
-			shared_ptr<Binaural::CSingleSourceDSP> mSource;		// 3DTI source
-			CTransform transform;								// 3DTI source transform
+			Binaural::CCore* mCore;										// 3DTI processing core
+			shared_ptr<Binaural::CSingleSourceDSP> mSource{ nullptr };	// 3DTI source
+			std::atomic<std::shared_ptr<CTransform>> transform;			// 3DTI source transform
 
-			static ReleasePool releasePool;
+			static ReleasePool releasePool;		// Garbage collector for shared pointers after atomic replacement
 		};
 	}
 }

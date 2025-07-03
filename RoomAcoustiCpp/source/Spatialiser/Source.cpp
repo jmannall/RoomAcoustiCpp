@@ -29,52 +29,58 @@ namespace RAC
 
 		//////////////////// Source class ////////////////////
 
+		ReleasePool Source::releasePool;
+
 		////////////////////////////////////////
 
-		Source::Source(Binaural::CCore* core, const std::shared_ptr<Config>& config) : mCore(core), targetGain(0.0f), currentGain(0.0f), mAirAbsorption(1.0, config->fs), mDirectivity(SourceDirectivity::omni),
-			directivityFilter(config->frequencyBands, config->Q, config->fs), reverbInputFilter(config->frequencyBands, config->Q, config->fs), feedsFDN(false), hasChanged(true)
+		void Source::Init(const std::shared_ptr<Config>& config)
 		{
-			dataMutex = std::make_shared<std::mutex>();
-			imageSourcesMutex = std::make_shared<std::mutex>();
-			imageSourceDataMutex = std::make_shared<std::mutex>();
-			currentDataMutex = std::make_shared<std::mutex>();
-
-			// Initialise source to core
+			if (mSource == nullptr)
 			{
-				unique_lock<shared_mutex> lock(tuneInMutex);
-				mSource = mCore->CreateSingleSourceDSP();
-				mSource->DisableFarDistanceEffect();
-				mSource->EnablePropagationDelay();
-
-				if (config->GetImpulseResponseMode())
-				{
-					mSource->DisableDistanceAttenuationSmoothingAnechoic();
-					mSource->DisableInterpolation();
-				}
-
-				//Select spatialisation mode
-				UpdateSpatialisationMode(config->GetSpatialisationMode());
+				InitBuffers(config->numFrames);
+				InitSource();
 			}
+
+			mAirAbsorption = std::make_unique<AirAbsorption>(1.0, config->fs);
+			directivityFilter = std::make_unique<GraphicEQ>(config->frequencyBands, config->Q, config->fs);
+			reverbInputFilter = std::make_unique<GraphicEQ>(config->frequencyBands, config->Q, config->fs);
+
+			mDirectivity.store(SourceDirectivity::omni);
+
+			feedsFDN.store(false);
 
 			ResetFDNSlots();
-			bStore.ResizeBuffer(config->numFrames);
-			bStoreReverb.ResizeBuffer(config->numFrames);
-			bInput = CMonoBuffer<float>(config->numFrames);
-			bOutput.left = CMonoBuffer<float>(config->numFrames);
-			bOutput.right = CMonoBuffer<float>(config->numFrames);
-			bMonoOutput = CMonoBuffer<float>(config->numFrames);
+			AllowAccess();
 		}
 
 		////////////////////////////////////////
 
-		Source::~Source()
+		void Source::Remove()
 		{
-			{
-				unique_lock<shared_mutex> lock(tuneInMutex);
-				mCore->RemoveSingleSourceDSP(mSource);
-			}
-			Reset();
+			PreventAccess();
+			clearInputBuffer.store(true);
 		}
+
+		////////////////////////////////////////
+
+		void Source::InitSource()
+		{
+			unique_lock<shared_mutex> lock(tuneInMutex);
+			mSource = mCore->CreateSingleSourceDSP();
+			mSource->DisableFarDistanceEffect();
+			mSource->EnablePropagationDelay();
+		}
+
+		////////////////////////////////////////
+
+		void Source::RemoveSource()
+		{
+			unique_lock<shared_mutex> lock(tuneInMutex);
+			mCore->RemoveSingleSourceDSP(mSource);
+			mSource.reset();
+		}
+
+		////////////////////////////////////////
 
 		void Source::InitReverbSendSource(const bool impulseResponseMode)
 		{
@@ -90,10 +96,12 @@ namespace RAC
 				mReverbSendSource->DisableDistanceAttenuationSmoothingAnechoic();
 				mReverbSendSource->DisableInterpolation();
 			}
+			feedsFDN.store(true);
 		}
 
 		void Source::RemoveReverbSendSource()
 		{
+			feedsFDN.store(false);
 			unique_lock<shared_mutex> lock(tuneInMutex);
 			mCore->RemoveSingleSourceDSP(mReverbSendSource);
 			mReverbSendSource.reset();
@@ -101,7 +109,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Source::UpdateSpatialisationMode(const SpatialisationMode mode)
+		void Source::SetSpatialisationMode(const SpatialisationMode mode)
 		{
 			switch (mode)
 			{
@@ -126,96 +134,68 @@ namespace RAC
 				break;
 			}
 			}
-
-			{
-				lock_guard<mutex> lock(*imageSourcesMutex);
-				for (auto& [key, imageSource] : mImageSources)
-					imageSource.UpdateSpatialisationMode(mode);
-			}
+			currentSpatialisationMode = spatialisationMode;
 		}
 
 		////////////////////////////////////////
 
-		void Source::UpdateImpulseResponseMode(const Real lerpFactor, const bool mode)
+		void Source::SetImpulseResponseMode(const bool mode)
 		{
+			if (mode)
 			{
-				lock_guard<std::mutex> lock(*dataMutex);
-				if (mode)
+				mSource->DisableDistanceAttenuationSmoothingAnechoic();
+				mSource->DisableInterpolation();
+				if (mReverbSendSource)
 				{
-					mSource->DisableDistanceAttenuationSmoothingAnechoic();
-					mSource->DisableInterpolation();
-
-					if (mReverbSendSource)
-					{
-						mReverbSendSource->DisableDistanceAttenuationSmoothingAnechoic();
-						mReverbSendSource->DisableInterpolation();
-					}
-				}
-				else
-				{
-					mSource->EnableDistanceAttenuationSmoothingAnechoic();
-					mSource->EnableInterpolation();
-
-					if (mReverbSendSource)
-					{
-						mReverbSendSource->EnableDistanceAttenuationSmoothingAnechoic();
-						mReverbSendSource->EnableInterpolation();
-					}
+					mReverbSendSource->DisableDistanceAttenuationSmoothingAnechoic();
+					mReverbSendSource->DisableInterpolation();
 				}
 			}
-
+			else
 			{
-				lock_guard<mutex> lock(*imageSourcesMutex);
-				for (auto& [key, imageSource] : mImageSources)
-					imageSource.UpdateImpulseResponseMode(mode);
+				mSource->EnableDistanceAttenuationSmoothingAnechoic();
+				mSource->EnableInterpolation();
+				if (mReverbSendSource)
+				{
+					mReverbSendSource->EnableDistanceAttenuationSmoothingAnechoic();
+					mReverbSendSource->EnableInterpolation();
+				}
 			}
-		}
-
-		////////////////////////////////////////
-
-		void Source::UpdateDiffractionModel(const DiffractionModel model, const int fs)
-		{
-			lock_guard<mutex> lock(*imageSourcesMutex);
-			for (auto& [key, imageSource] : mImageSources)
-				imageSource.UpdateDiffractionModel(model, fs);
+			currentImpulseResponseMode = mode;
 		}
 
 		////////////////////////////////////////
 
 		void Source::UpdateDirectivity(const SourceDirectivity directivity, const Coefficients<>& frequencyBands, const int numLateReverbChannels)
 		{
+			Coefficients reverbInput = Coefficients(frequencyBands.Length(), 1.0);
+			switch (directivity)
 			{
-				Coefficients reverbInput = Coefficients(frequencyBands.Length(), 1.0);
-				lock_guard<mutex> lock(*dataMutex);
-				mDirectivity = directivity;
-
-				switch (mDirectivity)
-				{
-				case SourceDirectivity::omni:
-					break;
-				case SourceDirectivity::subcardioid:
-					reverbInput = 1.0 / 1.3;	// 1 / Directivity Factor (DF) -> DF = 10 ^ (Directivity Index / 20) 
-					break;
-				case SourceDirectivity::cardioid:
-					reverbInput = 1.0 / 1.7;
-					break;
-				case SourceDirectivity::supercardioid:
-					reverbInput = 1.0 / 1.9;
-					break;
-				case SourceDirectivity::hypercardioid:
-					reverbInput = 0.5;
-					break;
-				case SourceDirectivity::bidirectional:
-					reverbInput = 1.0 / 1.7;
-					break;
-				case SourceDirectivity::genelec8020c:
-					reverbInput = GENELEC.AverageResponse(frequencyBands);
-					break;
-				}
-				// Divide energy between late reverb channels. Multiply by six to mimic shoebox room first reflections energy
-				reverbInputFilter.SetTargetGains(6.0 * reverbInput / static_cast<Real>(numLateReverbChannels));
+			case SourceDirectivity::omni:
+				break;
+			case SourceDirectivity::subcardioid:
+				reverbInput = 1.0 / 1.3;	// 1 / Directivity Factor (DF) -> DF = 10 ^ (Directivity Index / 20) 
+				break;
+			case SourceDirectivity::cardioid:
+				reverbInput = 1.0 / 1.7;
+				break;
+			case SourceDirectivity::supercardioid:
+				reverbInput = 1.0 / 1.9;
+				break;
+			case SourceDirectivity::hypercardioid:
+				reverbInput = 0.5;
+				break;
+			case SourceDirectivity::bidirectional:
+				reverbInput = 1.0 / 1.7;
+				break;
+			case SourceDirectivity::genelec8020c:
+				reverbInput = GENELEC.AverageResponse(frequencyBands);
+				break;
 			}
-			{ lock_guard<mutex> lock(*currentDataMutex); hasChanged = true; }
+			mDirectivity.store(directivity);
+			// Divide energy between late reverb channels. Multiply by six to mimic shoebox room first reflections energy
+			reverbInputFilter->SetTargetGains(6.0 * reverbInput / static_cast<Real>(numLateReverbChannels));
+			hasChanged.store(true);
 		}
 
 		////////////////////////////////////////
@@ -228,43 +208,67 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Source::ProcessDirect(const Buffer& data, Matrix& reverbInput, Buffer& outputBuffer, const Real lerpFactor)
+		void Source::Reset()
 		{
-			lock_guard<std::mutex> lock(*dataMutex);
-			/*if (directivityFilter.Invalid())
-				return;*/
+			if (!CanEdit())
+				return;
+			if (mSource == nullptr)
+				return;
+			RemoveImageSources();
+			ClearBuffers();
+			RemoveSource();
+			if (mReverbSendSource)
+				RemoveReverbSendSource();
+			ClearPointers();
+		}
+
+		////////////////////////////////////////
+
+		void Source::ProcessAudio(Buffer& outputBuffer, Matrix& reverbInput, const Real lerpFactor)
+		{
+			if (!GetAccess())
+				return;
 
 #ifdef PROFILE_AUDIO_THREAD
 			BeginSource();
+#endif
+			const int numFrames = inputBuffer.Length();
+
+			if (currentImpulseResponseMode != impulseResponseMode.load())
+				SetImpulseResponseMode(impulseResponseMode.load());
+
+			if (currentSpatialisationMode != spatialisationMode.load())
+				SetSpatialisationMode(spatialisationMode.load());
+
+#ifdef PROFILE_AUDIO_THREAD
 			BeginAirAbsorption();
 #endif
-			mAirAbsorption.ProcessAudio(data, bStore, lerpFactor);
+			mAirAbsorption->ProcessAudio(inputBuffer, bStore, lerpFactor);
 #ifdef PROFILE_AUDIO_THREAD
 			EndAirAbsorption();
 #endif
-			if (feedsFDN)
+			if (feedsFDN.load())
 			{
-				reverbInputFilter.ProcessAudio(bStore, bStoreReverb, lerpFactor);
+				reverbInputFilter->ProcessAudio(bStore, bStoreReverb, lerpFactor);
 				std::transform(bStoreReverb.begin(), bStoreReverb.end(), bInput.begin(),
 					[](auto value) { return static_cast<float>(value); });
 
-				// lock_guard<mutex> lock(tuneInMutex);
 				{
 					shared_lock<shared_mutex> lock(tuneInMutex);
-					mReverbSendSource->SetSourceTransform(transform);
+					mReverbSendSource->SetSourceTransform(*transform.load());
 					mReverbSendSource->SetBuffer(bInput);
 					mReverbSendSource->ProcessAnechoic(bOutput.left, bOutput.right);
 				}
 				for (int i = 0; i < reverbInput.Rows(); i++)
 				{
-					for (int j = 0; j < data.Length(); j++)
+					for (int j = 0; j < numFrames; j++)
 						reverbInput[i][j] += bOutput.left[j];
 				}
 			}
 #ifdef PROFILE_AUDIO_THREAD
 			BeginReflection();
 #endif
-			directivityFilter.ProcessAudio(bStore, bStore, lerpFactor);
+			directivityFilter->ProcessAudio(bStore, bStore, lerpFactor);
 #ifdef PROFILE_AUDIO_THREAD
 			EndReflection();
 #endif
@@ -276,7 +280,7 @@ namespace RAC
 #endif
 			{
 				shared_lock<shared_mutex> lock(tuneInMutex);
-				mSource->SetSourceTransform(transform);
+				mSource->SetSourceTransform(*transform.load());
 				mSource->SetBuffer(bInput);
 				mSource->ProcessAnechoic(bOutput.left, bOutput.right);
 			}
@@ -285,7 +289,7 @@ namespace RAC
 #endif
 
 			int j = 0;
-			for (int i = 0; i < data.Length(); i++)
+			for (int i = 0; i < numFrames; i++)
 			{
 				outputBuffer[j++] += static_cast<Real>(bOutput.left[i]);
 				outputBuffer[j++] += static_cast<Real>(bOutput.right[i]);
@@ -293,88 +297,128 @@ namespace RAC
 #ifdef PROFILE_AUDIO_THREAD
 			EndSource();
 #endif
-		}
-
-		////////////////////////////////////////
-
-		void Source::ProcessAudio(const Buffer& data, Matrix& reverbInput, Buffer& outputBuffer, const Real lerpFactor)
-		{
-			{
-				lock_guard<mutex> lock(*imageSourcesMutex);
-				std::latch latch(mImageSources.size() + 1);
-
-				size_t index = 0;
-				for (auto& [key, imageSource] : mImageSources)
-				{
-					size_t threadIndex = index++; // Each thread gets a unique index
-					audioThreadPool->enqueue([&, threadIndex] {
-						std::get<2>(threadResults[threadIndex]) = imageSource.ProcessAudio(data, std::get<0>(threadResults[threadIndex]), std::get<1>(threadResults[threadIndex]), lerpFactor);
-						// No need for a mutex, each thread writes to a unique index
-
-						latch.count_down();
-						});
-				}
-
-				audioThreadPool->enqueue([&] {
-					ProcessDirect(data, reverbInput, outputBuffer, lerpFactor);
-					latch.count_down();
-					});
-
-				// Wait for all threads to finish
-				latch.wait();
-
-				// Now safely merge the results
-				for (const auto& [localReverb, localOutput, fdnChannel] : threadResults)
-				{
-					outputBuffer += localOutput;
-					if (fdnChannel != -1)
-					{
-						for (int i = 0; i < data.Length(); i++)
-							reverbInput[fdnChannel][i] += localReverb[i];
-					}
-				}
-			}
+			FreeAccess();
 		}
 
 		////////////////////////////////////////
 
 		void Source::Update(const Vec3& position, const Vec4& orientation, const Real distance)
 		{
+			if (!GetAccess())
+				return;
+			mAirAbsorption->SetTargetDistance(distance);
+			
+			if (position == currentPosition && orientation == currentOrientation)
 			{
-				lock_guard<std::mutex>lock(*dataMutex);
-				mAirAbsorption.SetTargetDistance(distance);
+				FreeAccess();
+				return;
 			}
 			{
-				lock_guard<std::mutex>lock(*currentDataMutex);
-				if (position == currentPosition && orientation == currentOrientation)
-					return;
-				hasChanged = true;
+				lock_guard<std::mutex>lock(*dataMutex);
 				currentPosition = position;
 				currentOrientation = orientation;
 			}
-			lock_guard<std::mutex>lock(*dataMutex);
-			transform.SetOrientation(CQuaternion(static_cast<float>(orientation.w), static_cast<float>(orientation.x), static_cast<float>(orientation.y), static_cast<float>(orientation.z)));
-			transform.SetPosition(CVector3(static_cast<float>(position.x), static_cast<float>(position.y), static_cast<float>(position.z)));
+			hasChanged.store(true);
+			UpdateTransform(position, orientation);
+			FreeAccess();
+		}
+
+		////////////////////////////////////////
+		
+		void Source::UpdateData(const Source::AudioData source, const ImageSourceDataMap& imageSourceData, const std::shared_ptr<Config>& config)
+		{
+			if (!GetAccess())
+				return;
+			directivityFilter->SetTargetGains(source.directivity);
+
+			if (source.feedsFDN && !mReverbSendSource)
+			{
+				InitReverbSendSource(config->GetImpulseResponseMode());
+				UpdateImpulseResponseMode(config->GetImpulseResponseMode());
+			}
+			else if (!source.feedsFDN && mReverbSendSource)
+				RemoveReverbSendSource();
+			else
+				feedsFDN.store(source.feedsFDN);
+			UpdateImageSourceDataMap(imageSourceData);
+			UpdateImageSources(config);
+			FreeAccess();
 		}
 
 		////////////////////////////////////////
 
-		void Source::UpdateImageSourceDataMap()
+		std::optional<Source::Data> Source::GetData()
+		{
+			if (!GetAccess())
+				return std::nullopt;
+			lock_guard<std::mutex>lock(*dataMutex);
+			Data data(-1, currentPosition, currentOrientation, mDirectivity.load(), hasChanged.load());
+			FreeAccess();
+			return data;
+		}
+
+		////////////////////////////////////////
+
+		void Source::InitBuffers(int numFrames)
+		{
+			bStore = Buffer(numFrames);
+			bStoreReverb = Buffer(numFrames);
+			bInput = CMonoBuffer<float>(numFrames);
+			bOutput.left = CMonoBuffer<float>(numFrames);
+			bOutput.right = CMonoBuffer<float>(numFrames);
+			bMonoOutput = CMonoBuffer<float>(numFrames);
+		}
+
+		////////////////////////////////////////
+
+		void Source::ClearBuffers()
+		{
+			bInput.clear();
+			bOutput.left.clear();
+			bOutput.right.clear();
+			bMonoOutput.clear();
+			bStore.ResizeBuffer(1);
+		}
+
+		////////////////////////////////////////
+
+		void Source::ClearPointers()
+		{
+			directivityFilter.reset();
+			reverbInputFilter.reset();
+			mAirAbsorption.reset();
+			transform.load().reset();
+		}
+
+		////////////////////////////////////////
+
+		void Source::UpdateTransform(const Vec3& position, const Vec4& orientation)
+		{
+			std::shared_ptr<CTransform> transformCopy = std::make_shared<CTransform>();
+			transformCopy->SetOrientation(CQuaternion(static_cast<float>(orientation.w), static_cast<float>(orientation.x), static_cast<float>(orientation.y), static_cast<float>(orientation.z)));
+			transformCopy->SetPosition(CVector3(static_cast<float>(position.x), static_cast<float>(position.y), static_cast<float>(position.z)));
+			transform.store(transformCopy);
+			releasePool.Add(transformCopy);
+		}
+
+		////////////////////////////////////////
+
+		void Source::UpdateImageSourceDataMap(const ImageSourceDataMap& imageSourceData)
 		{
 			for (auto& [key, vSource] : currentImageSources)
 			{
-				auto it = targetImageSources.find(key);
-				if (it == targetImageSources.end()) // case: old vSource
-					vSource.Invisible();
+				auto it = imageSourceData.find(key);
+				if (it == imageSourceData.end()) // case: old vSource
+					vSource.second.Invisible();
 			}
 
-			for (auto& [key, vSource] : targetImageSources)
+			for (auto& [key, vSource] : imageSourceData)
 			{
 				auto it = currentImageSources.find(key);
 				if (it == currentImageSources.end()) // case: add new vSource
 					currentImageSources.emplace(key, vSource);
 				else // case: update exist vSource
-					it->second = vSource;
+					it->second.second = vSource.second;
 			}
 		}
 
@@ -385,70 +429,48 @@ namespace RAC
 			std::vector<std::string> keys;
 			for (auto& [key, vSource] : currentImageSources)
 			{
-				if (UpdateImageSource(vSource, config))
+				if (UpdateImageSource(vSource.first, vSource.second, config))
 					keys.push_back(key);
 			}
 
 			for (const std::string& key : keys)
 				currentImageSources.erase(key);
 		}
-
+		
 		////////////////////////////////////////
 
-		bool Source::UpdateImageSource(const ImageSourceData& data, const std::shared_ptr<Config>& config)
+		bool Source::UpdateImageSource(int& id, ImageSourceData& data, const std::shared_ptr<Config>& config)
 		{
-			auto it = mImageSources.find(data.GetKey());
-			if (it == mImageSources.end())		// case: virtual source does not exist
+			if (id < 0)		// case: virtual source does not exist
 			{
 				int fdnChannel = -1;
 				if (data.IsFeedingFDN())
 					fdnChannel = AssignFDNChannel(config->numLateReverbChannels);
-				{
-					unique_lock<mutex> lock(*imageSourcesMutex, defer_lock);
-					if (lock.try_lock())
-					{
-						mImageSources.try_emplace(data.GetKey(), mCore, config, data, fdnChannel);
-						threadResults.resize(mImageSources.size(), { Buffer(config->numFrames), Buffer(2 * config->numFrames), -1 });
-					}
-					else
-					{
-#ifdef DEBUG_IMAGE_SOURCE
-						Unity::Debug::Log("Failed to create image source", Unity::Colour::Red);
-#endif
-					}
-				}
+
+				id = imageSources.NextID();
+				if (id < 0)		// No free slots
+					return false;
+
+				imageSources.at(id).Init(&inputBuffer, config, data, fdnChannel);
 			}
 			else
 			{
 				int fdnChannel = -1;
-				if (data.IsFeedingFDN() && it->second.GetFDNChannel() < 0)
+				if (data.IsFeedingFDN() && imageSources.at(id).GetFDNChannel() < 0)
 					fdnChannel = AssignFDNChannel(config->numLateReverbChannels);
 
-				bool remove = it->second.Update(data, fdnChannel);
+				bool remove = imageSources.at(id).Update(data, fdnChannel);
 
-				assert(!(data.IsFeedingFDN() && it->second.GetFDNChannel() == -1));
+				assert(!(data.IsFeedingFDN() && imageSources.at(id).GetFDNChannel() == -1));
 
 				if (fdnChannel >= 0) // Add vSource old fdnChannel to freeFDNChannels (Also prevents leaking FDN channels if !data.visible and the channel is not assigned to vSource)
 					freeFDNChannels.push_back(fdnChannel);
 				if (remove)
 				{
-					if (it->second.GetFDNChannel() >= 0)
-						freeFDNChannels.push_back(it->second.GetFDNChannel());
-
-					size_t n = 0;
-					{
-						unique_lock<mutex> lock(*imageSourcesMutex, defer_lock);
-						if (lock.try_lock())
-						{
-							n = mImageSources.erase(data.GetKey());
-							BeginFDN();
-							threadResults.resize(mImageSources.size(), { Buffer(config->numFrames), Buffer(2 * config->numFrames), -1 });
-							EndFDN();
-						}
-					}
-
-					if (n == 1) // Check vSource has been successfully erased
-						return true;
+					int currentFDNChannel = imageSources.at(id).GetFDNChannel();
+					if (currentFDNChannel >= 0)
+						freeFDNChannels.push_back(currentFDNChannel);
+					return true;
 				}
 			}
 			return false;

@@ -373,36 +373,16 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Context::SubmitAudio(size_t id, const float* data)
-		{
-			unique_lock<mutex> lock(audioMutex, std::defer_lock);
-			if (lock.try_lock())
-			{
-				for (int i = 0; i < mConfig->numFrames; i++)
-					mInputBuffer[i] = static_cast<Real>(data[i]);
-				mSources->ProcessAudio(id, mInputBuffer, mReverbInput, mOutputBuffer, mConfig->GetLerpFactor());				
-			}
-		}
-
-		////////////////////////////////////////
-
 		void Context::GetOutput(float** bufferPtr)
 		{
 			const Real lerpFactor = mConfig->GetLerpFactor();
-			// Process reverb
-			unique_lock<mutex> lock(audioMutex, std::defer_lock);
-			if (lock.try_lock())
-			{
-				mReverb->ProcessAudio(mReverbInput, mOutputBuffer, lerpFactor);
-				mReverbInput.Reset();
+			mSources->ProcessAudio(mOutputBuffer, mReverbInput, lerpFactor);
 
-				if (applyHeadphoneEQ)
-					headphoneEQ.ProcessAudio(mOutputBuffer, mOutputBuffer, lerpFactor);
-			}
-			if (!lock.owns_lock())
-			{
-				while (lock.try_lock() == false) { std::this_thread::yield(); }
-			}
+			mReverb->ProcessAudio(mReverbInput, mOutputBuffer, lerpFactor);
+			mReverbInput.Reset();
+
+			if (applyHeadphoneEQ)
+				headphoneEQ.ProcessAudio(mOutputBuffer, mOutputBuffer, lerpFactor);
 			
 			// Copy output to send and set pointer
 			std::transform(mOutputBuffer.begin(), mOutputBuffer.end(), mSendBuffer.begin(),
@@ -411,25 +391,21 @@ namespace RAC
 
 			// Reset output buffer
 			mOutputBuffer.Reset();
+			mReverbInput.Reset();
 		}
 
 		////////////////////////////////////////
 
 		void Context::UpdateImpulseResponseMode(const Real lerpFactor, const bool mode)
 		{
-			unique_lock<mutex> lock(audioMutex);
-
 			if (mode)
 			{
 				mConfig->lerpFactor.store(1.0);
 				headphoneEQ.Reset();		// TO DO: Should this be here?
-				mSources->UpdateImpulseResponseMode(1.0, mode);
+				mSources->UpdateImpulseResponseMode(mode);
 				return;
 			}
-
-			Real newLerpFactor = mConfig->UpdateLerpFactor(lerpFactor);
-
-			mSources->UpdateImpulseResponseMode(newLerpFactor, mode);
+			mSources->UpdateImpulseResponseMode(mode);
 		}
 	}
 }

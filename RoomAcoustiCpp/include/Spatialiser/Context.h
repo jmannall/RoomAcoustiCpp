@@ -261,7 +261,7 @@ namespace RAC
 			* @param id The ID of the source to send the audio to.
 			* @param data The audio buffer.
 			*/
-			void SubmitAudio(size_t id, const float* data);
+			inline void SubmitAudio(size_t id, const Buffer& data) { mSources->SetInputBuffer(id, data); }
 
 			/**
 			* @brief Accesses the output of the spatialiser.

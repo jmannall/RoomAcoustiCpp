@@ -18,6 +18,7 @@
 // Spatialiser headers
 #include "Spatialiser/Types.h"
 #include "Spatialiser/Source.h"
+#include "Spatialiser/ImageSourceManager.h"
 
 // 3DTI headers
 #include "BinauralSpatializer/Core.h"
@@ -40,34 +41,47 @@ namespace RAC
 			* @params core The 3DTI processing core
 			* @params config The spatialiser configuration
 			*/
-			SourceManager(Binaural::CCore* core, const std::shared_ptr<Config> config) : mSources(), mEmptySlots(), mCore(core), mConfig(config), nextSource(0) {};
+			SourceManager(Binaural::CCore* core, const std::shared_ptr<Config> config) : mCore(core), mConfig(config), mImageSources(core)
+			{
+				for (auto& sources : mSources)
+					sources.emplace(core, mImageSources, config);
+			};
 			
 			/**
 			* @brief Default deconstructor
 			*/
-			~SourceManager() { unique_lock<shared_mutex> lock(mSourceMutex); Reset(); };
+			~SourceManager() {};
 
 			/**
 			* @brief Updates the spatialisation mode for the HRTF processing
 			* 
 			* @params mode New spatialisation mode
 			*/
-			void UpdateSpatialisationMode(const SpatialisationMode mode);
+			inline void UpdateSpatialisationMode(const SpatialisationMode mode)
+			{
+				mImageSources.UpdateSpatialisationMode(mode);
+				for (auto& source : mSources)
+					source->UpdateSpatialisationMode(mode);
+			}
 
 			/**
 			* @brief Updates the interpolation settings for recording impulse responses
 			*
-			* @params lerpFactor New interpolation factor
 			* @params mode True if disable AttuenationSmoothing, false otherwise
 			*/
-			void UpdateImpulseResponseMode(const Real lerpFactor, const bool mode);
+			inline void UpdateImpulseResponseMode(const bool mode)
+			{
+				mImageSources.UpdateImpulseResponseMode(mode);
+				for (auto& source : mSources)
+					source->UpdateImpulseResponseMode(mode);
+			}
 
 			/**
 			* @brief Updates the diffraction model
 			* 
 			* @params model The new diffraction model
 			*/
-			void UpdateDiffractionModel(const DiffractionModel model);
+			inline void UpdateDiffractionModel(const DiffractionModel model) { mImageSources.UpdateDiffractionModel(model, mConfig->fs); }
 
 			/**
 			* @brief Updates the source directivity for a given source ID
@@ -77,18 +91,26 @@ namespace RAC
 			*/
 			inline void UpdateSourceDirectivity(const size_t id, const SourceDirectivity directivity)
 			{
-				shared_lock<shared_mutex> lock(mSourceMutex);
-				auto it = mSources.find(id);
-				if (it != mSources.end()) // case: source does exist
-					it->second.UpdateDirectivity(directivity, mConfig->frequencyBands, mConfig->numLateReverbChannels);
+				mSources[id]->UpdateDirectivity(directivity, mConfig->frequencyBands, mConfig->numLateReverbChannels);
 			}
 
+			inline int NextID() const
+			{
+				int nextID = 0;
+				for (const auto& source : mSources)
+				{
+					if (source.has_value() && source->CanEdit())
+						return nextID;
+					nextID++;
+				}
+				return -1;
+			}
 			/**
 			* @brief Initialises a new source
 			* 
 			* @return The ID of the new source
 			*/
-			size_t Init();
+			int Init();
 
 			/**
 			* @brief Updates the position and orientation of a source
@@ -100,17 +122,15 @@ namespace RAC
 			*/
 			inline void Update(const size_t id, const Vec3& position, const Vec4& orientation, Real& distance)
 			{
-				shared_lock<shared_mutex> lock(mSourceMutex);
-				auto it = mSources.find(id);
-				if (it != mSources.end()) { it->second.Update(position, orientation, distance); } // case: source does exist
+				mSources[id]->Update(position, orientation, distance);
 			}
 
-			void Remove(const size_t id);
+			inline void Remove(const size_t id) { mSources[id]->Remove(); }
 
 			/**
 			* @return Position, orientation and directivity data for all sources
 			*/
-			std::vector<SourceData> GetSourceData();
+			std::vector<Source::Data> GetSourceData();
 
 			/**
 			* @brief Returns the position of the source with the given ID
@@ -118,13 +138,7 @@ namespace RAC
 			* @params id The ID of the source
 			* @return The position of the source
 			*/
-			inline Vec3 GetSourcePosition(const size_t id)
-			{
-				shared_lock<shared_mutex> lock(mSourceMutex);
-				auto it = mSources.find(id);
-				if (it != mSources.end()) { return it->second.GetPosition(); } // case: source does exist
-				return Vec3();
-			}
+			inline Vec3 GetSourcePosition(const size_t id) { return mSources[id]->GetPosition(); }
 
 			/**
 			* @brief Updates the audio DSP parameters and image sources for a given source
@@ -133,11 +147,19 @@ namespace RAC
 			* @params source The source audio DSP parameters
 			* @params vSources The new image sources
 			*/
-			inline void UpdateSourceData(const size_t id, const SourceAudioData source, const ImageSourceDataMap& vSources)
+			inline void UpdateSourceData(const size_t id, const Source::AudioData source, const ImageSourceDataMap& vSources)
 			{
-				shared_lock<shared_mutex> lock(mSourceMutex);
-				auto it = mSources.find(id);
-				if (it != mSources.end()) { it->second.UpdateData(source, vSources, mConfig); } // case: source does exist
+				mSources[id]->UpdateData(source, vSources, mConfig);
+			}
+
+			/**
+			* @brief Resets any unused sources
+			*/
+			inline void ResetUnusedSources()
+			{
+				for (auto& source : mSources)
+					source->Reset();
+				mImageSources.Reset();
 			}
 
 			/**
@@ -148,44 +170,24 @@ namespace RAC
 			* @params reverbInput The reverb input matrix to write to
 			* @params outputBuffer The output audio buffer to write to
 			*/
-			inline void ProcessAudio(const size_t id, const Buffer& data, Matrix& reverbInput, Buffer& outputBuffer, const Real lerpFactor)
+			inline void SetInputBuffer(const size_t id, const Buffer& data) { mSources[id]->SetInputBuffer(data); }
+
+			inline void ProcessAudio(Buffer& outputBuffer, Matrix& reverbInput, const Real lerpFactor)
 			{
-				shared_lock<shared_mutex> lock(mSourceMutex);
-				auto it = mSources.find(id);
-				if (it != mSources.end()) // case: source does exist
-					it->second.ProcessAudio(data, reverbInput, outputBuffer, lerpFactor);
+				for (auto& source : mSources)	// Zero any input buffers for sources that are not in use (but may still have image sources)
+					source->ResetInputBuffer();
+				for (auto& source : mSources)
+					source->ProcessAudio(outputBuffer, reverbInput, lerpFactor);
+				mImageSources.ProcessAudio(outputBuffer, reverbInput, lerpFactor);
 			}
 
 		private:
-			/**
-			* @brief Removes all sources
-			*/
-			inline void Reset() { mSources.clear(); mEmptySlots.clear(); }
-
 			std::shared_ptr<Config> mConfig;			// Spatialiser configuration
 
-			SourceMap mSources;							// Stored sources
-			std::vector<size_t> mEmptySlots;			// Available source IDs
-			std::vector<TimerPair> mTimers;				// Source IDs waiting to be made available
-			size_t nextSource;							// Next source ID if none available
-			std::vector<SourceData> sourceData;			// Stores position, orientation and directivity data for all sources
+			std::array<std::optional<Source>, MAX_SOURCES> mSources;	// Sources for the audio thread
+			ImageSourceManager mImageSources;							// Image sources for the audio thread
 
 			Binaural::CCore* mCore;			// 3DTI processing core
-
-			std::shared_mutex mSourceMutex;		// Protects mSources
-
-			/*
-			* Fixed array of image sources to process over. Ensure can process audio and be updated thread safe.
-			* Can be initialised and removed threadsafe. What if remove while audio being processed?
-			* List<bool> of which image sources to process
-			* imageSources contain a shared pointer to the input data for its source. - Is this efficient?
-			* mSources controls the root input data - thread safe as never write and read at same time.
-			* Modify to be generic for direct, reflection and diffraction.
-			* Subclasses?
-			*/
-			//std::array<ImageSource, 256> imageSources;
-			//std::array<bool, 256> process;
-
 		};
 	}
 }

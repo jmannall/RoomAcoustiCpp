@@ -302,5 +302,11 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\Parameter.h">
       <Filter>Header Files\DSP</Filter>
     </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Access.h">
+      <Filter>Header Files\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\ImageSourceManager.h">
+      <Filter>Header Files\Spatialiser</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

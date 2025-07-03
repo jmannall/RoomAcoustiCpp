@@ -178,7 +178,7 @@ namespace RAC
 			* 
 			* @remarks Directivities taken from: Eargle's the Microphone Book : From Mono to Stereo to Surround - a Guide to Microphone Design and Application
 			*/
-			Absorption<> CalculateDirectivity(const SourceData& source, const Vec3& point) const;
+			Absorption<> CalculateDirectivity(const Source::Data& source, const Vec3& point) const;
 
 			/**
 			* @brief Run the image edge model for the given source
@@ -187,7 +187,7 @@ namespace RAC
 			* @param imageSources The image source data to write to
 			* @param direct The direct sound audio data for the current source
 			*/
-			void ReflectPointInRoom(const SourceData& source, SourceAudioData& direct, ImageSourceDataMap& imageSources);
+			void ReflectPointInRoom(const Source::Data& source, Source::AudioData& direct, ImageSourceDataMap& imageSources);
 
 			/**
 			* @brief Find all first order diffractions
@@ -197,7 +197,7 @@ namespace RAC
 			* 
 			* @return The number of first order diffractions found
 			*/
-			size_t FirstOrderDiffraction(const SourceData& source, ImageSourceDataMap& imageSources);
+			size_t FirstOrderDiffraction(const Source::Data& source, ImageSourceDataMap& imageSources);
 
 			/**
 			* @brief Find all first order reflections
@@ -208,7 +208,7 @@ namespace RAC
 			* 
 			* @return counter + The number of first order reflections found
 			*/
-			size_t FirstOrderReflections(const SourceData& source, ImageSourceDataMap& imageSources, size_t counter);
+			size_t FirstOrderReflections(const Source::Data& source, ImageSourceDataMap& imageSources, size_t counter);
 
 			/**
 			* @brief Find all higher order reflection and diffraction paths
@@ -216,7 +216,7 @@ namespace RAC
 			* @params source The current source data
 			* @params imageSources The image source data to write to
 			*/
-			void HigherOrderPaths(const SourceData& source, ImageSourceDataMap& imageSources);
+			void HigherOrderPaths(const Source::Data& source, ImageSourceDataMap& imageSources);
 
 			/**
 			* @brief Initialise an image source
@@ -227,7 +227,7 @@ namespace RAC
 			* @param imageSources The image source data to write to
 			* @param feedsFDN True if the image source should feed the FDN, false otherwise
 			*/
-			void InitImageSource(const SourceData& source, const Vec3& intersection, ImageSourceData& imageSource, ImageSourceDataMap& imageSources, bool feedsFDN);
+			void InitImageSource(const Source::Data& source, const Vec3& intersection, ImageSourceData& imageSource, ImageSourceDataMap& imageSources, bool feedsFDN);
 
 			/**
 			* @brief Run simple ray tracing and update the late reverberation reflection filters
@@ -248,9 +248,9 @@ namespace RAC
 			PlaneMap mPlanes;									// Store planes
 			WallMap mWalls;										// Store walls
 			EdgeMap mEdges;										// Store edges
-			std::vector<SourceData> mSources;					// Store sources
+			std::vector<Source::Data> mSources;					// Store sources
 			std::vector<ImageSourceDataMap> imageSources;		// Store image sources
-			std::vector<SourceAudioData> mSourceAudioDatas;		// Store source audio data
+			std::vector<Source::AudioData> mSourceAudioDatas;		// Store source audio data
 			ImageSourceDataStore sp;							// Store valid image sources while the image edge model is being run
 			std::vector<bool> mCurrentCycles;					// Oscillates true and false each time the image edge model is run
 

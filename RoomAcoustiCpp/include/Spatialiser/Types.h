@@ -38,7 +38,7 @@ namespace RAC
 		typedef std::unordered_map<size_t, Edge> EdgeMap;									// Store edges
 		typedef std::unordered_map<size_t, Source> SourceMap;								// Store sources
 		typedef std::unordered_map<std::string, ImageSource> ImageSourceMap;				// Store image sources
-		typedef std::unordered_map<std::string, ImageSourceData> ImageSourceDataMap;		// Store image source datas
+		typedef std::unordered_map<std::string, std::pair<int, ImageSourceData>> ImageSourceDataMap;		// Store image source datas
 
 		typedef std::vector<std::vector<ImageSourceData>> ImageSourceDataStore;				// Store image source data
 

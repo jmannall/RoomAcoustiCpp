@@ -160,137 +160,325 @@ namespace RAC
 
 		//////////////////// ImageSource class ////////////////////
 
-		ReleasePool ImageSource::releasePool;
+		ReleasePool ImageSource::releasePool;		
 
 		////////////////////////////////////////
 
-		ImageSource::ImageSource(Binaural::CCore* core, const std::shared_ptr<Config>& config, const ImageSourceData& data, int fdnChannel) : mCore(core), mSource(nullptr), mFDNChannel(fdnChannel),
-			gain(0.0), mFilter(data.GetAbsorption(), config->frequencyBands, config->Q, config->fs), mAirAbsorption(data.GetDistance(), config->fs), feedsFDN(data.IsFeedingFDN()), bStore(config->numFrames), bDiffStore(config->numFrames), mDiffractionPath(data.GetDiffractionPath()),
-			reflection(data.IsReflection()), diffraction(data.IsDiffraction()), transform(data.GetTransform()), isCrossFading(false),
-			currentDiffractionModel(config->GetDiffractionModel()), diffractionGain(0.0)
+		void ImageSource::InitSource()
 		{
-			diffractionGain.Reset(1.0);			
-			switch (currentDiffractionModel)
+#ifdef DEBUG_IMAGE_SOURCE
+			Debug::Log("Init virtual source", Colour::Green);
+#endif
+			unique_lock<shared_mutex> lock(tuneInMutex);
+			mSource = mCore->CreateSingleSourceDSP();
+			mSource->EnablePropagationDelay();
+			mSource->DisableFarDistanceEffect();
+			mSource->DisableNearFieldEffect();
+		}
+
+		////////////////////////////////////////
+
+		void ImageSource::RemoveSource()
+		{
+#ifdef DEBUG_IMAGE_SOURCE
+			Debug::Log("Remove virtual source", Colour::Red);
+#endif
+			currentImpulseResponseMode = false;
+			currentSpatialisationMode = SpatialisationMode::none;
+
+			unique_lock<shared_mutex> lock(tuneInMutex);
+			mCore->RemoveSingleSourceDSP(mSource);
+			mSource.reset();
+		}
+
+		////////////////////////////////////////
+
+		void ImageSource::Init(const Buffer* sourceBuffer, const std::shared_ptr<Config>& config, const ImageSourceData& data, int fdnChannel)
+		{
+			if (mSource == nullptr)
+			{
+				InitBuffers(config->numFrames);
+				InitSource();
+			}
+
+			inputBuffer = sourceBuffer;
+			mFilter = make_unique<GraphicEQ>(data.GetAbsorption(), config->frequencyBands, config->Q, config->fs);
+			mAirAbsorption = make_unique<AirAbsorption>(data.GetDistance(), config->fs);
+
+			diffraction = data.IsDiffraction();
+			reflection = data.IsReflection();
+
+			InitDiffractionModel(config->GetDiffractionModel(), data.GetDiffractionPath(), config->fs);
+
+			feedsFDN.store(data.IsFeedingFDN());
+			mFDNChannel.store(fdnChannel);
+
+			UpdateTransform(data.GetTransform());
+
+			if (data.IsVisible())
+				gain.SetTarget(1.0);
+
+			AllowAccess();
+			LateInit(config);
+		}
+
+		////////////////////////////////////////
+
+		void ImageSource::LateInit(const std::shared_ptr<Config>& config)
+		{
+			DiffractionModel model = config->GetDiffractionModel();
+			UpdateDiffractionModel(model, config->fs);
+			while (model != config->GetDiffractionModel())
+			{
+				model = config->GetDiffractionModel();
+				UpdateDiffractionModel(model, config->fs);
+			}
+		}
+
+		////////////////////////////////////////
+
+		bool ImageSource::Update(const ImageSourceData& data, int& fdnChannel)
+		{
+			if (data.IsVisible())
+			{
+				gain.SetTarget(1.0);
+				UpdateParameters(data, fdnChannel);
+			}
+			else
+			{
+				gain.SetTarget(0.0);
+				if (gain.IsZero())
+				{
+					Remove();
+					return true;
+				}
+			}
+			return false;
+		}
+
+		////////////////////////////////////////
+
+		void ImageSource::UpdateParameters(const ImageSourceData& data, int& fdnChannel)
+		{
+			mFilter->SetTargetGains(data.GetAbsorption());
+
+			if (diffraction)
+			{
+				mDiffractionPath = data.GetDiffractionPath();
+				activeModel->SetTargetParameters(mDiffractionPath);
+				std::shared_ptr<Diffraction::Model> temp = incomingModel.load();
+				if (temp)
+					temp->SetTargetParameters(mDiffractionPath);
+				temp = nextModel.load();
+				if (temp)
+					temp->SetTargetParameters(mDiffractionPath);
+				if (isCrossFading.load())
+				{
+					temp = fadeModel;
+					if (temp)
+						temp->SetTargetParameters(mDiffractionPath);
+				}
+			}
+
+			mAirAbsorption->SetTargetDistance(data.GetDistance());
+
+			if (feedsFDN.load() != data.IsFeedingFDN())
+			{
+				feedsFDN.store(data.IsFeedingFDN());
+				fdnChannel = mFDNChannel.exchange(fdnChannel);
+			}
+
+			UpdateTransform(data.GetTransform());
+		}
+
+		////////////////////////////////////////
+
+		void ImageSource::Reset()
+		{
+			if (!CanEdit())
+				return;
+			if (mSource == nullptr)
+				return;
+			ClearBuffers();
+			RemoveSource();
+			ClearPointers();
+		}
+		
+		////////////////////////////////////////
+
+		void ImageSource::InitBuffers(int numFrames)
+		{
+			bInput = CMonoBuffer<float>(numFrames);
+			bOutput.left = CMonoBuffer<float>(numFrames);
+			bOutput.right = CMonoBuffer<float>(numFrames);
+			bMonoOutput = CMonoBuffer<float>(numFrames);
+			bStore = Buffer(numFrames);
+			bDiffStore = Buffer(numFrames);
+		}
+
+		////////////////////////////////////////
+
+		void ImageSource::ClearBuffers()
+		{
+			bInput.clear();
+			bOutput.left.clear();
+			bOutput.right.clear();
+			bMonoOutput.clear();
+			bStore.ResizeBuffer(1);
+			bDiffStore.ResizeBuffer(1);
+		}
+
+		////////////////////////////////////////
+
+		void ImageSource::ClearPointers()
+		{
+			mFilter.reset();
+			mAirAbsorption.reset();
+			activeModel.reset();
+			fadeModel.reset();
+			incomingModel.load().reset();
+			nextModel.load().reset();
+			transform.load().reset();
+		}
+
+		////////////////////////////////////////
+
+		void ImageSource::UpdateTransform(const CTransform& newTransform)
+		{
+			std::shared_ptr<CTransform> transformCopy = std::make_shared<CTransform>(newTransform);
+			transform.store(transformCopy);
+			releasePool.Add(transformCopy);
+		}
+
+		////////////////////////////////////////
+
+		void ImageSource::SetSpatialisationMode(const SpatialisationMode mode)
+		{
+			switch (mode)
+			{
+			case SpatialisationMode::quality:
+			{
+				mSource->SetSpatializationMode(Binaural::TSpatializationMode::HighQuality);
+				break;
+			}
+			case SpatialisationMode::performance:
+			{
+				mSource->SetSpatializationMode(Binaural::TSpatializationMode::HighPerformance);
+				break;
+			}
+			case SpatialisationMode::none:
+			{
+				mSource->SetSpatializationMode(Binaural::TSpatializationMode::NoSpatialization);
+				break;
+			}
+			default:
+			{
+				mSource->SetSpatializationMode(Binaural::TSpatializationMode::NoSpatialization);
+				break;
+			}
+			}
+			currentSpatialisationMode = spatialisationMode;
+		}
+
+		////////////////////////////////////////
+
+		void ImageSource::SetImpulseResponseMode(const bool mode)
+		{
+			if (mode)
+			{
+				mSource->DisableDistanceAttenuationSmoothingAnechoic();
+				mSource->DisableInterpolation();
+			}
+			else
+			{
+				mSource->EnableDistanceAttenuationSmoothingAnechoic();
+				mSource->EnableInterpolation();
+			}
+			currentImpulseResponseMode = mode;
+		}
+
+		////////////////////////////////////////
+
+		void ImageSource::InitDiffractionModel(const DiffractionModel model, const Diffraction::Path& path, const int fs)
+		{
+			diffractionGain.Reset(1.0);
+			isCrossFading.store(false);
+			
+			if (!diffraction)
+			{
+				activeModel.reset();
+				fadeModel.reset();
+				incomingModel.load().reset();
+				nextModel.load().reset();
+				return;
+			}
+
+			currentDiffractionModel.store(model);
+			mDiffractionPath = path;
+			switch (model)
 			{
 			case DiffractionModel::attenuate:
 			{
-				activeModel = std::make_shared<Diffraction::Attenuate>(mDiffractionPath);
+				activeModel = std::make_shared<Diffraction::Attenuate>(path);
 				break;
 			}
 			case DiffractionModel::lowPass:
 			{
-				activeModel = std::make_shared<Diffraction::LPF>(mDiffractionPath, config->fs);
+				activeModel = std::make_shared<Diffraction::LPF>(path, fs);
 				break;
 			}
 			case DiffractionModel::udfa:
 			{
-				activeModel = std::make_shared<Diffraction::UDFA>(mDiffractionPath, config->fs);
+				activeModel = std::make_shared<Diffraction::UDFA>(path, fs);
 				break;
 			}
 			case DiffractionModel::udfai:
 			{
-				activeModel = std::make_shared<Diffraction::UDFAI>(mDiffractionPath, config->fs);
+				activeModel = std::make_shared<Diffraction::UDFAI>(path, fs);
 				break;
 			}
 			case DiffractionModel::nnSmall:
 			{
-				activeModel = std::make_shared<Diffraction::NNSmall>(mDiffractionPath);
+				activeModel = std::make_shared<Diffraction::NNSmall>(path);
 				break;
 			}
 			case DiffractionModel::nnBest:
 			{
-				activeModel = std::make_shared<Diffraction::NNBest>(mDiffractionPath);
+				activeModel = std::make_shared<Diffraction::NNBest>(path);
 				break;
 			}
 			case DiffractionModel::utd:
 			{
-				activeModel = std::make_shared<Diffraction::UTD>(mDiffractionPath, config->fs);
+				activeModel = std::make_shared<Diffraction::UTD>(path, fs);
 				break;
 			}
 			case DiffractionModel::btm:
 			{
-				activeModel = std::make_shared<Diffraction::BTM>(mDiffractionPath, config->fs);
+				activeModel = std::make_shared<Diffraction::BTM>(path, fs);
 				break;
 			}
 			}
 			releasePool.Add(activeModel);
-
-			bInput = CMonoBuffer<float>(config->numFrames);
-			bOutput.left = CMonoBuffer<float>(config->numFrames);
-			bOutput.right = CMonoBuffer<float>(config->numFrames);
-			bMonoOutput = CMonoBuffer<float>(config->numFrames);
-			bDiffStore = Buffer(config->numFrames);
-
-			Init(data, config->GetImpulseResponseMode(), config->GetSpatialisationMode());
-			Update(data, fdnChannel);
-		}
-
-		////////////////////////////////////////
-
-		ImageSource::~ImageSource()
-		{
-			if (mSource != nullptr)
-				mCore->RemoveSingleSourceDSP(mSource);
-		}
-
-		////////////////////////////////////////
-
-		void ImageSource::UpdateSpatialisationMode(const SpatialisationMode mode)
-		{
-			if (isInitialised.load())
-			{
-				unique_lock<shared_mutex> lock(tuneInMutex);
-				switch (mode)
-				{
-				case SpatialisationMode::quality:
-				{
-					mSource->SetSpatializationMode(Binaural::TSpatializationMode::HighQuality);
-					break;
-				}
-				case SpatialisationMode::performance:
-				{
-					mSource->SetSpatializationMode(Binaural::TSpatializationMode::HighPerformance);
-					break;
-				}
-				case SpatialisationMode::none:
-				{
-					mSource->SetSpatializationMode(Binaural::TSpatializationMode::NoSpatialization);
-					break;
-				}
-				default:
-				{
-					mSource->SetSpatializationMode(Binaural::TSpatializationMode::NoSpatialization);
-					break;
-				}
-				}
-			}
-		}
-
-		////////////////////////////////////////
-
-		void ImageSource::UpdateImpulseResponseMode(const bool mode)
-		{
-			{
-				if (mode)
-				{
-					mSource->DisableDistanceAttenuationSmoothingAnechoic();
-					mSource->DisableInterpolation();
-				}
-				else
-				{
-					mSource->EnableDistanceAttenuationSmoothingAnechoic();
-					mSource->EnableInterpolation();
-				}
-			}
 		}
 
 		////////////////////////////////////////
 
 		void ImageSource::UpdateDiffractionModel(const DiffractionModel model, const int fs)
 		{
-			if (currentDiffractionModel == model)
+			if (!GetAccess())
 				return;
-			currentDiffractionModel = model;
+
+			if (!diffraction)
+			{
+				FreeAccess();
+				return;
+			}
+
+			if (!diffraction ||currentDiffractionModel.exchange(model) == model)
+			{
+				FreeAccess();
+				return;
+			}
 
 			switch (model)
 			{
@@ -341,130 +529,29 @@ namespace RAC
 				incomingModel = nextModel.exchange(nullptr);
 				isCrossFading.store(true);
 			}
-		}
+			FreeAccess();
+		}		
 
 		////////////////////////////////////////
 
-		bool ImageSource::Update(const ImageSourceData& data, int& fdnChannel)
+		void ImageSource::ProcessAudio(Buffer& outputBuffer, Matrix& reverbInput, const Real lerpFactor)
 		{
-			if (data.IsVisible())
-			{
-				gain.SetTarget(1.0);
-				UpdateParameters(data, fdnChannel);
-			}
-			else
-			{
-				gain.SetTarget(0.0);
-				if (gain.IsZero())
-				{
-					if (isInitialised.load())
-						Remove();
-					return true;
-				}
-			}
-			return false;
-		}
-
-		////////////////////////////////////////
-
-		void ImageSource::Init(const ImageSourceData& data, const bool impulseReponseMode, const SpatialisationMode spatialisationMode)
-		{
-			// audioMutex already locked
-#ifdef DEBUG_IMAGE_SOURCE
-			Debug::Log("Init virtual source", Colour::Green);
-#endif
-			{
-				shared_lock<shared_mutex> lock(tuneInMutex);
-
-				// Initialise source to core
-				mSource = mCore->CreateSingleSourceDSP();
-				mSource->EnablePropagationDelay();
-				mSource->DisableFarDistanceEffect();
-				mSource->DisableNearFieldEffect();
-
-				if (impulseReponseMode)
-				{
-					mSource->DisableDistanceAttenuationSmoothingAnechoic();
-					mSource->DisableInterpolation();
-				}
-
-				mSource->SetSourceTransform(data.GetTransform());
-			}
-			//updateTransform = true;
-			isInitialised.store(true);
-
-			UpdateSpatialisationMode(spatialisationMode);
-		}
-
-		////////////////////////////////////////
-
-		void ImageSource::UpdateParameters(const ImageSourceData& data, int& fdnChannel)
-		{
-			// audioMutex already locked
-			// Update reflection/directivity filter
-			mFilter.SetTargetGains(data.GetAbsorption());
-
-			if (diffraction)
-			{
-				mDiffractionPath = data.GetDiffractionPath();
-				activeModel->SetTargetParameters(mDiffractionPath);
-				std::shared_ptr<Diffraction::Model> temp = incomingModel.load();
-				if (temp)
-					temp->SetTargetParameters(mDiffractionPath);
-				temp = nextModel.load();
-				if (temp)
-					temp->SetTargetParameters(mDiffractionPath);
-				if (isCrossFading.load())
-				{
-					temp = fadeModel;
-					if (temp)
-						temp->SetTargetParameters(mDiffractionPath);
-				}
-			}
-
-			mAirAbsorption.SetTargetDistance(data.GetDistance());
-
-			if (data.IsFeedingFDN() != feedsFDN)
-			{
-				feedsFDN = !feedsFDN;
-				std::swap(mFDNChannel, fdnChannel);
-			}
-
-			transform = data.GetTransform();
-		}
-
-		////////////////////////////////////////
-
-		void ImageSource::Remove()
-		{
-			// audioMutex already locked
-#ifdef DEBUG_IMAGE_SOURCE
-			Debug::Log("Remove virtual source", Colour::Red);
-#endif
-			{
-				unique_lock<shared_mutex> lock(tuneInMutex);
-				mCore->RemoveSingleSourceDSP(mSource);
-				mSource.reset();
-			}
-			isInitialised.store(false);
-		}
-
-		////////////////////////////////////////
-
-		int ImageSource::ProcessAudio(const Buffer& data, Buffer& reverbInput, Buffer& outputBuffer, const Real lerpFactor)
-		{
-			if (!isInitialised.load())
-			{
-				std::fill(outputBuffer.begin(), outputBuffer.end(), 0.0);
-				return -1;
-			}
+			if (!GetAccess())
+				return;
 
 			if (gain.IsZero())
 			{
-				std::fill(outputBuffer.begin(), outputBuffer.end(), 0.0);
-				return -1;
+				FreeAccess();
+				return;
 			}
-			const int numFrames = data.Length();
+
+			if (currentImpulseResponseMode != impulseResponseMode.load())
+				SetImpulseResponseMode(impulseResponseMode.load());
+
+			if (currentSpatialisationMode != spatialisationMode.load())
+				SetSpatialisationMode(spatialisationMode.load());
+
+			const int numFrames = inputBuffer->Length();
 
 #ifdef PROFILE_AUDIO_THREAD
 			BeginVirtualSource();
@@ -472,14 +559,14 @@ namespace RAC
 #ifdef PROFILE_AUDIO_THREAD
 			BeginReflection();	// Always process as also includes directivity
 #endif
-			mFilter.ProcessAudio(data, bStore, lerpFactor);
+			mFilter->ProcessAudio(*inputBuffer, bStore, lerpFactor);
 #ifdef PROFILE_AUDIO_THREAD
 			EndReflection();
 #endif
 
 			if (diffraction)
 			{
-				
+
 #ifdef PROFILE_AUDIO_THREAD
 				BeginDiffraction();
 #endif
@@ -492,7 +579,7 @@ namespace RAC
 #ifdef PROFILE_AUDIO_THREAD
 			BeginAirAbsorption();
 #endif
-			mAirAbsorption.ProcessAudio(bStore, bStore, lerpFactor);
+			mAirAbsorption->ProcessAudio(bStore, bStore, lerpFactor);
 #ifdef PROFILE_AUDIO_THREAD
 			EndAirAbsorption();
 #endif
@@ -505,23 +592,18 @@ namespace RAC
 #endif
 			{
 				shared_lock<shared_mutex> lock(tuneInMutex);
-				mSource->SetSourceTransform(transform);
+				mSource->SetSourceTransform(*std::atomic_load(&transform));
 				mSource->SetBuffer(bInput);
 			
-				// lock_guard<mutex> lock(tuneInMutex);
-				if (feedsFDN)
+				int fdnChannel = mFDNChannel.load();
+				if (fdnChannel > -1)
 				{
-					{
-						mSource->ProcessAnechoic(bMonoOutput, bOutput.left, bOutput.right);
-						std::transform(bMonoOutput.begin(), bMonoOutput.end(), reverbInput.begin(),
-							[](auto value) { return static_cast<Real>(value); });
-					}
+					mSource->ProcessAnechoic(bMonoOutput, bOutput.left, bOutput.right);
+					std::transform(bMonoOutput.begin(), bMonoOutput.begin() + numFrames, reverbInput[fdnChannel].begin(), reverbInput[fdnChannel].begin(),
+						[](auto input, auto current) { return current + input; });
 				}
 				else
-				{
-					std::fill(reverbInput.begin(), reverbInput.end(), 0.0);
 					mSource->ProcessAnechoic(bOutput.left, bOutput.right);
-				}
 			}
 #ifdef PROFILE_AUDIO_THREAD
 			End3DTI();
@@ -529,13 +611,14 @@ namespace RAC
 			int j = 0;
 			for (int i = 0; i < numFrames; i++)
 			{
-				outputBuffer[j++] = static_cast<Real>(bOutput.left[i]);
-				outputBuffer[j++] = static_cast<Real>(bOutput.right[i]);
+				outputBuffer[j++] += static_cast<Real>(bOutput.left[i]);
+				outputBuffer[j++] += static_cast<Real>(bOutput.right[i]);
 			}
 #ifdef PROFILE_AUDIO_THREAD
 			EndVirtualSource();
 #endif
-			return mFDNChannel;
+			FreeAccess();
+			return;
 		}
 
 		////////////////////////////////////////

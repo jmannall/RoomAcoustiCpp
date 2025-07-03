@@ -59,6 +59,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\predict.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\rtwtypes.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\tmwtypes.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Access.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Coefficients.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Complex.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Definitions.h" />
@@ -89,6 +90,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\HeadphoneEQ.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\ImageEdge.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\ImageSource.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\ImageSourceManager.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Interface.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Globals.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\SourceManager.h" />

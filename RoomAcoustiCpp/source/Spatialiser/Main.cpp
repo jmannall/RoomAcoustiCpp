@@ -44,6 +44,7 @@ using namespace RAC::Unity;
 
 static float* buffer = nullptr;	// Pointer to return buffer
 static int numAbsorptionBands = 0;	// Store number of frequency bands for any reflection filters
+static int numAudioFrames = 0;
 
 extern "C"
 {
@@ -90,6 +91,7 @@ extern "C"
 		else { numFDNChannels = 32; }
 
 		numAbsorptionBands = numBands;
+		numAudioFrames = numFrames;
 		Coefficients frequencyBands = Coefficients(numBands);
 		for (int i = 0; i < numBands; i++)
 			frequencyBands[i] = static_cast<Real>(fBands[i]);
@@ -549,7 +551,10 @@ extern "C"
 	*/
 	EXPORT void API RACSubmitAudio(int id, const float* data)
 	{
-		SubmitAudio(static_cast<size_t>(id), data);
+		Buffer buffer = Buffer(numAudioFrames);
+		std::transform(data, data + numAudioFrames, buffer.begin(),
+			[](float value) { return static_cast<Real>(value); });
+		SubmitAudio(static_cast<size_t>(id), buffer);
 	}
 
 	/**

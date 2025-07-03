@@ -189,7 +189,7 @@ namespace RAC
 		* @param id The ID of the audio source to update.
 		* @param data The new audio data for the source.
 		*/
-		void SubmitAudio(size_t id, const float* data);
+		void SubmitAudio(size_t id, const Buffer& data);
 
 		/**
 		* Returns a pointer to the output buffer of the spatialiser.

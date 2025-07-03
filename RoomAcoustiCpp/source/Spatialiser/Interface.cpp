@@ -240,7 +240,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void SubmitAudio(size_t id, const float* data)
+		void SubmitAudio(size_t id, const Buffer& data)
 		{
 			auto context = GetContext();
 			if (context)
