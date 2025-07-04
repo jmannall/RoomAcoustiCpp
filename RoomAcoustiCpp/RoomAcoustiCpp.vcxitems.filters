@@ -43,6 +43,9 @@
     <Filter Include="Header Files\NN">
       <UniqueIdentifier>{71b87e4b-dd51-4948-9d66-89c889ae1188}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\moodycamel">
+      <UniqueIdentifier>{d52a8938-56af-42b1-b749-21565140082a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Context.cpp">
@@ -137,6 +140,9 @@
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\predict.cpp">
       <Filter>Source Files\NN</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\AudioThreadPool.cpp">
+      <Filter>Source Files\DSP</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -307,6 +313,15 @@
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\ImageSourceManager.h">
       <Filter>Header Files\Spatialiser</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\SpinLock.h">
+      <Filter>Header Files\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\moodycamel\concurrentqueue.h">
+      <Filter>Header Files\moodycamel</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\AudioThreadPool.h">
+      <Filter>Header Files\DSP</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

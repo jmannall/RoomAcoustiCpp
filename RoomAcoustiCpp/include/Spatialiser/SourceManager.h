@@ -16,6 +16,7 @@
 #include "Common/Types.h" 
 
 // Spatialiser headers
+#include "Spatialiser/Globals.h"
 #include "Spatialiser/Types.h"
 #include "Spatialiser/Source.h"
 #include "Spatialiser/ImageSourceManager.h"
@@ -27,6 +28,7 @@ using namespace Common;
 namespace RAC
 {
 	using namespace Common;
+	using namespace DSP;
 	namespace Spatialiser
 	{
 		//////////////////// SourceManager class ////////////////////
@@ -176,18 +178,20 @@ namespace RAC
 			{
 				for (auto& source : mSources)	// Zero any input buffers for sources that are not in use (but may still have image sources)
 					source->ResetInputBuffer();
-				for (auto& source : mSources)
+				audioThreadPool->ProcessAllSources(mSources, mImageSources, outputBuffer, reverbInput, lerpFactor);
+				/*for (auto& source : mSources)
 					source->ProcessAudio(outputBuffer, reverbInput, lerpFactor);
-				mImageSources.ProcessAudio(outputBuffer, reverbInput, lerpFactor);
+				mImageSources.ProcessAudio(outputBuffer, reverbInput, lerpFactor);*/
 			}
 
 		private:
+			Binaural::CCore* mCore;			// 3DTI processing core
+
 			std::shared_ptr<Config> mConfig;			// Spatialiser configuration
 
 			std::array<std::optional<Source>, MAX_SOURCES> mSources;	// Sources for the audio thread
 			ImageSourceManager mImageSources;							// Image sources for the audio thread
 
-			Binaural::CCore* mCore;			// 3DTI processing core
 		};
 	}
 }

@@ -10,8 +10,6 @@
 #include "Common/Definitions.h"
 #endif
 
-#include <latch>
-
 // Spatialiser headers
 #include "Spatialiser/Reverb.h"
 #include "Spatialiser/Globals.h"
@@ -40,7 +38,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		ReverbSource::ReverbSource(Binaural::CCore* core, const std::shared_ptr<Config> config, const Vec3& shift) : mCore(core), mShift(shift)
+		ReverbSource::ReverbSource(Binaural::CCore* core, const std::shared_ptr<Config> config, const Vec3& shift, const Buffer* inBuffer) : mCore(core), mShift(shift), inputBuffer(inBuffer)
 		{
 			bInput = CMonoBuffer<float>(config->numFrames);
 			bOutput.left = CMonoBuffer<float>(config->numFrames);
@@ -127,7 +125,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void ReverbSource::ProcessAudio(const Buffer& data, Buffer& outputBuffer)
+		void ReverbSource::ProcessAudio(Buffer& outputBuffer)
 		{
 #ifdef PROFILE_AUDIO_THREAD
 			BeginReverbSource();
@@ -139,7 +137,9 @@ namespace RAC
 				clearBuffers.store(false);
 			}
 
-			std::transform(data.begin(), data.end(), bInput.begin(),
+			const int numFrames = inputBuffer->Length();
+
+			std::transform(inputBuffer->begin(), inputBuffer->end(), bInput.begin(),
 				[&](auto value) { return static_cast<float>(value); });
 
 #ifdef PROFILE_AUDIO_THREAD
@@ -157,10 +157,10 @@ namespace RAC
 #endif
 
 			int j = 0;
-			for (int i = 0; i < data.Length(); i++)
+			for (int i = 0; i < numFrames; i++)
 			{
-				outputBuffer[j++] = static_cast<Real>(bOutput.left[i]);
-				outputBuffer[j++] = static_cast<Real>(bOutput.right[i]);
+				outputBuffer[j++] += static_cast<Real>(bOutput.left[i]);
+				outputBuffer[j++] += static_cast<Real>(bOutput.right[i]);
 			}
 #ifdef PROFILE_AUDIO_THREAD
 			EndReverbSource();
@@ -231,27 +231,11 @@ namespace RAC
 #ifdef PROFILE_AUDIO_THREAD
 			BeginReverb();
 #endif
-			mFDN.load()->ProcessAudio(data, reverbOutputs, lerpFactor);
+			mFDN.load()->ProcessAudio(data, reverbSourceInputs, lerpFactor);
 			
-			std::latch latch(mReverbSources.size());
-			size_t index = 0;
-			for (auto& source : mReverbSources)
-			{
-				size_t threadIndex = index++; // Each thread gets a unique index
-				audioThreadPool->enqueue([&, threadIndex] {
-					source->ProcessAudio(reverbOutputs[threadIndex], threadResults[threadIndex]);
-					// No need for a mutex, each thread writes to a unique index
-
-					latch.count_down();
-					});
-			}
-
-			// Wait for all threads to finish
-			latch.wait();
-
-			// Now safely merge the results **sequentially**
-			for (const Buffer& localOutput : threadResults)
-				outputBuffer += localOutput;
+			audioThreadPool->ProcessReverbSources(mReverbSources, outputBuffer);
+			/*for (auto& source : mReverbSources)
+				source->ProcessAudio(outputBuffer);*/
 
 #ifdef PROFILE_AUDIO_THREAD
 				EndReverb();

@@ -44,8 +44,8 @@ static const UnityProfilerMarkerDesc* lateReverbMarker = nullptr;
 static const UnityProfilerMarkerDesc* updateAudioDataMarker = nullptr;
 
 static UnityProfilerThreadId backgroundThreadID = 999;
+static std::unordered_map<int, UnityProfilerThreadId> threadIDs;
 
-static std::unordered_map<int, UnityProfilerThreadId> audioThreadIDs;
 int nextThreadID = 0;
 
 #endif
@@ -96,12 +96,37 @@ extern "C" void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API UnityPluginUnload()
 	unityProfiler = nullptr;
 }
 
+int RegisterThread()
+{
+	if (GetDevBuild())
+	{
+		auto [it, success] = threadIDs.emplace(nextThreadID, nextThreadID);
+		if (!success)
+			return -1;
+		nextThreadID++;
+		GetUnityProfiler()->RegisterThread(&it->second, "Acoustics", "Thread");
+		return it->first;
+	}
+	return -1;
+}
+
+void UnregisterThread(int id)
+{
+	if (GetDevBuild())
+	{
+		auto it = threadIDs.find(id);
+		if (it != threadIDs.end())
+			GetUnityProfiler()->UnregisterThread(it->second);
+		threadIDs.erase(it);
+	}
+}
+
 #ifdef PROFILE_AUDIO_THREAD
 int RegisterAudioThread()
 {
 	if (GetDevBuild())
 	{
-		auto [it, success] = audioThreadIDs.emplace(nextThreadID, nextThreadID);
+		auto [it, success] = threadIDs.emplace(nextThreadID, nextThreadID);
 		if (!success)
 			return -1;
 		nextThreadID++;
@@ -115,10 +140,10 @@ void UnregisterAudioThread(int id)
 {
 	if (GetDevBuild())
 	{
-		auto it = audioThreadIDs.find(id);
-		if (it != audioThreadIDs.end())
+		auto it = threadIDs.find(id);
+		if (it != threadIDs.end())
 			GetUnityProfiler()->UnregisterThread(it->second);
-		audioThreadIDs.erase(it);
+		threadIDs.erase(it);
 	}
 }
 

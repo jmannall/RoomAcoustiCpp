@@ -4,9 +4,9 @@
 */
 
 // Spatialiser headers
+#include "Spatialiser/Globals.h"
 #include "Spatialiser/Context.h"
 #include "Spatialiser/Types.h"
-#include "Spatialiser/Globals.h"
 
 // Unity headers
 #include "Unity/Debug.h"
@@ -18,15 +18,16 @@
 #include "ILD/ILDCereal.h"
 #include "Common/ErrorHandler.h"
 
+// Globals
+std::shared_mutex RAC::DSP::tuneInMutex;
+std::unique_ptr<RAC::DSP::AudioThreadPool> RAC::DSP::audioThreadPool;
+
 namespace RAC
 {
 	using namespace Unity;
+	using namespace DSP;
 	namespace Spatialiser
 	{
-
-		// Globals
-		std::shared_mutex tuneInMutex;
-		std::unique_ptr<ThreadPool> audioThreadPool = nullptr;
 
 #ifndef DISABLE_SOFA_SUPPORT
 #if defined(UNITY_WIN) || (defined(TARGET_OS_OSX) && !defined(TARGET_OS_IOS))
@@ -111,7 +112,7 @@ namespace RAC
 
 			// Start background thread after all systems are initialized
 			IEMThread = std::thread(BackgroundProcessor, this);
-			audioThreadPool = std::make_unique<ThreadPool>(std::thread::hardware_concurrency());
+			audioThreadPool = std::make_unique<AudioThreadPool>(std::min((unsigned int)8, std::thread::hardware_concurrency()), mConfig->numFrames, mConfig->numLateReverbChannels);
 
 			mInputBuffer = Buffer(mConfig->numFrames);
 			mOutputBuffer = Buffer(2 * mConfig->numFrames); // Stereo output buffer
@@ -142,12 +143,13 @@ namespace RAC
 			StopRunning();
 			IEMThread.join();
 			if (audioThreadPool)
-				audioThreadPool.reset();
+				audioThreadPool->Stop();
 
 			mImageEdgeModel.reset();
 			mSources.reset();
 			mRoom.reset();
 			mReverb.reset();
+			audioThreadPool.reset();
 
 			// Terminate NNs
 			myNN_terminate();

@@ -18,7 +18,6 @@
 #include "Common/Vec.h"
 #include "Common/Vec3.h"
 #include "Common/Vec4.h"
-#include "Common/ThreadPool.h"
 
 // Spatialiser headers
 #include "Spatialiser/Types.h"
@@ -60,7 +59,6 @@ namespace RAC
 	using namespace Common;
 	namespace Spatialiser
 	{
-
 		/**
 		* @brief Global context for the spatialiser.
 		* 

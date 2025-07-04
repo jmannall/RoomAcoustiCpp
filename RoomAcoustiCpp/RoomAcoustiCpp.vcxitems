@@ -23,6 +23,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\predict.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Common\Matrix.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Common\Vec.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\AudioThreadPool.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\Buffer.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\FIRFilter.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\GraphicEQ.cpp" />
@@ -66,6 +67,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Matrix.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\ReleasePool.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\SphericalGeometries.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\SpinLock.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\ThreadPool.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Timer.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Vec4.h" />
@@ -73,6 +75,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Types.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Vec.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Vec3.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\AudioThreadPool.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\Buffer.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\FIRFilter.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\GraphicEQ.h" />
@@ -80,6 +83,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\Interpolate.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\LinkwitzRileyFilter.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\Parameter.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\moodycamel\concurrentqueue.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\AirAbsorption.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Context.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Diffraction\Models.h" />

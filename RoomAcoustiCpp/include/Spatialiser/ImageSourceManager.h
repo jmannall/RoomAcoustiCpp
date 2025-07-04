@@ -12,7 +12,6 @@
 #include <array>
 
 // Spatialiser headers
-#include "Spatialiser/Globals.h"
 #include "Spatialiser/ImageSource.h"
 
 // 3DTI headers

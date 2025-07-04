@@ -19,7 +19,7 @@ namespace RAC
 		////////////////////////////////////////
 
 		GraphicEQ::GraphicEQ(const Coefficients<>& gain, const Coefficients<>& fc, const Real Q, const int sampleRate) :
-			numFilters(gain.Length() + 2), filterResponseMatrix(numFilters, numFilters), previousInput(numFilters)
+			numFilters(gain.Length() + 2), filterResponseMatrix(numFilters, numFilters), previousInput(gain)
 		{ 
 			assert(gain.Length() == fc.Length());
 

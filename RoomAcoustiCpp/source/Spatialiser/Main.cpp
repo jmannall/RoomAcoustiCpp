@@ -567,7 +567,7 @@ extern "C"
 	*/
 	EXPORT bool API RACProcessOutput()
 	{
-		GetOutput(&buffer);
+		GetOutput(&buffer);	
 		if (!buffer)
 		{
 #ifdef DEBUG_AUDIO_THREAD

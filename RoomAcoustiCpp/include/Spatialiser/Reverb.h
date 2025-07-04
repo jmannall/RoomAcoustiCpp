@@ -17,7 +17,6 @@
 // Common headers
 #include "Common/Types.h"
 #include "Common/Vec3.h"
-#include "Common/ThreadPool.h"
 #include "Common/ReleasePool.h"
 
 // Spatialiser headers
@@ -45,8 +44,9 @@ namespace RAC
 			* @params core The 3DTI processing core
 			* @params config The spatialiser configuration
 			* @params shift The position offset relative to the listener
+			* @params inBuffer Pointer to the input buffer to read from
 			*/
-			ReverbSource(Binaural::CCore* core, const std::shared_ptr<Config> config, const Vec3& shift);
+			ReverbSource(Binaural::CCore* core, const std::shared_ptr<Config> config, const Vec3& shift, const Buffer* inBuffer);
 
 			/**
 			* @brief Default deconstructor
@@ -77,7 +77,7 @@ namespace RAC
 			*
 			* @params outputBuffer The output buffer to write to
 			*/
-			void ProcessAudio(const Buffer& data, Buffer& outputBuffer);
+			void ProcessAudio(Buffer& outputBuffer);
 
 			/**
 			* @brief Reset the internal buffers to zero
@@ -92,15 +92,17 @@ namespace RAC
 
 			const Vec3 mShift;		// Position shift relative to the listener
 
-			Binaural::CCore* mCore;								// 3DTI core
-			shared_ptr<Binaural::CSingleSourceDSP> mSource;		// 3DTI source
-			std::atomic<shared_ptr<const CTransform>> transform;		// 3DTI source transform
-			CMonoBuffer<float> bInput;							// 3DTI Input buffer	
-			CEarPair<CMonoBuffer<float>> bOutput;				// 3DTI Output buffer
+			Binaural::CCore* mCore;									// 3DTI core
+			shared_ptr<Binaural::CSingleSourceDSP> mSource;			// 3DTI source
+			std::atomic<shared_ptr<const CTransform>> transform;	// 3DTI source transform
+			CMonoBuffer<float> bInput;								// 3DTI Input buffer	
+			CEarPair<CMonoBuffer<float>> bOutput;					// 3DTI Output buffer
+
+			const Buffer* inputBuffer{ nullptr };		// Pointer to the input buffer
 
 			std::atomic<bool> clearBuffers{ false };		// Flag to clear buffers to zeros next time ProcessAudio is called
 
-			static ReleasePool releasePool;
+			static ReleasePool releasePool;		// Garbage collector for shared pointers after atomic replacement
 		};
 
 		/**
@@ -115,12 +117,12 @@ namespace RAC
 			* @params core The 3DTI processing core
 			* @params config The spatialiser configuration
 			*/
-			Reverb(Binaural::CCore* core, const std::shared_ptr<Config> config) : threadResults(config->numLateReverbChannels, Buffer(2 * config->numFrames)), reverbOutputs(config->numLateReverbChannels, Buffer(config->numFrames))
+			Reverb(Binaural::CCore* core, const std::shared_ptr<Config> config) : reverbSourceInputs(config->numLateReverbChannels, Buffer(config->numFrames))
 			{
 				const std::vector<Vec3> points = CalculateSourcePositions(config->numLateReverbChannels);
 				mReverbSources.reserve(config->numLateReverbChannels);
 				for (int i = 0; i < config->numLateReverbChannels; i++)
-					mReverbSources.emplace_back(std::make_unique<ReverbSource>(core, config, points[i]));
+					mReverbSources.emplace_back(std::make_unique<ReverbSource>(core, config, points[i], &reverbSourceInputs[i]));
 			}
 
 			/**
@@ -207,15 +209,11 @@ namespace RAC
 
 			std::atomic<std::shared_ptr<FDN>> mFDN;		// FDN for late reverberation processing
 
-			// Config mConfig;									// Spatialiser configuration
-			// Coefficients mT60;								// Target decay time
+			std::vector<Buffer> reverbSourceInputs;		// Input buffers for each reverb source
 			std::vector<std::unique_ptr<ReverbSource>> mReverbSources;		// Reverb sources to binauralise the FDN output
 
 			std::atomic<bool> initialised{ false };		// True if T60 > 0.0 and T60 < 20.0 seconds
 			std::atomic<bool> running{ false };			// True if audio thread should process late reverberation
-
-			std::vector<Buffer> threadResults;
-			std::vector<Buffer> reverbOutputs;
 
 			static ReleasePool releasePool;
 		};

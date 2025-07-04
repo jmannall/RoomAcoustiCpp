@@ -5,9 +5,13 @@
 *
 */
 
+// C++ headers
+#include <mutex>
+
 // Spatialiser headers
 #include "Spatialiser/Source.h"
 #include "Spatialiser/Directivity.h"
+#include "Spatialiser/Globals.h"
 
 // DSP headers
 #include "DSP/Interpolate.h"
@@ -15,8 +19,6 @@
 // Unity headers
 #include "Unity/Debug.h"
 #include "Unity/UnityInterface.h"
-
-#include <mutex>
 
 using namespace Common;
 namespace RAC
@@ -48,6 +50,7 @@ namespace RAC
 			mDirectivity.store(SourceDirectivity::omni);
 
 			feedsFDN.store(false);
+			hasChanged.store(true);
 
 			ResetFDNSlots();
 			AllowAccess();

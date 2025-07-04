@@ -574,7 +574,7 @@ namespace RAC
 			std::atomic<bool> feedsFDN{ false };	// True if the image source feeds the FDN, false otherwise
 			std::atomic<int> mFDNChannel{ -1 };		// The FDN channel the image source feeds, -1 if the image source does not feed the FDN
 
-			const Buffer* inputBuffer{ nullptr };
+			const Buffer* inputBuffer{ nullptr };		// Pointer to the source input buffer
 			Buffer bStore;								// Internal working buffer
 			Buffer bDiffStore;							// Internal diffraction crossfade buffer
 			CMonoBuffer<float> bInput;					// 3DTI Input buffer

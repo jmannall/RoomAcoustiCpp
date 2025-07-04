@@ -9,7 +9,6 @@
 #define RoomAcoustiCpp_Source_h
 
 // C++ headers
-#include "Common/ThreadPool.h"
 #include <tuple>
 
 // Common headers
@@ -23,7 +22,6 @@
 #include "Spatialiser/Types.h"
 #include "Spatialiser/AirAbsorption.h"
 #include "Spatialiser/ImageSource.h"
-#include "Spatialiser/Globals.h"
 #include "Spatialiser/ImageSourceManager.h"
 
 // 3DTI headers
@@ -38,10 +36,6 @@ namespace RAC
 	namespace Spatialiser
 	{
 		//////////////////// Data structures ////////////////////
-
-		// typedef std::pair<Absorption, bool> SourceAudioData;
-
-		
 
 		/**
 		* @brief Class that represents a sound source
