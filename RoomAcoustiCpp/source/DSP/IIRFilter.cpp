@@ -33,16 +33,16 @@ namespace RAC
 
 		Real IIRFilter::GetOutput(const Real input, const Real lerpFactor)
 		{
-			if (!initialised.load())
+			if (!initialised.load(std::memory_order_acquire))
 				return 0.0;
 
-			if (!parametersEqual.load())
+			if (!parametersEqual.load(std::memory_order_acquire))
 				InterpolateParameters(lerpFactor);
 
-			if (clearBuffers.load())
+			if (clearBuffers.load(std::memory_order_acquire))
 			{
 				y.Reset();
-				clearBuffers.store(false);
+				clearBuffers.store(false, std::memory_order_release);
 			}
 
 			Real v = input;
@@ -93,16 +93,16 @@ namespace RAC
 
 		Real IIRFilter2::GetOutput(const Real input, const Real lerpFactor)
 		{
-			if (!initialised.load())
+			if (!initialised.load(std::memory_order_acquire))
 				return 0.0;
 
-			if (!parametersEqual.load())
+			if (!parametersEqual.load(std::memory_order_acquire))
 				InterpolateParameters(lerpFactor);
 
-			if (clearBuffers.load())
+			if (clearBuffers.load(std::memory_order_acquire))
 			{
 				y0 = 0.0; y1 = 0.0;
-				clearBuffers.store(false);
+				clearBuffers.store(false, std::memory_order_release);
 			}
 
 			Real v = input;
@@ -154,16 +154,16 @@ namespace RAC
 
 		Real IIRFilter1::GetOutput(const Real input, const Real lerpFactor)
 		{
-			if (!initialised.load())
+			if (!initialised.load(std::memory_order_acquire))
 				return 0.0;
 
-			if (!parametersEqual.load())
+			if (!parametersEqual.load(std::memory_order_acquire))
 				InterpolateParameters(lerpFactor);
 
-			if (clearBuffers.load())
+			if (clearBuffers.load(std::memory_order_acquire))
 			{
 				y0 = 0.0;
-				clearBuffers.store(false);
+				clearBuffers.store(false, std::memory_order_release);
 			}
 
 			Real v = input;
@@ -207,9 +207,9 @@ namespace RAC
 
 		void HighShelf::InterpolateParameters(const Real lerpFactor)
 		{
-			parametersEqual.store(true); // Prevents issues in case targetFc/Gain updated during this function call
-			const Real fc = targetFc.load();
-			const Real gain = targetGain.load();
+			parametersEqual.store(true, std::memory_order_release); // Prevents issues in case targetFc/Gain updated during this function call
+			const Real fc = targetFc.load(std::memory_order_acquire);
+			const Real gain = targetGain.load(std::memory_order_acquire);
 			currentFc = Lerp(currentFc, fc, lerpFactor);
 			currentGain = Lerp(currentGain, gain, lerpFactor);
 			if (Equals(currentFc, fc) && Equals(currentGain, gain))
@@ -218,7 +218,7 @@ namespace RAC
 				currentGain = gain;
 			}
 			else
-				parametersEqual.store(false);
+				parametersEqual.store(false, std::memory_order_release);
 			UpdateCoefficients(currentFc, currentGain);
 		}
 
@@ -245,13 +245,13 @@ namespace RAC
 
 		void LowPass1::InterpolateParameters(const Real lerpFactor)
 		{
-			parametersEqual.store(true); // Prevents issues in case targetFc updated during this function call
-			const Real fc = targetFc.load();
+			parametersEqual.store(true, std::memory_order_release); // Prevents issues in case targetFc updated during this function call
+			const Real fc = targetFc.load(std::memory_order_acquire);
 			currentFc = Lerp(currentFc, fc, lerpFactor);
 			if (Equals(currentFc, fc))
 				currentFc = fc;
 			else
-				parametersEqual.store(false);
+				parametersEqual.store(false, std::memory_order_release);
 			UpdateCoefficients(currentFc);
 		}
 
@@ -274,13 +274,13 @@ namespace RAC
 
 		void IIRFilter2Param1::InterpolateParameters(const Real lerpFactor)
 		{
-			parametersEqual.store(true); // Prevents issues in case target updated during this function call
-			const Real parameter = target.load();
+			parametersEqual.store(true, std::memory_order_release); // Prevents issues in case target updated during this function call
+			const Real parameter = target.load(std::memory_order_acquire);
 			current = Lerp(current, parameter, lerpFactor);
 			if (Equals(current, parameter))
 				current = parameter;
 			else
-				parametersEqual.store(false);
+				parametersEqual.store(false, std::memory_order_release);
 			UpdateCoefficients(current);
 		}
 
@@ -365,13 +365,13 @@ namespace RAC
 
 			releasePool.Add(zpkCopy);
 
-			targetZPK.store(zpkCopy);
-			parametersEqual.store(false);
+			targetZPK.store(zpkCopy, std::memory_order_release);
+			parametersEqual.store(false, std::memory_order_release);
 		}
 
 		void ZPKFilter::SetTargetGain(const Real k)
 		{
-			Parameters zpk = *targetZPK.load();
+			Parameters zpk = *targetZPK.load(std::memory_order_acquire);
 			zpk[4] = k;
 			SetTargetParameters(zpk);
 		}
@@ -392,13 +392,13 @@ namespace RAC
 
 		void ZPKFilter::InterpolateParameters(const Real lerpFactor)
 		{
-			parametersEqual.store(true); // Prevents issues in case targetZPK updated during this function call
-			std::shared_ptr<const Parameters> zpk = targetZPK.load();
+			parametersEqual.store(true, std::memory_order_release); // Prevents issues in case targetZPK updated during this function call
+			std::shared_ptr<const Parameters> zpk = targetZPK.load(std::memory_order_acquire);
 			Lerp(currentZPK, *zpk, lerpFactor);
 			if (Equals(currentZPK, *zpk))
 				currentZPK = *zpk;
 			else
-				parametersEqual.store(false);
+				parametersEqual.store(false, std::memory_order_release);
 			UpdateCoefficients(currentZPK);
 		}
 
@@ -444,9 +444,9 @@ namespace RAC
 
 		void HighShelfMatched::InterpolateParameters(const Real lerpFactor)
 		{
-			parametersEqual.store(true); // Prevents issues in case targetFc/Gain updated during this function call
-			const Real fc = targetFc.load();
-			const Real gain = targetGain.load();
+			parametersEqual.store(true, std::memory_order_release); // Prevents issues in case targetFc/Gain updated during this function call
+			const Real fc = targetFc.load(std::memory_order_acquire);
+			const Real gain = targetGain.load(std::memory_order_acquire);
 			currentFc = Lerp(currentFc, fc, lerpFactor);
 			currentGain = Lerp(currentGain, gain, lerpFactor);
 			if (Equals(currentFc, fc) && Equals(currentGain, gain))
@@ -455,7 +455,7 @@ namespace RAC
 				currentGain = gain;
 			}
 			else
-				parametersEqual.store(false);
+				parametersEqual.store(false, std::memory_order_release);
 			UpdateCoefficients(currentFc, currentGain);
 		}
 

@@ -22,7 +22,7 @@ namespace RAC
 
 			void Attenuate::ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const Real lerpFactor)
 			{
-				if (!isInitialised.load())
+				if (!isInitialised.load(std::memory_order_acquire))
 				{
 					outBuffer.Reset();
 					return;
@@ -40,7 +40,7 @@ namespace RAC
 
 			void LPF::ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const Real lerpFactor)
 			{
-				if (!isInitialised.load())
+				if (!isInitialised.load(std::memory_order_acquire))
 				{
 					outBuffer.Reset();
 					return;
@@ -565,7 +565,7 @@ namespace RAC
 
 			void BTM::ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const Real lerpFactor)
 			{
-				if (!isInitialised.load())
+				if (!isInitialised.load(std::memory_order_acquire))
 				{
 					outBuffer.Reset();
 					return;

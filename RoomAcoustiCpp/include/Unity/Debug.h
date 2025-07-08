@@ -52,13 +52,7 @@ extern "C"
     DLLExport void UnregisterIEMCallback();
 }
 
-namespace RAC
-{
-    using namespace Common;
-    using namespace Spatialiser;
-    namespace Unity
-    {
-        //////////////////// #defines ////////////////////
+//////////////////// #defines ////////////////////
 
 /**
 * @brief Debugging flags for printing debug messages
@@ -76,8 +70,14 @@ namespace RAC
 /**
 * @brief Debugging flags for completed iem model
 */
-#define IEM_FLAG
+// #define IEM_FLAG
 
+namespace RAC
+{
+    using namespace Common;
+    using namespace Spatialiser;
+    namespace Unity
+    {
         enum class Colour { Red, Green, Blue, Black, White, Yellow, Orange };
 
         /**

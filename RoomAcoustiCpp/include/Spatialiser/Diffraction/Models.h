@@ -92,7 +92,7 @@ namespace RAC
 				*/
 				Attenuate(const Path& path) : Model(), gain(CalculateGain(path))
 				{
-					isInitialised.store(true);
+					isInitialised.store(true, std::memory_order_release);
 				};
 
 				/**
@@ -141,7 +141,7 @@ namespace RAC
 				*/
 				LPF(const Path& path, const int fs) : Model(), gain(CalculateGain(path)), filter(1000.0, fs)
 				{
-					isInitialised.store(true);
+					isInitialised.store(true, std::memory_order_release);
 				}
 
 				/**
@@ -357,7 +357,7 @@ namespace RAC
 							InitFilters(fp, j, fs);
 						}
 					}
-					isInitialised.store(true);
+					isInitialised.store(true, std::memory_order_release);
 				}
 
 				/**
@@ -398,7 +398,7 @@ namespace RAC
 				*/
 				void ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const Real lerpFactor) override
 				{
-					if (!isInitialised.load())
+					if (!isInitialised.load(std::memory_order_acquire))
 						return;
 
 					FlushDenormals();
@@ -665,7 +665,7 @@ namespace RAC
 				{
 					if (!path.valid)
 						filter.SetTargetGain(0.0);
-					isInitialised.store(true);
+					isInitialised.store(true, std::memory_order_release);
 				};
 
 				/**
@@ -805,7 +805,7 @@ namespace RAC
 				*/
 				UTD(const Path& path, int fs) : Model(), lrFilter(CalculateUTD(path), fs)
 				{
-					isInitialised.store(true);
+					isInitialised.store(true, std::memory_order_release);
 				}
 
 				/**
@@ -1022,7 +1022,7 @@ namespace RAC
 				*/
 				BTM(const Path& path, int fs) : Model(), lastPath(path), samplesPerMetre(fs* INV_SPEED_OF_SOUND), firFilter(CalculateBTM(path), maxIrLength)
 				{
-					isInitialised.store(true);
+					isInitialised.store(true, std::memory_order_release);
 				};
 
 				/**

@@ -42,8 +42,8 @@ namespace RAC
 				a0 = 1.0; b1 = 0.0; // Not used by this filter
 				UpdateCoefficients(distance);
 
-				parametersEqual.store(true);
-				initialised.store(true);
+				parametersEqual.store(true, std::memory_order_release);
+				initialised.store(true, std::memory_order_release);
 			}
 
 			/**
@@ -60,8 +60,8 @@ namespace RAC
 			{ 
 				assert(distance > 0.0);
 
-				targetDistance.store(distance);
-				parametersEqual.store(false);
+				targetDistance.store(distance, std::memory_order_release);
+				parametersEqual.store(false, std::memory_order_release);
 			}
 
 			/**

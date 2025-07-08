@@ -22,9 +22,6 @@
 // Spatialiser headers
 #include "Spatialiser/Types.h"
 
-// Unity headers
-#include "Unity/UnityInterface.h"
-
 namespace RAC
 {
 	using namespace Spatialiser;
@@ -89,15 +86,9 @@ namespace RAC
 		inline Real Lerp(Real start, const Real end, const Real factor)
 		{
 			assert(0.0 < factor && factor <= 1.0);
-
-#ifdef PROFILE_DETAILED
-			BeginLerp();
-#endif			
+	
 			start *= 1.0 - factor;
 			start += end * factor;
-#ifdef PROFILE_DETAILED
-			EndLerp();
-#endif		
 			return start;
 		}
 
@@ -112,20 +103,12 @@ namespace RAC
 		inline void Lerp(Buffer& start, const Buffer& end, const Real factor)
 		{
 			assert(0.0 < factor && factor <= 1.0);
-
-#ifdef PROFILE_DETAILED
-			BeginLerp();
-#endif
 			assert(start.Length() >= end.Length());
 
 			// If the start buffer is longer than the end buffer, the remaining samples are interpolating to zero
 			start *= (1.0 - factor);
 			for (int i = 0; i < end.Length(); i++)
 				start[i] += factor * end[i];
-
-#ifdef PROFILE_DETAILED
-			EndLerp();
-#endif		
 		}
 
 		/**
@@ -138,19 +121,11 @@ namespace RAC
 		template<typename T>
 		inline void Lerp(Coefficients<T>& start, const Coefficients<T>& end, const Real factor)
 		{
-			assert(0.0 < factor && factor <= 1.0);
-
-#ifdef PROFILE_DETAILED
-			BeginLerp();
-#endif			
+			assert(0.0 < factor && factor <= 1.0);	
 			assert(start.Length() == end.Length());
 			
 			start *= (1.0 - factor);
 			start += factor * end;
-
-#ifdef PROFILE_DETAILED
-			EndLerp();
-#endif		
 		}
 
 		//////////////////// Equality functions ////////////////////

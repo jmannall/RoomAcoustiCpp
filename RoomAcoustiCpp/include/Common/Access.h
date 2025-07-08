@@ -35,7 +35,7 @@ namespace RAC
 			/**
 			* @brief True if accessFlag and inUse are false, false otherwise
 			*/
-			inline bool CanEdit() const { return !accessFlag.load() && inUse.load() == 0; }
+			inline bool CanEdit() const { return !accessFlag.load(std::memory_order_acquire) && inUse.load(std::memory_order_acquire) == 0; }
 
 		protected:
 			/**
@@ -43,12 +43,12 @@ namespace RAC
 			*/
 			inline bool GetAccess()
 			{
-				if (!accessFlag.load())
+				if (!accessFlag.load(std::memory_order_acquire))
 					return false;
 
 				inUse.fetch_add(1);
 
-				if (!accessFlag.load())
+				if (!accessFlag.load(std::memory_order_acquire))
 				{
 					FreeAccess();
 					return false;
@@ -64,12 +64,12 @@ namespace RAC
 			/**
 			* @brief Set accessFlag to false
 			*/
-			inline void PreventAccess() { accessFlag.store(false); }
+			inline void PreventAccess() { accessFlag.store(false, std::memory_order_release); }
 
 			/**
 			* @brief Set accessFlag to true
 			*/
-			inline void AllowAccess() { accessFlag.store(true); }
+			inline void AllowAccess() { accessFlag.store(true, std::memory_order_release); }
 
 		private:
 

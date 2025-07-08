@@ -449,21 +449,21 @@ namespace RAC
 			/**
 			* @return The FDN channel the image source feeds, -1 if the image source does not feed the FDN
 			*/
-			inline int GetFDNChannel() const { return mFDNChannel.load(); }
+			inline int GetFDNChannel() const { return mFDNChannel.load(std::memory_order_acquire); }
 
 			/**
 			* @brief Updates the target spatialisation mode for the HRTF processing
 			*
 			* @params mode The new spatialisation mode
 			*/
-			inline void UpdateSpatialisationMode(const SpatialisationMode mode) { spatialisationMode.store(mode); }
+			inline void UpdateSpatialisationMode(const SpatialisationMode mode) { spatialisationMode.store(mode, std::memory_order_release); }
 
 			/**
 			* @brief Updates the target impulse response mode
 			*
 			* @params mode True if disable 3DTI Interpolation, false otherwise.
 			*/
-			inline void UpdateImpulseResponseMode(const bool mode) { impulseResponseMode.store(mode); }
+			inline void UpdateImpulseResponseMode(const bool mode) { impulseResponseMode.store(mode, std::memory_order_release); }
 			
 			/**
 			* @brief Update the diffraction model

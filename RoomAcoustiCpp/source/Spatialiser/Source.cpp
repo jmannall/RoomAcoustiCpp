@@ -8,6 +8,9 @@
 // C++ headers
 #include <mutex>
 
+//Common headers
+#include "Common/RACProfiler.h"
+ 
 // Spatialiser headers
 #include "Spatialiser/Source.h"
 #include "Spatialiser/Directivity.h"
@@ -18,7 +21,6 @@
 
 // Unity headers
 #include "Unity/Debug.h"
-#include "Unity/UnityInterface.h"
 
 using namespace Common;
 namespace RAC
@@ -47,10 +49,10 @@ namespace RAC
 			directivityFilter = std::make_unique<GraphicEQ>(config->frequencyBands, config->Q, config->fs);
 			reverbInputFilter = std::make_unique<GraphicEQ>(config->frequencyBands, config->Q, config->fs);
 
-			mDirectivity.store(SourceDirectivity::omni);
+			mDirectivity.store(SourceDirectivity::omni, std::memory_order_release);
 
-			feedsFDN.store(false);
-			hasChanged.store(true);
+			feedsFDN.store(false, std::memory_order_release);
+			hasChanged.store(true, std::memory_order_release);
 
 			ResetFDNSlots();
 			AllowAccess();
@@ -61,7 +63,7 @@ namespace RAC
 		void Source::Remove()
 		{
 			PreventAccess();
-			clearInputBuffer.store(true);
+			clearInputBuffer.store(true, std::memory_order_release);
 		}
 
 		////////////////////////////////////////
@@ -99,12 +101,12 @@ namespace RAC
 				mReverbSendSource->DisableDistanceAttenuationSmoothingAnechoic();
 				mReverbSendSource->DisableInterpolation();
 			}
-			feedsFDN.store(true);
+			feedsFDN.store(true, std::memory_order_release);
 		}
 
 		void Source::RemoveReverbSendSource()
 		{
-			feedsFDN.store(false);
+			feedsFDN.store(false, std::memory_order_release);
 			unique_lock<shared_mutex> lock(tuneInMutex);
 			mCore->RemoveSingleSourceDSP(mReverbSendSource);
 			mReverbSendSource.reset();
@@ -195,10 +197,10 @@ namespace RAC
 				reverbInput = GENELEC.AverageResponse(frequencyBands);
 				break;
 			}
-			mDirectivity.store(directivity);
+			mDirectivity.store(directivity, std::memory_order_release);
 			// Divide energy between late reverb channels. Multiply by six to mimic shoebox room first reflections energy
 			reverbInputFilter->SetTargetGains(6.0 * reverbInput / static_cast<Real>(numLateReverbChannels));
-			hasChanged.store(true);
+			hasChanged.store(true, std::memory_order_release);
 		}
 
 		////////////////////////////////////////
@@ -232,33 +234,29 @@ namespace RAC
 			if (!GetAccess())
 				return;
 
-#ifdef PROFILE_AUDIO_THREAD
-			BeginSource();
-#endif
+			PROFILE_Source
 			const int numFrames = inputBuffer.Length();
 
-			if (currentImpulseResponseMode != impulseResponseMode.load())
-				SetImpulseResponseMode(impulseResponseMode.load());
+			if (currentImpulseResponseMode != impulseResponseMode.load(std::memory_order_acquire))
+				SetImpulseResponseMode(impulseResponseMode.load(std::memory_order_acquire));
 
-			if (currentSpatialisationMode != spatialisationMode.load())
-				SetSpatialisationMode(spatialisationMode.load());
+			if (currentSpatialisationMode != spatialisationMode.load(std::memory_order_acquire))
+				SetSpatialisationMode(spatialisationMode.load(std::memory_order_acquire));
 
-#ifdef PROFILE_AUDIO_THREAD
-			BeginAirAbsorption();
-#endif
 			mAirAbsorption->ProcessAudio(inputBuffer, bStore, lerpFactor);
-#ifdef PROFILE_AUDIO_THREAD
-			EndAirAbsorption();
-#endif
-			if (feedsFDN.load())
+
+			if (feedsFDN.load(std::memory_order_acquire))
 			{
-				reverbInputFilter->ProcessAudio(bStore, bStoreReverb, lerpFactor);
+				{
+					PROFILE_Reflection
+					reverbInputFilter->ProcessAudio(bStore, bStoreReverb, lerpFactor);
+				}
 				std::transform(bStoreReverb.begin(), bStoreReverb.end(), bInput.begin(),
 					[](auto value) { return static_cast<float>(value); });
 
 				{
 					shared_lock<shared_mutex> lock(tuneInMutex);
-					mReverbSendSource->SetSourceTransform(*transform.load());
+					mReverbSendSource->SetSourceTransform(*transform.load(std::memory_order_acquire));
 					mReverbSendSource->SetBuffer(bInput);
 					mReverbSendSource->ProcessAnechoic(bOutput.left, bOutput.right);
 				}
@@ -268,28 +266,20 @@ namespace RAC
 						reverbInput[i][j] += bOutput.left[j];
 				}
 			}
-#ifdef PROFILE_AUDIO_THREAD
-			BeginReflection();
-#endif
-			directivityFilter->ProcessAudio(bStore, bStore, lerpFactor);
-#ifdef PROFILE_AUDIO_THREAD
-			EndReflection();
-#endif
+			{
+				PROFILE_Reflection
+				directivityFilter->ProcessAudio(bStore, bStore, lerpFactor);
+			}
 			std::transform(bStore.begin(), bStore.end(), bInput.begin(),
 				[](auto value) { return static_cast<float>(value); });
 
-#ifdef PROFILE_AUDIO_THREAD
-			Begin3DTI();
-#endif
 			{
+				PROFILE_Spatialisation
 				shared_lock<shared_mutex> lock(tuneInMutex);
-				mSource->SetSourceTransform(*transform.load());
+				mSource->SetSourceTransform(*transform.load(std::memory_order_acquire));
 				mSource->SetBuffer(bInput);
 				mSource->ProcessAnechoic(bOutput.left, bOutput.right);
 			}
-#ifdef PROFILE_AUDIO_THREAD
-			End3DTI();
-#endif
 
 			int j = 0;
 			for (int i = 0; i < numFrames; i++)
@@ -297,9 +287,6 @@ namespace RAC
 				outputBuffer[j++] += static_cast<Real>(bOutput.left[i]);
 				outputBuffer[j++] += static_cast<Real>(bOutput.right[i]);
 			}
-#ifdef PROFILE_AUDIO_THREAD
-			EndSource();
-#endif
 			FreeAccess();
 		}
 
@@ -321,7 +308,7 @@ namespace RAC
 				currentPosition = position;
 				currentOrientation = orientation;
 			}
-			hasChanged.store(true);
+			hasChanged.store(true, std::memory_order_release);
 			UpdateTransform(position, orientation);
 			FreeAccess();
 		}
@@ -342,7 +329,7 @@ namespace RAC
 			else if (!source.feedsFDN && mReverbSendSource)
 				RemoveReverbSendSource();
 			else
-				feedsFDN.store(source.feedsFDN);
+				feedsFDN.store(source.feedsFDN, std::memory_order_release);
 			UpdateImageSourceDataMap(imageSourceData);
 			UpdateImageSources(config);
 			FreeAccess();
@@ -355,7 +342,7 @@ namespace RAC
 			if (!GetAccess())
 				return std::nullopt;
 			lock_guard<std::mutex>lock(*dataMutex);
-			Data data(-1, currentPosition, currentOrientation, mDirectivity.load(), hasChanged.load());
+			Data data(-1, currentPosition, currentOrientation, mDirectivity.load(std::memory_order_acquire), hasChanged.exchange(false, std::memory_order_acq_rel));
 			FreeAccess();
 			return data;
 		}
@@ -390,7 +377,7 @@ namespace RAC
 			directivityFilter.reset();
 			reverbInputFilter.reset();
 			mAirAbsorption.reset();
-			transform.load().reset();
+			transform.load(std::memory_order_acquire).reset();
 		}
 
 		////////////////////////////////////////
@@ -400,7 +387,7 @@ namespace RAC
 			std::shared_ptr<CTransform> transformCopy = std::make_shared<CTransform>();
 			transformCopy->SetOrientation(CQuaternion(static_cast<float>(orientation.w), static_cast<float>(orientation.x), static_cast<float>(orientation.y), static_cast<float>(orientation.z)));
 			transformCopy->SetPosition(CVector3(static_cast<float>(position.x), static_cast<float>(position.y), static_cast<float>(position.z)));
-			transform.store(transformCopy);
+			transform.store(transformCopy, std::memory_order_release);
 			releasePool.Add(transformCopy);
 		}
 

@@ -81,7 +81,7 @@ namespace RAC
 			*/
 			inline void Reset()
 			{ 
-				clearBuffers.store(true);
+				clearBuffers.store(true, std::memory_order_release);
 				mAbsorptionFilter.ClearBuffers();
 				mReflectionFilter.ClearBuffers();
 			}
@@ -185,7 +185,7 @@ namespace RAC
 			*/
 			inline void Reset()
 			{ 
-				clearBuffers.store(true); 
+				clearBuffers.store(true, std::memory_order_release);
 				for (auto& channel : mChannels)
 					channel->Reset();
 			}

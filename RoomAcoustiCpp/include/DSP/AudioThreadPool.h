@@ -107,7 +107,7 @@ namespace RAC
                 static_assert(std::is_member_function_pointer_v<decltype(&T::ProcessAudio)>, "T must have a ProcessAudio member function");
                 static_assert(std::is_same_v<decltype(&T::ProcessAudio), void (T::*)(Buffer&, Matrix&, Real)>, "T::ProcessAudio must be of type void (T::*)(Buffer&, Matrix&, Real)");
                 std::shared_ptr<AudioTaskBase> task = std::make_shared<AudioTask<T>>(source, tasksRemaining, lerpFactor);
-                tasks.enqueue(std::move(task));
+                tasks.try_enqueue(std::move(task));
             }
 
             /**
@@ -120,7 +120,7 @@ namespace RAC
                 static_assert(std::is_member_function_pointer_v<decltype(&ReverbSource::ProcessAudio)>, "T must have a ProcessAudio member function");
                 static_assert(std::is_same_v<decltype(&ReverbSource::ProcessAudio), void (ReverbSource::*)(Buffer&)>, "T::ProcessAudio must be of type void (T::*)(Buffer&)");
                 std::shared_ptr<AudioTaskBase> task = std::make_shared<AudioTask<ReverbSource>>(source, tasksRemaining);
-                tasks.enqueue(std::move(task));
+                tasks.try_enqueue(std::move(task));
             }
 
             /**
@@ -128,7 +128,7 @@ namespace RAC
             */
             inline void Stop()
             {
-				if (stop.exchange(true, std::memory_order_relaxed))
+				if (stop.exchange(true, std::memory_order_acq_rel))
 					return;
                 for (auto& worker : workers)
                 {

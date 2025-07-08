@@ -31,34 +31,34 @@ namespace RAC
 
 			inline void SetTarget(const Real parameter)
 			{
-				if (target.load() == parameter)
+				if (target.load(std::memory_order_acquire) == parameter)
 					return;
-				target.store(parameter);
-				parametersEqual.store(false);
+				target.store(parameter, std::memory_order_release);
+				parametersEqual.store(false, std::memory_order_release);
 			}
 
 			inline Real Use(const Real lerpFactor)
 			{
-				if (!parametersEqual.load())
+				if (!parametersEqual.load(std::memory_order_acquire))
 					Interpolate(lerpFactor);
 				return current;
 			}
 			
 			// TO DO: Can be incorrect if Interpolate called at the same time
-			inline bool IsZero() { return parametersEqual.load() && target.load() == 0.0; }
+			inline bool IsZero() { return parametersEqual.load(std::memory_order_acquire) && target.load(std::memory_order_acquire) == 0.0; }
 
-			inline void Reset(Real newValue) { current = newValue; parametersEqual.store(false); }
+			inline void Reset(Real newValue) { current = newValue; parametersEqual.store(false, std::memory_order_release); }
 
 		private:
 			inline void Interpolate(const Real lerpFactor)
 			{
-				parametersEqual.store(true); // Prevents issues in case target updated during this function call
-				const Real parameter = target.load();
+				parametersEqual.store(true, std::memory_order_release); // Prevents issues in case target updated during this function call
+				const Real parameter = target.load(std::memory_order_acquire);
 				current = Lerp(current, parameter, lerpFactor);
 				if (Equals(current, parameter))
 					current = parameter;
 				else
-					parametersEqual.store(false);
+					parametersEqual.store(false, std::memory_order_release);
 			}
 
 			std::atomic<Real> target;

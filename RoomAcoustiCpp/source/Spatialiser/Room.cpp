@@ -11,7 +11,6 @@
 
 // Unity headers
 #include "Unity/Debug.h"
-#include "Unity/UnityInterface.h"
 
 // Spatialiser headers
 #include "Spatialiser/Room.h"

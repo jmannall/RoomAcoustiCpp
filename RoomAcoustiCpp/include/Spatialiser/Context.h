@@ -36,14 +36,13 @@
 #include <filesystem>
 #include <ctime>
 
-inline std::string GetTimestampedLogPath() {
+inline std::string GetTimestamp() {
 	// Get current time
 	auto now = std::chrono::system_clock::now();
 	std::time_t time_now = std::chrono::system_clock::to_time_t(now);
 
-	// Create a tm structure to hold the local time
 	std::tm local_time;
-	localtime_s(&local_time, &time_now); // Correct usage of localtime_s
+	localtime_s(&local_time, &time_now);
 
 	// Format time into string: YYYY-MM-DD_HH-MM-SS
 	std::stringstream ss;
@@ -51,7 +50,17 @@ inline std::string GetTimestampedLogPath() {
 	std::string timestamp = ss.str();
 
 	// Full log file path
+	return timestamp;
+}
+
+inline std::string GetLogPath(std::string timestamp)
+{
 	return timestamp + "_RoomAcoustiCpp_log.txt";
+}
+
+inline std::string GetProfilePath(std::string timestamp)
+{
+	return timestamp + "_RoomAcoustiCpp_profile.txt";
 }
 
 namespace RAC
@@ -108,14 +117,14 @@ namespace RAC
 			/**
 			* @brief Stop the spatialiser running.
 			*/
-			void StopRunning() { mIsRunning = false; }
+			void StopRunning() { mIsRunning.store(false, std::memory_order_release); }
 
 			/**
 			* @brief Check if the spatialiser is running.
 			* 
 			* @return True if the spatialiser is running, false otherwise.
 			*/
-			bool IsRunning() const { return mIsRunning; }
+			bool IsRunning() const { return mIsRunning.load(std::memory_order_acquire); }
 
 			/**
 			* @brief Updates the image edge model (IEM) configuration.
@@ -259,7 +268,7 @@ namespace RAC
 			* @param id The ID of the source to send the audio to.
 			* @param data The audio buffer.
 			*/
-			inline void SubmitAudio(size_t id, const Buffer& data) { mSources->SetInputBuffer(id, data); }
+			inline void SubmitAudio(size_t id, const Buffer& data) { PROFILE_SubmitAudio mSources->SetInputBuffer(id, data); }
 
 			/**
 			* @brief Accesses the output of the spatialiser.
@@ -287,7 +296,7 @@ namespace RAC
 			* Spatialiser
 			*/
 			const std::shared_ptr<Config> mConfig;				// RAC Config
-			bool mIsRunning;			// Flag to check if the spatialiser is running
+			std::atomic<bool> mIsRunning;			// Flag to check if the spatialiser is running
 			std::thread IEMThread;		// Background thread to run the image edge model
 			Vec3 listenerPosition;		// Stored listener position
 			Real headRadius;			// Stored head radius from 3DTI
@@ -322,6 +331,7 @@ namespace RAC
 			std::mutex audioMutex;		// Mutex for audio processing
 
 			std::string logFile;		// Log file path
+			std::string profileFile;	// Profile file path
 		};
 	}
 }

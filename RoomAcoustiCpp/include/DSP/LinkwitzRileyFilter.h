@@ -58,8 +58,8 @@ namespace RAC
 				InitFilters(sampleRate, fc);
 				SetTargetGains(gains);
 
-				gainsEqual.store(true);
-				initialised.store(true);
+				gainsEqual.store(true, std::memory_order_release);
+				initialised.store(true, std::memory_order_release);
 			}
 
 			/**
@@ -85,8 +85,8 @@ namespace RAC
 				std::shared_ptr<Parameters> gainsCopy = std::make_shared<Parameters>(gains);
 
 				releasePool.Add(gainsCopy);
-				targetGains.store(gainsCopy);
-				gainsEqual.store(false);
+				targetGains.store(gainsCopy, std::memory_order_release);
+				gainsEqual.store(false, std::memory_order_release);
 			};
 
 			/**

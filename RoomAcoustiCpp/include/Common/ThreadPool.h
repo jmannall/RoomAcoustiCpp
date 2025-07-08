@@ -38,21 +38,25 @@ namespace RAC
                 for (size_t i = 0; i < numThreads; ++i)
                 {
                     workers.emplace_back([this, i] {
+#ifdef USE_UNITY_PROFILER
                         int i = RegisterThread();
+#endif
                         while (true)
                         {
                             std::function<void()> task;
                             {
                                 std::unique_lock<std::mutex> lock(queueMutex);
                                 condition.wait(lock, [this] { return !tasks.empty() || stop; });
-                                if (stop.load(std::memory_order_relaxed) && tasks.empty())
+                                if (stop.load(std::memory_order_acquire) && tasks.empty())
                                     break;
                                 task = std::move(tasks.front());
                                 tasks.pop();
                             }
                             task();
                         }
+#ifdef USE_UNITY_PROFILER
                         UnregisterThread(i);
+#endif
                         });
                 }
             }
@@ -62,7 +66,7 @@ namespace RAC
             */
             ~ThreadPool()
             {
-                stop.store(true, std::memory_order_relaxed);
+                stop.store(true, std::memory_order_acquire);
                 condition.notify_all();
                 for (std::thread& worker : workers) {
                     worker.join();

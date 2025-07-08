@@ -16,13 +16,13 @@
 
 // Unity headers
 #include "Unity/Debug.h"
-#include "Unity/UnityInterface.h"
 
 // DSP headers
 #include "DSP/Interpolate.h"
 
 // Common headers
 #include "Common/SphericalGeometries.h"
+#include "Common/RACProfiler.h"
 
 using namespace Common;
 namespace RAC
@@ -120,21 +120,18 @@ namespace RAC
 			const shared_ptr<CTransform> newTransformCopy = make_shared<CTransform>(newTransform);
 
 			releasePool.Add(newTransformCopy);
-			transform.store(newTransformCopy);
+			transform.store(newTransformCopy, std::memory_order_release);
 		}
 
 		////////////////////////////////////////
 
 		void ReverbSource::ProcessAudio(Buffer& outputBuffer)
 		{
-#ifdef PROFILE_AUDIO_THREAD
-			BeginReverbSource();
-#endif
-
-			if (clearBuffers.load())
+			PROFILE_ReverbSource
+			if (clearBuffers.load(std::memory_order_acquire))
 			{
 				mSource->ResetSourceBuffers(); // Think this reallocates memory
-				clearBuffers.store(false);
+				clearBuffers.store(false, std::memory_order_release);
 			}
 
 			const int numFrames = inputBuffer->Length();
@@ -142,19 +139,13 @@ namespace RAC
 			std::transform(inputBuffer->begin(), inputBuffer->end(), bInput.begin(),
 				[&](auto value) { return static_cast<float>(value); });
 
-#ifdef PROFILE_AUDIO_THREAD
-			Begin3DTI();
-#endif
 			{
+				PROFILE_Spatialisation
 				shared_lock<shared_mutex> lock(tuneInMutex);
-				mSource->SetSourceTransform(*transform.load());
+				mSource->SetSourceTransform(*transform.load(std::memory_order_acquire));
 				mSource->SetBuffer(bInput);
 				mSource->ProcessAnechoic(bOutput.left, bOutput.right);
 			}
-
-#ifdef PROFILE_AUDIO_THREAD
-			End3DTI();
-#endif
 
 			int j = 0;
 			for (int i = 0; i < numFrames; i++)
@@ -162,9 +153,6 @@ namespace RAC
 				outputBuffer[j++] += static_cast<Real>(bOutput.left[i]);
 				outputBuffer[j++] += static_cast<Real>(bOutput.right[i]);
 			}
-#ifdef PROFILE_AUDIO_THREAD
-			EndReverbSource();
-#endif
 		}
 
 		//////////////////// Reverb class ////////////////////
@@ -225,35 +213,29 @@ namespace RAC
 
 		void Reverb::ProcessAudio(const Matrix& data, Buffer& outputBuffer, const Real lerpFactor)
 		{
-			if (!running.load())
+			PROFILE_LateReverb
+			if (!running.load(std::memory_order_acquire))
 				return;
 
-#ifdef PROFILE_AUDIO_THREAD
-			BeginReverb();
-#endif
-			mFDN.load()->ProcessAudio(data, reverbSourceInputs, lerpFactor);
+			mFDN.load(std::memory_order_acquire)->ProcessAudio(data, reverbSourceInputs, lerpFactor);
 			
 			audioThreadPool->ProcessReverbSources(mReverbSources, outputBuffer);
 			/*for (auto& source : mReverbSources)
 				source->ProcessAudio(outputBuffer);*/
-
-#ifdef PROFILE_AUDIO_THREAD
-				EndReverb();
-#endif
 		}
 
 		////////////////////////////////////////
 
 		void Reverb::SetTargetT60(const Coefficients<>& T60)
 		{
-			if (!initialised.load())
+			if (!initialised.load(std::memory_order_acquire))
 				return;
 
 #ifdef DEBUG_INIT
 			Debug::Log("Init FDN: [" + RealToStr(T60[0]) + ", " + RealToStr(T60[1]) + ", " +
 				RealToStr(T60[2]) + ", " + RealToStr(T60[3]) + ", " + RealToStr(T60[4]) + "]", Colour::Green);
 #endif
-			mFDN.load()->SetTargetT60(T60);
+			mFDN.load(std::memory_order_acquire)->SetTargetT60(T60);
 		}
 
 		////////////////////////////////////////
@@ -274,24 +256,25 @@ namespace RAC
                 break;
             }
 			releasePool.Add(fdn);
-            mFDN.store(fdn);
-			initialised.store(true);
+            mFDN.store(fdn, std::memory_order_release);
+			initialised.store(true, std::memory_order_release);
 		}
 
 		////////////////////////////////////////
 
 		void Reverb::UpdateReflectionFilters(const std::vector<Absorption<>>& absorptions)
 		{
-			if (!initialised.load())
+			PROFILE_UpdateAudioData
+			if (!initialised.load(std::memory_order_acquire))
 				return;
-			bool isZero = mFDN.load()->SetTargetReflectionFilters(absorptions);
+			bool isZero = mFDN.load(std::memory_order_acquire)->SetTargetReflectionFilters(absorptions);
 			if (isZero)
 			{
-				mFDN.load()->Reset();
-				running.store(false);
+				mFDN.load(std::memory_order_acquire)->Reset();
+				running.store(false, std::memory_order_release);
 			}
 			else
-				running.store(true);
+				running.store(true, std::memory_order_release);
 		}
 	}
 }

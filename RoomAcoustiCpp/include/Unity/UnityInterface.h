@@ -5,74 +5,28 @@
 
 #include "Unity/IUnityProfiler.h"
 
-#define PROFILE_AUDIO_THREAD
-#ifdef PROFILE_AUDIO_THREAD
-// #define PROFILE_DETAILED
-#endif
-#define PROFILE_BACKGROUND_THREAD
+#define USE_UNITY_PROFILER
 
+#ifdef USE_UNITY_PROFILER
 IUnityProfiler* GetUnityProfiler();
 bool* GetDevBuild();
 
+// Register threads
 int RegisterThread();
 void UnregisterThread(int id);
-
-
-#ifdef PROFILE_AUDIO_THREAD
-int RegisterAudioThread();
-void UnregisterAudioThread(int id);
-
-void BeginSource();
-void EndSource();
-
-void BeginVirtualSource();
-void EndVirtualSource();
-
-void BeginFDN();
-void EndFDN();
-
-void BeginReverb();
-void EndReverb();
-
-void BeginReverbSource();
-void EndReverbSource();
-
-void BeginReflection();
-void EndReflection();
-
-void BeginAirAbsorption();
-void EndAirAbsorption();
-
-void BeginDiffraction();
-void EndDiffraction();
-
-void Begin3DTI();
-void End3DTI();
-#ifdef PROFILE_DETAILED
-void BeginFIR();
-void EndFIR();
-
-void BeginLerp();
-void EndLerp();
-
-void BeginFDNChannel();
-void EndFDNChannel();
-
-void BeginFDNMatrix();
-void EndFDNMatrix();
-#endif // PROFILE_DETAILED
-#endif // PROFILE_AUDIO_THREAD
-
-#ifdef PROFILE_BACKGROUND_THREAD
 
 void RegisterBackgroundThread();
 void UnregisterBackgroundThread();
 
+int RegisterAudioThread();
+void UnregisterAudioThread(int id);
+
+// Background thread functions
 void BeginBackgroundLoop();
 void EndBackgroundLoop();
 
-void BeginIEM();
-void EndIEM();
+void BeginImageEdgeModel();
+void EndImageEdgeModel();
 
 void BeginDirect();
 void EndDirect();
@@ -86,9 +40,6 @@ void EndSecondOrderRef();
 void BeginThirdOrderRef();
 void EndThirdOrderRef();
 
-void BeginFourthOrderRef();
-void EndFourthOrderRef();
-
 void BeginHigherOrderRef();
 void EndHigherOrderRef();
 
@@ -101,18 +52,52 @@ void EndSecondOrderRefDiff();
 void BeginThirdOrderRefDiff();
 void EndThirdOrderRefDiff();
 
-void BeginFourthOrderRefDiff();
-void EndFourthOrderRefDiff();
-
 void BeginHigherOrderRefDiff();
 void EndHigherOrderRefDiff();
 
-void BeginLateReverb();
-void EndLateReverb();
+void BeginReverbRayTracing();
+void EndReverbRayTracing();
 
 void BeginUpdateAudioData();
 void EndUpdateAudioData();
 
-#endif
+// Audio thread functions
+void BeginAudioThread();
+void EndAudioThread();
 
-#endif
+void BeginSubmitAudio();
+void EndSubmitAudio();
+
+void BeginEarlyReflections();
+void EndEarlyReflections();
+
+void BeginLateReverb();
+void EndLateReverb();
+
+void BeginSource();
+void EndSource();
+
+void BeginImageSource();
+void EndImageSource();
+
+void BeginReverbSource();
+void EndReverbSource();
+
+void BeginFDN();
+void EndFDN();
+
+void BeginReflection();
+void EndReflection();
+
+void BeginDiffraction();
+void EndDiffraction();
+
+void BeginAirAbsorption();
+void EndAirAbsorption();
+
+void Begin3DTI();
+void End3DTI();
+
+#endif // USE_UNITY_PROFILER
+
+#endif // Unity_UnityInterface_h

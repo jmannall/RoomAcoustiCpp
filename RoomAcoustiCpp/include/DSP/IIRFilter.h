@@ -59,7 +59,7 @@ namespace RAC
 			/**
 			* @brief Set flag to clear buffers to zeros next time GetOutput is called
 			*/
-			inline void ClearBuffers() { clearBuffers.store(true); }
+			inline void ClearBuffers() { clearBuffers.store(true, std::memory_order_release); }
 
 			/**
 			* @brief Returns the filter response at given frequencies.
@@ -124,7 +124,7 @@ namespace RAC
 			/**
 			* @brief Set flag to clear buffers to zeros next time GetOutput is called
 			*/
-			inline void ClearBuffers() { clearBuffers.store(true); }
+			inline void ClearBuffers() { clearBuffers.store(true, std::memory_order_release); }
 
 			/**
 			* @brief Returns the filter response at given frequencies.
@@ -188,7 +188,7 @@ namespace RAC
 			/**
 			* @brief Set flag to clear buffers to zeros next time GetOutput is called
 			*/
-			inline void ClearBuffers() { clearBuffers.store(true); }
+			inline void ClearBuffers() { clearBuffers.store(true, std::memory_order_release); }
 
 			/**
 			* @brief Returns the filter response at given frequencies.
@@ -247,8 +247,8 @@ namespace RAC
 				assert(fc < static_cast<Real>(sampleRate) / 2.0); // Ensure cut off frequency is less than Nyquist frequency
 
 				UpdateCoefficients(currentFc, currentGain);
-				parametersEqual.store(true);
-				initialised.store(true);
+				parametersEqual.store(true, std::memory_order_release);
+				initialised.store(true, std::memory_order_release);
 			};
 
 			/**
@@ -262,7 +262,12 @@ namespace RAC
 			* @param fc The cut off frequency of the filter
 			* @param gain The shelf gain of the filter (linear)
 			*/
-			inline void SetTargetParameters(const Real fc, const Real gain) { targetFc.store(fc); targetGain.store(gain), parametersEqual.store(false); }
+			inline void SetTargetParameters(const Real fc, const Real gain)
+			{
+				targetFc.store(fc, std::memory_order_release);
+				targetGain.store(gain, std::memory_order_release);
+				parametersEqual.store(false, std::memory_order_release);
+			}
 
 		private:
 			/**
@@ -310,8 +315,8 @@ namespace RAC
 				assert(fc < static_cast<Real>(sampleRate) / 2.0); // Ensure cut off frequency is less than Nyquist frequency
 
 				UpdateCoefficients(currentFc);
-				parametersEqual.store(true);
-				initialised.store(true);
+				parametersEqual.store(true, std::memory_order_release);
+				initialised.store(true, std::memory_order_release);
 			};
 
 			/**
@@ -324,7 +329,7 @@ namespace RAC
 			*
 			* @param fc The cut off frequency of the filter
 			*/
-			inline void SetTargetFc(const Real fc) { targetFc.store(fc); parametersEqual.store(false); }
+			inline void SetTargetFc(const Real fc) { targetFc.store(fc, std::memory_order_release); parametersEqual.store(false, std::memory_order_release); }
 
 		private:
 			/**
@@ -369,7 +374,7 @@ namespace RAC
 			*
 			* @param parameter The target parameter of the filter
 			*/
-			inline void SetTargetParameter(const Real parameter) { target.store(parameter); parametersEqual.store(false); }
+			inline void SetTargetParameter(const Real parameter) { target.store(parameter, std::memory_order_release); parametersEqual.store(false, std::memory_order_release); }
 
 			/**
 			* @brief Updates the parameters of the low pass filter
@@ -419,8 +424,8 @@ namespace RAC
 				assert(fc < static_cast<Real>(sampleRate) / 2.0); // Ensure cut off frequency is less than Nyquist frequency
 
 				UpdateCoefficients(gain);
-				parametersEqual.store(true);
-				initialised.store(true);
+				parametersEqual.store(true, std::memory_order_release);
+				initialised.store(true, std::memory_order_release);
 			}
 
 			/**
@@ -476,8 +481,8 @@ namespace RAC
 				assert(fc < static_cast<Real>(sampleRate) / 2.0); // Ensure cut off frequency is less than Nyquist frequency
 
 				UpdateCoefficients(gain);
-				parametersEqual.store(true);
-				initialised.store(true);
+				parametersEqual.store(true, std::memory_order_release);
+				initialised.store(true, std::memory_order_release);
 			}
 
 			/**
@@ -533,8 +538,8 @@ namespace RAC
 				assert(fc < static_cast<Real>(sampleRate) / 2.0); // Ensure cut off frequency is less than Nyquist frequency
 
 				UpdateCoefficients(gain);
-				parametersEqual.store(true);
-				initialised.store(true);
+				parametersEqual.store(true, std::memory_order_release);
+				initialised.store(true, std::memory_order_release);
 			}
 
 			/**
@@ -588,8 +593,8 @@ namespace RAC
 
 				a0 = 1.0;
 				UpdateCoefficients(currentZPK);
-				parametersEqual.store(true);
-				initialised.store(true);
+				parametersEqual.store(true, std::memory_order_release);
+				initialised.store(true, std::memory_order_release);
 			};
 
 			/**
@@ -645,8 +650,8 @@ namespace RAC
 			LowPass(const Real fc, const int sampleRate) : IIRFilter2Param1(fc, sampleRate)
 			{
 				UpdateCoefficients(fc);
-				parametersEqual.store(true);
-				initialised.store(true);
+				parametersEqual.store(true, std::memory_order_release);
+				initialised.store(true, std::memory_order_release);
 			}
 
 			/**
@@ -692,8 +697,8 @@ namespace RAC
 			HighPass(const Real fc, const int sampleRate) : IIRFilter2Param1(fc, sampleRate)
 			{
 				UpdateCoefficients(fc);
-				parametersEqual.store(true);
-				initialised.store(true);
+				parametersEqual.store(true, std::memory_order_release);
+				initialised.store(true, std::memory_order_release);
 			}
 
 			/**
@@ -740,8 +745,8 @@ namespace RAC
 				assert(fc < static_cast<Real>(sampleRate) / 2.0); // Ensure cut off frequency is less than Nyquist frequency
 
 				UpdateCoefficients(currentFc, currentGain);
-				parametersEqual.store(true);
-				initialised.store(true);
+				parametersEqual.store(true, std::memory_order_release);
+				initialised.store(true, std::memory_order_release);
 			};
 
 			/**
@@ -755,7 +760,12 @@ namespace RAC
 			* @param fc The cut off frequency of the filter
 			* @param gain The shelf gain of the filter (linear)
 			*/
-			inline void SetTargetParameters(const Real fc, const Real gain) { targetFc.store(fc); targetGain.store(gain), parametersEqual.store(false); }
+			inline void SetTargetParameters(const Real fc, const Real gain)
+			{
+				targetFc.store(fc, std::memory_order_release);
+				targetGain.store(gain, std::memory_order_release);
+				parametersEqual.store(false, std::memory_order_release);
+			}
 
 		private:
 			/**

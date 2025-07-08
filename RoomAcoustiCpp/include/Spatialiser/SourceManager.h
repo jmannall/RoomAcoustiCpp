@@ -13,7 +13,8 @@
 #include <shared_mutex>
 
 // Common headers
-#include "Common/Types.h" 
+#include "Common/Types.h"
+#include "Common/RACProfiler.h"
 
 // Spatialiser headers
 #include "Spatialiser/Globals.h"
@@ -151,6 +152,7 @@ namespace RAC
 			*/
 			inline void UpdateSourceData(const size_t id, const Source::AudioData source, const ImageSourceDataMap& vSources)
 			{
+				PROFILE_UpdateAudioData
 				mSources[id]->UpdateData(source, vSources, mConfig);
 			}
 
@@ -176,6 +178,7 @@ namespace RAC
 
 			inline void ProcessAudio(Buffer& outputBuffer, Matrix& reverbInput, const Real lerpFactor)
 			{
+				PROFILE_EarlyReflections
 				for (auto& source : mSources)	// Zero any input buffers for sources that are not in use (but may still have image sources)
 					source->ResetInputBuffer();
 				audioThreadPool->ProcessAllSources(mSources, mImageSources, outputBuffer, reverbInput, lerpFactor);

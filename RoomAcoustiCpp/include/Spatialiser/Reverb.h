@@ -82,7 +82,7 @@ namespace RAC
 			/**
 			* @brief Reset the internal buffers to zero
 			*/
-			inline void Reset() { clearBuffers.store(true); }
+			inline void Reset() { clearBuffers.store(true, std::memory_order_release); }
 
 		private:
 			/**
@@ -169,7 +169,7 @@ namespace RAC
 			{
 				for (auto& reverbSource : mReverbSources)
 					reverbSource->Reset();
-				mFDN.load()->Reset();
+				mFDN.load(std::memory_order_acquire)->Reset();
 			}
 
 			/**

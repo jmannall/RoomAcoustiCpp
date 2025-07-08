@@ -11,13 +11,13 @@
 #include <cmath>
 #include <numeric>  // For std::gcd
 
+#include "Common/RACProfiler.h"
+
 // Spatialiser headers
 #include "Spatialiser/FDN.h"
 #include "Spatialiser/Globals.h"
 
 // Unity headers
-#include "Unity/UnityInterface.h"
-#include "Unity/Profiler.h"
 #include "Unity/Debug.h"
 
 namespace RAC
@@ -33,10 +33,10 @@ namespace RAC
 
 		Real FDNChannel::GetOutput(const Real input, const Real lerpFactor)
 		{
-			if (clearBuffers.load())
+			if (clearBuffers.load(std::memory_order_acquire))
 			{
 				mBuffer.Reset();
-				clearBuffers.store(false);
+				clearBuffers.store(false, std::memory_order_release);
 			}
 
 			if (idx >= mBuffer.Length())
@@ -210,14 +210,12 @@ namespace RAC
 
 		void FDN::ProcessAudio(const Matrix& data, std::vector<Buffer>& outputBuffers, const Real lerpFactor)
 		{
-#ifdef PROFILE_AUDIO_THREAD
-			BeginFDN();
-#endif					
-			if (clearBuffers.load())
+			PROFILE_FDN		
+			if (clearBuffers.load(std::memory_order_acquire))
 			{
 				x.Reset();
 				y.Reset();
-				clearBuffers.store(false);
+				clearBuffers.store(false, std::memory_order_release);
 			}
 
 			FlushDenormals();
@@ -242,9 +240,6 @@ namespace RAC
 				mChannels[i]->ProcessOutput(outputBuffers[i], outputBuffers[i], lerpFactor);
 			
 			NoFlushDenormals();
-#ifdef PROFILE_AUDIO_THREAD
-			EndFDN();
-#endif
 		}
 
 		////////////////////////////////////////

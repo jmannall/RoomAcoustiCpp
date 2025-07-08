@@ -323,5 +323,8 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\AudioThreadPool.h">
       <Filter>Header Files\DSP</Filter>
     </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\RACProfiler.h">
+      <Filter>Header Files\Common</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

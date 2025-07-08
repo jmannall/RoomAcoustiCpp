@@ -20,16 +20,16 @@ namespace RAC
 
 		Real FIRFilter::GetOutput(const Real input, const Real lerpFactor)
 		{
-			if (!initialised.load())
+			if (!initialised.load(std::memory_order_acquire))
 				return 0.0;
 
-			if (!irsEqual.load())
+			if (!irsEqual.load(std::memory_order_acquire))
 				InterpolateIR(lerpFactor);
 
-			if (clearInputLine.load())
+			if (clearInputLine.load(std::memory_order_acquire))
 			{
 				inputLine.Reset();
-				clearInputLine.store(false);
+				clearInputLine.store(false, std::memory_order_release);
 			}
 
 			Real output = 0.0;
@@ -80,8 +80,8 @@ namespace RAC
 
 			releasePool.Add(irCopy);
 
-			targetIR.store(irCopy);
-			irsEqual.store(false);
+			targetIR.store(irCopy, std::memory_order_release);
+			irsEqual.store(false, std::memory_order_release);
 
 			return true;
 		}
@@ -90,8 +90,8 @@ namespace RAC
 
 		void FIRFilter::InterpolateIR(const Real lerpFactor)
 		{
-			irsEqual.store(true); // Prevents issues in case targetIR updated during this function call
-			const std::shared_ptr<const Buffer> ir = targetIR.load();
+			irsEqual.store(true, std::memory_order_release); // Prevents issues in case targetIR updated during this function call
+			const std::shared_ptr<const Buffer> ir = targetIR.load(std::memory_order_acquire);
 
 			irLength = ir->Length();
 
@@ -103,7 +103,7 @@ namespace RAC
 				oldIrLength = irLength;
 				return;
 			}
-			irsEqual.store(false);
+			irsEqual.store(false, std::memory_order_release);
 		}
 	}
 }

@@ -178,17 +178,17 @@ namespace RAC
 				// this->lerpFactor = std::max(std::min(this->lerpFactor, 1.0), 1.0 / static_cast<Real>(sampleRate));
 			};
 
-			bool GetImpulseResponseMode() const { return impulseResponseMode.load(); }
+			bool GetImpulseResponseMode() const { return impulseResponseMode.load(std::memory_order_acquire); }
 
-			bool CompareImpulseResponseMode(const bool mode) const { return impulseResponseMode.load() != mode; }
+			bool CompareImpulseResponseMode(const bool mode) const { return impulseResponseMode.load(std::memory_order_acquire) != mode; }
 
-			SpatialisationMode GetSpatialisationMode() const { return spatialisationMode.load(); }
+			SpatialisationMode GetSpatialisationMode() const { return spatialisationMode.load(std::memory_order_acquire); }
 			
-			bool CompareSpatialisationMode(const SpatialisationMode mode) const { return spatialisationMode.load() != mode; }
+			bool CompareSpatialisationMode(const SpatialisationMode mode) const { return spatialisationMode.load(std::memory_order_acquire) != mode; }
 
-			DiffractionModel GetDiffractionModel() const { return diffractionModel.load(); }
+			DiffractionModel GetDiffractionModel() const { return diffractionModel.load(std::memory_order_acquire); }
 
-			Real GetLerpFactor() const { return lerpFactor.load(); }
+			Real GetLerpFactor() const { return lerpFactor.load(std::memory_order_acquire); }
 
 
 			const int fs;							// Sample rate
@@ -218,7 +218,7 @@ namespace RAC
 			{
 				Real factor = 96.0 * lerpFactor / fs;
 				factor = std::max(std::min(factor, 1.0), 1.0 / fs);
-				this->lerpFactor.store(factor);
+				this->lerpFactor.store(factor, std::memory_order_release);
 				return factor;
 			}
 		};

@@ -111,7 +111,7 @@ namespace RAC
 			*/
 			inline void ResetInputBuffer()
 			{
-				if (clearInputBuffer.exchange(false))
+				if (clearInputBuffer.exchange(false, std::memory_order_acq_rel))
 					inputBuffer.Reset();
 			}
 
@@ -131,14 +131,14 @@ namespace RAC
 			*
 			* @params mode The new spatialisation mode
 			*/
-			inline void UpdateSpatialisationMode(const SpatialisationMode mode) { spatialisationMode.store(mode); }
+			inline void UpdateSpatialisationMode(const SpatialisationMode mode) { spatialisationMode.store(mode, std::memory_order_release); }
 
 			/**
 			* @brief Updates the target impulse response mode
 			*
 			* @params mode True if disable 3DTI Interpolation, false otherwise.
 			*/
-			inline void UpdateImpulseResponseMode(const bool mode) { impulseResponseMode.store(mode); }
+			inline void UpdateImpulseResponseMode(const bool mode) { impulseResponseMode.store(mode, std::memory_order_release); }
 
 			/**
 			* @brief Updates the source directivity
@@ -179,12 +179,12 @@ namespace RAC
 			/**
 			* @return The current source directivity
 			*/
-			inline SourceDirectivity GetDirectivity() const { return mDirectivity.load(); }
+			inline SourceDirectivity GetDirectivity() const { return mDirectivity.load(std::memory_order_acquire); }
 
 			/**
 			* @return True if the source has changed since the last check
 			*/
-			inline bool HasChanged() { return hasChanged.exchange(false); }
+			inline bool HasChanged() { return hasChanged.exchange(false, std::memory_order_acq_rel); }
 			
 			/**
 			* @brief Process a single audio frame

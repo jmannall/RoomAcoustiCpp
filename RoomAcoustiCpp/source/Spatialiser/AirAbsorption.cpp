@@ -8,6 +8,9 @@
 *
 */
 
+// Common headers
+#include "Common/RACProfiler.h"
+
 // Spatialiser headers
 #include "Spatialiser/AirAbsorption.h"
 
@@ -25,6 +28,7 @@ namespace RAC
 
 		void AirAbsorption::ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const Real lerpFactor)
 		{
+			PROFILE_AirAbsorption
 			FlushDenormals();
 			for (int i = 0; i < inBuffer.Length(); i++)
 				outBuffer[i] = GetOutput(inBuffer[i], lerpFactor);
@@ -35,13 +39,13 @@ namespace RAC
 
 		void AirAbsorption::InterpolateParameters(const Real lerpFactor)
 		{
-			parametersEqual.store(true); // Prevents issues in case targetFc/Gain updated during this function call
-			const Real distance = targetDistance.load();
+			parametersEqual.store(true, std::memory_order_release); // Prevents issues in case targetFc/Gain updated during this function call
+			const Real distance = targetDistance.load(std::memory_order_acquire);
 			currentDistance = Lerp(currentDistance, distance, lerpFactor);
 			if (Equals(currentDistance, distance))
 				currentDistance = distance;
 			else
-				parametersEqual.store(false);
+				parametersEqual.store(false, std::memory_order_release);
 			UpdateCoefficients(currentDistance);
 		}
 	}

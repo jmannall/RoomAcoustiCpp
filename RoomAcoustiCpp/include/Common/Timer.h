@@ -37,11 +37,11 @@ public:
     */
     void StartTimer(int intervalMs)
     {
-        if (running.load())
+        if (running.load(std::memory_order_acquire))
             StopTimer();
-        running.store(true);
+        running.store(true, std::memory_order_release);
         timerThread = std::thread([this, intervalMs]() {
-            while (running.load())
+            while (running.load(std::memory_order_acquire))
             {
                 std::this_thread::sleep_for(std::chrono::milliseconds(intervalMs));
                 TimerCallback();
@@ -54,7 +54,7 @@ public:
     */
     void StopTimer()
     {
-        running.store(false);
+        running.store(false, std::memory_order_release);
         if (timerThread.joinable())
             timerThread.join();
     }

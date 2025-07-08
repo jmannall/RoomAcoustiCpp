@@ -59,10 +59,10 @@ namespace RAC
 
 		Real LinkwitzRiley::GetOutput(const Real input, const Real lerpFactor)
 		{
-			if (!initialised.load())
+			if (!initialised.load(std::memory_order_acquire))
 				return 0.0;
 
-			if (!gainsEqual.load())
+			if (!gainsEqual.load(std::memory_order_acquire))
 				InterpolateGains(lerpFactor);
 
 			std::array<Real, 2> midResult = {
@@ -85,8 +85,8 @@ namespace RAC
 
 		void LinkwitzRiley::InterpolateGains(const Real lerpFactor)
 		{
-			gainsEqual.store(true); // Prevents issues in case targetGains updated during this function call
-			const std::shared_ptr<const Parameters> gain = targetGains.load();
+			gainsEqual.store(true, std::memory_order_release); // Prevents issues in case targetGains updated during this function call
+			const std::shared_ptr<const Parameters> gain = targetGains.load(std::memory_order_acquire);
 
 			Lerp(currentGains, *gain, lerpFactor);
 			if (Equals(currentGains, *gain))
@@ -94,7 +94,7 @@ namespace RAC
 				currentGains = *gain;
 				return;
 			}
-			gainsEqual.store(false);
+			gainsEqual.store(false, std::memory_order_release);
 		}
 
 	}

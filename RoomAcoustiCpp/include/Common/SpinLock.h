@@ -6,6 +6,9 @@
 * @details From: https://timur.audio/using-locks-in-real-time-audio-processing-safely
 */
 
+#ifndef RoomAcoustiCpp_SpinLock_h
+#define RoomAcoustiCpp_SpinLock_h
+
 // C++ headers
 #include <array>
 #include <thread>
@@ -94,3 +97,5 @@ public:
 private:
 	std::atomic<int> counter; // Number of tasks remaining to be processed
 };
+
+#endif

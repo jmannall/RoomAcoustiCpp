@@ -3,6 +3,9 @@
 *
 */
 
+//Common headers
+#include "Common/RACProfiler.h"
+
 // Spatialiser headers
 #include "Spatialiser/Globals.h"
 #include "Spatialiser/Context.h"
@@ -10,7 +13,6 @@
 
 // Unity headers
 #include "Unity/Debug.h"
-#include "Unity/UnityInterface.h"
 
 // 3DTI headers
 #include "HRTF/HRTFFactory.h"
@@ -26,6 +28,7 @@ namespace RAC
 {
 	using namespace Unity;
 	using namespace DSP;
+	using namespace Common;
 	namespace Spatialiser
 	{
 
@@ -41,43 +44,33 @@ namespace RAC
 		{
 
 #ifdef DEBUG_INIT
-	Debug::Log("Begin background thread", Colour::Green);
+			Debug::Log("Begin background thread", Colour::Green);
 #endif
-#ifdef PROFILE_BACKGROUND_THREAD
+#ifdef USE_UNITY_PROFILER
 			RegisterBackgroundThread();
 #endif
-			bool isRunning = context->IsRunning();
 			std::shared_ptr<Room> room = context->GetRoom();
 			std::shared_ptr<ImageEdge> imageEdgeModel = context->GetImageEdgeModel();
 
-			const int loop_interval_ms = 10;
-
-			while (isRunning)
+			const int loopInterval_ms = 10;
+			while (context->IsRunning())
 			{
-				auto start_time = std::chrono::steady_clock::now();
+				auto startTime = std::chrono::steady_clock::now();
 
-#ifdef PROFILE_BACKGROUND_THREAD
-				BeginBackgroundLoop();
-#endif
 				// Update IEM
 				imageEdgeModel->RunIEM();
 
-				isRunning = context->IsRunning();
-#ifdef PROFILE_BACKGROUND_THREAD
-				EndBackgroundLoop();
-#endif
-				auto end_time = std::chrono::steady_clock::now();
-				auto elapsed_time = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
-				if (elapsed_time < loop_interval_ms) {
-					std::this_thread::sleep_for(std::chrono::milliseconds(loop_interval_ms - elapsed_time));
-				}
+				auto endTime = std::chrono::steady_clock::now();
+				auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
+				if (elapsedTime < loopInterval_ms)
+					std::this_thread::sleep_for(std::chrono::milliseconds(loopInterval_ms - elapsedTime));
 			}
 
-#ifdef PROFILE_BACKGROUND_THREAD
+#ifdef USE_UNITY_PROFILER
 			UnregisterBackgroundThread();
 #endif
 #ifdef DEBUG_REMOVE
-	Debug::Log("End background thread", Colour::Red);
+			Debug::Log("End background thread", Colour::Red);
 #endif
 		}
 
@@ -92,8 +85,12 @@ namespace RAC
 #endif
 			CErrorHandler::Instance().SetAssertMode(ASSERT_MODE_CONTINUE);
 			CErrorHandler::Instance().SetVerbosityMode(VERBOSITYMODE_ERRORSANDWARNINGS);
-			logFile = GetTimestampedLogPath();
+			std::string timestamp = GetTimestamp();
+			logFile = GetLogPath(timestamp);
 			CErrorHandler::Instance().SetErrorLogFile(logFile, true);
+
+			std::string profileFile = GetProfilePath(timestamp);
+			Profiler::Instance().SetOutputFile(profileFile, true);
 
 			// Set dsp settings
 			mCore.SetAudioState({ mConfig->fs, mConfig->numFrames });
@@ -129,16 +126,17 @@ namespace RAC
 #endif
 
 			CErrorHandler::Instance().SetErrorLogFile(logFile, false); // Disable logging to file
-
             if (!logFile.empty())
 			{
-				std::ifstream f(logFile);
+				std::ifstream f(logFile);	// Delete file if it is empty
 				if (f.good() && f.peek() == std::ifstream::traits_type::eof())
 				{
 					f.close();
 					std::remove(logFile.c_str());
 				}
             }
+
+			Profiler::Instance().SetOutputFile(profileFile, false);
 
 			StopRunning();
 			IEMThread.join();
@@ -208,7 +206,7 @@ namespace RAC
 
 		void Context::UpdateSpatialisationMode(const SpatialisationMode mode)
 		{
-			mConfig->spatialisationMode.store(mode);
+			mConfig->spatialisationMode.store(mode, std::memory_order_release);
 			mReverb->UpdateSpatialisationMode(mode);
 			mSources->UpdateSpatialisationMode(mode);
 		}
@@ -233,7 +231,7 @@ namespace RAC
 
 		void Context::UpdateDiffractionModel(const DiffractionModel model)
 		{
-			mConfig->diffractionModel.store(model);
+			mConfig->diffractionModel.store(model, std::memory_order_release);
 			mImageEdgeModel->UpdateDiffractionModel(model);
 			mSources->UpdateDiffractionModel(model);
 		}
@@ -377,6 +375,7 @@ namespace RAC
 
 		void Context::GetOutput(float** bufferPtr)
 		{
+			PROFILE_AudioThread;
 			const Real lerpFactor = mConfig->GetLerpFactor();
 			mSources->ProcessAudio(mOutputBuffer, mReverbInput, lerpFactor);
 
@@ -402,7 +401,7 @@ namespace RAC
 		{
 			if (mode)
 			{
-				mConfig->lerpFactor.store(1.0);
+				mConfig->lerpFactor.store(1.0, std::memory_order_release);
 				headphoneEQ.Reset();		// TO DO: Should this be here?
 				mSources->UpdateImpulseResponseMode(mode);
 				return;

@@ -40,12 +40,12 @@ namespace RAC
 
 				assert(ir.Length() <= maxSize);
 
-				irLength = targetIR.load()->Length();
+				irLength = targetIR.load(std::memory_order_acquire)->Length();
 				oldIrLength = irLength;
 
 				std::copy(ir.begin(), ir.end(), currentIR.begin());
-				irsEqual.store(true);
-				initialised.store(true);
+				irsEqual.store(true, std::memory_order_release);
+				initialised.store(true, std::memory_order_release);
 			};
 			
 			/**
@@ -73,7 +73,7 @@ namespace RAC
 			/**
 			* @brief Set flag to clear input line to zeros next time GetOutput is called
 			*/
-			inline void Reset() { clearInputLine.store(true); }
+			inline void Reset() { clearInputLine.store(true, std::memory_order_release); }
 
 		private:
 

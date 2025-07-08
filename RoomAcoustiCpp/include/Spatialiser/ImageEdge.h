@@ -189,6 +189,8 @@ namespace RAC
 			*/
 			void ReflectPointInRoom(const Source::Data& source, Source::AudioData& direct, ImageSourceDataMap& imageSources);
 
+			Absorption<> Direct(const Source::Data& source);
+
 			/**
 			* @brief Find all first order diffractions
 			* 

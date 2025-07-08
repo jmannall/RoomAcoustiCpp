@@ -7,12 +7,14 @@
 *
 */
 
+//Common headers
+#include "Common/RACProfiler.h"
+
 // Spatialiser headers
 #include "Spatialiser/ImageSource.h"
 #include "Spatialiser/Globals.h"
 
 // Unity headers
-#include "Unity/UnityInterface.h"
 #include "Unity/Debug.h"
 
 // DSP headers
@@ -210,8 +212,8 @@ namespace RAC
 
 			InitDiffractionModel(config->GetDiffractionModel(), data.GetDiffractionPath(), config->fs);
 
-			feedsFDN.store(data.IsFeedingFDN());
-			mFDNChannel.store(fdnChannel);
+			feedsFDN.store(data.IsFeedingFDN(), std::memory_order_release);
+			mFDNChannel.store(fdnChannel, std::memory_order_release);
 
 			UpdateTransform(data.GetTransform());
 
@@ -266,13 +268,13 @@ namespace RAC
 			{
 				mDiffractionPath = data.GetDiffractionPath();
 				activeModel->SetTargetParameters(mDiffractionPath);
-				std::shared_ptr<Diffraction::Model> temp = incomingModel.load();
+				std::shared_ptr<Diffraction::Model> temp = incomingModel.load(std::memory_order_acquire);
 				if (temp)
 					temp->SetTargetParameters(mDiffractionPath);
-				temp = nextModel.load();
+				temp = nextModel.load(std::memory_order_acquire);
 				if (temp)
 					temp->SetTargetParameters(mDiffractionPath);
-				if (isCrossFading.load())
+				if (isCrossFading.load(std::memory_order_acquire))
 				{
 					temp = fadeModel;
 					if (temp)
@@ -282,10 +284,10 @@ namespace RAC
 
 			mAirAbsorption->SetTargetDistance(data.GetDistance());
 
-			if (feedsFDN.load() != data.IsFeedingFDN())
+			if (feedsFDN.load(std::memory_order_acquire) != data.IsFeedingFDN())
 			{
-				feedsFDN.store(data.IsFeedingFDN());
-				fdnChannel = mFDNChannel.exchange(fdnChannel);
+				feedsFDN.store(data.IsFeedingFDN(), std::memory_order_release);
+				fdnChannel = mFDNChannel.exchange(fdnChannel, std::memory_order_acq_rel);
 			}
 
 			UpdateTransform(data.GetTransform());
@@ -336,9 +338,9 @@ namespace RAC
 			mAirAbsorption.reset();
 			activeModel.reset();
 			fadeModel.reset();
-			incomingModel.load().reset();
-			nextModel.load().reset();
-			transform.load().reset();
+			incomingModel.load(std::memory_order_acquire).reset();
+			nextModel.load(std::memory_order_acquire).reset();
+			transform.load(std::memory_order_acquire).reset();
 		}
 
 		////////////////////////////////////////
@@ -346,7 +348,7 @@ namespace RAC
 		void ImageSource::UpdateTransform(const CTransform& newTransform)
 		{
 			std::shared_ptr<CTransform> transformCopy = std::make_shared<CTransform>(newTransform);
-			transform.store(transformCopy);
+			transform.store(transformCopy, std::memory_order_release);
 			releasePool.Add(transformCopy);
 		}
 
@@ -402,18 +404,18 @@ namespace RAC
 		void ImageSource::InitDiffractionModel(const DiffractionModel model, const Diffraction::Path& path, const int fs)
 		{
 			diffractionGain.Reset(1.0);
-			isCrossFading.store(false);
+			isCrossFading.store(false, std::memory_order_release);
 			
 			if (!diffraction)
 			{
 				activeModel.reset();
 				fadeModel.reset();
-				incomingModel.load().reset();
-				nextModel.load().reset();
+				incomingModel.load(std::memory_order_acquire).reset();
+				nextModel.load(std::memory_order_acquire).reset();
 				return;
 			}
 
-			currentDiffractionModel.store(model);
+			currentDiffractionModel.store(model, std::memory_order_release);
 			mDiffractionPath = path;
 			switch (model)
 			{
@@ -474,7 +476,7 @@ namespace RAC
 				return;
 			}
 
-			if (!diffraction ||currentDiffractionModel.exchange(model) == model)
+			if (!diffraction ||currentDiffractionModel.exchange(model, std::memory_order_acq_rel) == model)
 			{
 				FreeAccess();
 				return;
@@ -484,50 +486,50 @@ namespace RAC
 			{
 			case DiffractionModel::attenuate:
 			{ 
-				nextModel.store(std::make_shared<Diffraction::Attenuate>(mDiffractionPath));
+				nextModel.store(std::make_shared<Diffraction::Attenuate>(mDiffractionPath), std::memory_order_release);
 				break;
 			}
 			case DiffractionModel::lowPass:
 			{
-				nextModel.store(std::make_shared<Diffraction::LPF>(mDiffractionPath, fs));
+				nextModel.store(std::make_shared<Diffraction::LPF>(mDiffractionPath, fs), std::memory_order_release);
 				break;
 			}
 			case DiffractionModel::udfa:
 			{
-				nextModel.store(std::make_shared<Diffraction::UDFA>(mDiffractionPath, fs));
+				nextModel.store(std::make_shared<Diffraction::UDFA>(mDiffractionPath, fs), std::memory_order_release);
 				break;
 			}
 			case DiffractionModel::udfai:
 			{
-				nextModel.store(std::make_shared<Diffraction::UDFAI>(mDiffractionPath, fs));
+				nextModel.store(std::make_shared<Diffraction::UDFAI>(mDiffractionPath, fs), std::memory_order_release);
 				break;
 			}
 			case DiffractionModel::nnSmall:
 			{
-				nextModel.store(std::make_shared<Diffraction::NNSmall>(mDiffractionPath));
+				nextModel.store(std::make_shared<Diffraction::NNSmall>(mDiffractionPath), std::memory_order_release);
 				break;
 			}
 			case DiffractionModel::nnBest:
 			{
-				nextModel.store(std::make_shared<Diffraction::NNBest>(mDiffractionPath));
+				nextModel.store(std::make_shared<Diffraction::NNBest>(mDiffractionPath), std::memory_order_release);
 				break;
 			}
 			case DiffractionModel::utd:
 			{
-				nextModel.store(std::make_shared<Diffraction::UTD>(mDiffractionPath, fs));
+				nextModel.store(std::make_shared<Diffraction::UTD>(mDiffractionPath, fs), std::memory_order_release);
 				break;
 			}
 			case DiffractionModel::btm:
 			{
-				nextModel.store(std::make_shared<Diffraction::BTM>(mDiffractionPath, fs));
+				nextModel.store(std::make_shared<Diffraction::BTM>(mDiffractionPath, fs), std::memory_order_release);
 				break;
 			}
 			}
-			releasePool.Add(nextModel.load());
-			if (!isCrossFading.load())
+			releasePool.Add(nextModel.load(std::memory_order_acquire));
+			if (!isCrossFading.load(std::memory_order_acquire))
 			{
-				incomingModel = nextModel.exchange(nullptr);
-				isCrossFading.store(true);
+				incomingModel = nextModel.exchange(nullptr, std::memory_order_acq_rel);
+				isCrossFading.store(true, std::memory_order_release);
 			}
 			FreeAccess();
 		}		
@@ -539,63 +541,41 @@ namespace RAC
 			if (!GetAccess())
 				return;
 
+			PROFILE_ImageSource
 			if (gain.IsZero())
 			{
 				FreeAccess();
 				return;
 			}
 
-			if (currentImpulseResponseMode != impulseResponseMode.load())
-				SetImpulseResponseMode(impulseResponseMode.load());
+			if (currentImpulseResponseMode != impulseResponseMode.load(std::memory_order_acquire))
+				SetImpulseResponseMode(impulseResponseMode.load(std::memory_order_acquire));
 
-			if (currentSpatialisationMode != spatialisationMode.load())
-				SetSpatialisationMode(spatialisationMode.load());
+			if (currentSpatialisationMode != spatialisationMode.load(std::memory_order_acquire))
+				SetSpatialisationMode(spatialisationMode.load(std::memory_order_acquire));
 
 			const int numFrames = inputBuffer->Length();
 
-#ifdef PROFILE_AUDIO_THREAD
-			BeginVirtualSource();
-#endif
-#ifdef PROFILE_AUDIO_THREAD
-			BeginReflection();	// Always process as also includes directivity
-#endif
-			mFilter->ProcessAudio(*inputBuffer, bStore, lerpFactor);
-#ifdef PROFILE_AUDIO_THREAD
-			EndReflection();
-#endif
-
-			if (diffraction)
 			{
-
-#ifdef PROFILE_AUDIO_THREAD
-				BeginDiffraction();
-#endif
-				ProcessDiffraction(bStore, bStore, lerpFactor);
-#ifdef PROFILE_AUDIO_THREAD
-				EndDiffraction();
-#endif
+				PROFILE_Reflection
+				mFilter->ProcessAudio(*inputBuffer, bStore, lerpFactor);
 			}
 
-#ifdef PROFILE_AUDIO_THREAD
-			BeginAirAbsorption();
-#endif
+			if (diffraction)
+				ProcessDiffraction(bStore, bStore, lerpFactor);
+
 			mAirAbsorption->ProcessAudio(bStore, bStore, lerpFactor);
-#ifdef PROFILE_AUDIO_THREAD
-			EndAirAbsorption();
-#endif
 
 			for (int i = 0; i < numFrames; i++)
 				bInput[i] = static_cast<float>(bStore[i] * gain.Use(lerpFactor));
 
-#ifdef PROFILE_AUDIO_THREAD
-			Begin3DTI();
-#endif
 			{
+				PROFILE_Spatialisation
 				shared_lock<shared_mutex> lock(tuneInMutex);
-				mSource->SetSourceTransform(*std::atomic_load(&transform));
+				mSource->SetSourceTransform(*transform.load(std::memory_order_acquire));
 				mSource->SetBuffer(bInput);
 			
-				int fdnChannel = mFDNChannel.load();
+				int fdnChannel = mFDNChannel.load(std::memory_order_acquire);
 				if (fdnChannel > -1)
 				{
 					mSource->ProcessAnechoic(bMonoOutput, bOutput.left, bOutput.right);
@@ -605,18 +585,13 @@ namespace RAC
 				else
 					mSource->ProcessAnechoic(bOutput.left, bOutput.right);
 			}
-#ifdef PROFILE_AUDIO_THREAD
-			End3DTI();
-#endif
 			int j = 0;
 			for (int i = 0; i < numFrames; i++)
 			{
 				outputBuffer[j++] += static_cast<Real>(bOutput.left[i]);
 				outputBuffer[j++] += static_cast<Real>(bOutput.right[i]);
 			}
-#ifdef PROFILE_AUDIO_THREAD
-			EndVirtualSource();
-#endif
+
 			FreeAccess();
 			return;
 		}
@@ -625,12 +600,13 @@ namespace RAC
 
 		void ImageSource::ProcessDiffraction(const Buffer& inBuffer, Buffer& outBuffer, const Real lerpFactor)
 		{
+			PROFILE_Diffraction
 			activeModel->ProcessAudio(inBuffer, outBuffer, lerpFactor);
 			
-			if (!isCrossFading.load())
+			if (!isCrossFading.load(std::memory_order_acquire))
 				return;
 
-			if (auto newModel = incomingModel.exchange(nullptr))
+			if (auto newModel = incomingModel.exchange(nullptr, std::memory_order_acq_rel))
 				fadeModel = newModel;
 
 			fadeModel->ProcessAudio(inBuffer, bDiffStore, lerpFactor);
@@ -649,10 +625,10 @@ namespace RAC
 
 				fadeModel.swap(activeModel);
 
-				if (auto queued = nextModel.exchange(nullptr))
-					incomingModel.store(queued);
+				if (auto queued = nextModel.exchange(nullptr, std::memory_order_acq_rel))
+					incomingModel.store(queued, std::memory_order_release);
 				else
-					isCrossFading.store(false);
+					isCrossFading.store(false, std::memory_order_release);
 			}
 		}
 	}

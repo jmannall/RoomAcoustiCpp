@@ -65,6 +65,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Complex.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Definitions.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Matrix.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\RACProfiler.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\ReleasePool.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\SphericalGeometries.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\SpinLock.h" />

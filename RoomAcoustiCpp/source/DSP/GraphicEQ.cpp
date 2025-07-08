@@ -34,11 +34,11 @@ namespace RAC
 			// (same as fc[numFilters - 1] * 2 / SQRT_2 ) Decreasing the high shelf frequency by SQRT_2 creates a smoother response at high frequencies
 			highShelf = std::make_unique<PeakHighShelf>(std::min(f[numFilters - 2] * SQRT_2, 20000.0), targetGains.first[numFilters - 1], Q, sampleRate);
 
-			targetGain.store(targetGains.second);
+			targetGain.store(targetGains.second, std::memory_order_release);
 			currentGain = targetGains.second;
 
-			gainsEqual.store(true);
-			initialised.store(true);
+			gainsEqual.store(true, std::memory_order_release);
+			initialised.store(true, std::memory_order_release);
 		}
 
 		////////////////////////////////////////
@@ -49,15 +49,15 @@ namespace RAC
 
 			if (gains == previousInput) // No change in gains
 			{
-				if (gainsEqual.load() && gains <= 0.0) // Gains currently zero
+				if (gainsEqual.load(std::memory_order_acquire) && gains <= 0.0) // Gains currently zero
 					return true;
 				return false;
 			}
 			previousInput = gains;
 
 			const auto targetGains = CalculateGains(gains);
-			targetGain.store(targetGains.second);
-			gainsEqual.store(false);
+			targetGain.store(targetGains.second, std::memory_order_release);
+			gainsEqual.store(false, std::memory_order_release);
 			lowShelf->SetTargetGain(targetGains.first[0]);
 			for (int i = 1; i < numFilters - 1; i++)
 				peakingFilters[i - 1]->SetTargetGain(targetGains.first[i]);
@@ -153,10 +153,10 @@ namespace RAC
 
 		Real GraphicEQ::GetOutput(const Real input, const Real lerpFactor)
 		{
-			if (!initialised.load())
+			if (!initialised.load(std::memory_order_acquire))
 				return 0.0;
 
-			if (!gainsEqual.load())
+			if (!gainsEqual.load(std::memory_order_acquire))
 				InterpolateGain(lerpFactor);
 
 			Real out = lowShelf->GetOutput(input, lerpFactor);
@@ -171,13 +171,13 @@ namespace RAC
 
 		void GraphicEQ::ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const Real lerpFactor)
 		{
-			if (!initialised.load())
+			if (!initialised.load(std::memory_order_acquire))
 			{
 				outBuffer.Reset();
 				return;
 			}
 
-			if (currentGain == 0.0 && gainsEqual.load())
+			if (currentGain == 0.0 && gainsEqual.load(std::memory_order_acquire))
 			{
 				outBuffer.Reset();
 				return;
@@ -193,13 +193,13 @@ namespace RAC
 
 		void GraphicEQ::InterpolateGain(const Real lerpFactor)
 		{
-			gainsEqual.store(true); // Prevents issues in case targetGain updated during this function call
-			const Real gain = targetGain.load();
+			gainsEqual.store(true, std::memory_order_release); // Prevents issues in case targetGain updated during this function call
+			const Real gain = targetGain.load(std::memory_order_acquire);
 			currentGain = Lerp(currentGain, gain, lerpFactor);
 			if (Equals(currentGain, gain))
 				currentGain = gain;
 			else
-				gainsEqual.store(false);
+				gainsEqual.store(false, std::memory_order_release);
 		}
 	}
 }
