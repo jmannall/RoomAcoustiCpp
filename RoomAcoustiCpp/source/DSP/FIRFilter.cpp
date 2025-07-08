@@ -63,7 +63,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		bool FIRFilter::SetTargetIR(const Buffer& ir)
+		bool FIRFilter::SetTargetIR(const Buffer<>& ir)
 		{
 			int length = ir.Length();
 
@@ -75,7 +75,7 @@ namespace RAC
 				return false;
 			assert(length <= maxFilterLength);
 
-			const std::shared_ptr<Buffer> irCopy = std::make_shared<Buffer>(ir);
+			const std::shared_ptr<Buffer<>> irCopy = std::make_shared<Buffer<>>(ir);
 			irCopy->ResizeBuffer(length);
 
 			releasePool.Add(irCopy);
@@ -91,7 +91,7 @@ namespace RAC
 		void FIRFilter::InterpolateIR(const Real lerpFactor)
 		{
 			irsEqual.store(true, std::memory_order_release); // Prevents issues in case targetIR updated during this function call
-			const std::shared_ptr<const Buffer> ir = targetIR.load(std::memory_order_acquire);
+			const std::shared_ptr<const Buffer<>> ir = targetIR.load(std::memory_order_acquire);
 
 			irLength = ir->Length();
 

@@ -22,10 +22,11 @@ namespace RAC
 	namespace DSP
 	{
 		/**
-		* @brief Class that stores a resizeable buffer of Real values.
+		* @brief Class that stores a resizeable buffer of T values.
 		* 
 		* @details Used to store audio buffers and impulse responses
 		*/
+		template <typename T = Real>
 		class Buffer
 		{
 		public:
@@ -43,11 +44,11 @@ namespace RAC
 			Buffer(const int length) : mBuffer(length, 0.0) {};
 
 			/**
-			* Constructor that initialises the buffer with a vector of Real values.
+			* Constructor that initialises the buffer with a vector of T values.
 			*
-			* @param vec The vector of Real values to initialise the buffer with.
+			* @param vec The vector of T values to initialise the buffer with.
 			*/
-			Buffer(const std::vector<Real>& vector) : mBuffer(vector) {};
+			Buffer(const std::vector<T>& vector) : mBuffer(vector) {};
 
 			/**
 			* @brief Default deconstructor.
@@ -73,7 +74,21 @@ namespace RAC
 			* 
 			* @param numSamples The number of samples to resize the buffer to.
 			*/
-			void ResizeBuffer(const size_t numSamples);
+			inline void ResizeBuffer(const size_t numSamples)
+			{
+				assert(numSamples >= 0);
+
+				size_t size = Length();
+				if (size == numSamples)
+					return;
+				if (size < numSamples)
+				{
+					mBuffer.reserve(numSamples);
+					mBuffer.insert(mBuffer.end(), numSamples - size, 0.0);
+				}
+				else
+					mBuffer.resize(numSamples);
+			}
 
 			/**
 			* @brief Checks if the buffer is valid.
@@ -81,7 +96,13 @@ namespace RAC
 			* 
 			* @return False if the buffer contains nan values, true otherwise
 			*/
-			bool Valid();
+			bool Valid()
+			{
+				for (int i = 0; i < Length(); i++)
+					if (std::isnan(mBuffer[i]))
+						return false;
+				return true;
+			}
 
 			/**
 			* @brief Access the buffer at the specified index
@@ -89,7 +110,7 @@ namespace RAC
 			* @param i The index of the value to return
 			* @return A reference to the value at the specified index
 			*/
-			inline Real& operator[](const int i) { return mBuffer[i]; };
+			inline T& operator[](const int i) { return mBuffer[i]; };
 
 			/**
 			* @brief Access the buffer at the specified index
@@ -97,14 +118,14 @@ namespace RAC
 			* @param i The index of the value to return
 			* @return The value at the specified index
 			*/
-			inline Real operator[](const int i) const { assert(i < mBuffer.size()); return mBuffer[i]; };
+			inline T operator[](const int i) const { assert(i < mBuffer.size()); return mBuffer[i]; };
 
 			/**
 			* @brief Multiplies each sample in the buffer by a scalar value.
 			*/
-			inline Buffer operator*=(const Real a)
+			inline Buffer operator*=(const T a)
 			{
-				for (Real& sample : mBuffer)
+				for (T& sample : mBuffer)
 					sample *= a;
 				return *this;
 			}
@@ -112,9 +133,9 @@ namespace RAC
 			/**
 			* @brief Adds a scalar value to each sample in the buffer.
 			*/
-			inline Buffer operator+=(const Real a)
+			inline Buffer operator+=(const T a)
 			{
-				for (Real& sample : mBuffer)
+				for (T& sample : mBuffer)
 					sample += a;
 				return *this;
 			}
@@ -139,7 +160,7 @@ namespace RAC
 
 		private:
 
-			std::vector<Real> mBuffer;		// Buffer data
+			std::vector<T> mBuffer;		// Buffer data
 		};
 
 		//////////////////// Buffer operator overloads ////////////////////
@@ -148,7 +169,8 @@ namespace RAC
 		* @brief Performs an element-wise comparison
 		* @return True if their samples are equal, false otherwise
 		*/
-		inline bool operator==(const Buffer& a, const Buffer& b)
+		template <typename T = Real>
+		inline bool operator==(const Buffer<T>& a, const Buffer<T>& b)
 		{
 			if (a.Length() != b.Length())
 				return false;

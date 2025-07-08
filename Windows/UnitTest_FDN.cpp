@@ -14,12 +14,12 @@ namespace RAC
 
 #pragma optimize("", off)
 
-	Real CalculateT60(const Buffer& out, const int numSamples, const int fs)
+	Real CalculateT60(const Buffer<>& out, const int numSamples, const int fs)
 	{
 		Rowvec envelope(numSamples);
 
 		// Calculate the decay curve (in dB) for each channel and find the time to reach -60 dB
-		Buffer meanDecayCurve(numSamples);
+		Buffer<> meanDecayCurve(numSamples);
 		Real max = 0.0;
 		Real cumSum = 0.0;
 		for (int j = 0; j < numSamples; j++)
@@ -58,7 +58,7 @@ namespace RAC
 			Matrix in(config->numLateReverbChannels, config->numFrames);
 			in.RandomUniformDistribution();
 
-			std::vector<Buffer> out(config->numLateReverbChannels, Buffer(config->numFrames));
+			std::vector<Buffer<>> out(config->numLateReverbChannels, Buffer<>(config->numFrames));
 			fdn.SetTargetReflectionFilters(reflectionGains);
 			fdn.ProcessAudio(in, out, lerpFactor);
 
@@ -96,7 +96,7 @@ namespace RAC
 			Matrix in(config->numLateReverbChannels, config->numFrames);
 			in.RandomUniformDistribution();
 
-			std::vector<Buffer> out(config->numLateReverbChannels, Buffer(config->numFrames));
+			std::vector<Buffer<>> out(config->numLateReverbChannels, Buffer<>(config->numFrames));
 			fdn.ProcessAudio(in, out, lerpFactor);
 
 			for (int i = 0; i < config->numLateReverbChannels; i++)
@@ -130,7 +130,7 @@ namespace RAC
 			for (int i = 0; i < config->numLateReverbChannels; i++)
 				in[i][1] = 1.0;
 
-			std::vector<Buffer> out(config->numLateReverbChannels, Buffer(config->numFrames));
+			std::vector<Buffer<>> out(config->numLateReverbChannels, Buffer<>(config->numFrames));
 			fdn.ProcessAudio(in, out, lerpFactor);
 
 			// Analyze Output Decay
@@ -166,7 +166,7 @@ namespace RAC
 			for (int i = 0; i < config->numLateReverbChannels; i++)
 				in[i][1] = 1.0;
 
-			std::vector<Buffer> out(config->numLateReverbChannels, Buffer(config->numFrames));
+			std::vector<Buffer<>> out(config->numLateReverbChannels, Buffer<>(config->numFrames));
 			fdn.ProcessAudio(in, out, lerpFactor);
 			
 			// Analyze Output Decay
@@ -202,7 +202,7 @@ namespace RAC
 			for (int i = 0; i < config->numLateReverbChannels; i++)
 				in[i][1] = 1.0;
 
-			std::vector<Buffer> out(config->numLateReverbChannels, Buffer(config->numFrames));
+			std::vector<Buffer<>> out(config->numLateReverbChannels, Buffer<>(config->numFrames));
 			fdn.ProcessAudio(in, out, lerpFactor);
 
 			// Analyze Output Decay
@@ -236,7 +236,7 @@ namespace RAC
 			Matrix in(config->numLateReverbChannels, config->numFrames);
 			in[0][0] = 1.0;
 
-			std::vector<Buffer> out(config->numLateReverbChannels, Buffer(config->numFrames));
+			std::vector<Buffer<>> out(config->numLateReverbChannels, Buffer<>(config->numFrames));
 			fdn.ProcessAudio(in, out, lerpFactor);
 
 			Real sum = 0.0;
@@ -275,7 +275,7 @@ namespace RAC
 			Matrix in(config->numLateReverbChannels, config->numFrames);
 			in[0][0] = 1.0;
 
-			std::vector<Buffer> out(config->numLateReverbChannels, Buffer(config->numFrames));
+			std::vector<Buffer<>> out(config->numLateReverbChannels, Buffer<>(config->numFrames));
 			fdn.ProcessAudio(in, out, lerpFactor);
 
 			for (int i = 0; i < config->numLateReverbChannels; i++)
@@ -309,7 +309,7 @@ namespace RAC
 			Matrix in(config->numLateReverbChannels, config->numFrames);
 			in[0][0] = 1.0;
 
-			std::vector<Buffer> out(config->numLateReverbChannels, Buffer(config->numFrames));
+			std::vector<Buffer<>> out(config->numLateReverbChannels, Buffer<>(config->numFrames));
 			fdn.ProcessAudio(in, out, lerpFactor);
 
 			for (int i = 0; i < config->numLateReverbChannels; i++)
@@ -332,8 +332,8 @@ namespace RAC
 			channel.SetTargetReflectionFilter(reflectionGains);
 
 			const int numFrames = 256;
-			Buffer in(numFrames);
-			Buffer out(numFrames);
+			Buffer<> in(numFrames);
+			Buffer<> out(numFrames);
 			for (int i = 0; i < numFrames; i++)
 				in[i] = channel.GetOutput(rand(), config->lerpFactor);
 			channel.ProcessOutput(in, out, numFrames, config->lerpFactor);
@@ -358,9 +358,9 @@ namespace RAC
 			channel.SetTargetReflectionFilter(reflectionGains);
 
 			const int numFrames = 256;
-			Buffer in(numFrames);
+			Buffer<> in(numFrames);
 			in[0] = 1.0;
-			Buffer out(numFrames);
+			Buffer<> out(numFrames);
 
 			for (int i = 0; i < 10; i++)
 				channel.ProcessOutput(in, out, numFrames, config->lerpFactor);

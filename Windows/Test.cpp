@@ -209,7 +209,7 @@ namespace RAC
 			std::vector<Vec3> sourcePositions = { Vec3(5.47, 1.62, 4.5), Vec3(3.72, 1.62, 3.25) };
 			std::vector<Vec4> sourceOrientations = { AzimuthElevationToQuaternion(270.0, 0.0), AzimuthElevationToQuaternion(0.0, 0.0) };
 
-			std::vector<float> in(numFrames, 0.0);
+			std::vector<Real> in(numFrames, 0.0);
 			std::vector<float> out(2 * numFrames, 0.0);
 			std::vector<float> left(fs, 0.0);
 			std::vector<float> right(fs, 0.0);
@@ -248,10 +248,10 @@ namespace RAC
 							UpdateSource(sourceID, sourcePosition, sourceOrientation);
 							Sleep(20);
 							// UpdateSource(sourceID, sourcePosition, sourceOrientation);
-							SubmitAudio(sourceID, &in[0]);
+							SubmitAudio(sourceID, in);
 
 							in[0] = 1.0;
-							SubmitAudio(sourceID, &in[0]);
+							SubmitAudio(sourceID, in);
 							GetOutput(&outPtr);
 							for (int k = 0; k < numFrames; k++)
 							{
@@ -262,7 +262,7 @@ namespace RAC
 							in[0] = 0.0;
 							for (int n = 1; n < numBuffers; n++)
 							{
-								SubmitAudio(sourceID, &in[0]);
+								SubmitAudio(sourceID, in);
 								GetOutput(&outPtr);
 								for (int k = 0; k < numFrames; k++)
 								{
@@ -335,7 +335,7 @@ namespace RAC
 			UpdateSourceDirectivity(sourceID, SourceDirectivity::omni);
 
 			Sleep(1000);
-			std::vector<float> in(numFrames, 0.0);
+			std::vector<Real> in(numFrames, 0.0);
 			std::vector<float> out(2 * numFrames, 0.0);
 			std::vector<float> left(fs, 0.0);
 			std::vector<float> right(fs, 0.0);
@@ -346,7 +346,7 @@ namespace RAC
 
 			for (int i = 0; i < 1; i++)
 			{
-				SubmitAudio(sourceID, &in[0]);
+				SubmitAudio(sourceID, in);
 				GetOutput(&outPtr);
 			}
 
@@ -357,7 +357,7 @@ namespace RAC
 
 			for (int i = 0; i < 10; i++)
 			{
-				SubmitAudio(sourceID, &in[0]);
+				SubmitAudio(sourceID, in);
 				GetOutput(&outPtr);
 			}
 

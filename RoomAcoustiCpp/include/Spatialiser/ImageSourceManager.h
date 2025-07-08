@@ -50,7 +50,7 @@ namespace RAC
 			* @param reverbInput The reverb input matrix to write to
 			* @param lerpFactor The lerp factor for interpolation
 			*/
-			inline void ProcessAudio(Buffer& outputBuffer, Matrix& reverbInput, const Real lerpFactor)
+			inline void ProcessAudio(Buffer<>& outputBuffer, Matrix& reverbInput, const Real lerpFactor)
 			{
 				for (auto& imageSource : mImageSources)
 					imageSource->ProcessAudio(outputBuffer, reverbInput, lerpFactor);

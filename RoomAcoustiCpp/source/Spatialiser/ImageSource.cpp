@@ -195,7 +195,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void ImageSource::Init(const Buffer* sourceBuffer, const std::shared_ptr<Config>& config, const ImageSourceData& data, int fdnChannel)
+		void ImageSource::Init(const Buffer<>* sourceBuffer, const std::shared_ptr<Config>& config, const ImageSourceData& data, int fdnChannel)
 		{
 			if (mSource == nullptr)
 			{
@@ -536,7 +536,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void ImageSource::ProcessAudio(Buffer& outputBuffer, Matrix& reverbInput, const Real lerpFactor)
+		void ImageSource::ProcessAudio(Buffer<>& outputBuffer, Matrix& reverbInput, const Real lerpFactor)
 		{
 			if (!GetAccess())
 				return;
@@ -598,7 +598,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void ImageSource::ProcessDiffraction(const Buffer& inBuffer, Buffer& outBuffer, const Real lerpFactor)
+		void ImageSource::ProcessDiffraction(const Buffer<>& inBuffer, Buffer<>& outBuffer, const Real lerpFactor)
 		{
 			PROFILE_Diffraction
 			activeModel->ProcessAudio(inBuffer, outBuffer, lerpFactor);

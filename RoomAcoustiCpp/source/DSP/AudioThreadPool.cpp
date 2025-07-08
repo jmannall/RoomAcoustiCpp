@@ -48,7 +48,7 @@ namespace RAC
 
         ////////////////////////////////////////
 
-        void AudioThreadPool::ProcessAllSources(std::array<std::optional<Source>, MAX_SOURCES>& sources, ImageSourceManager& imageSources, Buffer& outputBuffer, Matrix& reverbInput, Real lerpFactor)
+        void AudioThreadPool::ProcessAllSources(std::array<std::optional<Source>, MAX_SOURCES>& sources, ImageSourceManager& imageSources, Buffer<>& outputBuffer, Matrix& reverbInput, Real lerpFactor)
         {
             if (stop.load(std::memory_order_acquire))
                 return;
@@ -92,7 +92,7 @@ namespace RAC
 
         ////////////////////////////////////////
 
-        void AudioThreadPool::ProcessReverbSources(std::vector<std::unique_ptr<ReverbSource>>& reverbSources, Buffer& outputBuffer)
+        void AudioThreadPool::ProcessReverbSources(std::vector<std::unique_ptr<ReverbSource>>& reverbSources, Buffer<>& outputBuffer)
         {
             if (stop.load(std::memory_order_acquire))
                 return;

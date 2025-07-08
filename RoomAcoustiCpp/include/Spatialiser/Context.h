@@ -105,7 +105,7 @@ namespace RAC
 			* @param leftIR The impulse response for the left channel.
 			* @param rightIR The impulse response for the right channel.
 			*/
-			inline void SetHeadphoneEQ(const Buffer& leftIR, const Buffer& rightIR) { headphoneEQ.SetFilters(leftIR, rightIR); applyHeadphoneEQ = true; }
+			inline void SetHeadphoneEQ(const Buffer<>& leftIR, const Buffer<>& rightIR) { headphoneEQ.SetFilters(leftIR, rightIR); applyHeadphoneEQ = true; }
 
 			/**
 			* @brief Updates the spatialisation mode for each component of the spatialiser.
@@ -268,7 +268,7 @@ namespace RAC
 			* @param id The ID of the source to send the audio to.
 			* @param data The audio buffer.
 			*/
-			inline void SubmitAudio(size_t id, const Buffer& data) { PROFILE_SubmitAudio mSources->SetInputBuffer(id, data); }
+			inline void SubmitAudio(size_t id, const Buffer<>& data) { PROFILE_SubmitAudio mSources->SetInputBuffer(id, data); }
 
 			/**
 			* @brief Accesses the output of the spatialiser.
@@ -312,8 +312,8 @@ namespace RAC
 			/**
 			* Audio buffers
 			*/
-			Buffer mInputBuffer;	// Audio input buffer
-			Buffer mOutputBuffer;	// Audio output buffer
+			Buffer<> mInputBuffer;	// Audio input buffer
+			Buffer<> mOutputBuffer;	// Audio output buffer
 			Matrix mReverbInput;	// Audio reverb input matrix
 			std::vector<float> mSendBuffer;	// Audio send buffer (float)
 

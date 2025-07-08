@@ -20,7 +20,7 @@ namespace RAC
 
 			////////////////////////////////////////
 
-			void Attenuate::ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const Real lerpFactor)
+			void Attenuate::ProcessAudio(const Buffer<>& inBuffer, Buffer<>& outBuffer, const Real lerpFactor)
 			{
 				if (!isInitialised.load(std::memory_order_acquire))
 				{
@@ -38,7 +38,7 @@ namespace RAC
 
 			////////////////////////////////////////
 
-			void LPF::ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const Real lerpFactor)
+			void LPF::ProcessAudio(const Buffer<>& inBuffer, Buffer<>& outBuffer, const Real lerpFactor)
 			{
 				if (!isInitialised.load(std::memory_order_acquire))
 				{
@@ -125,7 +125,7 @@ namespace RAC
 
 			////////////////////////////////////////
 
-			void NN::ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const Real lerpFactor)
+			void NN::ProcessAudio(const Buffer<>& inBuffer, Buffer<>& outBuffer, const Real lerpFactor)
 			{
 				if (!isInitialised)
 				{
@@ -223,7 +223,7 @@ namespace RAC
 
 			////////////////////////////////////////
 
-			void UTD::ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const Real lerpFactor)
+			void UTD::ProcessAudio(const Buffer<>& inBuffer, Buffer<>& outBuffer, const Real lerpFactor)
 			{
 				FlushDenormals();
 				for (int i = 0; i < inBuffer.Length(); i++)
@@ -385,7 +385,7 @@ namespace RAC
 
 			////////////////////////////////////////
 
-			Buffer BTM::CalculateBTM(const Path& path)
+			Buffer<> BTM::CalculateBTM(const Path& path)
 			{
 				if (!path.valid)
 					return Buffer();
@@ -563,7 +563,7 @@ namespace RAC
 
 			////////////////////////////////////////
 
-			void BTM::ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const Real lerpFactor)
+			void BTM::ProcessAudio(const Buffer<>& inBuffer, Buffer<>& outBuffer, const Real lerpFactor)
 			{
 				if (!isInitialised.load(std::memory_order_acquire))
 				{

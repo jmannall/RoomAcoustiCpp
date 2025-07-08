@@ -229,7 +229,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Source::ProcessAudio(Buffer& outputBuffer, Matrix& reverbInput, const Real lerpFactor)
+		void Source::ProcessAudio(Buffer<>& outputBuffer, Matrix& reverbInput, const Real lerpFactor)
 		{
 			if (!GetAccess())
 				return;

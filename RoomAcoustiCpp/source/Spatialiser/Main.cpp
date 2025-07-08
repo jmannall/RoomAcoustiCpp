@@ -551,7 +551,7 @@ extern "C"
 	*/
 	EXPORT void API RACSubmitAudio(int id, const float* data)
 	{
-		Buffer buffer = Buffer(numAudioFrames);
+		Buffer<> buffer = Buffer<>(numAudioFrames);
 		std::transform(data, data + numAudioFrames, buffer.begin(),
 			[](float value) { return static_cast<Real>(value); });
 		SubmitAudio(static_cast<size_t>(id), buffer);

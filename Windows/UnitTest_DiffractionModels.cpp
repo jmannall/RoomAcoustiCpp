@@ -51,7 +51,7 @@ namespace RAC
 
 		std::vector<Path> paths;
 
-		Buffer ir = Buffer(0);
+		Buffer<> ir = Buffer<>(0);
 		for (int i = 0; i < zW.size(); i++)
 		{
 			paths.emplace_back(CreatePath(rS[i], rR[i], tS[i], tR[i], tW[i], zS[i], zR[i], zW[i]));
@@ -111,7 +111,7 @@ namespace RAC
 
 		std::vector<Path> paths;
 
-		Buffer ir = Buffer(0);
+		Buffer<> ir = Buffer<>(0);
 		for (int i = 0; i < zW.size(); i++)
 		{
 			paths.emplace_back(CreatePath(rS[i], rR[i], tS[i], tR[i], tW[i], zS[i], zR[i], zW[i]));
@@ -148,9 +148,9 @@ namespace RAC
 		}
 
 		int numFrames = 2048;
-		Buffer in = Buffer(numFrames);
+		Buffer<> in = Buffer<>(numFrames);
 		in[0] = 1.0;
-		Buffer out = Buffer(2 * numFrames);
+		Buffer<> out = Buffer<>(2 * numFrames);
 		Real lerp = 2.0 / static_cast<Real>(numFrames);
 
 		for (int i = 0; i < paths.size(); i++)
@@ -220,10 +220,10 @@ namespace RAC
 			Path path = CreatePath(rS, rR, tS, tR, tW, zS, zR, zW);
 			Attenuate attenuate(path);
 
-			Buffer in(numFrames);
+			Buffer<> in(numFrames);
 			for (int i = 0; i < numFrames; i++)
 				in[i] = RandomValue();
-			Buffer output(numFrames);
+			Buffer<> output(numFrames);
 			attenuate.ProcessAudio(in, output, lerpFactor);
 
 			for (int i = 0; i < numFrames; i++)
@@ -251,10 +251,10 @@ namespace RAC
 			Path path = CreatePath(rS, rR, tS, tR, tW, zS, zR, zW);
 			Attenuate attenuate(path);
 
-			Buffer in(numFrames);
+			Buffer<> in(numFrames);
 			for (int i = 0; i < numFrames; i++)
 				in[i] = RandomValue();
-			Buffer output(numFrames);
+			Buffer<> output(numFrames);
 			attenuate.ProcessAudio(in, output, lerpFactor);
 
 			for (int i = 0; i < numFrames; i++)
@@ -288,10 +288,10 @@ namespace RAC
 			Path path = CreatePath(rS, rR, tS, tR, tW, zS, zR, zW);
 			LPF lpf(path, fs);
 
-			Buffer in(numFrames);
+			Buffer<> in(numFrames);
 			for (int i = 0; i < numFrames; i++)
 				in[i] = RandomValue();
-			Buffer output(numFrames);
+			Buffer<> output(numFrames);
 			lpf.ProcessAudio(in, output, lerpFactor);
 
 			Real fc = 1000.0;
@@ -323,10 +323,10 @@ namespace RAC
 			Path path = CreatePath(rS, rR, tS, tR, tW, zS, zR, zW);
 			LPF lpf(path, fs);
 
-			Buffer in(numFrames);
+			Buffer<> in(numFrames);
 			for (int i = 0; i < numFrames; i++)
 				in[i] = RandomValue();
-			Buffer output(numFrames);
+			Buffer<> output(numFrames);
 			lpf.ProcessAudio(in, output, lerpFactor);
 
 			for (int i = 0; i < numFrames; i++)
@@ -354,9 +354,9 @@ namespace RAC
 			const int numTests = target.size();
 			Real lerpFactor = 0.1;
 
-			Buffer in(numFrames);
+			Buffer<> in(numFrames);
 			in[0] = 1.0;
-			std::vector<Buffer> outputs(numTests, Buffer(numFrames));
+			std::vector<Buffer<>> outputs(numTests, Buffer<>(numFrames));
 
 			std::vector<Real> zW(data[0]);
 			std::vector<Real> tW(data[1]);
@@ -404,9 +404,9 @@ namespace RAC
 			const int numTests = target.size();
 			Real lerpFactor = 0.1;
 
-			Buffer in(numFrames);
+			Buffer<> in(numFrames);
 			in[0] = 1.0;
-			std::vector<Buffer> outputs(numTests, Buffer(numFrames));
+			std::vector<Buffer<>> outputs(numTests, Buffer<>(numFrames));
 
 			std::vector<Real> zW(data[0]);
 			std::vector<Real> tW(data[1]);
@@ -454,9 +454,9 @@ namespace RAC
 			const int numTests = target.size();
 			Real lerpFactor = 0.1;
 
-			Buffer in(numFrames);
+			Buffer<> in(numFrames);
 			in[0] = 1.0;
-			std::vector<Buffer> outputs(numTests, Buffer(numFrames));
+			std::vector<Buffer<>> outputs(numTests, Buffer<>(numFrames));
 
 			std::vector<Real> zW(data[0]);
 			std::vector<Real> tW(data[1]);
@@ -505,9 +505,9 @@ namespace RAC
 			const int numTests = target.size();
 			Real lerpFactor = 0.1;
 
-			Buffer in(numFrames);
+			Buffer<> in(numFrames);
 			in[0] = 1.0;
-			std::vector<Buffer> outputs(numTests, Buffer(numFrames));
+			std::vector<Buffer<>> outputs(numTests, Buffer<>(numFrames));
 
 			std::vector<Real> zW(data[0]);
 			std::vector<Real> tW(data[1]);
@@ -556,9 +556,9 @@ namespace RAC
 			const int numTests = target.size();
 			Real lerpFactor = 0.1;
 
-			Buffer in(numFrames);
+			Buffer<> in(numFrames);
 			in[0] = 1.0;
-			std::vector<Buffer> outputs(numTests, Buffer(numFrames));
+			std::vector<Buffer<>> outputs(numTests, Buffer<>(numFrames));
 
 			std::vector<Real> zW(data[0]);
 			std::vector<Real> tW(data[1]);
@@ -607,9 +607,9 @@ namespace RAC
 			const int numTests = target.size();
 			Real lerpFactor = 0.1;
 
-			Buffer in(numFrames);
+			Buffer<> in(numFrames);
 			in[0] = 1.0;
-			std::vector<Buffer> outputs(numTests, Buffer(numFrames));
+			std::vector<Buffer<>> outputs(numTests, Buffer<>(numFrames));
 
 			std::vector<Real> zW(data[0]);
 			std::vector<Real> tW(data[1]);

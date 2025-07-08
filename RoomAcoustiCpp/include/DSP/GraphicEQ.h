@@ -84,7 +84,7 @@ namespace RAC
 			* @param numFrames The number of frames in the buffer
 			* @param lerpFactor The linear interpolation factor
 			*/
-			void ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const Real lerpFactor);
+			void ProcessAudio(const Buffer<>& inBuffer, Buffer<>& outBuffer, const Real lerpFactor);
 
 			/**
 			* @brief Resets the filter buffers

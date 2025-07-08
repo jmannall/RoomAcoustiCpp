@@ -149,7 +149,7 @@ namespace RAC
 		InitLateReverb(145.0f, Vec({ 8.444f, 6.038f, 2.988f }), FDNMatrix::randomOrthogonal);
 		UpdatePlanesAndEdges();
 
-		std::vector<float> input(config->numFrames);
+		std::vector<Real> input(config->numFrames);
 
 		RegisterIEMCallback(OnIEMCompleted);
 
@@ -225,14 +225,14 @@ namespace RAC
 				while (!lateReverbCompleted || iemCounter < 2) { std::this_thread::sleep_for(std::chrono::milliseconds(1)); }
 
 				input[0] = 0.0;
-				SubmitAudio(sourceID, &input[0]);
+				SubmitAudio(sourceID, input);
 
 				input[0] = 1.0;
 
 				int count = 0;
 				for (int k = 0; k < numBuffers; k++)
 				{
-					SubmitAudio(sourceID, &input[0]);
+					SubmitAudio(sourceID, input);
 
 					input[0] = 0.0;
 					GetOutput(&outputPtr);

@@ -16,7 +16,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Buffer::ResizeBuffer(const size_t numSamples)
+		/*void Buffer<T>::ResizeBuffer(const size_t numSamples)
 		{
 			assert(numSamples >= 0);
 
@@ -30,16 +30,16 @@ namespace RAC
 			}
 			else
 				mBuffer.resize(numSamples);
-		}
+		}*/
 
 		////////////////////////////////////////
 
-		bool Buffer::Valid()
+		/*bool Buffer<T>::Valid()
 		{
 			for (int i = 0; i < Length(); i++)
 				if (std::isnan(mBuffer[i]))
 					return false;
 			return true;
-		}
+		}*/
 	}
 }

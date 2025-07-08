@@ -65,7 +65,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void SetHeadphoneEQ(const Buffer& leftIR, const Buffer& rightIR)
+		void SetHeadphoneEQ(const Buffer<>& leftIR, const Buffer<>& rightIR)
 		{
 			auto context = GetContext();
 			if (context)
@@ -240,7 +240,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void SubmitAudio(size_t id, const Buffer& data)
+		void SubmitAudio(size_t id, const Buffer<>& data)
 		{
 			auto context = GetContext();
 			if (context)

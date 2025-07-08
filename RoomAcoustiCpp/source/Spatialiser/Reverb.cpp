@@ -38,7 +38,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		ReverbSource::ReverbSource(Binaural::CCore* core, const std::shared_ptr<Config> config, const Vec3& shift, const Buffer* inBuffer) : mCore(core), mShift(shift), inputBuffer(inBuffer)
+		ReverbSource::ReverbSource(Binaural::CCore* core, const std::shared_ptr<Config> config, const Vec3& shift, const Buffer<>* inBuffer) : mCore(core), mShift(shift), inputBuffer(inBuffer)
 		{
 			bInput = CMonoBuffer<float>(config->numFrames);
 			bOutput.left = CMonoBuffer<float>(config->numFrames);
@@ -125,7 +125,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void ReverbSource::ProcessAudio(Buffer& outputBuffer)
+		void ReverbSource::ProcessAudio(Buffer<>& outputBuffer)
 		{
 			PROFILE_ReverbSource
 			if (clearBuffers.load(std::memory_order_acquire))
@@ -211,7 +211,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Reverb::ProcessAudio(const Matrix& data, Buffer& outputBuffer, const Real lerpFactor)
+		void Reverb::ProcessAudio(const Matrix& data, Buffer<>& outputBuffer, const Real lerpFactor)
 		{
 			PROFILE_LateReverb
 			if (!running.load(std::memory_order_acquire))

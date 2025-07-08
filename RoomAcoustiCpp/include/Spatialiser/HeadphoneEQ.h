@@ -34,7 +34,7 @@ namespace RAC
 			* @param leftIR The impulse response for the left channel
 			* @param rightIR The impulse response for the right channel
 			*/
-			inline void SetFilters(const Buffer& leftIR, const Buffer& rightIR)
+			inline void SetFilters(const Buffer<>& leftIR, const Buffer<>& rightIR)
 			{
 				leftFilter.SetTargetIR(leftIR);
 				rightFilter.SetTargetIR(rightIR);
@@ -46,7 +46,7 @@ namespace RAC
 			* @params inputBuffer The input audio buffer
 			* @params outputBuffer The output buffer to write to
 			*/
-			inline void ProcessAudio(const Buffer& inputBuffer, Buffer& outputBuffer, const Real lerpFactor)
+			inline void ProcessAudio(const Buffer<>& inputBuffer, Buffer<>& outputBuffer, const Real lerpFactor)
 			{
 				for (int i = 0; i < inputBuffer.Length(); i += 2)
 				{

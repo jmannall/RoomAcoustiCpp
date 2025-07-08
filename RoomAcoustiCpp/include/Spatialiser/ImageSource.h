@@ -429,7 +429,7 @@ namespace RAC
 			* @param data The image source data to initialise with
 			* @param fdnChannel The FDN channel to feed, -1 if the image source does not feed the FDN
 			*/
-			void Init(const Buffer* inputBuffer, const std::shared_ptr<Config>& config, const ImageSourceData& data, int fdnChannel);
+			void Init(const Buffer<>* inputBuffer, const std::shared_ptr<Config>& config, const ImageSourceData& data, int fdnChannel);
 
 			/**
 			* @brief Update the image source and remove if no longer visible
@@ -480,7 +480,7 @@ namespace RAC
 			* @param reverbInput The reverb input buffer to write to
 			* @param lerpFactor The lerp factor for interpolation
 			*/
-			void ProcessAudio(Buffer& outputBuffer, Matrix& reverbInput, const Real lerpFactor);
+			void ProcessAudio(Buffer<>& outputBuffer, Matrix& reverbInput, const Real lerpFactor);
 
 			/**
 			* @brief Resets the image source by clearing the buffers and removing the source from the 3DTI processing core
@@ -552,7 +552,7 @@ namespace RAC
 			* @params outBuffer The output audio buffer to write to
 			* @params lerpFactor The lerp factor for interpolation
 			*/
-			void ProcessDiffraction(const Buffer& inBuffer, Buffer& outBuffer, const Real lerpFactor);
+			void ProcessDiffraction(const Buffer<>& inBuffer, Buffer<>& outBuffer, const Real lerpFactor);
 
 			/**
 			* @brief Initialises the internal audio buffers
@@ -574,9 +574,9 @@ namespace RAC
 			std::atomic<bool> feedsFDN{ false };	// True if the image source feeds the FDN, false otherwise
 			std::atomic<int> mFDNChannel{ -1 };		// The FDN channel the image source feeds, -1 if the image source does not feed the FDN
 
-			const Buffer* inputBuffer{ nullptr };		// Pointer to the source input buffer
-			Buffer bStore;								// Internal working buffer
-			Buffer bDiffStore;							// Internal diffraction crossfade buffer
+			const Buffer<>* inputBuffer{ nullptr };		// Pointer to the source input buffer
+			Buffer<> bStore;								// Internal working buffer
+			Buffer<> bDiffStore;							// Internal diffraction crossfade buffer
 			CMonoBuffer<float> bInput;					// 3DTI Input buffer
 			CEarPair<CMonoBuffer<float>> bOutput;		// 3DTI Stero Output buffer
 			CMonoBuffer<float> bMonoOutput;				// 3DTI Mono output buffer for reverb send

@@ -71,7 +71,7 @@ namespace RAC
 				* @param outBuffer The output audio buffer to write to
 				* @param lerpFactor The lerp factor for interpolation
 				*/
-				virtual void ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const Real lerpFactor) = 0;
+				virtual void ProcessAudio(const Buffer<>& inBuffer, Buffer<>& outBuffer, const Real lerpFactor) = 0;
 
 			protected:
 				std::atomic<bool> isInitialised{ false };	// True if the model has been initialised, false otherwise
@@ -114,7 +114,7 @@ namespace RAC
 				* @param outBuffer The output audio buffer to write to
 				* @param lerpFactor The lerp factor for interpolation
 				*/
-				void ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const Real lerpFactor) override;
+				void ProcessAudio(const Buffer<>& inBuffer, Buffer<>& outBuffer, const Real lerpFactor) override;
 			private:
 
 				/**
@@ -163,7 +163,7 @@ namespace RAC
 				* @param outBuffer The output audio buffer to write to
 				* @param lerpFactor The lerp factor for interpolation
 				*/
-				void ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const Real lerpFactor) override;
+				void ProcessAudio(const Buffer<>& inBuffer, Buffer<>& outBuffer, const Real lerpFactor) override;
 			private:
 
 				/**
@@ -396,7 +396,7 @@ namespace RAC
 				* @param outBuffer The output audio buffer to write to
 				* @param lerpFactor The lerp factor for interpolation
 				*/
-				void ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const Real lerpFactor) override
+				void ProcessAudio(const Buffer<>& inBuffer, Buffer<>& outBuffer, const Real lerpFactor) override
 				{
 					if (!isInitialised.load(std::memory_order_acquire))
 						return;
@@ -687,7 +687,7 @@ namespace RAC
 				* @param outBuffer The output audio buffer to write to
 				* @param lerpFactor The lerp factor for interpolation
 				*/
-				void ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const Real lerpFactor) override;
+				void ProcessAudio(const Buffer<>& inBuffer, Buffer<>& outBuffer, const Real lerpFactor) override;
 
 			private:
 				/**
@@ -827,7 +827,7 @@ namespace RAC
 				* @param outBuffer The output audio buffer to write to
 				* @param lerpFactor The lerp factor for interpolation
 				*/
-				void ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const Real lerpFactor) override;
+				void ProcessAudio(const Buffer<>& inBuffer, Buffer<>& outBuffer, const Real lerpFactor) override;
 
 			private:
 				/**
@@ -1042,7 +1042,7 @@ namespace RAC
 				* @param outBuffer The output audio buffer to write to
 				* @param lerpFactor The lerp factor for interpolation
 				*/
-				void ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const Real lerpFactor) override;
+				void ProcessAudio(const Buffer<>& inBuffer, Buffer<>& outBuffer, const Real lerpFactor) override;
 
 			private:
 				/**
@@ -1050,7 +1050,7 @@ namespace RAC
 				* 
 				* @param path The path to calculate the impulse response for
 				*/
-				Buffer CalculateBTM(const Path& path);
+				Buffer<> CalculateBTM(const Path& path);
 
 				/**
 				* @brief Analytical solution for the first sample in skew case (i.e rS != rS and zS != zR)

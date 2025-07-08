@@ -120,7 +120,7 @@ namespace RAC
 			* 
 			* @param data The audio data to write to the input buffer
 			*/
-			inline void SetInputBuffer(const Buffer& data)
+			inline void SetInputBuffer(const Buffer<>& data)
 			{
 				assert(data.Length() == inputBuffer.Length());
 				std::transform(data.begin(), data.end(), inputBuffer.begin(), [](Real val) { return val; });
@@ -193,7 +193,7 @@ namespace RAC
 			* @param reverbInput The reverb input buffer to write to
 			* @param lerpFactor The lerp factor for interpolation
 			*/
-			void ProcessAudio(Buffer& outputBuffer, Matrix& reverbInput, const Real lerpFactor);
+			void ProcessAudio(Buffer<>& outputBuffer, Matrix& reverbInput, const Real lerpFactor);
 
 			/**
 			* @brief Resets the source (if not in use) by clearing the buffers and removing the source from the 3DTI processing core
@@ -305,9 +305,9 @@ namespace RAC
 			std::atomic<bool> feedsFDN{ false };			// True if the source feeds the FDN
 
 			std::atomic<bool> clearInputBuffer{ false };	// True if the input buffer should be cleared, false otherwise
-			Buffer inputBuffer;								// Input audio buffer for the source
-			Buffer bStore;									// Internal scratch audio buffer
-			Buffer bStoreReverb;							// Internal audio buffer reverb send
+			Buffer<> inputBuffer;								// Input audio buffer for the source
+			Buffer<> bStore;									// Internal scratch audio buffer
+			Buffer<> bStoreReverb;							// Internal audio buffer reverb send
 
 			Vec3 currentPosition;						// Current source position
 			Vec4 currentOrientation;					// Current source orientation

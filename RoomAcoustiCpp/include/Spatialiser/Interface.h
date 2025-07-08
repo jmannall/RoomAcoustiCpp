@@ -49,7 +49,7 @@ namespace RAC
 		* @param leftIR The impulse response for the left channel.
 		* @param rightIR The impulse response for the right channel.
 		*/
-		void SetHeadphoneEQ(const Buffer& leftIR, const Buffer& rightIR);
+		void SetHeadphoneEQ(const Buffer<>& leftIR, const Buffer<>& rightIR);
 
 		/**
 		* Sets the spatialisation mode for the HRTF processing.
@@ -189,7 +189,7 @@ namespace RAC
 		* @param id The ID of the audio source to update.
 		* @param data The new audio data for the source.
 		*/
-		void SubmitAudio(size_t id, const Buffer& data);
+		void SubmitAudio(size_t id, const Buffer<>& data);
 
 		/**
 		* Returns a pointer to the output buffer of the spatialiser.

@@ -100,7 +100,7 @@ namespace RAC
 		* @params end The target buffer
 		* @params factor The interpolation factor (must be between 0 and 1)
 		*/
-		inline void Lerp(Buffer& start, const Buffer& end, const Real factor)
+		inline void Lerp(Buffer<>& start, const Buffer<>& end, const Real factor)
 		{
 			assert(0.0 < factor && factor <= 1.0);
 			assert(start.Length() >= end.Length());
@@ -169,7 +169,7 @@ namespace RAC
 		* @param v Buffer 2
 		* @returns True if equal within the threshold EPS, false otherwise
 		*/
-		inline bool Equals(const Buffer& u, const Buffer& v, const int length, const Real threshold = EPS)
+		inline bool Equals(const Buffer<>& u, const Buffer<>& v, const int length, const Real threshold = EPS)
 		{
 			assert(v.Length() == length);
 			assert(u.Length() >= length);

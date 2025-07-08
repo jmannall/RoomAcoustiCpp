@@ -32,7 +32,7 @@ namespace RAC
 			* @param impulseResponse The impulse response to initialise the FIRFilter with
 			* @param maxSize The maximum size of the FIRFilter
 			*/
-			FIRFilter(const Buffer& ir, const int maxSize) : maxFilterLength((maxSize % 8 == 0) ? maxSize : (maxSize + (8 - maxSize % 8))),
+			FIRFilter(const Buffer<>& ir, const int maxSize) : maxFilterLength((maxSize % 8 == 0) ? maxSize : (maxSize + (8 - maxSize % 8))),
 				inputLine(2 * maxFilterLength), currentIR(maxFilterLength)
 			{
 				if (!SetTargetIR(ir))
@@ -68,7 +68,7 @@ namespace RAC
 			* @param ir The new target impulse response
 			* @return True if the target impulse response was set successfully, false otherwise
 			*/
-			bool SetTargetIR(const Buffer& ir);
+			bool SetTargetIR(const Buffer<>& ir);
 
 			/**
 			* @brief Set flag to clear input line to zeros next time GetOutput is called
@@ -86,10 +86,10 @@ namespace RAC
 				
             const int maxFilterLength;	// Maximum filter length
 
-			std::atomic<std::shared_ptr<const Buffer>> targetIR;	// Target impulse response
+			std::atomic<std::shared_ptr<const Buffer<>>> targetIR;	// Target impulse response
 
-			Buffer currentIR;	// Current impulse response buffer (should only be accessed from the audio thread)
-			Buffer inputLine;	// Input line buffer (should only be accessed from the audio thread)
+			Buffer<> currentIR;	// Current impulse response buffer (should only be accessed from the audio thread)
+			Buffer<> inputLine;	// Input line buffer (should only be accessed from the audio thread)
 
 			size_t irLength;		// Length of the current impulse response (should only be accessed from the audio thread)
 			size_t oldIrLength;		// Previous length of the impulse response (should only be accessed from the audio thread)

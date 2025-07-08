@@ -208,7 +208,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void FDN::ProcessAudio(const Matrix& data, std::vector<Buffer>& outputBuffers, const Real lerpFactor)
+		void FDN::ProcessAudio(const Matrix& data, std::vector<Buffer<>>& outputBuffers, const Real lerpFactor)
 		{
 			PROFILE_FDN		
 			if (clearBuffers.load(std::memory_order_acquire))

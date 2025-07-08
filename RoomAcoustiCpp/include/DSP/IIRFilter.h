@@ -76,7 +76,7 @@ namespace RAC
 
 			Coefficients<> b;		// Numerator coefficients
 			Coefficients<> a;		// Denominator coefficients
-			Buffer y;			// Output buffer
+			Buffer<> y;			// Output buffer
 
 			std::atomic<bool> parametersEqual{ false };		// True if the current parameters are known to be equal to the target parameters
 			std::atomic<bool> initialised{ false };			// True if the filter has been initialised, false otherwise

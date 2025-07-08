@@ -169,7 +169,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void GraphicEQ::ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const Real lerpFactor)
+		void GraphicEQ::ProcessAudio(const Buffer<>& inBuffer, Buffer<>& outBuffer, const Real lerpFactor)
 		{
 			if (!initialised.load(std::memory_order_acquire))
 			{

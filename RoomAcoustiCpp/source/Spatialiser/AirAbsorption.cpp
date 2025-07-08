@@ -26,7 +26,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void AirAbsorption::ProcessAudio(const Buffer& inBuffer, Buffer& outBuffer, const Real lerpFactor)
+		void AirAbsorption::ProcessAudio(const Buffer<>& inBuffer, Buffer<>& outBuffer, const Real lerpFactor)
 		{
 			PROFILE_AirAbsorption
 			FlushDenormals();
