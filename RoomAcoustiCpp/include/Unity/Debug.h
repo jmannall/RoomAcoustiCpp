@@ -70,7 +70,7 @@ extern "C"
 /**
 * @brief Debugging flags for completed iem model
 */
-// #define IEM_FLAG
+#define IEM_FLAG
 
 namespace RAC
 {
