@@ -393,7 +393,7 @@ namespace RAC
 
 				int n0 = (int)round(samplesPerMetre * constants.R0);
 				int nir = (int)round(samplesPerMetre * path.GetMaxD());
-				int irLen = nir - n0;
+				int irLen = nir - n0 + 1;
 
 				Buffer ir(irLen);
 
