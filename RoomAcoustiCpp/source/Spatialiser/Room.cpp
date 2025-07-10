@@ -558,9 +558,6 @@ namespace RAC
 			if (reverbFormula == ReverbFormula::Custom)
 				return T60;
 
-			if (mVolume <= 0.0)
-				return Coefficients(numAbsorptionBands);
-
 			Coefficients absorption = Coefficients(numAbsorptionBands);
 			Real surfaceArea = 0.0;
 

@@ -130,7 +130,7 @@ namespace RAC
 			* @params volume The volume of the room
 			* @return The predicted reverb time of the room
 			*/
-			Coefficients<> GetReverbTime(const Real volume) { mVolume = volume; return GetReverbTime(); }
+			Coefficients<> GetReverbTime(const Real volume) { mVolume = std::max(volume, 0.001); return GetReverbTime(); }
 
 			/**
 			* @return True if the room geometry has changed since last check, false otherwise
