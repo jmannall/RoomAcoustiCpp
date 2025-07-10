@@ -45,7 +45,7 @@ namespace RAC
 
 		void ImageEdge::RunIEM()
 		{
-			ProfileSection section(ProfilerCategories::BackgroundThread);
+			PROFILE_BackgroundThread
 			bool doIEM = false;
 
 			shared_ptr<Room> sharedRoom = mRoom.lock();
@@ -518,13 +518,12 @@ namespace RAC
 				if (CheckObstructions(source.position, imageSource, { imageSource.GetApex() }))
 					continue;
 
+				InitImageSource(source, imageSource.GetApex(), imageSource, imageSources, feedsFDN);
 #ifdef DEBUG_IEM
 				Vec3 position;
 				position = imageSource.GetTransform().GetPosition();
 				Debug::send_path(imageSource.GetKey(), { imageSource.GetApex() }, position);
 #endif
-
-				InitImageSource(source, imageSource.GetApex(), imageSource, imageSources, feedsFDN);
 			}
 			return counter;
 		}
@@ -547,14 +546,12 @@ namespace RAC
 				ImageSourceData& imageSource = counter < size ? sp[0][counter] : sp[0].emplace_back(frequencyBands.Length(), source.id);
 
 				imageSource.SetPreviousPlane(Vec4(plane.GetD(), plane.GetNormal()));
-
 				if (counter < size)
 					imageSource.Clear(source.id);
 				counter++;
 
 				imageSource.Valid();
 				imageSource.AddPlaneID(planeID);
-
 				imageSource.SetTransform(position);
 
 				if (mIEMConfig.reflOrder < 1)
@@ -569,13 +566,12 @@ namespace RAC
 				if (CheckObstructions(source.position, imageSource, intersections))
 					continue;
 
+				InitImageSource(source, intersections[0], imageSource, imageSources, feedsFDN);
 #ifdef DEBUG_IEM
 				Vec3 position;
 				position = imageSource.GetTransform().GetPosition();
 				Debug::send_path(imageSource.GetKey(), intersections, position);
 #endif
-
-				InitImageSource(source, intersections[0], imageSource, imageSources, feedsFDN);
 			}
 			return counter;
 		}
@@ -590,17 +586,14 @@ namespace RAC
 
 			int order;
 			Vec3 position;
+			std::vector<Vec3> intersections = { Vec3() };
 			for (int refIdx = 1; refIdx < mIEMConfig.MaxOrder(); refIdx++)
 			{
 				int refOrder = refIdx + 1;
 				int prevRefIdx = refIdx - 1;
 				const bool feedsFDN = mIEMConfig.MaxOrder() == refOrder && mIEMConfig.lateReverb;
 
-				std::vector<Vec3> intersections;
-				size_t capacity = intersections.capacity();
-				intersections.reserve(refOrder);
-				std::fill_n(std::back_inserter(intersections), refOrder - capacity, Vec3());
-
+				intersections.emplace_back(Vec3());
 				// Check m is not null
 				if (sp[prevRefIdx].size() == 0)
 					return;
@@ -657,9 +650,10 @@ namespace RAC
 								ImageSourceData& imageSource = counter < size ? sp[refIdx][counter] : sp[refIdx].emplace_back(vS);
 
 								imageSource.SetPreviousPlane(planeData);
-
 								if (counter < size)
-									sp[refIdx][counter].Update(vS);
+									imageSource.Update(vS);
+								else
+									imageSource.IncreaseImageSourceOrder();
 								counter++;
 
 								imageSource.Reset();
@@ -679,12 +673,12 @@ namespace RAC
 								if (CheckObstructions(source.position, imageSource, intersections))
 									continue;
 
+								InitImageSource(source, intersections[0], imageSource, imageSources, feedsFDN);
 #ifdef DEBUG_IEM
 								Vec3 position;
 								position = imageSource.GetTransform().GetPosition();
 								Debug::send_path(imageSource.GetKey(), intersections, position);
 #endif
-								InitImageSource(source, intersections[0], imageSource, imageSources, feedsFDN);
 							}
 							// HOD reflections (post diffraction)
 							else if (refIdx < mIEMConfig.shadowDiffOrder || refIdx < mIEMConfig.specularDiffOrder)
@@ -723,16 +717,18 @@ namespace RAC
 								ImageSourceData& imageSource = counter < size ? sp[refIdx][counter] : sp[refIdx].emplace_back(vS);
 
 								imageSource.SetPreviousPlane(planeData);
-
 								if (counter < size)
-									sp[refIdx][counter].Update(vS);
+									imageSource.Update(vS);
+								else
+									imageSource.IncreaseImageSourceOrder();
 								counter++;
 
 								imageSource.Reset();
 								imageSource.Valid();
 								imageSource.AddPlaneID(planeID);
 
-								position = imageSource.GetPosition();
+								// position = imageSource.GetPosition(prevRefIdx);
+								position = imageSource.GetDiffractionPath().sData.point;
 								plane.ReflectPointInPlaneNoCheck(position);
 								imageSource.UpdateDiffractionPath(position, mListenerPosition, plane);
 
@@ -762,12 +758,12 @@ namespace RAC
 								if (CheckObstructions(source.position, imageSource, intersections))
 									continue;
 
+								InitImageSource(source, intersections[0], imageSource, imageSources, feedsFDN);
 #ifdef DEBUG_IEM
 								Vec3 position;
 								position = imageSource.GetTransform().GetPosition();
 								Debug::send_path(imageSource.GetKey(), intersections, position);
 #endif
-								InitImageSource(source, intersections[0], imageSource, imageSources, feedsFDN);
 							}
 						}
 					}
@@ -820,13 +816,15 @@ namespace RAC
 						ImageSourceData& imageSource = counter < size ? sp[refIdx][counter] : sp[refIdx].emplace_back(vS);
 
 						if (counter < size)
-							sp[refIdx][counter].Update(vS);
+							imageSource.Update(vS);
+						else
+							imageSource.IncreaseImageSourceOrder();
 						counter++;
 
 						imageSource.Reset();
 						imageSource.Valid();
 						imageSource.AddEdgeID(edgeID);
-						imageSource.UpdateDiffractionPath(imageSource.GetPosition(), mListenerPosition, edge);
+						imageSource.UpdateDiffractionPath(imageSource.GetPosition(prevRefIdx), mListenerPosition, edge);
 
 						// Receiver checks
 						if (rZone == EdgeZone::Invalid)
@@ -849,12 +847,12 @@ namespace RAC
 						if (CheckObstructions(source.position, imageSource, intersections))
 							continue;
 
+						InitImageSource(source, intersections[0], imageSource, imageSources, feedsFDN);
 #ifdef DEBUG_IEM
 						Vec3 position;
 						position = imageSource.GetTransform().GetPosition();
 						Debug::send_path(imageSource.GetKey(), intersections, position);
 #endif
-						InitImageSource(source, intersections[0], imageSource, imageSources, feedsFDN);
 					}
 				}
 				sp[refIdx].resize(counter, ImageSourceData(frequencyBands.Length(), source.id));
@@ -872,6 +870,7 @@ namespace RAC
 			imageSource.SetDistance(mListenerPosition);
 			imageSource.Visible(feedsFDN);
 			imageSource.UpdateCycle(currentCycle);
+			imageSource.CreateKey();
 			imageSources.insert_or_assign(imageSource.GetKey(), std::pair<int, ImageSourceData>(-1, imageSource));
 		}
 

@@ -98,7 +98,7 @@ namespace RAC
 				int nextID = 0;
 				for (const auto& imageSource : mImageSources)
 				{
-					if (imageSource.has_value() && imageSource->CanEdit())
+					if (imageSource.has_value() && imageSource->CanEdit() && imageSource->IsReset())
 						return nextID;
 					nextID++;
 				}

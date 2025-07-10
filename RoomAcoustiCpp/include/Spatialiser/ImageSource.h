@@ -99,14 +99,14 @@ namespace RAC
 
 			/**
 			* @brief Constructor that initialises the image source data
-			* 
+			*
 			* @param numFrequencyBands The number of frequency bands for applying wall absorption
+			* @param sourceID The ID of the source this image source is associated with
 			*/
 			ImageSourceData(int numFrequencyBands, int sourceID) : valid(false), visible(false), feedsFDN(false), reflection(false), diffraction(false),
-				mAbsorption(numFrequencyBands), distance(0.0), lastUpdatedCycle(false), idKey{ '0' }, sourceKey{ 's' }, reflectionKey { 'r' }, diffractionKey{ 'd' }
-			{
-				AddSourceID(sourceID);
-			};
+				mAbsorption(numFrequencyBands), distance(0.0), lastUpdatedCycle(false), idKey{ '0' }, sourceKey{ 's' }, reflectionKey{ 'r' }, diffractionKey{ 'd' },
+				sourceID(sourceID), mPositions(1, Vec3()), pathParts(1, Part(0, true)), mEdges(1, { Vec3(), Vec3() }) {
+			}
 
 			/**
 			* @brief Default deconstructor
@@ -115,7 +115,7 @@ namespace RAC
 
 			/**
 			* @brief Adds absorption to the image source
-			* 
+			*
 			* @param absorption The absorption to add
 			*/
 			inline void AddAbsorption(const Absorption<>& absorption) { mAbsorption *= absorption; }
@@ -136,15 +136,25 @@ namespace RAC
 			inline const Absorption<>& GetAbsorption() const { return mAbsorption; }
 
 			/**
+			* @brief Creates a string key representing the image source path
+			*/
+			void CreateKey();
+
+			/**
 			* @brief Adds a reflection to the image source path
-			* 
+			*
 			* @param id The ID of the reflecting plane
 			*/
-			void AddPlaneID(const size_t id);
+			inline void AddPlaneID(const size_t id)
+			{
+				pathParts.back().id = id;
+				pathParts.back().isReflection = true;
+				reflection = true;
+			}
 
 			/**
 			* @brief Adds a diffraction to the image source path
-			* 
+			*
 			* @param id The ID of the diffracting edge
 			*/
 			void AddEdgeID(const size_t id);
@@ -156,7 +166,7 @@ namespace RAC
 
 			/**
 			* @brief Returns the ID of the plane or edge at the given index within the image source path
-			* 
+			*
 			* @param i The index of the reflection or diffraction within the image source path
 			* @return The ID of the plane or edge at the given index
 			*/
@@ -182,7 +192,7 @@ namespace RAC
 
 			/**
 			* @brief Update the index of the corresponding image source
-			* 
+			*
 			* @param id The index of the corresponding image source
 			*/
 			inline void UpdateArrayID(const int id) { arrayID = id; }
@@ -209,7 +219,7 @@ namespace RAC
 
 			/**
 			* @brief Returns the position of the image source or image edge apex point at the given index
-			* 
+			*
 			* @param i The index of the position to return
 			* @return The position of the image source or image edge apex point at the given index
 			*/
@@ -217,21 +227,22 @@ namespace RAC
 
 			/**
 			* @brief Updates the diffraction path of the image source
-			* 
+			*
 			* @param source The position of the image source
 			* @param receiver The position of the listener
 			* @param edge The edge to diffract around
 			*/
 			inline void UpdateDiffractionPath(const Vec3& source, const Vec3& receiver, const Edge& edge)
 			{
-				mEdges.emplace_back(edge.GetBase(), edge.GetEdgeVector());
+				mEdges.back().base = edge.GetBase();
+				mEdges.back().edgeVector = edge.GetEdgeVector();
 				mDiffractionPath.UpdateParameters(source, receiver, edge);
 				SetTransform(source, mDiffractionPath.CalculateVirtualPostion());
 			}
 
 			/**
 			* @brief Updates the existing diffraction path following a reflection
-			* 
+			*
 			* @param source The position of the image source
 			* @param receiver The position of the listener
 			* @param plane The plane to reflect the edge in
@@ -239,7 +250,9 @@ namespace RAC
 			inline void UpdateDiffractionPath(const Vec3& source, const Vec3& receiver, const Plane& plane)
 			{
 				mDiffractionPath.ReflectEdgeInPlane(plane);
-				mEdges.emplace_back(mDiffractionPath.GetEdge().GetBase(), mDiffractionPath.GetEdge().GetEdgeVector());
+				mEdges.back().base = mDiffractionPath.GetEdge().GetBase();
+				mEdges.back().edgeVector = mDiffractionPath.GetEdge().GetEdgeVector();
+				plane.ReflectPointInPlaneNoCheck(mDiffractionPath.sData.point);
 				mDiffractionPath.UpdateParameters(source, receiver);
 				SetTransform(source, mDiffractionPath.CalculateVirtualPostion());
 			}
@@ -252,11 +265,11 @@ namespace RAC
 			/**
 			* @return The apex of the diffraction path
 			*/
-			inline Vec3 GetApex() const { assert(mEdges.size() > 0); return mEdges[0].GetEdgeCoordinate(mDiffractionPath.GetApexZ()); }
+			inline Vec3 GetApex() const { assert(mEdges.size() > 0); return mEdges[diffractionIndex].GetEdgeCoordinate(mDiffractionPath.GetApexZ()); }
 
 			/**
 			* @brief Sets the image source as visible and whether it feeds the FDN
-			* 
+			*
 			* @param fdn True if the image source feeds the FDN, false otherwise
 			*/
 			inline void Visible(const bool fdn) { visible = true; feedsFDN = fdn; }
@@ -287,15 +300,20 @@ namespace RAC
 			void Clear(int sourceID);
 
 			/**
+			* @brief Increases the path reflection/diffraction order stored in the image source
+			*/
+			void IncreaseImageSourceOrder();
+
+			/**
 			* @brief Updates the image source data using another image source
-			* 
+			*
 			* @param imageSource The image source to update from
 			*/
 			void Update(const ImageSourceData& imageSource);
 
 			/**
 			* @brief Sets the distance of the image source from the listener
-			* 
+			*
 			* @param listenerPosition The position of the listener
 			*/
 			void SetDistance(const Vec3& listenerPosition);
@@ -307,7 +325,7 @@ namespace RAC
 
 			/**
 			* @brief Set plane information where: w -> D, x, y, z -> Normal
-			* 
+			*
 			* @param plane The new plane information
 			*/
 			inline void SetPreviousPlane(const Vec4& plane) { previousPlane = plane; }
@@ -366,10 +384,22 @@ namespace RAC
 
 			/**
 			* @brief Adds the sourceID to the key
-			*
-			* @param id The ID of the source
 			*/
-			void AddSourceID(const size_t id);
+			void AddSourceIDToKey();
+
+			/**
+			* @brief Adds a reflection to the image source path
+			*
+			* @param id The ID of the reflecting plane
+			*/
+			void AddPlaneIDToKey(const size_t id);
+
+			/**
+			* @brief Adds a diffraction to the image source path
+			*
+			* @param id The ID of the diffracting edge
+			*/
+			void AddEdgeIDToKey(const size_t id);
 
 			int arrayID{ -1 };
 
@@ -380,6 +410,7 @@ namespace RAC
 			std::array<char, 1> diffractionKey;			// Char that stores the diffraction key
 
 			std::vector<Part> pathParts;			// Reflection and diffraction parts of the image source path
+			int sourceID;							// ID of the source
 			std::vector<Vec3> mPositions;			// Positions of the image source along the path
 			std::vector<ImageEdgeData> mEdges;		// Image edges along the image source path
 			int diffractionIndex;					// Index of the first diffraction in the image source path
@@ -407,7 +438,7 @@ namespace RAC
 
 			/**
 			* @brief Default constructor
-			* 
+			*
 			* @param core The 3DTI processing core
 			*/
 			ImageSource(Binaural::CCore* core) : Access(), mCore(core) {}
@@ -423,7 +454,7 @@ namespace RAC
 
 			/**
 			* @brief Reset and initialise the image source with the given configuration and data
-			* 
+			*
 			* @param inputBuffer Pointer to the source input buffer
 			* @param config The current RAC configuration
 			* @param data The image source data to initialise with
@@ -464,10 +495,10 @@ namespace RAC
 			* @params mode True if disable 3DTI Interpolation, false otherwise.
 			*/
 			inline void UpdateImpulseResponseMode(const bool mode) { impulseResponseMode.store(mode, std::memory_order_release); }
-			
+
 			/**
 			* @brief Update the diffraction model
-			* 
+			*
 			* @params model The new diffraction model
 			* @params fs The sample rate used to initialise the diffraction model
 			*/
@@ -475,7 +506,7 @@ namespace RAC
 
 			/**
 			* @brief Process a single audio frame
-			* 
+			*
 			* @param outputBuffer The output buffer to write to
 			* @param reverbInput The reverb input buffer to write to
 			* @param lerpFactor The lerp factor for interpolation
@@ -486,6 +517,11 @@ namespace RAC
 			* @brief Resets the image source by clearing the buffers and removing the source from the 3DTI processing core
 			*/
 			void Reset();
+
+			/**
+			* @return True if the source is ready to be initialised, false otherwise
+			*/
+			bool IsReset() const { return isReset.load(std::memory_order_release); }
 
 		private:
 			/**
@@ -527,10 +563,10 @@ namespace RAC
 			* @brief Romeves the image source from the 3DTI processing core
 			*/
 			void RemoveSource();
-			
+
 			/**
 			* @brief Updates the image source with the given data
-			* 
+			*
 			* @param data The image source data
 			* @param fdnChannel The FDN channel to feed, gets updated to the previous channel if feedsFDN has changed
 			*/
@@ -538,16 +574,16 @@ namespace RAC
 
 			/**
 			* @brief Stores the position and rotation source
-			* 
+			*
 			* @params newTransform The transform to update the image source with
 			*/
 			void UpdateTransform(const CTransform& newTransform);
 
 			/**
 			* @brief Process a single audio frame using the current diffraction model
-			* 
+			*
 			* @details Applies a cross fase if the diffraction model has been changed
-			* 
+			*
 			* @params inBuffer The input audio buffer
 			* @params outBuffer The output audio buffer to write to
 			* @params lerpFactor The lerp factor for interpolation
@@ -573,6 +609,7 @@ namespace RAC
 
 			std::atomic<bool> feedsFDN{ false };	// True if the image source feeds the FDN, false otherwise
 			std::atomic<int> mFDNChannel{ -1 };		// The FDN channel the image source feeds, -1 if the image source does not feed the FDN
+			std::atomic<bool> isReset{ true };		// Flag to check if the source is ready to be initialised
 
 			const Buffer<>* inputBuffer{ nullptr };		// Pointer to the source input buffer
 			Buffer<> bStore;								// Internal working buffer

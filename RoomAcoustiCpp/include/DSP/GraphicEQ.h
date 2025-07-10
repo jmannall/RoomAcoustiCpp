@@ -132,7 +132,7 @@ namespace RAC
 			void InterpolateGain(const Real lerpFactor);
 
 			const int numFilters;			// Number of filters
-			Coefficients<> previousInput;		// Previous target response to check if they have changed
+			Coefficients<> previousInput;	// Previous target response to check if they have changed
 
 			std::unique_ptr<PeakLowShelf> lowShelf;							// Low-shelf filter
 			std::vector<std::unique_ptr<PeakingFilter>> peakingFilters;		// Peaking filters

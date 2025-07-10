@@ -33,10 +33,34 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void ImageSourceData::AddSourceID(const size_t id)
+		void ImageSourceData::CreateKey()
+		{
+			AddSourceIDToKey();
+			for (const auto& part : pathParts)
+			{
+				if (part.isReflection)
+					AddPlaneIDToKey(part.id);
+				else
+					AddEdgeIDToKey(part.id);
+			}
+		}
+
+		////////////////////////////////////////
+
+		void ImageSourceData::AddEdgeID(size_t id)
+		{
+			pathParts.back().id = id;
+			pathParts.back().isReflection = false;
+			diffraction = true;
+			diffractionIndex = static_cast<int>(pathParts.size()) - 1;
+		}
+
+		////////////////////////////////////////
+
+		void ImageSourceData::AddSourceIDToKey()
 		{
 			key = "";
-			auto [ptr, ec] = std::to_chars(idKey.data(), idKey.data() + idKey.size(), id);
+			auto [ptr, ec] = std::to_chars(idKey.data(), idKey.data() + idKey.size(), sourceID);
 			if (ec == std::errc()) // Null-terminate manually if conversion is successful
 				*ptr = '\0';
 			else// Failed to convert id to char array
@@ -49,10 +73,10 @@ namespace RAC
 			key += sourceKey[0];
 		}
 
-		void ImageSourceData::AddPlaneID(const size_t id)
+		////////////////////////////////////////
+
+		void ImageSourceData::AddPlaneIDToKey(const size_t id)
 		{
-			pathParts.emplace_back(id, true);
-			reflection = true;
 			auto [ptr, ec] = std::to_chars(idKey.data(), idKey.data() + idKey.size(), id);
 			if (ec == std::errc()) // Null-terminate manually if conversion is successful
 				*ptr = '\0';
@@ -68,14 +92,8 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void ImageSourceData::AddEdgeID(const size_t id)
+		void ImageSourceData::AddEdgeIDToKey(const size_t id)
 		{
-			if (!diffraction)
-				mEdges.clear();
-
-			pathParts.emplace_back(id, false);
-			diffraction = true;
-			diffractionIndex = static_cast<int>(pathParts.size()) - 1;
 			auto [ptr, ec] = std::to_chars(idKey.data(), idKey.data() + idKey.size(), id);
 			if (ec == std::errc()) // Null-terminate manually if conversion is successful
 				*ptr = '\0';
@@ -93,7 +111,7 @@ namespace RAC
 		void ImageSourceData::SetTransform(const Vec3& position)
 		{
 			transform.SetPosition(CVector3(static_cast<float>(position.x), static_cast<float>(position.y), static_cast<float>(position.z)));
-			mPositions.emplace_back(position);
+			mPositions.back() = position;
 		}
 
 		////////////////////////////////////////
@@ -101,7 +119,7 @@ namespace RAC
 		void ImageSourceData::SetTransform(const Vec3& position, const Vec3& rotatedEdgePosition)
 		{
 			transform.SetPosition(CVector3(static_cast<float>(rotatedEdgePosition.x), static_cast<float>(rotatedEdgePosition.y), static_cast<float>(rotatedEdgePosition.z)));
-			mPositions.emplace_back(position);
+			mPositions.back() = position;
 		}
 
 		////////////////////////////////////////
@@ -135,29 +153,41 @@ namespace RAC
 		void ImageSourceData::Clear(int sourceID)
 		{
 			Reset();
-			pathParts.clear();
-			mPositions.clear();
-			mEdges.clear();
 			reflection = false;
 			diffraction = false;
-			AddSourceID(sourceID);
+			sourceID = sourceID;
+			key.clear();
+		}
+
+		////////////////////////////////////////
+
+		void ImageSourceData::IncreaseImageSourceOrder()
+		{
+			pathParts.emplace_back(0, true);
+			mPositions.emplace_back(Vec3());
+			mEdges.emplace_back(Vec3(), Vec3());
 		}
 
 		////////////////////////////////////////
 
 		void ImageSourceData::Update(const ImageSourceData& imageSource)
 		{
-			pathParts = imageSource.pathParts;
-			mPositions = imageSource.mPositions;
+			for (int i = 0; i < imageSource.pathParts.size(); i++)
+			{
+				pathParts[i] = imageSource.pathParts[i];
+				mPositions[i] = imageSource.mPositions[i];
+			}
 			reflection = imageSource.reflection;
 			diffraction = imageSource.diffraction;
 			if (diffraction)
 			{
-				mEdges = imageSource.mEdges;
+				for (int i = 0; i < imageSource.mEdges.size(); i++)
+					mEdges[i] = imageSource.mEdges[i];
 				diffractionIndex = imageSource.diffractionIndex;
 				mDiffractionPath = imageSource.mDiffractionPath;
 			}
-			key = imageSource.key;
+			sourceID = imageSource.sourceID;
+			key.clear();
 		}
 
 		//////////////////// ImageSource class ////////////////////
@@ -197,11 +227,9 @@ namespace RAC
 
 		void ImageSource::Init(const Buffer<>* sourceBuffer, const std::shared_ptr<Config>& config, const ImageSourceData& data, int fdnChannel)
 		{
-			if (mSource == nullptr)
-			{
-				InitBuffers(config->numFrames);
-				InitSource();
-			}
+			isReset.store(false, std::memory_order_release);
+			InitSource();
+			InitBuffers(config->numFrames);
 
 			inputBuffer = sourceBuffer;
 			mFilter = make_unique<GraphicEQ>(data.GetAbsorption(), config->frequencyBands, config->Q, config->fs);
@@ -299,11 +327,12 @@ namespace RAC
 		{
 			if (!CanEdit())
 				return;
-			if (mSource == nullptr)
+			if (!mSource)
 				return;
 			ClearBuffers();
 			RemoveSource();
 			ClearPointers();
+			isReset.store(true, std::memory_order_release);
 		}
 		
 		////////////////////////////////////////
@@ -540,6 +569,12 @@ namespace RAC
 		{
 			if (!GetAccess())
 				return;
+
+			if (!transform.load(std::memory_order_acquire))  // Check if the source position has been updated before using
+			{
+				FreeAccess();
+				return;
+			}
 
 			PROFILE_ImageSource
 			if (gain.IsZero())

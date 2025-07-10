@@ -39,11 +39,9 @@ namespace RAC
 
 		void Source::Init(const std::shared_ptr<Config>& config)
 		{
-			if (mSource == nullptr)
-			{
-				InitBuffers(config->numFrames);
-				InitSource();
-			}
+			isReset.store(false, std::memory_order_release);
+			InitSource();
+			InitBuffers(config->numFrames);
 
 			mAirAbsorption = std::make_unique<AirAbsorption>(1.0, config->fs);
 			directivityFilter = std::make_unique<GraphicEQ>(config->frequencyBands, config->Q, config->fs);
@@ -217,7 +215,7 @@ namespace RAC
 		{
 			if (!CanEdit())
 				return;
-			if (mSource == nullptr)
+			if (!mSource)
 				return;
 			RemoveImageSources();
 			ClearBuffers();
@@ -225,6 +223,7 @@ namespace RAC
 			if (mReverbSendSource)
 				RemoveReverbSendSource();
 			ClearPointers();
+			isReset.store(true, std::memory_order_release);
 		}
 
 		////////////////////////////////////////
@@ -233,6 +232,12 @@ namespace RAC
 		{
 			if (!GetAccess())
 				return;
+
+			if (!transform.load(std::memory_order_acquire)) // Check if the source position has been updated before using
+			{
+				FreeAccess();
+				return;
+			}
 
 			PROFILE_Source
 			const int numFrames = inputBuffer.Length();

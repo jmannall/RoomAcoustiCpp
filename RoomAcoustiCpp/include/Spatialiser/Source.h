@@ -200,6 +200,11 @@ namespace RAC
 			*/
 			void Reset();
 
+			/**
+			* @return True if the source is ready to be initialised, false otherwise
+			*/
+			bool IsReset() const { return isReset.load(std::memory_order_release); }
+
 		private:
 			/**
 			* @brief Flags all current image sources for removal
@@ -312,7 +317,8 @@ namespace RAC
 			Vec3 currentPosition;						// Current source position
 			Vec4 currentOrientation;					// Current source orientation
 			std::atomic<bool> hasChanged{ true };		// Flag to check if the source has changed
-			
+			std::atomic<bool> isReset{ true };			// Flag to check if the source is ready to be initialised
+
 			ImageSourceDataMap currentImageSources;		// Current image sources
 			std::vector<int> freeFDNChannels;			// Free FDN channels
 

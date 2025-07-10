@@ -102,7 +102,7 @@ namespace RAC
 				int nextID = 0;
 				for (const auto& source : mSources)
 				{
-					if (source.has_value() && source->CanEdit())
+					if (source.has_value() && source->CanEdit() && source->IsReset())
 						return nextID;
 					nextID++;
 				}

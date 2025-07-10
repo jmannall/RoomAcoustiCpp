@@ -127,7 +127,7 @@ namespace RAC
 			*
 			* @return The material absorption properties of the wall
 			*/
-			inline Absorption<> GetAbsorption() const { return mAbsorption; }
+			const inline Absorption<>& GetAbsorption() const { return mAbsorption; }
 
 			/**
 			* @brief Returns the area of the wall
@@ -284,7 +284,7 @@ namespace RAC
 			* 
 			* @return The IDs of the walls in the plane
 			*/
-			inline std::vector<size_t> GetWalls() const { return mWalls; }
+			const inline std::vector<size_t>& GetWalls() const { return mWalls; }
 
 			/**
 			* @brief Returns whether the listener is in front of the plane
