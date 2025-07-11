@@ -18,8 +18,6 @@ namespace RAC
 {
 	namespace Common
 	{
-#define USE_MOD_ART
-
 		/**
 		* Contols Real typedef
 		*/

@@ -279,10 +279,6 @@ namespace RAC
 			*/
 			void GetOutput(float** bufferPtr);
 
-#ifdef USE_MOD_ART
-			void GetOutput_MOD_ART(float** bufferPtr, const float* data);
-#endif
-
 			/**
 			* @brief Sets the spatialiser to impulse response mode if mode is true
 			*
@@ -317,9 +313,6 @@ namespace RAC
 			Matrix mReverbInput;	// Audio reverb input matrix
 			std::vector<float> mSendBuffer;	// Audio send buffer (float)
 
-#ifdef USE_MOD_ART
-			Matrix mMOD_ARTReverbInput;	// Audio reverb MOD_ART input matrix
-#endif
 			/**
 			* Handles
 			*/
@@ -331,7 +324,9 @@ namespace RAC
 			std::mutex audioMutex;		// Mutex for audio processing
 
 			std::string logFile;		// Log file path
+#ifdef PROFILE_BACKGROUND_THREAD || PROFILE_AUDIO_THREAD
 			std::string profileFile;	// Profile file path
+#endif
 		};
 	}
 }

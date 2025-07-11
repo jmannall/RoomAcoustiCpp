@@ -54,8 +54,6 @@
 #endif
 
 #ifdef PROFILE_BACKGROUND_THREAD_DETAILED
-#define PROFILE_BackgroundThread \
-    PROFILER_CATEGORY(BackgroundThread)
 #define PROFILE_ImageEdgeModel \
     PROFILER_CATEGORY(ImageEdgeModel)
 #define PROFILE_Direct \
@@ -69,7 +67,6 @@
 #define PROFILE_UpdateAudioData \
     PROFILER_CATEGORY(UpdateAudioData)
 #else
-#define PROFILE_BackgroundThread
 #define PROFILE_ImageEdgeModel
 #define PROFILE_Direct
 #define PROFILE_FirstOrderReflections

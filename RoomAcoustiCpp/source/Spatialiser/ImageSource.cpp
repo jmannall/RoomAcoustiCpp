@@ -198,9 +198,6 @@ namespace RAC
 
 		void ImageSource::InitSource()
 		{
-#ifdef DEBUG_IMAGE_SOURCE
-			Debug::Log("Init virtual source", Colour::Green);
-#endif
 			unique_lock<shared_mutex> lock(tuneInMutex);
 			mSource = mCore->CreateSingleSourceDSP();
 			mSource->EnablePropagationDelay();
@@ -212,9 +209,6 @@ namespace RAC
 
 		void ImageSource::RemoveSource()
 		{
-#ifdef DEBUG_IMAGE_SOURCE
-			Debug::Log("Remove virtual source", Colour::Red);
-#endif
 			currentImpulseResponseMode = false;
 			currentSpatialisationMode = SpatialisationMode::none;
 

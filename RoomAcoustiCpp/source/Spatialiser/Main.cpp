@@ -569,22 +569,9 @@ extern "C"
 	{
 		GetOutput(&buffer);	
 		if (!buffer)
-		{
-#ifdef DEBUG_AUDIO_THREAD
-	Debug::Log("Process Output Failed", Colour::Orange);
-#endif
 			return false;
-		}
 		if (std::isnan(*buffer))
-		{
-#ifdef DEBUG_AUDIO_THREAD
-	Debug::Log("Process Output is NaN", Colour::Orange);
-#endif
 			return false;
-		}
-#ifdef DEBUG_AUDIO_THREAD
-	Debug::Log("Process Output Success", Colour::Orange);
-#endif
 		return true;
 	}
 

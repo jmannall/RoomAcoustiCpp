@@ -57,20 +57,15 @@ extern "C"
 /**
 * @brief Debugging flags for printing debug messages
 */
-#define DEBUG_INIT
-// #define DEBUG_UPDATE
-#define DEBUG_REMOVE
-// #define DEBUG_AUDIO_THREAD
-// #define DEBUG_HRTF
-// #define DEBUG_WALL
-// #define DEBUG_IMAGE_SOURCE
-#define DEBUG_IEM
-#define DEBUG_GEOMETRY
+// #define DEBUG_INIT          // Send initialisation information to Unity for debugging purposes
+// #define DEBUG_REMOVE        // Send removal information to Unity for debugging purposes
+// #define DEBUG_IEM           // Send image edge model information to Unity for debugging purposes
+// #define DEBUG_GEOMETRY      // Send edge information to Unity for debugging purposes
 
 /**
 * @brief Debugging flags for completed iem model
 */
-#define IEM_FLAG
+// #define IEM_FLAG            // Send IEM flag to Unity, used when measuring impulse responses
 
 namespace RAC
 {

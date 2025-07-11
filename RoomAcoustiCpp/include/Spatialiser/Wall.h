@@ -63,7 +63,7 @@ namespace RAC
 			* @param vData The vertices of the wall.
 			* @param absorption The material absorption property of the wall.
 			*/
-			Wall(const Vertices& vData, const Absorption<>& absorption);
+			Wall(const Vertices& vData, const Absorption<>& absorption) : mPlaneId(0), mAbsorption(absorption) { Update(vData); }
 
 			/**
 			* Default deconstructor.

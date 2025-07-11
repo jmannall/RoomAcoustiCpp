@@ -89,8 +89,10 @@ namespace RAC
 			logFile = GetLogPath(timestamp);
 			CErrorHandler::Instance().SetErrorLogFile(logFile, true);
 
-			std::string profileFile = GetProfilePath(timestamp);
+#ifdef PROFILE_BACKGROUND_THREAD || PROFILE_AUDIO_THREAD
+			profileFile = GetProfilePath(timestamp);
 			Profiler::Instance().SetOutputFile(profileFile, true);
+#endif
 
 			// Set dsp settings
 			mCore.SetAudioState({ mConfig->fs, mConfig->numFrames });
@@ -135,8 +137,9 @@ namespace RAC
 					std::remove(logFile.c_str());
 				}
             }
-
+#ifdef PROFILE_BACKGROUND_THREAD || PROFILE_AUDIO_THREAD
 			Profiler::Instance().SetOutputFile(profileFile, false);
+#endif
 
 			StopRunning();
 			IEMThread.join();
@@ -162,13 +165,6 @@ namespace RAC
 		{
 			unique_lock<shared_mutex> lock(tuneInMutex);
 
-#ifdef DEBUG_HRTF
-			Debug::Log("HRTF resampling step: " + mCore.GetHRTFResamplingStep(), Colour::Blue);
-			Debug::Log("HRTF file path: " + filePaths[0], Colour::Blue);
-			Debug::Log("Near field file path: " + filePaths[1], Colour::Blue);
-			Debug::Log("ILD file path: " + filePaths[2], Colour::Blue);
-#endif
-
 			// Set HRTF resampling step
 			mCore.SetHRTFResamplingStep(hrtfResamplingStep);
 
@@ -176,29 +172,9 @@ namespace RAC
 			bool result = HRTF::CreateFrom3dti(filePaths[0], mListener);
 			if (result)
 				result = ILD::CreateFrom3dti_ILDNearFieldEffectTable(filePaths[1], mListener);
-			else
-			{
-#ifdef DEBUG_HRTF
-				Debug::Log("Failed to load HRTF files", Colour::Red);
-#endif
-			}
 			// Load high performance files
 			if (result)
 				result = ILD::CreateFrom3dti_ILDSpatializationTable(filePaths[2], mListener);
-			else
-			{
-#ifdef DEBUG_HRTF
-				Debug::Log("Failed to load near field files", Colour::Red);
-#endif
-			}
-
-			if (!result)
-			{
-#ifdef DEBUG_HRTF
-				Debug::Log("Failed to load ILD field files", Colour::Red);
-#endif
-			}
-
 			return result;
 		}
 
@@ -258,9 +234,6 @@ namespace RAC
 
 		void Context::UpdateListener(const Vec3& position, const Vec4& orientation)
 		{
-#if DEBUG_UPDATE
-	Debug::Log("Update Listener", Colour::Yellow);
-#endif
 			listenerPosition = position;
 
 			// Set listener position and orientation
@@ -291,9 +264,6 @@ namespace RAC
 
 		void Context::UpdateSource(size_t id, const Vec3& position, const Vec4& orientation)
 		{
-#ifdef DEBUG_UPDATE
-			Debug::Log("Update Source", Colour::Yellow);
-#endif
 			Real distance = (position - listenerPosition).Length();
 
 			// Ensure source is outside listener head radius

@@ -136,18 +136,6 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		Wall::Wall(const Vertices& vData, const Absorption<>& absorption) : mPlaneId(0), mAbsorption(absorption)
-		{
-			Update(vData);
-
-#ifdef DEBUG_WALL
-	Debug::Log("Vertices: " + VerticesToStr(mVertices), Colour::Orange);
-	Debug::Log("Normal: " + VecToStr(mNormal), Colour::Orange);
-#endif
-		}
-
-		////////////////////////////////////////
-
 		void Wall::Update(const Vertices& vData)
 		{
 			mVertices = vData;
