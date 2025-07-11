@@ -227,7 +227,6 @@ namespace RAC
 
 		void ImageSource::Init(const Buffer<>* sourceBuffer, const std::shared_ptr<Config>& config, const ImageSourceData& data, int fdnChannel)
 		{
-			isReset.store(false, std::memory_order_release);
 			InitSource();
 			InitBuffers(config->numFrames);
 
@@ -249,6 +248,7 @@ namespace RAC
 				gain.SetTarget(1.0);
 
 			AllowAccess();
+			isReset.store(false, std::memory_order_release);
 			LateInit(config);
 		}
 
@@ -325,6 +325,8 @@ namespace RAC
 
 		void ImageSource::Reset()
 		{
+			if (isReset.load(std::memory_order_acquire))
+				return;
 			if (!CanEdit())
 				return;
 			if (!mSource)

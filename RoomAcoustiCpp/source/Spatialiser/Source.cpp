@@ -39,7 +39,6 @@ namespace RAC
 
 		void Source::Init(const std::shared_ptr<Config>& config)
 		{
-			isReset.store(false, std::memory_order_release);
 			InitSource();
 			InitBuffers(config->numFrames);
 
@@ -54,6 +53,7 @@ namespace RAC
 
 			ResetFDNSlots();
 			AllowAccess();
+			isReset.store(false, std::memory_order_release);
 		}
 
 		////////////////////////////////////////
@@ -171,7 +171,8 @@ namespace RAC
 
 		void Source::UpdateDirectivity(const SourceDirectivity directivity, const Coefficients<>& frequencyBands, const int numLateReverbChannels)
 		{
-			Coefficients reverbInput = Coefficients(frequencyBands.Length(), 1.0);
+			GetAccess();
+			Coefficients<> reverbInput = Coefficients<>(frequencyBands.Length(), 1.0);
 			switch (directivity)
 			{
 			case SourceDirectivity::omni:
@@ -199,6 +200,7 @@ namespace RAC
 			// Divide energy between late reverb channels. Multiply by six to mimic shoebox room first reflections energy
 			reverbInputFilter->SetTargetGains(6.0 * reverbInput / static_cast<Real>(numLateReverbChannels));
 			hasChanged.store(true, std::memory_order_release);
+			FreeAccess();
 		}
 
 		////////////////////////////////////////
@@ -213,6 +215,8 @@ namespace RAC
 
 		void Source::Reset()
 		{
+			if (isReset.load(std::memory_order_acquire))
+				return;
 			if (!CanEdit())
 				return;
 			if (!mSource)
