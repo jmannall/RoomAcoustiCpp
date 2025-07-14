@@ -271,7 +271,9 @@ namespace RAC
 				Vec3 newPosition = position;
 				if (distance == 0.0)
 					newPosition = mSources->GetSourcePosition(id);
-
+				distance = (newPosition - listenerPosition).Length();
+				if (distance == 0.0)
+					newPosition = listenerPosition + Vec3(1.0,0.0,0.0);
 				newPosition = listenerPosition + UnitVector(newPosition - listenerPosition) * headRadius;
 
 				// Update source position, orientation and virtual sources
