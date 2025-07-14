@@ -126,21 +126,6 @@ namespace RAC
 #ifdef DEBUG_REMOVE
 			Debug::Log("Exit Context", Colour::Red);
 #endif
-
-			CErrorHandler::Instance().SetErrorLogFile(logFile, false); // Disable logging to file
-            if (!logFile.empty())
-			{
-				std::ifstream f(logFile);	// Delete file if it is empty
-				if (f.good() && f.peek() == std::ifstream::traits_type::eof())
-				{
-					f.close();
-					std::remove(logFile.c_str());
-				}
-            }
-#ifdef PROFILE_BACKGROUND_THREAD || PROFILE_AUDIO_THREAD
-			Profiler::Instance().SetOutputFile(profileFile, false);
-#endif
-
 			StopRunning();
 			IEMThread.join();
 			if (audioThreadPool)
@@ -157,6 +142,20 @@ namespace RAC
 
 			unique_lock<shared_mutex> lock(tuneInMutex);
 			mCore.RemoveListener();
+
+			CErrorHandler::Instance().SetErrorLogFile(logFile, false); // Disable logging to file
+			if (!logFile.empty())
+			{
+				std::ifstream f(logFile);	// Delete file if it is empty
+				if (f.good() && f.peek() == std::ifstream::traits_type::eof())
+				{
+					f.close();
+					std::remove(logFile.c_str());
+				}
+			}
+#ifdef PROFILE_BACKGROUND_THREAD || PROFILE_AUDIO_THREAD
+			Profiler::Instance().SetOutputFile(profileFile, false);
+#endif
 		}
 
 		////////////////////////////////////////

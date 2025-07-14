@@ -257,19 +257,39 @@ namespace RAC
 
             inline void SetOutputFile(const std::string& filename, bool logOn)
             {
-                std::lock_guard<std::mutex> lock(fileMutex);
-                if (output.is_open())
-                {
-                    output.close();
-					std::ifstream f(filename);  // Delete file if it is empty
-                    if (f.good() && f.peek() == std::ifstream::traits_type::eof())
-                    {
-                        f.close();
-                        std::remove(filename.c_str());
-                    }
-                }
                 if (logOn)
                     output.open(filename);
+                else
+                    Shutdown(filename);
+            }
+
+            inline void Shutdown(const std::string& filename)
+            {
+                {
+                    std::lock_guard<std::mutex> lock(fileMutex);
+                    if (!output.is_open())
+                        return;
+                }
+
+                running.store(false, std::memory_order_release);
+                if (logThread.joinable())
+                    logThread.join();
+
+                // Flush any remaining events after the thread has stopped
+                ProfileEvent event;
+                while (queue.try_dequeue(event))
+                    output << event.category << "," << event.duration_ns << "," << event.timestamp_ns << "\n";
+
+                output.close();
+                std::ifstream f(filename);  // Delete file if it is empty
+                if (f.good() && f.peek() == std::ifstream::traits_type::eof())
+                {
+                    f.close();
+                    std::remove(filename.c_str());
+                }
+
+				running.store(true, std::memory_order_release);
+				logThread = std::thread([this]() { this->ThreadFunc(); });
             }
 
         private:
@@ -284,7 +304,8 @@ namespace RAC
 
             inline void ThreadFunc() {
                 ProfileEvent event;
-                while (running) {
+                while (running)
+                {
                     while (queue.try_dequeue(event))
                     {
                         std::lock_guard<std::mutex> lock(fileMutex);
