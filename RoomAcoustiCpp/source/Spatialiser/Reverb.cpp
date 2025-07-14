@@ -38,13 +38,12 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		ReverbSource::ReverbSource(Binaural::CCore* core, const std::shared_ptr<Config> config, const Vec3& shift, const Buffer<>* inBuffer) : mCore(core), mShift(shift), inputBuffer(inBuffer)
+		ReverbSource::ReverbSource(Binaural::CCore* core, const std::shared_ptr<Config> config, const Vec3& shift, const Buffer<>* inBuffer) : mCore(core), mShift(shift), inputBuffer(inBuffer), spatialisationMode(config->GetSpatialisationMode())
 		{
 			bInput = CMonoBuffer<float>(config->numFrames);
 			bOutput.left = CMonoBuffer<float>(config->numFrames);
 			bOutput.right = CMonoBuffer<float>(config->numFrames);
 			InitSource();
-			UpdateSpatialisationMode(config->GetSpatialisationMode());
 		}
 
 		////////////////////////////////////////
@@ -75,15 +74,17 @@ namespace RAC
 				mSource->DisablePropagationDelay();
 				mSource->DisableDistanceAttenuationSmoothingAnechoic();
 				mSource->DisableDistanceAttenuationAnechoic();
+				mSource->DisableInterpolation();
 				mSource->DisableNearFieldEffect();
 				mSource->DisableFarDistanceEffect();
+				SetSpatialisationMode(spatialisationMode.load(std::memory_order_acquire));
 			}
 			
 		}
 
 		////////////////////////////////////////
 
-		void ReverbSource::UpdateSpatialisationMode(const SpatialisationMode mode)
+		void ReverbSource::SetSpatialisationMode(const SpatialisationMode mode)
 		{
 			switch (mode)
 			{
@@ -108,6 +109,7 @@ namespace RAC
 				break;
 			}
 			}
+			currentSpatialisationMode = mode;
 		}
 
 		////////////////////////////////////////
@@ -133,6 +135,9 @@ namespace RAC
 				mSource->ResetSourceBuffers(); // Think this reallocates memory
 				clearBuffers.store(false, std::memory_order_release);
 			}
+
+			if (SpatialisationMode mode = spatialisationMode.load(std::memory_order_acquire); mode != currentSpatialisationMode)
+				SetSpatialisationMode(mode);
 
 			const int numFrames = inputBuffer->Length();
 

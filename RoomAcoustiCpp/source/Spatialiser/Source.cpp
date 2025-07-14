@@ -61,6 +61,7 @@ namespace RAC
 		void Source::Remove()
 		{
 			PreventAccess();
+			RemoveImageSources();
 			clearInputBuffer.store(true, std::memory_order_release);
 		}
 
@@ -72,6 +73,7 @@ namespace RAC
 			mSource = mCore->CreateSingleSourceDSP();
 			mSource->DisableFarDistanceEffect();
 			mSource->EnablePropagationDelay();
+			SetSpatialisationMode(spatialisationMode.load(std::memory_order_acquire));
 		}
 
 		////////////////////////////////////////
@@ -137,7 +139,7 @@ namespace RAC
 				break;
 			}
 			}
-			currentSpatialisationMode = spatialisationMode;
+			currentSpatialisationMode = mode;
 		}
 
 		////////////////////////////////////////
@@ -221,7 +223,7 @@ namespace RAC
 				return;
 			if (!mSource)
 				return;
-			RemoveImageSources();
+			currentImageSources.clear();
 			ClearBuffers();
 			RemoveSource();
 			if (mReverbSendSource)
@@ -246,11 +248,11 @@ namespace RAC
 			PROFILE_Source
 			const int numFrames = inputBuffer.Length();
 
-			if (currentImpulseResponseMode != impulseResponseMode.load(std::memory_order_acquire))
-				SetImpulseResponseMode(impulseResponseMode.load(std::memory_order_acquire));
+			if (bool mode = impulseResponseMode.load(std::memory_order_acquire); mode != currentImpulseResponseMode)
+				SetImpulseResponseMode(mode);
 
-			if (currentSpatialisationMode != spatialisationMode.load(std::memory_order_acquire))
-				SetSpatialisationMode(spatialisationMode.load(std::memory_order_acquire));
+			if (SpatialisationMode mode = spatialisationMode.load(std::memory_order_acquire); mode != currentSpatialisationMode)
+				SetSpatialisationMode(mode);
 
 			mAirAbsorption->ProcessAudio(inputBuffer, bStore, lerpFactor);
 
@@ -349,6 +351,8 @@ namespace RAC
 		std::optional<Source::Data> Source::GetData()
 		{
 			if (!GetAccess())
+				return std::nullopt;
+			if (!transform.load(std::memory_order_acquire)) // Check if the source position has been updated before using
 				return std::nullopt;
 			lock_guard<std::mutex>lock(*dataMutex);
 			Data data(-1, currentPosition, currentOrientation, mDirectivity.load(std::memory_order_acquire), hasChanged.exchange(false, std::memory_order_acq_rel));

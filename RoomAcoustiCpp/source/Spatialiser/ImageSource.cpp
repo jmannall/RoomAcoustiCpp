@@ -203,6 +203,7 @@ namespace RAC
 			mSource->EnablePropagationDelay();
 			mSource->DisableFarDistanceEffect();
 			mSource->DisableNearFieldEffect();
+			SetSpatialisationMode(spatialisationMode.load(std::memory_order_acquire));
 		}
 
 		////////////////////////////////////////
@@ -579,11 +580,11 @@ namespace RAC
 				return;
 			}
 
-			if (currentImpulseResponseMode != impulseResponseMode.load(std::memory_order_acquire))
-				SetImpulseResponseMode(impulseResponseMode.load(std::memory_order_acquire));
+			if (bool mode = impulseResponseMode.load(std::memory_order_acquire); mode != currentImpulseResponseMode)
+				SetImpulseResponseMode(mode);
 
-			if (currentSpatialisationMode != spatialisationMode.load(std::memory_order_acquire))
-				SetSpatialisationMode(spatialisationMode.load(std::memory_order_acquire));
+			if (SpatialisationMode mode = spatialisationMode.load(std::memory_order_acquire); mode != currentSpatialisationMode)
+				SetSpatialisationMode(mode);
 
 			const int numFrames = inputBuffer->Length();
 

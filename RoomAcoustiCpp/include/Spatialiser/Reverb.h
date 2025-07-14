@@ -54,11 +54,11 @@ namespace RAC
 			~ReverbSource();
 
 			/**
-			* @brief Update the spatialisation mode for the HRTF processing
+			* @brief Updates the target spatialisation mode for the HRTF processing
 			*
-			* @params mode New spatialisation mode
+			* @params mode The new spatialisation mode
 			*/
-			void UpdateSpatialisationMode(const SpatialisationMode mode);
+			inline void UpdateSpatialisationMode(const SpatialisationMode mode) { spatialisationMode.store(mode, std::memory_order_release); }
 
 			/**
 			* @return The position shift relative to the listener
@@ -90,6 +90,13 @@ namespace RAC
 			*/
 			void InitSource();
 
+			/**
+			* @brief Update the spatialisation mode for the HRTF processing
+			*
+			* @params New spatialisation mode
+			*/
+			void SetSpatialisationMode(const SpatialisationMode mode);
+
 			const Vec3 mShift;		// Position shift relative to the listener
 
 			Binaural::CCore* mCore;									// 3DTI core
@@ -101,6 +108,9 @@ namespace RAC
 			const Buffer<>* inputBuffer{ nullptr };		// Pointer to the input buffer
 
 			std::atomic<bool> clearBuffers{ false };		// Flag to clear buffers to zeros next time ProcessAudio is called
+
+			std::atomic<SpatialisationMode> spatialisationMode;								// Target spatialisation mode
+			SpatialisationMode currentSpatialisationMode{ SpatialisationMode::quality };	// Current spatialisation mode
 
 			static ReleasePool releasePool;		// Garbage collector for shared pointers after atomic replacement
 		};

@@ -637,8 +637,8 @@ namespace RAC
 			std::atomic<bool> impulseResponseMode{ false };		// True if the image source should be in impulse response mode, false otherwise
 			bool currentImpulseResponseMode{ false };			// True if the image source is in impulse response mode, false otherwise
 
-			std::atomic<SpatialisationMode> spatialisationMode{ SpatialisationMode::none };		// Target spatialisation mode
-			SpatialisationMode currentSpatialisationMode{ SpatialisationMode::none };			// Current spatialisation mode
+			std::atomic<SpatialisationMode> spatialisationMode;								// Target spatialisation mode
+			SpatialisationMode currentSpatialisationMode{ SpatialisationMode::quality };	// Current spatialisation mode
 
 			Binaural::CCore* mCore;										// 3DTI processing core
 			shared_ptr<Binaural::CSingleSourceDSP> mSource{ nullptr };	// 3DTI source

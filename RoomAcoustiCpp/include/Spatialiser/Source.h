@@ -77,7 +77,7 @@ namespace RAC
 			* @param imageSources Reference to the image source array
 			* @params config The spatialiser configuration
 			*/
-			Source(Binaural::CCore* core, ImageSourceManager& imageSources, const std::shared_ptr<Config>& config) : Access(), mCore(core), imageSources(imageSources), inputBuffer(config->numFrames)
+			Source(Binaural::CCore* core, ImageSourceManager& imageSources, const std::shared_ptr<Config>& config) : Access(), mCore(core), imageSources(imageSources), inputBuffer(config->numFrames), spatialisationMode(config->GetSpatialisationMode())
 			{
 				dataMutex = std::make_shared<std::mutex>();
 			}
@@ -213,7 +213,6 @@ namespace RAC
 			{
 				for (auto& [key, vSource] : currentImageSources)
 					imageSources.at(vSource.first).Remove();
-				currentImageSources.clear();
 			}
 
 			/**
@@ -336,8 +335,8 @@ namespace RAC
 			std::atomic<bool> impulseResponseMode{ false };		// True if the image source should be in impulse response mode, false otherwise
 			bool currentImpulseResponseMode{ false };			// True if the image source is in impulse response mode, false otherwise
 
-			std::atomic<SpatialisationMode> spatialisationMode{ SpatialisationMode::none };		// Target spatialisation mode
-			SpatialisationMode currentSpatialisationMode{ SpatialisationMode::none };			// Current spatialisation mode
+			std::atomic<SpatialisationMode> spatialisationMode;								// Target spatialisation mode
+			SpatialisationMode currentSpatialisationMode{ SpatialisationMode::quality };	// Current spatialisation mode
 
 			ImageSourceManager& imageSources;	// Image source manager for the audio thread
 
