@@ -51,22 +51,22 @@ namespace RAC
 
 		TEST_METHOD(Buffer_Class)
 		{
-			std::vector<Real> start = { 1.0, 4.0, 3.0, 2.0 };
+			std::vector<Real> start = { 1.0, 4.0, 3.0, 2.0, 0.0, 0.0, 0.0, 0.0 };
 			Buffer current = Buffer(start);
 
-			std::vector<Real> end = { 0.0, 2.0, 4.0, 2.0 };
+			std::vector<Real> end = { 0.0, 2.0, 4.0, 2.0, 0.0, 0.0, 0.0, 0.0 };
 			Buffer target = Buffer(end);
 			Real lerpFactor = 0.2;
-			Lerp(current, target, lerpFactor);
+			Lerp(current, target, 4, lerpFactor);
 
 			{
-				std::vector<Real> output = { 0.8, 3.6, 3.2, 2.0 };
+				std::vector<Real> output = { 0.8, 3.6, 3.2, 2.0, 0.0, 0.0, 0.0, 0.0 };
 				for (int i = 0; i < 4; i++)
 					Assert::AreEqual(output[i], current[i], EPS, L"Wrong output");
 			}
 			{
-				std::vector<Real> output = { 0.64, 3.28, 3.36, 2.0 };
-				Lerp(current, target, lerpFactor);
+				std::vector<Real> output = { 0.64, 3.28, 3.36, 2.0, 0.0, 0.0, 0.0, 0.0 };
+				Lerp(current, target, 4, lerpFactor);
 				for (int i = 0; i < 4; i++)
 					Assert::AreEqual(output[i], current[i], EPS, L"Wrong output");
 			}

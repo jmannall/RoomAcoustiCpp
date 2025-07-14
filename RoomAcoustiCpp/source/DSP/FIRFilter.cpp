@@ -92,10 +92,9 @@ namespace RAC
 		{
 			irsEqual.store(true, std::memory_order_release); // Prevents issues in case targetIR updated during this function call
 			const std::shared_ptr<const Buffer<>> ir = targetIR.load(std::memory_order_acquire);
-
 			irLength = ir->Length();
 
-			Lerp(currentIR, *ir, lerpFactor);
+			Lerp(currentIR, *ir, oldIrLength, lerpFactor);
 
 			if (Equals(currentIR, *ir, irLength))
 			{

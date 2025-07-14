@@ -97,18 +97,48 @@ namespace RAC
 		* @details if start is longer than end, the remaining samples are interpolated to zero.
 		*
 		* @params start The current buffer to be interpolated
-		* @params end The target buffer
+		* @params end The target buffer (must be a multiple of 8 samples)
+		* @params startLength The previous used length of the start buffer for interpolating old samples to zero
 		* @params factor The interpolation factor (must be between 0 and 1)
 		*/
-		inline void Lerp(Buffer<>& start, const Buffer<>& end, const Real factor)
+		inline void Lerp(Buffer<>& start, const Buffer<>& end, const int startLength, const Real factor)
 		{
 			assert(0.0 < factor && factor <= 1.0);
+			assert(end.Length() % 8 == 0);
 			assert(start.Length() >= end.Length());
+			assert(startLength <= start.Length());
 
-			// If the start buffer is longer than the end buffer, the remaining samples are interpolating to zero
-			start *= (1.0 - factor);
-			for (int i = 0; i < end.Length(); i++)
+			int len = end.Length();
+			int i = 0;
+			while(i < len) // Easier for compiler to vectorise ~1.6x faster
+			{
+				start[i] *= (1.0 - factor);
 				start[i] += factor * end[i];
+				i++;
+				start[i] *= (1.0 - factor);
+				start[i] += factor * end[i];
+				i++;
+				start[i] *= (1.0 - factor);
+				start[i] += factor * end[i];
+				i++;
+				start[i] *= (1.0 - factor);
+				start[i] += factor * end[i];
+				i++;
+				start[i] *= (1.0 - factor);
+				start[i] += factor * end[i];
+				i++;
+				start[i] *= (1.0 - factor);
+				start[i] += factor * end[i];
+				i++;
+				start[i] *= (1.0 - factor);
+				start[i] += factor * end[i];
+				i++;
+				start[i] *= (1.0 - factor);
+				start[i] += factor * end[i];
+				i++;
+			}
+			for (int i = end.Length(); i < startLength; i++) // Interpolating to zero
+				start[i] *= (1.0 - factor);
 		}
 
 		/**
