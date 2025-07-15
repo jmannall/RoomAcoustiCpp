@@ -26,7 +26,7 @@ namespace RAC
 			*
 			* @param fs The sample rate
 			*/
-			HeadphoneEQ(const int fs, const int maxFilterLength) : leftFilter(fs, maxFilterLength), rightFilter(fs, maxFilterLength) {};
+			HeadphoneEQ(const int maxFilterLength) : leftFilter(Buffer<>(), maxFilterLength), rightFilter(Buffer<>(), maxFilterLength) {};
 
 			/**
 			* @brief Set the FIR filter impulse responses for the left and right channels
