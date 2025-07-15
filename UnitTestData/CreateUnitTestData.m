@@ -37,12 +37,44 @@ writematrix(irOut, 'btm.csv')
 clear all
 close all
 
-data = load("C:\Users\jm01527\OneDrive - University of Surrey\Documents\Sound PhD\Year 2\BRAS Database\2_source_and_receiver_descriptions-Genelec_8020c\2 Source and receiver descriptions\Genelec 8020c\Genelec8020_DAF_2016_1x1_64442_IR_front_pole.mat");
-% Parameters
-fs = 44100;    % Sampling frequency (Hz)
+csvData = readtable("C:\BRASDatabase\2_source_and_receiver_descriptions-Genelec_8020c\2 Source and receiver descriptions\Genelec 8020c\Genelec8020c_1x1_64442_IR_front_pole.csv");
+
+data.IR = csvData{:,2:end}';
+data.Phi = str2double(extractBetween(csvData{:,1}, 'P', 'T'));
+data.Theta = str2double(extractAfter(csvData{:,1}, 'T'));
+
+fs = 44100;
 freqBands = [62.5, 125, 250, 500, 1000, 2000, 4000, 8000, 16000];  % Adjust as needed
 
-a_lm = CalculateSphericalHarmonics(data, freqBands, fs);
+[a_lm, ~, ~, invDF] = CalculateSphericalHarmonics(data, freqBands, fs, true);
+
+[data.IR, ctf] = HRTFtoDTF(data.IR, fs);
+a_lm_dtf = CalculateSphericalHarmonics(data, freqBands, fs, true);
+
+out = a_lmToText(a_lm);
+out_dtf = a_lmToText(a_lm_dtf);
+
+%% QSC K8 Directivity
+
+clear all
+close all
+
+csvData = readtable("C:\BRASDatabase\2_source_and_receiver_descriptions-QSC_K8\2 Source and receiver descriptions\QSC K8\QSCK8_1x1_64442_IR_front_pole.csv");
+
+data.IR = csvData{:,2:end}';
+data.Phi = str2double(extractBetween(csvData{:,1}, 'P', 'T'));
+data.Theta = str2double(extractAfter(csvData{:,1}, 'T'));
+
+fs = 44100;
+freqBands = [62.5, 125, 250, 500, 1000, 2000, 4000, 8000, 16000];  % Adjust as needed
+
+[a_lm, ~, ~, invDF] = CalculateSphericalHarmonics(data, freqBands, fs, true);
+
+[data.IR, ctf] = HRTFtoDTF(data.IR, fs);
+a_lm_dtf = CalculateSphericalHarmonics(data, freqBands, fs, true);
+
+out = a_lmToText(a_lm);
+out_dtf = a_lmToText(a_lm_dtf);
 
 %%
 a = deg2rad(0:10:350);
@@ -64,6 +96,11 @@ writematrix(freqBands, 'directivityFreq.csv');
 writematrix(input, 'genelecDirectivityInput.csv');
 writematrix(dir, 'genelecDirectivityOutput.csv');
 
+%%
+writematrix(freqBands, 'directivityFreq.csv');
+writematrix(input, 'qscDirectivityInput.csv');
+writematrix(dir, 'qscDirectivityOutput.csv');
+
 function dir = CalculateDirectivity(harmonics, azimuth, elevation)
     dir = zeros(1, length(harmonics));
     for k = 1:length(harmonics)
@@ -76,6 +113,22 @@ function dir = CalculateDirectivity(harmonics, azimuth, elevation)
         end
     end
     dir = abs(dir);
+end
+
+function out = a_lmToText(a_lm)
+    for i = 1:length(a_lm)
+        out{i} = '{ ';
+        for j = 1:length(a_lm{i})
+            aReal = real(a_lm{i}(j));
+            aImag = imag(a_lm{i}(j));
+            if (aImag == 0)
+                out{i} = [out{i} num2str(a_lm{i}(j), 16) ','];
+            else
+                out{i} = [out{i} 'Complex(' num2str(aReal, 16) ', ' num2str(aImag, 16) '),'];
+            end
+        end
+        out{i} = [out{i} ' },'];
+    end
 end
 
 function Ylm = spharm(l, m, theta, phi)

@@ -368,6 +368,17 @@ namespace RAC
 				directivity = GENELEC_DTF.Response(frequencyBands, theta, phi);
 				break;
 			}
+			case SourceDirectivity::qscK8:
+			{
+				Vec3 direction = UnitVector(point - source.position);
+				Vec3 localDirection = source.orientation.RotateVector(direction);
+
+				Real theta = std::acos(localDirection.z);
+				Real phi = -std::atan2(localDirection.x, localDirection.y); // -phi converts from left-handed coordinate system to right-handed coordinate system
+
+				directivity = QSC_K8.Response(frequencyBands, theta, phi);
+				break;
+			}
 			default:
 				directivity = 1.0;
 			}

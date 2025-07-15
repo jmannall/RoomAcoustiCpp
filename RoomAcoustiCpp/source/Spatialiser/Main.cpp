@@ -396,6 +396,7 @@ extern "C"
 	* 5 -> bidirectional
 	* 6 -> genelec8020c
 	* 7 -> genelec8020c DTF
+	* 8 -> qscK8
 	* 
 	* @param id The ID of the audio source to update.
 	* @param directivity The new directivity of the source.
@@ -420,6 +421,8 @@ extern "C"
 		{ UpdateSourceDirectivity(id, SourceDirectivity::genelec8020c); break; }
 		case(7):
 		{ UpdateSourceDirectivity(id, SourceDirectivity::genelec8020cDTF); break; }
+		case(8):
+		{ UpdateSourceDirectivity(id, SourceDirectivity::qscK8); break; }
 		default:
 		{ UpdateSourceDirectivity(id, SourceDirectivity::omni); break; }
 		}

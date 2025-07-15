@@ -197,6 +197,9 @@ namespace RAC
 			case SourceDirectivity::genelec8020c:
 				reverbInput = GENELEC.AverageResponse(frequencyBands);
 				break;
+			case SourceDirectivity::qscK8:
+				reverbInput = QSC_K8.AverageResponse(frequencyBands);
+				break;
 			}
 			mDirectivity.store(directivity, std::memory_order_release);
 			// Divide energy between late reverb channels. Multiply by six to mimic shoebox room first reflections energy

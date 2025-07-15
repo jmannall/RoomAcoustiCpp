@@ -80,7 +80,8 @@ namespace RAC
 			hypercardioid,
 			bidirectional,
 			genelec8020c,
-			genelec8020cDTF
+			genelec8020cDTF,
+			qscK8
 		};
 
 		enum class SpatialisationMode { quality, performance, none };
