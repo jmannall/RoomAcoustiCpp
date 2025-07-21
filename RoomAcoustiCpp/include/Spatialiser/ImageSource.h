@@ -101,12 +101,10 @@ namespace RAC
 			* @brief Constructor that initialises the image source data
 			*
 			* @param numFrequencyBands The number of frequency bands for applying wall absorption
-			* @param sourceID The ID of the source this image source is associated with
 			*/
-			ImageSourceData(int numFrequencyBands, int sourceID) : valid(false), visible(false), feedsFDN(false), reflection(false), diffraction(false),
+			ImageSourceData(int numFrequencyBands) : valid(false), visible(false), feedsFDN(false), reflection(false), diffraction(false),
 				mAbsorption(numFrequencyBands), distance(0.0), lastUpdatedCycle(false), idKey{ '0' }, sourceKey{ 's' }, reflectionKey{ 'r' }, diffractionKey{ 'd' },
-				sourceID(sourceID), mPositions(1, Vec3()), pathParts(1, Part(0, true)), mEdges(1, { Vec3(), Vec3() }) {
-			}
+				mPositions(1, Vec3()), pathParts(1, Part(0, true)), mEdges(1, { Vec3(), Vec3() }) {}
 
 			/**
 			* @brief Default deconstructor
@@ -138,7 +136,7 @@ namespace RAC
 			/**
 			* @brief Creates a string key representing the image source path
 			*/
-			void CreateKey();
+			void CreateKey(int sourceID);
 
 			/**
 			* @brief Adds a reflection to the image source path
@@ -297,7 +295,7 @@ namespace RAC
 			/**
 			* @brief Clears the image source data
 			*/
-			void Clear(int sourceID);
+			void Clear();
 
 			/**
 			* @brief Increases the path reflection/diffraction order stored in the image source
@@ -385,7 +383,7 @@ namespace RAC
 			/**
 			* @brief Adds the sourceID to the key
 			*/
-			void AddSourceIDToKey();
+			void AddSourceIDToKey(int sourceID);
 
 			/**
 			* @brief Adds a reflection to the image source path
@@ -410,7 +408,6 @@ namespace RAC
 			std::array<char, 1> diffractionKey;			// Char that stores the diffraction key
 
 			std::vector<Part> pathParts;			// Reflection and diffraction parts of the image source path
-			int sourceID;							// ID of the source
 			std::vector<Vec3> mPositions;			// Positions of the image source along the path
 			std::vector<ImageEdgeData> mEdges;		// Image edges along the image source path
 			int diffractionIndex;					// Index of the first diffraction in the image source path

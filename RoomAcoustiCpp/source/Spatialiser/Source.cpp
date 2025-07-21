@@ -356,7 +356,10 @@ namespace RAC
 			if (!GetAccess())
 				return std::nullopt;
 			if (!transform.load(std::memory_order_acquire)) // Check if the source position has been updated before using
+			{
+				FreeAccess();
 				return std::nullopt;
+			}
 			lock_guard<std::mutex>lock(*dataMutex);
 			Data data(-1, currentPosition, currentOrientation, mDirectivity.load(std::memory_order_acquire), hasChanged.exchange(false, std::memory_order_acq_rel));
 			FreeAccess();

@@ -33,9 +33,9 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void ImageSourceData::CreateKey()
+		void ImageSourceData::CreateKey(int sourceID)
 		{
-			AddSourceIDToKey();
+			AddSourceIDToKey(sourceID);
 			for (const auto& part : pathParts)
 			{
 				if (part.isReflection)
@@ -57,7 +57,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void ImageSourceData::AddSourceIDToKey()
+		void ImageSourceData::AddSourceIDToKey(int sourceID)
 		{
 			key = "";
 			auto [ptr, ec] = std::to_chars(idKey.data(), idKey.data() + idKey.size(), sourceID);
@@ -140,8 +140,8 @@ namespace RAC
 			{
 				if (i >= diffractionIndex)
 				{
-					assert(i - diffractionIndex < mEdges.size());
-					return mEdges[i - diffractionIndex].GetEdgeCoordinate(mDiffractionPath.GetApexZ());
+					assert(i < mEdges.size());
+					return mEdges[i].GetEdgeCoordinate(mDiffractionPath.GetApexZ());
 				}
 			}
 			assert(i < mPositions.size());
@@ -150,12 +150,11 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void ImageSourceData::Clear(int sourceID)
+		void ImageSourceData::Clear()
 		{
 			Reset();
 			reflection = false;
 			diffraction = false;
-			sourceID = sourceID;
 			key.clear();
 		}
 
@@ -186,7 +185,6 @@ namespace RAC
 				diffractionIndex = imageSource.diffractionIndex;
 				mDiffractionPath = imageSource.mDiffractionPath;
 			}
-			sourceID = imageSource.sourceID;
 			key.clear();
 		}
 

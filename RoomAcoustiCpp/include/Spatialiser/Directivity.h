@@ -926,7 +926,7 @@ namespace RAC
 			0.376312699147105
 		};
 
-		const Directivity QSC_K8 = Directivity({ 62.5, 125.0, 250.0, 500.0, 1e3, 2e3, 4e3, 8e3, 16e3 }, QSC_K8_DIRECTIVITY, QSC_DIRECTIVITY_INDEX);
+		const Directivity QSC_K8 = Directivity({ 62.5, 125.0, 250.0, 500.0, 1e3, 2e3, 4e3, 8e3, 16e3 }, QSC_K8_DIRECTIVITY, QSC_K8_DIRECTIVITY_INDEX);
 	}
 }
 #endif

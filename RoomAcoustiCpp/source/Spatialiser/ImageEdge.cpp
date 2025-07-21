@@ -138,6 +138,8 @@ namespace RAC
 				auto it = mPlanes.find(imageSource.GetID(bounceIdx));
 				if (it != mPlanes.end()) // case: plane exists
 					valid = LinePlaneIntersection(mListenerPosition, imageSource.GetPosition(bounceIdx), it->second, absorption, intersections[bounceIdx]);
+				else
+					return false;
 			}
 			else
 			{
@@ -454,7 +456,7 @@ namespace RAC
 			{
 				counter = FirstOrderReflections(source, imageSources, counter);
 
-				sp[0].resize(counter, ImageSourceData(frequencyBands.Length(), source.id));
+				sp[0].resize(counter, ImageSourceData(frequencyBands.Length()));
 
 				if (mIEMConfig.MaxOrder() < 2)
 				{
@@ -465,7 +467,7 @@ namespace RAC
 				HigherOrderPaths(source, imageSources);
 			}
 			else
-				sp[0].resize(counter, ImageSourceData(frequencyBands.Length(), source.id));
+				sp[0].resize(counter, ImageSourceData(frequencyBands.Length()));
 
 			EraseOldEntries(imageSources);
 			return;
@@ -495,10 +497,10 @@ namespace RAC
 				if (mIEMConfig.specularDiffOrder < 1 && zone == EdgeZone::NonShadowed)
 					continue;
 
-				ImageSourceData& imageSource = counter < size ? sp[0][counter] : sp[0].emplace_back(frequencyBands.Length(), source.id);
+				ImageSourceData& imageSource = counter < size ? sp[0][counter] : sp[0].emplace_back(frequencyBands.Length());
 				
 				if (counter < size)
-					imageSource.Clear(source.id);
+					imageSource.Clear();
 				counter++;
 
 				imageSource.Valid();
@@ -554,11 +556,11 @@ namespace RAC
 				if (!plane.ReflectPointInPlane(position, source.position))
 					continue;
 
-				ImageSourceData& imageSource = counter < size ? sp[0][counter] : sp[0].emplace_back(frequencyBands.Length(), source.id);
+				ImageSourceData& imageSource = counter < size ? sp[0][counter] : sp[0].emplace_back(frequencyBands.Length());
 
 				imageSource.SetPreviousPlane(Vec4(plane.GetD(), plane.GetNormal()));
 				if (counter < size)
-					imageSource.Clear(source.id);
+					imageSource.Clear();
 				counter++;
 
 				imageSource.Valid();
@@ -782,7 +784,7 @@ namespace RAC
 
 				if (mIEMConfig.specularDiffOrder < refOrder && mIEMConfig.shadowDiffOrder < refOrder)
 				{
-					sp[refIdx].resize(counter, ImageSourceData(frequencyBands.Length(), source.id));
+					sp[refIdx].resize(counter, ImageSourceData(frequencyBands.Length()));
 					continue;
 				}
 #ifdef PROFILE_BACKGROUND_THREAD_DETAILED
@@ -866,7 +868,7 @@ namespace RAC
 #endif
 					}
 				}
-				sp[refIdx].resize(counter, ImageSourceData(frequencyBands.Length(), source.id));
+				sp[refIdx].resize(counter, ImageSourceData(frequencyBands.Length()));
 			}
 		}
 
@@ -881,7 +883,7 @@ namespace RAC
 			imageSource.SetDistance(mListenerPosition);
 			imageSource.Visible(feedsFDN);
 			imageSource.UpdateCycle(currentCycle);
-			imageSource.CreateKey();
+			imageSource.CreateKey(source.id);
 			imageSources.insert_or_assign(imageSource.GetKey(), std::pair<int, ImageSourceData>(-1, imageSource));
 		}
 

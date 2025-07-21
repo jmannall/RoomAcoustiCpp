@@ -345,12 +345,14 @@ namespace RAC
 							Vec3 test1 = UnitVectorRound(Cross(wallA.GetNormal(), wallB.GetNormal()));
 							Vec3 test2 = UnitVectorRound(verticesA[idxA] - verticesA[i]);
 
-							if (test1 == test2) // Check returns correct angle type
+							Vec3 test = test1 - test2; // If opposite sign, will tend to zero
+							if (test.Length() < 0.1)
 							{
+
 								edges.emplace_back(verticesA[i], verticesA[idxA], wallA.GetNormal(), wallB.GetNormal(), idA, idB, wallA.GetPlaneID(), wallB.GetPlaneID());
 								return;
 							}
-							else if (test1 == -test2)
+							else if (test.Length() > 1.9)
 							{
 								edges.emplace_back(verticesA[i], verticesA[idxA], wallB.GetNormal(), wallA.GetNormal(), idB, idA, wallB.GetPlaneID(), wallA.GetPlaneID());
 								return;
