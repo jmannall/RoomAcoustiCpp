@@ -224,7 +224,7 @@ namespace RAC
 			InitBuffers(config->numFrames);
 
 			inputBuffer = sourceBuffer;
-			mFilter = make_unique<GraphicEQ>(data.GetAbsorption(), config->frequencyBands, config->Q, config->fs);
+			mFilter = make_unique<GraphicEQ<>>(data.GetAbsorption(), config->frequencyBands, config->Q, config->fs);
 			mAirAbsorption = make_unique<AirAbsorption>(data.GetDistance(), config->fs);
 
 			diffraction = data.IsDiffraction();
@@ -560,7 +560,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void ImageSource::ProcessAudio(Buffer<>& outputBuffer, Matrix& reverbInput, const Real lerpFactor)
+		void ImageSource::ProcessAudio(Buffer<>& outputBuffer, Matrix<>& reverbInput, const Real lerpFactor)
 		{
 			if (!GetAccess())
 				return;

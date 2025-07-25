@@ -127,7 +127,8 @@ namespace RAC
 			* @params core The 3DTI processing core
 			* @params config The spatialiser configuration
 			*/
-			Reverb(Binaural::CCore* core, const std::shared_ptr<Config> config) : reverbSourceInputs(config->numLateReverbChannels, Buffer<>(config->numFrames))
+			Reverb(Binaural::CCore* core, const std::shared_ptr<Config> config) : reverbSourceInputs(config->numLateReverbChannels, Buffer<>(config->numFrames)),
+				reverbSourceInputsComplex(config->numLateReverbChannels, Buffer<Complex>(config->numFrames)), reverbSourceInputsComplexPair(config->numLateReverbChannels, Buffer<ComplexPair>(config->numFrames))
 			{
 				const std::vector<Vec3> points = CalculateSourcePositions(config->numLateReverbChannels);
 				mReverbSources.reserve(config->numLateReverbChannels);
@@ -170,7 +171,11 @@ namespace RAC
 			* @params data Multichannel audio data input
 			* @params ouputBuffer Stereo output buffer to write to
 			*/
-			void ProcessAudio(const Matrix& data, Buffer<>& outputBuffer, const Real lerpFactor);
+			void ProcessAudio(const Matrix<>& data, Buffer<>& outputBuffer, const Real lerpFactor);
+
+			void ProcessComplexAudio(const Matrix<Complex>& data, Buffer<Complex>& outputBuffer, const Real lerpFactor);
+
+			void ProcessComplexPairAudio(const Matrix<ComplexPair>& data, Buffer<ComplexPair>& outputBuffer, const Real lerpFactor);
 
 			/**
 			* @brief Resets the FDN and ReverbSources internal buffers to zero
@@ -180,6 +185,8 @@ namespace RAC
 				for (auto& reverbSource : mReverbSources)
 					reverbSource->Reset();
 				mFDN.load(std::memory_order_acquire)->Reset();
+				complexFDN.load(std::memory_order_acquire)->Reset();
+				complexPairFDN.load(std::memory_order_acquire)->Reset();
 			}
 
 			/**
@@ -203,7 +210,7 @@ namespace RAC
 			*/
 			void SetTargetT60(const Coefficients<>& T60);
 
-			void InitLateReverb(const Coefficients<>& T60, const Vec& dimensions, const FDNMatrix matrix, const std::shared_ptr<Config> config);
+			void InitLateReverb(const Coefficients<>& T60, const Vec<>& dimensions, const FDNMatrix matrix, const std::shared_ptr<Config> config);
 
 			/**
 			* @brief Update reflection filters for directional dependent reverberation level
@@ -217,9 +224,14 @@ namespace RAC
 
 			std::vector<Vec3> CalculateSourcePositions(const int numLateReverbChannels) const;
 
-			std::atomic<std::shared_ptr<FDN>> mFDN;		// FDN for late reverberation processing
+			std::atomic<std::shared_ptr<FDN<>>> mFDN;		// FDN for late reverberation processing
+			std::atomic < std::shared_ptr<RandomOrthogonalFDN<Complex>>> complexFDN;
+			std::atomic < std::shared_ptr<RandomOrthogonalFDN<ComplexPair>>> complexPairFDN;
 
 			std::vector<Buffer<>> reverbSourceInputs;		// Input buffers for each reverb source
+			std::vector<Buffer<Complex>> reverbSourceInputsComplex;		// Input buffers for each reverb source
+			std::vector<Buffer<ComplexPair>> reverbSourceInputsComplexPair;		// Input buffers for each reverb source
+
 			std::vector<std::unique_ptr<ReverbSource>> mReverbSources;		// Reverb sources to binauralise the FDN output
 
 			std::atomic<bool> initialised{ false };		// True if T60 > 0.0 and T60 < 20.0 seconds

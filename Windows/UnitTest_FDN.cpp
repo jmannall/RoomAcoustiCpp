@@ -7,6 +7,10 @@
 
 #include "Spatialiser/FDN.h"
 
+#include "Spatialiser/ComplexFDN.h"
+
+#include "Common/RACProfiler.h"
+
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 namespace RAC
 {
@@ -53,7 +57,7 @@ namespace RAC
 			const std::vector<Absorption<>> reflectionGains(config->numLateReverbChannels, gains);
 
 			Vec dimensions({ 1.0, 1.5, 2.0 });
-			FDN fdn(T60, dimensions, config);
+			FDN<> fdn(T60, dimensions, config);
 
 			Matrix in(config->numLateReverbChannels, config->numFrames);
 			in.RandomUniformDistribution();
@@ -67,7 +71,7 @@ namespace RAC
 				Real sum = 0.0;
 				for (int j = 0; j < config->numFrames; j++)
 					sum += out[i][j] * out[i][j];
-				Assert::AreNotEqual(0.0, sum, L"ProcessAudio is zero");
+				Assert::AreNotEqual((Real)0.0, sum, L"ProcessAudio is zero");
 			}
 
 			fdn.Reset();
@@ -77,7 +81,7 @@ namespace RAC
 			for (int i = 0; i < config->numLateReverbChannels; i++)
 			{
 				for (int j = 0; j < config->numFrames; j++)
-					Assert::AreEqual(0.0, out[i][j], L"ProcessAudio not zero");
+					Assert::AreEqual((Real)0.0, out[i][j], L"ProcessAudio not zero");
 			}
 		}
 
@@ -90,7 +94,7 @@ namespace RAC
 			const std::vector<Absorption<>> reflectionGains(config->numLateReverbChannels, gains);
 
 			Vec dimensions({ 1.0, 1.5, 2.0 });
-			FDN fdn(T60, dimensions, config);
+			FDN<> fdn(T60, dimensions, config);
 			fdn.SetTargetReflectionFilters(reflectionGains);
 
 			Matrix in(config->numLateReverbChannels, config->numFrames);
@@ -102,7 +106,7 @@ namespace RAC
 			for (int i = 0; i < config->numLateReverbChannels; i++)
 			{
 				for (int j = 0; j < config->numFrames; j++)
-					Assert::AreEqual(0.0, out[i][j], L"Refelctions filters not zero");
+					Assert::AreEqual((Real)0.0, out[i][j], L"Refelctions filters not zero");
 			}
 		}
 
@@ -122,8 +126,8 @@ namespace RAC
 			const std::vector<Absorption<>> reflectionGains(config->numLateReverbChannels, gains);
 
 			// Long delay lines cause issues with the T60 estimation due to less frequent but larger drops in energy
-			Vec dimensions({ RandomValue(0.1, 2.0), RandomValue(0.1, 5.0), RandomValue(0.1, 10.0) });
-			FDN fdn(T60, dimensions, config);
+			Vec dimensions({ RandomValue((Real)0.1, (Real)2.0), RandomValue((Real)0.1, (Real)5.0), RandomValue((Real)0.1, (Real)10.0) });
+			FDN<> fdn(T60, dimensions, config);
 			fdn.SetTargetReflectionFilters(reflectionGains);
 
 			Matrix in(config->numLateReverbChannels, config->numFrames);
@@ -139,7 +143,7 @@ namespace RAC
 				decayTime += CalculateT60(out[i], config->numFrames, config->fs);
 			decayTime /= config->numLateReverbChannels;
 			Assert::IsTrue(decayTime > 0.0f, L"Decay not detected.");
-			Assert::AreEqual(target, decayTime, 0.02, L"Decay time does not match target RT60.");
+			Assert::AreEqual(target, decayTime, (Real)0.02, L"Decay time does not match target RT60.");
 		}
 
 		TEST_METHOD(ProcessRandomOrthogonal)
@@ -159,7 +163,7 @@ namespace RAC
 
 			// Long delay lines cause issues with the T60 estimation due to less frequent but larger drops in energy
 			Vec dimensions({ RandomValue(0.1, 2.0), RandomValue(0.1, 5.0), RandomValue(0.1, 10.0) });
-			FDN fdn(T60, dimensions, config);
+			FDN<> fdn(T60, dimensions, config);
 			fdn.SetTargetReflectionFilters(reflectionGains);
 
 			Matrix in(config->numLateReverbChannels, config->numFrames);
@@ -168,14 +172,14 @@ namespace RAC
 
 			std::vector<Buffer<>> out(config->numLateReverbChannels, Buffer<>(config->numFrames));
 			fdn.ProcessAudio(in, out, lerpFactor);
-			
+
 			// Analyze Output Decay
 			Real decayTime = 0.0;
 			for (int i = 0; i < config->numLateReverbChannels; i++)
 				decayTime += CalculateT60(out[i], config->numFrames, config->fs);
 			decayTime /= config->numLateReverbChannels;
 			Assert::IsTrue(decayTime > 0.0f, L"Decay not detected.");
-			Assert::AreEqual(target, decayTime, 0.02, L"Decay time does not match target RT60.");
+			Assert::AreEqual(target, decayTime, (Real)0.02, L"Decay time does not match target RT60.");
 		}
 
 		TEST_METHOD(ProcessHouseHolder)
@@ -194,8 +198,8 @@ namespace RAC
 			const std::vector<Absorption<>> reflectionGains(config->numLateReverbChannels, gains);
 
 			// Long delay lines cause issues with the T60 estimation due to less frequent but larger drops in energy
-			Vec dimensions({ RandomValue(0.1, 2.0), RandomValue(0.1, 5.0), RandomValue(0.1, 10.0) });
-			FDN fdn(T60, dimensions, config);
+			Vec<> dimensions({ RandomValue(0.1, 2.0), RandomValue(0.1, 5.0), RandomValue(0.1, 10.0) });
+			FDN<> fdn(T60, dimensions, config);
 			fdn.SetTargetReflectionFilters(reflectionGains);
 
 			Matrix in(config->numLateReverbChannels, config->numFrames);
@@ -211,7 +215,7 @@ namespace RAC
 				decayTime += CalculateT60(out[i], config->numFrames, config->fs);
 			decayTime /= config->numLateReverbChannels;
 			Assert::IsTrue(decayTime > 0.0f, L"Decay not detected.");
-			Assert::AreEqual(target, decayTime, 0.02, L"Decay time does not match target RT60.");
+			Assert::AreEqual(target, decayTime, (Real)0.02, L"Decay time does not match target RT60.");
 		}
 
 		TEST_METHOD(FeedbackMatrixIdentity)
@@ -230,7 +234,7 @@ namespace RAC
 
 			// Long delay lines cause issues with the T60 estimation due to less frequent but larger drops in energy
 			Vec dimensions({ 2.3, 1.5, 5.6 });
-			FDN fdn(T60, dimensions, config);
+			FDN<> fdn(T60, dimensions, config);
 			fdn.SetTargetReflectionFilters(std::vector<Absorption<>>(config->numLateReverbChannels, reflectionGains));
 
 			Matrix in(config->numLateReverbChannels, config->numFrames);
@@ -242,14 +246,14 @@ namespace RAC
 			Real sum = 0.0;
 			for (int j = 0; j < config->numFrames; j++)
 				sum += out[0][j] * out[0][j];
-			Assert::AreNotEqual(0.0, sum, L"Feedback matrix is not identity.");
+			Assert::AreNotEqual((Real)0.0, sum, L"Feedback matrix is not identity.");
 
 			for (int i = 1; i < config->numLateReverbChannels; i++)
 			{
 				Real sum = 0.0;
 				for (int j = 0; j < config->numFrames; j++)
 					sum += out[i][j] * out[i][j];
-				Assert::AreEqual(0.0, sum, L"Feedback matrix is not identity.");
+				Assert::AreEqual((Real)0.0, sum, L"Feedback matrix is not identity.");
 			}
 		}
 
@@ -283,7 +287,7 @@ namespace RAC
 				Real sum = 0.0;
 				for (int j = 0; j < config->numFrames; j++)
 					sum += out[i][j] * out[i][j];
-				Assert::AreNotEqual(0.0, sum, L"Feedback matrix is not random orthogonal.");
+				Assert::AreNotEqual((Real)0.0, sum, L"Feedback matrix is not random orthogonal.");
 			}
 		}
 
@@ -317,8 +321,395 @@ namespace RAC
 				Real sum = 0.0;
 				for (int j = 0; j < config->numFrames; j++)
 					sum += out[i][j] * out[i][j];
-				Assert::AreNotEqual(0.0, sum, L"Feedback matrix is not random orthogonal.");
+				Assert::AreNotEqual((Real)0.0, sum, L"Feedback matrix is not random orthogonal.");
 			}
+		}
+
+		TEST_METHOD(ProcessReal)
+		{
+			Profiler::Instance().SetOutputFile("RealProfile2.csv", true);
+
+			const Real target = RandomValue(0.1, 2.0);
+			const int fs = 48e3;
+			const int numFrames = static_cast<int>(fs * target * 1.2);
+			const int numLateReverbChannels = 12;
+			const Real lerpFactor = 1.0;
+			const Real Q = 0.98;
+			const std::vector<Real> fBands = { 500.0, 1000.0, 2000.0, 4000.0 };
+			const std::shared_ptr<Config> config = std::make_shared<Config>(fs, numFrames, numLateReverbChannels, lerpFactor, Q, fBands);
+
+			const Coefficients T60({ target, target, target, target });
+			const Absorption gains({ 0.1, 0.05, 0.3, 0.25 });
+			const std::vector<Absorption<>> reflectionGains(config->numLateReverbChannels, gains);
+
+			// Long delay lines cause issues with the T60 estimation due to less frequent but larger drops in energy
+			Vec dimensions({ RandomValue(0.1, 2.0), RandomValue(0.1, 5.0), RandomValue(0.1, 10.0) });
+			FDN<Real> fdn(T60, dimensions, config);
+			fdn.SetTargetReflectionFilters(reflectionGains);
+
+			Matrix<Real> in(config->numLateReverbChannels, config->numFrames);
+			for (int i = 0; i < config->numLateReverbChannels; i++)
+				in[i][1] = 1.0;
+
+			std::vector<Buffer<Real>> out(config->numLateReverbChannels, Buffer<Real>(config->numFrames));
+
+			for (int i = 0; i < 1000; i++)
+				fdn.ProcessAudio(in, out, lerpFactor);
+
+			fdn.Reset();
+			fdn.ProcessAudio(in, out, lerpFactor);
+			std::vector<Buffer<Real>> outReal(config->numLateReverbChannels, Buffer<Real>(config->numFrames));
+			std::vector<Buffer<Real>> outImaginary(config->numLateReverbChannels, Buffer<Real>(config->numFrames));
+
+			for (int i = 0; i < config->numLateReverbChannels; i++)
+			{
+				for (int j = 0; j < config->numFrames; j++)
+				{
+					outReal[i][j] = out[i][j];
+					outImaginary[i][j] = out[i][j];
+
+					Assert::AreEqual(outReal[i][j], outImaginary[i][j], L"Incorrect ratio between real and imaginary parts.");
+				}
+			}
+
+			// Analyze Output Decay
+			Real decayTimeReal = 0.0;
+			Real decayTimeImaginay = 0.0;
+			for (int i = 0; i < config->numLateReverbChannels; i++)
+			{
+				decayTimeReal += CalculateT60(outReal[i], config->numFrames, config->fs);
+				decayTimeImaginay += CalculateT60(outReal[i], config->numFrames, config->fs);
+			}
+			decayTimeReal /= config->numLateReverbChannels;
+			decayTimeImaginay /= config->numLateReverbChannels;
+
+			Assert::IsTrue(decayTimeReal > 0.0f, L"Decay not detected.");
+			Assert::AreEqual(target, decayTimeReal, (Real)0.02, L"Decay time does not match target RT60.");
+
+			Assert::IsTrue(decayTimeImaginay > 0.0f, L"Decay not detected.");
+			Assert::AreEqual(target, decayTimeImaginay, (Real)0.02, L"Decay time does not match target RT60.");
+			Profiler::Instance().SetOutputFile("RealProfile.csv", false);
+		}
+
+		TEST_METHOD(ProcessComplex)
+		{
+			Profiler::Instance().SetOutputFile("ComplexProfile2.csv", true);
+
+			const Real target = RandomValue(0.1, 2.0);
+			const int fs = 48e3;
+			const int numFrames = static_cast<int>(fs * target * 1.2);
+			const int numLateReverbChannels = 12;
+			const Real lerpFactor = 1.0;
+			const Real Q = 0.98;
+			const std::vector<Real> fBands = { 500.0, 1000.0, 2000.0, 4000.0 };
+			const std::shared_ptr<Config> config = std::make_shared<Config>(fs, numFrames, numLateReverbChannels, lerpFactor, Q, fBands);
+
+			const Coefficients T60({ target, target, target, target });
+			const Absorption gains({ (Real)0.1, (Real)0.05, (Real)0.3, (Real)0.25 });
+			const std::vector<Absorption<>> reflectionGains(config->numLateReverbChannels, gains);
+
+			// Long delay lines cause issues with the T60 estimation due to less frequent but larger drops in energy
+			Vec dimensions({ RandomValue(0.1, 2.0), RandomValue(0.1, 5.0), RandomValue(0.1, 10.0) });
+			FDN<Complex> fdn(T60, dimensions, config);
+			fdn.SetTargetReflectionFilters(reflectionGains);
+
+			Matrix<Complex> in(config->numLateReverbChannels, config->numFrames);
+			for (int i = 0; i < config->numLateReverbChannels; i++)
+				in[i][1] = Complex(1.0, 2.0);
+
+			std::vector<Buffer<Complex>> out(config->numLateReverbChannels, Buffer<Complex>(config->numFrames));
+
+			{
+				for (int i = 0; i < 1000; i++)
+					fdn.ProcessAudio(in, out, lerpFactor);
+			}
+
+			fdn.Reset();
+			fdn.ProcessAudio(in, out, lerpFactor);
+			std::vector<Buffer<Real>> outReal(config->numLateReverbChannels, Buffer<Real>(config->numFrames));
+			std::vector<Buffer<Real>> outImaginary(config->numLateReverbChannels, Buffer<Real>(config->numFrames));
+
+			for (int i = 0; i < config->numLateReverbChannels; i++)
+			{
+				for (int j = 0; j < config->numFrames; j++)
+				{
+					outReal[i][j] = out[i][j].real();
+					outImaginary[i][j] = out[i][j].imag();
+
+					Assert::AreEqual((Real)2.0 * outReal[i][j], outImaginary[i][j], L"Incorrect ratio between real and imaginary parts.");
+				}
+			}
+
+			// Analyze Output Decay
+			Real decayTimeReal = 0.0;
+			Real decayTimeImaginay = 0.0;
+			for (int i = 0; i < config->numLateReverbChannels; i++)
+			{
+				decayTimeReal += CalculateT60(outReal[i], config->numFrames, config->fs);
+				decayTimeImaginay += CalculateT60(outReal[i], config->numFrames, config->fs);
+			}
+			decayTimeReal /= config->numLateReverbChannels;
+			decayTimeImaginay /= config->numLateReverbChannels;
+
+			Assert::IsTrue(decayTimeReal > (Real)0.0, L"Decay not detected.");
+			Assert::AreEqual(target, decayTimeReal, (Real)0.02, L"Decay time does not match target RT60.");
+
+			Assert::IsTrue(decayTimeImaginay > (Real)0.0, L"Decay not detected.");
+			Assert::AreEqual(target, decayTimeImaginay, (Real)0.02, L"Decay time does not match target RT60.");
+			Profiler::Instance().SetOutputFile("ComplexProfile.csv", false);
+
+		}
+
+		TEST_METHOD(ProcessComplexPair)
+		{
+			Profiler::Instance().SetOutputFile("ComplexPairProfile2.csv", true);
+
+			const Real target = RandomValue(0.1, 2.0);
+			const int fs = 48e3;
+			const int numFrames = static_cast<int>(fs * target * 1.2);
+			const int numLateReverbChannels = 12;
+			const Real lerpFactor = 1.0;
+			const Real Q = 0.98;
+			const std::vector<Real> fBands = { 500.0, 1000.0, 2000.0, 4000.0 };
+			const std::shared_ptr<Config> config = std::make_shared<Config>(fs, numFrames, numLateReverbChannels, lerpFactor, Q, fBands);
+
+			const Coefficients T60({ target, target, target, target });
+			const Absorption gains({ (Real)0.1, (Real)0.05, (Real)0.3, (Real)0.25 });
+			const std::vector<Absorption<>> reflectionGains(config->numLateReverbChannels, gains);
+
+			// Long delay lines cause issues with the T60 estimation due to less frequent but larger drops in energy
+			Vec dimensions({ RandomValue(0.1, 2.0), RandomValue(0.1, 5.0), RandomValue(0.1, 10.0) });
+			FDN<ComplexPair> fdn(T60, dimensions, config);
+			fdn.SetTargetReflectionFilters(reflectionGains);
+
+			Matrix<ComplexPair> in(config->numLateReverbChannels, config->numFrames);
+			for (int i = 0; i < config->numLateReverbChannels; i++)
+				in[i][1] = ComplexPair(1.0, 2.0);
+
+			std::vector<Buffer<ComplexPair>> out(config->numLateReverbChannels, Buffer<ComplexPair>(config->numFrames));
+
+
+			for (int i = 0; i < 1000; i++)
+				fdn.ProcessAudio(in, out, lerpFactor);
+
+			fdn.Reset();
+			fdn.ProcessAudio(in, out, lerpFactor);
+			std::vector<Buffer<Real>> outReal(config->numLateReverbChannels, Buffer<Real>(config->numFrames));
+			std::vector<Buffer<Real>> outImaginary(config->numLateReverbChannels, Buffer<Real>(config->numFrames));
+
+			for (int i = 0; i < config->numLateReverbChannels; i++)
+			{
+				for (int j = 0; j < config->numFrames; j++)
+				{
+					outReal[i][j] = out[i][j].real;
+					outImaginary[i][j] = out[i][j].imag;
+
+					Assert::AreEqual((Real)2.0 * outReal[i][j], outImaginary[i][j], L"Incorrect ratio between real and imaginary parts.");
+				}
+			}
+
+			// Analyze Output Decay
+			Real decayTimeReal = 0.0;
+			Real decayTimeImaginay = 0.0;
+			for (int i = 0; i < config->numLateReverbChannels; i++)
+			{
+				decayTimeReal += CalculateT60(outReal[i], config->numFrames, config->fs);
+				decayTimeImaginay += CalculateT60(outReal[i], config->numFrames, config->fs);
+			}
+			decayTimeReal /= config->numLateReverbChannels;
+			decayTimeImaginay /= config->numLateReverbChannels;
+
+			Assert::IsTrue(decayTimeReal > (Real)0.0, L"Decay not detected.");
+			Assert::AreEqual(target, decayTimeReal, (Real)0.02, L"Decay time does not match target RT60.");
+
+			Assert::IsTrue(decayTimeImaginay > (Real)0.0, L"Decay not detected.");
+			Assert::AreEqual(target, decayTimeImaginay, (Real)0.02, L"Decay time does not match target RT60.");
+			Profiler::Instance().SetOutputFile("ComplexPairProfile.csv", false);
+		}
+
+		TEST_METHOD(ProcessInterleaved)
+		{
+			Profiler::Instance().SetOutputFile("ProfileFDNsInterleaved.csv", true);
+			for (int i = 0; i < 1000; i++)
+			{
+				{
+					const Real target = RandomValue(0.1, 2.0);
+					const int fs = 48e3;
+					const int numFrames = static_cast<int>(fs * target * 1.2);
+					const int numLateReverbChannels = 12;
+					const Real lerpFactor = 1.0;
+					const Real Q = 0.98;
+					const std::vector<Real> fBands = { 500.0, 1000.0, 2000.0, 4000.0 };
+					const std::shared_ptr<Config> config = std::make_shared<Config>(fs, numFrames, numLateReverbChannels, lerpFactor, Q, fBands);
+
+					const Coefficients T60({ target, target, target, target });
+					const Absorption gains({ 0.1, 0.05, 0.3, 0.25 });
+					const std::vector<Absorption<>> reflectionGains(config->numLateReverbChannels, gains);
+
+					// Long delay lines cause issues with the T60 estimation due to less frequent but larger drops in energy
+					Vec dimensions({ RandomValue(0.1, 2.0), RandomValue(0.1, 5.0), RandomValue(0.1, 10.0) });
+					FDN<Real> fdn(T60, dimensions, config);
+					fdn.SetTargetReflectionFilters(reflectionGains);
+
+					Matrix<Real> in(config->numLateReverbChannels, config->numFrames);
+					for (int i = 0; i < config->numLateReverbChannels; i++)
+						in[i][1] = 1.0;
+
+					std::vector<Buffer<Real>> out(config->numLateReverbChannels, Buffer<Real>(config->numFrames));
+
+					fdn.ProcessAudio(in, out, lerpFactor);
+				}
+				{
+
+					const Real target = RandomValue(0.1, 2.0);
+					const int fs = 48e3;
+					const int numFrames = static_cast<int>(fs * target * 1.2);
+					const int numLateReverbChannels = 12;
+					const Real lerpFactor = 1.0;
+					const Real Q = 0.98;
+					const std::vector<Real> fBands = { 500.0, 1000.0, 2000.0, 4000.0 };
+					const std::shared_ptr<Config> config = std::make_shared<Config>(fs, numFrames, numLateReverbChannels, lerpFactor, Q, fBands);
+
+					const Coefficients T60({ target, target, target, target });
+					const Absorption gains({ (Real)0.1, (Real)0.05, (Real)0.3, (Real)0.25 });
+					const std::vector<Absorption<>> reflectionGains(config->numLateReverbChannels, gains);
+
+					// Long delay lines cause issues with the T60 estimation due to less frequent but larger drops in energy
+					Vec dimensions({ RandomValue(0.1, 2.0), RandomValue(0.1, 5.0), RandomValue(0.1, 10.0) });
+					FDN<Complex> fdn(T60, dimensions, config);
+					fdn.SetTargetReflectionFilters(reflectionGains);
+
+					Matrix<Complex> in(config->numLateReverbChannels, config->numFrames);
+					for (int i = 0; i < config->numLateReverbChannels; i++)
+						in[i][1] = Complex(1.0, 2.0);
+
+					std::vector<Buffer<Complex>> out(config->numLateReverbChannels, Buffer<Complex>(config->numFrames));
+
+					fdn.ProcessAudio(in, out, lerpFactor);
+				}
+				{
+					const Real target = RandomValue(0.1, 2.0);
+					const int fs = 48e3;
+					const int numFrames = static_cast<int>(fs * target * 1.2);
+					const int numLateReverbChannels = 12;
+					const Real lerpFactor = 1.0;
+					const Real Q = 0.98;
+					const std::vector<Real> fBands = { 500.0, 1000.0, 2000.0, 4000.0 };
+					const std::shared_ptr<Config> config = std::make_shared<Config>(fs, numFrames, numLateReverbChannels, lerpFactor, Q, fBands);
+
+					const Coefficients T60({ target, target, target, target });
+					const Absorption gains({ (Real)0.1, (Real)0.05, (Real)0.3, (Real)0.25 });
+					const std::vector<Absorption<>> reflectionGains(config->numLateReverbChannels, gains);
+
+					// Long delay lines cause issues with the T60 estimation due to less frequent but larger drops in energy
+					Vec dimensions({ RandomValue(0.1, 2.0), RandomValue(0.1, 5.0), RandomValue(0.1, 10.0) });
+					FDN<ComplexPair> fdn(T60, dimensions, config);
+					fdn.SetTargetReflectionFilters(reflectionGains);
+
+					Matrix<ComplexPair> in(config->numLateReverbChannels, config->numFrames);
+					for (int i = 0; i < config->numLateReverbChannels; i++)
+						in[i][1] = ComplexPair(1.0, 2.0);
+
+					std::vector<Buffer<ComplexPair>> out(config->numLateReverbChannels, Buffer<ComplexPair>(config->numFrames));
+
+					fdn.ProcessAudio(in, out, lerpFactor);
+				}
+			}
+			std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+			Profiler::Instance().SetOutputFile("ProfileFDNsInterleaved.csv", false);
+		}
+
+		TEST_METHOD(ProcessAll)
+		{
+			Profiler::Instance().SetOutputFile("ProfileFDNs2.csv", true);
+
+			{
+				const Real target = RandomValue(0.1, 2.0);
+				const int fs = 48e3;
+				const int numFrames = static_cast<int>(fs * target * 1.2);
+				const int numLateReverbChannels = 12;
+				const Real lerpFactor = 1.0;
+				const Real Q = 0.98;
+				const std::vector<Real> fBands = { 500.0, 1000.0, 2000.0, 4000.0 };
+				const std::shared_ptr<Config> config = std::make_shared<Config>(fs, numFrames, numLateReverbChannels, lerpFactor, Q, fBands);
+
+				const Coefficients T60({ target, target, target, target });
+				const Absorption gains({ 0.1, 0.05, 0.3, 0.25 });
+				const std::vector<Absorption<>> reflectionGains(config->numLateReverbChannels, gains);
+
+				// Long delay lines cause issues with the T60 estimation due to less frequent but larger drops in energy
+				Vec dimensions({ RandomValue(0.1, 2.0), RandomValue(0.1, 5.0), RandomValue(0.1, 10.0) });
+				FDN<Real> fdn(T60, dimensions, config);
+				fdn.SetTargetReflectionFilters(reflectionGains);
+
+				Matrix<Real> in(config->numLateReverbChannels, config->numFrames);
+				for (int i = 0; i < config->numLateReverbChannels; i++)
+					in[i][1] = 1.0;
+
+				std::vector<Buffer<Real>> out(config->numLateReverbChannels, Buffer<Real>(config->numFrames));
+
+				for (int i = 0; i < 1000; i++)
+					fdn.ProcessAudio(in, out, lerpFactor);
+			}
+			{
+
+				const Real target = RandomValue(0.1, 2.0);
+				const int fs = 48e3;
+				const int numFrames = static_cast<int>(fs * target * 1.2);
+				const int numLateReverbChannels = 12;
+				const Real lerpFactor = 1.0;
+				const Real Q = 0.98;
+				const std::vector<Real> fBands = { 500.0, 1000.0, 2000.0, 4000.0 };
+				const std::shared_ptr<Config> config = std::make_shared<Config>(fs, numFrames, numLateReverbChannels, lerpFactor, Q, fBands);
+
+				const Coefficients T60({ target, target, target, target });
+				const Absorption gains({ (Real)0.1, (Real)0.05, (Real)0.3, (Real)0.25 });
+				const std::vector<Absorption<>> reflectionGains(config->numLateReverbChannels, gains);
+
+				// Long delay lines cause issues with the T60 estimation due to less frequent but larger drops in energy
+				Vec dimensions({ RandomValue(0.1, 2.0), RandomValue(0.1, 5.0), RandomValue(0.1, 10.0) });
+				FDN<Complex> fdn(T60, dimensions, config);
+				fdn.SetTargetReflectionFilters(reflectionGains);
+
+				Matrix<Complex> in(config->numLateReverbChannels, config->numFrames);
+				for (int i = 0; i < config->numLateReverbChannels; i++)
+					in[i][1] = Complex(1.0, 2.0);
+
+				std::vector<Buffer<Complex>> out(config->numLateReverbChannels, Buffer<Complex>(config->numFrames));
+
+				for (int i = 0; i < 1000; i++)
+					fdn.ProcessAudio(in, out, lerpFactor);
+			}
+			{
+				const Real target = RandomValue(0.1, 2.0);
+				const int fs = 48e3;
+				const int numFrames = static_cast<int>(fs * target * 1.2);
+				const int numLateReverbChannels = 12;
+				const Real lerpFactor = 1.0;
+				const Real Q = 0.98;
+				const std::vector<Real> fBands = { 500.0, 1000.0, 2000.0, 4000.0 };
+				const std::shared_ptr<Config> config = std::make_shared<Config>(fs, numFrames, numLateReverbChannels, lerpFactor, Q, fBands);
+
+				const Coefficients T60({ target, target, target, target });
+				const Absorption gains({ (Real)0.1, (Real)0.05, (Real)0.3, (Real)0.25 });
+				const std::vector<Absorption<>> reflectionGains(config->numLateReverbChannels, gains);
+
+				// Long delay lines cause issues with the T60 estimation due to less frequent but larger drops in energy
+				Vec dimensions({ RandomValue(0.1, 2.0), RandomValue(0.1, 5.0), RandomValue(0.1, 10.0) });
+				FDN<ComplexPair> fdn(T60, dimensions, config);
+				fdn.SetTargetReflectionFilters(reflectionGains);
+
+				Matrix<ComplexPair> in(config->numLateReverbChannels, config->numFrames);
+				for (int i = 0; i < config->numLateReverbChannels; i++)
+					in[i][1] = ComplexPair(1.0, 2.0);
+
+				std::vector<Buffer<ComplexPair>> out(config->numLateReverbChannels, Buffer<ComplexPair>(config->numFrames));
+
+				for (int i = 0; i < 1000; i++)
+					fdn.ProcessAudio(in, out, lerpFactor);
+			}
+			std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+			Profiler::Instance().SetOutputFile("ProfileFDNs2.csv", false);
 		}
 
 		/*TEST_METHOD(ResetReflection)
@@ -342,7 +733,7 @@ namespace RAC
 			in.Reset();
 			channel.ProcessOutput(in, out, numFrames, config->lerpFactor);
 			for (int i = 0; i < numFrames; i++)
-				Assert::AreEqual(0.0, out[i], L"ProcessOutput not zero");
+				Assert::AreEqual((Real)0.0, out[i], L"ProcessOutput not zero");
 		}
 
 		TEST_METHOD(ProcessReflection)

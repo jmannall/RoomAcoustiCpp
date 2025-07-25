@@ -32,7 +32,7 @@ namespace RAC
 				for (int j = 0; j < cols; j++)
 				{
 					m[i][j] = x;
-					Assert::AreEqual(x, m[i][j], L"Error: Add entry");
+					Assert::AreEqual((Real)x, m[i][j], L"Error: Add entry");
 				}
 			}
 		}
@@ -51,10 +51,10 @@ namespace RAC
 				for (int j = 0; j < cols; j++)
 				{
 					m[i][j] = x;
-					Assert::AreEqual(x, m[i][j], L"Error: Add entry");
+					Assert::AreEqual((Real)x, m[i][j], L"Error: Add entry");
 					m[i][j] += 1.0;
 					x += 1.0;
-					Assert::AreEqual(x, m[i][j], L"Error: Increase entry");
+					Assert::AreEqual((Real)x, m[i][j], L"Error: Increase entry");
 				}
 			}
 
@@ -64,7 +64,7 @@ namespace RAC
 			{
 				for (int j = 0; j < cols; j++)
 				{
-					Assert::AreEqual(m[i][j], mat[i][j], L"Error: Init from vectors");
+					Assert::AreEqual((Real)m[i][j], mat[i][j], L"Error: Init from vectors");
 				}
 			}
 
@@ -75,7 +75,7 @@ namespace RAC
 				for (int j = 0; j < cols; j++)
 				{
 					Real test = m[i][j];
-					Assert::AreEqual(0.0, test, L"Error: Reset");
+					Assert::AreEqual((Real)(Real)0.0, test, L"Error: Reset");
 				}
 			}
 		}
@@ -105,24 +105,24 @@ namespace RAC
 
 			Matrix z = x * y;
 
-			Assert::AreEqual(11.0, z[0][0], L"Error (0, 0)");
-			Assert::AreEqual(12.0, z[0][1], L"Error (0, 1)");
-			Assert::AreEqual(14.0, z[1][0], L"Error (1, 0)");
-			Assert::AreEqual(7.0, z[1][1], L"Error (1, 1)");
+			Assert::AreEqual((Real)11.0, z[0][0], L"Error (0, 0)");
+			Assert::AreEqual((Real)12.0, z[0][1], L"Error (0, 1)");
+			Assert::AreEqual((Real)14.0, z[1][0], L"Error (1, 0)");
+			Assert::AreEqual((Real)7.0, z[1][1], L"Error (1, 1)");
 
 			z *= 2.0;
 
-			Assert::AreEqual(22.0, z[0][0], L"Error 2 (0, 0)");
-			Assert::AreEqual(24.0, z[0][1], L"Error 2 (0, 1)");
-			Assert::AreEqual(28.0, z[1][0], L"Error 2 (1, 0)");
-			Assert::AreEqual(14.0, z[1][1], L"Error 2 (1, 1)");
+			Assert::AreEqual((Real)22.0, z[0][0], L"Error 2 (0, 0)");
+			Assert::AreEqual((Real)24.0, z[0][1], L"Error 2 (0, 1)");
+			Assert::AreEqual((Real)28.0, z[1][0], L"Error 2 (1, 0)");
+			Assert::AreEqual((Real)14.0, z[1][1], L"Error 2 (1, 1)");
 
 			Matrix w = z * 2.0;
 
-			Assert::AreEqual(44.0, w[0][0], L"Error 3 (0, 0)");
-			Assert::AreEqual(48.0, w[0][1], L"Error 3 (0, 1)");
-			Assert::AreEqual(56.0, w[1][0], L"Error 3 (1, 0)");
-			Assert::AreEqual(28.0, w[1][1], L"Error 3 (1, 1)");
+			Assert::AreEqual((Real)44.0, w[0][0], L"Error 3 (0, 0)");
+			Assert::AreEqual((Real)48.0, w[0][1], L"Error 3 (0, 1)");
+			Assert::AreEqual((Real)56.0, w[1][0], L"Error 3 (1, 0)");
+			Assert::AreEqual((Real)28.0, w[1][1], L"Error 3 (1, 1)");
 		}
 
 		TEST_METHOD(Add)
@@ -151,12 +151,12 @@ namespace RAC
 
 			Matrix z = x + y;
 
-			Assert::AreEqual(9.0, z[0][0], L"Error (0, 0)");
-			Assert::AreEqual(4.0, z[0][1], L"Error (0, 1)");
-			Assert::AreEqual(6.0, z[0][2], L"Error (0, 2)");
-			Assert::AreEqual(5.0, z[1][0], L"Error (1, 0)");
-			Assert::AreEqual(4.0, z[1][1], L"Error (1, 1)");
-			Assert::AreEqual(2.0, z[1][2], L"Error (1, 2)");
+			Assert::AreEqual((Real)9.0, z[0][0], L"Error (0, 0)");
+			Assert::AreEqual((Real)4.0, z[0][1], L"Error (0, 1)");
+			Assert::AreEqual((Real)6.0, z[0][2], L"Error (0, 2)");
+			Assert::AreEqual((Real)5.0, z[1][0], L"Error (1, 0)");
+			Assert::AreEqual((Real)4.0, z[1][1], L"Error (1, 1)");
+			Assert::AreEqual((Real)2.0, z[1][2], L"Error (1, 2)");
 		}
 
 		TEST_METHOD(Negative)
@@ -176,12 +176,12 @@ namespace RAC
 
 			Matrix y = -x;
 
-			Assert::AreEqual(-1.0, y[0][0], L"Error (0, 0)");
-			Assert::AreEqual(-1.0, y[0][1], L"Error (0, 1)");
-			Assert::AreEqual(-1.0, y[0][2], L"Error (0, 2)");
-			Assert::AreEqual(-1.0, y[1][0], L"Error (1, 0)");
-			Assert::AreEqual(-1.0, y[1][1], L"Error (1, 1)");
-			Assert::AreEqual(-1.0, y[1][2], L"Error (1, 2)");
+			Assert::AreEqual((Real)-1.0, y[0][0], L"Error (0, 0)");
+			Assert::AreEqual((Real)-1.0, y[0][1], L"Error (0, 1)");
+			Assert::AreEqual((Real)-1.0, y[0][2], L"Error (0, 2)");
+			Assert::AreEqual((Real)-1.0, y[1][0], L"Error (1, 0)");
+			Assert::AreEqual((Real)-1.0, y[1][1], L"Error (1, 1)");
+			Assert::AreEqual((Real)-1.0, y[1][2], L"Error (1, 2)");
 		}
 
 		TEST_METHOD(Comparison)

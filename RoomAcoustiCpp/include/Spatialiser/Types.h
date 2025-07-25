@@ -102,7 +102,7 @@ namespace RAC
 			/**
 			* @brief Default constructor for the IEMConfig class
 			*/
-			IEMConfig() : IEMConfig(DirectSound::doCheck, 0, 0, 0, false, 0.0) {};
+			IEMConfig() : IEMConfig(DirectSound::doCheck, 0, 0, 0, false, (Real)0.0) {};
 
 			/**
 			* @brief Constructor for the IEMConfig class
@@ -146,7 +146,7 @@ namespace RAC
 			/**
 			* @brief Default constructor for the Config class
 			*/
-			Config() : Config(48000, 512, 12, 2.0, 0.98, Coefficients({ 250.0, 500.0, 1000.0, 2000.0 }), DiffractionModel::btm, SpatialisationMode::none) {}
+			Config() : Config(48000, 512, 12, (Real)2.0, (Real)0.98, Coefficients({ (Real)250.0, (Real)500.0, (Real)1000.0, (Real)2000.0 }), DiffractionModel::btm, SpatialisationMode::none) {}
 
 			/**
 			* @brief Constructor for the Config class
@@ -173,7 +173,7 @@ namespace RAC
 			* @param mode The spatialisation mode
 			*/
 			Config(int sampleRate, int numFrames, int numLateReverbChannels, Real lerpFactor, Real Q, Coefficients<> fBands, DiffractionModel model, SpatialisationMode mode) :
-				fs(sampleRate), numFrames(numFrames), numLateReverbChannels(numLateReverbChannels), lerpFactor(96.0 * lerpFactor / static_cast<Real>(sampleRate)),
+				fs(sampleRate), numFrames(numFrames), numLateReverbChannels(numLateReverbChannels), lerpFactor((Real)96.0 * lerpFactor / static_cast<Real>(sampleRate)),
 				Q(Q), frequencyBands(fBands), diffractionModel(model), spatialisationMode(mode)
 			{
 				// this->lerpFactor = std::max(std::min(this->lerpFactor, 1.0), 1.0 / static_cast<Real>(sampleRate));
@@ -217,8 +217,8 @@ namespace RAC
 			
 			Real UpdateLerpFactor(const Real lerpFactor)
 			{
-				Real factor = 96.0 * lerpFactor / fs;
-				factor = std::max(std::min(factor, 1.0), 1.0 / fs);
+				Real factor = (Real)96.0 * lerpFactor / fs;
+				factor = std::max(std::min(factor, (Real)1.0), (Real)1.0 / fs);
 				this->lerpFactor.store(factor, std::memory_order_release);
 				return factor;
 			}

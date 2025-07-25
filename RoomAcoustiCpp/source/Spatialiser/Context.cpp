@@ -3,6 +3,8 @@
 *
 */
 
+#include <random>
+
 //Common headers
 #include "Common/RACProfiler.h"
 
@@ -116,7 +118,24 @@ namespace RAC
 			mInputBuffer = Buffer(mConfig->numFrames);
 			mOutputBuffer = Buffer(2 * mConfig->numFrames); // Stereo output buffer
 			mSendBuffer = std::vector<float>(2 * mConfig->numFrames, 0.0);
-			mReverbInput = Matrix(mConfig->numLateReverbChannels, mConfig->numFrames);
+			mReverbInput = Matrix<>(mConfig->numLateReverbChannels, mConfig->numFrames);
+			
+			mOutputBufferComplex = Buffer<Complex>(2 * mConfig->numFrames); // Complex stereo output buffer
+			mReverbInputComplex = Matrix<Complex>(mConfig->numLateReverbChannels, mConfig->numFrames);
+
+			mOutputBufferComplexPair = Buffer<ComplexPair>(2 * mConfig->numFrames); // Complex pair stereo output buffer
+			mReverbInputComplexPair = Matrix<ComplexPair>(mConfig->numLateReverbChannels, mConfig->numFrames);
+
+			std::default_random_engine generator(100); // Seed the generator
+			std::uniform_real_distribution<Real> distribution(-1.0, 1.0);
+			for (int i = 0; i < mConfig->numLateReverbChannels; i++)
+			{
+				for (int j = 0; j < mConfig->numFrames; j++)
+				{
+					mReverbInputComplex[i][j] = Complex(distribution(generator), distribution(generator));
+					mReverbInputComplexPair[i][j] = ComplexPair(distribution(generator), distribution(generator));
+				}
+			}
 		}
 
 		////////////////////////////////////////
@@ -213,7 +232,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Context::InitLateReverb(const Real volume, const Vec& dimensions, const FDNMatrix matrix)
+		void Context::InitLateReverb(const Real volume, const Vec<>& dimensions, const FDNMatrix matrix)
 		{
 			Coefficients T60 = mRoom->GetReverbTime(volume);
 			if (dimensions.Rows() == 0)
@@ -351,7 +370,8 @@ namespace RAC
 			mSources->ProcessAudio(mOutputBuffer, mReverbInput, lerpFactor);
 
 			mReverb->ProcessAudio(mReverbInput, mOutputBuffer, lerpFactor);
-			mReverbInput.Reset();
+			mReverb->ProcessComplexAudio(mReverbInputComplex, mOutputBufferComplex, lerpFactor);
+			mReverb->ProcessComplexPairAudio(mReverbInputComplexPair, mOutputBufferComplexPair, lerpFactor);
 
 			if (applyHeadphoneEQ)
 				headphoneEQ.ProcessAudio(mOutputBuffer, mOutputBuffer, lerpFactor);
@@ -363,7 +383,12 @@ namespace RAC
 
 			// Reset output buffer
 			mOutputBuffer.Reset();
+			mOutputBufferComplex.Reset();
+			mOutputBufferComplexPair.Reset();
+
 			mReverbInput.Reset();
+			mReverbInputComplex.Reset();
+			mReverbInputComplexPair.Reset();
 		}
 
 		////////////////////////////////////////

@@ -74,7 +74,7 @@ namespace RAC
 			* 
 			* @param numSamples The number of samples to resize the buffer to.
 			*/
-			inline void ResizeBuffer(const size_t numSamples)
+			void ResizeBuffer(const size_t numSamples)
 			{
 				assert(numSamples >= 0);
 
@@ -93,7 +93,7 @@ namespace RAC
 			/**
 			* @brief Checks if the buffer is valid.
 			* @details A buffer is valid if none of the values are nan.
-			* 
+			*
 			* @return False if the buffer contains nan values, true otherwise
 			*/
 			bool Valid()

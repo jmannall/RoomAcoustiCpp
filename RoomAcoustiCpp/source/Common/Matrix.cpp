@@ -9,8 +9,9 @@
 #include <random>
 
 // Common headers
-#include "Common/Matrix.h"
+#include "Common/Matrix_private.h"
 #include "Common/Definitions.h"
+#include "Common/Complex.h"
 
 namespace RAC
 {
@@ -18,11 +19,16 @@ namespace RAC
 	{
 		//////////////////// Matrix ////////////////////
 
+		template class Matrix<Real>;
+		template class Matrix<ComplexPair>;
+		template class Matrix<Complex>;
+
 		static std::default_random_engine generator(100); // Seed the generator
 
 		////////////////////////////////////////
 
-		void Matrix::Init(const std::vector<std::vector<Real>>& matrix)
+		template<typename T>
+		void Matrix<T>::Init(const std::vector<std::vector<T>>& matrix)
 		{
 			rows = static_cast<int>(matrix.size());
 			for (int i = 1; i < rows; i++)
@@ -35,24 +41,26 @@ namespace RAC
 			}
 			else
 				cols = 0;
-			column = std::vector<Real>(rows);
+			column = std::vector<T>(rows);
 		}
 
 		////////////////////////////////////////
 
-		void Matrix::AllocateSpace()
+		template<typename T>
+		void Matrix<T>::AllocateSpace()
 		{
 			for (int i = 0; i < rows; i++)
-				data.push_back(std::vector<Real>(cols, 0.0));
-			column = std::vector<Real>(rows);
+				data.push_back(std::vector<T>(cols, 0.0));
+			column = std::vector<T>(rows);
 		}
 
 		////////////////////////////////////////
 
-		Matrix Matrix::Transpose()
+		template<typename T>
+		Matrix<T> Matrix<T>::Transpose()
 		{
 			assert(rows == data.size());
-			Matrix matrix = Matrix(cols, rows);
+			Matrix<T> matrix = Matrix<T>(cols, rows);
 			for (int i = 0; i < rows; i++)
 			{
 				assert(cols == data[i].size());
@@ -64,7 +72,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Matrix::Inverse()
+		void Matrix<Real>::Inverse()
 		{
 			assert(rows == cols); // Matrix must be square
 
@@ -125,7 +133,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Matrix::Log10()
+		void Matrix<Real>::Log10()
 		{
 			for (int i = 0; i < rows; i++)
 			{
@@ -136,7 +144,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Matrix::Pow10()
+		void Matrix<Real>::Pow10()
 		{
 			for (int i = 0; i < rows; i++)
 			{
@@ -147,7 +155,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Matrix::Max(const Real min)
+		void Matrix<Real>::Max(const Real min)
 		{
 			for (int i = 0; i < rows; i++)
 			{
@@ -158,7 +166,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Matrix::Min(const Real max)
+		void Matrix<Real>::Min(const Real max)
 		{
 			for (int i = 0; i < rows; i++)
 			{
@@ -169,7 +177,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Matrix::RandomUniformDistribution()
+		void Matrix<Real>::RandomUniformDistribution()
 		{
 			std::uniform_real_distribution<Real> distribution; // a 0, b 1
 			for (int i = 0; i < rows; i++)
@@ -181,7 +189,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Matrix::RandomUniformDistribution(Real a, Real b)
+		void Matrix<Real>::RandomUniformDistribution(Real a, Real b)
 		{
 			std::uniform_real_distribution<Real> distribution(a, b);
 			for (int i = 0; i < rows; i++)

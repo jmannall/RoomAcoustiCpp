@@ -44,7 +44,7 @@ namespace RAC
                 /**
 				* @brief Pure virtual function to run the audio task
                 */
-                virtual void Run(Buffer<>& out, Matrix& reverb) = 0;
+                virtual void Run(Buffer<>& out, Matrix<>& reverb) = 0;
 
                 /**
 				* @brief Default virtual destructor
@@ -66,7 +66,7 @@ namespace RAC
                     : source(source), lerpFactor(lerpFactor), tasksRemaining(tasksRemaining) {
                 }
 
-                void Run(Buffer<>& out, Matrix& reverb) override
+                void Run(Buffer<>& out, Matrix<>& reverb) override
                 {
                     ProcessAudio(out, reverb, std::is_same<T, ReverbSource>{});
                     tasksRemaining->Subtract();
@@ -74,10 +74,10 @@ namespace RAC
 
             private:
                 // General case
-                void ProcessAudio(Buffer<>& out, Matrix& reverb, std::false_type) { source->ProcessAudio(out, reverb, lerpFactor); }
+                void ProcessAudio(Buffer<>& out, Matrix<>& reverb, std::false_type) { source->ProcessAudio(out, reverb, lerpFactor); }
 
                 // Specialized case for ReverbSource
-                void ProcessAudio(Buffer<>& out, Matrix& reverb, std::true_type) { source->ProcessAudio(out); }
+                void ProcessAudio(Buffer<>& out, Matrix<>& reverb, std::true_type) { source->ProcessAudio(out); }
             };
 
         public:
@@ -105,7 +105,7 @@ namespace RAC
             template <typename T>
             void Enqueue(T* source, SpinLock* tasksRemaining, Real lerpFactor) {
                 static_assert(std::is_member_function_pointer_v<decltype(&T::ProcessAudio)>, "T must have a ProcessAudio member function");
-                static_assert(std::is_same_v<decltype(&T::ProcessAudio), void (T::*)(Buffer<>&, Matrix&, Real)>, "T::ProcessAudio must be of type void (T::*)(Buffer&, Matrix&, Real)");
+                static_assert(std::is_same_v<decltype(&T::ProcessAudio), void (T::*)(Buffer<>&, Matrix<>&, Real)>, "T::ProcessAudio must be of type void (T::*)(Buffer&, Matrix&, Real)");
                 std::shared_ptr<AudioTaskBase> task = std::make_shared<AudioTask<T>>(source, tasksRemaining, lerpFactor);
                 tasks.try_enqueue(std::move(task));
             }
@@ -146,7 +146,7 @@ namespace RAC
 			* @param reverbInput Reverb input matrix to write to
 			* @param lerpFactor Interpolation factor for audio processing
             */
-            void ProcessAllSources(std::array<std::optional<Source>, MAX_SOURCES>& sources, ImageSourceManager& imageSources, Buffer<>& outputBuffer, Matrix& reverbInput, Real lerpFactor);
+            void ProcessAllSources(std::array<std::optional<Source>, MAX_SOURCES>& sources, ImageSourceManager& imageSources, Buffer<>& outputBuffer, Matrix<>& reverbInput, Real lerpFactor);
 
             /**
 			* @brief Processes reverb sources
@@ -164,7 +164,7 @@ namespace RAC
 			size_t threadCount;                 // Number of threads in the pool
 
 			std::vector<Buffer<>> threadOutputBuffers;    // Output buffers for each thread
-			std::vector<Matrix> threadReverbBuffers;    // Reverb input matrices for each thread
+			std::vector<Matrix<>> threadReverbBuffers;    // Reverb input matrices for each thread
         };
     }
 }

@@ -92,7 +92,7 @@ namespace RAC
 		* @param volume The volume of the room.
 		* @param dimensions The dimensions of the room for the delay lines.
 		*/
-		void InitLateReverb(const Real volume, const Vec& dimensions, FDNMatrix matrix);
+		void InitLateReverb(const Real volume, const Vec<>& dimensions, FDNMatrix matrix);
 
 		/**
 		* Clears the internal FDN buffers.

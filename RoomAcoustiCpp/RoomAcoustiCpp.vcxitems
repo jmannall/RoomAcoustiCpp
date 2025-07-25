@@ -65,6 +65,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Complex.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Definitions.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Matrix.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Matrix_private.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\RACProfiler.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\ReleasePool.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\SphericalGeometries.h" />
@@ -76,11 +77,14 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Types.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Vec.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Vec3.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Vec_private.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\AudioThreadPool.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\Buffer.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\FIRFilter.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\GraphicEQ.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\GraphicEQ_private.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\IIRFilter.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\IIRFilter_private.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\Interpolate.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\LinkwitzRileyFilter.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\Parameter.h" />
@@ -93,6 +97,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Directivity.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Edge.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\FDN.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\FDN_private.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\HeadphoneEQ.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\ImageEdge.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\ImageSource.h" />

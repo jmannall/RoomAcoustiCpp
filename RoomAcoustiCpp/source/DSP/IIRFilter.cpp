@@ -89,9 +89,14 @@ namespace RAC
 
 		//////////////////// IIRFIlter2 ////////////////////
 
+		template class IIRFilter2<Real>;
+		template class IIRFilter2<ComplexPair>;
+		template class IIRFilter2<Complex>;
+
 		////////////////////////////////////////
 
-		Real IIRFilter2::GetOutput(const Real input, const Real lerpFactor)
+		template<typename In>
+		In IIRFilter2<In>::GetOutput(const In input, const Real lerpFactor)
 		{
 			if (!initialised.load(std::memory_order_acquire))
 				return 0.0;
@@ -105,8 +110,8 @@ namespace RAC
 				clearBuffers.store(false, std::memory_order_release);
 			}
 
-			Real v = input;
-			Real output = 0.0;
+			In v = input;
+			In output = 0.0;
 
 			v -= y0 * a1;
 			output += y0 * b1;
@@ -124,7 +129,8 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		Coefficients<> IIRFilter2::GetFrequencyResponse(const Coefficients<>& frequencies) const
+		template<typename In>
+		Coefficients<> IIRFilter2<In>::GetFrequencyResponse(const Coefficients<>& frequencies) const
 		{
 			Real omega;
 			Complex e;
@@ -270,25 +276,35 @@ namespace RAC
 
 		//////////////////// IIRFilter2Param1 ////////////////////
 
+		template class IIRFilter2Param1<Real>;
+		template class IIRFilter2Param1<ComplexPair>;
+		template class IIRFilter2Param1<Complex>;
+
 		////////////////////////////////////////
 
-		void IIRFilter2Param1::InterpolateParameters(const Real lerpFactor)
+		template<typename In>
+		void IIRFilter2Param1<In>::InterpolateParameters(const Real lerpFactor)
 		{
-			parametersEqual.store(true, std::memory_order_release); // Prevents issues in case target updated during this function call
+			this->parametersEqual.store(true, std::memory_order_release); // Prevents issues in case target updated during this function call
 			const Real parameter = target.load(std::memory_order_acquire);
 			current = Lerp(current, parameter, lerpFactor);
 			if (Equals(current, parameter))
 				current = parameter;
 			else
-				parametersEqual.store(false, std::memory_order_release);
+				this->parametersEqual.store(false, std::memory_order_release);
 			UpdateCoefficients(current);
 		}
 
 		//////////////////// PeakHighSelf ////////////////////
 
+		template class PeakHighShelf<Real>;
+		template class PeakHighShelf<ComplexPair>;
+		template class PeakHighShelf<Complex>;
+
 		////////////////////////////////////////
 
-		void PeakHighShelf::UpdateCoefficients(const Real gain)
+		template<typename In>
+		void PeakHighShelf<In>::UpdateCoefficients(const Real gain)
 		{
 			assert(gain > 0.0);
 
@@ -299,20 +315,25 @@ namespace RAC
 			const Real v4 = v2 * cosOmega;
 			const Real v5 = sqrt(A) * alpha; // 2 * sqrt(A) * alpha
 
-			a0 = 1.0 / (v1 - v4 + v5); // a0 isn't used in GetOutput
-			a1 = (2.0 * (v2 - v3)) * a0;
-			a2 = (v1 - v4 - v5) * a0;
+			this->a0 = 1.0 / (v1 - v4 + v5); // a0 isn't used in GetOutput
+			this->a1 = (2.0 * (v2 - v3)) * this->a0;
+			this->a2 = (v1 - v4 - v5) * this->a0;
 
-			b0 = A * (v1 + v4 + v5) * a0;
-			b1 = -2.0 * A * (v2 + v3) * a0;
-			b2 = A * (v1 + v4 - v5) * a0;
+			this->b0 = A * (v1 + v4 + v5) * this->a0;
+			this->b1 = -2.0 * A * (v2 + v3) * this->a0;
+			this->b2 = A * (v1 + v4 - v5) * this->a0;
 		}
 
 		//////////////////// PeakLowShelf ////////////////////
 
+		template class PeakLowShelf<Real>;
+		template class PeakLowShelf<ComplexPair>;
+		template class PeakLowShelf<Complex>;
+
 		////////////////////////////////////////
 
-		void PeakLowShelf::UpdateCoefficients(const Real gain)
+		template<typename In>
+		void PeakLowShelf<In>::UpdateCoefficients(const Real gain)
 		{
 			assert(gain > 0.0);
 
@@ -323,20 +344,25 @@ namespace RAC
 			const Real v4 = v2 * cosOmega;
 			const Real v5 = sqrt(A) * alpha; // 2 * sqrt(A) * alpha
 
-			a0 = 1.0 / (v1 + v4 + v5); // a0 isn't used in GetOutput
-			a1 = (-2.0 * (v2 + v3)) * a0;
-			a2 = (v1 + v4 - v5) * a0;
+			this->a0 = 1.0 / (v1 + v4 + v5); // a0 isn't used in GetOutput
+			this->a1 = (-2.0 * (v2 + v3)) * this->a0;
+			this->a2 = (v1 + v4 - v5) * this->a0;
 
-			b0 = A * (v1 - v4 + v5) * a0;
-			b1 = 2.0 * A * (v2 - v3) * a0;
-			b2 = A * (v1 - v4 - v5) * a0;
+			this->b0 = A * (v1 - v4 + v5) * this->a0;
+			this->b1 = 2.0 * A * (v2 - v3) * this->a0;
+			this->b2 = A * (v1 - v4 - v5) * this->a0;
 		}
 
 		//////////////////// PeakingFilter ////////////////////
 
+		template class PeakingFilter<Real>;
+		template class PeakingFilter<ComplexPair>;
+		template class PeakingFilter<Complex>;
+
 		////////////////////////////////////////
 
-		void PeakingFilter::UpdateCoefficients(const Real gain)
+		template<typename In>
+		void PeakingFilter<In>::UpdateCoefficients(const Real gain)
 		{
 			assert(gain > 0.0);
 
@@ -344,13 +370,13 @@ namespace RAC
 			const Real v1 = alpha * A;
 			const Real v2 = alpha / A;
 
-			a0 = 1.0 / (1.0 + v2); // a0 isn't used in GetOutput
-			a1 = cosOmega * a0;
-			a2 = (1.0 - v2) * a0;
+			this->a0 = 1.0 / (1.0 + v2); // a0 isn't used in GetOutput
+			this->a1 = cosOmega * this->a0;
+			this->a2 = (1.0 - v2) * this->a0;
 
-			b0 = (1.0 + v1) * a0;
-			b1 = a1;
-			b2 = (1.0 - v1) * a0;
+			this->b0 = (1.0 + v1) * this->a0;
+			this->b1 = this->a1;
+			this->b2 = (1.0 - v1) * this->a0;
 		}
 
 		//////////////////// ZPKFilter ////////////////////

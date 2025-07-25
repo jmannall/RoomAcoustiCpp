@@ -11,7 +11,7 @@ using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 //////////////////// Assert templates ////////////////////
 
-template<> static std::wstring Microsoft::VisualStudio::CppUnitTestFramework::ToString<RAC::Common::Coefficients<std::vector<double>>>(const RAC::Common::Coefficients<std::vector<double>>& t)
+template<> static std::wstring Microsoft::VisualStudio::CppUnitTestFramework::ToString<RAC::Common::Coefficients<std::vector<RAC::Common::Real>>>(const RAC::Common::Coefficients<std::vector<RAC::Common::Real>>& t)
 {
 	std::string str = "Coefficients: ";
 	for (int i = 0; i < t.Length(); i++)
@@ -20,7 +20,7 @@ template<> static std::wstring Microsoft::VisualStudio::CppUnitTestFramework::To
 	return werror;
 }
 
-template<> static std::wstring Microsoft::VisualStudio::CppUnitTestFramework::ToString<RAC::Common::Absorption<std::vector<double>>>(const RAC::Common::Absorption<std::vector<double>>& t)
+template<> static std::wstring Microsoft::VisualStudio::CppUnitTestFramework::ToString<RAC::Common::Absorption<std::vector<RAC::Common::Real>>>(const RAC::Common::Absorption<std::vector<RAC::Common::Real>>& t)
 {
 	std::string str = "Absorption: ";
 	for (int i = 0; i < t.Length(); i++)
@@ -48,7 +48,7 @@ namespace RAC
 			Assert::AreEqual(out, c1 + c2, L"Error: Incorrect addition");
 
 			out = Coefficients(std::vector<Real>({ 4.0, 5.0 }));
-			Assert::AreEqual(out, c1 + 2.0, L"Error: Incorrect factor addition");
+			Assert::AreEqual(out, c1 + (Real)2.0, L"Error: Incorrect factor addition");
 		}
 
 		TEST_METHOD(Subtraction)
@@ -60,7 +60,7 @@ namespace RAC
 			Assert::AreEqual(out, c1 - c2, L"Error: Incorrect subtraction");
 
 			out = Coefficients(std::vector<Real>({ 0.0, -1.0 }));
-			Assert::AreEqual(out, 2.0 - c1, L"Error: Incorrect factor subtraction");
+			Assert::AreEqual(out, (Real)2.0 - c1, L"Error: Incorrect factor subtraction");
 		}
 
 		TEST_METHOD(Multiplication)
@@ -72,7 +72,7 @@ namespace RAC
 			Assert::AreEqual(out, c1 * c2, L"Error: Incorrect multiplication");
 
 			out = Coefficients(std::vector<Real>({ 4.0, 6.0 }));
-			Assert::AreEqual(out, c1 * 2.0, L"Error: Incorrect factor multiplication");
+			Assert::AreEqual(out, c1 * (Real)2.0, L"Error: Incorrect factor multiplication");
 		}
 
 		TEST_METHOD(Division)
@@ -84,7 +84,7 @@ namespace RAC
 			Assert::AreEqual(out, c1 / c2, L"Error: Incorrect division");
 
 			out = Coefficients(std::vector<Real>({ 1.0, 1.5 }));
-			Assert::AreEqual(out, c1 / 2.0, L"Error: Incorrect factor division");
+			Assert::AreEqual(out, c1 / (Real)2.0, L"Error: Incorrect factor division");
 		}
 	};
 
@@ -94,8 +94,8 @@ namespace RAC
 
 		TEST_METHOD(Addition)
 		{
-			std::vector<Real> a = { 0.5, 0.7 };
-			std::vector<Real> b = { 0.5, 0.8 };
+			std::vector<Real> a = { (Real)0.5, (Real)0.7 };
+			std::vector<Real> b = { (Real)0.5, (Real)0.8 };
 
 			Absorption c1 = Absorption(a);
 			Absorption c2 = Absorption(b);
@@ -117,8 +117,8 @@ namespace RAC
 
 		TEST_METHOD(Subtraction)
 		{
-			std::vector<Real> a = { 0.5, 0.7 };
-			std::vector<Real> b = { 0.5, 0.8 };
+			std::vector<Real> a = { (Real)0.5, (Real)0.7 };
+			std::vector<Real> b = { (Real)0.5, (Real)0.8 };
 
 			Absorption c1 = Absorption(a);
 			Absorption c2 = Absorption(b);
@@ -140,8 +140,8 @@ namespace RAC
 
 		TEST_METHOD(Multiplication)
 		{
-			std::vector<Real> a = { 0.5, 0.7 };
-			std::vector<Real> b = { 0.5, 0.8 };
+			std::vector<Real> a = { (Real)0.5, (Real)0.7 };
+			std::vector<Real> b = { (Real)0.5, (Real)0.8 };
 
 			Absorption c1 = Absorption(a);
 			Absorption c2 = Absorption(b);
@@ -163,8 +163,8 @@ namespace RAC
 
 		TEST_METHOD(Division)
 		{
-			std::vector<Real> a = { 0.5, 0.7 };
-			std::vector<Real> b = { 0.5, 0.8 };
+			std::vector<Real> a = { (Real)0.5, (Real)0.7 };
+			std::vector<Real> b = { (Real)0.5, (Real)0.8 };
 
 			Absorption c1 = Absorption(a);
 			Absorption c2 = Absorption(b);

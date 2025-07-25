@@ -59,7 +59,7 @@ namespace RAC
 			filter.ClearBuffers();
 
 			Real out = filter.GetOutput(0.0, lerpFactor);
-			Assert::AreEqual(0.0, out, L"Wrong output");
+			Assert::AreEqual((Real)0.0, out, L"Wrong output");
 		}
 	};
 #pragma optimize("", on)

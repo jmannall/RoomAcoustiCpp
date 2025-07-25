@@ -7,8 +7,13 @@
 *
 */
 
+#include "Common/RACProfiler.h"
+
+// Common headers
+#include "Common/Complex.h"
+
 // DSP headers
-#include "DSP/GraphicEQ.h"
+#include "DSP/GraphicEQ_private.h"
 
 namespace RAC
 {
@@ -16,11 +21,16 @@ namespace RAC
 	{
 		//////////////////// GraphicEQ ////////////////////
 
+		template class GraphicEQ<Real>;
+		template class GraphicEQ<ComplexPair>;
+		template class GraphicEQ<Complex>;
+
 		////////////////////////////////////////
 
-		GraphicEQ::GraphicEQ(const Coefficients<>& gain, const Coefficients<>& fc, const Real Q, const int sampleRate) :
+		template<typename T>
+		GraphicEQ<T>::GraphicEQ(const Coefficients<>& gain, const Coefficients<>& fc, const Real Q, const int sampleRate) :
 			numFilters(gain.Length() + 2), filterResponseMatrix(numFilters, numFilters), previousInput(gain)
-		{ 
+		{
 			assert(gain.Length() == fc.Length());
 
 			Coefficients f = CreateFrequencyVector(fc);
@@ -28,11 +38,11 @@ namespace RAC
 			auto targetGains = CalculateGains(gain);
 
 			// Increasing the low shelf frequency by SQRT_2 creates a smoother response at low frequencies
-			lowShelf = std::make_unique<PeakLowShelf>(f[0] * SQRT_2, targetGains.first[0], Q, sampleRate);
+			lowShelf = std::make_unique<PeakLowShelf<T>>(f[0] * SQRT_2, targetGains.first[0], Q, sampleRate);
 			for (int i = 1; i < numFilters - 1; i++)
-				peakingFilters.emplace_back(std::make_unique<PeakingFilter>(f[i], targetGains.first[i], Q, sampleRate));
+				peakingFilters.emplace_back(std::make_unique<PeakingFilter<T>>(f[i], targetGains.first[i], Q, sampleRate));
 			// (same as fc[numFilters - 1] * 2 / SQRT_2 ) Decreasing the high shelf frequency by SQRT_2 creates a smoother response at high frequencies
-			highShelf = std::make_unique<PeakHighShelf>(std::min(f[numFilters - 2] * SQRT_2, 20000.0), targetGains.first[numFilters - 1], Q, sampleRate);
+			highShelf = std::make_unique<PeakHighShelf<T>>(std::min(f[numFilters - 2] * SQRT_2, (Real)20000.0), targetGains.first[numFilters - 1], Q, sampleRate);
 
 			targetGain.store(targetGains.second, std::memory_order_release);
 			currentGain = targetGains.second;
@@ -43,7 +53,8 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		bool GraphicEQ::SetTargetGains(const Coefficients<>& gains)
+		template<typename T>
+		bool GraphicEQ<T>::SetTargetGains(const Coefficients<>& gains)
 		{
 			assert(gains.Length() == peakingFilters.size());
 
@@ -67,13 +78,14 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		std::pair<Rowvec, Real> GraphicEQ::CalculateGains(const Coefficients<>& gains) const
+		template<typename T>
+		std::pair<Rowvec<>, Real> GraphicEQ<T>::CalculateGains(const Coefficients<>& gains) const
 		{
 			assert(gains.Length() + 2 == numFilters);
 
 			Rowvec inputGains(std::vector<Real>(numFilters, 1.0));
 			if (gains <= 0.0)
-				return std::make_pair(inputGains, 0.0);
+				return std::make_pair(inputGains, (Real)0.0);
 
 			if (gains.Length() == 1)
 			{
@@ -103,19 +115,21 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		Coefficients<> GraphicEQ::CreateFrequencyVector(const Coefficients<>& fc) const
+		template<typename T>
+		Coefficients<> GraphicEQ<T>::CreateFrequencyVector(const Coefficients<>& fc) const
 		{
 			Coefficients f(numFilters);
-			f[0] = std::max(fc[0] / 2, 20.0);
+			f[0] = std::max(fc[0] / (Real)2.0, (Real)20.0);
 			for (int i = 1; i < numFilters - 1; i++)
 				f[i] = fc[i - 1];
-			f[numFilters - 1] = std::min(fc[numFilters - 3] * 2.0, 20000.0);
+			f[numFilters - 1] = std::min(fc[numFilters - 3] * (Real)2.0, (Real)20000.0);
 			return f;
 		}
 
 		////////////////////////////////////////
 
-		void GraphicEQ::InitMatrix(const Coefficients<>& fc, const Real Q, const Real fs)
+		template<typename T>
+		void GraphicEQ<T>::InitMatrix(const Coefficients<>& fc, const Real Q, const Real fs)
 		{
 			assert(fc.Length() == numFilters);
 
@@ -139,7 +153,7 @@ namespace RAC
 					filterResponseMatrix[j][i] += out[i];
 			}
 
-			const PeakHighShelf tempHighShelf(std::min(fc[numFilters - 2] * SQRT_2, 20000.0), p, Q, fs); // Times SQRT_2. See constructor
+			const PeakHighShelf tempHighShelf(std::min(fc[numFilters - 2] * SQRT_2, (Real)20000.0), p, Q, fs); // Times SQRT_2. See constructor
 			out = tempHighShelf.GetFrequencyResponse(fc);
 
 			for (int i = 0; i < out.Length(); i++)
@@ -151,7 +165,8 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		Real GraphicEQ::GetOutput(const Real input, const Real lerpFactor)
+		template<typename T>
+		T GraphicEQ<T>::GetOutput(const T input, const Real lerpFactor)
 		{
 			if (!initialised.load(std::memory_order_acquire))
 				return 0.0;
@@ -159,7 +174,7 @@ namespace RAC
 			if (!gainsEqual.load(std::memory_order_acquire))
 				InterpolateGain(lerpFactor);
 
-			Real out = lowShelf->GetOutput(input, lerpFactor);
+			T out = lowShelf->GetOutput(input, lerpFactor);
 			for (auto& filter : peakingFilters)
 				out = filter->GetOutput(out, lerpFactor);
 			out = highShelf->GetOutput(out, lerpFactor);
@@ -169,7 +184,8 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void GraphicEQ::ProcessAudio(const Buffer<>& inBuffer, Buffer<>& outBuffer, const Real lerpFactor)
+		template<typename T>
+		void GraphicEQ<T>::ProcessAudio(const Buffer<T>& inBuffer, Buffer<T>& outBuffer, const Real lerpFactor)
 		{
 			if (!initialised.load(std::memory_order_acquire))
 			{
@@ -191,7 +207,8 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void GraphicEQ::InterpolateGain(const Real lerpFactor)
+		template<typename T>
+		void GraphicEQ<T>::InterpolateGain(const Real lerpFactor)
 		{
 			gainsEqual.store(true, std::memory_order_release); // Prevents issues in case targetGain updated during this function call
 			const Real gain = targetGain.load(std::memory_order_acquire);

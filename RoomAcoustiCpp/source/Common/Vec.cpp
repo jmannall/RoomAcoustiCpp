@@ -10,7 +10,7 @@
 #include <random>
 
 // Common headers
-#include "Common/Vec.h"
+#include "Common/Vec_private.h"
 
 namespace RAC
 {
@@ -18,30 +18,35 @@ namespace RAC
 	{
 		//////////////////// Vec ////////////////////
 
+		template class Vec<Real>;
+		template class Vec<ComplexPair>;
+		template class Vec<Complex>;
+
 		static std::default_random_engine generator(100); // Seed the generator
 
 		////////////////////////////////////////
 
-		void Vec::Init(const std::vector<Real>& vector)
+		template<typename T>
+		void Vec<T>::Init(const std::vector<T>& vector)
 		{
-			rows = static_cast<int>(vector.size());
-			data.resize(rows, std::vector<Real>(1, 0.0));
-			for (int i = 0; i < rows; i++)
-				data[i][0] = vector[i];
+			this->rows = static_cast<int>(vector.size());
+			this->data.resize(this->rows, std::vector<T>(1, 0.0));
+			for (int i = 0; i < this->rows; i++)
+				this->data[i][0] = vector[i];
 		}
 
 		////////////////////////////////////////
 
-		void Vec::RandomNormalDistribution()
+		void Vec<Real>::RandomNormalDistribution()
 		{
 			std::normal_distribution<Real> distribution; // mean 0, standard deviation 1
-			for (int i = 0; i < rows; i++)
-				data[i][0] = distribution(generator);
+			for (int i = 0; i < this->rows; i++)
+				this->data[i][0] = distribution(generator);
 		}
 
 		////////////////////////////////////////
 
-		void Vec::RandomUniformDistribution()
+		void Vec<Real>::RandomUniformDistribution()
 		{
 			std::uniform_real_distribution<Real> distribution; // a 0, b 1
 			for (int i = 0; i < rows; i++)
@@ -50,7 +55,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Vec::RandomUniformDistribution(Real a, Real b)
+		void Vec<Real>::RandomUniformDistribution(Real a, Real b)
 		{
 			std::uniform_real_distribution<Real> distribution(a, b);
 			for (int i = 0; i < rows; i++)
@@ -59,30 +64,35 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Vec::Normalise()
+		void Vec<Real>::Normalise()
 		{
 			Real normal = CalculateNormal();
-			for (int i = 0; i < rows; i++)
-				data[i][0] = data[i][0] / normal;
+			for (int i = 0; i < this->rows; i++)
+				this->data[i][0] = this->data[i][0] / normal;
 		}
 
-		Real Vec::CalculateNormal() const
+		////////////////////////////////////////
+
+		template<>
+		Real Vec<Real>::CalculateNormal() const
 		{
 			Real magnitude = 0.0;
-			for (int i = 0; i < rows; i++)
-				magnitude += data[i][0] * data[i][0];
+			for (int i = 0; i < this->rows; i++)
+				magnitude += this->data[i][0] * this->data[i][0];
 			return sqrt(magnitude);
 		}
 
 		////////////////////////////////////////
 
-		void Vec::Max(const Real min)
+		void Vec<Real>::Max(const Real min)
 		{
 			for (int i = 0; i < rows; i++)
 				data[i][0] = std::max(min, data[i][0]);
 		}
 
-		void Vec::Min(const Real max)
+		////////////////////////////////////////
+
+		void Vec<Real>::Min(const Real max)
 		{
 			for (int i = 0; i < rows; i++)
 				data[i][0] = std::min(max, data[i][0]);
@@ -90,31 +100,38 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		Real Vec::Sum() const
+		template<typename T>
+		T Vec<T>::Sum() const
 		{
-			Real sum = 0.0;
-			for (int i = 0; i < cols; i++)
-				sum += data[i][0];
+			T sum = 0.0;
+			for (int i = 0; i < this->cols; i++)
+				sum += this->data[i][0];
 			return sum;
 		}
 
 		//////////////////// Rowvec ////////////////////
 
+		template class Rowvec<Real>;
+		template class Rowvec<ComplexPair>;
+		template class Rowvec<Complex>;
+
 		////////////////////////////////////////
 
-		void Rowvec::Init(const std::vector<Real>& vector)
+		template<typename T>
+		void Rowvec<T>::Init(const std::vector<T>& vector)
 		{
-			cols = static_cast<int>(vector.size());
-			data[0] = vector;
+			this->cols = static_cast<int>(vector.size());
+			this->data[0] = vector;
 		}
 
 		////////////////////////////////////////
 
-		Real Rowvec::Sum() const
+		template<typename T>
+		T Rowvec<T>::Sum() const
 		{
-			Real sum = 0.0;
-			for (int i = 0; i < cols; i++)
-				sum += data[0][i];
+			T sum = 0.0;
+			for (int i = 0; i < this->cols; i++)
+				sum += this->data[0][i];
 			return sum;
 		}
 	}

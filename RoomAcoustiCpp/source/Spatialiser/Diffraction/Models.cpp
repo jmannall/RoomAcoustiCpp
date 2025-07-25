@@ -157,9 +157,9 @@ namespace RAC
 				Parameters g{ 0.0 }, gSB{ 0.0 };
 				for (int i = 0; i < 4; i++)
 				{
-					Complex AD = -exp(-imUnit * k[i] * dSR) * E[i] / A;
-					g[i] = abs(AD * (EqHalf(path.rData.t - path.sData.t, k[i], n, L) + EqHalf(path.rData.t + path.sData.t, k[i], n, L))); // eq. 25
-					gSB[i] = abs(AD * (EqHalf(PI_EPS, k[i], n, L) + EqHalf(2 * path.sData.t + PI_EPS, k[i], n, L)));
+					Complex AD = -std::exp(-imUnit * k[i] * dSR) * E[i] / A;
+					g[i] = std::abs(AD * (EqHalf(path.rData.t - path.sData.t, k[i], n, L) + EqHalf(path.rData.t + path.sData.t, k[i], n, L))); // eq. 25
+					gSB[i] = std::abs(AD * (EqHalf(PI_EPS, k[i], n, L) + EqHalf(2 * path.sData.t + PI_EPS, k[i], n, L)));
 				}
 				Real idx = (path.bA - PI_1) / (path.eData.t - path.sData.t - PI_1);
 				Coefficients<std::array<Real, 4>> oldGains = (1.0 - idx) * g / gSB + idx * g * dSR;
@@ -178,7 +178,7 @@ namespace RAC
 					if (eps == 0.0)
 						eps = 0.001f;
 					Real kL2 = 2.0 * k * L;
-					return n * exp(imUnit * PI_1 / 4.0) * (sqrt(PI_1 * kL2) * Sign(eps) - kL2 * eps * exp(imUnit * PI_1 / 4.0));
+					return n * std::exp(imUnit * PI_1 / 4.0) * (sqrt(PI_1 * kL2) * Sign(eps) - kL2 * eps * std::exp(imUnit * PI_1 / 4.0));
 				}
 				return cot(cotArg) * FresnelIntegral(k * L * AlphaPM(t, plus, n));
 			}
@@ -210,7 +210,7 @@ namespace RAC
 			Complex UTD::FresnelIntegral(Real x) const
 			{
 				Real sqrtX = sqrt(x);
-				Complex output = exp(imUnit * PI_1 / 4.0 * (1.0 - sqrtX / (x + 1.4))); // eq. 22 (K)
+				Complex output = std::exp(imUnit * PI_1 / 4.0 * (1.0 - sqrtX / (x + 1.4))); // eq. 22 (K)
 				if (x < 0.8)
 					output *= sqrt(PI_1 * x) * (1.0 - (sqrtX / (0.7 * sqrtX + 1.2))); // eq. 22 (K)
 				else
@@ -552,10 +552,10 @@ namespace RAC
 				Real dR = sqrt(dzRSq + constants.rRSq);
 
 				Real ml = dS * dR;
-				Real y = std::max(1.0, (ml + dzS * dzR) / constants.rr); // limit to 1 -> real(sqrt(y ^ 2 - 1)) returns 0 if y <= 1
-				Real A = y + sqrt(y * y - 1.0);
+				Real y = std::max((Real)1.0, (ml + dzS * dzR) / constants.rr); // limit to 1 -> real(sqrt(y ^ 2 - 1)) returns 0 if y <= 1
+				Real A = y + sqrt(y * y - (Real)1.0);
 				Real Apow = pow(A, constants.v);
-				Real coshvtheta = (Apow + (1.0 / Apow)) / 2.0;
+				Real coshvtheta = (Apow + ((Real)1.0 / Apow)) / (Real)2.0;
 
 				Real Btotal = Sum(constants.sinTheta / (coshvtheta - constants.cosTheta));
 				return Btotal / ml;

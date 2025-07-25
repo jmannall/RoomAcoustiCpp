@@ -174,7 +174,7 @@ namespace RAC
 			* @param volume The volume of the room used to predict the reverberation time.
 			* @param dimensions The dimensions of the room used to set the FDN delay lines.
 			*/
-			void InitLateReverb(const Real volume, const Vec& dimensions, const FDNMatrix matrix);
+			void InitLateReverb(const Real volume, const Vec<>& dimensions, const FDNMatrix matrix);
 
 			inline void ResetFDN() { mReverb->Reset(); }
 
@@ -310,7 +310,14 @@ namespace RAC
 			*/
 			Buffer<> mInputBuffer;	// Audio input buffer
 			Buffer<> mOutputBuffer;	// Audio output buffer
-			Matrix mReverbInput;	// Audio reverb input matrix
+			Matrix<> mReverbInput;	// Audio reverb input matrix
+
+			Buffer<Complex> mOutputBufferComplex;	// Audio output buffer
+			Matrix<Complex> mReverbInputComplex;	// Audio reverb input matrix
+
+			Buffer<ComplexPair> mOutputBufferComplexPair;	// Audio output buffer
+			Matrix<ComplexPair> mReverbInputComplexPair;	// Audio reverb input matrix
+
 			std::vector<float> mSendBuffer;	// Audio send buffer (float)
 
 			/**

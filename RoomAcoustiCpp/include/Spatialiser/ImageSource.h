@@ -508,7 +508,7 @@ namespace RAC
 			* @param reverbInput The reverb input buffer to write to
 			* @param lerpFactor The lerp factor for interpolation
 			*/
-			void ProcessAudio(Buffer<>& outputBuffer, Matrix& reverbInput, const Real lerpFactor);
+			void ProcessAudio(Buffer<>& outputBuffer, Matrix<>& reverbInput, const Real lerpFactor);
 
 			/**
 			* @brief Resets the image source by clearing the buffers and removing the source from the 3DTI processing core
@@ -616,7 +616,7 @@ namespace RAC
 			CMonoBuffer<float> bMonoOutput;				// 3DTI Mono output buffer for reverb send
 
 			Parameter gain{ 0.0 };								// 1.0 if the source is visible, 0.0 otherwise
-			std::unique_ptr<GraphicEQ> mFilter;					// Frequency dependent reflection and directivity filter
+			std::unique_ptr<GraphicEQ<>> mFilter;					// Frequency dependent reflection and directivity filter
 			std::unique_ptr<AirAbsorption> mAirAbsorption;		// Air absorption filter
 
 			Parameter diffractionGain{ 1.0 };											// Gain for crossfading diffracton models

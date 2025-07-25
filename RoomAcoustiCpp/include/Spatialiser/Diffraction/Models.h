@@ -551,7 +551,7 @@ namespace RAC
 				* @param parameters The UDFA filter parameters
 				* @return The gain at the given frequency
 				*/
-				inline Real CalcG(Real f, const Parameters& parameters) const { return abs(CalcUDFA(f, parameters)); }
+				inline Real CalcG(Real f, const Parameters& parameters) const { return std::abs(CalcUDFA(f, parameters)); }
 
 				/**
 				* @brief Calculates the filter response at a given frequency using the UDFA filter parameters
@@ -562,9 +562,11 @@ namespace RAC
 				*/
 				inline Complex CalcUDFA(Real f, const Parameters& parameters) const
 				{
-					Real alpha = 0.5;
-					Real r = 1.6;
-					return pow(pow(imUnit * f / parameters.fc, 2.0 / parameters.blend) + pow(imUnit * f / (parameters.Q * parameters.fc), 1.0 / (pow(parameters.blend, r))) + Complex(1.0, 0.0), -alpha * parameters.blend / 2.0);
+					Real alpha = (Real)0.5;
+					Real r = (Real)1.6;
+
+					const std::complex<Real> imagUnit = std::complex<Real>(0.0, 1.0);
+					return pow(pow(imagUnit * f / parameters.fc, (Real)2.0 / parameters.blend) + pow(imagUnit * f / (parameters.Q * parameters.fc), (Real)1.0 / (pow(parameters.blend, r))) + (Real)1.0, -alpha * parameters.blend / (Real)2.0);
 				}
 
 			private:

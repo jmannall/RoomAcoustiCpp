@@ -23,7 +23,7 @@ namespace RAC
 			const Buffer longIR = Buffer({ 1.0, 0.5, -3.0, 0.2, 0.7, -0.13, 0.2, 2.1, -1.2, 0.48, 0.1, -0.35 });
 			FIRFilter filter = FIRFilter(longIR, 16);
 
-			Assert::AreEqual(1.0, filter.GetOutput(1.0, lerpFactor), L"Init wrong");
+			Assert::AreEqual((Real)1.0, filter.GetOutput(1.0, lerpFactor), L"Init wrong");
 
 			const Buffer shortIR = Buffer({ -0.9, 0.3, 0.33, -0.1, -0.4, 0.6 });
 			filter.SetTargetIR(shortIR);
@@ -45,7 +45,7 @@ namespace RAC
 			const Buffer shortIR({ 0.9, 0.5, 0.0, 0.2 });
 			FIRFilter filter(shortIR, 16);
 
-			Assert::AreEqual(1.8, filter.GetOutput(2.0, lerpFactor), L"Init wrong");
+			Assert::AreEqual((Real)1.8, filter.GetOutput(2.0, lerpFactor), L"Init wrong");
 
 			const Buffer longIR({ 1.3, -0.5, 0.15, 0.78, -0.2, -1.0, 0.1, 0.9, 1.3, 2.3 });
 			filter.SetTargetIR(longIR);
@@ -123,11 +123,11 @@ namespace RAC
 			FIRFilter filter(ir, 8);
 
 			for (int i = 0; i < input.size(); i++)
-				Assert::AreEqual(0.0, filter.GetOutput(input[i], lerpFactor), EPS, L"Init Error");
+				Assert::AreEqual((Real)0.0, filter.GetOutput(input[i], lerpFactor), EPS, L"Init Error");
 
 			filter.SetTargetIR(ir);
 			for (int i = 0; i < input.size(); i++)
-				Assert::AreEqual(0.0, filter.GetOutput(input[i], lerpFactor), EPS, L"Set Error");
+				Assert::AreEqual((Real)0.0, filter.GetOutput(input[i], lerpFactor), EPS, L"Set Error");
 		}
 	};
 }

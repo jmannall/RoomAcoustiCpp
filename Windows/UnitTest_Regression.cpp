@@ -101,18 +101,18 @@ namespace RAC
 
 	std::vector<IRResult> RunScene(std::string scene, IEMConfig iemConfig, DiffractionModel diffractionModel)
 	{
-		std::vector<float> data = Parse2Dcsv<float>(filePath + "ImpulseResponses\\" + scene + "\\RAC\\Data.csv")[0];
+		std::vector<Real> data = Parse2Dcsv<Real>(filePath + "ImpulseResponses\\" + scene + "\\RAC\\Data.csv")[0];
 
-		std::vector<std::vector<float>> sourceData = Parse2Dcsv<float>(filePath + "Scenes\\" + scene + "\\Sources.csv");
+		std::vector<std::vector<Real>> sourceData = Parse2Dcsv<Real>(filePath + "Scenes\\" + scene + "\\Sources.csv");
 		std::vector<std::vector<std::string>> sourceNames = Parse2Dcsv<std::string>(filePath + "Scenes\\" + scene + "\\SourceNames.csv");
 
-		std::vector<std::vector<float>> listenerData = Parse2Dcsv<float>(filePath + "Scenes\\" + scene + "\\Listeners.csv");
+		std::vector<std::vector<Real>> listenerData = Parse2Dcsv<Real>(filePath + "Scenes\\" + scene + "\\Listeners.csv");
 		std::vector<std::vector<std::string>> listenerNames = Parse2Dcsv<std::string>(filePath + "Scenes\\" + scene + "\\ListenerNames.csv");
 
-		std::vector<std::vector<float>> verticesData = Parse2Dcsv<float>(filePath + "Scenes\\" + scene + "\\Vertices.csv");
-		std::vector<std::vector<float>> absorptionData = Parse2Dcsv<float>(filePath + "Scenes\\" + scene + "\\Absorption.csv");
+		std::vector<std::vector<Real>> verticesData = Parse2Dcsv<Real>(filePath + "Scenes\\" + scene + "\\Vertices.csv");
+		std::vector<std::vector<Real>> absorptionData = Parse2Dcsv<Real>(filePath + "Scenes\\" + scene + "\\Absorption.csv");
 
-		Coefficients fBands = Coefficients(std::vector<double>(data.begin() + 7, data.end()));
+		Coefficients fBands = Coefficients(std::vector<Real>(data.begin() + 7, data.end()));
 		std::shared_ptr<Config> config = std::make_shared<Config>(data[0], data[1], data[2], data[3], data[4], fBands, diffractionModel, SpatialisationMode::none);
 
 		std::shared_ptr<MATLABEngine> matlabPtr = LoadMATLAB();

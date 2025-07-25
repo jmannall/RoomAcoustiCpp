@@ -43,8 +43,8 @@ namespace RAC
 			InitBuffers(config->numFrames);
 
 			mAirAbsorption = std::make_unique<AirAbsorption>(1.0, config->fs);
-			directivityFilter = std::make_unique<GraphicEQ>(config->frequencyBands, config->Q, config->fs);
-			reverbInputFilter = std::make_unique<GraphicEQ>(config->frequencyBands, config->Q, config->fs);
+			directivityFilter = std::make_unique<GraphicEQ<>>(config->frequencyBands, config->Q, config->fs);
+			reverbInputFilter = std::make_unique<GraphicEQ<>>(config->frequencyBands, config->Q, config->fs);
 
 			mDirectivity.store(SourceDirectivity::omni, std::memory_order_release);
 
@@ -237,7 +237,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Source::ProcessAudio(Buffer<>& outputBuffer, Matrix& reverbInput, const Real lerpFactor)
+		void Source::ProcessAudio(Buffer<>& outputBuffer, Matrix<>& reverbInput, const Real lerpFactor)
 		{
 			if (!GetAccess())
 				return;

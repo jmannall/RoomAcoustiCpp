@@ -193,7 +193,7 @@ namespace RAC
 			* @param reverbInput The reverb input buffer to write to
 			* @param lerpFactor The lerp factor for interpolation
 			*/
-			void ProcessAudio(Buffer<>& outputBuffer, Matrix& reverbInput, const Real lerpFactor);
+			void ProcessAudio(Buffer<>& outputBuffer, Matrix<>& reverbInput, const Real lerpFactor);
 
 			/**
 			* @brief Resets the source (if not in use) by clearing the buffers and removing the source from the 3DTI processing core
@@ -302,8 +302,8 @@ namespace RAC
 			void ResetFDNSlots();
 
 			std::unique_ptr<AirAbsorption> mAirAbsorption;		// Air absorption filter
-			std::unique_ptr<GraphicEQ> directivityFilter;		// Directivity filter
-			std::unique_ptr<GraphicEQ> reverbInputFilter;		// Reverb energy based on directivity
+			std::unique_ptr<GraphicEQ<>> directivityFilter;		// Directivity filter
+			std::unique_ptr<GraphicEQ<>> reverbInputFilter;		// Reverb energy based on directivity
 
 			std::atomic<SourceDirectivity> mDirectivity;	// Source directivity
 			std::atomic<bool> feedsFDN{ false };			// True if the source feeds the FDN

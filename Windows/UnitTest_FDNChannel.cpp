@@ -27,10 +27,10 @@ namespace RAC
 
 			FDNChannel channel(delay, T60, config);
 
-			Assert::AreEqual(0.0, channel.GetOutput(RandomValue(), lerpFactor), L"Output not zero");
+			Assert::AreEqual((Real)0.0, channel.GetOutput(RandomValue(), lerpFactor), L"Output not zero");
 			for (int i = 1; i < delay; i++)
-				Assert::AreEqual(0.0, channel.GetOutput(RandomValue(), lerpFactor), L"Output not zero");
-			Assert::AreNotEqual(0.0, channel.GetOutput(RandomValue(), lerpFactor), L"Output zero");
+				Assert::AreEqual((Real)0.0, channel.GetOutput(RandomValue(), lerpFactor), L"Output not zero");
+			Assert::AreNotEqual((Real)0.0, channel.GetOutput(RandomValue(), lerpFactor), L"Output zero");
 		}
 
 		TEST_METHOD(ResetAbsorption)
@@ -50,10 +50,10 @@ namespace RAC
 				in[i] = channel.GetOutput(RandomValue(), lerpFactor);
 			channel.Reset();
 
-			Assert::AreEqual(0.0, channel.GetOutput(RandomValue(), lerpFactor), L"GetOutput not zero");
+			Assert::AreEqual((Real)0.0, channel.GetOutput(RandomValue(), lerpFactor), L"GetOutput not zero");
 			for (int i = 1; i < delay; i++)
-				Assert::AreEqual(0.0, channel.GetOutput(RandomValue(), lerpFactor), L"GetOutput not zero");
-			Assert::AreNotEqual(0.0, channel.GetOutput(RandomValue(), lerpFactor), L"GetOutput zero");
+				Assert::AreEqual((Real)0.0, channel.GetOutput(RandomValue(), lerpFactor), L"GetOutput not zero");
+			Assert::AreNotEqual((Real)0.0, channel.GetOutput(RandomValue(), lerpFactor), L"GetOutput zero");
 		}
 
 		TEST_METHOD(ResetReflection)
@@ -78,7 +78,7 @@ namespace RAC
 			in.Reset();
 			channel.ProcessOutput(in, out, lerpFactor);
 			for (int i = 0; i < numFrames; i++)
-				Assert::AreEqual(0.0, out[i], L"ProcessOutput not zero");
+				Assert::AreEqual((Real)0.0, out[i], L"ProcessOutput not zero");
 		}
 
 		TEST_METHOD(ProcessReflection)
@@ -101,7 +101,7 @@ namespace RAC
 			channel.ProcessOutput(in, out, lerpFactor);
 			in[0] = 1.0;
 			channel.ProcessOutput(in, out, lerpFactor);
-			Assert::AreEqual(target, out[0], 10e-16, L"Reflection filter incorrect");
+			Assert::AreEqual(target, out[0], (Real)10e-16, L"Reflection filter incorrect");
 		}
 
 		TEST_METHOD(ProcessAbsorption)
@@ -120,7 +120,7 @@ namespace RAC
 			for (int i = 1; i < delay; i++)
 				channel.GetOutput(0.0, lerpFactor);
 			Real out = channel.GetOutput(0.0, lerpFactor);
-			Assert::AreEqual(target, out, 10e-16, L"Absorption filter incorrect");
+			Assert::AreEqual(target, out, (Real)10e-16, L"Absorption filter incorrect");
 		}
 
 		TEST_METHOD(UpdateT60)
@@ -141,7 +141,7 @@ namespace RAC
 			for (int i = 1; i < delay; i++)
 				channel.GetOutput(0.0, lerpFactor);
 			Real out = channel.GetOutput(0.0, lerpFactor);
-			Assert::AreEqual(target, out, 10e-16, L"Absorption filter not interpolating");
+			Assert::AreEqual(target, out, (Real)10e-16, L"Absorption filter not interpolating");
 		}
 	};
 #pragma optimize("", on)

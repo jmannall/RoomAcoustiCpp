@@ -14,10 +14,10 @@
 
 #include "moodycamel/concurrentqueue.h"
 
-//#define PROFILE_BACKGROUND_THREAD
-//#define PROFILE_BACKGROUND_THREAD_DETAILED
-//#define PROFILE_AUDIO_THREAD
-//#define PROFILE_AUDIO_THREAD_DETAILED
+#define PROFILE_BACKGROUND_THREAD
+#define PROFILE_BACKGROUND_THREAD_DETAILED
+#define PROFILE_AUDIO_THREAD
+#define PROFILE_AUDIO_THREAD_DETAILED
 
 
 #ifdef PROFILE_AUDIO_THREAD_DETAILED
@@ -80,6 +80,10 @@
     PROFILER_CATEGORY(EarlyReflections)
 #define PROFILE_LateReverb \
     PROFILER_CATEGORY(LateReverb)
+#define PROFILE_LateReverbComplex \
+    PROFILER_CATEGORY(LateReverbComplex)
+#define PROFILE_LateReverbComplexPair \
+    PROFILER_CATEGORY(LateReverbComplexPair)
 #define PROFILE_Source \
     PROFILER_CATEGORY(Source)
 #define PROFILE_ImageSource \
@@ -103,6 +107,8 @@
 #define PROFILE_ImageSource
 #define PROFILE_ReverbSource
 #define PROFILE_FDN
+#define PROFILE_FDNComplex
+#define PROFILE_FDNComplexPair
 #define PROFILE_Reflection
 #define PROFILE_Diffraction
 #define PROFILE_AirAbsorption
@@ -128,6 +134,8 @@ enum ProfilerCategories
     SubmitAudio,
     EarlyReflections,
     LateReverb,
+    LateReverbComplex,
+    LateReverbComplexPair,
     FDN,
     Source,
     ImageSource,
@@ -193,6 +201,12 @@ inline std::ostream& operator<<(std::ostream& os, const ProfilerCategories& cate
 	case ProfilerCategories::LateReverb:
 		os << "LateReverb";
 		break;
+    case ProfilerCategories::LateReverbComplex:
+        os << "LateReverbComplex";
+        break;
+    case ProfilerCategories::LateReverbComplexPair:
+        os << "LateReverbComplexPair";
+        break;
 	case ProfilerCategories::FDN:
 		os << "FDN";
 		break;
@@ -381,6 +395,12 @@ namespace RAC
                 case ProfilerCategories::LateReverb:
                     BeginLateReverb();
                     break;
+                case ProfilerCategories::LateReverbComplex:
+                    BeginImageSource();
+                    break;
+                case ProfilerCategories::LateReverbComplexPair:
+                    BeginDiffraction();
+                    break;
                 case ProfilerCategories::FDN:
                     BeginFDN();
                     break;
@@ -470,6 +490,12 @@ namespace RAC
                     break;
                 case ProfilerCategories::LateReverb:
                     EndLateReverb();
+                    break;
+                case ProfilerCategories::LateReverbComplex:
+                    EndImageSource();
+                    break;
+                case ProfilerCategories::LateReverbComplexPair:
+                    EndDiffraction();
                     break;
                 case ProfilerCategories::FDN:
                     EndFDN();

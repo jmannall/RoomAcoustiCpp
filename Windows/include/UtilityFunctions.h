@@ -156,13 +156,13 @@ inline std::vector<std::string> ListDirectoryFiles(const std::string& directoryP
 
 static std::default_random_engine generator(100); // Seed the generator
 
-inline double RandomValue()
+inline float RandomValue()
 {
-	std::uniform_real_distribution<double> distribution(-1.0, 1.0);
+	std::uniform_real_distribution<float> distribution(-1.0, 1.0);
 	return distribution(generator);
 }
 
-inline double RandomValue(const double a, const double b)
+inline float RandomValue(const float a, const float b)
 {
 	std::uniform_real_distribution<double> distribution(a, b);
 	return distribution(generator);

@@ -216,17 +216,36 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Reverb::ProcessAudio(const Matrix& data, Buffer<>& outputBuffer, const Real lerpFactor)
+		void Reverb::ProcessAudio(const Matrix<>& data, Buffer<>& outputBuffer, const Real lerpFactor)
 		{
-			PROFILE_LateReverb
-			if (!running.load(std::memory_order_acquire))
-				return;
+			{
+				PROFILE_LateReverb
+					if (!running.load(std::memory_order_acquire))
+						return;
 
-			mFDN.load(std::memory_order_acquire)->ProcessAudio(data, reverbSourceInputs, lerpFactor);
-			
+				mFDN.load(std::memory_order_acquire)->ProcessAudio(data, reverbSourceInputs, lerpFactor);
+			}
 			audioThreadPool->ProcessReverbSources(mReverbSources, outputBuffer);
 			/*for (auto& source : mReverbSources)
 				source->ProcessAudio(outputBuffer);*/
+		}
+
+		void Reverb::ProcessComplexAudio(const Matrix<Complex>& data, Buffer<Complex>& outputBuffer, const Real lerpFactor)
+		{
+			PROFILE_LateReverbComplex
+			if (!running.load(std::memory_order_acquire))
+				return;
+
+			complexFDN.load(std::memory_order_acquire)->ProcessAudio(data, reverbSourceInputsComplex, lerpFactor);
+		}
+
+		void Reverb::ProcessComplexPairAudio(const Matrix<ComplexPair>& data, Buffer<ComplexPair>& outputBuffer, const Real lerpFactor)
+		{
+			PROFILE_LateReverbComplexPair
+				if (!running.load(std::memory_order_acquire))
+					return;
+
+			complexPairFDN.load(std::memory_order_acquire)->ProcessAudio(data, reverbSourceInputsComplexPair, lerpFactor);
 		}
 
 		////////////////////////////////////////
@@ -241,27 +260,36 @@ namespace RAC
 				RealToStr(T60[2]) + ", " + RealToStr(T60[3]) + ", " + RealToStr(T60[4]) + "]", Colour::Green);
 #endif
 			mFDN.load(std::memory_order_acquire)->SetTargetT60(T60);
+			complexFDN.load(std::memory_order_acquire)->SetTargetT60(T60);
+			complexPairFDN.load(std::memory_order_acquire)->SetTargetT60(T60);
 		}
 
 		////////////////////////////////////////
 
-		void Reverb::InitLateReverb(const Coefficients<>& T60, const Vec& dimensions, const FDNMatrix matrix, const std::shared_ptr<Config> config)
+		void Reverb::InitLateReverb(const Coefficients<>& T60, const Vec<>& dimensions, const FDNMatrix matrix, const std::shared_ptr<Config> config)
 		{
-            std::shared_ptr<FDN> fdn;
+            std::shared_ptr<FDN<>> fdn;
             switch (matrix)
             {
             case FDNMatrix::householder:
                 fdn = std::make_shared<HouseHolderFDN>(T60, dimensions, config);
                 break;
             case FDNMatrix::randomOrthogonal:
-                fdn = std::make_shared<RandomOrthogonalFDN>(T60, dimensions, config);
+                fdn = std::make_shared<RandomOrthogonalFDN<>>(T60, dimensions, config);
                 break;
             default:
-                fdn = std::make_shared<FDN>(T60, dimensions, config);
+                fdn = std::make_shared<FDN<>>(T60, dimensions, config);
                 break;
             }
 			releasePool.Add(fdn);
             mFDN.store(fdn, std::memory_order_release);
+
+			std::shared_ptr<RandomOrthogonalFDN<Complex>> fdnComplex = std::make_shared<RandomOrthogonalFDN<Complex>>(T60, dimensions, config);
+			std::shared_ptr<RandomOrthogonalFDN<ComplexPair>> fdnComplexPair = std::make_shared<RandomOrthogonalFDN<ComplexPair>>(T60, dimensions, config);
+
+			complexFDN.store(fdnComplex, std::memory_order_release);
+			complexPairFDN.store(fdnComplexPair, std::memory_order_release);
+
 			initialised.store(true, std::memory_order_release);
 		}
 
@@ -273,9 +301,13 @@ namespace RAC
 			if (!initialised.load(std::memory_order_acquire))
 				return;
 			bool isZero = mFDN.load(std::memory_order_acquire)->SetTargetReflectionFilters(absorptions);
+			complexFDN.load(std::memory_order_acquire)->SetTargetReflectionFilters(absorptions);
+			complexPairFDN.load(std::memory_order_acquire)->SetTargetReflectionFilters(absorptions);
 			if (isZero)
 			{
 				mFDN.load(std::memory_order_acquire)->Reset();
+				complexFDN.load(std::memory_order_acquire)->Reset();
+				complexPairFDN.load(std::memory_order_acquire)->Reset();
 				running.store(false, std::memory_order_release);
 			}
 			else

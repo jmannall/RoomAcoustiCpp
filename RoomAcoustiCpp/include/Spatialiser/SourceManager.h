@@ -176,7 +176,7 @@ namespace RAC
 			*/
 			inline void SetInputBuffer(const size_t id, const Buffer<>& data) { mSources[id]->SetInputBuffer(data); }
 
-			inline void ProcessAudio(Buffer<>& outputBuffer, Matrix& reverbInput, const Real lerpFactor)
+			inline void ProcessAudio(Buffer<>& outputBuffer, Matrix<>& reverbInput, const Real lerpFactor)
 			{
 				PROFILE_EarlyReflections
 				for (auto& source : mSources)	// Zero any input buffers for sources that are not in use (but may still have image sources)

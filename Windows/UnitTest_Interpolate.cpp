@@ -28,13 +28,13 @@ namespace RAC
 			for (int i = 0; i < 10; i++)
 				current = Lerp(current, target, lerpFactor);
 			NoFlushDenormals();
-			Assert::AreEqual(0.0, current, L"DenormalsFlushed");
+			Assert::AreEqual((Real)0.0, current, L"DenormalsFlushed");
 
 			current = MIN_VALUE;
 			for (int i = 0; i < 10; i++)
 				current = Lerp(current, target, lerpFactor);
 
-			Assert::AreNotEqual(0.0, current, L"NoDenormalsFlushed");
+			Assert::AreNotEqual((Real)0.0, current, L"NoDenormalsFlushed");
 		}
 
 		TEST_METHOD(Real_Type)
@@ -44,9 +44,9 @@ namespace RAC
 			Real lerpFactor = 0.2;
 			current = Lerp(current, target, lerpFactor);
 
-			Assert::AreEqual(0.8, current, EPS, L"Wrong output");
+			Assert::AreEqual((Real)0.8, current, EPS, L"Wrong output");
 			current = Lerp(current, target, lerpFactor);
-			Assert::AreEqual(0.64, current, EPS, L"Wrong output");
+			Assert::AreEqual((Real)0.64, current, EPS, L"Wrong output");
 		}
 
 		TEST_METHOD(Buffer_Class)

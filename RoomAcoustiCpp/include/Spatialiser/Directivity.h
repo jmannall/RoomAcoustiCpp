@@ -143,7 +143,7 @@ namespace RAC
 				if (isNegative)
 				{
 					E = std::conj(E);
-					E = isOdd ? -E : E;
+					E = isOdd ? -E : E;	
 				}
 
 				// Compute spherical harmonic

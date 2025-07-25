@@ -30,7 +30,7 @@ namespace RAC
 			const Buffer buffer = Buffer();
 			Assert::AreEqual(length, buffer.Length(), L"Buffer not initialised correctly");
 			for (int i = 0; i < buffer.Length(); i++)
-				Assert::AreEqual(0.0, buffer[i], L"Buffer not initialised to zero");
+				Assert::AreEqual((Real)0.0, buffer[i], L"Buffer not initialised to zero");
 		}
 
 		TEST_METHOD(InitLength)
@@ -39,7 +39,7 @@ namespace RAC
 			const Buffer buffer(length);
 			Assert::AreEqual(buffer.Length(), length, L"Buffer not initialised correctly");
 			for (int i = 0; i < buffer.Length(); i++)
-				Assert::AreEqual(0.0, buffer[i], L"Buffer not initialised to zero");
+				Assert::AreEqual((Real)0.0, buffer[i], L"Buffer not initialised to zero");
 		}
 
 		TEST_METHOD(InitVector)
@@ -61,7 +61,7 @@ namespace RAC
 
 			buffer.Reset();
 			for (int i = 0; i < length; i++)
-				Assert::AreEqual(0.0, buffer[i], L"Buffer not reset to zero");
+				Assert::AreEqual((Real)0.0, buffer[i], L"Buffer not reset to zero");
 		}
 
 		TEST_METHOD(Resize)
@@ -74,7 +74,7 @@ namespace RAC
 			buffer.ResizeBuffer(newLength);
 			Assert::AreEqual(buffer.Length(), newLength, L"Buffer not resized correctly");
 			for (int i = length; i < buffer.Length(); i++)
-				Assert::AreEqual(0.0, buffer[i], L"New values not initialised to zero");
+				Assert::AreEqual((Real)0.0, buffer[i], L"New values not initialised to zero");
 
 			buffer.ResizeBuffer(length);
 			Assert::AreEqual(buffer.Length(), length, L"Buffer not resized correctly");

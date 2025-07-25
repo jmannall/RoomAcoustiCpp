@@ -119,7 +119,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void InitLateReverb(const Real volume, const Vec& dimensions, const FDNMatrix matrix)
+		void InitLateReverb(const Real volume, const Vec<>& dimensions, const FDNMatrix matrix)
 		{
 			auto context = GetContext();
 			if (context)

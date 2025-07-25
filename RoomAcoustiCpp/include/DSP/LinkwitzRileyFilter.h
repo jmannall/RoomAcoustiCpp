@@ -120,7 +120,7 @@ namespace RAC
 			*/
 			static inline Parameters CalculateMidFrequencies(const std::array<Real, 3>& fc)
 			{
-				return Parameters({ std::sqrt(20.0 * fc[0]), std::sqrt(fc[0] * fc[1]), std::sqrt(fc[1] * fc[2]), std::sqrt(fc[2] * 20000.0) });
+				return Parameters({ std::sqrt((Real)20.0 * fc[0]), std::sqrt(fc[0] * fc[1]), std::sqrt(fc[1] * fc[2]), std::sqrt(fc[2] * (Real)20000.0) });
 			}
 
 			/*

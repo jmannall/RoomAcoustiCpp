@@ -126,8 +126,8 @@ namespace RAC
 			const Real lerpFactor = 0.5;
 
 			// std::string filePath = _SOLUTIONDIR;
-			auto inputData = Parse2Dcsv<double>(filePath + "peakingFilterInput.csv");
-			auto outputData = Parse2Dcsv<double>(filePath + "lowShelfFilterOutput.csv");
+			auto inputData = Parse2Dcsv<Real>(filePath + "peakingFilterInput.csv");
+			auto outputData = Parse2Dcsv<Real>(filePath + "lowShelfFilterOutput.csv");
 
 			std::vector<Real> fc(inputData[0]);
 			std::vector<Real> g(inputData[1]);
@@ -155,7 +155,7 @@ namespace RAC
 					std::string error = "Test: " + ToStr(i) + ", Incorrect Sample : " + ToStr(j);
 					std::wstring werror = std::wstring(error.begin(), error.end());
 					const wchar_t* werrorchar = werror.c_str();
-					Assert::AreEqual(outputData[i][j], out[j], 10e-16, werrorchar);
+					Assert::AreEqual(outputData[i][j], out[j], (Real)10e-16, werrorchar);
 				}
 			}
 		}
