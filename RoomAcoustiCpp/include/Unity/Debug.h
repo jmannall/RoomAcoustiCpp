@@ -17,6 +17,9 @@
 #include <vector>
 #include <mutex>
 
+// Common headers
+#include "Common/Coefficients.h"
+
 // Unity headers
 #include "Unity/IUnityInterface.h"
 
@@ -163,11 +166,18 @@ namespace RAC
         inline std::string VerticesToStr(const Vertices& x)
         {
             std::stringstream ss;
-            std::string output;
             for (int i = 0; i < x.size(); i++)
-            {
                 ss << x[i];
-            }
+            return ss.str();
+        }
+
+        /**
+        * @brief Converts a Vec3 to a string
+        */
+        inline std::string CoefficientToStr(const Coefficients<>& x)
+        {
+            std::stringstream ss;
+            ss << x;
             return ss.str();
         }
     }
