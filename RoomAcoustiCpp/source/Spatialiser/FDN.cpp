@@ -30,7 +30,6 @@ namespace RAC
 		//////////////////// FDN Channel class ////////////////////
 
 		template class FDNChannel<Real>;
-		template class FDNChannel<ComplexPair>;
 		template class FDNChannel<Complex>;
 
 		////////////////////////////////////////
@@ -55,7 +54,6 @@ namespace RAC
 		//////////////////// FDN class ////////////////////
 
 		template class FDN<Real>;
-		template class FDN<ComplexPair>;
 		template class FDN<Complex>;
 		
 		////////////////////////////////////////
@@ -230,7 +228,6 @@ namespace RAC
 		////////////////////////////////////////
 
 		template class RandomOrthogonalFDN<Real>;
-		template class RandomOrthogonalFDN<ComplexPair>;
 		template class RandomOrthogonalFDN<Complex>;
 
 		template<typename T>

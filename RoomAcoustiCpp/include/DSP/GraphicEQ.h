@@ -25,7 +25,6 @@ namespace RAC
 	namespace DSP
 	{
 		extern template class GraphicEQ<Real>;
-		extern template class GraphicEQ<ComplexPair>;
 		extern template class GraphicEQ<Complex>;
 	}
 }

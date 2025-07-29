@@ -120,22 +120,6 @@ namespace RAC
 			mSendBuffer = std::vector<float>(2 * mConfig->numFrames, 0.0);
 			mReverbInput = Matrix<>(mConfig->numLateReverbChannels, mConfig->numFrames);
 			
-			mOutputBufferComplex = Buffer<Complex>(2 * mConfig->numFrames); // Complex stereo output buffer
-			mReverbInputComplex = Matrix<Complex>(mConfig->numLateReverbChannels, mConfig->numFrames);
-
-			mOutputBufferComplexPair = Buffer<ComplexPair>(2 * mConfig->numFrames); // Complex pair stereo output buffer
-			mReverbInputComplexPair = Matrix<ComplexPair>(mConfig->numLateReverbChannels, mConfig->numFrames);
-
-			std::default_random_engine generator(100); // Seed the generator
-			std::uniform_real_distribution<Real> distribution(-1.0, 1.0);
-			for (int i = 0; i < mConfig->numLateReverbChannels; i++)
-			{
-				for (int j = 0; j < mConfig->numFrames; j++)
-				{
-					mReverbInputComplex[i][j] = Complex(distribution(generator), distribution(generator));
-					mReverbInputComplexPair[i][j] = ComplexPair(distribution(generator), distribution(generator));
-				}
-			}
 		}
 
 		////////////////////////////////////////

@@ -19,7 +19,6 @@ namespace RAC
 		//////////////////// Vec ////////////////////
 
 		template class Vec<Real>;
-		template class Vec<ComplexPair>;
 		template class Vec<Complex>;
 
 		static std::default_random_engine generator(100); // Seed the generator
@@ -112,7 +111,6 @@ namespace RAC
 		//////////////////// Rowvec ////////////////////
 
 		template class Rowvec<Real>;
-		template class Rowvec<ComplexPair>;
 		template class Rowvec<Complex>;
 
 		////////////////////////////////////////

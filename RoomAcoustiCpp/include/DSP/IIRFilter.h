@@ -161,7 +161,6 @@ namespace RAC
 		};
 
 		extern template class IIRFilter2<Real>;
-		extern template class IIRFilter2<ComplexPair>;
 		extern template class IIRFilter2<Complex>;
 
 		/**
@@ -294,19 +293,15 @@ namespace RAC
 		};
 
 		extern template class IIRFilter2Param1<Real>;
-		extern template class IIRFilter2Param1<ComplexPair>;
 		extern template class IIRFilter2Param1<Complex>;
 
 		extern template class PeakHighShelf<Real>;
-		extern template class PeakHighShelf<ComplexPair>;
 		extern template class PeakHighShelf<Complex>;
 
 		extern template class PeakLowShelf<Real>;
-		extern template class PeakLowShelf<ComplexPair>;
 		extern template class PeakLowShelf<Complex>;
 
 		extern template class PeakingFilter<Real>;
-		extern template class PeakingFilter<ComplexPair>;
 		extern template class PeakingFilter<Complex>;
 
 		/**

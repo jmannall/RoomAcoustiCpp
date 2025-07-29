@@ -90,7 +90,6 @@ namespace RAC
 		//////////////////// IIRFIlter2 ////////////////////
 
 		template class IIRFilter2<Real>;
-		template class IIRFilter2<ComplexPair>;
 		template class IIRFilter2<Complex>;
 
 		////////////////////////////////////////
@@ -277,7 +276,6 @@ namespace RAC
 		//////////////////// IIRFilter2Param1 ////////////////////
 
 		template class IIRFilter2Param1<Real>;
-		template class IIRFilter2Param1<ComplexPair>;
 		template class IIRFilter2Param1<Complex>;
 
 		////////////////////////////////////////
@@ -298,7 +296,6 @@ namespace RAC
 		//////////////////// PeakHighSelf ////////////////////
 
 		template class PeakHighShelf<Real>;
-		template class PeakHighShelf<ComplexPair>;
 		template class PeakHighShelf<Complex>;
 
 		////////////////////////////////////////
@@ -327,7 +324,6 @@ namespace RAC
 		//////////////////// PeakLowShelf ////////////////////
 
 		template class PeakLowShelf<Real>;
-		template class PeakLowShelf<ComplexPair>;
 		template class PeakLowShelf<Complex>;
 
 		////////////////////////////////////////
@@ -356,7 +352,6 @@ namespace RAC
 		//////////////////// PeakingFilter ////////////////////
 
 		template class PeakingFilter<Real>;
-		template class PeakingFilter<ComplexPair>;
 		template class PeakingFilter<Complex>;
 
 		////////////////////////////////////////

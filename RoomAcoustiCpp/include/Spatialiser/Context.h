@@ -312,12 +312,6 @@ namespace RAC
 			Buffer<> mOutputBuffer;	// Audio output buffer
 			Matrix<> mReverbInput;	// Audio reverb input matrix
 
-			Buffer<Complex> mOutputBufferComplex;	// Audio output buffer
-			Matrix<Complex> mReverbInputComplex;	// Audio reverb input matrix
-
-			Buffer<ComplexPair> mOutputBufferComplexPair;	// Audio output buffer
-			Matrix<ComplexPair> mReverbInputComplexPair;	// Audio reverb input matrix
-
 			std::vector<float> mSendBuffer;	// Audio send buffer (float)
 
 			/**

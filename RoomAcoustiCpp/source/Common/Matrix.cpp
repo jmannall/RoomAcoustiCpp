@@ -20,7 +20,6 @@ namespace RAC
 		//////////////////// Matrix ////////////////////
 
 		template class Matrix<Real>;
-		template class Matrix<ComplexPair>;
 		template class Matrix<Complex>;
 
 		static std::default_random_engine generator(100); // Seed the generator

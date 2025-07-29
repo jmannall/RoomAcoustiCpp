@@ -26,16 +26,13 @@ namespace RAC
 	namespace Spatialiser
 	{
 		extern template class FDNChannel<Real>;
-		extern template class FDNChannel<ComplexPair>;
 		extern template class FDNChannel<Complex>;
 
 		extern template class FDN<Real>;
-		extern template class FDN<ComplexPair>;
 		extern template class FDN<Complex>;
 
 		extern template class RandomOrthogonalFDN<Real>;
 		extern template class RandomOrthogonalFDN<Complex>;
-		extern template class RandomOrthogonalFDN<ComplexPair>;
 	}
 }
 

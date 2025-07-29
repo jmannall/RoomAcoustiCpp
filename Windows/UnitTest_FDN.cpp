@@ -7,8 +7,6 @@
 
 #include "Spatialiser/FDN.h"
 
-#include "Spatialiser/ComplexFDN.h"
-
 #include "Common/RACProfiler.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;

@@ -18,11 +18,9 @@ namespace RAC
 	namespace Common
 	{
 		extern template class Vec<Real>;
-		extern template class Vec<ComplexPair>;
 		extern template class Vec<Complex>;
 
 		extern template class Rowvec<Real>;
-		extern template class Rowvec<ComplexPair>;
 		extern template class Rowvec<Complex>;
 	}
 }

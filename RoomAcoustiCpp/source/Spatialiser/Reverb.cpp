@@ -301,13 +301,9 @@ namespace RAC
 			if (!initialised.load(std::memory_order_acquire))
 				return;
 			bool isZero = mFDN.load(std::memory_order_acquire)->SetTargetReflectionFilters(absorptions);
-			complexFDN.load(std::memory_order_acquire)->SetTargetReflectionFilters(absorptions);
-			complexPairFDN.load(std::memory_order_acquire)->SetTargetReflectionFilters(absorptions);
 			if (isZero)
 			{
 				mFDN.load(std::memory_order_acquire)->Reset();
-				complexFDN.load(std::memory_order_acquire)->Reset();
-				complexPairFDN.load(std::memory_order_acquire)->Reset();
 				running.store(false, std::memory_order_release);
 			}
 			else

@@ -22,7 +22,6 @@ namespace RAC
 		//////////////////// GraphicEQ ////////////////////
 
 		template class GraphicEQ<Real>;
-		template class GraphicEQ<ComplexPair>;
 		template class GraphicEQ<Complex>;
 
 		////////////////////////////////////////
