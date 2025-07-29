@@ -47,9 +47,6 @@
     <ClCompile Include="UnitTest_Directivity.cpp">
       <Filter>UnitTest</Filter>
     </ClCompile>
-    <ClCompile Include="UnitTest_Regression.cpp">
-      <Filter>UnitTest</Filter>
-    </ClCompile>
     <ClCompile Include="UnitTest_LowPass.cpp">
       <Filter>UnitTest</Filter>
     </ClCompile>

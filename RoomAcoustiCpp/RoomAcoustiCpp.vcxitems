@@ -90,7 +90,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\Parameter.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\moodycamel\concurrentqueue.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\AirAbsorption.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\ComplexFDN.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Context.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Diffraction\Models.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Diffraction\Path.h" />
@@ -104,6 +103,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\ImageSourceManager.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Interface.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Globals.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\RAVESResidual.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\SourceManager.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Reverb.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Room.h" />

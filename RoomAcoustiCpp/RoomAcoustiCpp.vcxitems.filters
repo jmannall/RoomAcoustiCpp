@@ -326,9 +326,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\RACProfiler.h">
       <Filter>Header Files\Common</Filter>
     </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\ComplexFDN.h">
-      <Filter>Header Files\Spatialiser</Filter>
-    </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\GraphicEQ_private.h">
       <Filter>Header Files\DSP</Filter>
     </ClInclude>
@@ -343,6 +340,9 @@
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Vec_private.h">
       <Filter>Header Files\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\RAVESResidual.h">
+      <Filter>Header Files\Spatialiser</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
