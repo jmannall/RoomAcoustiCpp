@@ -181,15 +181,13 @@ namespace RAC
 
 			bool GetImpulseResponseMode() const { return impulseResponseMode.load(std::memory_order_acquire); }
 
-			bool CompareImpulseResponseMode(const bool mode) const { return impulseResponseMode.load(std::memory_order_acquire) != mode; }
-
 			SpatialisationMode GetSpatialisationMode() const { return spatialisationMode.load(std::memory_order_acquire); }
 			
 			bool CompareSpatialisationMode(const SpatialisationMode mode) const { return spatialisationMode.load(std::memory_order_acquire) != mode; }
 
 			DiffractionModel GetDiffractionModel() const { return diffractionModel.load(std::memory_order_acquire); }
 
-			Real GetLerpFactor() const { return lerpFactor.load(std::memory_order_acquire); }
+			Real GetLerpFactor() const { return impulseResponseMode.load(std::memory_order_acquire) ? 1.0 : lerpFactor.load(std::memory_order_acquire); }
 
 
 			const int fs;							// Sample rate

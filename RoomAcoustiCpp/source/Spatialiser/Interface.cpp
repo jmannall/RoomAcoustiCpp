@@ -260,11 +260,11 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void UpdateImpulseResponseMode(const Real lerpFactor, const bool mode)
+		void UpdateImpulseResponseMode(const bool mode)
 		{
 			auto context = GetContext();
 			if (context)
-				context->UpdateImpulseResponseMode(lerpFactor, mode);
+				context->UpdateImpulseResponseMode(mode);
 		}
 	}
 }

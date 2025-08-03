@@ -368,16 +368,12 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Context::UpdateImpulseResponseMode(const Real lerpFactor, const bool mode)
+		void Context::UpdateImpulseResponseMode(const bool mode)
 		{
-			if (mode)
-			{
-				mConfig->lerpFactor.store(1.0, std::memory_order_release);
-				headphoneEQ.Reset();		// TO DO: Should this be here?
-				mSources->UpdateImpulseResponseMode(mode);
-				return;
-			}
+			mConfig->impulseResponseMode.store(mode, std::memory_order_release);
 			mSources->UpdateImpulseResponseMode(mode);
+			if (mode)
+				headphoneEQ.Reset();		// TO DO: Should this be here?
 		}
 	}
 }
