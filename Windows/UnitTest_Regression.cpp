@@ -121,7 +121,7 @@ namespace RAC
 
 		Init(config);
 		UpdateIEMConfig(iemConfig);
-		UpdateImpulseResponseMode(config->GetLerpFactor(), true);
+		UpdateImpulseResponseMode(true);
 		UpdateReverbTime(ReverbFormula::Sabine);
 		bool filesLoaded = false;
 
