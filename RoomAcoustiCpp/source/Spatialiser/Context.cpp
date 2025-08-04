@@ -103,23 +103,22 @@ namespace RAC
 			mListener = mCore.CreateListener();
 			headRadius = mListener->GetHeadRadius();
 
-			mReverb = std::make_shared<Reverb>(&mCore, mConfig);
+			InitialiseAudio();
 			mRoom = std::make_shared<Room>(mConfig->frequencyBands.Length());
 			mSources = std::make_shared<SourceManager>(&mCore, mConfig);
-			mImageEdgeModel = std::make_shared<ImageEdge>(mRoom, mSources, mReverb, mConfig->frequencyBands);
+
+			mImageEdgeModel = std::make_shared<ImageEdge>(mRoom, mSources, mReverb, mConfig);
 			
 			// Initialize NNs
 			myNN_initialize();
 
 			// Start background thread after all systems are initialized
 			IEMThread = std::thread(BackgroundProcessor, this);
-			audioThreadPool = std::make_unique<AudioThreadPool>(std::min((unsigned int)8, std::thread::hardware_concurrency()), mConfig->numFrames, mConfig->numLateReverbChannels);
+			
 
 			mInputBuffer = Buffer(mConfig->numFrames);
 			mOutputBuffer = Buffer(2 * mConfig->numFrames); // Stereo output buffer
 			mSendBuffer = std::vector<float>(2 * mConfig->numFrames, 0.0);
-			mReverbInput = Matrix<>(mConfig->numLateReverbChannels, mConfig->numFrames);
-			
 		}
 
 		////////////////////////////////////////
@@ -163,6 +162,32 @@ namespace RAC
 
 		////////////////////////////////////////
 
+		void Context::InitialiseAudio()
+		{
+			size_t numThreads = std::min((unsigned int)8, std::thread::hardware_concurrency());
+			switch (mConfig->lateReverbModel.load(std::memory_order_acquire))
+			{
+			case LateReverbModel::fdn:
+				audioThreadPool = std::make_unique<AudioThreadPool>(numThreads, mConfig->numFrames, mConfig->numReverbSources, mConfig->numFrames, mConfig->numReverbSources);
+				mReverb = std::make_shared<SingleFDN>(&mCore, mConfig);
+				mReverbInput = Matrix<>(mConfig->numReverbSources, mConfig->numFrames);
+				break;
+			case LateReverbModel::raves:
+				audioThreadPool = std::make_unique<AudioThreadPool>(numThreads, mConfig->numFrames, mConfig->numRavesFDNs, 2 * mConfig->numFrames, mConfig->numReverbSources);
+				mReverb = std::make_shared<RAVES>(&mCore, mConfig);
+				mReverbInput = Matrix<>(mConfig->numRavesFDNs, 2 * mConfig->numFrames);
+				break;
+			default:
+				// Unknown late reverb model, using default SingleFDN
+				audioThreadPool = std::make_unique<AudioThreadPool>(numThreads, mConfig->numFrames, mConfig->numReverbSources, mConfig->numFrames, mConfig->numReverbSources);
+				mReverb = std::make_shared<SingleFDN>(&mCore, mConfig);
+				mReverbInput = Matrix<>(mConfig->numReverbSources, mConfig->numFrames);
+				break;
+			}
+		}
+
+		////////////////////////////////////////
+
 		bool Context::LoadSpatialisationFiles(const int hrtfResamplingStep, const std::vector<std::string>& filePaths)
 		{
 			unique_lock<shared_mutex> lock(tuneInMutex);
@@ -194,7 +219,8 @@ namespace RAC
 		void Context::UpdateReverbTime(const ReverbFormula model)
 		{
 			mRoom->UpdateReverbTimeFormula(model);
-			mReverb->SetTargetT60(mRoom->GetReverbTime());
+			Coefficients<> T60 = mRoom->GetReverbTime();
+			mReverb->SetTargetT60(T60);
 		}
 
 		////////////////////////////////////////
@@ -212,6 +238,40 @@ namespace RAC
 			mConfig->diffractionModel.store(model, std::memory_order_release);
 			mImageEdgeModel->UpdateDiffractionModel(model);
 			mSources->UpdateDiffractionModel(model);
+		}
+
+		////////////////////////////////////////
+
+		// How to stop ImageSources and Sources trying the write in old format to new
+		// reverbSend matrix (in case IE model slow to update)?
+		void Context::UpdateLateReverbModel(const LateReverbModel model)
+		{
+			while (audioFlag.exchange(true, std::memory_order_acquire))
+				std::this_thread::yield();
+
+			// SingleFDN currently not working - background thread keeps running. Tries to access Reverb when being changed/before initialised
+			mConfig->lateReverbModel.store(model, std::memory_order_release);
+			mImageEdgeModel->UpdateLateReverbModel(model);
+			audioThreadPool->Stop(); // Stop the audio thread pool to reinitialize the reverb
+			InitialiseAudio();
+
+			if (model == LateReverbModel::raves)
+			{
+				std::vector<Coefficients<>> T60s(mConfig->numRavesFDNs, Coefficients<>(1));
+				for (int i = 0; i < mConfig->numRavesFDNs; ++i)
+					T60s[i] = (0.5 * i + 0.5) * mRoom->GetReverbTime();
+				Vec delayLineLengths({1.0, 1.7, 3.2});
+				mReverb->InitLateReverb(T60s, delayLineLengths, FDNMatrix::randomOrthogonal, mConfig);
+				std::vector<Absorption<>> listenerResiduals(mConfig->numRavesFDNs, Absorption<>(mConfig->numReverbSources));
+				for (int i = 0; i < mConfig->numRavesFDNs; ++i)
+				{
+					for (int j = 0; j < mConfig->numReverbSources; ++j)
+						listenerResiduals[i][j] = (0.5 * i - 0.5) + (0.2 * j - 0.6);
+				}
+				mReverb->SetTargetOutputFilters(listenerResiduals);
+			}
+
+			audioFlag.store(false, std::memory_order_release);
 		}
 
 		////////////////////////////////////////
@@ -349,14 +409,14 @@ namespace RAC
 
 		void Context::GetOutput(float** bufferPtr)
 		{
+			if (audioFlag.exchange(true, std::memory_order_acquire))
+				return;
+
 			PROFILE_AudioThread;
 			const Real lerpFactor = mConfig->GetLerpFactor();
 			mSources->ProcessAudio(mOutputBuffer, mReverbInput, lerpFactor);
 
 			mReverb->ProcessAudio(mReverbInput, mOutputBuffer, lerpFactor);
-			mReverb->ProcessComplexAudio(mReverbInputComplex, mOutputBufferComplex, lerpFactor);
-			mReverb->ProcessComplexPairAudio(mReverbInputComplexPair, mOutputBufferComplexPair, lerpFactor);
-
 			if (applyHeadphoneEQ)
 				headphoneEQ.ProcessAudio(mOutputBuffer, mOutputBuffer, lerpFactor);
 			
@@ -367,12 +427,9 @@ namespace RAC
 
 			// Reset output buffer
 			mOutputBuffer.Reset();
-			mOutputBufferComplex.Reset();
-			mOutputBufferComplexPair.Reset();
-
 			mReverbInput.Reset();
-			mReverbInputComplex.Reset();
-			mReverbInputComplexPair.Reset();
+
+			audioFlag.store(false, std::memory_order_release);
 		}
 
 		////////////////////////////////////////

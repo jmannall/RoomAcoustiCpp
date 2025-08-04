@@ -495,6 +495,7 @@ namespace RAC
 			*
 			* @param len The number of coefficients
 			*/
+			template <typename U = T, std::enable_if_t<std::is_constructible<U, size_t, Real>::value, int> = 0>
 			Absorption(int len) : Coefficients<T>(len, 1.0), mArea(0.0) {}
 
 			/**

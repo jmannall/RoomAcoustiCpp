@@ -15,6 +15,8 @@
 
 // Spatialiser headers
 #include "Spatialiser/Types.h"
+// RAVES headers
+#include"Spatialiser/RAVESResidual.h"
 
 // Common headers
 #include "Common/Types.h"
@@ -46,11 +48,16 @@ namespace RAC
 			* @param T60 Target decay time
 			* @param config Configuration of the spatialiser
 			*/
-			FDNChannel(const int delayLength, const Coefficients<>& T60, const std::shared_ptr<Config> config) :
+			// template <typename U = T, std::enable_if_t<std::is_same_v<U, Real>, bool> = true>
+			FDNChannel(const int delayLength, const Coefficients<>& T60, const std::shared_ptr<Config> config) requires std::is_same_v<T, Real> :
 				mT(static_cast<Real>(delayLength) / config->fs), mBuffer(delayLength),
 				mAbsorptionFilter(CalculateFilterGains(T60), config->frequencyBands, config->Q, config->fs),
-				mReflectionFilter(config->frequencyBands, config->Q, config->fs), idx(0) {
-			}
+				mReflectionFilter(config->frequencyBands, config->Q, config->fs) {}
+
+			template <typename U = T, std::enable_if_t<std::is_same_v<U, Complex>, bool> = true>
+			FDNChannel(const int delayLength, const Coefficients<>& T60, const std::shared_ptr<Config> config) requires std::is_same_v<T, Complex> :
+				mT(static_cast<Real>(delayLength) / config->fs), mBuffer(delayLength),
+				mAbsorptionFilter(CalculateFilterGains(T60), config->frequencyBands, config->Q, config->fs) {}
 
 			/**
 			* @brief Default deconstructor
@@ -74,6 +81,7 @@ namespace RAC
 			* @return True if all current and target reflection gains are zero, false otherwise
 			*/
 			inline bool SetTargetReflectionFilter(const Coefficients<>& gains)
+			requires std::is_same_v<T, Real>
 			{
 				return mReflectionFilter.SetTargetGains(gains);
 			}
@@ -81,11 +89,17 @@ namespace RAC
 			/**
 			* @brief Resets the internal buffers to zero
 			*/
-			inline void Reset()
+			inline void Reset() requires std::is_same_v<T, Real>
 			{
 				clearBuffers.store(true, std::memory_order_release);
 				mAbsorptionFilter.ClearBuffers();
 				mReflectionFilter.ClearBuffers();
+			}
+
+			inline void Reset() requires std::is_same_v<T, Complex>
+			{
+				clearBuffers.store(true, std::memory_order_release);
+				mAbsorptionFilter.ClearBuffers();
 			}
 
 			/**
@@ -97,6 +111,7 @@ namespace RAC
 			* @param lerpFactor The linear interpolation factor
 			*/
 			inline void ProcessOutput(const Buffer<T>& data, Buffer<T>& outputBuffer, const Real lerpFactor)
+			requires std::is_same_v<T, Real>
 			{
 				mReflectionFilter.ProcessAudio(data, outputBuffer, lerpFactor);
 			}
@@ -120,11 +135,12 @@ namespace RAC
 			inline Coefficients<> CalculateFilterGains(const Coefficients<>& T60) const { return (-3.0 * mT / T60).Pow10(); } // 20 * log10(H(f)) = -60 * t / t60(f);
 
 			const Real mT;		// The current delay in seconds
-			Buffer<T> mBuffer;		// The internal delay line
-			int idx;			// Current delay line read index
+			Buffer<T> mBuffer;	// The internal delay line
+			int idx{ 0 };			// Current delay line read index
 
 			GraphicEQ<T> mAbsorptionFilter;		// The absorption filter to match the target decay time
-			GraphicEQ<T> mReflectionFilter;		// The reflection filter on the FDN output
+			std::conditional_t<std::is_same_v<T, Real>,
+				GraphicEQ<Real>, std::nullptr_t> mReflectionFilter;		// The reflection filter on the FDN output
 
 			std::atomic<bool> clearBuffers{ false };		// Flag to clear buffers to zeros next time GetOutput is called
 		};
@@ -144,7 +160,7 @@ namespace RAC
 			* @param dimensions Primary room dimensions that determine delay line lengths
 			* @param config The spatialiser configuration
 			*/
-			FDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<Config> config) : FDN(T60, dimensions, config, InitMatrix(config->numLateReverbChannels)) {}
+			FDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<Config> config) : FDN(T60, dimensions, config, InitMatrix(config->numReverbSources)) {}
 
 			/**
 			* @brief Default deconstructor
@@ -158,6 +174,14 @@ namespace RAC
 			*/
 			void SetTargetT60(const Coefficients<>& T60);
 
+			inline void SetTargetResiduals(const Coefficients<>& residuals)
+			requires std::is_same_v<T, Complex>
+			{
+				assert(residuals.Length() == ravesResiduals.size());
+				for (int i = 0; i < ravesResiduals.size(); i++)
+					ravesResiduals[i].SetTargetEnergy(residuals[i]);
+			}
+
 			/**
 			* @brief Sets the target reflection filters for each channel
 			*
@@ -165,13 +189,26 @@ namespace RAC
 			* @return True if all channels have zero target reflection gains, false otherwise
 			*/
 			inline bool SetTargetReflectionFilters(const std::vector<Absorption<>>& gains)
+			requires std::is_same_v<T, Real>
 			{
-				assert(gains.size() == mChannels.size());
+				// assert(gains.size() == mChannels.size());
 
 				bool isZero = true;
-				for (size_t i = 0; i < mChannels.size(); i++)
+				for (int i = 0; i < mChannels.size(); i++)
 					isZero = mChannels[i]->SetTargetReflectionFilter(gains[i]) && isZero;
 				return isZero;
+			}
+
+			inline void SetTimeDelay(Real delay, int fs)
+			requires std::is_same_v<T, Complex>
+			{
+				delayBuffer.ResizeBuffer(static_cast<int>(delay * fs));
+			}
+
+			inline void SubmitAudio(const std::vector<Real>& input)
+			requires std::is_same_v<T, Complex> 
+			{ 
+				inputData = reinterpret_cast<const Complex*>(input.data());
 			}
 
 			/**
@@ -180,7 +217,9 @@ namespace RAC
 			* @param data Multichannel audio data input (numChannels x numFrames)
 			* @param outputBuffers Output buffers to write to
 			*/
-			void ProcessAudio(const Matrix<T>& data, std::vector<Buffer<T>>& outputBuffers, const Real lerpFactor);
+			void ProcessAudio(const Matrix<>& data, std::vector<Buffer<>>& outputBuffers, const Real lerpFactor);
+
+			void ProcessAudio(std::vector<Buffer<>>& outputBuffers, const Real lerpFactor);
 
 			/**
 			* @brief Resets all internal FDN buffers to zero
@@ -212,15 +251,13 @@ namespace RAC
 			Rowvec<T> y;	// Previous output audio buffer
 
 		private:
-			friend class ComplexFDN;
-
 			/**
 			* @brief Calculate a sample delay based on given distances
 			*
 			* @param dimensions Primary room dimensions
 			* @return Sample delays for each FDN channel
 			*/
-			std::vector<int> CalculateTimeDelay(const Vec<>& dimensions, const int numLateReverbChannels, const int fs);
+			std::vector<int> CalculateTimeDelay(const Vec<>& dimensions, const int numReverbSources, const int fs);
 
 			/**
 			* @brief Initialises a default diagonal matrix
@@ -266,11 +303,24 @@ namespace RAC
 			const Matrix<> feedbackMatrix;	// Feedback matrix
 
 			std::vector<std::unique_ptr<FDNChannel<T>>> mChannels;		// Internal delay line channels
+			
+			std::conditional_t<std::is_same_v<T, Complex>,
+				std::vector<RAVESListenerResidual>, std::nullptr_t> ravesResiduals; // Residuals for the RAVES algorithm
+
+			std::conditional_t<std::is_same_v<T, Complex>,
+				Buffer<Complex>, std::nullptr_t> delayBuffer;
+
+			std::conditional_t<std::is_same_v<T, Complex>,
+				int, std::nullptr_t> idx{ 0 };
+
+			std::conditional_t<std::is_same_v<T, Complex>,
+				const Complex*, std::nullptr_t> inputData{ nullptr };
 
 			std::atomic<bool> clearBuffers{ false };		// Flag to clear buffers to zeros next time GetOutput is called
 		};
 
-		class HouseHolderFDN : public FDN<>
+		template <typename T = Real>
+		class HouseHolderFDN : public FDN<T>
 		{
 		public:
 			/**
@@ -282,7 +332,7 @@ namespace RAC
 			* @param config The spatialiser configuration
 			*/
 			HouseHolderFDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<Config> config)
-				: FDN<>(T60, dimensions, config, Matrix()), houseHolderFactor(2.0 / static_cast<Real>(config->numLateReverbChannels)) {}
+				: FDN<T>(T60, dimensions, config, Matrix()), houseHolderFactor(2.0 / static_cast<Real>(config->numReverbSources)) {}
 
 			/**
 			* @brief Default deconstructor
@@ -294,7 +344,7 @@ namespace RAC
 			*/
 			inline void ProcessMatrix() override
 			{
-				Real entry = houseHolderFactor * this->y.Sum();
+				T entry = houseHolderFactor * this->y.Sum();
 				for (int i = 0; i < this->y.Cols(); i++)
 					this->x[i] = entry - this->y[i];
 			}
@@ -317,7 +367,7 @@ namespace RAC
 			* @param config The spatialiser configuration
 			*/
 			RandomOrthogonalFDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<Config> config)
-				: FDN<T>(T60, dimensions, config, InitMatrix(config->numLateReverbChannels)) {}
+				: FDN<T>(T60, dimensions, config, InitMatrix(config->numReverbSources)) {}
 
 			/**
 			* @brief Default deconstructor

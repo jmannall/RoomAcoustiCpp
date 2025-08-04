@@ -175,12 +175,12 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		std::vector<Vec3> Reverb::CalculateSourcePositions(const int numLateReverbChannels) const
+		std::vector<Vec3> Reverb::CalculateSourcePositions(const int numReverbSources) const
 		{
 			// Distribute reverb sources around the listener
 			std::vector<Vec3> points;
-			points.reserve(numLateReverbChannels);
-			switch (numLateReverbChannels)
+			points.reserve(numReverbSources);
+			switch (numReverbSources)
 			{
 			case 1:
 			{ points.emplace_back(0.0, 0.0, 1.0); break; }
@@ -218,96 +218,147 @@ namespace RAC
 
 		void Reverb::ProcessAudio(const Matrix<>& data, Buffer<>& outputBuffer, const Real lerpFactor)
 		{
-			{
-				PROFILE_LateReverb
-					if (!running.load(std::memory_order_acquire))
-						return;
+			PROFILE_LateReverb
+			if (!running.load(std::memory_order_acquire))
+				return;
 
-				mFDN.load(std::memory_order_acquire)->ProcessAudio(data, reverbSourceInputs, lerpFactor);
-			}
+			ProcessReverberator(data, reverbSourceInputs, lerpFactor);
+
 			audioThreadPool->ProcessReverbSources(mReverbSources, outputBuffer);
 			/*for (auto& source : mReverbSources)
 				source->ProcessAudio(outputBuffer);*/
 		}
 
-		void Reverb::ProcessComplexAudio(const Matrix<Complex>& data, Buffer<Complex>& outputBuffer, const Real lerpFactor)
-		{
-			PROFILE_LateReverbComplex
-			if (!running.load(std::memory_order_acquire))
-				return;
-
-			complexFDN.load(std::memory_order_acquire)->ProcessAudio(data, reverbSourceInputsComplex, lerpFactor);
-		}
-
-		void Reverb::ProcessComplexPairAudio(const Matrix<ComplexPair>& data, Buffer<ComplexPair>& outputBuffer, const Real lerpFactor)
-		{
-			PROFILE_LateReverbComplexPair
-				if (!running.load(std::memory_order_acquire))
-					return;
-
-			complexPairFDN.load(std::memory_order_acquire)->ProcessAudio(data, reverbSourceInputsComplexPair, lerpFactor);
-		}
-
 		////////////////////////////////////////
 
-		void Reverb::SetTargetT60(const Coefficients<>& T60)
+		void SingleFDN::SetTargetT60(const Coefficients<>& T60)
 		{
 			if (!initialised.load(std::memory_order_acquire))
 				return;
 
 #ifdef DEBUG_INIT
-			Debug::Log("Init FDN: [" + RealToStr(T60[0]) + ", " + RealToStr(T60[1]) + ", " +
-				RealToStr(T60[2]) + ", " + RealToStr(T60[3]) + ", " + RealToStr(T60[4]) + "]", Colour::Green);
+			Debug::Log("Init FDN: [" + CoefficientToStr(T60[0]) + "]", Colour::Green);
 #endif
+
 			mFDN.load(std::memory_order_acquire)->SetTargetT60(T60);
-			complexFDN.load(std::memory_order_acquire)->SetTargetT60(T60);
-			complexPairFDN.load(std::memory_order_acquire)->SetTargetT60(T60);
 		}
 
 		////////////////////////////////////////
 
-		void Reverb::InitLateReverb(const Coefficients<>& T60, const Vec<>& dimensions, const FDNMatrix matrix, const std::shared_ptr<Config> config)
+		void SingleFDN::InitLateReverb(const Coefficients<>& T60, const Vec<>& delayLineLengths, const FDNMatrix matrix, const std::shared_ptr<Config> config)
 		{
             std::shared_ptr<FDN<>> fdn;
             switch (matrix)
             {
             case FDNMatrix::householder:
-                fdn = std::make_shared<HouseHolderFDN>(T60, dimensions, config);
+                fdn = std::make_shared<HouseHolderFDN<>>(T60, delayLineLengths, config);
                 break;
             case FDNMatrix::randomOrthogonal:
-                fdn = std::make_shared<RandomOrthogonalFDN<>>(T60, dimensions, config);
+                fdn = std::make_shared<RandomOrthogonalFDN<>>(T60, delayLineLengths, config);
                 break;
             default:
-                fdn = std::make_shared<FDN<>>(T60, dimensions, config);
+                fdn = std::make_shared<FDN<>>(T60, delayLineLengths, config);
                 break;
             }
 			releasePool.Add(fdn);
             mFDN.store(fdn, std::memory_order_release);
-
-			std::shared_ptr<RandomOrthogonalFDN<Complex>> fdnComplex = std::make_shared<RandomOrthogonalFDN<Complex>>(T60, dimensions, config);
-			std::shared_ptr<RandomOrthogonalFDN<ComplexPair>> fdnComplexPair = std::make_shared<RandomOrthogonalFDN<ComplexPair>>(T60, dimensions, config);
-
-			complexFDN.store(fdnComplex, std::memory_order_release);
-			complexPairFDN.store(fdnComplexPair, std::memory_order_release);
 
 			initialised.store(true, std::memory_order_release);
 		}
 
 		////////////////////////////////////////
 
-		void Reverb::UpdateReflectionFilters(const std::vector<Absorption<>>& absorptions)
+		void SingleFDN::SetTargetOutputFilters(const std::vector<Absorption<>>& gains)
 		{
 			PROFILE_UpdateAudioData
 			if (!initialised.load(std::memory_order_acquire))
 				return;
-			bool isZero = mFDN.load(std::memory_order_acquire)->SetTargetReflectionFilters(absorptions);
+
+			bool isZero = mFDN.load(std::memory_order_acquire)->SetTargetReflectionFilters(gains);
 			if (isZero)
 			{
-				mFDN.load(std::memory_order_acquire)->Reset();
+				Reset();
 				running.store(false, std::memory_order_release);
 			}
 			else
 				running.store(true, std::memory_order_release);
+		}
+
+		////////////////////////////////////////
+
+		void RAVES::InitLateReverb(const std::vector<Coefficients<>>& T60, const Vec<>& delayLineLengths, const FDNMatrix matrix, const std::shared_ptr<Config> config)
+		{
+			FDNPtr fdns = std::make_shared<std::vector<std::unique_ptr<FDN<Complex>>>>(config->numRavesFDNs);
+			// fdns->reserve(config->numRavesFDNs);
+			for (int i = 0; i < config->numRavesFDNs; i++)
+			{
+				switch (matrix)
+				{
+				case FDNMatrix::householder:
+					fdns->at(i) = std::make_unique<HouseHolderFDN<Complex>>(T60[i], delayLineLengths, config);
+					break;
+				case FDNMatrix::randomOrthogonal:
+					fdns->at(i) = std::make_unique<RandomOrthogonalFDN<Complex>>(T60[i], delayLineLengths, config);
+					break;
+				default:
+					fdns->at(i) = std::make_unique<FDN<Complex>>(T60[i], delayLineLengths, config);
+					break;
+				}
+			}
+			releasePool.Add(fdns);
+
+			mFDNs.store(fdns, std::memory_order_release);
+			initialised.store(true, std::memory_order_release);
+		}
+
+		////////////////////////////////////////
+
+		void RAVES::SetTargetT60s(const std::vector<Coefficients<>>& T60s)
+		{
+			if (!initialised.load(std::memory_order_acquire))
+				return;
+
+			auto fdns = mFDNs.load();
+			assert(T60s.size() == fdns->size());
+			for (int i = 0; i < fdns->size(); i++)
+			{
+#ifdef DEBUG_INIT
+				Debug::Log("Init FDN: [" + CoefficientToStr(T60s[0]) + "]", Colour::Green);
+#endif
+				fdns->at(i)->SetTargetT60(T60s[i]);
+			}
+		}
+		
+		////////////////////////////////////////
+
+		void RAVES::SetTargetOutputFilters(const std::vector<Absorption<>>& residuals)
+		{
+			if (!initialised.load(std::memory_order_acquire))
+				return;
+
+			auto fdns = mFDNs.load();	
+			for (int i = 0; i < fdns->size(); i++)
+				fdns->at(i)->SetTargetResiduals(residuals[i]);
+			running.store(true, std::memory_order_release);
+		}
+
+		////////////////////////////////////////
+
+		void RAVES::ProcessReverberator(const Matrix<>& data, std::vector<Buffer<>>& outputBuffers, const Real lerpFactor)
+		{
+			for (Buffer<>& buffer : outputBuffers)
+				buffer.Reset();
+
+			if (!initialised.load(std::memory_order_acquire))
+				return;
+
+			auto fdns = mFDNs.load(); // Parallelise the processing of multiple FDNs
+			for (int i = 0; i < fdns->size(); i++)
+				fdns->at(i)->SubmitAudio(data[i]);
+
+			audioThreadPool->ProcessFDNs(*fdns, outputBuffers, lerpFactor);
+			/*for (int i = 0; i < fdns->size(); i++)
+				fdns->at(i)->ProcessAudio(outputBuffers, lerpFactor);*/
 		}
 	}
 }

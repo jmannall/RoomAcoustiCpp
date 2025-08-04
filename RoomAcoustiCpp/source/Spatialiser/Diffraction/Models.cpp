@@ -28,10 +28,8 @@ namespace RAC
 					return;
 				}
 
-				FlushDenormals();
 				for (int i = 0; i < inBuffer.Length(); i++)
 					outBuffer[i] = gain.Use(lerpFactor) * inBuffer[i];
-				NoFlushDenormals();
 			}
 
 			//////////////////// LPF class ////////////////////
@@ -46,10 +44,8 @@ namespace RAC
 					return;
 				}
 
-				FlushDenormals();
 				for (int i = 0; i < inBuffer.Length(); i++)
 					outBuffer[i] = gain.Use(lerpFactor) * filter.GetOutput(inBuffer[i], lerpFactor);
-				NoFlushDenormals();
 			}
 
 			//////////////////// NN class ////////////////////
@@ -133,10 +129,8 @@ namespace RAC
 					return;
 				}
 
-				FlushDenormals();
 				for (int i = 0; i < inBuffer.Length(); i++)
 					outBuffer[i] = filter.GetOutput(inBuffer[i], lerpFactor);
-				NoFlushDenormals();
 			}
 
 			//////////////////// UTD class ////////////////////
@@ -225,10 +219,8 @@ namespace RAC
 
 			void UTD::ProcessAudio(const Buffer<>& inBuffer, Buffer<>& outBuffer, const Real lerpFactor)
 			{
-				FlushDenormals();
 				for (int i = 0; i < inBuffer.Length(); i++)
 					outBuffer[i] = lrFilter.GetOutput(inBuffer[i], lerpFactor);
-				NoFlushDenormals();
 			}
 
 			//////////////////// BTM class ////////////////////
@@ -571,10 +563,8 @@ namespace RAC
 					return;
 				}
 
-				FlushDenormals();	// Only needed if interpolating but expensive to call every sample
 				for (int i = 0; i < inBuffer.Length(); i++)
 					outBuffer[i] = firFilter.GetOutput(inBuffer[i], lerpFactor);
-				NoFlushDenormals();
 			}
 		}
 	}

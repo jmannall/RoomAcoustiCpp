@@ -63,7 +63,7 @@ namespace RAC
 		*
 		* @param config The new configuration for the IEM.
 		*/
-		void UpdateIEMConfig(const IEMConfig& config);
+		void UpdateIEMConfig(const IEMData& data);
 
 		/**
 		* Updates the model in order to calculate the late reverberation time (T60).
@@ -85,6 +85,13 @@ namespace RAC
 		* @param model The diffraction model.
 		*/
 		void UpdateDiffractionModel(const DiffractionModel model);
+
+		/**
+		* Updates the model used to process late reveberation.
+		*
+		* @param model The late reverberation model.
+		*/
+		void UpdateLateReverbModel(const LateReverbModel model);
 
 		/**
 		* Updates the volume and dimensions of the room.

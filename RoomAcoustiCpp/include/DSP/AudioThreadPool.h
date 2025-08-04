@@ -18,6 +18,7 @@
 #include "Spatialiser/Source.h"
 #include "Spatialiser/ImageSourceManager.h"
 #include "Spatialiser/Reverb.h"
+#include "Spatialiser/FDN.h"
 
 // Common headers
 #include "Common/Definitions.h"
@@ -44,7 +45,7 @@ namespace RAC
                 /**
 				* @brief Pure virtual function to run the audio task
                 */
-                virtual void Run(Buffer<>& out, Matrix<>& reverb) = 0;
+                virtual void Run(Buffer<>& out, Matrix<>& reverbInput, std::vector<Buffer<>>& reverbOutput) = 0;
 
                 /**
 				* @brief Default virtual destructor
@@ -66,9 +67,14 @@ namespace RAC
                     : source(source), lerpFactor(lerpFactor), tasksRemaining(tasksRemaining) {
                 }
 
-                void Run(Buffer<>& out, Matrix<>& reverb) override
+                void Run(Buffer<>& output, Matrix<>& reverbInput, std::vector<Buffer<>>& reverbOutput) override
                 {
-                    ProcessAudio(out, reverb, std::is_same<T, ReverbSource>{});
+                    if constexpr (std::is_same_v<T, ReverbSource>)
+                        source->ProcessAudio(output);
+                    else if constexpr (std::is_same_v<T, FDN<Complex>>)
+                        source->ProcessAudio(reverbOutput, lerpFactor);
+                    else // Source, ImageSource
+                        source->ProcessAudio(output, reverbInput, lerpFactor);
                     tasksRemaining->Subtract();
                 }
 
@@ -85,10 +91,11 @@ namespace RAC
 			* @brief Constructor that initialises the audio thread pool with a given number of threads
             * 
 			* @param numThreads The number of threads to create in the pool
-			* @param numFrames The number of frames per audio buffer
+			* @param numSamples The number of samples per audio frame
 			* @param numLateReverbChannels The number of channels for late reverb processing
+            * @param numLateReverbSamples The number of samples per audio frame for late reverb send
             */
-            AudioThreadPool(size_t numThreads, int numFrames, int numLateReverbChannels);
+            AudioThreadPool(size_t numThreads, int numSamples, int numLateReverbChannels, int numLateReverbSamples, int numReverbSources);
 
             /**
 			* @brief Default destructor that stops all threads
@@ -103,7 +110,8 @@ namespace RAC
 			* @param tasksRemaining Pointer to the spin lock for tracking remaining tasks
             */
             template <typename T>
-            void Enqueue(T* source, SpinLock* tasksRemaining, Real lerpFactor) {
+            void Enqueue(T* source, SpinLock* tasksRemaining, Real lerpFactor)
+            {
                 static_assert(std::is_member_function_pointer_v<decltype(&T::ProcessAudio)>, "T must have a ProcessAudio member function");
                 static_assert(std::is_same_v<decltype(&T::ProcessAudio), void (T::*)(Buffer<>&, Matrix<>&, Real)>, "T::ProcessAudio must be of type void (T::*)(Buffer&, Matrix&, Real)");
                 std::shared_ptr<AudioTaskBase> task = std::make_shared<AudioTask<T>>(source, tasksRemaining, lerpFactor);
@@ -116,10 +124,25 @@ namespace RAC
             * @param source Pointer to the ReverbSource object
             * @param tasksRemaining Pointer to the spin lock for tracking remaining tasks
             */
-            void Enqueue(ReverbSource* source, SpinLock* tasksRemaining) {
+            void Enqueue(ReverbSource* source, SpinLock* tasksRemaining)
+            {
                 static_assert(std::is_member_function_pointer_v<decltype(&ReverbSource::ProcessAudio)>, "T must have a ProcessAudio member function");
                 static_assert(std::is_same_v<decltype(&ReverbSource::ProcessAudio), void (ReverbSource::*)(Buffer<>&)>, "T::ProcessAudio must be of type void (T::*)(Buffer&)");
                 std::shared_ptr<AudioTaskBase> task = std::make_shared<AudioTask<ReverbSource>>(source, tasksRemaining);
+                tasks.try_enqueue(std::move(task));
+            }
+
+            /**
+            * @brief Adds an audio task to the queue (specialized for ReverbSource)
+            *
+            * @param source Pointer to the ReverbSource object
+            * @param tasksRemaining Pointer to the spin lock for tracking remaining tasks
+            */
+            void Enqueue(FDN<Complex>* fdn, SpinLock* tasksRemaining, Real lerpFactor)
+            {
+                //static_assert(std::is_member_function_pointer_v<decltype(&FDN<Complex>::ProcessAudio)>, "T must have a ProcessAudio member function");
+                //static_assert(std::is_same_v<decltype(&FDN<Complex>::ProcessAudio), void (FDN<Complex>::*)(std::vector<Buffer<>>&, Real)>, "T::ProcessAudio must be of type void (T::*)(Buffer&, Real)");
+                std::shared_ptr<AudioTaskBase> task = std::make_shared<AudioTask<FDN<Complex>>>(fdn, tasksRemaining, lerpFactor);
                 tasks.try_enqueue(std::move(task));
             }
 
@@ -156,6 +179,8 @@ namespace RAC
             */
             void ProcessReverbSources(std::vector<std::unique_ptr<ReverbSource>>& reverbSources, Buffer<>& outputBuffer);
 
+            void ProcessFDNs(std::vector<std::unique_ptr<FDN<Complex>>>& FDNs, std::vector<Buffer<>>& outputBuffers, Real lerpFactor);
+
         private:
             moodycamel::ConcurrentQueue<std::shared_ptr<AudioTaskBase>> tasks;  // Lock-free queue
 
@@ -163,8 +188,9 @@ namespace RAC
             std::atomic<bool> stop;             // Flag to stop the thread pool
 			size_t threadCount;                 // Number of threads in the pool
 
-			std::vector<Buffer<>> threadOutputBuffers;    // Output buffers for each thread
-			std::vector<Matrix<>> threadReverbBuffers;    // Reverb input matrices for each thread
+			std::vector<Buffer<>> threadOutputBuffers;      // Output buffers for each thread
+            std::vector<std::vector<Buffer<>>> threadReverbOutputs;      // Reverb output matrices for each thread
+			std::vector<Matrix<>> threadReverbInputs;       // Reverb input matrices for each thread
         };
     }
 }

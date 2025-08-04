@@ -23,6 +23,8 @@
 #include "Spatialiser/AirAbsorption.h"
 #include "Spatialiser/ImageSource.h"
 #include "Spatialiser/ImageSourceManager.h"
+// RAVES headers
+#include "Spatialiser/RAVESResidual.h"
 
 // 3DTI headers
 #include "BinauralSpatializer/Core.h"
@@ -49,9 +51,9 @@ namespace RAC
 			struct AudioData
 			{
 				Absorption<> directivity;	// Frequency dependent directivity
-				bool feedsFDN;				// True if direct sound feeds the late reverberation, false otherwise
+				LateReverbModel reverbSend;				// True if direct sound feeds the late reverberation, false otherwise
 
-				AudioData(int len, bool feedsFDN) : directivity(len), feedsFDN(feedsFDN) {}
+				AudioData(int len, LateReverbModel feedsFDN) : directivity(len), reverbSend(reverbSend) {}
 			};
 
 			/**
@@ -77,7 +79,8 @@ namespace RAC
 			* @param imageSources Reference to the image source array
 			* @params config The spatialiser configuration
 			*/
-			Source(Binaural::CCore* core, ImageSourceManager& imageSources, const std::shared_ptr<Config>& config) : Access(), mCore(core), imageSources(imageSources), inputBuffer(config->numFrames), spatialisationMode(config->GetSpatialisationMode())
+			Source(Binaural::CCore* core, ImageSourceManager& imageSources, const std::shared_ptr<Config>& config) : Access(), mCore(core), imageSources(imageSources), inputBuffer(config->numFrames), spatialisationMode(config->GetSpatialisationMode()),
+				ravesResiduals(config->numRavesFDNs)
 			{
 				dataMutex = std::make_shared<std::mutex>();
 			}
@@ -186,6 +189,15 @@ namespace RAC
 			*/
 			inline bool HasChanged() { return hasChanged.exchange(false, std::memory_order_acq_rel); }
 			
+			inline void SetTargetResiduals(const Coefficients<>& residuals)
+			{
+				if (!GetAccess())
+					return;
+				assert(residuals.Length() == ravesResiduals.size());
+				for (int i = 0; i < ravesResiduals.size(); i++)
+					ravesResiduals[i].SetTargetEnergy(residuals[i]);
+			}
+
 			/**
 			* @brief Process a single audio frame
 			* 
@@ -305,13 +317,15 @@ namespace RAC
 			std::unique_ptr<GraphicEQ<>> directivityFilter;		// Directivity filter
 			std::unique_ptr<GraphicEQ<>> reverbInputFilter;		// Reverb energy based on directivity
 
-			std::atomic<SourceDirectivity> mDirectivity;	// Source directivity
-			std::atomic<bool> feedsFDN{ false };			// True if the source feeds the FDN
+			std::atomic<SourceDirectivity> mDirectivity;						// Source directivity
+			std::atomic<LateReverbModel> reverbSend{ LateReverbModel::none };	// Current reverb model for reverb send
 
 			std::atomic<bool> clearInputBuffer{ false };	// True if the input buffer should be cleared, false otherwise
-			Buffer<> inputBuffer;								// Input audio buffer for the source
-			Buffer<> bStore;									// Internal scratch audio buffer
+			Buffer<> inputBuffer;							// Input audio buffer for the source
+			Buffer<> bStore;								// Internal scratch audio buffer
 			Buffer<> bStoreReverb;							// Internal audio buffer reverb send
+			std::vector<Parameter> ravesGains;
+			std::vector<RAVESSourceResidual> ravesResiduals;			// Residuals for the RAVES algorithm
 
 			Vec3 currentPosition;						// Current source position
 			Vec4 currentOrientation;					// Current source orientation

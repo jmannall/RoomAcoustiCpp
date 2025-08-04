@@ -500,7 +500,7 @@ namespace RAC
 				return;
 			}
 
-			if (!diffraction ||currentDiffractionModel.exchange(model, std::memory_order_acq_rel) == model)
+			if (currentDiffractionModel.exchange(model, std::memory_order_acq_rel) == model)
 			{
 				FreeAccess();
 				return;

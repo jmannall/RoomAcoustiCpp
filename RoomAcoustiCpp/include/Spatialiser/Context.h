@@ -89,6 +89,8 @@ namespace RAC
 			*/
 			~Context();
 
+			void InitialiseAudio();
+			
 			/**
 			* @brief Loads the HRTF, near field and ILD files from the given file paths.
 			*
@@ -131,7 +133,10 @@ namespace RAC
 			*
 			* @param config The new IEM configuration.
 			*/
-			inline void UpdateIEMConfig(const IEMConfig& config) { mImageEdgeModel->UpdateIEMConfig(config); }
+			inline void UpdateIEMConfig(const IEMData& data)
+			{
+				mImageEdgeModel->UpdateIEMConfig(data, mConfig);
+			}
 
 			/**
 			* Updates the model in order to calculate the late reverberation time (T60).
@@ -153,6 +158,13 @@ namespace RAC
 			* @param model The new diffraction model.
 			*/
 			void UpdateDiffractionModel(const DiffractionModel model);
+
+			/**
+			* @brief Updates the late reverb model.
+			*
+			* @param model The new late reverb model.
+			*/
+			void UpdateLateReverbModel(const LateReverbModel model);
 
 			/**
 			* @brief Returns a pointer to the room class.
@@ -260,7 +272,7 @@ namespace RAC
 			* 
 			* @param gain The new late reverb gain.
 			*/
-			inline void UpdateLateReverbGain(const Real gain) { mReverb->SetReverbGain(gain); }
+			inline void UpdateLateReverbGain(const Real gain) {  }
 
 			/**
 			* @brief Sends an audio buffer to a source and adds the output to mOutputBuffer.
@@ -313,6 +325,8 @@ namespace RAC
 			Matrix<> mReverbInput;	// Audio reverb input matrix
 
 			std::vector<float> mSendBuffer;	// Audio send buffer (float)
+
+			std::atomic<bool> audioFlag{ false };	// Flag to check if the audio thread is processing
 
 			/**
 			* Handles

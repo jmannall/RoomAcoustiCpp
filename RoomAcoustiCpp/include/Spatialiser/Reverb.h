@@ -127,12 +127,11 @@ namespace RAC
 			* @params core The 3DTI processing core
 			* @params config The spatialiser configuration
 			*/
-			Reverb(Binaural::CCore* core, const std::shared_ptr<Config> config) : reverbSourceInputs(config->numLateReverbChannels, Buffer<>(config->numFrames)),
-				reverbSourceInputsComplex(config->numLateReverbChannels, Buffer<Complex>(config->numFrames)), reverbSourceInputsComplexPair(config->numLateReverbChannels, Buffer<ComplexPair>(config->numFrames))
+			Reverb(Binaural::CCore* core, const std::shared_ptr<Config> config) : reverbSourceInputs(config->numReverbSources, Buffer(config->numFrames))
 			{
-				const std::vector<Vec3> points = CalculateSourcePositions(config->numLateReverbChannels);
-				mReverbSources.reserve(config->numLateReverbChannels);
-				for (int i = 0; i < config->numLateReverbChannels; i++)
+				const std::vector<Vec3> points = CalculateSourcePositions(config->numReverbSources);
+				mReverbSources.reserve(config->numReverbSources);
+				for (int i = 0; i < config->numReverbSources; i++)
 					mReverbSources.emplace_back(std::make_unique<ReverbSource>(core, config, points[i], &reverbSourceInputs[i]));
 			}
 
@@ -173,9 +172,7 @@ namespace RAC
 			*/
 			void ProcessAudio(const Matrix<>& data, Buffer<>& outputBuffer, const Real lerpFactor);
 
-			void ProcessComplexAudio(const Matrix<Complex>& data, Buffer<Complex>& outputBuffer, const Real lerpFactor);
-
-			void ProcessComplexPairAudio(const Matrix<ComplexPair>& data, Buffer<ComplexPair>& outputBuffer, const Real lerpFactor);
+			virtual void ProcessReverberator(const Matrix<>& data, std::vector<Buffer<>>& outputBuffers, const Real lerpFactor) = 0;
 
 			/**
 			* @brief Resets the FDN and ReverbSources internal buffers to zero
@@ -184,10 +181,30 @@ namespace RAC
 			{
 				for (auto& reverbSource : mReverbSources)
 					reverbSource->Reset();
-				mFDN.load(std::memory_order_acquire)->Reset();
-				complexFDN.load(std::memory_order_acquire)->Reset();
-				complexPairFDN.load(std::memory_order_acquire)->Reset();
+				ResetReverberator();
 			}
+
+			virtual void ResetReverberator() = 0;
+
+			virtual void SetTargetT60(const Coefficients<>& T60) = 0;
+
+			/**
+			* @brief Updates the target T60
+			*
+			* @params T60 The new decay time
+			*/
+			virtual inline void SetTargetT60s(const std::vector<Coefficients<>>& T60)
+			{
+				SetTargetT60(T60[0]);
+			}
+
+			/**
+			* @brief Update reflection filters for directional dependent reverberation level
+			*
+			* @params absorptions New reflection filter target gains
+			* @params running True if including late reveberation in audio prcoessing, false otherwise
+			*/
+			virtual void SetTargetOutputFilters(const std::vector<Absorption<>>& gains) = 0;
 
 			/**
 			* @brief Calculate the end limits for reverb source directions
@@ -201,16 +218,59 @@ namespace RAC
 					directions.emplace_back(100.0 * reverbSource->GetShift());
 			}
 
-			inline void SetReverbGain(const Real gain) { /*reverbGain = gain;*/ }
+			virtual void InitLateReverb(const Coefficients<>& T60, const Vec<>& delayLineLengths, const FDNMatrix matrix, const std::shared_ptr<Config> config) = 0;
+
+			virtual inline void InitLateReverb(const std::vector<Coefficients<>>& T60, const Vec<>& delayLineLengths, const FDNMatrix matrix, const std::shared_ptr<Config> config)
+			{
+				InitLateReverb(T60[0], delayLineLengths, matrix, config);
+			}
+
+		protected:
+			std::atomic<bool> initialised{ false };		// True if T60 > 0.0 and T60 < 20.0 seconds
+			std::atomic<bool> running{ false };			// True if audio thread should process late reverberation
+
+			static ReleasePool releasePool;		// Garbage collector for shared pointers after atomic replacement
+
+		private:
+
+			std::vector<Vec3> CalculateSourcePositions(const int numReverbSources) const;
+
+			std::vector<Buffer<>> reverbSourceInputs;						// Input buffers for each reverb source
+			std::vector<std::unique_ptr<ReverbSource>> mReverbSources;		// Reverb sources to binauralise the FDN output
+		};
+
+		class SingleFDN : public Reverb
+		{
+		public:
+			SingleFDN(Binaural::CCore* core, const std::shared_ptr<Config> config) : Reverb(core, config) {}
+
+			void InitLateReverb(const Coefficients<>& T60, const Vec<>& delayLineLengths, const FDNMatrix matrix, const std::shared_ptr<Config> config) override;
+
+			/**
+			* @brief Resets the FDN and ReverbSources internal buffers to zero
+			*/
+			inline void ResetReverberator() override
+			{
+				mFDN.load(std::memory_order_acquire)->Reset();
+			}
 
 			/**
 			* @brief Updates the target T60
 			*
 			* @params T60 The new decay time
 			*/
-			void SetTargetT60(const Coefficients<>& T60);
+			void SetTargetT60(const Coefficients<>& T60) override;
 
-			void InitLateReverb(const Coefficients<>& T60, const Vec<>& dimensions, const FDNMatrix matrix, const std::shared_ptr<Config> config);
+			inline void ProcessReverberator(const Matrix<>& data, std::vector<Buffer<>>& outputBuffers, const Real lerpFactor)
+			{
+				if (!initialised.load(std::memory_order_acquire))
+				{
+					for (Buffer<>& outputBuffer : outputBuffers)
+						outputBuffer.Reset();
+					return;
+				}
+				mFDN.load()->ProcessAudio(data, outputBuffers, lerpFactor);
+			}
 
 			/**
 			* @brief Update reflection filters for directional dependent reverberation level
@@ -218,26 +278,48 @@ namespace RAC
 			* @params absorptions New reflection filter target gains
 			* @params running True if including late reveberation in audio prcoessing, false otherwise
 			*/
-			void UpdateReflectionFilters(const std::vector<Absorption<>>& absorptions);
+			void SetTargetOutputFilters(const std::vector<Absorption<>>& gains);
 
 		private:
-
-			std::vector<Vec3> CalculateSourcePositions(const int numLateReverbChannels) const;
-
 			std::atomic<std::shared_ptr<FDN<>>> mFDN;		// FDN for late reverberation processing
-			std::atomic < std::shared_ptr<RandomOrthogonalFDN<Complex>>> complexFDN;
-			std::atomic < std::shared_ptr<RandomOrthogonalFDN<ComplexPair>>> complexPairFDN;
 
-			std::vector<Buffer<>> reverbSourceInputs;		// Input buffers for each reverb source
-			std::vector<Buffer<Complex>> reverbSourceInputsComplex;		// Input buffers for each reverb source
-			std::vector<Buffer<ComplexPair>> reverbSourceInputsComplexPair;		// Input buffers for each reverb source
+		};
 
-			std::vector<std::unique_ptr<ReverbSource>> mReverbSources;		// Reverb sources to binauralise the FDN output
+		class RAVES : public Reverb
+		{
+		public:
+			RAVES(Binaural::CCore* core, const std::shared_ptr<Config> config) : Reverb(core, config) {}
 
-			std::atomic<bool> initialised{ false };		// True if T60 > 0.0 and T60 < 20.0 seconds
-			std::atomic<bool> running{ false };			// True if audio thread should process late reverberation
+			void InitLateReverb(const Coefficients<>& T60, const Vec<>& delayLineLengths, const FDNMatrix matrix, const std::shared_ptr<Config> config) override
+			{
+				InitLateReverb({ T60 }, delayLineLengths, matrix, config);
+			}
 
-			static ReleasePool releasePool;
+			void InitLateReverb(const std::vector<Coefficients<>>& T60, const Vec<>& delayLineLengths, const FDNMatrix matrix, const std::shared_ptr<Config> config) override;
+
+			void SetTargetOutputFilters(const std::vector<Absorption<>>& residuals) override;
+
+			inline void SetTargetT60(const Coefficients<>& T60) override { SetTargetT60s({ T60 }); }
+
+			/**
+			* @brief Updates the target T60
+			*
+			* @params T60 The new decay time
+			*/
+			void SetTargetT60s(const std::vector<Coefficients<>>& T60s) override;
+
+			inline void ResetReverberator() override
+			{
+				auto fdns = mFDNs.load();
+				for (auto& fdn : *fdns)
+					fdn->Reset();
+			}
+
+			void ProcessReverberator(const Matrix<>& data, std::vector<Buffer<>>& outputBuffers, const Real lerpFactor) override;
+
+		private:
+			using FDNPtr = std::shared_ptr<std::vector<std::unique_ptr<FDN<Complex>>>>;
+			std::atomic<FDNPtr> mFDNs;
 		};
 	}
 }

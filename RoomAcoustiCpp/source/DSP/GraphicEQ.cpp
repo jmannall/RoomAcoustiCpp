@@ -198,10 +198,8 @@ namespace RAC
 				return;
 			}
 
-			FlushDenormals();
 			for (int i = 0; i < inBuffer.Length(); i++)
 				outBuffer[i] = GetOutput(inBuffer[i], lerpFactor);
-			NoFlushDenormals();
 		}
 
 		////////////////////////////////////////

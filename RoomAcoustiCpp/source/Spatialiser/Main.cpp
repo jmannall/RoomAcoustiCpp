@@ -212,10 +212,10 @@ extern "C"
 	* @param specularDiffOrder The maximum number of reflections or diffractions in specular diffraction paths.
 	* @param rev Whether to consider late reverberation.
 	*/
-	EXPORT void API RACUpdateIEMConfig(int dir, int reflOrder, int shadowDiffOrder, int specularDiffOrder, bool rev, float edgeLen)
+	EXPORT void API RACUpdateIEMConfig(int dir, int reflOrder, int shadowDiffOrder, int specularDiffOrder, bool rev, float edgeLen, float pathLen)
 	{
 		DirectSound direct = SelectDirectMode(dir);
-		UpdateIEMConfig(IEMConfig(direct, reflOrder, shadowDiffOrder, specularDiffOrder, rev, static_cast<Real>(edgeLen)));
+		UpdateIEMConfig(IEMData(direct, reflOrder, shadowDiffOrder, specularDiffOrder, rev, static_cast<Real>(edgeLen), static_cast<Real>(pathLen)));
 	}
 
 	/**
@@ -294,6 +294,28 @@ extern "C"
 		{ UpdateDiffractionModel(DiffractionModel::btm); break; }
 		default:
 		{ UpdateDiffractionModel(DiffractionModel::attenuate); break; }
+		}
+	}
+
+	/**
+	* Updates the model used to process late reverberation.
+	*
+	* The mapping is as follows:
+	* 0 -> Single FDN
+	* 1 -> RAVES
+	*
+	* @param id The ID corresponding to a late reverberation model.
+	*/
+	EXPORT void API RACUpdateLateReverbModel(int id)
+	{
+		switch (id)
+		{
+		case(0):
+		{ UpdateLateReverbModel(LateReverbModel::fdn); break; }
+		case(1):
+		{ UpdateLateReverbModel(LateReverbModel::raves); break; }
+		default:
+		{ UpdateLateReverbModel(LateReverbModel::fdn); break; }
 		}
 	}
 

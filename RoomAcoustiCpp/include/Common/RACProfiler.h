@@ -80,10 +80,6 @@
     PROFILER_CATEGORY(EarlyReflections)
 #define PROFILE_LateReverb \
     PROFILER_CATEGORY(LateReverb)
-#define PROFILE_LateReverbComplex \
-    PROFILER_CATEGORY(LateReverbComplex)
-#define PROFILE_LateReverbComplexPair \
-    PROFILER_CATEGORY(LateReverbComplexPair)
 #define PROFILE_Source \
     PROFILER_CATEGORY(Source)
 #define PROFILE_ImageSource \
@@ -134,8 +130,6 @@ enum ProfilerCategories
     SubmitAudio,
     EarlyReflections,
     LateReverb,
-    LateReverbComplex,
-    LateReverbComplexPair,
     FDN,
     Source,
     ImageSource,
@@ -201,12 +195,6 @@ inline std::ostream& operator<<(std::ostream& os, const ProfilerCategories& cate
 	case ProfilerCategories::LateReverb:
 		os << "LateReverb";
 		break;
-    case ProfilerCategories::LateReverbComplex:
-        os << "LateReverbComplex";
-        break;
-    case ProfilerCategories::LateReverbComplexPair:
-        os << "LateReverbComplexPair";
-        break;
 	case ProfilerCategories::FDN:
 		os << "FDN";
 		break;
@@ -395,12 +383,6 @@ namespace RAC
                 case ProfilerCategories::LateReverb:
                     BeginLateReverb();
                     break;
-                case ProfilerCategories::LateReverbComplex:
-                    BeginImageSource();
-                    break;
-                case ProfilerCategories::LateReverbComplexPair:
-                    BeginDiffraction();
-                    break;
                 case ProfilerCategories::FDN:
                     BeginFDN();
                     break;
@@ -490,12 +472,6 @@ namespace RAC
                     break;
                 case ProfilerCategories::LateReverb:
                     EndLateReverb();
-                    break;
-                case ProfilerCategories::LateReverbComplex:
-                    EndImageSource();
-                    break;
-                case ProfilerCategories::LateReverbComplexPair:
-                    EndDiffraction();
                     break;
                 case ProfilerCategories::FDN:
                     EndFDN();

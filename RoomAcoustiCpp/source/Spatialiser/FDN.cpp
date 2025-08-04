@@ -119,16 +119,31 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		template<typename T>
-		FDN<T>::FDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<Config> config, const Matrix<>& matrix) : x(config->numLateReverbChannels),
-			y(config->numLateReverbChannels), feedbackMatrix(matrix)
+		template<>
+		FDN<Real>::FDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<Config> config, const Matrix<>& matrix) : x(config->numReverbSources),
+			y(config->numReverbSources), feedbackMatrix(matrix)
 		{
 			assert(T60 > 0);
 			
-			std::vector<int> delayLengths = CalculateTimeDelay(dimensions, config->numLateReverbChannels, config->fs);
-			mChannels.reserve(config->numLateReverbChannels);
-			for (int i = 0; i < config->numLateReverbChannels; i++)
-				mChannels.push_back(std::make_unique<FDNChannel<T>>(delayLengths[i], T60, config));
+			std::vector<int> delayLengths = CalculateTimeDelay(dimensions, config->numReverbSources, config->fs);
+			mChannels.reserve(config->numReverbSources);
+			for (int i = 0; i < config->numReverbSources; i++)
+				mChannels.push_back(std::make_unique<FDNChannel<Real>>(delayLengths[i], T60, config));
+		}
+
+		////////////////////////////////////////
+
+		template<>
+		FDN<Complex>::FDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<Config> config, const Matrix<>& matrix) : x(config->numReverbSources),
+			y(config->numReverbSources), feedbackMatrix(matrix), ravesResiduals(config->numReverbSources)
+		{
+			assert(T60 > 0);
+
+			std::vector<int> delayLengths = CalculateTimeDelay(dimensions, config->numReverbSources, config->fs);
+			mChannels.reserve(config->numReverbSources);
+			for (int i = 0; i < config->numReverbSources; i++)
+				mChannels.push_back(std::make_unique<FDNChannel<Complex>>(delayLengths[i], T60, config));
+			SetTimeDelay(10.0 / SPEED_OF_SOUND, config->fs); // Time delay for 10m path propagation
 		}
 
 		////////////////////////////////////////
@@ -143,24 +158,24 @@ namespace RAC
 		////////////////////////////////////////
 
 		template<typename T>
-		std::vector<int> FDN<T>::CalculateTimeDelay(const Vec<>& dimensions, const int numLateReverbChannels, const int fs)
+		std::vector<int> FDN<T>::CalculateTimeDelay(const Vec<>& dimensions, const int numReverbSources, const int fs)
 		{
 			assert(dimensions.Rows() >  0);
 
-			Vec t = Vec(numLateReverbChannels);
-			std::vector<int> delays = std::vector<int>(numLateReverbChannels);
+			Vec t = Vec(numReverbSources);
+			std::vector<int> delays = std::vector<int>(numReverbSources);
 			if (dimensions.Rows() > 0)
 			{
-				Real idx = static_cast<Real>(numLateReverbChannels) / static_cast<Real>(dimensions.Rows());
+				Real idx = static_cast<Real>(numReverbSources) / static_cast<Real>(dimensions.Rows());
 
-				assert(dimensions.Rows() <= numLateReverbChannels);
+				assert(dimensions.Rows() <= numReverbSources);
 				assert(idx == floor(idx)); // length of dimensions must be a multiple of mNumChannels
 
 				t.RandomUniformDistribution(-0.1, 0.1f);
 				t *= dimensions.Mean();
 
 				int k = 0;
-				for (int j = 0; j < numLateReverbChannels / idx; ++j)
+				for (int j = 0; j < numReverbSources / idx; ++j)
 				{
 					assert(dimensions[j] > 0.0);
 					for (int i = 0; i < idx; ++i)
@@ -172,7 +187,7 @@ namespace RAC
 				t *= INV_SPEED_OF_SOUND;
 				t.Max(1.0 / static_cast<Real>(fs));
 
-				for (int i = 0; i < numLateReverbChannels; i++)
+				for (int i = 0; i < numReverbSources; i++)
 					delays[i] = static_cast<int>(round(t[i] * static_cast<Real>(fs)));
 				if (!IsSetMutuallyPrime(delays))
 					MakeSetMutuallyPrime(delays);
@@ -182,17 +197,16 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		template<typename T>
-		void FDN<T>::ProcessAudio(const Matrix<T>& data, std::vector<Buffer<T>>& outputBuffers, const Real lerpFactor)
+		template <>
+		void FDN<Real>::ProcessAudio(const Matrix<>& data, std::vector<Buffer<>>& outputBuffers, const Real lerpFactor)
 		{
+			PROFILE_FDN
 			if (clearBuffers.load(std::memory_order_acquire))
 			{
 				x.Reset();
 				y.Reset();
 				clearBuffers.store(false, std::memory_order_release);
 			}
-
-			FlushDenormals();
 
 			// Process feedback loop
 			for (int i = 0; i < data.Cols(); i++)
@@ -208,8 +222,35 @@ namespace RAC
 			// Process output filters
 			for (int i = 0; i < mChannels.size(); i++)
 				mChannels[i]->ProcessOutput(outputBuffers[i], outputBuffers[i], lerpFactor);
-			
-			NoFlushDenormals();
+		}
+
+		////////////////////////////////////////
+
+		template<>
+		void FDN<Complex>::ProcessAudio(std::vector<Buffer<>>& outputBuffers, const Real lerpFactor)
+		{
+			PROFILE_FDN
+			if (clearBuffers.load(std::memory_order_acquire))
+			{
+				x.Reset();
+				y.Reset();
+				clearBuffers.store(false, std::memory_order_release);
+			}
+
+			// Process feedback loop
+			for (int i = 0; i < outputBuffers[0].Length(); i++)
+			{
+				if (idx >= delayBuffer.Length())
+					idx = 0;
+				for (int j = 0; j < mChannels.size(); j++)
+				{
+					y[j] = mChannels[j]->GetOutput(x[j] + delayBuffer[idx], lerpFactor);
+					outputBuffers[j][i] += ravesResiduals[j].GetOutput(y[j], lerpFactor);
+				}
+				ProcessMatrix();
+				delayBuffer[idx] = inputData[i];
+				++idx;
+			}
 		}
 
 		////////////////////////////////////////

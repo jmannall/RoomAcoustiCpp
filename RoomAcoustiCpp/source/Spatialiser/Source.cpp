@@ -48,8 +48,14 @@ namespace RAC
 
 			mDirectivity.store(SourceDirectivity::omni, std::memory_order_release);
 
-			feedsFDN.store(false, std::memory_order_release);
+			reverbSend.store(LateReverbModel::none, std::memory_order_release);
 			hasChanged.store(true, std::memory_order_release);
+
+			Coefficients<> sourceResiduals(config->numRavesFDNs);
+			for (int i = 0; i < config->numRavesFDNs; ++i)
+				sourceResiduals[i] = -0.5 * i + 0.5;
+			for (int i = 0; i < ravesResiduals.size(); i++)
+				ravesResiduals[i].SetTargetEnergy(sourceResiduals[i]);
 
 			ResetFDNSlots();
 			AllowAccess();
@@ -101,12 +107,10 @@ namespace RAC
 				mReverbSendSource->DisableDistanceAttenuationSmoothingAnechoic();
 				mReverbSendSource->DisableInterpolation();
 			}
-			feedsFDN.store(true, std::memory_order_release);
 		}
 
 		void Source::RemoveReverbSendSource()
 		{
-			feedsFDN.store(false, std::memory_order_release);
 			unique_lock<shared_mutex> lock(tuneInMutex);
 			mCore->RemoveSingleSourceDSP(mReverbSendSource);
 			mReverbSendSource.reset();
@@ -259,7 +263,7 @@ namespace RAC
 
 			mAirAbsorption->ProcessAudio(inputBuffer, bStore, lerpFactor);
 
-			if (feedsFDN.load(std::memory_order_acquire))
+			if (reverbSend.load(std::memory_order_acquire) == LateReverbModel::fdn)
 			{
 				{
 					PROFILE_Reflection
@@ -276,8 +280,20 @@ namespace RAC
 				}
 				for (int i = 0; i < reverbInput.Rows(); i++)
 				{
-					for (int j = 0; j < numFrames; j++)
-						reverbInput[i][j] += bOutput.left[j];
+					std::transform(bOutput.left.begin(), bOutput.left.end(), reverbInput[i].begin(),
+						reverbInput[i].begin(), std::plus<>());
+				}
+			}
+			else if (reverbSend.load(std::memory_order_acquire) == LateReverbModel::raves)
+			{
+				for (int j = 0; j < numFrames; j++)
+				{
+					for (int i = 0; i < reverbInput.Rows(); i++)
+					{
+						Complex input = ravesResiduals[i].GetOutput(inputBuffer[j], lerpFactor);
+						reverbInput[i][2 * j] = input.real();
+						reverbInput[i][2 * j + 1] = input.imag();
+					}
 				}
 			}
 			{
@@ -335,15 +351,15 @@ namespace RAC
 				return;
 			directivityFilter->SetTargetGains(source.directivity);
 
-			if (source.feedsFDN && !mReverbSendSource)
+			if (source.reverbSend == LateReverbModel::fdn && !mReverbSendSource)
 			{
 				InitReverbSendSource(config->GetImpulseResponseMode());
 				UpdateImpulseResponseMode(config->GetImpulseResponseMode());
 			}
-			else if (!source.feedsFDN && mReverbSendSource)
+			if (source.reverbSend != LateReverbModel::fdn && mReverbSendSource)
 				RemoveReverbSendSource();
-			else
-				feedsFDN.store(source.feedsFDN, std::memory_order_release);
+			reverbSend.store(source.reverbSend, std::memory_order_release);
+
 			UpdateImageSourceDataMap(imageSourceData);
 			UpdateImageSources(config);
 			FreeAccess();
@@ -454,7 +470,7 @@ namespace RAC
 			{
 				int fdnChannel = -1;
 				if (data.IsFeedingFDN())
-					fdnChannel = AssignFDNChannel(config->numLateReverbChannels);
+					fdnChannel = AssignFDNChannel(config->numReverbSources);
 
 				id = imageSources.NextID();
 				if (id < 0)		// No free slots
@@ -466,7 +482,7 @@ namespace RAC
 			{
 				int fdnChannel = -1;
 				if (data.IsFeedingFDN() && imageSources.at(id).GetFDNChannel() < 0)
-					fdnChannel = AssignFDNChannel(config->numLateReverbChannels);
+					fdnChannel = AssignFDNChannel(config->numReverbSources);
 
 				bool remove = imageSources.at(id).Update(data, fdnChannel);
 

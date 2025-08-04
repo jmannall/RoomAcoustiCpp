@@ -83,11 +83,11 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void UpdateIEMConfig(const IEMConfig& config)
+		void UpdateIEMConfig(const IEMData& data)
 		{
 			auto context = GetContext();
 			if (context)
-				context->UpdateIEMConfig(config);
+				context->UpdateIEMConfig(data);
 		}
 
 		////////////////////////////////////////
@@ -115,6 +115,15 @@ namespace RAC
 			auto context = GetContext();
 			if (context)
 				context->UpdateDiffractionModel(model);
+		}
+
+		////////////////////////////////////////
+
+		void UpdateLateReverbModel(const LateReverbModel model)
+		{
+			auto context = GetContext();
+			if (context)
+				context->UpdateLateReverbModel(model);
 		}
 
 		////////////////////////////////////////

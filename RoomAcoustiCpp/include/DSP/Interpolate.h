@@ -48,6 +48,7 @@ namespace RAC
 
 		/**
 		* Forces the CPU to flush denormals (cause performance issues in recursive filter structures)
+		* This is per thread
 		*/
 		inline void FlushDenormals()
 		{

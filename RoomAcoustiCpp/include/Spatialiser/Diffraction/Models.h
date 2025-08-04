@@ -401,7 +401,6 @@ namespace RAC
 					if (!isInitialised.load(std::memory_order_acquire))
 						return;
 
-					FlushDenormals();
 					for (int i = 0; i < inBuffer.Length(); i++)
 					{
 						Real outSample = 0.0;
@@ -414,7 +413,6 @@ namespace RAC
 						}
 						outBuffer[i] = outSample;
 					}
-					NoFlushDenormals();
 				}
 
 			private:

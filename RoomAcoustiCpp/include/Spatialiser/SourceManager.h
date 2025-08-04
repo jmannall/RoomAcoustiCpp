@@ -94,7 +94,7 @@ namespace RAC
 			*/
 			inline void UpdateSourceDirectivity(const size_t id, const SourceDirectivity directivity)
 			{
-				mSources[id]->UpdateDirectivity(directivity, mConfig->frequencyBands, mConfig->numLateReverbChannels);
+				mSources[id]->UpdateDirectivity(directivity, mConfig->frequencyBands, mConfig->numReverbSources);
 			}
 
 			inline int NextID() const
@@ -154,6 +154,11 @@ namespace RAC
 			{
 				PROFILE_UpdateAudioData
 				mSources[id]->UpdateData(source, vSources, mConfig);
+			}
+
+			inline void SetSourceTargetResiduals(const size_t id, const Coefficients<>& residuals)
+			{
+				mSources[id]->SetTargetResiduals(residuals);
 			}
 
 			/**
