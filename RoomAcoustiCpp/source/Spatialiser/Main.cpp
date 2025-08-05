@@ -528,16 +528,6 @@ extern "C"
 	}
 
 	/**
-	* Updates the late reverberation gain.
-	* 
-	* @param gain The new late reverberation gain.
-	*/
-	EXPORT void API RACUpdateLateReverbGain(float gain)
-	{
-		UpdateLateReverbGain(static_cast<Real>(gain));
-	}
-
-	/**
 	* Submits an audio buffer to the audio source with the given ID.
 	*
 	* This function should be called when there is a new audio buffer for a source.

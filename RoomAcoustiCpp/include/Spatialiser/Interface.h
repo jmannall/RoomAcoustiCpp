@@ -177,13 +177,6 @@ namespace RAC
 		void UpdatePlanesAndEdges();
 
 		/**
-		* Updates the late reverberation gain.
-		* 
-		* @param gain The new late reverberation gain.
-		*/
-		void UpdateLateReverbGain(const Real gain);
-
-		/**
 		* Submits an audio buffer to the audio source with the given ID.
 		*
 		* @param id The ID of the audio source to update.

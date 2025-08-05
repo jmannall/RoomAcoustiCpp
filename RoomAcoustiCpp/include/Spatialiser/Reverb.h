@@ -194,8 +194,6 @@ namespace RAC
 					directions.emplace_back(100.0 * reverbSource->GetShift());
 			}
 
-			inline void SetReverbGain(const Real gain) { /*reverbGain = gain;*/ }
-
 			/**
 			* @brief Updates the target T60
 			*

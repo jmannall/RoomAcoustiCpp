@@ -230,15 +230,6 @@ namespace RAC
 		}
 
 		////////////////////////////////////////
-		
-		void UpdateLateReverbGain(const Real gain)
-		{
-			auto context = GetContext();
-			if (context)
-				context->UpdateLateReverbGain(gain);
-		}
-
-		////////////////////////////////////////
 
 		void SubmitAudio(size_t id, const Buffer<>& data)
 		{
