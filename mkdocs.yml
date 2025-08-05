@@ -1,10 +1,185 @@
+# Project information
+site_name: RoomAcoustiC++ Documentation
+site_url: https://roomacousticpp.readthedocs.io
+site_author: Joshua Mannall
+site_description: >-
+  Real-time room acoustic C++ library
+
+# Repository
+repo_name: jmannall/RoomAcoustiCpp
+repo_url: https://github.com/jmannall/RoomAcoustiCpp
+edit_uri: edit/main/docs/
+
+# Configuration
 theme:
-  name: readthedocs
-  highlightjs: true
-  hljs_languages:
-    - yaml
-    - rust
-site_name: RoomAcoustiC++
+  name: material
+  # custom_dir: material/overrides
+  features:
+    - announce.dismiss
+    - content.action.edit
+    - content.action.view
+    - content.code.annotate
+    - content.code.copy
+    # - content.code.select
+    # - content.footnote.tooltips
+    # - content.tabs.link
+    - content.tooltips
+    # - header.autohide
+    # - navigation.expand
+    - navigation.footer
+    - navigation.indexes
+    # - navigation.instant
+    # - navigation.instant.prefetch
+    # - navigation.instant.progress
+    # - navigation.prune
+    # - navigation.sections
+    - navigation.tabs
+    # - navigation.tabs.sticky
+    - navigation.top
+    - navigation.tracking
+    - search.highlight
+    - search.share
+    - search.suggest
+    - toc.follow
+    - toc.integrate
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: blue grey
+      toggle:
+        icon: material/toggle-switch-off
+        name: Switch to dark mode
+    - scheme: slate
+      primary: blue
+      accent: blue grey
+      toggle:
+        icon: material/toggle-switch
+        name: Switch to light mode
+  font:
+    text: Roboto
+    code: Roboto Mono
+  favicon: material/toggle-switch # Tab icon
+  icon:
+    logo: simple/audiomack
+
+#plugins:
+#  - search:
+#      enabled: false
+
+# Additional configuration
+extra:
+  status:
+    new: Recently added
+    deprecated: Deprecated
+  analytics:
+    provider: google
+    property: !ENV GOOGLE_ANALYTICS_KEY
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/jmannall/RoomAcoustiCpp
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - toc:
+      permalink: false
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.magiclink:
+      normalize_issue_symbols: true
+      repo_url_shorthand: true
+      user: jmannall
+      repo: RoomAcoustiCpp
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+      combine_header_slug: true
+      slugify: !!python/object/apply:pymdownx.slugs.slugify
+        kwds:
+          case: lower
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+  - pymdownx.arithmatex:
+      generic: true
+  
+  
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
+# extra_css: [extra.css]
+
 nav:
   - Home: index.md
-  - About: about.md
+  - RoomAcoustiC++:
+    - Overview: overview/about.md
+    - Acoustic Model: overview/model.md
+    - Diffraction: overview/diffraction.md
+  - Unity Interface: unity/index.md
+  - API Reference:
+    - API Reference: api/index.md
+    - Interface: api/interface.md
+    - Structure: api/structure.md
+    # - Common:
+    #   - Definitions: common/definitions.md
+    #   - Complex: common/complex.md
+    #   - Matrix: common/matrix.md
+    #   - Vec: common/vec.md
+    #   - Rowvec: common/rowvec.md
+    #   - Vec3: common/vec3.md
+    #   - Vec4: common/vec4.md
+    #   - Coefficients: common/coefficients.md
+    #   - Absorption: common/absorption.md
+    #   - Access: common/access.md
+    #   - ReleasePool: common/releasepool.md
+    #   - ScopedTimer: common/scopedtimer.md
+    #   - Timer: common/timer.md
+    #   - SphericalGeometries: common/sphericalgeometries.md
+    # - DSP:
+    #   - DSP: dspclasses/index.md
+    #   - Buffer: dspclasses/buffer.md
+    #   - FIRFilter: dspclasses/firfilter.md
+    #   - IIRFilter: dspclasses/iirfilter.md
+    #   - HighShelf: dspclasses/highshelf.md
+    #   - LowPass1: dspclasses/lowpass1.md
+    #   - ZPKFilter: dspclasses/zpkfilter.md
+    #   - IIRFilter2Param1: dspclasses/iirfilter2param1.md
+    #   - LowPass: dspclasses/lowpass.md
+    #   - HighPass: dspclasses/highpass.md
+    #   - PeakHighShelf: dspclasses/peakhighshelf.md
+    #   - PeakLowShelf: dspclasses/peaklowshelf.md
+    #   - PeakingFilter: dspclasses/peakingfilter.md
+    #   - GraphicEQ: dspclasses/graphiceq.md
+    #   - Linkwitz-Riley Filter: dspclasses/linkwitzriley.md
+    #   - Interpolate Functions: dspclasses/interpolate.md
+    # - Spatialiser:
+    #   - Spatialiser: spatialiser/index.md
+    #   - Interface: spatialiser/interface.md
+    #   - Air Absorption: spatialiser/airabsorption.md
+    #   - FDN: spatialiser/fdn.md
+    #   - HouseHolderFDN: spatialiser/householderfdn.md
+    #   - RandomOrthogonalFDN: spatialiser/randomorthogonalfdn.md
+    #   - FDNChannel: spatialiser/fdnchannel.md
