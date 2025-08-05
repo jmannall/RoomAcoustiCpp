@@ -106,7 +106,7 @@ namespace RAC
 					Debug::Log("Source ID out of range", Colour::Red);
 					return;
 				}
-				mSources[id]->UpdateDirectivity(directivity, mConfig->frequencyBands, mConfig->numLateReverbChannels);
+				mSources[id]->UpdateDirectivity(directivity, mConfig->frequencyBands, mConfig->numReverbSources);
 			}
 
 			/**

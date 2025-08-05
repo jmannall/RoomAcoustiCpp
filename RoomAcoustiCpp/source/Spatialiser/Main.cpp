@@ -43,8 +43,8 @@ using namespace RAC::Unity;
 //////////////////// Variables ////////////////////
 
 static float* buffer = nullptr;	// Pointer to return buffer
-static int numAbsorptionBands = 0;	// Store number of frequency bands for any reflection filters
-static int numAudioFrames = 0;
+static int NUM_FREQUENCY_BANDS = 0;	// Store number of frequency bands for any reflection filters
+static int NUM_FRAMES = 0;
 
 extern "C"
 {
@@ -56,47 +56,23 @@ extern "C"
 	*
 	* @param fs The sample rate for audio processing.
 	* @param numFrames The number of frames in an audio buffer.
-	* @param maxFDNChannels The number of feedback delay network channels.
+	* @param numReverbSources The number of reverb sources for late reverberation spatialisation.
 	* @param lerpFactor The interpolation factor for audio parameters.
-	* @param Q The quality factor for reflection filters. (0.77 is a good starting point)
-	* @param fBands The center frequency bands for reflection filters.
-	* @param numBands The number of frequency bands provided in the fBands parameter.
+	* @param Q The quality factor for GraphicEQ. (0.98 is a good starting point)
+	* @param frequencyBandData The center frequency bands for frequency dependent filtering.
+	* @param numFrequencyBands The number of frequency bands provided by the frequencyBandData parameter.
 	*
 	* @return True if the initialization was successful, false otherwise.
 	*/
-	EXPORT bool API RACInit(int fs, int numFrames, int maxFDNChannels, float lerpFactor, float Q, const float* fBands, int numBands)
+	EXPORT bool API RACInit(int fs, int numFrames, int numReverbSources, float lerpFactor, float Q, const float* frequencyBandData, int numFrequencyBands)
 	{
+		NUM_FREQUENCY_BANDS = numFrequencyBands;
+		NUM_FRAMES = numFrames;
+		Coefficients<> frequencyBands = Coefficients<>(numFrequencyBands);
+		for (int i = 0; i < numFrequencyBands; i++)
+			frequencyBands[i] = static_cast<Real>(frequencyBandData[i]);
 
-		int numFDNChannels = 0;
-		if (maxFDNChannels < 1)
-		{ numFDNChannels = 0; }
-		else if (maxFDNChannels < 2)
-		{ numFDNChannels = 1; }
-		else if (maxFDNChannels < 4)
-		{ numFDNChannels = 2; }
-		else if (maxFDNChannels < 6)
-		{ numFDNChannels = 4; }
-		else if (maxFDNChannels < 8)
-		{ numFDNChannels = 6; }
-		else if (maxFDNChannels < 12)
-		{ numFDNChannels = 8; }
-		else if (maxFDNChannels < 16)
-		{ numFDNChannels = 12; }
-		else if (maxFDNChannels < 20)
-		{ numFDNChannels = 16; }
-		else if (maxFDNChannels < 24)
-		{ numFDNChannels = 20; }
-		else if (maxFDNChannels < 32)
-		{ numFDNChannels = 24; }
-		else { numFDNChannels = 32; }
-
-		numAbsorptionBands = numBands;
-		numAudioFrames = numFrames;
-		Coefficients frequencyBands = Coefficients(numBands);
-		for (int i = 0; i < numBands; i++)
-			frequencyBands[i] = static_cast<Real>(fBands[i]);
-
-		std::shared_ptr<Config> config = std::make_shared<Config>(fs, numFrames, numFDNChannels, static_cast<Real>(lerpFactor), static_cast<Real>(Q), frequencyBands);
+		std::shared_ptr<Config> config = std::make_shared<Config>(fs, numFrames, numReverbSources, static_cast<Real>(lerpFactor), static_cast<Real>(Q), frequencyBands);
 		return Init(config);
 	}
 
@@ -225,8 +201,8 @@ extern "C"
 	*/
 	EXPORT void API RACUpdateReverbTime(const float* t60)
 	{
-		Coefficients T60 = Coefficients<>(static_cast<size_t>(numAbsorptionBands));
-		for (int i = 0; i < numAbsorptionBands; i++)
+		Coefficients T60 = Coefficients<>(static_cast<size_t>(NUM_FREQUENCY_BANDS));
+		for (int i = 0; i < NUM_FREQUENCY_BANDS; i++)
 			T60[i] = static_cast<Real>(t60[i]);
 
 		UpdateReverbTime(T60);
@@ -454,8 +430,8 @@ extern "C"
 	*/
 	EXPORT int API RACInitWall(const float* verticesData, const float* absorptionData)
 	{
-		std::vector<Real> a = std::vector<Real>(numAbsorptionBands);
-		for (int i = 0; i < numAbsorptionBands; i++)
+		std::vector<Real> a = std::vector<Real>(NUM_FREQUENCY_BANDS);
+		for (int i = 0; i < NUM_FREQUENCY_BANDS; i++)
 			a[i] = static_cast<Real>(absorptionData[i]);
 		Absorption absorption = Absorption(a);
 
@@ -495,8 +471,8 @@ extern "C"
 	*/
 	EXPORT void API RACUpdateWallAbsorption(int id, const float* absorptionData)
 	{
-		std::vector<Real> a = std::vector<Real>(numAbsorptionBands);
-		for (int i = 0; i < numAbsorptionBands; i++)
+		std::vector<Real> a = std::vector<Real>(NUM_FREQUENCY_BANDS);
+		for (int i = 0; i < NUM_FREQUENCY_BANDS; i++)
 			a[i] = static_cast<Real>(absorptionData[i]);
 		Absorption absorption = Absorption(a);
 
@@ -538,8 +514,8 @@ extern "C"
 	*/
 	EXPORT void API RACSubmitAudio(int id, const float* data)
 	{
-		Buffer<> buffer = Buffer<>(numAudioFrames);
-		std::transform(data, data + numAudioFrames, buffer.begin(),
+		Buffer<> buffer = Buffer<>(NUM_FRAMES);
+		std::transform(data, data + NUM_FRAMES, buffer.begin(),
 			[](float value) { return static_cast<Real>(value); });
 		SubmitAudio(static_cast<size_t>(id), buffer);
 	}

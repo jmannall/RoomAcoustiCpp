@@ -109,14 +109,14 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		FDN::FDN(const Coefficients<>& T60, const Vec& dimensions, const std::shared_ptr<Config> config, const Matrix& matrix) : x(config->numLateReverbChannels),
-			y(config->numLateReverbChannels), feedbackMatrix(matrix)
+		FDN::FDN(const Coefficients<>& T60, const Vec& dimensions, const std::shared_ptr<Config> config, const Matrix& matrix) : x(config->numReverbSources),
+			y(config->numReverbSources), feedbackMatrix(matrix)
 		{
 			assert(T60 > 0);
 			
-			std::vector<int> delayLengths = CalculateTimeDelay(dimensions, config->numLateReverbChannels, config->fs);
-			mChannels.reserve(config->numLateReverbChannels);
-			for (int i = 0; i < config->numLateReverbChannels; i++)
+			std::vector<int> delayLengths = CalculateTimeDelay(dimensions, config->numReverbSources, config->fs);
+			mChannels.reserve(config->numReverbSources);
+			for (int i = 0; i < config->numReverbSources; i++)
 				mChannels.push_back(std::make_unique<FDNChannel>(delayLengths[i], T60, config));
 		}
 

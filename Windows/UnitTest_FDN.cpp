@@ -50,19 +50,19 @@ namespace RAC
 			const Absorption gains({ 0.87, 0.75, 0.81, 0.84 });
 			const std::shared_ptr<Config> config = std::make_shared<Config>();
 			const Real lerpFactor = config->GetLerpFactor();
-			const std::vector<Absorption<>> reflectionGains(config->numLateReverbChannels, gains);
+			const std::vector<Absorption<>> reflectionGains(config->numReverbSources, gains);
 
 			Vec dimensions({ 1.0, 1.5, 2.0 });
 			FDN fdn(T60, dimensions, config);
 
-			Matrix in(config->numLateReverbChannels, config->numFrames);
+			Matrix in(config->numReverbSources, config->numFrames);
 			in.RandomUniformDistribution();
 
-			std::vector<Buffer<>> out(config->numLateReverbChannels, Buffer<>(config->numFrames));
+			std::vector<Buffer<>> out(config->numReverbSources, Buffer<>(config->numFrames));
 			fdn.SetTargetReflectionFilters(reflectionGains);
 			fdn.ProcessAudio(in, out, lerpFactor);
 
-			for (int i = 0; i < config->numLateReverbChannels; i++)
+			for (int i = 0; i < config->numReverbSources; i++)
 			{
 				Real sum = 0.0;
 				for (int j = 0; j < config->numFrames; j++)
@@ -74,7 +74,7 @@ namespace RAC
 			in.Reset();
 
 			fdn.ProcessAudio(in, out, lerpFactor);
-			for (int i = 0; i < config->numLateReverbChannels; i++)
+			for (int i = 0; i < config->numReverbSources; i++)
 			{
 				for (int j = 0; j < config->numFrames; j++)
 					Assert::AreEqual(0.0, out[i][j], L"ProcessAudio not zero");
@@ -87,19 +87,19 @@ namespace RAC
 			const Absorption gains({ 1.0, 1.0, 1.0, 1.0 });
 			const std::shared_ptr<Config> config = std::make_shared<Config>();
 			const Real lerpFactor = config->GetLerpFactor();
-			const std::vector<Absorption<>> reflectionGains(config->numLateReverbChannels, gains);
+			const std::vector<Absorption<>> reflectionGains(config->numReverbSources, gains);
 
 			Vec dimensions({ 1.0, 1.5, 2.0 });
 			FDN fdn(T60, dimensions, config);
 			fdn.SetTargetReflectionFilters(reflectionGains);
 
-			Matrix in(config->numLateReverbChannels, config->numFrames);
+			Matrix in(config->numReverbSources, config->numFrames);
 			in.RandomUniformDistribution();
 
-			std::vector<Buffer<>> out(config->numLateReverbChannels, Buffer<>(config->numFrames));
+			std::vector<Buffer<>> out(config->numReverbSources, Buffer<>(config->numFrames));
 			fdn.ProcessAudio(in, out, lerpFactor);
 
-			for (int i = 0; i < config->numLateReverbChannels; i++)
+			for (int i = 0; i < config->numReverbSources; i++)
 			{
 				for (int j = 0; j < config->numFrames; j++)
 					Assert::AreEqual(0.0, out[i][j], L"Refelctions filters not zero");
@@ -119,25 +119,25 @@ namespace RAC
 
 			const Coefficients T60({ target, target, target, target });
 			const Absorption gains({ 0.1, 0.05, 0.3, 0.25 });
-			const std::vector<Absorption<>> reflectionGains(config->numLateReverbChannels, gains);
+			const std::vector<Absorption<>> reflectionGains(config->numReverbSources, gains);
 
 			// Long delay lines cause issues with the T60 estimation due to less frequent but larger drops in energy
 			Vec dimensions({ RandomValue(0.1, 2.0), RandomValue(0.1, 5.0), RandomValue(0.1, 10.0) });
 			FDN fdn(T60, dimensions, config);
 			fdn.SetTargetReflectionFilters(reflectionGains);
 
-			Matrix in(config->numLateReverbChannels, config->numFrames);
-			for (int i = 0; i < config->numLateReverbChannels; i++)
+			Matrix in(config->numReverbSources, config->numFrames);
+			for (int i = 0; i < config->numReverbSources; i++)
 				in[i][1] = 1.0;
 
-			std::vector<Buffer<>> out(config->numLateReverbChannels, Buffer<>(config->numFrames));
+			std::vector<Buffer<>> out(config->numReverbSources, Buffer<>(config->numFrames));
 			fdn.ProcessAudio(in, out, lerpFactor);
 
 			// Analyze Output Decay
 			Real decayTime = 0.0;
-			for (int i = 0; i < config->numLateReverbChannels; i++)
+			for (int i = 0; i < config->numReverbSources; i++)
 				decayTime += CalculateT60(out[i], config->numFrames, config->fs);
-			decayTime /= config->numLateReverbChannels;
+			decayTime /= config->numReverbSources;
 			Assert::IsTrue(decayTime > 0.0f, L"Decay not detected.");
 			Assert::AreEqual(target, decayTime, 0.02, L"Decay time does not match target RT60.");
 		}
@@ -155,25 +155,25 @@ namespace RAC
 
 			const Coefficients T60({ target, target, target, target });
 			const Absorption gains({ 0.1, 0.05, 0.3, 0.25 });
-			const std::vector<Absorption<>> reflectionGains(config->numLateReverbChannels, gains);
+			const std::vector<Absorption<>> reflectionGains(config->numReverbSources, gains);
 
 			// Long delay lines cause issues with the T60 estimation due to less frequent but larger drops in energy
 			Vec dimensions({ RandomValue(0.1, 2.0), RandomValue(0.1, 5.0), RandomValue(0.1, 10.0) });
 			FDN fdn(T60, dimensions, config);
 			fdn.SetTargetReflectionFilters(reflectionGains);
 
-			Matrix in(config->numLateReverbChannels, config->numFrames);
-			for (int i = 0; i < config->numLateReverbChannels; i++)
+			Matrix in(config->numReverbSources, config->numFrames);
+			for (int i = 0; i < config->numReverbSources; i++)
 				in[i][1] = 1.0;
 
-			std::vector<Buffer<>> out(config->numLateReverbChannels, Buffer<>(config->numFrames));
+			std::vector<Buffer<>> out(config->numReverbSources, Buffer<>(config->numFrames));
 			fdn.ProcessAudio(in, out, lerpFactor);
 			
 			// Analyze Output Decay
 			Real decayTime = 0.0;
-			for (int i = 0; i < config->numLateReverbChannels; i++)
+			for (int i = 0; i < config->numReverbSources; i++)
 				decayTime += CalculateT60(out[i], config->numFrames, config->fs);
-			decayTime /= config->numLateReverbChannels;
+			decayTime /= config->numReverbSources;
 			Assert::IsTrue(decayTime > 0.0f, L"Decay not detected.");
 			Assert::AreEqual(target, decayTime, 0.02, L"Decay time does not match target RT60.");
 		}
@@ -191,25 +191,25 @@ namespace RAC
 
 			const Coefficients T60({ target, target, target, target });
 			const Absorption gains({ 0.1, 0.05, 0.3, 0.25 });
-			const std::vector<Absorption<>> reflectionGains(config->numLateReverbChannels, gains);
+			const std::vector<Absorption<>> reflectionGains(config->numReverbSources, gains);
 
 			// Long delay lines cause issues with the T60 estimation due to less frequent but larger drops in energy
 			Vec dimensions({ RandomValue(0.1, 2.0), RandomValue(0.1, 5.0), RandomValue(0.1, 10.0) });
 			FDN fdn(T60, dimensions, config);
 			fdn.SetTargetReflectionFilters(reflectionGains);
 
-			Matrix in(config->numLateReverbChannels, config->numFrames);
-			for (int i = 0; i < config->numLateReverbChannels; i++)
+			Matrix in(config->numReverbSources, config->numFrames);
+			for (int i = 0; i < config->numReverbSources; i++)
 				in[i][1] = 1.0;
 
-			std::vector<Buffer<>> out(config->numLateReverbChannels, Buffer<>(config->numFrames));
+			std::vector<Buffer<>> out(config->numReverbSources, Buffer<>(config->numFrames));
 			fdn.ProcessAudio(in, out, lerpFactor);
 
 			// Analyze Output Decay
 			Real decayTime = 0.0;
-			for (int i = 0; i < config->numLateReverbChannels; i++)
+			for (int i = 0; i < config->numReverbSources; i++)
 				decayTime += CalculateT60(out[i], config->numFrames, config->fs);
-			decayTime /= config->numLateReverbChannels;
+			decayTime /= config->numReverbSources;
 			Assert::IsTrue(decayTime > 0.0f, L"Decay not detected.");
 			Assert::AreEqual(target, decayTime, 0.02, L"Decay time does not match target RT60.");
 		}
@@ -231,12 +231,12 @@ namespace RAC
 			// Long delay lines cause issues with the T60 estimation due to less frequent but larger drops in energy
 			Vec dimensions({ 2.3, 1.5, 5.6 });
 			FDN fdn(T60, dimensions, config);
-			fdn.SetTargetReflectionFilters(std::vector<Absorption<>>(config->numLateReverbChannels, reflectionGains));
+			fdn.SetTargetReflectionFilters(std::vector<Absorption<>>(config->numReverbSources, reflectionGains));
 
-			Matrix in(config->numLateReverbChannels, config->numFrames);
+			Matrix in(config->numReverbSources, config->numFrames);
 			in[0][0] = 1.0;
 
-			std::vector<Buffer<>> out(config->numLateReverbChannels, Buffer<>(config->numFrames));
+			std::vector<Buffer<>> out(config->numReverbSources, Buffer<>(config->numFrames));
 			fdn.ProcessAudio(in, out, lerpFactor);
 
 			Real sum = 0.0;
@@ -244,7 +244,7 @@ namespace RAC
 				sum += out[0][j] * out[0][j];
 			Assert::AreNotEqual(0.0, sum, L"Feedback matrix is not identity.");
 
-			for (int i = 1; i < config->numLateReverbChannels; i++)
+			for (int i = 1; i < config->numReverbSources; i++)
 			{
 				Real sum = 0.0;
 				for (int j = 0; j < config->numFrames; j++)
@@ -270,15 +270,15 @@ namespace RAC
 			// Long delay lines cause issues with the T60 estimation due to less frequent but larger drops in energy
 			Vec dimensions({ 2.3, 1.5, 5.6 });
 			RandomOrthogonalFDN fdn(T60, dimensions, config);
-			fdn.SetTargetReflectionFilters(std::vector<Absorption<>>(config->numLateReverbChannels, reflectionGains));
+			fdn.SetTargetReflectionFilters(std::vector<Absorption<>>(config->numReverbSources, reflectionGains));
 
-			Matrix in(config->numLateReverbChannels, config->numFrames);
+			Matrix in(config->numReverbSources, config->numFrames);
 			in[0][0] = 1.0;
 
-			std::vector<Buffer<>> out(config->numLateReverbChannels, Buffer<>(config->numFrames));
+			std::vector<Buffer<>> out(config->numReverbSources, Buffer<>(config->numFrames));
 			fdn.ProcessAudio(in, out, lerpFactor);
 
-			for (int i = 0; i < config->numLateReverbChannels; i++)
+			for (int i = 0; i < config->numReverbSources; i++)
 			{
 				Real sum = 0.0;
 				for (int j = 0; j < config->numFrames; j++)
@@ -304,15 +304,15 @@ namespace RAC
 			// Long delay lines cause issues with the T60 estimation due to less frequent but larger drops in energy
 			Vec dimensions({ 2.3, 1.5, 5.6 });
 			HouseHolderFDN fdn(T60, dimensions, config);
-			fdn.SetTargetReflectionFilters(std::vector<Absorption<>>(config->numLateReverbChannels, reflectionGains));
+			fdn.SetTargetReflectionFilters(std::vector<Absorption<>>(config->numReverbSources, reflectionGains));
 
-			Matrix in(config->numLateReverbChannels, config->numFrames);
+			Matrix in(config->numReverbSources, config->numFrames);
 			in[0][0] = 1.0;
 
-			std::vector<Buffer<>> out(config->numLateReverbChannels, Buffer<>(config->numFrames));
+			std::vector<Buffer<>> out(config->numReverbSources, Buffer<>(config->numFrames));
 			fdn.ProcessAudio(in, out, lerpFactor);
 
-			for (int i = 0; i < config->numLateReverbChannels; i++)
+			for (int i = 0; i < config->numReverbSources; i++)
 			{
 				Real sum = 0.0;
 				for (int j = 0; j < config->numFrames; j++)

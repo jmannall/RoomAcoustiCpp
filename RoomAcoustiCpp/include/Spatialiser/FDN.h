@@ -142,7 +142,7 @@ namespace RAC
 			* @param dimensions Primary room dimensions that determine delay line lengths
 			* @param config The spatialiser configuration
 			*/
-			FDN(const Coefficients<>& T60, const Vec& dimensions, const std::shared_ptr<Config> config) : FDN(T60, dimensions, config, InitMatrix(config->numLateReverbChannels)) {}
+			FDN(const Coefficients<>& T60, const Vec& dimensions, const std::shared_ptr<Config> config) : FDN(T60, dimensions, config, InitMatrix(config->numReverbSources)) {}
 
 			/**
 			* @brief Default deconstructor
@@ -278,7 +278,7 @@ namespace RAC
 			* @param config The spatialiser configuration
 			*/
 			HouseHolderFDN(const Coefficients<>& T60, const Vec& dimensions, const std::shared_ptr<Config> config)
-				: FDN(T60, dimensions, config, Matrix()), houseHolderFactor(2.0 / static_cast<Real>(config->numLateReverbChannels))
+				: FDN(T60, dimensions, config, Matrix()), houseHolderFactor(2.0 / static_cast<Real>(config->numReverbSources))
 			{}
 
 			/**
@@ -313,7 +313,7 @@ namespace RAC
 			* @param config The spatialiser configuration
 			*/
 			RandomOrthogonalFDN(const Coefficients<>& T60, const Vec& dimensions, const std::shared_ptr<Config> config)
-				: FDN(T60, dimensions, config, InitMatrix(config->numLateReverbChannels)) {}
+				: FDN(T60, dimensions, config, InitMatrix(config->numReverbSources)) {}
 
 			/**
 			* @brief Default deconstructor

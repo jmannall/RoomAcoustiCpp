@@ -111,12 +111,12 @@ namespace RAC
 
 			// Start background thread after all systems are initialized
 			IEMThread = std::thread(BackgroundProcessor, this);
-			audioThreadPool = std::make_unique<AudioThreadPool>(std::min((unsigned int)8, std::thread::hardware_concurrency()), mConfig->numFrames, mConfig->numLateReverbChannels);
+			audioThreadPool = std::make_unique<AudioThreadPool>(std::min((unsigned int)8, std::thread::hardware_concurrency()), mConfig->numFrames, mConfig->numReverbSources);
 
 			mInputBuffer = Buffer(mConfig->numFrames);
 			mOutputBuffer = Buffer(2 * mConfig->numFrames); // Stereo output buffer
 			mSendBuffer = std::vector<float>(2 * mConfig->numFrames, 0.0);
-			mReverbInput = Matrix(mConfig->numLateReverbChannels, mConfig->numFrames);
+			mReverbInput = Matrix(mConfig->numReverbSources, mConfig->numFrames);
 		}
 
 		////////////////////////////////////////

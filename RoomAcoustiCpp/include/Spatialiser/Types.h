@@ -146,37 +146,37 @@ namespace RAC
 			/**
 			* @brief Default constructor for the Config class
 			*/
-			Config() : Config(48000, 512, 12, 2.0, 0.98, Coefficients({ 250.0, 500.0, 1000.0, 2000.0 }), DiffractionModel::btm, SpatialisationMode::none) {}
+			Config() : Config(48000, 512, 12, 2.0, 0.98, Coefficients<>({ 250.0, 500.0, 1000.0, 2000.0 }), DiffractionModel::btm, SpatialisationMode::none) {}
 
 			/**
 			* @brief Constructor for the Config class
 			*
 			* @param sampleRate The sample rate
 			* @param numFrames The number of frames per audio callback
-			* @param numLateReverbChannels The number of FDN channels for late reverberation
+			* @param numReverbSources The number of reverb sources for late reverberation spatialisation
 			* @param lerpFactor The linear interpolation factor for audio processing
 			* @param Q The Q factor for the GraphicEQ
-			* @param fBands The frequency bands for the GraphicEQ
+			* @param frequencyBands The frequency bands for frequency dependent filtering
 			*/
-			Config(int sampleRate, int numFrames, int numLateReverbChannels, Real lerpFactor, Real Q, Coefficients<> fBands) : Config(sampleRate, numFrames, numLateReverbChannels, lerpFactor, Q, fBands, DiffractionModel::btm, SpatialisationMode::none) {}
+			Config(int sampleRate, int numFrames, size_t numReverbSources, Real lerpFactor, Real Q, Coefficients<> frequencyBands) : Config(sampleRate, numFrames, numReverbSources, lerpFactor, Q, frequencyBands, DiffractionModel::btm, SpatialisationMode::none) {}
 
 			/**
 			* @brief Constructor for the Config class
 			*
 			* @param sampleRate The sample rate
 			* @param numFrames The number of frames per audio callback
-			* @param numLateReverbChannels The number of FDN channels for late reverberation
+			* @param numReverbSources The number of reverb sources for late reverberation spatialisation
 			* @param lerpFactor The linear interpolation factor for audio processing
 			* @param Q The Q factor for the GraphicEQ
-			* @param fBands The frequency bands for the GraphicEQ
+			* @param frequencyBands The frequency bands for frequency dependent filtering
 			* @param model The diffraction model
 			* @param mode The spatialisation mode
 			*/
-			Config(int sampleRate, int numFrames, int numLateReverbChannels, Real lerpFactor, Real Q, Coefficients<> fBands, DiffractionModel model, SpatialisationMode mode) :
-				fs(sampleRate), numFrames(numFrames), numLateReverbChannels(numLateReverbChannels), lerpFactor(96.0 * lerpFactor / static_cast<Real>(sampleRate)),
-				Q(Q), frequencyBands(fBands), diffractionModel(model), spatialisationMode(mode)
+			Config(int sampleRate, int numFrames, size_t numReverbSources, Real lerpFactor, Real Q, Coefficients<> frequencyBands, DiffractionModel model, SpatialisationMode mode) :
+				fs(sampleRate), numFrames(numFrames), numReverbSources(CalculateNumReverbSources(numReverbSources)), lerpFactor(CalculateLerpFactor(lerpFactor)),
+				Q(Q), frequencyBands(frequencyBands), diffractionModel(model), spatialisationMode(mode)
 			{
-				// this->lerpFactor = std::max(std::min(this->lerpFactor, 1.0), 1.0 / static_cast<Real>(sampleRate));
+				CalculateLerpFactor(lerpFactor);
 			};
 
 			bool GetImpulseResponseMode() const { return impulseResponseMode.load(std::memory_order_acquire); }
@@ -187,39 +187,71 @@ namespace RAC
 
 			DiffractionModel GetDiffractionModel() const { return diffractionModel.load(std::memory_order_acquire); }
 
-			Real GetLerpFactor() const { return impulseResponseMode.load(std::memory_order_acquire) ? 1.0 : lerpFactor.load(std::memory_order_acquire); }
+			/**
+			* @return lerpFactor if the impulse response mode is disabled, otherwise returns 1
+			*/
+			Real GetLerpFactor() const { return impulseResponseMode.load(std::memory_order_acquire) ? 1.0 : lerpFactor; }
 
-
-			const int fs;							// Sample rate
-			const int numFrames;					// Number of frames per audio callback
-			const int numLateReverbChannels;		// Number of channels for late reverbration
+			const int fs;						// Sample rate
+			const int numFrames;				// Number of frames per audio callback
+			const size_t numReverbSources;		// Number of reverb sources for late reverberation spatialisation
 
 			const Real Q;								// Q factor for the GraphicEQ
-			const Coefficients<> frequencyBands;		// Frequency bands for the GraphicEQ
+			const Coefficients<> frequencyBands;		// Frequency bands for frequency dependent filtering
 
 		private:
-
 			friend class Context;		// Allow Context to access private members	
+
+			/**
+			* @return A supported number of reverb sources based on the maximum number of reverb sources requested
+			*/
+			static constexpr size_t CalculateNumReverbSources(size_t maxNumReverbSources)
+			{
+				if (maxNumReverbSources < 1)
+					return 0;
+				else if (maxNumReverbSources < 2)
+					return 1;
+				else if (maxNumReverbSources < 4)
+					return 2;
+				else if (maxNumReverbSources < 6)
+					return 4;
+				else if (maxNumReverbSources < 8)
+					return 6;
+				else if (maxNumReverbSources < 12)
+					return 8;
+				else if (maxNumReverbSources < 16)
+					return 12;
+				else if (maxNumReverbSources < 20)
+					return 16;
+				else if (maxNumReverbSources < 24)
+					return 20;
+				else if (maxNumReverbSources < 32)
+					return 24;
+				else
+					return 32;
+			}
+
+			/**
+			* @brief Calculates the linear interpolation factor for audio processing
+			* 
+			* @param factor the input linear interpolation factor
+			*/
+			constexpr Real CalculateLerpFactor(Real factor)
+			{
+				factor *= (Real)96.0 / static_cast<Real>(fs);
+				return std::max(std::min(factor, (Real)1.0), (Real)1.0 / static_cast<Real>(fs));
+			}
 
 			/**
 			* @details 1 means DSP parameters are lerped over only 1 audio callback,
 			* 5 means lerped over 5 separate audio callbacks. Must be greater than 0
 			*/
-			std::atomic<Real> lerpFactor;		// Linear interpolation factor for audio processing
+			const Real lerpFactor;		// Linear interpolation factor for audio processing
 
 			std::atomic<DiffractionModel> diffractionModel;			// Diffraction model
 			std::atomic<SpatialisationMode> spatialisationMode;		// Spatialisation mode
 
 			std::atomic<bool> impulseResponseMode;
-
-			
-			Real UpdateLerpFactor(const Real lerpFactor)
-			{
-				Real factor = 96.0 * lerpFactor / fs;
-				factor = std::max(std::min(factor, 1.0), 1.0 / fs);
-				this->lerpFactor.store(factor, std::memory_order_release);
-				return factor;
-			}
 		};
 	}
 }

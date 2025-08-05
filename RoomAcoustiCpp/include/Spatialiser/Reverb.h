@@ -127,11 +127,11 @@ namespace RAC
 			* @params core The 3DTI processing core
 			* @params config The spatialiser configuration
 			*/
-			Reverb(Binaural::CCore* core, const std::shared_ptr<Config> config) : reverbSourceInputs(config->numLateReverbChannels, Buffer<>(config->numFrames))
+			Reverb(Binaural::CCore* core, const std::shared_ptr<Config> config) : reverbSourceInputs(config->numReverbSources, Buffer<>(config->numFrames))
 			{
-				const std::vector<Vec3> points = CalculateSourcePositions(config->numLateReverbChannels);
-				mReverbSources.reserve(config->numLateReverbChannels);
-				for (int i = 0; i < config->numLateReverbChannels; i++)
+				const std::vector<Vec3> points = CalculateSourcePositions(config->numReverbSources);
+				mReverbSources.reserve(config->numReverbSources);
+				for (int i = 0; i < config->numReverbSources; i++)
 					mReverbSources.emplace_back(std::make_unique<ReverbSource>(core, config, points[i], &reverbSourceInputs[i]));
 			}
 
