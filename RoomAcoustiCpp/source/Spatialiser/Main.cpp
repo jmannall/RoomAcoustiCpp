@@ -102,10 +102,14 @@ extern "C"
 	}
 
 	/**
-	* @brief Sets the headphone EQ filters.
+	* Sets the headphone EQ filters.
 	*
+	* Should be called if a headphone EQ is desired (implemented as a stereo FIR filter)
+	* If not called, the headphone EQ will not be applied.
+	* 
 	* @param leftIR The impulse response for the left channel.
 	* @param rightIR The impulse response for the right channel.
+	* @param irLength The length of the impulse responses.
 	*/
 	EXPORT void API RACSetHeadphoneEQ(const float* leftIR, const float* rightIR, int irLength)
 	{
@@ -121,8 +125,10 @@ extern "C"
 	/**
 	* Sets the spatialisation mode (high quality, high performance or none).
 	*
+	* Should be called after spatialisation files have been loaded, otherwise defaults to none
+	* 
 	* The mapping is as follows:
-	* 0 -> none
+	* 0 -> none (mono)
 	* 1 -> high performance (ILD only)
 	* 2 -> high quality (HRTF)
 	*
@@ -143,34 +149,21 @@ extern "C"
 		}
 	}
 
-
-	DirectSound SelectDirectMode(int dir)
+	/**
+	* @brief Convert direct sound mode id to enum
+	*/
+	DirectSound SelectDirectMode(int directMode)
 	{
-		switch (dir)
+		switch (directMode)
 		{
 		case(0):
 		{ return DirectSound::none; break; }
 		case(1):
-		{ return DirectSound::doCheck; break; }
+		{ return DirectSound::check; break; }
 		case(2):
-		{ return DirectSound::alwaysTrue; break; }
+		{ return DirectSound::ignoreCheck; break; }
 		default:
 		{ return DirectSound::none; break; }
-		}
-	}
-
-	DiffractionSound SelectDiffractionMode(int diff)
-	{
-		switch (diff)
-		{
-		case(0):
-		{ return DiffractionSound::none; break; }
-		case(1):
-		{ return DiffractionSound::shadowZone; break; }
-		case(2):
-		{ return DiffractionSound::allZones; break; }
-		default:
-		{ return DiffractionSound::none; break; }
 		}
 	}
 
@@ -179,19 +172,20 @@ extern "C"
 	* 
 	* The direct sound is mapped as follows.
 	* 0 -> none
-	* 1 -> doCheck
-	* 2 -> alwaysTrue
+	* 1 -> check
+	* 2 -> ignoreCheck (ignores visibility check)
 	*
-	* @param dir Whether to consider direct sound.
+	* @param directMode Whether to consider direct sound.
 	* @param reflOrder The maximum number of reflections in reflection only paths.
 	* @param shadowDiffOrder The maximum number of reflections or diffractions in shadowed diffraction paths.
 	* @param specularDiffOrder The maximum number of reflections or diffractions in specular diffraction paths.
-	* @param rev Whether to consider late reverberation.
+	* @param lateReverb Whether to consider late reverberation.
+	* @param minEdgeLength The minimum edge length to consider diffraction for.
 	*/
-	EXPORT void API RACUpdateIEMConfig(int dir, int reflOrder, int shadowDiffOrder, int specularDiffOrder, bool rev, float edgeLen)
+	EXPORT void API RACUpdateIEMConfig(int directMode, int reflOrder, int shadowDiffOrder, int specularDiffOrder, bool lateReverb, float minEdgeLength)
 	{
-		DirectSound direct = SelectDirectMode(dir);
-		UpdateIEMConfig(IEMConfig(direct, reflOrder, shadowDiffOrder, specularDiffOrder, rev, static_cast<Real>(edgeLen)));
+		DirectSound direct = SelectDirectMode(directMode);
+		UpdateIEMConfig(IEMConfig(direct, reflOrder, shadowDiffOrder, specularDiffOrder, lateReverb, static_cast<Real>(minEdgeLength)));
 	}
 
 	/**

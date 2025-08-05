@@ -399,10 +399,10 @@ namespace RAC
 			// Direct sound
 			switch (mIEMConfig.direct)
 			{
-			case DirectSound::doCheck:
+			case DirectSound::check:
 				lineOfSight = !LineRoomObstruction(mListenerPosition, source.position);
 				break;
-			case DirectSound::alwaysTrue:
+			case DirectSound::ignoreCheck:
 				lineOfSight = true;
 				break;
 			default:

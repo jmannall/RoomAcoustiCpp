@@ -86,7 +86,7 @@ namespace RAC
 
 		enum class SpatialisationMode { quality, performance, none };
 
-		enum class DirectSound { none, doCheck, alwaysTrue };
+		enum class DirectSound { none, check, ignoreCheck };
 
 		enum class DiffractionSound { none, shadowZone, allZones };
 
@@ -102,7 +102,7 @@ namespace RAC
 			/**
 			* @brief Default constructor for the IEMConfig class
 			*/
-			IEMConfig() : IEMConfig(DirectSound::doCheck, 0, 0, 0, false, 0.0) {};
+			IEMConfig() : IEMConfig(DirectSound::check, 0, 0, 0, false, 0.0) {};
 
 			/**
 			* @brief Constructor for the IEMConfig class
