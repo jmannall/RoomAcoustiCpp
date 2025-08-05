@@ -237,7 +237,7 @@ namespace RAC
 				return;
 
 #ifdef DEBUG_INIT
-			Debug::Log("Init FDN: [" + CoefficientToStr(T60) + "]", Colour::Green);
+			Debug::Log("T60: " + CoefficientToStr(T60), Colour::Green);
 #endif
 			mFDN.load(std::memory_order_acquire)->SetTargetT60(T60);
 		}
@@ -246,6 +246,9 @@ namespace RAC
 
 		void Reverb::InitLateReverb(const Coefficients<>& T60, const Vec& dimensions, const FDNMatrix matrix, const std::shared_ptr<Config> config)
 		{
+#ifdef DEBUG_INIT
+			Debug::Log("T60: " + CoefficientToStr(T60), Colour::Green);
+#endif
             std::shared_ptr<FDN> fdn;
             switch (matrix)
             {
