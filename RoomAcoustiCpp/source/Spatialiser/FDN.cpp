@@ -117,7 +117,7 @@ namespace RAC
 			std::vector<int> delayLengths = CalculateTimeDelay(dimensions, config->numReverbSources, config->fs);
 			mChannels.reserve(config->numReverbSources);
 			for (int i = 0; i < config->numReverbSources; i++)
-				mChannels.push_back(std::make_unique<FDNChannel>(delayLengths[i], T60, config));
+				mChannels.push_back(std::make_unique<FDNChannel>(static_cast<size_t>(delayLengths[i]), T60, config));
 		}
 
 		////////////////////////////////////////
@@ -130,40 +130,36 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		std::vector<int> FDN::CalculateTimeDelay(const Vec& dimensions, const int numLateReverbChannels, const int fs)
+		std::vector<int> FDN::CalculateTimeDelay(const Vec& dimensions, const int numChannels, const int fs)
 		{
 			assert(dimensions.Rows() >  0);
 
-			Vec t = Vec(numLateReverbChannels);
-			std::vector<int> delays = std::vector<int>(numLateReverbChannels);
-			if (dimensions.Rows() > 0)
+			Vec t = Vec(numChannels);
+			std::vector<int> delays = std::vector<int>(numChannels);
+
+			t.RandomUniformDistribution(-0.1, 0.1);
+			t *= dimensions.Mean();
+
+			int k = 0;
+			while (k < numChannels)
 			{
-
-				assert(dimensions.Rows() <= numLateReverbChannels);
-
-				t.RandomUniformDistribution(-0.1, 0.1f);
-				t *= dimensions.Mean();
-
-				int k = 0;
-				while (k < numLateReverbChannels)
+				for (int i = 0; i < dimensions.Rows(); ++i)
 				{
-					for (int i = 0; i < dimensions.Rows(); ++i)
-					{
-						if (k >= numLateReverbChannels)
-							break;
-						assert(dimensions[i] > 0.0);
-						t[k] += dimensions[i];
-						++k;
-					}
+					if (k >= numChannels)
+						break;
+					assert(dimensions[i] > 0.0);
+					t[k] += dimensions[i];
+					++k;
 				}
-				t *= INV_SPEED_OF_SOUND;
-				t.Max(1.0 / static_cast<Real>(fs));
-
-				for (int i = 0; i < numLateReverbChannels; i++)
-					delays[i] = static_cast<int>(round(t[i] * static_cast<Real>(fs)));
-				if (!IsSetMutuallyPrime(delays))
-					MakeSetMutuallyPrime(delays);
 			}
+			t *= INV_SPEED_OF_SOUND;
+
+			for (int i = 0; i < numChannels; i++)
+				delays[i] = static_cast<int>(round(t[i] * static_cast<Real>(fs)));
+			if (!IsSetMutuallyPrime(delays))
+				MakeSetMutuallyPrime(delays);
+			for (int& delay : delays)
+				delay = std::max(delay, 1);  // Ensure no zero or less delays
 			return delays;
 		}
 

@@ -45,7 +45,7 @@ namespace RAC
 			* @param T60 Target decay time
 			* @param config Configuration of the spatialiser
 			*/
-			FDNChannel(const int delayLength, const Coefficients<>& T60, const std::shared_ptr<Config> config) :
+			FDNChannel(const size_t delayLength, const Coefficients<>& T60, const std::shared_ptr<Config> config) :
 				mT(static_cast<Real>(delayLength) / config->fs), mBuffer(delayLength),
 				mAbsorptionFilter(CalculateFilterGains(T60), config->frequencyBands, config->Q, config->fs),
 				mReflectionFilter(config->frequencyBands, config->Q, config->fs), idx(0) {}

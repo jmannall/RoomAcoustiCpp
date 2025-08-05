@@ -21,9 +21,13 @@
 #include "Spatialiser/Wall.h"
 #include "Spatialiser/Edge.h"
 
+// Unity headers
+#include "Unity/Debug.h"
+
 namespace RAC
 {
 	using namespace Common;
+	using namespace Unity;
 	namespace Spatialiser
 	{
 
@@ -41,7 +45,7 @@ namespace RAC
 			* 
 			* @params numFrequencyBands The number of frequency bands to use
 			*/
-			Room(const int numFrequencyBands) : nextPlane(0), nextWall(0), nextEdge(0), reverbFormula(ReverbFormula::Sabine), mVolume(0.0), T60(numFrequencyBands, 0.5), numAbsorptionBands(numFrequencyBands), hasChanged(true) {}
+			Room(const int numFrequencyBands) : nextPlane(0), nextWall(0), nextEdge(0), reverbFormula(ReverbFormula::Sabine), volume(0.0), T60(numFrequencyBands, 0.5), numAbsorptionBands(numFrequencyBands), hasChanged(true) {}
 			
 			/**
 			* @brief Default deconstructor
@@ -133,17 +137,17 @@ namespace RAC
 			void UpdateEdges();
 
 			/**
-			* @return The predicted reverb time of the room
+			* @return The reverb time of the room
 			*/
 			Coefficients<> GetReverbTime();
 
 			/**
-			* @brief Get the predicted reverb time of the room with a given volume
-			* 
+			* @brief Update the volume of the room and return the reverb time
+			*
 			* @params volume The volume of the room
-			* @return The predicted reverb time of the room
+			* @return The reverb time of the room
 			*/
-			Coefficients<> GetReverbTime(const Real volume) { mVolume = std::max(volume, 0.001); return GetReverbTime(); }
+			inline Coefficients<> GetReverbTime(Real volume) { this->volume = volume; return GetReverbTime(); }
 
 			/**
 			* @return True if the room geometry has changed since last check, false otherwise
@@ -321,22 +325,25 @@ namespace RAC
 			/**
 			* @brief Calculate the reverb time of the room using the Sabine formula
 			* 
+			* @params volume The volume of the room
 			* @params absorption The total absorption of the room
-			* @return The reverb time of the room
+			* @return The predicted reverb time of the room
 			*/
 			Coefficients<> Sabine(const Coefficients<>& absorption);
 
 			/**
 			* @brief Calculate the reverb time of the room using the Eyring formula
 			* 
+			* @params volume The volume of the room
 			* @params absorption The total absorption of the room
 			* @params surfaceArea The surface area of the room
+			* @return The predicted reverb time of the room
 			*/
 			Coefficients<> Eyring(const Coefficients<>& absorption, const Real& surfaceArea);
 
 			std::atomic<bool> hasChanged;		// True if the room geometry has changed since last check
 
-			Real mVolume;						// The volume of the room
+			Real volume;						// The volume of the room in m^3
 			Coefficients<> T60;					// The custom reverberation time of the room (default: 0.5s)
 			ReverbFormula reverbFormula;		// The formula used to calculate the reverb time
 			int numAbsorptionBands;				// The number of frequency bands to use for late reverberation

@@ -173,9 +173,13 @@ namespace RAC
 			* 
 			* @param volume The volume of the room used to predict the reverberation time.
 			* @param dimensions The dimensions of the room used to set the FDN delay lines.
+			* @return True if the late reverb was initialised successfully, false otherwise.
 			*/
-			void InitLateReverb(const Real volume, const Vec& dimensions, const FDNMatrix matrix);
+			bool InitLateReverb(const Real volume, const Vec& dimensions, const FDNMatrix matrix);
 
+			/**
+			* @brief Clears the internal FDN buffers.
+			*/
 			inline void ResetFDN() { mReverb->Reset(); }
 
 			/**

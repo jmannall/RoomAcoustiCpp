@@ -238,11 +238,11 @@ extern "C"
 	* 0 -> Atteuate (1 / r)
 	* 1 -> Low pass filter (1kHz)
 	* 2 -> UDFA
-	* 3 -> UDFA (interpolated)
+	* 3 -> UDFA (shadow zone only)
 	* 4 -> NN-IIR (best)
 	* 5 -> NN-IIR (small)
 	* 6 -> UTD
-	* 7 -> Btm
+	* 7 -> BTM
 	*
 	* @param id The ID corresponding to a diffraction model.
 	*/
@@ -272,6 +272,22 @@ extern "C"
 	}
 
 	/**
+	* @brief Convert FDN matrix id to enum
+	*/
+	FDNMatrix SelectFDNMatrix(int fdnMatrix)
+	{
+		switch (fdnMatrix)
+		{
+		case(0):
+		{ return FDNMatrix::householder; break; }
+		case(1):
+		{ return FDNMatrix::randomOrthogonal; break; }
+		default:
+		{ return FDNMatrix::householder; break; }
+		}
+	}
+
+	/**
 	* Updates the volume and dimensions of the room.
 	*
 	* This function should be called when the volume or dimensions of the room changes and after all walls have been initialised.
@@ -282,26 +298,20 @@ extern "C"
 	* 1 -> Random orthogonal
 	* 
 	* @param volume The volume (m^3) of the room.
-	* @param dim The dimensions (m) of the room for the delay lines.
-	* @param numDimensions The number of dimensions provided in the dim parameter. This must be a factor of numFDNChannels set in RACInit. 
+	* @param dimensionData The primary dimensions (m) of the room.
+	* @param numDimensions The number of dimensions provided in the dimensionData parameter.
 	* @param id The ID corresponding to a FDN matrix type.
+	* @return True if the late reverb was initialised successfully, false otherwise.
 	*/
-	EXPORT void API RACUpdateRoom(float volume, const float* dim, int numDimensions, int id)
+	EXPORT bool API RACInitLateReverb(float volume, const float* dimensionData, int numDimensions, int id)
 	{
 		Vec dimensions = Vec(numDimensions);
 		for (int i = 0; i < numDimensions; i++)
-			dimensions[i] = static_cast<Real>(dim[i]);
+			dimensions[i] = static_cast<Real>(dimensionData[i]);
 
-		FDNMatrix fdnMatrix = FDNMatrix::householder; // Default to householder matrix
-		switch (id)
-		{
-		case(0):
-		{ fdnMatrix = FDNMatrix::householder; break; }
-		case(1):
-		{ fdnMatrix = FDNMatrix::randomOrthogonal; break; }
-		}
+		FDNMatrix fdnMatrix = SelectFDNMatrix(id);
 
-		InitLateReverb(static_cast<Real>(volume), dimensions, fdnMatrix);
+		return InitLateReverb(static_cast<Real>(volume), dimensions, fdnMatrix);
 	}
 
 	/**

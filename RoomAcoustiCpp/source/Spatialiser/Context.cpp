@@ -213,20 +213,17 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Context::InitLateReverb(const Real volume, const Vec& dimensions, const FDNMatrix matrix)
+		bool Context::InitLateReverb(const Real volume, const Vec& dimensions, const FDNMatrix matrix)
 		{
-			Coefficients T60 = mRoom->GetReverbTime(volume);
 			if (dimensions.Rows() == 0)
 			{
 				Debug::Log("No dimensions provided for room", Colour::Red);
-				Vec defaultDimensions = Vec(3); // Assume a shoebox
-				defaultDimensions[0] = 2.5; // Assume height
-				defaultDimensions[1] = 4.0; // Assume width
-				defaultDimensions[2] = volume / 10.0; // Calculate depth
-				mReverb->InitLateReverb(T60, defaultDimensions, matrix, mConfig);
+				return false;
 			}
-			else
-				mReverb->InitLateReverb(T60, dimensions, matrix, mConfig);
+
+			Coefficients T60 = mRoom->GetReverbTime(volume);
+			mReverb->InitLateReverb(T60, dimensions, matrix, mConfig);
+			return true;
 		}
 
 		////////////////////////////////////////

@@ -59,8 +59,7 @@ namespace RAC
 			auto context = GetContext();
 			if (context)
 				return context->LoadSpatialisationFiles(hrtfResamplingStep, filePaths);
-			else
-				return false;
+			return false;
 		}
 
 		////////////////////////////////////////
@@ -119,11 +118,12 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void InitLateReverb(const Real volume, const Vec& dimensions, const FDNMatrix matrix)
+		bool InitLateReverb(const Real volume, const Vec& dimensions, const FDNMatrix matrix)
 		{
 			auto context = GetContext();
 			if (context)
-				context->InitLateReverb(volume, dimensions, matrix);
+				return context->InitLateReverb(volume, dimensions, matrix);
+			return false;
 		}
 
 		////////////////////////////////////////
@@ -151,8 +151,7 @@ namespace RAC
 			auto context = GetContext();
 			if (context)
 				return context->InitSource();
-			else
-				return -1;
+			return -1;
 		}
 
 		////////////////////////////////////////
@@ -189,8 +188,7 @@ namespace RAC
 			auto context = GetContext();
 			if (context)
 				return context->InitWall(vertices, absorption);
-			else
-				return -1;
+			return -1;
 		}
 
 		////////////////////////////////////////

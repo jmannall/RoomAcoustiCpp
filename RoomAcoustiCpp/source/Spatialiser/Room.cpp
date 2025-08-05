@@ -573,8 +573,17 @@ namespace RAC
 				}
 			}
 
-			if (surfaceArea == 0.0) // No walls
+			if (surfaceArea == 0.0)
+			{
+				Debug::Log("No walls initialised", Colour::Red);
 				return T60;
+			}
+
+			if (volume < 0.0)
+			{
+				Debug::Log("Room volume less than or equal to 0", Colour::Red);
+				return T60;
+			}
 
 			switch (reverbFormula)
 			{
@@ -592,16 +601,15 @@ namespace RAC
 		Coefficients<> Room::Sabine(const Coefficients<>& absorption)
 		{
 			Real factor = 24.0 * log(10.0) / SPEED_OF_SOUND;
-			return factor * mVolume / (absorption + 1e-10);
+			return factor * volume / (absorption + 1e-10);
 		}
 
 		////////////////////////////////////////
 
 		Coefficients<> Room::Eyring(const Coefficients<>& absorption, const Real& surfaceArea)
 		{
-			
 			Real factor = 24.0 * log(10.0) / SPEED_OF_SOUND;
-			return -factor * mVolume / ((1.0 - absorption / surfaceArea).Log() * surfaceArea + 1e-10);
+			return -factor * volume / ((1.0 - absorption / surfaceArea).Log() * surfaceArea + 1e-10);
 		}
 	}
 }

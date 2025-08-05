@@ -91,8 +91,10 @@ namespace RAC
 		*
 		* @param volume The volume of the room.
 		* @param dimensions The dimensions of the room for the delay lines.
+		* @param matrix The FDN feedback matrix type.
+		* @return True if the late reverb was initialized successfully, false otherwise.
 		*/
-		void InitLateReverb(const Real volume, const Vec& dimensions, FDNMatrix matrix);
+		bool InitLateReverb(const Real volume, const Vec& dimensions, FDNMatrix matrix);
 
 		/**
 		* Clears the internal FDN buffers.
