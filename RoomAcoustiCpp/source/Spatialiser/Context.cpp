@@ -113,9 +113,6 @@ namespace RAC
 			IEMThread = std::thread(BackgroundProcessor, this);
 			audioThreadPool = std::make_unique<AudioThreadPool>(std::min((unsigned int)8, std::thread::hardware_concurrency()), mConfig->numFrames, mConfig->numReverbSources);
 
-			mInputBuffer = Buffer(mConfig->numFrames);
-			mOutputBuffer = Buffer(2 * mConfig->numFrames); // Stereo output buffer
-			mSendBuffer = std::vector<float>(2 * mConfig->numFrames, 0.0);
 			mReverbInput = Matrix(mConfig->numReverbSources, mConfig->numFrames);
 		}
 
@@ -353,26 +350,26 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Context::GetOutput(float** bufferPtr)
+		void Context::GetOutput(Buffer<>& outputBuffer)
 		{
 			PROFILE_AudioThread;
-			const Real lerpFactor = mConfig->GetLerpFactor();
-			mSources->ProcessAudio(mOutputBuffer, mReverbInput, lerpFactor);
+			if (outputBuffer.Length() != 2 * mConfig->numFrames)
+			{
+				Debug::Log("Incorrect buffer size", Colour::Red);
+				outputBuffer.ResizeBuffer(2 * mConfig->numFrames);
+			}
 
-			mReverb->ProcessAudio(mReverbInput, mOutputBuffer, lerpFactor);
+			// Reset buffers
+			outputBuffer.Reset();
+			mReverbInput.Reset();
+			const Real lerpFactor = mConfig->GetLerpFactor();
+
+			mSources->ProcessAudio(outputBuffer, mReverbInput, lerpFactor);
+			mReverb->ProcessAudio(mReverbInput, outputBuffer, lerpFactor);
 			mReverbInput.Reset();
 
 			if (applyHeadphoneEQ)
-				headphoneEQ.ProcessAudio(mOutputBuffer, mOutputBuffer, lerpFactor);
-			
-			// Copy output to send and set pointer
-			std::transform(mOutputBuffer.begin(), mOutputBuffer.end(), mSendBuffer.begin(),
-				[&](auto value) { return static_cast<float>(value); });
-			*bufferPtr = &mSendBuffer[0];
-
-			// Reset output buffer
-			mOutputBuffer.Reset();
-			mReverbInput.Reset();
+				headphoneEQ.ProcessAudio(outputBuffer, outputBuffer, lerpFactor);
 		}
 
 		////////////////////////////////////////

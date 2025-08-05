@@ -273,7 +273,7 @@ namespace RAC
 			* 
 			* @param bufferPtr Pointer to a float pointer that is pointed towards mSendBuffer.
 			*/
-			void GetOutput(float** bufferPtr);
+			void GetOutput(Buffer<>& sendBuffer);
 
 			/**
 			* @brief Sets the spatialiser to impulse response mode if mode is true
@@ -304,9 +304,7 @@ namespace RAC
 			* Audio buffers
 			*/
 			Buffer<> mInputBuffer;	// Audio input buffer
-			Buffer<> mOutputBuffer;	// Audio output buffer
 			Matrix mReverbInput;	// Audio reverb input matrix
-			std::vector<float> mSendBuffer;	// Audio send buffer (float)
 
 			/**
 			* Handles

@@ -238,13 +238,13 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void GetOutput(float** bufferPtr)
+		void GetOutput(Buffer<>& outputBuffer)
 		{
 			auto context = GetContext();
 			if (context)
-				context->GetOutput(bufferPtr);
+				context->GetOutput(outputBuffer);
 			else
-				*bufferPtr = nullptr;
+				outputBuffer.Reset();
 		}
 
 		////////////////////////////////////////

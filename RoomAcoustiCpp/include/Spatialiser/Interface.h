@@ -187,11 +187,13 @@ namespace RAC
 		void SubmitAudio(size_t id, const Buffer<>& data);
 
 		/**
-		* Returns a pointer to the output buffer of the spatialiser.
+		* Processes the audio for the current audio callback and updates the output buffer.
 		*
-		* @param bufferPtr A pointer to a float pointer. This will be set to point to the output buffer.
+		* If outputBuffer.Length() != 2 * numFrames, it will be resized.
+		* 
+		* @param outputBuffer Buffer to write the audio output to.
 		*/
-		void GetOutput(float** bufferPtr);
+		void GetOutput(Buffer<>& outputBuffer);
 
 		/**
 		* @brief Sets the spatialiser to impulse response mode if mode is true

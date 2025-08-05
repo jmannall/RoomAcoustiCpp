@@ -218,7 +218,7 @@ namespace RAC
 				UpdateSource(sourceID, sourcePosition, sourceOrientation);
 
 				std::vector<float> output(irData[fileCounter].size());
-				float* outputPtr = nullptr;
+				Buffer<> out(2 * config->numFrames);
 
 				lateReverbCompleted = false;
 				iemCounter = 0;
@@ -235,13 +235,13 @@ namespace RAC
 					SubmitAudio(sourceID, input);
 
 					input[0] = 0.0;
-					GetOutput(&outputPtr);
+					GetOutput(out);
 
 					for (int l = 0; l < config->numFrames; l++)
 					{
-						output[count++] = outputPtr[2 * l];
+						output[count++] = out[2 * l];
 						if (mode != SpatialisationMode::none)
-							output[count++] = outputPtr[2 * l + 1];
+							output[count++] = out[2 * l + 1];
 					}
 				}
 				results.push_back(AssessImpulseResponse(matlabPtr, irData[fileCounter], output, config->fs));
