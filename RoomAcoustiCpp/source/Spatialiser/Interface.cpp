@@ -146,7 +146,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		size_t InitSource()
+		int InitSource()
 		{
 			auto context = GetContext();
 			if (context)

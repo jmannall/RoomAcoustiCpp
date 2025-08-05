@@ -108,11 +108,11 @@ namespace RAC
 		void UpdateListener(const Vec3& position, const Vec4& orientation);
 
 		/**
-		* Initializes a new audio source and returns its ID.
+		* Initializes a new audio source and returns its ID. If ID is -1, failed to initialize.
 		*
 		* @return The ID of the new audio source.
 		*/
-		size_t InitSource();
+		int InitSource();
 
 		/**
 		* Updates the position and orientation of the audio source with the given ID.

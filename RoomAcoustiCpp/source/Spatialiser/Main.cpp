@@ -364,7 +364,7 @@ extern "C"
 	*/
 	EXPORT int API RACInitSource()
 	{
-		return static_cast<int>(InitSource());
+		return InitSource();
 	}
 
 	/**
@@ -406,25 +406,25 @@ extern "C"
 		switch (directivity)
 		{
 		case(0):
-		{ UpdateSourceDirectivity(id, SourceDirectivity::omni); break; }
+		{ UpdateSourceDirectivity(static_cast<size_t>(id), SourceDirectivity::omni); break; }
 		case(1):
-		{ UpdateSourceDirectivity(id, SourceDirectivity::subcardioid); break; }
+		{ UpdateSourceDirectivity(static_cast<size_t>(id), SourceDirectivity::subcardioid); break; }
 		case(2):
-		{ UpdateSourceDirectivity(id, SourceDirectivity::cardioid); break; }
+		{ UpdateSourceDirectivity(static_cast<size_t>(id), SourceDirectivity::cardioid); break; }
 		case(3):
-		{ UpdateSourceDirectivity(id, SourceDirectivity::supercardioid); break; }
+		{ UpdateSourceDirectivity(static_cast<size_t>(id), SourceDirectivity::supercardioid); break; }
 		case(4):
-		{ UpdateSourceDirectivity(id, SourceDirectivity::hypercardioid); break; }
+		{ UpdateSourceDirectivity(static_cast<size_t>(id), SourceDirectivity::hypercardioid); break; }
 		case(5):
-		{ UpdateSourceDirectivity(id, SourceDirectivity::bidirectional); break; }
+		{ UpdateSourceDirectivity(static_cast<size_t>(id), SourceDirectivity::bidirectional); break; }
 		case(6):
-		{ UpdateSourceDirectivity(id, SourceDirectivity::genelec8020c); break; }
+		{ UpdateSourceDirectivity(static_cast<size_t>(id), SourceDirectivity::genelec8020c); break; }
 		case(7):
-		{ UpdateSourceDirectivity(id, SourceDirectivity::genelec8020cDTF); break; }
+		{ UpdateSourceDirectivity(static_cast<size_t>(id), SourceDirectivity::genelec8020cDTF); break; }
 		case(8):
-		{ UpdateSourceDirectivity(id, SourceDirectivity::qscK8); break; }
+		{ UpdateSourceDirectivity(static_cast<size_t>(id), SourceDirectivity::qscK8); break; }
 		default:
-		{ UpdateSourceDirectivity(id, SourceDirectivity::omni); break; }
+		{ UpdateSourceDirectivity(static_cast<size_t>(id), SourceDirectivity::omni); break; }
 		}
 	}
 

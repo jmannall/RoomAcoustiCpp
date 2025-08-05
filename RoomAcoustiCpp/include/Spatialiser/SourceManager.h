@@ -25,15 +25,22 @@
 // 3DTI headers
 #include "BinauralSpatializer/Core.h"
 
+// Unity headers
+#include "Unity/Debug.h"
+
 using namespace Common;
 namespace RAC
 {
 	using namespace Common;
 	using namespace DSP;
+	using namespace Unity;
 	namespace Spatialiser
 	{
 		//////////////////// SourceManager class ////////////////////
 
+		/**
+		* @brief Class that stores, updates and process all sound sources and image sources
+		*/
 		class SourceManager
 		{
 		public:
@@ -94,20 +101,14 @@ namespace RAC
 			*/
 			inline void UpdateSourceDirectivity(const size_t id, const SourceDirectivity directivity)
 			{
+				if (id > MAX_SOURCES)
+				{
+					Debug::Log("Source ID out of range", Colour::Red);
+					return;
+				}
 				mSources[id]->UpdateDirectivity(directivity, mConfig->frequencyBands, mConfig->numLateReverbChannels);
 			}
 
-			inline int NextID() const
-			{
-				int nextID = 0;
-				for (const auto& source : mSources)
-				{
-					if (source.has_value() && source->CanEdit() && source->IsReset())
-						return nextID;
-					nextID++;
-				}
-				return -1;
-			}
 			/**
 			* @brief Initialises a new source
 			* 
@@ -125,10 +126,28 @@ namespace RAC
 			*/
 			inline void Update(const size_t id, const Vec3& position, const Vec4& orientation, Real& distance)
 			{
+				if (id > MAX_SOURCES)
+				{
+					Debug::Log("Source ID out of range", Colour::Red);
+					return;
+				}
 				mSources[id]->Update(position, orientation, distance);
 			}
 
-			inline void Remove(const size_t id) { mSources[id]->Remove(); }
+			/**
+			* @brief Removes a source
+			* 
+			* @params id The ID of the source
+			*/
+			inline void Remove(const size_t id)
+			{
+				if (id > MAX_SOURCES)
+				{
+					Debug::Log("Source ID out of range", Colour::Red);
+					return;
+				}
+				mSources[id]->Remove();
+			}
 
 			/**
 			* @return Position, orientation and directivity data for all sources
@@ -141,7 +160,15 @@ namespace RAC
 			* @params id The ID of the source
 			* @return The position of the source
 			*/
-			inline Vec3 GetSourcePosition(const size_t id) { return mSources[id]->GetPosition(); }
+			inline std::optional<Vec3> GetSourcePosition(const size_t id)
+			{
+				if (id > MAX_SOURCES)
+				{
+					Debug::Log("Source ID out of range", Colour::Red);
+					return std::nullopt;
+				}
+				return mSources[id]->GetPosition();
+			}
 
 			/**
 			* @brief Updates the audio DSP parameters and image sources for a given source
@@ -153,6 +180,11 @@ namespace RAC
 			inline void UpdateSourceData(const size_t id, const Source::AudioData source, const ImageSourceDataMap& vSources)
 			{
 				PROFILE_UpdateAudioData
+				if (id > MAX_SOURCES)
+				{
+					Debug::Log("Source ID out of range", Colour::Red);
+					return;
+				}
 				mSources[id]->UpdateData(source, vSources, mConfig);
 			}
 
@@ -171,11 +203,24 @@ namespace RAC
 			* 
 			* @params id The ID of the source
 			* @params data The input audio buffer
-			* @params reverbInput The reverb input matrix to write to
-			* @params outputBuffer The output audio buffer to write to
 			*/
-			inline void SetInputBuffer(const size_t id, const Buffer<>& data) { mSources[id]->SetInputBuffer(data); }
+			inline void SetInputBuffer(const size_t id, const Buffer<>& data)
+			{
+				if (id > MAX_SOURCES)
+				{
+					Debug::Log("Source ID out of range", Colour::Red);
+					return;
+				}
+				mSources[id]->SetInputBuffer(data);
+			}
 
+			/**
+			* @brief Processes the audio for all sources and image sources
+			* 
+			* @params outputBuffer The output audio buffer to write to
+			* @params reverbInput The reverb input matrix to write to
+			* @param lerpFactor The lerp factor for interpolation
+			* */
 			inline void ProcessAudio(Buffer<>& outputBuffer, Matrix& reverbInput, const Real lerpFactor)
 			{
 				PROFILE_EarlyReflections
@@ -188,13 +233,26 @@ namespace RAC
 			}
 
 		private:
-			Binaural::CCore* mCore;			// 3DTI processing core
+			/**
+			* @return The next available ID for a source, returns -1 if no ID is available
+			*/
+			inline int NextID() const
+			{
+				int nextID = 0;
+				for (const auto& source : mSources)
+				{
+					if (source.has_value() && source->CanEdit() && source->IsReset())
+						return nextID;
+					nextID++;
+				}
+				return -1;
+			}
 
-			std::shared_ptr<Config> mConfig;			// Spatialiser configuration
+			Binaural::CCore* mCore;				// 3DTI processing core
+			std::shared_ptr<Config> mConfig;	// Spatialiser configuration
 
 			std::array<std::optional<Source>, MAX_SOURCES> mSources;	// Sources for the audio thread
 			ImageSourceManager mImageSources;							// Image sources for the audio thread
-
 		};
 	}
 }

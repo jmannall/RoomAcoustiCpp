@@ -191,7 +191,7 @@ namespace RAC
 			* 
 			* @return The ID of the new source.
 			*/
-			size_t InitSource();
+			int InitSource();
 
 			/**
 			* @brief Updates the position and orientation of a source.

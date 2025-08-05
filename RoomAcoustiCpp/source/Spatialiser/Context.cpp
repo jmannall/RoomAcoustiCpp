@@ -250,7 +250,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		size_t Context::InitSource()
+		int Context::InitSource()
 		{
 #ifdef DEBUG_INIT
 	Debug::Log("Init Source", Colour::Green);
@@ -268,16 +268,21 @@ namespace RAC
 			// Ensure source is outside listener head radius
 			if (distance < headRadius)
 			{
-				Vec3 newPosition = position;
+				std::optional<Vec3> newPosition = position;
 				if (distance == 0.0)
+				{
 					newPosition = mSources->GetSourcePosition(id);
-				distance = (newPosition - listenerPosition).Length();
+					if (!newPosition.has_value())
+						return; // Exit if source position is not found
+				}
+
+				distance = (newPosition.value() - listenerPosition).Length();
 				if (distance == 0.0)
 					newPosition = listenerPosition + Vec3(1.0,0.0,0.0);
-				newPosition = listenerPosition + UnitVector(newPosition - listenerPosition) * headRadius;
+				newPosition = listenerPosition + UnitVector(newPosition.value() - listenerPosition) * headRadius;
 
 				// Update source position, orientation and virtual sources
-				mSources->Update(id, newPosition, orientation, headRadius);
+				mSources->Update(id, newPosition.value(), orientation, headRadius);
 			}
 			else
 				// Update source position, orientation and virtual sources
