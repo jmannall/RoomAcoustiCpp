@@ -42,9 +42,9 @@ using namespace RAC::Unity;
 
 //////////////////// Variables ////////////////////
 
-static float* buffer = nullptr;	// Pointer to return buffer
-static int numAbsorptionBands = 0;	// Store number of frequency bands for any reflection filters
-static int numAudioFrames = 0;
+static Buffer<> buffer(1);	// Return buffer
+static int NUM_FREQUENCY_BANDS = 0;	// Store number of frequency bands for any reflection filters
+static int NUM_FRAMES = 0;
 
 extern "C"
 {
@@ -66,6 +66,12 @@ extern "C"
 	*/
 	EXPORT bool API RACInit(int fs, int numFrames, int maxFDNChannels, float lerpFactor, float Q, const float* fBands, int numBands)
 	{
+		buffer.ResizeBuffer(2 * numFrames);
+		NUM_FREQUENCY_BANDS = numFrequencyBands;
+		NUM_FRAMES = numFrames;
+		Coefficients<> frequencyBands = Coefficients<>(numFrequencyBands);
+		for (int i = 0; i < numFrequencyBands; i++)
+			frequencyBands[i] = static_cast<Real>(frequencyBandData[i]);
 
 		int numFDNChannels = 0;
 		if (maxFDNChannels < 1)
@@ -206,16 +212,16 @@ extern "C"
 	* 1 -> doCheck
 	* 2 -> alwaysTrue
 	*
-	* @param dir Whether to consider direct sound.
+	* @param direct Whether to consider direct sound.
 	* @param reflOrder The maximum number of reflections in reflection only paths.
 	* @param shadowDiffOrder The maximum number of reflections or diffractions in shadowed diffraction paths.
 	* @param specularDiffOrder The maximum number of reflections or diffractions in specular diffraction paths.
 	* @param rev Whether to consider late reverberation.
 	*/
-	EXPORT void API RACUpdateIEMConfig(int dir, int reflOrder, int shadowDiffOrder, int specularDiffOrder, bool rev, float edgeLen, float pathLen)
+	EXPORT void API RACUpdateIEMConfig(int direct, int reflOrder, int shadowDiffOrder, int specularDiffOrder, bool lateReverb, float minEdgeLength, float maxPathLen)
 	{
-		DirectSound direct = SelectDirectMode(dir);
-		UpdateIEMConfig(IEMData(direct, reflOrder, shadowDiffOrder, specularDiffOrder, rev, static_cast<Real>(edgeLen), static_cast<Real>(pathLen)));
+		DirectSound directMode = SelectDirectMode(direct);
+		UpdateIEMConfig(IEMConfig(directMode, reflOrder, shadowDiffOrder, specularDiffOrder, lateReverb, static_cast<Real>(minEdgeLength),  static_cast<Real>(maxPathLen)));
 	}
 
 	/**
@@ -433,6 +439,36 @@ extern "C"
 	}
 
 	/**
+	* @brief Convert Directivity id to enum
+	*/
+	SourceDirectivity SelectDirectivity(int directivity)
+	{
+		switch (directivity)
+		{
+		case(0):
+		{ return SourceDirectivity::omni; }
+		case(1):
+		{ return SourceDirectivity::subcardioid; }
+		case(2):
+		{ return SourceDirectivity::cardioid; }
+		case(3):
+		{ return SourceDirectivity::supercardioid; }
+		case(4):
+		{ return SourceDirectivity::hypercardioid; }
+		case(5):
+		{ return SourceDirectivity::bidirectional; }
+		case(6):
+		{ return SourceDirectivity::genelec8020c; }
+		case(7):
+		{ return SourceDirectivity::genelec8020cDTF; }
+		case(8):
+		{ return SourceDirectivity::qscK8; }
+		default:
+		{ return SourceDirectivity::omni; }
+		}
+	}
+
+	/**
 	* Updates the directivity of the audio source with the given ID.
 	* 
 	* The mapping is as follows:
@@ -447,33 +483,12 @@ extern "C"
 	* 8 -> qscK8
 	* 
 	* @param id The ID of the audio source to update.
-	* @param directivity The new directivity of the source.
+	* @param directivityID The new directivity of the source.
 	*/
-	EXPORT void API RACUpdateSourceDirectivity(int id, int directivity)
+	EXPORT void API RACUpdateSourceDirectivity(int id, int directivityID)
 	{
-		switch (directivity)
-		{
-		case(0):
-		{ UpdateSourceDirectivity(id, SourceDirectivity::omni); break; }
-		case(1):
-		{ UpdateSourceDirectivity(id, SourceDirectivity::subcardioid); break; }
-		case(2):
-		{ UpdateSourceDirectivity(id, SourceDirectivity::cardioid); break; }
-		case(3):
-		{ UpdateSourceDirectivity(id, SourceDirectivity::supercardioid); break; }
-		case(4):
-		{ UpdateSourceDirectivity(id, SourceDirectivity::hypercardioid); break; }
-		case(5):
-		{ UpdateSourceDirectivity(id, SourceDirectivity::bidirectional); break; }
-		case(6):
-		{ UpdateSourceDirectivity(id, SourceDirectivity::genelec8020c); break; }
-		case(7):
-		{ UpdateSourceDirectivity(id, SourceDirectivity::genelec8020cDTF); break; }
-		case(8):
-		{ UpdateSourceDirectivity(id, SourceDirectivity::qscK8); break; }
-		default:
-		{ UpdateSourceDirectivity(id, SourceDirectivity::omni); break; }
-		}
+		SourceDirectivity directivity = SelectDirectivity(directivityID);
+		UpdateSourceDirectivity(static_cast<size_t>(id), directivity);
 	}
 
 	/**
@@ -618,10 +633,8 @@ extern "C"
 	*/
 	EXPORT bool API RACProcessOutput()
 	{
-		GetOutput(&buffer);	
-		if (!buffer)
-			return false;
-		if (std::isnan(*buffer))
+		GetOutput(buffer);	
+		if (!buffer.Valid())
 			return false;
 		return true;
 	}
@@ -634,9 +647,10 @@ extern "C"
 	*
 	* @param buf A pointer to a float pointer. This will be set to point to the interleaved output buffer.
 	*/
-	EXPORT void API RACGetOutputBuffer(float** buf)
+	EXPORT void API RACGetOutputBuffer(float* sendBuffer)
 	{
-		*buf = buffer;
+		for (Real value : buffer)
+			*sendBuffer++ = static_cast<float>(value);
 	}
 
 	/**
@@ -647,7 +661,7 @@ extern "C"
 	* @param lerpFactor The default interpolation factor.
 	* @params mode True if disable all interpolation, false otherwise.
 	*/
-	EXPORT void API RACUpdateImpulseResponseMode(float lerpFactor, bool mode)
+	EXPORT void API RACUpdateImpulseResponseMode(bool mode)
 	{
 		UpdateImpulseResponseMode(mode);
 	}
