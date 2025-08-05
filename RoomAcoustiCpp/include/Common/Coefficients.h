@@ -13,6 +13,7 @@
 #include <vector>
 #include <array>
 #include <cmath>
+#include <iostream>
 
 // Common headers
 #include "Common/Types.h"
@@ -30,11 +31,17 @@ namespace RAC
 		{
 		public:
 
+			/**
+			* @brief Constructor that initialises the Coefficients with a value
+			*
+			* @param in The value for the coefficients
+			* @details Used for std::array (predetermined size)
+			*/
 			template <typename U = T, std::enable_if_t<!std::is_constructible<U, size_t, Real>::value, int> = 0>
 			Coefficients(const Real in) { mCoefficients.fill(in); }
 
 			/**
-			* Constructor that initialises the Coefficients with zeros
+			* @brief Constructor that initialises the Coefficients with zeros
 			*
 			* @param len The number of coefficients
 			*/
@@ -372,6 +379,23 @@ namespace RAC
 		inline Coefficients<T> operator/(Coefficients<T> v, const Real a) { return v *= (1.0 / a); }
 		template<typename T>		
 		inline Coefficients<T> operator/(const Real a, const Coefficients<T>& v) { Coefficients<T> u = Coefficients<T>(v.Length(), a);  return u /= v; }
+
+		/**
+		* @brief prints a Coeffcient using std::cout << coefficient << std::endl;
+		*/
+		inline std::ostream& operator<<(std::ostream& os, const Coefficients<>& v)
+		{
+			if (v.Length() == 0)
+			{
+				os << "[ ]";
+				return os;
+			}
+			os << "[ " << v[0];
+			for (int i = 1; i < v.Length(); i++)
+				os << ", " << v[i];
+			os << " ]";
+			return os;
+		}
 
 		/**
 		* @return True if all coefficient entries are equal to a, false otherwise

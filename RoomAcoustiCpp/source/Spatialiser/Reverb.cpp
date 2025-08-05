@@ -237,8 +237,7 @@ namespace RAC
 				return;
 
 #ifdef DEBUG_INIT
-			Debug::Log("Init FDN: [" + RealToStr(T60[0]) + ", " + RealToStr(T60[1]) + ", " +
-				RealToStr(T60[2]) + ", " + RealToStr(T60[3]) + ", " + RealToStr(T60[4]) + "]", Colour::Green);
+			Debug::Log("Init FDN: [" + CoefficientToStr(T60) + "]", Colour::Green);
 #endif
 			mFDN.load(std::memory_order_acquire)->SetTargetT60(T60);
 		}

@@ -17,6 +17,9 @@
 #include <vector>
 #include <mutex>
 
+// Common headers
+#include "Common/Coefficients.h"
+
 // Unity headers
 #include "Unity/IUnityInterface.h"
 
@@ -168,6 +171,16 @@ namespace RAC
             {
                 ss << x[i];
             }
+            return ss.str();
+        }
+
+        /**
+        * @brief Converts Coefficients to a string
+        */
+        inline std::string CoefficientToStr(const Coefficients<>& x)
+        {
+            std::stringstream ss;
+            ss << x;
             return ss.str();
         }
     }
