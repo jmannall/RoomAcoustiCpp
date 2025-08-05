@@ -44,11 +44,18 @@ namespace RAC
 			Buffer(const int length) : mBuffer(length, 0.0) {};
 
 			/**
-			* Constructor that initialises the buffer with a vector of T values.
+			* @brief Constructor that initialises the buffer with a vector of T values.
 			*
 			* @param vec The vector of T values to initialise the buffer with.
 			*/
 			Buffer(const std::vector<T>& vector) : mBuffer(vector) {};
+
+			/**
+			* @brief Copy constructor that copys the buffer data from another Buffer instance.
+			* 
+			* @param buffer The Buffer instance to copy from.
+			*/
+			Buffer(const Buffer& buffer) : mBuffer(buffer.mBuffer) {}
 
 			/**
 			* @brief Default deconstructor.
@@ -119,6 +126,17 @@ namespace RAC
 			* @return The value at the specified index
 			*/
 			inline T operator[](const int i) const { assert(i < mBuffer.size()); return mBuffer[i]; };
+
+			/**
+			* @brief Assignment operator that copies the buffer data from another Buffer instance
+			* 
+			* @param buffer The Buffer instance to copy from
+			*/
+			Buffer& operator=(const Buffer& buffer) {
+				if (this != &buffer)
+					mBuffer = buffer.mBuffer;
+				return *this;
+			}
 
 			/**
 			* @brief Multiplies each sample in the buffer by a scalar value.
