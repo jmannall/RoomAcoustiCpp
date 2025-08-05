@@ -184,11 +184,11 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		size_t InitWall(const Vertices& vData, const Absorption<>& absorption)
+		int InitWall(const Vertices& vertices, const Absorption<>& absorption)
 		{
 			auto context = GetContext();
 			if (context)
-				return context->InitWall(vData, absorption);
+				return context->InitWall(vertices, absorption);
 			else
 				return -1;
 		}

@@ -25,9 +25,10 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		size_t Room::AddWall(Wall& wall)
+		size_t Room::InitWall(const Vertices& vertices, const Absorption<>& absorption)
 		{
 			size_t id;
+			Wall wall(vertices, absorption);
 			std::lock_guard<std::mutex> lock(mWallMutex);
 			if (!mEmptyWallSlots.empty()) // Assign wall to an existing ID
 			{

@@ -447,26 +447,23 @@ extern "C"
 	* This function should be called when a new wall is created. A wall must have 3 vertices.
 	* It will allocate resources for the new wall and return an ID that can be used to reference the wall in future calls.
 	*
-	* @param nX The x-coordinate of the wall's normal vector.
-	* @param nY The y-coordinate of the wall's normal vector.
-	* @param nZ The z-coordinate of the wall's normal vector.
-	* @param vData The vertices of the wall.
-	* @param absorption The frequency absorption coefficients.
+	* @param verticesData The vertices of the wall.
+	* @param absorptionData The frequency absorption coefficients.
 	*
 	* @return The ID of the new wall.
 	*/
-	EXPORT int API RACInitWall(const float* vData, const float* absorption)
+	EXPORT int API RACInitWall(const float* verticesData, const float* absorptionData)
 	{
 		std::vector<Real> a = std::vector<Real>(numAbsorptionBands);
 		for (int i = 0; i < numAbsorptionBands; i++)
-			a[i] = static_cast<Real>(absorption[i]);
-		Absorption abs = Absorption(a);
+			a[i] = static_cast<Real>(absorptionData[i]);
+		Absorption absorption = Absorption(a);
 
-		Vertices vertices = { Vec3(vData[0], vData[1], vData[2]),
-			Vec3(vData[3], vData[4], vData[5]),
-			Vec3(vData[6], vData[7], vData[8]) };
+		Vertices vertices = { Vec3(verticesData[0], verticesData[1], verticesData[2]),
+			Vec3(verticesData[3], verticesData[4], verticesData[5]),
+			Vec3(verticesData[6], verticesData[7], verticesData[8]) };
 
-		return static_cast<int>(InitWall(vertices, abs));
+		return InitWall(vertices, absorption);
 	}
 
 	/**
@@ -476,16 +473,13 @@ extern "C"
 	* It will update the internal representation of the wall to match the new position and orientation.
 	*
 	* @param id The ID of the wall to update.
-	* @param nX The x-coordinate of the wall's normal vector.
-	* @param nY The y-coordinate of the wall's normal vector.
-	* @param nZ The z-coordinate of the wall's normal vector.
-	* @param vData The vertices of the wall.
+	* @param verticesData The vertices of the wall.
 	*/
-	EXPORT void API RACUpdateWall(int id, const float* vData)
+	EXPORT void API RACUpdateWall(int id, const float* verticesData)
 	{
-		Vertices vertices = { Vec3(vData[0], vData[1], vData[2]),
-			Vec3(vData[3], vData[4], vData[5]),
-			Vec3(vData[6], vData[7], vData[8]) };
+		Vertices vertices = { Vec3(verticesData[0], verticesData[1], verticesData[2]),
+			Vec3(verticesData[3], verticesData[4], verticesData[5]),
+			Vec3(verticesData[6], verticesData[7], verticesData[8]) };
 
 		UpdateWall(static_cast<size_t>(id), vertices);
 	}
@@ -497,16 +491,16 @@ extern "C"
 	* It will update the internal representation of the wall to match the new absorption and update the late reverberation time.
 	*
 	* @param id The ID of the wall to update.
-	* @param absorption The frequency absorption coefficients.
+	* @param absorptionData The frequency absorption coefficients.
 	*/
-	EXPORT void API RACUpdateWallAbsorption(int id, const float* absorption)
+	EXPORT void API RACUpdateWallAbsorption(int id, const float* absorptionData)
 	{
 		std::vector<Real> a = std::vector<Real>(numAbsorptionBands);
 		for (int i = 0; i < numAbsorptionBands; i++)
-			a[i] = static_cast<Real>(absorption[i]);
-		Absorption abs = Absorption(a);
+			a[i] = static_cast<Real>(absorptionData[i]);
+		Absorption absorption = Absorption(a);
 
-		UpdateWallAbsorption(static_cast<size_t>(id), abs);
+		UpdateWallAbsorption(static_cast<size_t>(id), absorption);
 	}
 
 	/**

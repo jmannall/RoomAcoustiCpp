@@ -220,12 +220,11 @@ namespace RAC
 			/**
 			* @brief Initialises a new wall in the spatialsier.
 			* 
-			* @param vData The vertices of the wall.
+			* @param vertices The vertices of the wall.
 			* @param absorption The absorption of the wall.
-			* 
-			* @return The ID of the new wall.
+			* @return The ID of the wall.
 			*/
-			size_t InitWall(const Vertices& vData, const Absorption<>& absorption);
+			int InitWall(const Vertices& vertices, const Absorption<>& absorption);
 			
 			/**
 			* @brief Updates the position of a wall.
@@ -254,13 +253,6 @@ namespace RAC
 			* @brief Updates the planes and edges of the room.
 			*/
 			void UpdatePlanesAndEdges();
-
-			/**
-			* @brief Updates the late reverb gain.
-			* 
-			* @param gain The new late reverb gain.
-			*/
-			inline void UpdateLateReverbGain(const Real gain) { mReverb->SetReverbGain(gain); }
 
 			/**
 			* @brief Sends an audio buffer to a source and adds the output to mOutputBuffer.

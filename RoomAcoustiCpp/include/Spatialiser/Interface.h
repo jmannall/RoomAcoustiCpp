@@ -141,11 +141,11 @@ namespace RAC
 		/**
 		* Initializes a new wall with the given parameters and returns its ID.
 		*
-		* @param vData The vertices of the wall.
+		* @param vertices The vertices of the wall.
 		* @param absorption The frequency absorption coefficients.
 		* @return The ID of the new wall.
 		*/
-		size_t InitWall(const Vertices& vData, const Absorption<>& absorption);
+		int InitWall(const Vertices& vertices, const Absorption<>& absorption);
 		
 		/**
 		* Updates the position and orientation of the wall with the given ID.

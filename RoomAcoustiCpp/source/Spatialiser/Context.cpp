@@ -255,7 +255,6 @@ namespace RAC
 #ifdef DEBUG_INIT
 	Debug::Log("Init Source", Colour::Green);
 #endif
-
 			return mSources->Init();
 		}
 
@@ -302,16 +301,19 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		size_t Context::InitWall(const Vertices& vData, const Absorption<>& absorption)
+		int Context::InitWall(const Vertices& vertices, const Absorption<>& absorption)
 		{
 #ifdef DEBUG_INIT
-	Debug::Log("Init Wall", Colour::Green);
+			Debug::Log("Init Wall", Colour::Green);
 #endif
-
-			Wall wall = Wall(vData, absorption);
-			size_t id = mRoom->AddWall(wall);
+			if (absorption.Length() != mConfig->frequencyBands.Length())
+			{
+				Debug::Log("Absorption coefficients length does not match frequency bands length", Colour::Red);
+				return -1; // Return -1 if absorption coefficients length is incorrect
+			}
+			size_t id = mRoom->InitWall(vertices, absorption);
 			mRoom->InitEdges(id);
-			return id;
+			return static_cast<int>(id);
 		}
 
 		////////////////////////////////////////
@@ -325,6 +327,11 @@ namespace RAC
 
 		void Context::UpdateWallAbsorption(size_t id, const Absorption<>& absorption)
 		{
+			if (absorption.Length() != mConfig->frequencyBands.Length())
+			{
+				Debug::Log("Absorption coefficients length does not match frequency bands length", Colour::Red);
+				return;
+			}
 			mRoom->UpdateWallAbsorption(id, absorption);
 			mReverb->SetTargetT60(mRoom->GetReverbTime());
 		}

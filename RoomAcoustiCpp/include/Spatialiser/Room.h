@@ -63,9 +63,13 @@ namespace RAC
 			inline void UpdateReverbTime(const Coefficients<>& t) { reverbFormula = ReverbFormula::Custom; T60 = t; }
 
 			/**
-			* @brief Add a wall to the room
+			* @brief Initialises a new wall
+			* 
+			* @params vertices The vertices of the wall
+			* @params absorption The absorption of the wall
+			* @return The ID of the wall
 			*/
-			size_t AddWall(Wall& wall);
+			size_t InitWall(const Vertices& vertices, const Absorption<>& absorption);
 
 			/**
 			* @brief Update the vertex data of the wall with the given ID
