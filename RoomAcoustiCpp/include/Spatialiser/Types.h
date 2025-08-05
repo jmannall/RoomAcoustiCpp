@@ -253,8 +253,6 @@ namespace RAC
 
 			bool GetImpulseResponseMode() const { return impulseResponseMode.load(std::memory_order_acquire); }
 
-			bool CompareImpulseResponseMode(const bool mode) const { return impulseResponseMode.load(std::memory_order_acquire) != mode; }
-
 			SpatialisationMode GetSpatialisationMode() const { return spatialisationMode.load(std::memory_order_acquire); }
 			
 			LateReverbModel GetLateReverbModel() const { return lateReverbModel.load(std::memory_order_acquire); }
@@ -263,7 +261,7 @@ namespace RAC
 
 			DiffractionModel GetDiffractionModel() const { return diffractionModel.load(std::memory_order_acquire); }
 
-			Real GetLerpFactor() const { return lerpFactor.load(std::memory_order_acquire); }
+			Real GetLerpFactor() const { return impulseResponseMode.load(std::memory_order_acquire) ? 1.0 : lerpFactor.load(std::memory_order_acquire); }
 
 			const int fs;							// Sample rate
 			const int numFrames;					// Number of frames per audio callback

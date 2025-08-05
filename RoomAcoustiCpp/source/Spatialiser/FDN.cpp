@@ -166,21 +166,21 @@ namespace RAC
 			std::vector<int> delays = std::vector<int>(numReverbSources);
 			if (dimensions.Rows() > 0)
 			{
-				Real idx = static_cast<Real>(numReverbSources) / static_cast<Real>(dimensions.Rows());
 
 				assert(dimensions.Rows() <= numReverbSources);
-				assert(idx == floor(idx)); // length of dimensions must be a multiple of mNumChannels
 
 				t.RandomUniformDistribution(-0.1, 0.1f);
 				t *= dimensions.Mean();
 
 				int k = 0;
-				for (int j = 0; j < numReverbSources / idx; ++j)
+				while (k < numReverbSources)
 				{
-					assert(dimensions[j] > 0.0);
-					for (int i = 0; i < idx; ++i)
+					for (int i = 0; i < dimensions.Rows(); ++i)
 					{
-						t[k] += dimensions[j];
+						if (k >= numReverbSources)
+							break;
+						assert(dimensions[i] > 0.0);
+						t[k] += dimensions[i];
 						++k;
 					}
 				}

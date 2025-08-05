@@ -1,0 +1,1 @@
+This section covers the classes making up the digital signal processing used on the audio thread. This consists of audio buffers, parameter interpolation and lock free protocols for FIR and IIR filters.
