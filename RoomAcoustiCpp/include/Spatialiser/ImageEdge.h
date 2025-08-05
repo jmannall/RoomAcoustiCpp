@@ -71,7 +71,7 @@ namespace RAC
 				else
 					doSpecularDiffraction = false;
 				mIEMConfigStore.specularDiffOrder = doSpecularDiffraction ? specularDiffractionStore : 0;
-				configChanged = store != doSpecularDiffraction;
+				configChanged = configChanged || store != doSpecularDiffraction;
 			}
 
 			/**
