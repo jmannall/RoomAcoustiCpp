@@ -573,6 +573,9 @@ namespace RAC
 				}
 			}
 
+			if (surfaceArea == 0.0) // No walls
+				return T60;
+
 			switch (reverbFormula)
 			{
 			case(ReverbFormula::Sabine):
@@ -589,15 +592,16 @@ namespace RAC
 		Coefficients<> Room::Sabine(const Coefficients<>& absorption)
 		{
 			Real factor = 24.0 * log(10.0) / SPEED_OF_SOUND;
-			return factor * mVolume / absorption;
+			return factor * mVolume / (absorption + 1e-10);
 		}
 
 		////////////////////////////////////////
 
 		Coefficients<> Room::Eyring(const Coefficients<>& absorption, const Real& surfaceArea)
 		{
+			
 			Real factor = 24.0 * log(10.0) / SPEED_OF_SOUND;
-			return -factor * mVolume / ((1 - absorption / surfaceArea).Log() * surfaceArea);
+			return -factor * mVolume / ((1.0 - absorption / surfaceArea).Log() * surfaceArea + 1e-10);
 		}
 	}
 }

@@ -190,14 +190,16 @@ extern "C"
 
 	/**
 	* Updates the late reverberation time (T60).
+	* 
+	* Should be called after the late reverberation has been initialised, if a custom T60 is desired.
 	*
-	* @param t60 The late reverberation time.s
+	* @param T60Data The late reverberation time.
 	*/
-	EXPORT void API RACUpdateReverbTime(const float* t60)
+	EXPORT void API RACUpdateReverbTime(const float* T60Data)
 	{
 		Coefficients T60 = Coefficients<>(static_cast<size_t>(NUM_FREQUENCY_BANDS));
 		for (int i = 0; i < NUM_FREQUENCY_BANDS; i++)
-			T60[i] = static_cast<Real>(t60[i]);
+			T60[i] = static_cast<Real>(T60Data[i]);
 
 		UpdateReverbTime(T60);
 	}
@@ -205,6 +207,8 @@ extern "C"
 	/**
 	* Updates the model in order to calculate the late reverberation time (T60).
 	*
+	* Should be called after the late reverberation has been initialised.
+	* 
 	* The mapping is as follows:
 	* 0 -> Sabine
 	* 1 -> Eyring

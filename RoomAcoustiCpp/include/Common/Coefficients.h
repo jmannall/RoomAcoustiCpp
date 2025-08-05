@@ -506,8 +506,13 @@ namespace RAC
 			{
 				for (int i = 0; i < this->mCoefficients.size(); i++)
 				{
-					assert(this->mCoefficients[i] <= 1.0);
-					this->mCoefficients[i] = sqrt(1.0 - R[i]);
+					// Clip between 0 and 1
+					if (R[i] < 0.0)
+						this->mCoefficients[i] = 1.0;
+					else if (R[i] > 1.0)
+						this->mCoefficients[i] = 0.0;
+					else
+						this->mCoefficients[i] = sqrt(1.0 - R[i]);
 				}
 			}
 

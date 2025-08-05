@@ -199,7 +199,7 @@ namespace RAC
 		void Context::UpdateReverbTime(const Coefficients<>& T60)
 		{
 			mRoom->UpdateReverbTime(T60);
-			mReverb->SetTargetT60(T60);
+			mReverb->SetTargetT60(mRoom->GetReverbTime());
 		}
 
 		////////////////////////////////////////
