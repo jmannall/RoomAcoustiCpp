@@ -61,9 +61,9 @@ namespace RAC
 		/**
 		* Updates the configuration for the Image Edge Model (IEM).
 		*
-		* @param config The new configuration for the IEM.
+		* @param data The new configuration for the IEM.
 		*/
-		void UpdateIEMConfig(const IEMConfig& config);
+		void UpdateIEMConfig(const IEMData& data);
 
 		/**
 		* Updates the model in order to calculate the late reverberation time (T60).

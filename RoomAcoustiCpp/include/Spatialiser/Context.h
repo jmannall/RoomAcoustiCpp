@@ -129,9 +129,9 @@ namespace RAC
 			/**
 			* @brief Updates the image edge model (IEM) configuration.
 			*
-			* @param config The new IEM configuration.
+			* @param data The new IEM configuration.
 			*/
-			inline void UpdateIEMConfig(const IEMConfig& config) { mImageEdgeModel->UpdateIEMConfig(config); }
+			inline void UpdateIEMConfig(const IEMData& data) { mImageEdgeModel->UpdateIEMConfig(data, mConfig); }
 
 			/**
 			* Updates the model in order to calculate the late reverberation time (T60).
@@ -283,6 +283,11 @@ namespace RAC
 			void UpdateImpulseResponseMode(const bool mode);
 
 		private:
+			/**
+			* @brief Initialise the audio thread pool and late reverberation
+			*/
+			void InitialiseAudio();
+
 			/**
 			* Spatialiser
 			*/

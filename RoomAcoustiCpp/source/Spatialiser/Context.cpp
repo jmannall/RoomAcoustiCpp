@@ -101,19 +101,16 @@ namespace RAC
 			mListener = mCore.CreateListener();
 			headRadius = mListener->GetHeadRadius();
 
-			mReverb = std::make_shared<Reverb>(&mCore, mConfig);
+			InitialiseAudio();
 			mRoom = std::make_shared<Room>(mConfig->frequencyBands.Length());
 			mSources = std::make_shared<SourceManager>(&mCore, mConfig);
-			mImageEdgeModel = std::make_shared<ImageEdge>(mRoom, mSources, mReverb, mConfig->frequencyBands);
+			mImageEdgeModel = std::make_shared<ImageEdge>(mRoom, mSources, mReverb, mConfig);
 			
 			// Initialize NNs
 			myNN_initialize();
 
 			// Start background thread after all systems are initialized
 			IEMThread = std::thread(BackgroundProcessor, this);
-			audioThreadPool = std::make_unique<AudioThreadPool>(std::min((unsigned int)8, std::thread::hardware_concurrency()), mConfig->numFrames, mConfig->numReverbSources);
-
-			mReverbInput = Matrix(mConfig->numReverbSources, mConfig->numFrames);
 		}
 
 		////////////////////////////////////////
@@ -153,6 +150,16 @@ namespace RAC
 #ifdef PROFILE_BACKGROUND_THREAD || PROFILE_AUDIO_THREAD
 			Profiler::Instance().SetOutputFile(profileFile, false);
 #endif
+		}
+
+		////////////////////////////////////////
+
+		void Context::InitialiseAudio()
+		{
+			size_t numThreads = std::min((unsigned int)8, std::thread::hardware_concurrency());
+			audioThreadPool = std::make_unique<AudioThreadPool>(numThreads, mConfig->numFrames, mConfig->numReverbSources);
+			mReverb = std::make_shared<Reverb>(&mCore, mConfig);
+			mReverbInput = Matrix(mConfig->numReverbSources, mConfig->numFrames);
 		}
 
 		////////////////////////////////////////

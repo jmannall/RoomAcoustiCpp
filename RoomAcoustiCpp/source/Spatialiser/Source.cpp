@@ -48,7 +48,7 @@ namespace RAC
 
 			mDirectivity.store(SourceDirectivity::omni, std::memory_order_release);
 
-			feedsFDN.store(false, std::memory_order_release);
+			reverbSend.store(LateReverbModel::none, std::memory_order_release);
 			hasChanged.store(true, std::memory_order_release);
 
 			ResetFDNSlots();
@@ -101,12 +101,10 @@ namespace RAC
 				mReverbSendSource->DisableDistanceAttenuationSmoothingAnechoic();
 				mReverbSendSource->DisableInterpolation();
 			}
-			feedsFDN.store(true, std::memory_order_release);
 		}
 
 		void Source::RemoveReverbSendSource()
 		{
-			feedsFDN.store(false, std::memory_order_release);
 			unique_lock<shared_mutex> lock(tuneInMutex);
 			mCore->RemoveSingleSourceDSP(mReverbSendSource);
 			mReverbSendSource.reset();
@@ -259,7 +257,7 @@ namespace RAC
 
 			mAirAbsorption->ProcessAudio(inputBuffer, bStore, lerpFactor);
 
-			if (feedsFDN.load(std::memory_order_acquire))
+			if (reverbSend.load(std::memory_order_acquire) == LateReverbModel::fdn)
 			{
 				{
 					PROFILE_Reflection
@@ -335,15 +333,15 @@ namespace RAC
 				return;
 			directivityFilter->SetTargetGains(source.directivity);
 
-			if (source.feedsFDN && !mReverbSendSource)
+			if (source.reverbSend == LateReverbModel::fdn && !mReverbSendSource)
 			{
 				InitReverbSendSource(config->GetImpulseResponseMode());
 				UpdateImpulseResponseMode(config->GetImpulseResponseMode());
 			}
-			else if (!source.feedsFDN && mReverbSendSource)
+			if (source.reverbSend != LateReverbModel::fdn && mReverbSendSource)
 				RemoveReverbSendSource();
-			else
-				feedsFDN.store(source.feedsFDN, std::memory_order_release);
+			reverbSend.store(source.reverbSend, std::memory_order_release);
+
 			UpdateImageSourceDataMap(imageSourceData);
 			UpdateImageSources(config);
 			FreeAccess();

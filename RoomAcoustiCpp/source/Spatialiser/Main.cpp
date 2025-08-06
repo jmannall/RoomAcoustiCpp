@@ -183,10 +183,10 @@ extern "C"
 	* @param lateReverb Whether to consider late reverberation.
 	* @param minEdgeLength The minimum edge length to consider diffraction for.
 	*/
-	EXPORT void API RACUpdateIEMConfig(int direct, int reflOrder, int shadowDiffOrder, int specularDiffOrder, bool lateReverb, float minEdgeLength)
+	EXPORT void API RACUpdateIEMConfig(int dir, int reflOrder, int shadowDiffOrder, int specularDiffOrder, bool rev, float edgeLen)
 	{
-		DirectSound directMode = SelectDirectMode(direct);
-		UpdateIEMConfig(IEMConfig(directMode, reflOrder, shadowDiffOrder, specularDiffOrder, lateReverb, static_cast<Real>(minEdgeLength)));
+		DirectSound direct = SelectDirectMode(dir);
+		UpdateIEMConfig(IEMData(direct, reflOrder, shadowDiffOrder, specularDiffOrder, rev, static_cast<Real>(edgeLen)));
 	}
 
 	/**

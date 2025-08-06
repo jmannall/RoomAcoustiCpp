@@ -86,11 +86,35 @@ namespace RAC
 
 		enum class SpatialisationMode { quality, performance, none };
 
+		enum class LateReverbModel { none, fdn };
+
 		enum class DirectSound { none, check, ignoreCheck };
 
 		enum class DiffractionSound { none, shadowZone, allZones };
 
 		//////////////////// Struct Data Types ////////////////////
+
+		struct IEMData
+		{
+		public:
+			DirectSound direct{ DirectSound::none };		// Direct sound visibiilty model
+			int reflOrder{ 0 };								// Maximum number of reflections in reflection only paths
+			int shadowDiffOrder{ 0 };						// Maximum number of reflections or diffractions in shadowed diffraction paths
+			int specularDiffOrder{ 0 };						// Maximum number of reflections or diffractions in specular diffraction paths
+			bool lateReverb{ false };						// True when late reverb enabled, flase otherwise
+			Real minEdgeLength{ 0.0 };						// Minimum edge length for diffraction
+
+			IEMData() {}
+
+			IEMData(DirectSound direct, int reflOrder, int shadowDiffOrder, int specularDiffOrder, bool lateReverb) :
+				direct(direct), reflOrder(reflOrder), shadowDiffOrder(shadowDiffOrder), specularDiffOrder(specularDiffOrder), lateReverb(lateReverb) {
+			}
+
+			IEMData(DirectSound direct, int reflOrder, int shadowDiffOrder, int specularDiffOrder, bool lateReverb, Real minEdgeLength) :
+				direct(direct), reflOrder(reflOrder), shadowDiffOrder(shadowDiffOrder), specularDiffOrder(specularDiffOrder), lateReverb(lateReverb),
+				minEdgeLength(minEdgeLength) {
+			}
+		};
 
 		/**
 		* @brief Configuration struct for the image edge model
@@ -98,15 +122,17 @@ namespace RAC
 		class IEMConfig
 		{
 		public:
-
-			/**
-			* @brief Default constructor for the IEMConfig class
-			*/
-			IEMConfig() : IEMConfig(DirectSound::check, 0, 0, 0, false, 0.0) {};
-
 			/**
 			* @brief Constructor for the IEMConfig class
 			* 
+			* @param diffractionModel The diffraction model to use
+			* @param lateReverb The late reverberation model to use
+			*/
+			IEMConfig(DiffractionModel diffractionModel, LateReverbModel lateReverb) : IEMConfig(IEMData(), diffractionModel, lateReverb) {};
+
+			/**
+			* @brief Constructor for the IEMConfig class
+			*
 			* @param order The maximum reflection/diffraction order of the IEM
 			* @param direct The direct sound visibility model
 			* @param reflections The reflection flag
@@ -115,27 +141,109 @@ namespace RAC
 			* @param lateReverb The late reverberation flag
 			* @param minEdgeLength The minimum edge length for diffraction
 			*/
-			IEMConfig(DirectSound direct, int reflOrder, int shadowDiffOrder, int specularDiffOrder, bool lateReverb, Real minEdgeLength) : 
-				direct(direct), reflOrder(reflOrder), shadowDiffOrder(shadowDiffOrder), specularDiffOrder(specularDiffOrder),
-				lateReverb(lateReverb), minEdgeLength(minEdgeLength)
+			IEMConfig(IEMData data, DiffractionModel diffractionModel, LateReverbModel lateReverb) :
+				data(data), lateReverbModel(lateReverb)
 			{
-				maxOrder = std::max(std::max(reflOrder, shadowDiffOrder), specularDiffOrder);
+				UpdateMaxOrder();
+				UpdateDiffractionModel(diffractionModel);
 			};
 
-			int MaxOrder() { return maxOrder; }
+			/**
+			* @brief Update the current diffraction model and check for specular diffraction support
+			* 
+			* @param model The new diffraction model
+			* @return True if the support for specular diffraction has changed, false otherwise
+			*/
+			inline bool UpdateDiffractionModel(DiffractionModel model)
+			{
+				if (model == DiffractionModel::btm || model == DiffractionModel::udfa)
+				{
+					bool hasChanged = data.specularDiffOrder == 0 && specularDiffOrderStore > 0;
+					data.specularDiffOrder = specularDiffOrderStore;
+					return hasChanged;
+				}
+				else
+				{
+					bool hasChanged = data.specularDiffOrder != 0;
+					data.specularDiffOrder = 0;	// Only BTM and UDFA support specular diffraction
+					return hasChanged;
+				}
+			}
 
-			DirectSound direct;								// Direct sound visibiilty model
-			int reflOrder;									// Maximum number of reflections in reflection only paths
-			int shadowDiffOrder;							// Maximum number of reflections or diffractions in shadowed diffraction paths
-			int specularDiffOrder;							// Maximum number of reflections or diffractions in specular diffraction paths
-			bool lateReverb;								// Late reverberation flag
-			Real minEdgeLength;								// Minimum edge length for diffraction
+			/**
+			* @brief Update the current late reverberation model
+			* 
+			* @param model The new late reverberation model
+			* @return True if the late reverb model has changed and late reverberation is currently enabled, false otherwise
+			*/
+			inline bool UpdateLateReverbModel(LateReverbModel model)
+			{
+				if (lateReverbModel == model)
+					return false;
+				lateReverbModel = model;
+				return data.lateReverb; // If no late reverb, no need to update the model
+			}
+
+			/**
+			* @brief Calculate the maximum path order
+			*/
+			inline void UpdateMaxOrder()
+			{
+				maxOrder = std::max(std::max(data.reflOrder, data.shadowDiffOrder), data.specularDiffOrder);
+			}
+
+			/**
+			* @brief Update the IEM configuration data
+			* 
+			* @param data The path configuration data
+			* @param diffractionModel The diffraction model to use
+			* @param lateReverb The late reverberation model to use
+			*/
+			inline void Update(IEMData data, DiffractionModel diffractionModel, LateReverbModel lateReverb)
+			{
+				this->data = data;
+				UpdateMaxOrder();
+				UpdateDiffractionModel(diffractionModel);
+				UpdateLateReverbModel(lateReverb);
+			}
+
+			/**
+			* @return The maximum order of the IE model
+			*/
+			inline int MaxOrder() const { return maxOrder; }
+
+			/**
+			* @brief Get the current late reverberation model
+			* 
+			* @param checkData If true, checks if late reverb is enabled in the data and returns LateReverbModel::none if not enabled
+			* @return The current late reverberation model
+			*/
+			inline LateReverbModel GetLateReverbModel(bool checkData = true) const
+			{
+				if (checkData)
+					return data.lateReverb ? lateReverbModel : LateReverbModel::none;
+				return lateReverbModel;
+			}
+
+			/**
+			* @brief Check if the current path order feeds the FDN
+			* 
+			* @param order The current path order to check
+			* @return True if the current path order feeds the FDN late reverberation model, false otherwise
+			*/
+			inline bool FeedsFDN(int order) const
+			{
+				return data.lateReverb && lateReverbModel == LateReverbModel::fdn && maxOrder == order;
+			}
+
+			IEMData data;		// IE model path configuration data
 
 		private:
-			int maxOrder;									// Maximum order of the IEM
-		};
+			int maxOrder;						// Maximum order of the IEM
+			int specularDiffOrderStore;			// Store the specular diffraction order
 
-		// class Context;
+			LateReverbModel lateReverbModel;		// Late reverb model
+		};
 
 		/**
 		* @brief Configuration struct for RAC
@@ -146,7 +254,7 @@ namespace RAC
 			/**
 			* @brief Default constructor for the Config class
 			*/
-			Config() : Config(48000, 512, 12, 2.0, 0.98, Coefficients<>({ 250.0, 500.0, 1000.0, 2000.0 }), DiffractionModel::btm, SpatialisationMode::none) {}
+			Config() : Config(48000, 512, 12, 2.0, 0.98, Coefficients<>({ 250.0, 500.0, 1000.0, 2000.0, 4000.0 }), SpatialisationMode::none) {}
 
 			/**
 			* @brief Constructor for the Config class
@@ -158,7 +266,7 @@ namespace RAC
 			* @param Q The Q factor for the GraphicEQ
 			* @param frequencyBands The frequency bands for frequency dependent filtering
 			*/
-			Config(int sampleRate, int numFrames, size_t numReverbSources, Real lerpFactor, Real Q, Coefficients<> frequencyBands) : Config(sampleRate, numFrames, numReverbSources, lerpFactor, Q, frequencyBands, DiffractionModel::btm, SpatialisationMode::none) {}
+			Config(int sampleRate, int numFrames, size_t numReverbSources, Real lerpFactor, Real Q, Coefficients<> frequencyBands) : Config(sampleRate, numFrames, numReverbSources, lerpFactor, Q, frequencyBands, SpatialisationMode::none) {}
 
 			/**
 			* @brief Constructor for the Config class
@@ -172,19 +280,33 @@ namespace RAC
 			* @param model The diffraction model
 			* @param mode The spatialisation mode
 			*/
-			Config(int sampleRate, int numFrames, size_t numReverbSources, Real lerpFactor, Real Q, Coefficients<> frequencyBands, DiffractionModel model, SpatialisationMode mode) :
+			Config(int sampleRate, int numFrames, size_t numReverbSources, Real lerpFactor, Real Q, Coefficients<> frequencyBands, SpatialisationMode mode) :
 				fs(sampleRate), numFrames(numFrames), numReverbSources(CalculateNumReverbSources(numReverbSources)), lerpFactor(CalculateLerpFactor(lerpFactor)),
-				Q(Q), frequencyBands(frequencyBands), diffractionModel(model), spatialisationMode(mode)
-			{
-				CalculateLerpFactor(lerpFactor);
-			};
+				Q(Q), frequencyBands(frequencyBands), spatialisationMode(mode) {};
 
+			/**
+			* @return True if the impulse response mode is enabled (interpolation disabled), false otherwise
+			*/
 			bool GetImpulseResponseMode() const { return impulseResponseMode.load(std::memory_order_acquire); }
 
+			/**
+			* @return The current spatialisation mode (quality, performance, none)
+			*/
 			SpatialisationMode GetSpatialisationMode() const { return spatialisationMode.load(std::memory_order_acquire); }
 			
+			/**
+			* @return The current late reverberation model (fdn, none)
+			*/
+			LateReverbModel GetLateReverbModel() const { return lateReverbModel.load(std::memory_order_acquire); }
+
+			/**
+			* @return True if the current spatialisation mode is different from the given mode, false otherwise
+			*/
 			bool CompareSpatialisationMode(const SpatialisationMode mode) const { return spatialisationMode.load(std::memory_order_acquire) != mode; }
 
+			/**
+			* @return The current diffraction model (attenuate, lowPass, utd, udfa, udfai, nnBest, nnSmall, btm)
+			*/
 			DiffractionModel GetDiffractionModel() const { return diffractionModel.load(std::memory_order_acquire); }
 
 			/**
@@ -248,10 +370,11 @@ namespace RAC
 			*/
 			const Real lerpFactor;		// Linear interpolation factor for audio processing
 
-			std::atomic<DiffractionModel> diffractionModel;			// Diffraction model
-			std::atomic<SpatialisationMode> spatialisationMode;		// Spatialisation mode
+			std::atomic<DiffractionModel> diffractionModel{ DiffractionModel::btm };	// Diffraction model
+			std::atomic<SpatialisationMode> spatialisationMode;							// Spatialisation mode
+			std::atomic<LateReverbModel> lateReverbModel{ LateReverbModel::fdn };		// Late reverberation mode
 
-			std::atomic<bool> impulseResponseMode;
+			std::atomic<bool> impulseResponseMode;		// True if impulse response mode is enabled (disables interpolation), false otherwise
 		};
 	}
 }

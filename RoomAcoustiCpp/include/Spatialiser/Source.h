@@ -48,10 +48,10 @@ namespace RAC
 			*/
 			struct AudioData
 			{
-				Absorption<> directivity;	// Frequency dependent directivity
-				bool feedsFDN;				// True if direct sound feeds the late reverberation, false otherwise
+				Absorption<> directivity;		// Frequency dependent directivity
+				LateReverbModel reverbSend;		// True if direct sound feeds the late reverberation, false otherwise
 
-				AudioData(int len, bool feedsFDN) : directivity(len), feedsFDN(feedsFDN) {}
+				AudioData(int numFrequencyBands, LateReverbModel model) : directivity(numFrequencyBands), reverbSend(model) {}
 			};
 
 			/**
@@ -305,12 +305,12 @@ namespace RAC
 			std::unique_ptr<GraphicEQ> directivityFilter;		// Directivity filter
 			std::unique_ptr<GraphicEQ> reverbInputFilter;		// Reverb energy based on directivity
 
-			std::atomic<SourceDirectivity> mDirectivity;	// Source directivity
-			std::atomic<bool> feedsFDN{ false };			// True if the source feeds the FDN
+			std::atomic<SourceDirectivity> mDirectivity;						// Source directivity
+			std::atomic<LateReverbModel> reverbSend{ LateReverbModel::none };	// Current reverb model for reverb send
 
 			std::atomic<bool> clearInputBuffer{ false };	// True if the input buffer should be cleared, false otherwise
-			Buffer<> inputBuffer;								// Input audio buffer for the source
-			Buffer<> bStore;									// Internal scratch audio buffer
+			Buffer<> inputBuffer;							// Input audio buffer for the source
+			Buffer<> bStore;								// Internal scratch audio buffer
 			Buffer<> bStoreReverb;							// Internal audio buffer reverb send
 
 			Vec3 currentPosition;						// Current source position

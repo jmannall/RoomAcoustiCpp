@@ -38,9 +38,9 @@ namespace RAC
 			* @param room Pointer to the room class
 			* @param sourceManager Pointer to the source manager class
 			* @param reverb Pointer to the late reverb class
-			* @param frequencyBands Frequency bands for graphic equalisers
+			* @param config The configuration for the spatialiser.
 			*/
-			ImageEdge(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const Coefficients<>& numFrequencyBands);
+			ImageEdge(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const std::shared_ptr<Config>& config);
 			
 			/**
 			* @brief Default deconstructor
@@ -49,29 +49,26 @@ namespace RAC
 
 			/**
 			* @brief Updates the image edge model configuration
-			* 
+			*
 			* @param config The new configuration
 			*/
-			inline void UpdateIEMConfig(const IEMConfig& config)
+			inline void UpdateIEMConfig(const IEMData& data, const std::shared_ptr<Config>& config)
 			{
 				lock_guard<std::mutex> lock(dataStoreMutex);
-				mIEMConfigStore = config;
-				specularDiffractionStore = config.specularDiffOrder;
-				if (!doSpecularDiffraction)
-					mIEMConfigStore.specularDiffOrder = 0;
+				mIEMConfigStore.Update(data, config->GetDiffractionModel(), config->GetLateReverbModel());
 				configChanged = true;
 			}
 
 			inline void UpdateDiffractionModel(const DiffractionModel model)
 			{
 				lock_guard<std::mutex> lock(dataStoreMutex);
-				bool store = doSpecularDiffraction;
-				if (model == DiffractionModel::btm || model == DiffractionModel::udfa)
-					doSpecularDiffraction = true;
-				else
-					doSpecularDiffraction = false;
-				mIEMConfigStore.specularDiffOrder = doSpecularDiffraction ? specularDiffractionStore : 0;
-				configChanged = configChanged || store != doSpecularDiffraction;
+				configChanged = configChanged || mIEMConfigStore.UpdateDiffractionModel(model);
+			}
+
+			inline void UpdateLateReverbModel(const LateReverbModel model)
+			{
+				lock_guard<std::mutex> lock(dataStoreMutex);
+				configChanged = configChanged || mIEMConfigStore.UpdateLateReverbModel(model);
 			}
 
 			/**

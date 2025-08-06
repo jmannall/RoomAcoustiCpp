@@ -82,11 +82,11 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void UpdateIEMConfig(const IEMConfig& config)
+		void UpdateIEMConfig(const IEMData& data)
 		{
 			auto context = GetContext();
 			if (context)
-				context->UpdateIEMConfig(config);
+				context->UpdateIEMConfig(data);
 		}
 
 		////////////////////////////////////////
