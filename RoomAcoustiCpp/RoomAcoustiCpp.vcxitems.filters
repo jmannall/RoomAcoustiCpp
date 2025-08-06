@@ -1,348 +1,109 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{48cd3823-f33b-42f0-a180-4413b3091693}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{99419ef0-ef8f-46cf-ab10-52f48c2b3a04}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\Spatialiser">
-      <UniqueIdentifier>{5f549b9f-a86d-4246-98bb-dc19592f70f7}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Spatialiser">
-      <UniqueIdentifier>{a8acf9c8-96c3-4f50-b04c-b5c4f6817dea}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\Spatialiser\Diffraction">
-      <UniqueIdentifier>{62b025b6-b69f-457c-829a-3a6c64119e55}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Spatialiser\Diffraction">
-      <UniqueIdentifier>{834593a7-5170-4a18-b2a1-192d9efe6294}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\Common">
-      <UniqueIdentifier>{f07afa99-c5fe-4f26-ac6f-5946d16efa7c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\Unity">
-      <UniqueIdentifier>{5135bf83-bb43-41f2-a4d4-b559c10e9d4b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Unity">
-      <UniqueIdentifier>{fbe530ca-caee-4355-97ff-2fb5e0d29240}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Common">
-      <UniqueIdentifier>{d00b4eae-0a1d-4174-a196-68e8896c0c72}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\DSP">
-      <UniqueIdentifier>{b73dbbb8-a9d2-40dc-b708-7f8d6b809edf}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\DSP">
-      <UniqueIdentifier>{6dbdf9af-0bc0-4b16-a505-df86882c6a32}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\NN">
-      <UniqueIdentifier>{2f9b7dac-b322-47c0-a624-bef1cc89105a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\NN">
-      <UniqueIdentifier>{71b87e4b-dd51-4948-9d66-89c889ae1188}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\moodycamel">
-      <UniqueIdentifier>{d52a8938-56af-42b1-b749-21565140082a}</UniqueIdentifier>
-    </Filter>
+    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\elementwiseOperationInPlace.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\myBestNN.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\myNN_data.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\myNN_initialize.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\myNN_terminate.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\mySmallNN.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\predict.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Common\Matrix.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Common\Vec.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\AudioThreadPool.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\Buffer.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\FIRFilter.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\GraphicEQ.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\IIRFilter.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\LinkwitzRileyFilter.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\AirAbsorption.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Context.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Diffraction\Models.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Diffraction\Path.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Edge.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\FDN.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\ImageEdge.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\ImageSource.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Interface.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Main.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\SourceManager.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Reverb.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Room.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Source.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\TracingTypes.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\TracingUtils.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Wall.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Unity\Debug.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Unity\UnityInterface.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Context.cpp">
-      <Filter>Source Files\Spatialiser</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\SourceManager.cpp">
-      <Filter>Source Files\Spatialiser</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Interface.cpp">
-      <Filter>Source Files\Spatialiser</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Main.cpp">
-      <Filter>Source Files\Spatialiser</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Wall.cpp">
-      <Filter>Source Files\Spatialiser</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Room.cpp">
-      <Filter>Source Files\Spatialiser</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\FDN.cpp">
-      <Filter>Source Files\Spatialiser</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Reverb.cpp">
-      <Filter>Source Files\Spatialiser</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Edge.cpp">
-      <Filter>Source Files\Spatialiser</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Diffraction\Path.cpp">
-      <Filter>Source Files\Spatialiser\Diffraction</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Diffraction\Models.cpp">
-      <Filter>Source Files\Spatialiser\Diffraction</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Source.cpp">
-      <Filter>Source Files\Spatialiser</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\Common\Matrix.cpp">
-      <Filter>Source Files\Common</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\Common\Vec.cpp">
-      <Filter>Source Files\Common</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\Unity\Debug.cpp">
-      <Filter>Source Files\Unity</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\Unity\UnityInterface.cpp">
-      <Filter>Source Files\Unity</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\Buffer.cpp">
-      <Filter>Source Files\DSP</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\FIRFilter.cpp">
-      <Filter>Source Files\DSP</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\IIRFilter.cpp">
-      <Filter>Source Files\DSP</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\LinkwitzRileyFilter.cpp">
-      <Filter>Source Files\DSP</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\ImageEdge.cpp">
-      <Filter>Source Files\Spatialiser</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\GraphicEQ.cpp">
-      <Filter>Source Files\DSP</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\AirAbsorption.cpp">
-      <Filter>Source Files\Spatialiser</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\ImageSource.cpp">
-      <Filter>Source Files\Spatialiser</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\elementwiseOperationInPlace.cpp">
-      <Filter>Source Files\NN</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\myBestNN.cpp">
-      <Filter>Source Files\NN</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\myNN_data.cpp">
-      <Filter>Source Files\NN</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\myNN_initialize.cpp">
-      <Filter>Source Files\NN</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\myNN_terminate.cpp">
-      <Filter>Source Files\NN</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\mySmallNN.cpp">
-      <Filter>Source Files\NN</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\predict.cpp">
-      <Filter>Source Files\NN</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\AudioThreadPool.cpp">
-      <Filter>Source Files\DSP</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Types.h">
-      <Filter>Header Files\Spatialiser</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Context.h">
-      <Filter>Header Files\Spatialiser</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\SourceManager.h">
-      <Filter>Header Files\Spatialiser</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Interface.h">
-      <Filter>Header Files\Spatialiser</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Wall.h">
-      <Filter>Header Files\Spatialiser</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Room.h">
-      <Filter>Header Files\Spatialiser</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\FDN.h">
-      <Filter>Header Files\Spatialiser</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Reverb.h">
-      <Filter>Header Files\Spatialiser</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Edge.h">
-      <Filter>Header Files\Spatialiser</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Diffraction\Path.h">
-      <Filter>Header Files\Spatialiser\Diffraction</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Diffraction\Models.h">
-      <Filter>Header Files\Spatialiser\Diffraction</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Source.h">
-      <Filter>Header Files\Spatialiser</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Unity\Debug.h">
-      <Filter>Header Files\Unity</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Unity\IUnityInterface.h">
-      <Filter>Header Files\Unity</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Complex.h">
-      <Filter>Header Files\Common</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Definitions.h">
-      <Filter>Header Files\Common</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Matrix.h">
-      <Filter>Header Files\Common</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Vec4.h">
-      <Filter>Header Files\Common</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\ScopedTimer.h">
-      <Filter>Header Files\Common</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Types.h">
-      <Filter>Header Files\Common</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Vec.h">
-      <Filter>Header Files\Common</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Vec3.h">
-      <Filter>Header Files\Common</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Unity\IUnityProfiler.h">
-      <Filter>Header Files\Unity</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Unity\UnityInterface.h">
-      <Filter>Header Files\Unity</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Coefficients.h">
-      <Filter>Header Files\Common</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\Buffer.h">
-      <Filter>Header Files\DSP</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\FIRFilter.h">
-      <Filter>Header Files\DSP</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\IIRFilter.h">
-      <Filter>Header Files\DSP</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\LinkwitzRileyFilter.h">
-      <Filter>Header Files\DSP</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\Interpolate.h">
-      <Filter>Header Files\DSP</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\SphericalGeometries.h">
-      <Filter>Header Files\Common</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\ImageEdge.h">
-      <Filter>Header Files\Spatialiser</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Globals.h">
-      <Filter>Header Files\Spatialiser</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\AirAbsorption.h">
-      <Filter>Header Files\Spatialiser</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\GraphicEQ.h">
-      <Filter>Header Files\DSP</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\ImageSource.h">
-      <Filter>Header Files\Spatialiser</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Directivity.h">
-      <Filter>Header Files\Spatialiser</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\ThreadPool.h">
-      <Filter>Header Files\Common</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\HeadphoneEQ.h">
-      <Filter>Header Files\Spatialiser</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\anonymous_function.h">
-      <Filter>Header Files\NN</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\elementwiseOperationInPlace.h">
-      <Filter>Header Files\NN</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\myBestNN.h">
-      <Filter>Header Files\NN</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\myNN_data.h">
-      <Filter>Header Files\NN</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\myNN_initialize.h">
-      <Filter>Header Files\NN</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\myNN_internal_types.h">
-      <Filter>Header Files\NN</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\myNN_terminate.h">
-      <Filter>Header Files\NN</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\myNN_types.h">
-      <Filter>Header Files\NN</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\mySmallNN.h">
-      <Filter>Header Files\NN</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\predict.h">
-      <Filter>Header Files\NN</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\rtwtypes.h">
-      <Filter>Header Files\NN</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\tmwtypes.h">
-      <Filter>Header Files\NN</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\ReleasePool.h">
-      <Filter>Header Files\Common</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Timer.h">
-      <Filter>Header Files\Common</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\Parameter.h">
-      <Filter>Header Files\DSP</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Access.h">
-      <Filter>Header Files\Common</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\ImageSourceManager.h">
-      <Filter>Header Files\Spatialiser</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\SpinLock.h">
-      <Filter>Header Files\Common</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\moodycamel\concurrentqueue.h">
-      <Filter>Header Files\moodycamel</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\AudioThreadPool.h">
-      <Filter>Header Files\DSP</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\RACProfiler.h">
-      <Filter>Header Files\Common</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\GraphicEQ_private.h">
-      <Filter>Header Files\DSP</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\FDN_private.h">
-      <Filter>Header Files\Spatialiser</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\IIRFilter_private.h">
-      <Filter>Header Files\DSP</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Matrix_private.h">
-      <Filter>Header Files\Common</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Vec_private.h">
-      <Filter>Header Files\Common</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\RAVESResidual.h">
-      <Filter>Header Files\Spatialiser</Filter>
-    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\anonymous_function.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\elementwiseOperationInPlace.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\myBestNN.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\myNN_data.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\myNN_initialize.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\myNN_internal_types.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\myNN_terminate.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\myNN_types.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\mySmallNN.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\predict.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\rtwtypes.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\include\tmwtypes.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Access.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Coefficients.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Complex.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Definitions.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Matrix.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Matrix_private.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\RACProfiler.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\ReleasePool.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\SphericalGeometries.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\SpinLock.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\ThreadPool.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Timer.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Vec4.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\ScopedTimer.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Types.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Vec.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Vec3.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Vec_private.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\AudioThreadPool.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\Buffer.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\FIRFilter.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\GraphicEQ.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\GraphicEQ_private.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\IIRFilter.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\IIRFilter_private.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\Interpolate.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\LinkwitzRileyFilter.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\Parameter.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\moodycamel\concurrentqueue.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\AirAbsorption.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Context.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Diffraction\Models.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Diffraction\Path.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Directivity.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Edge.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\FDN.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\FDN_private.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\HeadphoneEQ.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\ImageEdge.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\ImageSource.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\ImageSourceManager.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Interface.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Globals.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\RAVESResidual.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\SourceManager.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Reverb.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Room.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Source.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\TracingTypes.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\TracingUtils.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Types.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Wall.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Unity\Debug.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Unity\IUnityInterface.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Unity\IUnityProfiler.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Unity\UnityInterface.h" />
   </ItemGroup>
 </Project>
