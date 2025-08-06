@@ -1,0 +1,24 @@
+All rights reserved.
+
+This copy of RoomAcoustiCpp is free software; you can redistribute 
+it and/or modify it under the terms of the GNU General Public License 
+version 3 as published by the Free Software Foundation.
+
+RoomAcoustiCpp is distributed in the hope that it will be useful, but 
+WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY 
+or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for 
+more details.
+
+You should have received a copy of the GNU General Public License version
+3 along with this program; if not, see http://www.gnu.org/licenses.
+
+Linking RoomAcoustiCpp statically or dynamically with other software 
+(such as a library, module or application) is making a combined work based
+on RoomAcoustiCpp. Thus, the terms and conditions of the GNU General 
+Public License version 3 cover this combined work.
+
+If such software can only be used together with RoomAcoustiCpp, then not
+only the combined work but the software itself is a work derived from 
+RoomAcoustiCpp and as such shall be licensed under the terms of the GNU 
+General Public License version 3. This includes the situation where 
+RoomAcoustiCpp is only being used through an abstraction layer.
