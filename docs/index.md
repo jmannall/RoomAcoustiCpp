@@ -15,7 +15,11 @@ This software is being developed by:
 
 * [Joshua Mannall](https://github.com/jmannall) ([Institute of Sound Recording, University of Surrey](https://iosr.surrey.ac.uk/)). Contact: j.mannall@surrey.ac.uk
 
-## Copyright and License
+## License
+
+RoomAcoustiCpp is distributed under the GPL v3, a popular open-source license with strong copyleft conditions license.
+
+If you license RoomAcoustiCpp under GPL v3, there is no license fee or signed license agreement: you just need to comply with the GPL v3 terms and conditions. See the license files on the GitHub repository for more information.
 
 ## Acknowledgements
 
