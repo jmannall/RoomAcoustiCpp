@@ -32,3 +32,6 @@ The forked 3dti_AudioToolkit repository includes all the required files for use 
 Some small changes have been made for the purposes of compatibility between the source files.
 
 ## License
+RoomAcoustiCpp is distributed under the GPL v3, a popular open-source license with strong copyleft conditions license.
+
+If you license RoomAcoustiCpp under GPL v3, there is no license fee or signed license agreement: you just need to comply with the GPL v3 terms and conditions. See ROOMACOUSTICPP_LICENSE and LICENSE for further information.
