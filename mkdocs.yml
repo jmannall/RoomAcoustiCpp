@@ -135,7 +135,7 @@ extra_javascript:
 nav:
   - Home: index.md
   - RoomAcoustiC++:
-    - Overview: overview/about.md
+    - Overview: overview/index.md
     - Acoustic Model: overview/model.md
     - Diffraction: overview/diffraction.md
   - Unity Interface:
