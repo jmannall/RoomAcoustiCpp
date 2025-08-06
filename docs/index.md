@@ -18,3 +18,9 @@ This software is being developed by:
 ## Copyright and License
 
 ## Acknowledgements
+
+The project utilises the [3D-TuneIn Toolkit](https://github.com/3DTune-In/3dti_AudioToolkit) (3DTI) for binaural processing.
+The forked 3dti_AudioToolkit repository (included as a submodule) includes all the required files for use with RAC.
+Some small changes have been made for the purposes of compatibility between the source files.
+
+The lock-free queue [concurrentqueue](https://github.com/cameron314/concurrentqueue) is used for multithreaded audio processing.

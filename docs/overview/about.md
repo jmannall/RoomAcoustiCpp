@@ -11,6 +11,16 @@ This section provides an overview of the library's features.
 * Diffraction modelling
 * FDN late reverberation
 * Dynamic geometry
+
+## Installation
+
+To use the C++ library, you need to add the RoomAcoustiC++ source and header files to your project and add `#!cpp #include "Spatialiser/Interface.h"`.
+You can clone the repository using the following command:
+
+```bash
+git clone --recurse-submodules https://github.com/jmannall/RoomAcoustiCpp.git
+```
+
 <!-- 
 ## Description
 
