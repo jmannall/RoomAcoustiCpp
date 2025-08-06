@@ -15,7 +15,7 @@ In addition to this main repository, there are other repositories with associate
 
 ## Credits
 The software is being developed by
-* Joshua Mannall (University of Surrey). Contact: j.mannall@surrey.ac.uk
+* [Joshua Mannall](https://github.com/jmannall) ([Institute of Sound Recording, University of Surrey](https://iosr.surrey.ac.uk/)). Contact: j.mannall@surrey.ac.uk
 
 ## Aknowledgements
 The project utilises the [3D-TuneIn Toolkit](https://github.com/3DTune-In/3dti_AudioToolkit) (3DTI) for binaural processing.
