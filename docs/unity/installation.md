@@ -1,5 +1,11 @@
 # Installation
 
+Two branches are included in the repository: `main` and `unity6` to preserve backwards compatibility.
+The differences between the branches are minimal, with Unity materials and scenes being the primary differences.
+The `main` branch should be used with Unity 2023 or older.
+The `unity6` branch is for Unity 6 and later.
+For new projects Unity 6 is recommended.
+
 ## Usage
 
 To install and set up the project, run the following commands:
@@ -28,7 +34,7 @@ To undo the copy of the StreamingAssets folder (in order to commit any changes) 
 .\utilities\undoCopyStreamingAssets.ps1
 ```
 
-The demo scene uses the new Unity Input System. If you are using a Unity 5 or older you will need to install it through the Unity package manager: [installation guide](https://docs.unity3d.com/Packages/com.unity.inputsystem@1.11/manual/Installation.html).
+The demo scene uses the new Unity Input System. If you are using a Unity 2023 or older you will need to install it through the Unity package manager: [installation guide](https://docs.unity3d.com/Packages/com.unity.inputsystem@1.11/manual/Installation.html).
 
 ## Binaural Processing
 
