@@ -138,7 +138,9 @@ nav:
     - Overview: overview/about.md
     - Acoustic Model: overview/model.md
     - Diffraction: overview/diffraction.md
-  - Unity Interface: unity/index.md
+  - Unity Interface:
+    - Overview: unity/index.md
+    - Installation: unity/installation.md
   - API Reference:
     - API Reference: api/index.md
     - Interface: api/interface.md
