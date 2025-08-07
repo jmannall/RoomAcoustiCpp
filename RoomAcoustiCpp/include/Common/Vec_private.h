@@ -42,6 +42,18 @@ namespace RAC
 			Vec(const int length) : Matrix<T>(length, 1) {}
 
 			/**
+			* Constructor that initialises a Rowvec with a given value
+			*
+			* @param length The length of the vector
+			* @param value The value to initialise the vector with
+			*/
+			Vec(const int length, const T value) : Matrix<T>(length, 1)
+			{
+				for (int i = 0; i < length; ++i)
+					this->data[i][0] = value;
+			}
+
+			/**
 			* Constructor that initialises a Vec with data
 			*
 			* @param vector The input data to initialise the vector
@@ -162,6 +174,18 @@ namespace RAC
 			* @param length The length of the vector
 			*/
 			Rowvec(const int length) : Matrix<T>(1, length) {}
+
+			/**
+			* Constructor that initialises a Rowvec with a given value
+			* 
+			* @param length The length of the vector
+			* @param value The value to initialise the vector with
+			*/
+			Rowvec(const int length, const T value) : Matrix<T>(1, length)
+			{
+				for (int i = 0; i < length; ++i)
+					this->data[0][i] = value;
+			}
 
 			/**
 			* Constructor that initialises a Rowvec with data
