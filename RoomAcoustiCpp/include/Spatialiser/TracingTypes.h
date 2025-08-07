@@ -16,7 +16,8 @@
 
 namespace RAC
 {
-    namespace Common
+    using namespace Common;
+    namespace Spatialiser
     {
         /**
          * @brief Compute a 3D dot product: (ax,ay,az) · (bx,by,bz).

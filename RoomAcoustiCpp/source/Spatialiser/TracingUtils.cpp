@@ -2,7 +2,8 @@
 
 namespace RAC
 {
-	namespace Common
+    using namespace Common;
+	namespace Spatialiser
 	{
         // ------------------------ Intersection kernels ------------------------
         

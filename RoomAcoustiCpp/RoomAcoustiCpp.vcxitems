@@ -45,6 +45,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Source.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\TracingTypes.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\TracingUtils.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\TracingThread.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Wall.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Unity\Debug.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Unity\UnityInterface.cpp" />
@@ -112,6 +113,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Source.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\TracingTypes.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\TracingUtils.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\TracingThread.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Types.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Wall.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Unity\Debug.h" />

@@ -10,7 +10,8 @@
 
 namespace RAC
 {
-	namespace Common
+    using namespace Common;
+	namespace Spatialiser
 	{
         // TODO: Consider making one abstract class Ray which gets inherited by RayBundle, RayPencil, RaySingle.
 

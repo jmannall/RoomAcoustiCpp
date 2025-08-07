@@ -150,6 +150,9 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\TracingUtils.cpp">
       <Filter>Source Files\Spatialiser</Filter>
     </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\TracingThread.cpp">
+      <Filter>Source Files\Spatialiser</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Types.h">
@@ -354,6 +357,9 @@
       <Filter>Header Files\Spatialiser</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\TracingUtils.h">
+      <Filter>Header Files\Spatialiser</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\TracingThread.h">
       <Filter>Header Files\Spatialiser</Filter>
     </ClInclude>
   </ItemGroup>

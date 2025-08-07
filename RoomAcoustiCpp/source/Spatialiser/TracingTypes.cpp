@@ -2,7 +2,8 @@
 
 namespace RAC
 {
-    namespace Common
+    using namespace Common;
+    namespace Spatialiser
     {
         Real dot3(Real ax, Real ay, Real az, Real bx, Real by, Real bz) {
             return ax * bx + ay * by + az * bz;
