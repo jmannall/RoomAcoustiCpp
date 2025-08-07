@@ -35,6 +35,12 @@ namespace RAC
 		const constexpr Real EPS = 0.000001;				// Tolerance for some floating point comparisons
 		const constexpr Real MIN_VALUE = 10.0 * DBL_MIN;	// Minimum value for trimming BTM FIR filter
 
+		const constexpr Real EPS_FACING = 1e-7;			// Tolerance for facing test: dot(n,O) + d0 > facing.
+		const constexpr Real EPS_EDGE = 1e-7;			// Tolerance for side predicates (edge-inclusive).
+		const constexpr Real EPS_PARALLEL = 1e-7;		// Tolerance for near-parallel plane denominator.
+		const constexpr Real EPS_SELFHIT = 1e-5;		// Minimum distance between ray origin and valid intersection.
+		const constexpr Real EPS_ZFIGHT = 1e-5;			// Detection range for Z-fighting triangles.
+
 		//////////////////// Mathematical Constants ////////////////////
 
 		const constexpr Real PI_1 = 3.141592653589793238462643383279502884197169399375105820974944;
@@ -52,6 +58,8 @@ namespace RAC
 		const constexpr Real LOG_10 = 2.302585092994045684017991454684364207601101488628772976033328;
 		const constexpr Real LOG2_10 = 3.321928094887362347870319429489390175864831393024580612054756;
 		const constexpr Real INV_LOG2_10 = 1.0 / LOG2_10;
+
+		const constexpr Real PHI = 1.6180339887498948482; // golden ratio
 
 		//////////////////// Mathematical Functions ////////////////////
 
@@ -99,6 +107,12 @@ namespace RAC
 		const constexpr Real EPS = 0.000001f;				// Tolerance for some floating point comparisons
 		const constexpr Real MIN_VALUE = 10.0f * FLT_MIN;	// Minimum value for trimming BTM FIR filter
 
+		const constexpr Real EPS_FACING = 1e-7f;		// Tolerance for facing test: dot(n,O) + d0 > facing.
+		const constexpr Real EPS_EDGE = 1e-7f;			// Tolerance for side predicates (edge-inclusive).
+		const constexpr Real EPS_PARALLEL = 1e-7f;		// Tolerance for near-parallel plane denominator.
+		const constexpr Real EPS_SELFHIT = 1e-5f;		// Minimum distance between ray origin and valid intersection.
+		const constexpr Real EPS_ZFIGHT = 1e-5f;		// Detection range for Z-fighting triangles.
+
 		//////////////////// Mathematical Constants ////////////////////
 
 		const constexpr Real PI_1 = 3.141592653589793238462643383279502884197169399375105820974944f;
@@ -116,6 +130,8 @@ namespace RAC
 		const constexpr Real LOG_10 = 2.302585092994045684017991454684364207601101488628772976033328f;
 		const constexpr Real LOG2_10 = 3.321928094887362347870319429489390175864831393024580612054756f;
 		const constexpr Real INV_LOG2_10 = 1.0f / LOG2_10;
+
+		const constexpr Real PHI = 1.6180339887498948482f; // golden ratio
 
 		//////////////////// Mathematical Functions ////////////////////
 

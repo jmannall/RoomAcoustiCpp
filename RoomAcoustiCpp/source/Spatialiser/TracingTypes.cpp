@@ -47,6 +47,51 @@ namespace RAC
 #endif // end PLUCKER_KERNEL
         }
 
+        // TODO: These two function definitions are identical. I'm sure there's a more elegant way to do that.
+        void RayBundleSoA::fill_uniform_sphere(bool hemisphereOnly) {
+            const int N = hemisphereOnly ? 2 * size() : size();
+            const Real Nr = static_cast<Real>(N);
+            Real ir, z, r, phi;
+
+            for (int i = 0; i < N; ++i) {
+                ir = static_cast<Real>(i);
+
+                /* Fibonacci sphere (a.k.a. Vogel sphere): equal-area spacing in z */
+                z = 1.0 - 2.0 * (ir + 0.5) / Nr;
+                if (hemisphereOnly && z < 0)
+                    break; // skip lower hemisphere
+
+                r = std::sqrt(std::max(0.0, 1.0 - z * z));
+                phi = PI_2 * std::fmod(ir / PHI, 1.0);
+
+                Dx[i] = r * std::cos(phi);
+                Dy[i] = r * std::sin(phi);
+                Dz[i] = z;
+            }
+        }
+
+        void RayPencilSoA::fill_uniform_sphere(bool hemisphereOnly) {
+            const int N = hemisphereOnly ? 2 * size() : size();
+            const Real Nr = static_cast<Real>(N);
+            Real ir, z, r, phi;
+
+            for (int i = 0; i < N; ++i) {
+                ir = static_cast<Real>(i);
+
+                /* Fibonacci sphere (a.k.a. Vogel sphere): equal-area spacing in z */
+                z = 1.0 - 2.0 * (ir + 0.5) / Nr;
+                if (hemisphereOnly && z < 0)
+                    break; // skip lower hemisphere
+
+                r = std::sqrt(std::max(0.0, 1.0 - z * z));
+                phi = PI_2 * std::fmod(ir / PHI, 1.0);
+
+                Dx[i] = r * std::cos(phi);
+                Dy[i] = r * std::sin(phi);
+                Dz[i] = z;
+            }
+        }
+
 #ifdef PLUCKER_KERNEL
         void RayBundleSoA::compute_moments() {
             const int n = size();

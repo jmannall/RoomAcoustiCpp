@@ -106,6 +106,12 @@ namespace RAC
              */
             void resize(int n);
 
+            /**
+             * @brief Initialize the directions with a uniform sampling of the unit sphere.
+             * @param hemisphereOnly If true, generate a uniform sampling of the unit hemisphere (positive Z). Same number of points.
+             */
+            void fill_uniform_sphere(bool hemisphereOnly);
+
 #ifdef PLUCKER_KERNEL
             /**
              * @brief Compute the ray moment M = O x D for all rays in the bundle.
@@ -160,6 +166,12 @@ namespace RAC
              * @param n New number of rays.
              */
             void resize(int n);
+
+            /**
+             * @brief Initialize the directions with a uniform sampling of the unit sphere.
+             * @param hemisphereOnly If true, generate a uniform sampling of the unit hemisphere (positive Z). Same number of points.
+             */
+            void fill_uniform_sphere(bool hemisphereOnly);
 
 #ifdef PLUCKER_KERNEL
             /**

@@ -29,6 +29,9 @@ namespace RAC
 		typedef float Real; // Define Real as float
 #endif
 
+		/** @brief Shorthands for quiet NaN. */
+		constexpr Real qNaN = std::numeric_limits<Real>::quiet_NaN();
+
 		/**
 		* @brief Struct that stores an id and time
 		*/
