@@ -144,8 +144,12 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\AudioThreadPool.cpp">
       <Filter>Source Files\DSP</Filter>
     </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\TracingTypes.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\TracingUtils.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\TracingTypes.cpp">
+      <Filter>Source Files\Spatialiser</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\TracingUtils.cpp">
+      <Filter>Source Files\Spatialiser</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Types.h">
@@ -346,7 +350,11 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\RAVESResidual.h">
       <Filter>Header Files\Spatialiser</Filter>
     </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\TracingTypes.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\TracingUtils.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\TracingTypes.h">
+      <Filter>Header Files\Spatialiser</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\TracingUtils.h">
+      <Filter>Header Files\Spatialiser</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

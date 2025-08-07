@@ -59,7 +59,7 @@ namespace RAC
 		const constexpr Real LOG2_10 = 3.321928094887362347870319429489390175864831393024580612054756;
 		const constexpr Real INV_LOG2_10 = 1.0 / LOG2_10;
 
-		const constexpr Real PHI = 1.6180339887498948482; // golden ratio
+		const constexpr Real PHI = 1.61803398874989484820458683436563811772030917980576286213544862270526046281890; // golden ratio
 
 		//////////////////// Mathematical Functions ////////////////////
 
@@ -131,7 +131,7 @@ namespace RAC
 		const constexpr Real LOG2_10 = 3.321928094887362347870319429489390175864831393024580612054756f;
 		const constexpr Real INV_LOG2_10 = 1.0f / LOG2_10;
 
-		const constexpr Real PHI = 1.6180339887498948482f; // golden ratio
+		const constexpr Real PHI = 1.61803398874989484820458683436563811772030917980576286213544862270526046281890f; // golden ratio
 
 		//////////////////// Mathematical Functions ////////////////////
 
