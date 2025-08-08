@@ -239,6 +239,10 @@ namespace RAC
 			void Init(const std::vector<T>& vec);
 		};
 
+		/**
+		* @brief Calculates the dot product of two vectors
+		*/
+		Real Dot(const Vec<>& u, const Vec<>& v);
 	}
 }
 

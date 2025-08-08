@@ -5,7 +5,7 @@ namespace RAC
 	using namespace Common;
 	namespace Spatialiser
 	{
-		// TODO: Add a helper function `void Dot(const Vec<>& a, const Vec<>& b, Vec<>& out)`
+		// TODO: Prepare Python data from existing 3-room environment for testing
 
 		// TODO: Initialize TracingThread in the constructor of Context.cpp
 
@@ -30,13 +30,9 @@ namespace RAC
 			std::vector<std::vector<int>> pathIndexing(1, std::vector<int>(1, 0));
 
 			Vec<Real> energyContributions(numPaths, 0.0);
-			// TODO: How are Coefficients initialized????
+			// TODO: How are Coefficients initialized?
 			Coefficients<Real> sourceResidues(numFDNs, 0.0);
 			Coefficients<Real> listenerResidues(numReverbDirections, 0.0);
-			//sourceResidues = Coefficients<Real>(numFDNs, 0.0);
-			//listenerResidues = Coefficients<Real>(numReverbDirections, 0.0);
-			//sourceResidues = Coefficients(std::vector<Real>(numFDNs, 0.0));
-			//listenerResidues = Coefficients(std::vector<Real>(numReverbDirections, 0.0));
 		}
 
 		void TracingThread::setNumberOfRays(int newNumRays) {
@@ -61,22 +57,22 @@ namespace RAC
 				hemispherePencil.moveOrigin(mListenerPosition);
 				hemispherePencil.traceAll(triangles);
 
-				for (slope_idx = 0; slope_idx < numFDNs; ++slope_idx) {
-					// TODO: eigenvector = mReverb.get_right_eigenvector(slope_idx);
-					// TODO: residues = zeros(reverbDirections.size());
-					for (dir_idx = 0; dir_idx < numReverbDirections; ++dir_idx) {
+				for (int slope_idx = 0; slope_idx < numFDNs; ++slope_idx) {
+					for (int dir_idx = 0; dir_idx < numReverbDirections; ++dir_idx) {
 						computeEnergyContributions(dir_idx);
-						// TODO: Check if any different normalization is required (e.g. normalize by path etendue); if constant, bake it into the eigenvectors; if not, implement it here.
-						// TODO: residues[dir_idx] = dot(energy_contributions[dir_idx], eigenvector)
+						// TODO: Double-check theory: is any different normalization required (e.g. normalize by path etendue)? If constant, bake it into the eigenvectors; if not, implement it here.
+						listenerResidues[dir_idx] = Dot(energyContributions, mReverb.getRightEigenvector(slope_idx));
 					}
-				// TODO: Return residues to FDN[slope_idx]
-				// TODO: sharedReverb->SetTargetListenerResidues(slope_idx, residues)
+					shared_ptr<Reverb> sharedReverb = mReverb.lock();
+					sharedReverb->SetTargetListenerResidues(slope_idx, listenerResidues);
+					// TODO: is sharedReverb unlocked automatically?
 				}
 			}
 
 			shared_ptr<SourceManager> sharedSource = mSourceManager.lock();
 			sharedSource->ResetUnusedSources();
 			mSources = sharedSource->GetSourceData();
+			// TODO: is sharedSource unlocked automatically?
 
 			for (Source::Data& source : mSources) {
 				if (source.hasChanged) {
@@ -84,14 +80,14 @@ namespace RAC
 					hemispherePencil.traceAll(triangles);
 
 					computeEnergyContributions();
-					// TODO: Check if any different normalization is required (e.g. normalize by path etendue); if constant, bake it into the eigenvectors; if not, implement it here.
+					// TODO: Double-check theory: is any different normalization required (e.g. normalize by path etendue)? If constant, bake it into the eigenvectors; if not, implement it here.
 
-					// TODO: residues = zeros(mReverb.get_num_slopes());
-					for (slope_idx = 0; slope_idx < numFDNs; ++slope_idx) {
-						// TODO: eigenvector = mReverb.get_left_eigenvector(slope_idx);
-						// TODO: residues[slope_idx] = dot(energy contributions, eigenvector)
+					for (int slope_idx = 0; slope_idx < numFDNs; ++slope_idx) {
+						sourceResidues[slope_idx] = Dot(energyContributions, mReverb.getLeftEigenvector(slope_idx));
 					}
-					// TODO: sharedSource->SetSourceTargetResidues(source.id, residues)
+					shared_ptr<SourceManager> sharedSource = mSourceManager.lock();
+					sharedSource->SetSourceTargetResidues(source.id, sourceResidues);
+					// TODO: is sharedSource unlocked automatically?
 				}
 			}
 		}

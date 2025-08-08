@@ -132,5 +132,14 @@ namespace RAC
 				sum += this->data[0][i];
 			return sum;
 		}
+
+		Real Dot(const Vec<>& u, const Vec<>& v)
+		{
+			assert(u.Rows() == v.Rows());
+			Real out = 0.0;
+			for (int i = 0; i < u.Rows(); ++i)
+				out += u[i] * v[i];
+			return out;
+		}
 	}
 }
