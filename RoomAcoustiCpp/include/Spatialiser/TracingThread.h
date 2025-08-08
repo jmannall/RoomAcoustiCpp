@@ -33,7 +33,7 @@ namespace RAC
 			* @param sourceManager Pointer to the source manager class.
 			* @param reverb Pointer to the late reverb class.
 			*/
-			TracingThread(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb);
+			TracingThread(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const std::shared_ptr<Config>& config);
 
 			/**
 			* @brief Updates the stored listener position.
@@ -43,9 +43,9 @@ namespace RAC
 			/**
 			* @brief Change the number of traced rays.
 			*
-			* @param numRays The new number of rays. N.B.: this is the number of rays in each hemisphere; the actual traced directions are twice as many.
+			* @param newNumRays The new number of rays. N.B.: this is the number of rays in each hemisphere; the actual traced directions are twice as many.
 			*/
-			void setNumberOfRays(int numRays);
+			void setNumberOfRays(int newNumRays);
 
 			/**
 			* @brief Process the ray-tracing from every new position and update the related residues.
@@ -59,11 +59,11 @@ namespace RAC
 
 			// The geometry is assumed unchanging.
 			int numPaths;									// Number of ART propagation paths
-			TriangleMeshSoA& triangles;					// Pointer to the (immutable) structure of arrays stored in Room
-			std::vector<std::vector<int>> pathIndexing;	// Index of the ART propagation path from triangle A to triangle B
+			TriangleMeshSoA& triangles;						// Pointer to the (immutable) structure of arrays stored in Room
+			std::vector<std::vector<int>> pathIndexing;		// Index of the ART propagation path from triangle A to triangle B
 
 			// The number of reverb directions is assumed unchanging.
-			int numReverbDirections;
+			int numFDNs, numReverbDirections;
 			std::vector<Vec3> reverbDirections;
 			// The indexing of ray directions to reverb directions may change because the number of rays may change.
 			std::vector<int> frontClusters, backClusters;	// For each ray, the index of the reverb direction that the ray falls into

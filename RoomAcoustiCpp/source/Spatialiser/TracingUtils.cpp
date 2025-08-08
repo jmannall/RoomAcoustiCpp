@@ -1026,6 +1026,24 @@ namespace RAC
 #endif // end PLUCKER_KERNEL
         }
 
+        void RayBundle::getOrigins(std::vector<Vec3>& origins) {
+            assert(origins.size() == numRays);
+            for (int i = 0; i < numRays; ++i) {
+                origins[i].x = rays.Ox[i];
+                origins[i].y = rays.Oy[i];
+                origins[i].z = rays.Oz[i];
+            }
+        }
+
+        void RayBundle::getDirections(std::vector<Vec3>& directions) {
+            assert(directions.size() == numRays);
+            for (int i = 0; i < numRays; ++i) {
+                directions[i].x = rays.Dx[i];
+                directions[i].y = rays.Dy[i];
+                directions[i].z = rays.Dz[i];
+            }
+        }
+
         void RayBundle::getTotalDistances(Vec<>& distances) {
             assert(distances.size() == numRays);
             for (int i = 0; i < numRays; ++i) {
@@ -1102,7 +1120,7 @@ namespace RAC
             std::vector<int> backTriangleIdx(numRays, -1);
         }
 
-        void RayPencil::move_origin(const Vec3& origin) {
+        void RayPencil::moveOrigin(const Vec3& origin) {
             rays.Ox = origin.x;
             rays.Oy = origin.y;
             rays.Oz = origin.z;
@@ -1135,6 +1153,45 @@ namespace RAC
                 backTriangleIdx[i] = temp_backTriangleIdx;
                 backDistance[i] = temp_backDistance;
                 backCosine[i] = temp_backCosine;
+            }
+        }
+        
+        void RayPencil::clusterDirections(const std::vector<Vec3>& directions,
+            std::vector<int>& frontClusters, std::vector<int>& backClusters) {
+            assert(frontClusters.size() == numRays);
+            assert(backClusters.size() == numRays);
+
+            // Buffer used while iterating
+            std::vector<Real> cosineSimilarity(directions.size(), 0.0);
+            int argMin, argMax;
+
+            for (int i = 0; i < numRays; ++i) {
+                for (int j = 0; j < directions.size(); ++j) {
+                    cosineSimilarity[j] = dot3(
+                        rays.Dx[i], rays.Dy[i], rays.Dz[i],
+                        directions[j].x, directions[j].y, directions[j].z);
+                }
+                argMin = std::distance(cosineSimilarity.begin(), std::min_element(cosineSimilarity.begin(), cosineSimilarity.end()));
+                argMax = std::distance(cosineSimilarity.begin(), std::max_element(cosineSimilarity.begin(), cosineSimilarity.end()));
+                if (cosineSimilarity[argMax] >= -cosineSimilarity[argMin]) {
+                    // The highest positive dot product is greater than the absolute value of the lowest negative dot product,
+                    // i.e., the forward direction has found a better match than the backward direction.
+                    frontClusters[i] = argMax;
+                    backClusters[i] = -1;
+                } else {
+                    // The backward direction has found a better match than the forward direction.
+                    frontClusters[i] = -1;
+                    backClusters[i] = argMin;
+                }
+            }
+        }
+
+        void RayPencil::getDirections(std::vector<Vec3>& directions) {
+            assert(directions.size() == numRays);
+            for (int i = 0; i < numRays; ++i) {
+                directions[i].x = rays.Dx[i];
+                directions[i].y = rays.Dy[i];
+                directions[i].z = rays.Dz[i];
             }
         }
 

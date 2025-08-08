@@ -135,9 +135,9 @@ namespace RAC
         struct RayPencilSoA {
             /** @name Ray origin */
             ///@{
-            Real Ox; /**< X-components of ray origin. */
-            Real Oy; /**< Y-components of ray origin. */
-            Real Oz; /**< Z-components of ray origin. */
+            Real Ox; /**< X-component of ray origin. */
+            Real Oy; /**< Y-component of ray origin. */
+            Real Oz; /**< Z-component of ray origin. */
             ///@}
 
             /** @name Ray directions */

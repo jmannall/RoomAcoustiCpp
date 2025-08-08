@@ -11,31 +11,38 @@ namespace RAC
 
 		// TODO: Handle the tracing thread in a function "void TracingProcessor(Context* context)" in Context.cpp
 
-		TracingThread::TracingThread(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb) :
-			mRoom(room), mSourceManager(sourceManager), mReverb(reverb)
+		TracingThread::TracingThread(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const std::shared_ptr<Config>& config) :
+			mRoom(room), mSourceManager(sourceManager), mReverb(reverb), numReverbDirections(config->numReverbSources), numFDNs(config->numRavesFDNs)
 		{
-			// TODO: Initialize `int numRays`
-			// TODO: Initialize `RayPencil hemispherePencil`
+			// TODO: Initialize `numRays` taking the value from somewhere. Passed as argument? new Config class? Global constant DEFAULT_NUM_RAYS?
+			numRays = 1000;
+			RayPencil hemispherePencil(*new Vec3, numRays, true);
 
 			shared_ptr<Reverb> sharedReverb = mReverb.lock();
 			sharedReverb->GetReverbSourceDirections(reverbDirections);
-			numReverbDirections = reverbDirections.size();
-			// TODO: Initialize `std::vector<int> frontClusters, backClusters` by calling `clusterReverbDirections()`
+			clusterReverbDirections();
 
 			shared_ptr<Room> sharedRoom = mRoom.lock();
 			sharedRoom->GetTriangleMeshSoA(triangles);
 
-			// TODO: Initialize `int numPaths`
-			// TODO: Initialize `std::vector<std::vector<int>> pathIndexing`
+			// TODO: Initialize `numPaths` and `pathIndexing` taking the values from somewhere. Passed as arguments?
+			numPaths = 1;
+			std::vector<std::vector<int>> pathIndexing(1, std::vector<int>(1, 0));
 
-			// TODO: Allocate `Vec<Real> energyContributions` with size `numPaths`
-			// TODO: Allocate `Coefficients<Real> sourceResidues` with size `numFDNs`
-			// TODO: Allocate `Coefficients<Real> listenerResidues` with size `numReverbDirections`
+			Vec<Real> energyContributions(numPaths, 0.0);
+			// TODO: How are Coefficients initialized????
+			Coefficients<Real> sourceResidues(numFDNs, 0.0);
+			Coefficients<Real> listenerResidues(numReverbDirections, 0.0);
+			//sourceResidues = Coefficients<Real>(numFDNs, 0.0);
+			//listenerResidues = Coefficients<Real>(numReverbDirections, 0.0);
+			//sourceResidues = Coefficients(std::vector<Real>(numFDNs, 0.0));
+			//listenerResidues = Coefficients(std::vector<Real>(numReverbDirections, 0.0));
 		}
 
-		void TracingThread::setNumberOfRays(int numRays) {
-			// TODO: Define this.
-			//		Don't forget to call `clusterReverbDirections()` afterwards.
+		void TracingThread::setNumberOfRays(int newNumRays) {
+			numRays = newNumRays;
+			RayPencil hemispherePencil(*new Vec3, numRays, true);
+			clusterReverbDirections();
 		}
 
 		void TracingThread::RunTracing() {
@@ -51,7 +58,7 @@ namespace RAC
 				}
 			}
 			if (listenerMoved) {
-				hemispherePencil.move_origin(mListenerPosition);
+				hemispherePencil.moveOrigin(mListenerPosition);
 				hemispherePencil.traceAll(triangles);
 
 				// TODO: Compute energy contributions of each reverbDirection to each propagation path (using pathIndexing in combination with hemispherePencil.getIndices)
@@ -71,7 +78,7 @@ namespace RAC
 
 			for (Source::Data& source : mSources) {
 				if (source.hasChanged) {
-					hemispherePencil.move_origin(source.position);
+					hemispherePencil.moveOrigin(source.position);
 					hemispherePencil.traceAll(triangles);
 
 					// TODO: Compute energy contributions to each propagation path (using pathIndexing in combination with hemispherePencil.getIndices)
@@ -86,7 +93,11 @@ namespace RAC
 		}
 
 		void TracingThread::clusterReverbDirections() {
-			// TODO: Define this.
+			// Re-allocate these in case the number of rays has changed.
+			std::vector<int> frontClusters(numRays, -1);
+			std::vector<int> backClusters(numRays, -1);
+
+			hemispherePencil.clusterDirections(reverbDirections, frontClusters, backClusters);
 		}
 
 		void TracingThread::computeEnergyContributions(int reverbDirectionIdx, Vec<>& contributions) {
