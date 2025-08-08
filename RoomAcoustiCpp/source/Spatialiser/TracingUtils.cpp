@@ -8,8 +8,8 @@ namespace RAC
         // ------------------------ Intersection kernels ------------------------
         
         void intersection_test(
-            TriangleMeshSoA& triangles, int triangleIndex,
-            RayBundleSoA& rays, int rayIndex,
+            const TriangleMeshSoA& triangles, int triangleIndex,
+            const RayBundleSoA& rays, int rayIndex,
             Real& distance, Real& cosine) {
             // Sanity check: the requested triangle must exist.
             assert(triangleIndex < triangles.size());
@@ -241,8 +241,8 @@ namespace RAC
         }
 
         void intersection_test(
-            TriangleMeshSoA& triangles, int triangleIndex,
-            RayPencilSoA& rays, int rayIndex,
+            const TriangleMeshSoA& triangles, int triangleIndex,
+            const RayPencilSoA& rays, int rayIndex,
             Real& distance, Real& cosine) {
             // Sanity check: the requested triangle must exist.
             assert(triangleIndex < triangles.size());
@@ -474,8 +474,8 @@ namespace RAC
         }
 
         void intersection_test(
-            TriangleMeshSoA& triangles, int triangleIndex,
-            Vec3& rayOrigin, Vec3& rayDirection,
+            const TriangleMeshSoA& triangles, int triangleIndex,
+            const Vec3& rayOrigin, const Vec3& rayDirection,
             Real& distance, Real& cosine) {
             // Sanity check: the requested triangle must exist.
             assert(triangleIndex < triangles.size());
@@ -711,7 +711,7 @@ namespace RAC
 
         // TODO: The three definitions of this overloaded function are identical except for one line. I'm sure there's a more elegant way to do that.
         void trace_ray(
-            TriangleMeshSoA& triangles, RayBundleSoA& rays, int rayIndex,
+            const TriangleMeshSoA& triangles, const RayBundleSoA& rays, int rayIndex,
             int& triangleIdxFront, Real& distanceFront, Real& cosineFront,
             int& triangleIdxBack, Real& distanceBack, Real& cosineBack,
             int ignoredTriangleIndex) {
@@ -789,7 +789,7 @@ namespace RAC
         }
 
         void trace_ray(
-            TriangleMeshSoA& triangles, RayPencilSoA& rays, int rayIndex,
+            const TriangleMeshSoA& triangles, const RayPencilSoA& rays, int rayIndex,
             int& triangleIdxFront, Real& distanceFront, Real& cosineFront,
             int& triangleIdxBack, Real& distanceBack, Real& cosineBack,
             int ignoredTriangleIndex) {
@@ -867,7 +867,7 @@ namespace RAC
         }
 
         void trace_ray(
-            TriangleMeshSoA& triangles, Vec3& rayOrigin, Vec3& rayDirection,
+            const TriangleMeshSoA& triangles, const Vec3& rayOrigin, const Vec3& rayDirection,
             int& triangleIdxFront, Real& distanceFront, Real& cosineFront,
             int& triangleIdxBack, Real& distanceBack, Real& cosineBack,
             int ignoredTriangleIndex) {
@@ -946,7 +946,7 @@ namespace RAC
 
         // ------------------------ RayBundle methods ------------------------
         
-        RayBundle::RayBundle(Vec3& origin, std::vector<Vec3>& directions) {
+        RayBundle::RayBundle(const Vec3& origin, const std::vector<Vec3>& directions) {
             numRays = directions.size();
             rays.resize(numRays);
 
@@ -970,7 +970,7 @@ namespace RAC
             std::vector<int> previousTriangleIdx(numRays, -1);
         }
 
-        RayBundle::RayBundle(std::vector<Vec3>& origins, std::vector<Vec3>& directions) {
+        RayBundle::RayBundle(const std::vector<Vec3>& origins, const std::vector<Vec3>& directions) {
             numRays = directions.size();
             rays.resize(numRays);
 
@@ -994,7 +994,7 @@ namespace RAC
             std::vector<int> previousTriangleIdx(numRays, -1);
         }
 
-        void RayBundle::trace_all(TriangleMeshSoA& triangles) {
+        void RayBundle::traceAll(const TriangleMeshSoA& triangles) {
             // Buffers for ray processing
             int triangleIdxFront, triangleIdxBack;
             Real distanceFront, distanceBack, cosineFront, cosineBack;
@@ -1019,28 +1019,28 @@ namespace RAC
             }
         }
 
-        void RayBundle::advance_reflect(TriangleMeshSoA& triangles) {
+        void RayBundle::advanceAndReflect(const TriangleMeshSoA& triangles) {
             // TODO: Port definition from a different project, if we ever want to trace multiple reflection orders.
 #ifdef PLUCKER_KERNEL
             rays.compute_moments();
 #endif // end PLUCKER_KERNEL
         }
 
-        void RayBundle::get_total_distances(Vec<>& distances) {
+        void RayBundle::getTotalDistances(Vec<>& distances) {
             assert(distances.size() == numRays);
             for (int i = 0; i < numRays; ++i) {
                 distances[i] = totalDistance[i];
             }
         }
 
-        void RayBundle::get_incidence_cosines(Vec<>& cosines) {
+        void RayBundle::getCosines(Vec<>& cosines) {
             assert(cosines.size() == numRays);
             for (int i = 0; i < numRays; ++i) {
                 cosines[i] = latestCosine[i];
             }
         }
 
-        void RayBundle::get_indices(std::vector<int>& current, std::vector<int>& previous) {
+        void RayBundle::getIndices(std::vector<int>& current, std::vector<int>& previous) {
             assert(current.size() == numRays);
             assert(previous.size() == numRays);
             for (int i = 0; i < numRays; ++i) {
@@ -1049,7 +1049,7 @@ namespace RAC
             }
         }
 
-        void RayBundle::get_radiance(Vec<>& rad) {
+        void RayBundle::getRadiance(Vec<>& rad) {
             assert(rad.size() == numRays);
             for (int i = 0; i < numRays; ++i) {
                 rad[i] = radiance[i];
@@ -1058,7 +1058,7 @@ namespace RAC
 
         // ------------------------ RayPencil methods ------------------------
 
-        RayPencil::RayPencil(Vec3& origin, int numDirections, bool hemisphereOnly) {
+        RayPencil::RayPencil(const Vec3& origin, int numDirections, bool hemisphereOnly) {
             numRays = numDirections;
             rays.resize(numRays);
 
@@ -1078,7 +1078,7 @@ namespace RAC
             std::vector<int> backTriangleIdx(numRays, -1);
         }
 
-        RayPencil::RayPencil(Vec3& origin, std::vector<Vec3>& directions) {
+        RayPencil::RayPencil(const Vec3& origin, const std::vector<Vec3>& directions) {
             numRays = directions.size();
             rays.resize(numRays);
 
@@ -1102,7 +1102,7 @@ namespace RAC
             std::vector<int> backTriangleIdx(numRays, -1);
         }
 
-        void RayPencil::move_origin(Vec3& origin) {
+        void RayPencil::move_origin(const Vec3& origin) {
             rays.Ox = origin.x;
             rays.Oy = origin.y;
             rays.Oz = origin.z;
@@ -1118,7 +1118,7 @@ namespace RAC
             std::vector<int> backTriangleIdx(numRays, -1);
         }
 
-        void RayPencil::trace_all(TriangleMeshSoA& triangles) {
+        void RayPencil::traceAll(const TriangleMeshSoA& triangles) {
             // Buffers for ray processing
             int temp_frontTriangleIdx, temp_backTriangleIdx;
             Real temp_frontDistance, temp_backDistance, temp_frontCosine, temp_backCosine;
@@ -1138,7 +1138,7 @@ namespace RAC
             }
         }
 
-        void RayPencil::get_distances(Vec<>& front, Vec<>& back) {
+        void RayPencil::getDistances(Vec<>& front, Vec<>& back) {
             assert(front.size() == numRays);
             assert(back.size() == numRays);
             for (int i = 0; i < numRays; ++i) {
@@ -1147,7 +1147,7 @@ namespace RAC
             }
         }
 
-        void RayPencil::get_cosines(Vec<>& front, Vec<>& back) {
+        void RayPencil::getCosines(Vec<>& front, Vec<>& back) {
             assert(front.size() == numRays);
             assert(back.size() == numRays);
             for (int i = 0; i < numRays; ++i) {
@@ -1156,7 +1156,7 @@ namespace RAC
             }
         }
 
-        void RayPencil::get_indices(std::vector<int>& front, std::vector<int>& back) {
+        void RayPencil::getIndices(std::vector<int>& front, std::vector<int>& back) {
             assert(front.size() == numRays);
             assert(back.size() == numRays);
             for (int i = 0; i < numRays; ++i) {
