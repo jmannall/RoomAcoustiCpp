@@ -204,7 +204,9 @@ namespace RAC
 			* @params absorptions New reflection filter target gains
 			* @params running True if including late reveberation in audio prcoessing, false otherwise
 			*/
-			virtual void SetTargetOutputFilters(const std::vector<Absorption<>>& gains) = 0;
+			virtual void SetTargetOutputFilters(const std::vector<Absorption<>>& gains) { /*Do Nothing*/ }
+
+			virtual void SetTargetListenerResiduals(size_t id, const Coefficients<>& residuals) { /*Do Nothing*/ }
 
 			/**
 			* @brief Calculate the end limits for reverb source directions
@@ -276,7 +278,6 @@ namespace RAC
 			* @brief Update reflection filters for directional dependent reverberation level
 			*
 			* @params absorptions New reflection filter target gains
-			* @params running True if including late reveberation in audio prcoessing, false otherwise
 			*/
 			void SetTargetOutputFilters(const std::vector<Absorption<>>& gains);
 
@@ -297,7 +298,7 @@ namespace RAC
 
 			void InitLateReverb(const std::vector<Coefficients<>>& T60, const Vec<>& delayLineLengths, const FDNMatrix matrix, const std::shared_ptr<Config> config) override;
 
-			void SetTargetOutputFilters(const std::vector<Absorption<>>& residuals) override;
+			void SetTargetListenerResiduals(size_t id, const Coefficients<>& residuals) override;
 
 			inline void SetTargetT60(const Coefficients<>& T60) override { SetTargetT60s({ T60 }); }
 

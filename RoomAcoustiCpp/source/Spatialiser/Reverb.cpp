@@ -331,14 +331,13 @@ namespace RAC
 		
 		////////////////////////////////////////
 
-		void RAVES::SetTargetOutputFilters(const std::vector<Absorption<>>& residuals)
+		void RAVES::SetTargetListenerResiduals(size_t id, const Coefficients<>& residuals)
 		{
 			if (!initialised.load(std::memory_order_acquire))
 				return;
 
 			auto fdns = mFDNs.load();	
-			for (int i = 0; i < fdns->size(); i++)
-				fdns->at(i)->SetTargetResiduals(residuals[i]);
+			fdns->at(id)->SetTargetResiduals(residuals);
 			running.store(true, std::memory_order_release);
 		}
 
