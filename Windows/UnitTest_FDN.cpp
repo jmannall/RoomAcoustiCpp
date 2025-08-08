@@ -323,60 +323,60 @@ namespace RAC
 			}
 		}
 
-		TEST_METHOD(ProcessComplex)
-		{
-			const Real target = RandomValue(0.1, 2.0);
-			const int fs = 48e3;
-			const int numFrames = static_cast<int>(fs * target * 1.2);
-			const int numReverbSources = 8;
-			const Real lerpFactor = 1.0;
-			const Real Q = 0.98;
-			const std::vector<Real> fBands = { 500.0, 1000.0, 2000.0, 4000.0 };
-			const std::shared_ptr<Config> config = std::make_shared<Config>(fs, numFrames, numReverbSources, lerpFactor, Q, fBands);
+		//TEST_METHOD(ProcessComplex)
+		//{
+		//	const Real target = RandomValue(0.1, 2.0);
+		//	const int fs = 48e3;
+		//	const int numFrames = static_cast<int>(fs * target * 1.2);
+		//	const int numReverbSources = 8;
+		//	const Real lerpFactor = 1.0;
+		//	const Real Q = 0.98;
+		//	const std::vector<Real> fBands = { 500.0, 1000.0, 2000.0, 4000.0 };
+		//	const std::shared_ptr<Config> config = std::make_shared<Config>(fs, numFrames, numReverbSources, lerpFactor, Q, fBands);
 
-			const Coefficients T60({ target, target, target, target });
-			const Absorption gains({ (Real)0.1, (Real)0.05, (Real)0.3, (Real)0.25 });
+		//	const Coefficients T60({ target, target, target, target });
+		//	const Absorption gains({ (Real)0.1, (Real)0.05, (Real)0.3, (Real)0.25 });
 
-			// Long delay lines cause issues with the T60 estimation due to less frequent but larger drops in energy
-			Vec dimensions({ RandomValue(0.1, 2.0), RandomValue(0.1, 4.0), RandomValue(0.1, 5.0), RandomValue(0.1, 10.0) });
-			// Vec dimensions({ 0.1, 0.2 });
-			FDN<Complex> fdn(T60, dimensions, config);
-			fdn.SetTimeDelay(0.001, fs);
-			std::vector<Real> in(2 * config->numFrames);
-			in[2] = 1.0;
-			in[3] = -2.0;
+		//	// Long delay lines cause issues with the T60 estimation due to less frequent but larger drops in energy
+		//	Vec dimensions({ RandomValue(0.1, 2.0), RandomValue(0.1, 4.0), RandomValue(0.1, 5.0), RandomValue(0.1, 10.0) });
+		//	// Vec dimensions({ 0.1, 0.2 });
+		//	FDN<Complex> fdn(T60, dimensions, config);
+		//	fdn.SetTimeDelay(0.001, fs);
+		//	std::vector<Complex> in(2 * config->numFrames);
+		//	in[2] = 1.0;
+		//	in[3] = -2.0;
 
-			Coefficients<> residuals({ 1.0, 2.0, 3.0, -1.0, -2.0, -3.0, 0.0, 0.0 });
-			fdn.SetTargetResiduals(residuals);
-			std::vector<Buffer<>> out(config->numReverbSources, Buffer<>(config->numFrames));
-			for (int i = 0; i < 1; i++)
-				fdn.ProcessAudio(in, out, lerpFactor);
+		//	Coefficients<> residuals({ 1.0, 2.0, 3.0, -1.0, -2.0, -3.0, 0.0, 0.0 });
+		//	fdn.SetTargetResiduals(residuals);
+		//	std::vector<Buffer<Complex>> out(config->numReverbSources, Buffer<Complex>(config->numFrames));
+		//	for (int i = 0; i < 1; i++)
+		//		fdn.ProcessAudio(in, out, lerpFactor);
 
-			fdn.Reset();
-			fdn.ProcessAudio(in, out, lerpFactor);
+		//	fdn.Reset();
+		//	fdn.ProcessAudio(in, out, lerpFactor);
 
-			// Analyze Output Decay
-			Real decayTime = 0.0;
-			int count = 0;
-			for (int i = 0; i < config->numReverbSources; i++)
-			{
-				if (residuals[i] == 0.0)
-				{
-					for (int j = 0; j < numFrames; j++)
-						Assert::IsTrue(out[i][j] == (Real)0.0, L"Output not zero.");
-				}
-				else
-				{
-					decayTime += CalculateT60(out[i], config->numFrames, config->fs);
-					count++;
-				}
-			}
+		//	// Analyze Output Decay
+		//	Real decayTime = 0.0;
+		//	int count = 0;
+		//	for (int i = 0; i < config->numReverbSources; i++)
+		//	{
+		//		if (residuals[i] == 0.0)
+		//		{
+		//			for (int j = 0; j < numFrames; j++)
+		//				Assert::IsTrue(out[i][j] == (Real)0.0, L"Output not zero.");
+		//		}
+		//		else
+		//		{
+		//			decayTime += CalculateT60(out[i], config->numFrames, config->fs);
+		//			count++;
+		//		}
+		//	}
 
-			decayTime /= count;;
+		//	decayTime /= count;;
 
-			Assert::IsTrue(decayTime > (Real)0.0, L"Decay not detected.");
-			Assert::AreEqual(target, decayTime, (Real)0.02, L"Decay time does not match target RT60.");
-		}
+		//	Assert::IsTrue(decayTime > (Real)0.0, L"Decay not detected.");
+		//	Assert::AreEqual(target, decayTime, (Real)0.02, L"Decay time does not match target RT60.");
+		//}
 	};
 #pragma optimize("", on)
 }

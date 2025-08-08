@@ -29,6 +29,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\GraphicEQ.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\IIRFilter.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\LinkwitzRileyFilter.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\OctaveBandFilter.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\AirAbsorption.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Context.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Diffraction\Models.cpp" />
@@ -90,6 +91,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\IIRFilter_private.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\Interpolate.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\LinkwitzRileyFilter.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\OctaveBandFilter.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\Parameter.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\moodycamel\concurrentqueue.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\AirAbsorption.h" />

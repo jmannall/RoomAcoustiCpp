@@ -60,7 +60,7 @@ namespace RAC
 			* @param lerpFactor The lerp factor for interpolation
 			* @return The output of the FIRFilter
 			*/
-			Real GetOutput(const Real input, const Real lerpFactor);
+			virtual Real GetOutput(const Real input, const Real lerpFactor);
 
 			/**
 			* @brief Atomically sets the new target impulse response
@@ -75,29 +75,35 @@ namespace RAC
 			*/
 			inline void Reset() { clearInputLine.store(true, std::memory_order_release); }
 
+		protected:
+			const int maxFilterLength;	// Maximum filter length
+			size_t irLength;		// Length of the current impulse response (should only be accessed from the audio thread)
+
+			std::atomic<bool> initialised;		// True if the filter has been initialised, false otherwise
+			std::atomic<bool> clearInputLine;	// Flag to clear input line
+            
+			Buffer<> currentIR;	// Current impulse response buffer (should only be accessed from the audio thread)
+			Buffer<> inputLine;	// Input line buffer (should only be accessed from the audio thread)
+
+			int count{ 0 };			// Index for the next sample entry to the input line buffer (should only be accessed from the audio thread)
+
 		private:
 
 			/*
 			* @brief Linearly interpolates the current impulse response with the target impulse response
-			* 
+			*
 			* @param lerpFactor The lerp factor for interpolation
 			*/
 			void InterpolateIR(const Real lerpFactor);
-				
-            const int maxFilterLength;	// Maximum filter length
+
 
 			std::atomic<std::shared_ptr<const Buffer<>>> targetIR;	// Target impulse response
 
-			Buffer<> currentIR;	// Current impulse response buffer (should only be accessed from the audio thread)
-			Buffer<> inputLine;	// Input line buffer (should only be accessed from the audio thread)
+			
 
-			size_t irLength;		// Length of the current impulse response (should only be accessed from the audio thread)
 			size_t oldIrLength;		// Previous length of the impulse response (should only be accessed from the audio thread)
-			int count{ 0 };			// Index for the next sample entry to the input line buffer (should only be accessed from the audio thread)
 
-			std::atomic<bool> clearInputLine;	// Flag to clear input line
 			std::atomic<bool> irsEqual;			// True if the current impulse response is known to be equal to the target impulse response
-			std::atomic<bool> initialised;		// True if the filter has been initialised, false otherwise
 
 			static ReleasePool releasePool;		// Garbage collector for shared pointers after atomic replacement
 		};

@@ -1,0 +1,191 @@
+/*
+* @class OctaveBand
+*
+* @brief Declaration of OctaveBand filter class
+*
+* @remarks Based after Linear-Phase Octave Graphic Equalizer. Bruschi V, Valimaki V, Liski J, Cecchi L. 2022
+*
+*/
+
+#ifndef DSP_OctaveBandFilter_h
+#define DSP_OctaveBandFilter_h
+
+// C++ headers
+#include <cassert>
+#include <memory>
+#include <atomic>
+
+// DSP headers
+#include "DSP/Interpolate.h"
+#include "DSP/FIRFilter.h"
+#include "DSP/DelayLine.h"
+
+// Common headers
+#include "Common/Types.h"
+#include "Common/Coefficients.h"
+#include "Common/ReleasePool.h"
+
+namespace RAC
+{
+	using namespace Common;
+	namespace DSP
+	{
+		/**
+		* @brief Class that implements a linear-phase octave band filter
+		* 
+		* @remarks The current implementation begins at the band centre frequencies at 16kHz and halves the frequency for each band below it
+		*/
+		class OctaveBand
+		{
+			/**
+			* @brief Class that implements the internal low-pass filters
+			* 
+			* @remarks The impulse response is zero every other sample, so the filter only expects the non-zero samples
+			*/
+			class Filter : public FIRFilter
+			{
+			public:
+
+				/**
+				* @brief Constructor that initialises the Filter with a given impulse response, midSample and step size
+				* 
+				* @param h The non-zero samples of the impulse response to initialise the Filter with
+				* @param midSample The mid sample value of the impulse response (The only non-zero odd sample)
+				* @param step The step size for stretched versions of the base filter (h)
+				*/
+				Filter(const Buffer<>& h, Real midSample, int step) : FIRFilter(h, h.Length()), step(step), midSample(midSample), midSampleStep(step* (h.Length() - 1)),
+					halfInputLine(2 * step * maxFilterLength)
+				{
+					inputLine.ResizeBuffer(2 * halfInputLine);
+				}
+
+				/**
+				* @brief Returns the output of the Filter given an input
+				*
+				* @param input The input to the FIRFilter
+				* @param lerpFactor The lerp factor for interpolation
+				* @return The output of the FIRFilter
+				*/
+				Real GetOutput(const Real input, const Real lerpFactor = 1.0) override;
+
+			private:
+				const int step;				// Step size for stretched versions of the base filter
+				const int midSampleStep;	// Sample index of the mid sample in the impulse response
+				const Real midSample;		// Value of the mid sample in the impulse response
+				const int halfInputLine;	// The half length of the input line buffer (which is double buffered)
+			};
+
+			// typedef Coefficients<std::array<Real, 4>> Parameters; // add template?
+			typedef Coefficients<> Parameters;
+		public:
+			/**
+			* @brief Constructor that initialises the OctaveBand filter with given gains, sample rate and number of frequency bands
+			* 
+			* @param gains The target gain parameters for the filter
+			* @param fs The sample rate for calculating the filter coefficients
+			* @param numFrequencyBands The number of frequency bands for the filter
+			*/
+			OctaveBand(const Parameters& gains, int fs, int numFrequencyBands);
+
+			/**
+			* @brief Updates the target gains of the LinkwitzRiley filter
+			*
+			* @param gains The new target gain parameters
+			*/
+			inline void SetTargetGains(const Parameters& gains)
+			{
+				std::shared_ptr<Parameters> gainsCopy = std::make_shared<Parameters>(gains);
+
+				releasePool.Add(gainsCopy);
+				targetGains.store(gainsCopy, std::memory_order_release);
+				gainsEqual.store(false, std::memory_order_release);
+			};
+
+			
+			/**
+			* @brief Returns the output of the OctaveBand filter given an input
+			* 
+			* @param input The input to the OctaveBand filter
+			* @param lerpFactor The lerp factor for interpolation
+			* @return A vector containing the outputs of each frequency band
+			*/
+			std::vector<Real> GetOutput(Real input, Real lerpFactor);
+
+			/**
+			* @brief Resets the filter buffers
+			*/
+			inline void ClearBuffers()
+			{
+				for (auto& filter : filters)
+					filter->Reset();
+				for (auto& delayLine : delayLines)
+					delayLine.Reset();
+			}
+
+		private:
+			/*
+			* @brief Linearly interpolates the current gains with the target gains
+			*
+			* @param lerpFactor The lerp factor for interpolation
+			*/
+			inline void InterpolateGains(const Real lerpFactor)
+			{
+				gainsEqual.store(true, std::memory_order_release); // Prevents issues in case targetGains updated during this function call
+				const std::shared_ptr<const Parameters> gain = targetGains.load(std::memory_order_acquire);
+
+				Lerp(currentGains, *gain, lerpFactor);
+				if (Equals(currentGains, *gain))
+				{
+					currentGains = *gain;
+					return;
+				}
+				gainsEqual.store(false, std::memory_order_release);
+			}
+
+			/**
+			* @param fs The sample rate for calculating the filter coefficients
+			* @return Returns the impulse response of the low-pass filter
+			*/
+			Buffer<> CalculateH(int fs)
+			{
+				std::array<Real, Lwin> window = GenerateHanningWindow();
+				Buffer<> h(Dwin + 1);
+				int count = 0;
+				Real omega = PI_2 * fc / static_cast<Real>(fs);
+				for (int i = 0; i < Dwin + 1; i++)
+					h[i] = window[2 * i] * (sin(omega * (2 * i - Dwin)) / (PI_1 * (2 * i - Dwin)));
+				return h;
+			}
+
+			static const int filterOrder{ 18 };			// Order of the low-pass filter (must be even)
+			static const int Lwin{ filterOrder + 1 };	// Length of the window function (must be odd)
+			static const int Dwin{ filterOrder / 2 };	// Half the filter order (must be even)
+
+			/**
+			* @return Returns a Hanning window function of length Lwin
+			*/
+			static constexpr inline std::array<Real, Lwin> GenerateHanningWindow()
+			{
+				std::array<Real, Lwin> w = {};
+				for (int i = 0; i < Lwin; i++)
+					w[i] = 0.5 * (1 - cos(PI_2 * (i + 1) / (Lwin + 1)));
+				return w;
+			}
+
+			const int numFrequencyBands;	// Number of frequency bands for the filter
+			const Real fc{ 12e3 };			// First cut-off frequency of the filter
+
+			std::vector<DelayLine> delayLines;				// Filter delay lines, ordered with complementary filter delays first and then followed by the correction delays (highest band to the lowest band)
+			std::vector<std::unique_ptr<Filter>> filters;	// Low-pass filters for each frequency band
+
+			std::atomic<std::shared_ptr<Parameters>> targetGains;	// Target filter band gains
+			Parameters currentGains;								// Current filter band gains
+
+			std::atomic<bool> initialised{ false };		// True if the filter has been initialised, false otherwise
+			std::atomic<bool> gainsEqual{ false };		// True if the current gains are know to be equal to the target gains
+
+			static ReleasePool releasePool;		// ReleasePool for managing memory of shared pointers
+		};
+	}
+}
+#endif
