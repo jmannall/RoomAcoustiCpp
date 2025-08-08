@@ -206,7 +206,13 @@ namespace RAC
 			*/
 			virtual void SetTargetOutputFilters(const std::vector<Absorption<>>& gains) { /*Do Nothing*/ }
 
-			virtual void SetTargetListenerResiduals(size_t id, const Coefficients<>& residuals) { /*Do Nothing*/ }
+			/**
+			* @brief Update listener residues for RAVES reverb
+			* 
+			* @param id The ID of the FDN to update
+			* @param residues The new listener residues (size of numReverbSources)
+			*/
+			virtual void SetTargetListenerResidues(size_t id, const Coefficients<>& residues) { /*Do Nothing*/ }
 
 			/**
 			* @brief Calculate the end limits for reverb source directions
@@ -298,7 +304,13 @@ namespace RAC
 
 			void InitLateReverb(const std::vector<Coefficients<>>& T60, const Vec<>& delayLineLengths, const FDNMatrix matrix, const std::shared_ptr<Config> config) override;
 
-			void SetTargetListenerResiduals(size_t id, const Coefficients<>& residuals) override;
+			/**
+			* @brief Update listener residues for RAVES reverb
+			*
+			* @param id The ID of the FDN to update
+			* @param residues The new listener residues (size of numReverbSources)
+			*/
+			void SetTargetListenerResidues(size_t id, const Coefficients<>& residues) override;
 
 			inline void SetTargetT60(const Coefficients<>& T60) override { SetTargetT60s({ T60 }); }
 

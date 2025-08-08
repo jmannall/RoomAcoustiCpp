@@ -174,12 +174,12 @@ namespace RAC
 			*/
 			void SetTargetT60(const Coefficients<>& T60);
 
-			inline void SetTargetResiduals(const Coefficients<>& residuals)
+			inline void SetTargetResidues(const Coefficients<>& residues)
 			requires std::is_same_v<T, Complex>
 			{
-				assert(residuals.Length() == ravesResiduals.size());
-				for (int i = 0; i < ravesResiduals.size(); i++)
-					ravesResiduals[i].SetTargetEnergy(residuals[i]);
+				assert(residues.Length() == ravesResidues.size());
+				for (int i = 0; i < ravesResidues.size(); i++)
+					ravesResidues[i].SetTargetEnergy(residues[i]);
 			}
 
 			/**
@@ -305,7 +305,7 @@ namespace RAC
 			std::vector<std::unique_ptr<FDNChannel<T>>> mChannels;		// Internal delay line channels
 			
 			std::conditional_t<std::is_same_v<T, Complex>,
-				std::vector<RAVESListenerResidual>, std::nullptr_t> ravesResiduals; // Residuals for the RAVES algorithm
+				std::vector<RAVESListenerResidual>, std::nullptr_t> ravesResidues; // Residues for the RAVES algorithm
 
 			std::conditional_t<std::is_same_v<T, Complex>,
 				Buffer<Complex>, std::nullptr_t> delayBuffer;

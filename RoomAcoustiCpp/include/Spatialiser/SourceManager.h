@@ -156,9 +156,15 @@ namespace RAC
 				mSources[id]->UpdateData(source, vSources, mConfig);
 			}
 
-			inline void SetSourceTargetResiduals(const size_t id, const Coefficients<>& residuals)
+			/**
+			* @brief Update listener residues for RAVES reverb
+			*
+			* @param id The ID of the FDN to update
+			* @param residues The new source residues (size of numRAVESFDNs)
+			*/
+			inline void SetSourceTargetResidues(const size_t id, const Coefficients<>& residues)
 			{
-				mSources[id]->SetTargetResiduals(residuals);
+				mSources[id]->SetTargetResidues(residues);
 			}
 
 			/**

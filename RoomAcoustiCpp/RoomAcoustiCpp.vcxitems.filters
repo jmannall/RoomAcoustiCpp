@@ -368,5 +368,8 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\OctaveBandFilter.h">
       <Filter>Header Files\DSP</Filter>
     </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\DelayLine.h">
+      <Filter>Header Files\DSP</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

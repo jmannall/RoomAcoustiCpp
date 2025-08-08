@@ -331,13 +331,13 @@ namespace RAC
 		
 		////////////////////////////////////////
 
-		void RAVES::SetTargetListenerResiduals(size_t id, const Coefficients<>& residuals)
+		void RAVES::SetTargetListenerResidues(size_t id, const Coefficients<>& residues)
 		{
 			if (!initialised.load(std::memory_order_acquire))
 				return;
 
 			auto fdns = mFDNs.load();	
-			fdns->at(id)->SetTargetResiduals(residuals);
+			fdns->at(id)->SetTargetResidues(residues);
 			running.store(true, std::memory_order_release);
 		}
 

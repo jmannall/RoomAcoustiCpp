@@ -51,11 +51,11 @@ namespace RAC
 			reverbSend.store(LateReverbModel::none, std::memory_order_release);
 			hasChanged.store(true, std::memory_order_release);
 
-			Coefficients<> sourceResiduals(config->numRavesFDNs);
+			Coefficients<> sourceResidues(config->numRavesFDNs);
 			for (int i = 0; i < config->numRavesFDNs; ++i)
-				sourceResiduals[i] = -0.5 * i + 0.5;
-			for (int i = 0; i < ravesResiduals.size(); i++)
-				ravesResiduals[i].SetTargetEnergy(sourceResiduals[i]);
+				sourceResidues[i] = -0.5 * i + 0.5;
+			for (int i = 0; i < ravesResidues.size(); i++)
+				ravesResidues[i].SetTargetEnergy(sourceResidues[i]);
 
 			ResetFDNSlots();
 			AllowAccess();
@@ -290,7 +290,7 @@ namespace RAC
 				{
 					for (int i = 0; i < reverbInput.Rows(); i++)
 					{
-						Complex input = ravesResiduals[i].GetOutput(inputBuffer[j], lerpFactor);
+						Complex input = ravesResidues[i].GetOutput(inputBuffer[j], lerpFactor);
 						reverbInput[i][2 * j] = input.real();
 						reverbInput[i][2 * j + 1] = input.imag();
 					}

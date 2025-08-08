@@ -84,6 +84,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Vec_private.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\AudioThreadPool.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\Buffer.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\DelayLine.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\FIRFilter.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\GraphicEQ.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\GraphicEQ_private.h" />

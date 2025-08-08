@@ -80,7 +80,7 @@ namespace RAC
 			* @params config The spatialiser configuration
 			*/
 			Source(Binaural::CCore* core, ImageSourceManager& imageSources, const std::shared_ptr<Config>& config) : Access(), mCore(core), imageSources(imageSources), inputBuffer(config->numFrames), spatialisationMode(config->GetSpatialisationMode()),
-				ravesResiduals(config->numRavesFDNs)
+				ravesResidues(config->numRavesFDNs)
 			{
 				dataMutex = std::make_shared<std::mutex>();
 			}
@@ -189,13 +189,13 @@ namespace RAC
 			*/
 			inline bool HasChanged() { return hasChanged.exchange(false, std::memory_order_acq_rel); }
 			
-			inline void SetTargetResiduals(const Coefficients<>& residuals)
+			inline void SetTargetResidues(const Coefficients<>& residues)
 			{
 				if (!GetAccess())
 					return;
-				assert(residuals.Length() == ravesResiduals.size());
-				for (int i = 0; i < ravesResiduals.size(); i++)
-					ravesResiduals[i].SetTargetEnergy(residuals[i]);
+				assert(residues.Length() == ravesResidues.size());
+				for (int i = 0; i < ravesResidues.size(); i++)
+					ravesResidues[i].SetTargetEnergy(residues[i]);
 			}
 
 			/**
@@ -325,7 +325,7 @@ namespace RAC
 			Buffer<> bStore;								// Internal scratch audio buffer
 			Buffer<> bStoreReverb;							// Internal audio buffer reverb send
 			std::vector<Parameter> ravesGains;
-			std::vector<RAVESSourceResidual> ravesResiduals;			// Residuals for the RAVES algorithm
+			std::vector<RAVESSourceResidual> ravesResidues;			// Residues for the RAVES algorithm
 
 			Vec3 currentPosition;						// Current source position
 			Vec4 currentOrientation;					// Current source orientation

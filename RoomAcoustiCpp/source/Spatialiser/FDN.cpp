@@ -135,7 +135,7 @@ namespace RAC
 
 		template<>
 		FDN<Complex>::FDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<Config> config, const Matrix<>& matrix) : x(config->numReverbSources),
-			y(config->numReverbSources), feedbackMatrix(matrix), ravesResiduals(config->numReverbSources)
+			y(config->numReverbSources), feedbackMatrix(matrix), ravesResidues(config->numReverbSources)
 		{
 			assert(T60 > 0);
 
@@ -245,7 +245,7 @@ namespace RAC
 				for (int j = 0; j < mChannels.size(); j++)
 				{
 					y[j] = mChannels[j]->GetOutput(x[j] + delayBuffer[idx], lerpFactor);
-					outputBuffers[j][i] += ravesResiduals[j].GetOutput(y[j], lerpFactor);
+					outputBuffers[j][i] += ravesResidues[j].GetOutput(y[j], lerpFactor);
 				}
 				ProcessMatrix();
 				delayBuffer[idx] = inputData[i];

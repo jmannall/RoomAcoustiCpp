@@ -262,13 +262,13 @@ namespace RAC
 					T60s[i] = (0.5 * i + 0.5) * mRoom->GetReverbTime();
 				Vec delayLineLengths({1.0, 1.7, 3.2});
 				mReverb->InitLateReverb(T60s, delayLineLengths, FDNMatrix::randomOrthogonal, mConfig);
-				std::vector<Absorption<>> listenerResiduals(mConfig->numRavesFDNs, Absorption<>(mConfig->numReverbSources));
+				std::vector<Absorption<>> listenerResidues(mConfig->numRavesFDNs, Absorption<>(mConfig->numReverbSources));
 				for (int i = 0; i < mConfig->numRavesFDNs; ++i)
 				{
 					for (int j = 0; j < mConfig->numReverbSources; ++j)
-						listenerResiduals[i][j] = (0.5 * i - 0.5) + (0.2 * j - 0.6);
+						listenerResidues[i][j] = (0.5 * i - 0.5) + (0.2 * j - 0.6);
 				}
-				mReverb->SetTargetOutputFilters(listenerResiduals);
+				mReverb->SetTargetOutputFilters(listenerResidues);
 			}
 
 			audioFlag.store(false, std::memory_order_release);
