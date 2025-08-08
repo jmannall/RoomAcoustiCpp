@@ -109,6 +109,7 @@ namespace RAC
 
 			// Reset contributions to 0
 			for (int i = 0; i < numPaths; ++i) {
+				// TODO: It would be nice to overload the = operator for element-wise Vec definition.
 				energyContributions[i] = 0;
 			}
 
@@ -128,6 +129,7 @@ namespace RAC
 
 			// Normalize by number of rays
 			for (int i = 0; i < numPaths; ++i) {
+				// TODO: It would be nice to overload the / operator for element-wise Vec division, as already done for Vec3.
 				energyContributions[i] /= numRays;
 			}
 		}
