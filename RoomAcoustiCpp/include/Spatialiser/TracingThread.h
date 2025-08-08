@@ -91,14 +91,13 @@ namespace RAC
 			void clusterReverbDirections();
 
 			/**
-			* @brief Computes the energy constributions of the ray pencil to each ART propagation path.
+			* @brief Computes the energy constributions of the ray pencil to each ART propagation path and stores them in the attribute `energyContributions`.
 			* Makes internal use of the latest tracing results stored in hemispherePencil in conjunction with pathIndexing.
 			*
-			* @param reverbDirectionIdx If `reverbDirectionIdx == -1`, take all rays' contributions into account (omnidirectional).
+			* @param reverbDirectionIdx If `reverbDirectionIdx == -1` (default), take all rays' contributions into account (omnidirectional).
 			*						 Otherwise, only tally up the contributions of rays within the cluster with index `reverbDirectionIdx`.
-			* @param contributions Pointer to a Vec where the results are written.
 			*/
-			void computeEnergyContributions(int reverbDirectionIdx, Vec<>& contributions);
+			void computeEnergyContributions(int reverbDirectionIdx = -1);
 		};
 	}
 }

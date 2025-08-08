@@ -61,15 +61,17 @@ namespace RAC
 				hemispherePencil.moveOrigin(mListenerPosition);
 				hemispherePencil.traceAll(triangles);
 
-				// TODO: Compute energy contributions of each reverbDirection to each propagation path (using pathIndexing in combination with hemispherePencil.getIndices)
-
-				// TODO: for (slope_idx = 0; slope_idx < mReverb.get_num_slopes(); ++slope_idx)
+				for (slope_idx = 0; slope_idx < numFDNs; ++slope_idx) {
 					// TODO: eigenvector = mReverb.get_right_eigenvector(slope_idx);
 					// TODO: residues = zeros(reverbDirections.size());
-					// TODO: for (dir_idx = 0; dir_idx < reverbDirections.size(); ++dir_idx)
+					for (dir_idx = 0; dir_idx < numReverbDirections; ++dir_idx) {
+						computeEnergyContributions(dir_idx);
+						// TODO: Check if any different normalization is required (e.g. normalize by path etendue); if constant, bake it into the eigenvectors; if not, implement it here.
 						// TODO: residues[dir_idx] = dot(energy_contributions[dir_idx], eigenvector)
-					// TODO: Return residues to FDN[slope_idx]
-					// TODO: sharedReverb->SetTargetListenerResidues(slope_idx, residues)
+					}
+				// TODO: Return residues to FDN[slope_idx]
+				// TODO: sharedReverb->SetTargetListenerResidues(slope_idx, residues)
+				}
 			}
 
 			shared_ptr<SourceManager> sharedSource = mSourceManager.lock();
@@ -81,12 +83,14 @@ namespace RAC
 					hemispherePencil.moveOrigin(source.position);
 					hemispherePencil.traceAll(triangles);
 
-					// TODO: Compute energy contributions to each propagation path (using pathIndexing in combination with hemispherePencil.getIndices)
+					computeEnergyContributions();
+					// TODO: Check if any different normalization is required (e.g. normalize by path etendue); if constant, bake it into the eigenvectors; if not, implement it here.
 
 					// TODO: residues = zeros(mReverb.get_num_slopes());
-					// TODO: for (slope_idx = 0; slope_idx < mReverb.get_num_slopes(); ++slope_idx)
+					for (slope_idx = 0; slope_idx < numFDNs; ++slope_idx) {
 						// TODO: eigenvector = mReverb.get_left_eigenvector(slope_idx);
 						// TODO: residues[slope_idx] = dot(energy contributions, eigenvector)
+					}
 					// TODO: sharedSource->SetSourceTargetResidues(source.id, residues)
 				}
 			}
@@ -100,8 +104,36 @@ namespace RAC
 			hemispherePencil.clusterDirections(reverbDirections, frontClusters, backClusters);
 		}
 
-		void TracingThread::computeEnergyContributions(int reverbDirectionIdx, Vec<>& contributions) {
-			// TODO: Define this.
+		void TracingThread::computeEnergyContributions(int reverbDirectionIdx) {
+			int pathIdx;
+			std::vector<int> frontIndices(numRays, -1);
+			std::vector<int> backIndices(numRays, -1);
+
+			hemispherePencil.getIndices(frontIndices, backIndices);
+
+			// Reset contributions to 0
+			for (int i = 0; i < numPaths; ++i) {
+				energyContributions[i] = 0;
+			}
+
+			for (int i = 0; i < numRays; ++i) {
+				if ((reverbDirectionIdx == -1) || (reverbDirectionIdx == frontClusters[i])) {
+					// Contribution of front ray
+					pathIdx = pathIndexing[frontIndices[i]][backIndices[i]];
+					energyContributions[pathIdx] += 1;
+				}
+
+				if ((reverbDirectionIdx == -1) || (reverbDirectionIdx == backClusters[i])) {
+					// Contribution of back ray
+					pathIdx = pathIndexing[backIndices[i]][frontIndices[i]];
+					energyContributions[pathIdx] += 1;
+				}
+			}
+
+			// Normalize by number of rays
+			for (int i = 0; i < numPaths; ++i) {
+				energyContributions[i] /= numRays;
+			}
 		}
 	}
 }
