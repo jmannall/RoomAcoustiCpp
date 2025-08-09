@@ -111,8 +111,11 @@ namespace RAC
 			*/
 			inline void ResetInputBuffer()
 			{
-				if (clearInputBuffer.exchange(false, std::memory_order_acq_rel))
+				if (clearInputBuffer.exchange(false, std::memory_order_acq_rel) || !inputBufferUpdated)
+				{
 					inputBuffer.Reset();
+					inputBufferUpdated = true;
+				}
 			}
 
 			/**
@@ -123,6 +126,7 @@ namespace RAC
 			inline void SetInputBuffer(const Buffer<>& data)
 			{
 				assert(data.Length() == inputBuffer.Length());
+				inputBufferUpdated = true;
 				std::transform(data.begin(), data.end(), inputBuffer.begin(), [](Real val) { return val; });
 			}
 
@@ -310,6 +314,7 @@ namespace RAC
 
 			std::atomic<bool> clearInputBuffer{ false };	// True if the input buffer should be cleared, false otherwise
 			Buffer<> inputBuffer;							// Input audio buffer for the source
+			bool inputBufferUpdated{ false };				// True if the input buffer has been updated, false otherwise
 			Buffer<> bStore;								// Internal scratch audio buffer
 			Buffer<> bStoreReverb;							// Internal audio buffer reverb send
 
