@@ -375,3 +375,7 @@ UnitTestData/NearFieldCompensation_ILD_48000.3dti-ild
 UnitTestData/Kemar_HRTF_ITD_48000_3dti-hrtf.3dti-hrtf
 UnitTestData/HRTF_ILD_48000.3dti-ild
 *.mat
+/Plugins
+/Windows/Release_Debug
+/Windows/Release_Profile
+/Windows/Release_ProfileDetailed

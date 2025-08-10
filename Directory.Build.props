@@ -32,14 +32,14 @@
   <!-- ===== Release Configuration ===== -->
   <!-- Release -->
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
-    <OutDir>$(SolutionDir)$(Platform)\Release\</OutDir>
-    <TargetName>RoomAcoustiCpp_$(Platform)</TargetName>
+    <OutDir>$(SolutionDir)$(Platform)\Release\$(Platform)\</OutDir>
+    <TargetName>RoomAcoustiCpp</TargetName>
   </PropertyGroup>
 
   <!-- Release_Debug -->
   <PropertyGroup Condition="'$(Configuration)' == 'Release_Debug'">
-    <OutDir>$(SolutionDir)$(Platform)\Release\</OutDir>
-    <TargetName>RoomAcoustiCpp_Debug_$(Platform)</TargetName>
+    <OutDir>$(SolutionDir)$(Platform)\Release\$(Platform)\</OutDir>
+    <TargetName>RoomAcoustiCpp_Debug</TargetName>
   </PropertyGroup>
 
   <ItemDefinitionGroup Condition="'$(Configuration)' == 'Release_Debug'">
@@ -58,8 +58,8 @@
 
   <!-- Release_Profile -->
   <PropertyGroup Condition="'$(Configuration)' == 'Release_Profile'">
-    <OutDir>$(SolutionDir)$(Platform)\Release\</OutDir>
-    <TargetName>RoomAcoustiCpp_Profile_$(Platform)</TargetName>
+    <OutDir>$(SolutionDir)$(Platform)\Release\$(Platform)\</OutDir>
+    <TargetName>RoomAcoustiCpp_Profile</TargetName>
   </PropertyGroup>
 
   <ItemDefinitionGroup Condition="'$(Configuration)' == 'Release_Profile'">
@@ -75,8 +75,8 @@
 
   <!-- Release_ProfileDetailed -->
   <PropertyGroup Condition="'$(Configuration)' == 'Release_ProfileDetailed'">
-    <OutDir>$(SolutionDir)$(Platform)\Release\</OutDir>
-    <TargetName>RoomAcoustiCpp_ProfileDetailed_$(Platform)</TargetName>
+    <OutDir>$(SolutionDir)$(Platform)\Release\$(Platform)\</OutDir>
+    <TargetName>RoomAcoustiCpp_ProfileDetailed</TargetName>
   </PropertyGroup>
 
   <ItemDefinitionGroup Condition="'$(Configuration)' == 'Release_ProfileDetailed'">
@@ -111,7 +111,7 @@
     </ClCompile>
   </ItemDefinitionGroup> -->
 
-  <Target Name="CopyOutputToSecondaryLocation" AfterTargets="Build" Condition="'$(MyTargetPlatform)' != 'Android'">
+  <!--<Target Name="CopyOutputToSecondaryLocation" AfterTargets="Build" Condition="'$(MyTargetPlatform)' != 'Android'">
     <MakeDir Directories="$(SolutionDir)\Plugins\$(Platform)" />
     <Copy
       SourceFiles="$(OutDir)$(TargetName)$(TargetExt)"
@@ -123,5 +123,46 @@
     <Copy
       SourceFiles="$(ProjectDir)$(Platform)\$(Configuration)\$(TargetName)$(TargetExt)"
       DestinationFolder="$(SolutionDir)\Plugins\$(Platform)" />
+  </Target>-->
+
+  <Target Name="CopyAndroidArm64Plugin" AfterTargets="Build"
+        Condition="'$(Platform)' == 'ARM64' And '$(MyTargetPlatform)' == 'Android'">
+    <MakeDir Directories="$(SolutionDir)\Plugins\Android\arm64-v8a\" />
+    <Copy
+      SourceFiles="$(ProjectDir)$(Platform)\$(Configuration)\$(TargetName)$(TargetExt)"
+      DestinationFolder="$(SolutionDir)\Plugins\Android\arm64-v8a\" />
   </Target>
+
+  <Target Name="CopyAndroidArmPlugin" AfterTargets="Build"
+        Condition="'$(Platform)' == 'ARM' And '$(MyTargetPlatform)' == 'Android'">
+    <MakeDir Directories="$(SolutionDir)\Plugins\Android\armeabi-v7a\" />
+    <Copy
+      SourceFiles="$(ProjectDir)$(Platform)\$(Configuration)\$(TargetName)$(TargetExt)"
+      DestinationFolder="$(SolutionDir)\Plugins\Android\armeabi-v7a\" />
+  </Target>
+
+  <Target Name="CopyAndroid86Plugin" AfterTargets="Build"
+        Condition="'$(Platform)' == 'x86' And '$(MyTargetPlatform)' == 'Android'">
+    <MakeDir Directories="$(SolutionDir)\Plugins\Android\x86\" />
+    <Copy
+      SourceFiles="$(ProjectDir)$(Platform)\$(Configuration)\$(TargetName)$(TargetExt)"
+      DestinationFolder="$(SolutionDir)\Plugins\Android\x86\" />
+  </Target>
+
+  <Target Name="CopyLinux64Plugin" AfterTargets="Build"
+        Condition="'$(Platform)' == 'x64' And '$(MyTargetPlatform)' == 'Android'">
+    <MakeDir Directories="$(SolutionDir)\Plugins\Linux\x86_64\" />
+    <Copy
+      SourceFiles="$(ProjectDir)$(Platform)\$(Configuration)\$(TargetName)$(TargetExt)"
+      DestinationFolder="$(SolutionDir)\Plugins\Linux\x86_64\" />
+  </Target>
+
+  <Target Name="CopyWindows64Plugin" AfterTargets="Build"
+        Condition="'$(Platform)' == 'x64' And '$(MyTargetPlatform)' == 'Windows'">
+    <MakeDir Directories="$(SolutionDir)\Plugins\Windows\x64\" />
+    <Copy
+      SourceFiles="$(OutDir)$(TargetName)$(TargetExt)"
+      DestinationFolder="$(SolutionDir)\Plugins\Windows\x64\" />
+  </Target>
+  
 </Project>
