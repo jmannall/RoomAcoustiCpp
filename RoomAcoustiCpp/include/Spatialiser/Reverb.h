@@ -100,8 +100,12 @@ namespace RAC
 			const Vec3 mShift;		// Position shift relative to the listener
 
 			Binaural::CCore* mCore;									// 3DTI core
-			shared_ptr<Binaural::CSingleSourceDSP> mSource;			// 3DTI source
-			std::atomic<shared_ptr<const CTransform>> transform;	// 3DTI source transform
+			std::shared_ptr<Binaural::CSingleSourceDSP> mSource;			// 3DTI source
+#ifdef __ANDROID__
+			std::shared_ptr<CTransform> transform;	// 3DTI source transform
+#else
+			std::atomic<std::shared_ptr<const CTransform>> transform;	// 3DTI source transform
+#endif
 			CMonoBuffer<float> bInput;								// 3DTI Input buffer	
 			CEarPair<CMonoBuffer<float>> bOutput;					// 3DTI Output buffer
 
@@ -179,7 +183,11 @@ namespace RAC
 			{
 				for (auto& reverbSource : mReverbSources)
 					reverbSource->Reset();
+#ifdef __ANDROID__
+				std::atomic_load(&mFDN)->Reset();
+#else
 				mFDN.load(std::memory_order_acquire)->Reset();
+#endif
 			}
 
 			/**
@@ -215,8 +223,11 @@ namespace RAC
 
 			std::vector<Vec3> CalculateSourcePositions(const int numLateReverbChannels) const;
 
+#ifdef __ANDROID__
+			std::shared_ptr<FDN> mFDN;		// FDN for late reverberation processing
+#else
 			std::atomic<std::shared_ptr<FDN>> mFDN;		// FDN for late reverberation processing
-
+#endif
 			std::vector<Buffer<>> reverbSourceInputs;		// Input buffers for each reverb source
 			std::vector<std::unique_ptr<ReverbSource>> mReverbSources;		// Reverb sources to binauralise the FDN output
 

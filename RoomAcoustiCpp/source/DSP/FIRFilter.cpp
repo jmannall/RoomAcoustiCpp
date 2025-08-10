@@ -80,9 +80,13 @@ namespace RAC
 
 			releasePool.Add(irCopy);
 
+#ifdef __ANDROID__
+			std::atomic_store(&targetIR, irCopy);
+			std::atomic_store(&irsEqual, false);
+#else
 			targetIR.store(irCopy, std::memory_order_release);
 			irsEqual.store(false, std::memory_order_release);
-
+#endif
 			return true;
 		}
 
@@ -91,7 +95,11 @@ namespace RAC
 		void FIRFilter::InterpolateIR(const Real lerpFactor)
 		{
 			irsEqual.store(true, std::memory_order_release); // Prevents issues in case targetIR updated during this function call
+#ifdef __ANDROID__
+			const std::shared_ptr<const Buffer<>> ir = std::atomic_load(&targetIR);
+#else
 			const std::shared_ptr<const Buffer<>> ir = targetIR.load(std::memory_order_acquire);
+#endif
 			irLength = ir->Length();
 
 			Lerp(currentIR, *ir, oldIrLength, lerpFactor);

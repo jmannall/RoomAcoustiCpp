@@ -42,7 +42,11 @@ inline std::string GetTimestamp() {
 	std::time_t time_now = std::chrono::system_clock::to_time_t(now);
 
 	std::tm local_time;
+#if __ANDROID__
+	localtime_r(&time_now, &local_time);
+#else
 	localtime_s(&local_time, &time_now);
+#endif
 
 	// Format time into string: YYYY-MM-DD_HH-MM-SS
 	std::stringstream ss;

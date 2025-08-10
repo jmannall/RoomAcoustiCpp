@@ -19,7 +19,9 @@ namespace RAC
 	namespace Common
 	{
 		static_assert(std::atomic<bool>::is_always_lock_free, "Bool type must be lock-free for atomic operations");
+#ifdef __WINDOWS__
 		static_assert(!std::atomic<std::shared_ptr<Real>>::is_always_lock_free, "Shared ptr type is now lock free");
+#endif
 		static_assert(std::atomic<Real>::is_always_lock_free, "Real type must be lock-free for atomic operations");
 		
 		const constexpr size_t MAX_IMAGESOURCES = 1024;		// Maximum number of image sources

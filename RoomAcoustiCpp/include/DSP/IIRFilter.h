@@ -621,7 +621,11 @@ namespace RAC
 			*/
 			void UpdateCoefficients(const Parameters& zpk);
 
+#ifdef __ANDROID__
+			std::shared_ptr<Parameters> targetZPK;	// Target ZPK parameters
+#else
 			std::atomic<std::shared_ptr<Parameters>> targetZPK;	// Target ZPK parameters
+#endif
 			Parameters currentZPK;								// Current ZPK parameters
 
 			static ReleasePool releasePool;		// ReleasePool for managing memory of shared pointers

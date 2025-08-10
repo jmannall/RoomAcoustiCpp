@@ -325,7 +325,11 @@ namespace RAC
 			shared_ptr<Binaural::CSingleSourceDSP> mSource;				// 3DTI source
 			shared_ptr<Binaural::CSingleSourceDSP> mReverbSendSource;	// 3DTI reverb send source
 
+#ifdef __ANDROID__
+			std::shared_ptr<CTransform> transform;		// 3DTI source transform
+#else
 			std::atomic<std::shared_ptr<CTransform>> transform;		// 3DTI source transform
+#endif
 			CMonoBuffer<float> bInput;								// 3DTI mono input buffer
 			CEarPair<CMonoBuffer<float>> bOutput;					// 3DTI stereo output buffer
 			CMonoBuffer<float> bMonoOutput;							// 3DTI mono output buffer

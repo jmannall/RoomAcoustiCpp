@@ -289,10 +289,18 @@ namespace RAC
 			{
 				mDiffractionPath = data.GetDiffractionPath();
 				activeModel->SetTargetParameters(mDiffractionPath);
+#ifdef __ANDROID__
+				std::shared_ptr<Diffraction::Model> temp = std::atomic_load(&incomingModel);
+#else
 				std::shared_ptr<Diffraction::Model> temp = incomingModel.load(std::memory_order_acquire);
+#endif
 				if (temp)
 					temp->SetTargetParameters(mDiffractionPath);
+#ifdef __ANDROID__
+				temp = std::atomic_load(&nextModel);
+#else
 				temp = nextModel.load(std::memory_order_acquire);
+#endif
 				if (temp)
 					temp->SetTargetParameters(mDiffractionPath);
 				if (isCrossFading.load(std::memory_order_acquire))
@@ -362,9 +370,15 @@ namespace RAC
 			mAirAbsorption.reset();
 			activeModel.reset();
 			fadeModel.reset();
+#ifdef __ANDROID__
+			std::atomic_load(&incomingModel).reset();
+			std::atomic_load(&nextModel).reset();
+			std::atomic_load(&transform).reset();
+#else
 			incomingModel.load(std::memory_order_acquire).reset();
 			nextModel.load(std::memory_order_acquire).reset();
 			transform.load(std::memory_order_acquire).reset();
+#endif
 		}
 
 		////////////////////////////////////////
@@ -372,7 +386,11 @@ namespace RAC
 		void ImageSource::UpdateTransform(const CTransform& newTransform)
 		{
 			std::shared_ptr<CTransform> transformCopy = std::make_shared<CTransform>(newTransform);
+#ifdef __ANDROID__
+			std::atomic_store(&transform, transformCopy);
+#else
 			transform.store(transformCopy, std::memory_order_release);
+#endif
 			releasePool.Add(transformCopy);
 		}
 
@@ -434,8 +452,13 @@ namespace RAC
 			{
 				activeModel.reset();
 				fadeModel.reset();
+#ifdef __ANDROID__
+				std::atomic_load(&incomingModel).reset();
+				std::atomic_load(&nextModel).reset();
+#else
 				incomingModel.load(std::memory_order_acquire).reset();
 				nextModel.load(std::memory_order_acquire).reset();
+#endif
 				return;
 			}
 
@@ -510,49 +533,89 @@ namespace RAC
 			{
 			case DiffractionModel::attenuate:
 			{ 
+#ifdef __ANDROID__
+				std::atomic_store(&nextModel, std::static_pointer_cast<Diffraction::Model>(std::make_shared<Diffraction::Attenuate>(mDiffractionPath)));
+#else
 				nextModel.store(std::make_shared<Diffraction::Attenuate>(mDiffractionPath), std::memory_order_release);
+#endif
 				break;
 			}
 			case DiffractionModel::lowPass:
 			{
+#ifdef __ANDROID__
+				std::atomic_store(&nextModel, std::static_pointer_cast<Diffraction::Model>(std::make_shared<Diffraction::LPF>(mDiffractionPath, fs)));
+#else
 				nextModel.store(std::make_shared<Diffraction::LPF>(mDiffractionPath, fs), std::memory_order_release);
+#endif
 				break;
 			}
 			case DiffractionModel::udfa:
 			{
+#ifdef __ANDROID__
+				std::atomic_store(&nextModel, std::static_pointer_cast<Diffraction::Model>(std::make_shared<Diffraction::UDFA>(mDiffractionPath, fs)));
+#else
 				nextModel.store(std::make_shared<Diffraction::UDFA>(mDiffractionPath, fs), std::memory_order_release);
+#endif
 				break;
 			}
 			case DiffractionModel::udfai:
 			{
+#ifdef __ANDROID__
+				std::atomic_store(&nextModel, std::static_pointer_cast<Diffraction::Model>(std::make_shared<Diffraction::UDFAI>(mDiffractionPath, fs)));
+#else
 				nextModel.store(std::make_shared<Diffraction::UDFAI>(mDiffractionPath, fs), std::memory_order_release);
+#endif
 				break;
 			}
 			case DiffractionModel::nnSmall:
 			{
+#ifdef __ANDROID__
+				std::atomic_store(&nextModel, std::static_pointer_cast<Diffraction::Model>(std::make_shared<Diffraction::NNSmall>(mDiffractionPath)));
+#else
 				nextModel.store(std::make_shared<Diffraction::NNSmall>(mDiffractionPath), std::memory_order_release);
+#endif
 				break;
 			}
 			case DiffractionModel::nnBest:
 			{
+#ifdef __ANDROID__
+				std::atomic_store(&nextModel, std::static_pointer_cast<Diffraction::Model>(std::make_shared<Diffraction::NNBest>(mDiffractionPath)));
+#else
 				nextModel.store(std::make_shared<Diffraction::NNBest>(mDiffractionPath), std::memory_order_release);
+#endif
 				break;
 			}
 			case DiffractionModel::utd:
 			{
+#ifdef __ANDROID__
+				std::atomic_store(&nextModel, std::static_pointer_cast<Diffraction::Model>(std::make_shared<Diffraction::UTD>(mDiffractionPath, fs)));
+#else
 				nextModel.store(std::make_shared<Diffraction::UTD>(mDiffractionPath, fs), std::memory_order_release);
+#endif
 				break;
 			}
 			case DiffractionModel::btm:
 			{
+#ifdef __ANDROID__
+				std::atomic_store(&nextModel, std::static_pointer_cast<Diffraction::Model>(std::make_shared<Diffraction::BTM>(mDiffractionPath, fs)));
+#else
 				nextModel.store(std::make_shared<Diffraction::BTM>(mDiffractionPath, fs), std::memory_order_release);
+#endif
 				break;
 			}
 			}
+#ifdef __ANDROID__
+			releasePool.Add(std::atomic_load(&nextModel));
+#else
 			releasePool.Add(nextModel.load(std::memory_order_acquire));
+#endif
 			if (!isCrossFading.load(std::memory_order_acquire))
 			{
+#ifdef __ANDROID__
+				std::atomic_exchange(&incomingModel, std::shared_ptr<Diffraction::Model>{});
+#else
 				incomingModel = nextModel.exchange(nullptr, std::memory_order_acq_rel);
+#endif
 				isCrossFading.store(true, std::memory_order_release);
 			}
 			FreeAccess();
@@ -565,12 +628,19 @@ namespace RAC
 			if (!GetAccess())
 				return;
 
+#ifdef __ANDROID__
+			if (!std::atomic_load(&transform))  // Check if the source position has been updated before using
+			{
+				FreeAccess();
+				return;
+			}
+#else
 			if (!transform.load(std::memory_order_acquire))  // Check if the source position has been updated before using
 			{
 				FreeAccess();
 				return;
 			}
-
+#endif
 			PROFILE_ImageSource
 			if (gain.IsZero())
 			{
@@ -602,7 +672,11 @@ namespace RAC
 			{
 				PROFILE_Spatialisation
 				shared_lock<shared_mutex> lock(tuneInMutex);
+#ifdef __ANDROID__
+				mSource->SetSourceTransform(*std::atomic_load(&transform));
+#else
 				mSource->SetSourceTransform(*transform.load(std::memory_order_acquire));
+#endif
 				mSource->SetBuffer(bInput);
 			
 				int fdnChannel = mFDNChannel.load(std::memory_order_acquire);
@@ -636,9 +710,13 @@ namespace RAC
 			if (!isCrossFading.load(std::memory_order_acquire))
 				return;
 
+#ifdef __ANDROID__
+			if (auto newModel = std::atomic_exchange(&incomingModel, std::shared_ptr<Diffraction::Model>{}))
+				fadeModel = newModel;
+#else
 			if (auto newModel = incomingModel.exchange(nullptr, std::memory_order_acq_rel))
 				fadeModel = newModel;
-
+#endif
 			fadeModel->ProcessAudio(inBuffer, bDiffStore, lerpFactor);
 
 			Real factor = 0.0;
@@ -655,8 +733,13 @@ namespace RAC
 
 				fadeModel.swap(activeModel);
 
+#ifdef __ANDROID__
+				if (auto queued = std::atomic_exchange(&nextModel, std::shared_ptr<Diffraction::Model>{}))
+					std::atomic_store(&incomingModel, queued);
+#else
 				if (auto queued = nextModel.exchange(nullptr, std::memory_order_acq_rel))
 					incomingModel.store(queued, std::memory_order_release);
+#endif
 				else
 					isCrossFading.store(false, std::memory_order_release);
 			}

@@ -624,8 +624,14 @@ namespace RAC
 			std::atomic<DiffractionModel> currentDiffractionModel;						// Current diffraction model
 			std::shared_ptr<Diffraction::Model> activeModel;							// Active diffraction model for processing audio
 			std::shared_ptr<Diffraction::Model> fadeModel{ nullptr };					// Next active diffraction model 
+			
+#ifdef __ANDROID__
+			std::shared_ptr<Diffraction::Model> incomingModel{ nullptr };	// Incoming diffraction model after ongoing crossfade
+			std::shared_ptr<Diffraction::Model> nextModel{ nullptr };		// Queued diffraction model
+#else
 			std::atomic<std::shared_ptr<Diffraction::Model>> incomingModel{ nullptr };	// Incoming diffraction model after ongoing crossfade
 			std::atomic<std::shared_ptr<Diffraction::Model>> nextModel{ nullptr };		// Queued diffraction model
+#endif
 			std::atomic<bool> isCrossFading{ false };									// True if currently crossfading between diffraction models, false otherwise
 
 			bool reflection{ false };					// True if the image source path includes any reflections, false otherwise
@@ -639,7 +645,11 @@ namespace RAC
 
 			Binaural::CCore* mCore;										// 3DTI processing core
 			shared_ptr<Binaural::CSingleSourceDSP> mSource{ nullptr };	// 3DTI source
+#ifdef __ANDROID__
+			std::shared_ptr<CTransform> transform;			// 3DTI source transform
+#else
 			std::atomic<std::shared_ptr<CTransform>> transform;			// 3DTI source transform
+#endif
 
 			static ReleasePool releasePool;		// Garbage collector for shared pointers after atomic replacement
 		};

@@ -365,13 +365,22 @@ namespace RAC
 
 			releasePool.Add(zpkCopy);
 
+#ifdef __ANDROID__
+			std::atomic_store(&targetZPK, zpkCopy);
+			std::atomic_store(&parametersEqual, false);
+#else
 			targetZPK.store(zpkCopy, std::memory_order_release);
 			parametersEqual.store(false, std::memory_order_release);
+#endif
 		}
 
 		void ZPKFilter::SetTargetGain(const Real k)
 		{
+#ifdef __ANDROID__
+			Parameters zpk = *std::atomic_load(&targetZPK);
+#else
 			Parameters zpk = *targetZPK.load(std::memory_order_acquire);
+#endif
 			zpk[4] = k;
 			SetTargetParameters(zpk);
 		}
@@ -393,7 +402,11 @@ namespace RAC
 		void ZPKFilter::InterpolateParameters(const Real lerpFactor)
 		{
 			parametersEqual.store(true, std::memory_order_release); // Prevents issues in case targetZPK updated during this function call
+#ifdef __ANDROID__
+			std::shared_ptr<const Parameters> zpk = std::atomic_load(&targetZPK);
+#else
 			std::shared_ptr<const Parameters> zpk = targetZPK.load(std::memory_order_acquire);
+#endif
 			Lerp(currentZPK, *zpk, lerpFactor);
 			if (Equals(currentZPK, *zpk))
 				currentZPK = *zpk;

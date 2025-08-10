@@ -7,8 +7,9 @@
 #define DSP_Interpolate_h
 
 // C++ headers
-#if defined(_WINDOWS)
-#include <intrin.h>
+#if defined(__x86_64__) || defined(_M_X64)
+// #include <intrin.h>
+#include <xmmintrin.h>
 #endif
 #include <omp.h>
 
@@ -30,7 +31,7 @@ namespace RAC
 
 		//////////////////// Android specific functions ////////////////////
 
-#if(_ANDROID)
+#if defined(__aarch64__) || defined(__arm__)
 		inline int getStatusWord()
 		{
 			int result;
@@ -51,12 +52,13 @@ namespace RAC
 		*/
 		inline void FlushDenormals()
 		{
-#if(_WINDOWS)
-			_MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
-#elif(_ANDROID)
+#if defined(__aarch64__) || defined(__arm__)
 			unsigned m_savedCSR = getStatusWord();
 			// Bit 24 is the flush-to-zero mode control bit. Setting it to 1 flushes denormals to 0.
 			setStatusWord(m_savedCSR | (1 << 24));
+#endif
+#if defined(__x86_64__) || defined(_M_X64)
+			_MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
 #endif
 		}
 
@@ -65,11 +67,12 @@ namespace RAC
 		*/
 		inline void NoFlushDenormals()
 		{
-#if(_WINDOWS)
-			_MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_OFF);
-#elif(_ANDROID)
+#if defined(__aarch64__) || defined(__arm__)
 			unsigned m_savedCSR = getStatusWord();
 			setStatusWord(m_savedCSR | (0 << 24));
+#endif
+#if defined(__x86_64__) || defined(_M_X64)
+			_MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_OFF);
 #endif
 		}
 

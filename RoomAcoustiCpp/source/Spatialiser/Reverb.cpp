@@ -122,7 +122,11 @@ namespace RAC
 			const shared_ptr<CTransform> newTransformCopy = make_shared<CTransform>(newTransform);
 
 			releasePool.Add(newTransformCopy);
+#ifdef __ANDROID__
+			std::atomic_store(&transform, newTransformCopy);
+#else
 			transform.store(newTransformCopy, std::memory_order_release);
+#endif
 		}
 
 		////////////////////////////////////////
@@ -147,7 +151,11 @@ namespace RAC
 			{
 				PROFILE_Spatialisation
 				shared_lock<shared_mutex> lock(tuneInMutex);
+#ifdef __ANDROID__
+				mSource->SetSourceTransform(*std::atomic_load(&transform));
+#else
 				mSource->SetSourceTransform(*transform.load(std::memory_order_acquire));
+#endif
 				mSource->SetBuffer(bInput);
 				mSource->ProcessAnechoic(bOutput.left, bOutput.right);
 			}
@@ -222,7 +230,11 @@ namespace RAC
 			if (!running.load(std::memory_order_acquire))
 				return;
 
+#ifdef __ANDROID__
+			std::atomic_load(&mFDN)->ProcessAudio(data, reverbSourceInputs, lerpFactor);
+#else
 			mFDN.load(std::memory_order_acquire)->ProcessAudio(data, reverbSourceInputs, lerpFactor);
+#endif
 			
 			audioThreadPool->ProcessReverbSources(mReverbSources, outputBuffer);
 			/*for (auto& source : mReverbSources)
@@ -239,7 +251,11 @@ namespace RAC
 #ifdef DEBUG_INIT
 			Debug::Log("T60: " + CoefficientToStr(T60), Colour::Green);
 #endif
+#ifdef __ANDROID__
+			std::atomic_load(&mFDN)->SetTargetT60(T60);
+#else
 			mFDN.load(std::memory_order_acquire)->SetTargetT60(T60);
+#endif
 		}
 
 		////////////////////////////////////////
@@ -263,7 +279,11 @@ namespace RAC
                 break;
             }
 			releasePool.Add(fdn);
-            mFDN.store(fdn, std::memory_order_release);
+#ifdef __ANDROID__
+			std::atomic_store(&mFDN, fdn);
+#else
+			mFDN.store(fdn, std::memory_order_release);
+#endif
 			initialised.store(true, std::memory_order_release);
 		}
 
@@ -274,10 +294,18 @@ namespace RAC
 			PROFILE_UpdateAudioData
 			if (!initialised.load(std::memory_order_acquire))
 				return;
+#ifdef __ANDROID__
+			bool isZero = std::atomic_load(&mFDN)->SetTargetReflectionFilters(absorptions);
+#else
 			bool isZero = mFDN.load(std::memory_order_acquire)->SetTargetReflectionFilters(absorptions);
+#endif
 			if (isZero)
 			{
+#ifdef __ANDROID__
+				std::atomic_load(&mFDN)->Reset();
+#else
 				mFDN.load(std::memory_order_acquire)->Reset();
+#endif
 				running.store(false, std::memory_order_release);
 			}
 			else
