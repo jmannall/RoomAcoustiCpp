@@ -26,7 +26,9 @@ std::unique_ptr<RAC::DSP::AudioThreadPool> RAC::DSP::audioThreadPool;
 
 namespace RAC
 {
+#ifdef USE_UNITY_DEBUG
 	using namespace Unity;
+#endif
 	using namespace DSP;
 	using namespace Common;
 	namespace Spatialiser
@@ -221,7 +223,9 @@ namespace RAC
 		{
 			if (dimensions.Rows() == 0)
 			{
+#ifdef DEBUG_INIT
 				Debug::Log("No dimensions provided for room", Colour::Red);
+#endif
 				return false;
 			}
 
@@ -309,7 +313,9 @@ namespace RAC
 #endif
 			if (absorption.Length() != mConfig->frequencyBands.Length())
 			{
+#ifdef DEBUG_INIT
 				Debug::Log("Absorption coefficients length does not match frequency bands length", Colour::Red);
+#endif
 				return -1; // Return -1 if absorption coefficients length is incorrect
 			}
 			size_t id = mRoom->InitWall(vertices, absorption);
@@ -330,7 +336,9 @@ namespace RAC
 		{
 			if (absorption.Length() != mConfig->frequencyBands.Length())
 			{
+#ifdef USE_UNITY_DEBUG
 				Debug::Log("Absorption coefficients length does not match frequency bands length", Colour::Red);
+#endif
 				return;
 			}
 			mRoom->UpdateWallAbsorption(id, absorption);
@@ -362,7 +370,9 @@ namespace RAC
 			PROFILE_AudioThread;
 			if (outputBuffer.Length() != 2 * mConfig->numFrames)
 			{
+#ifdef USE_UNITY_DEBUG
 				Debug::Log("Incorrect buffer size", Colour::Red);
+#endif
 				outputBuffer.ResizeBuffer(2 * mConfig->numFrames);
 			}
 

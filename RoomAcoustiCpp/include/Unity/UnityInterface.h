@@ -1,13 +1,11 @@
 
+#ifdef USE_UNITY_PROFILER
 
 #ifndef Unity_UnityInterface_h
 #define Unity_UnityInterface_h
 
 #include "Unity/IUnityProfiler.h"
 
-#define USE_UNITY_PROFILER
-
-#ifdef USE_UNITY_PROFILER
 IUnityProfiler* GetUnityProfiler();
 bool* GetDevBuild();
 
@@ -98,6 +96,5 @@ void EndAirAbsorption();
 void Begin3DTI();
 void End3DTI();
 
-#endif // USE_UNITY_PROFILER
-
 #endif // Unity_UnityInterface_h
+#endif 

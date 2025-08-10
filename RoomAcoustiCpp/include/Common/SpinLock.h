@@ -13,7 +13,6 @@
 #include <array>
 #include <thread>
 #include <atomic>
-#include <emmintrin.h>
 
 /**
 * @brief Class that implements a spin lock

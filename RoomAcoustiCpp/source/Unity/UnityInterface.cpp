@@ -1,12 +1,12 @@
 
+#ifdef USE_UNITY_PROFILER
+
 // Unity headers
 #include "Unity/UnityInterface.h"
 #include "Unity/IUnityInterface.h"
 #include "Unity/IUnityProfiler.h"
 
 #include <unordered_map>
-
-#ifdef USE_UNITY_PROFILER
 
 static IUnityProfiler* unityProfiler = nullptr;
 static bool* isDevelopmentBuild = nullptr;
@@ -559,9 +559,5 @@ void End3DTI()
 	if (GetDevBuild())
 		GetUnityProfiler()->EndSample(threedtiMarker);
 }
-
-////////////////////////////////////////
-
-
 
 #endif

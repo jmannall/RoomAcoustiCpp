@@ -33,7 +33,9 @@ namespace RAC
 {
 	using namespace Common;
 	using namespace DSP;
+#ifdef USE_UNITY_DEBUG
 	using namespace Unity;
+#endif
 	namespace Spatialiser
 	{
 		//////////////////// SourceManager class ////////////////////
@@ -103,7 +105,9 @@ namespace RAC
 			{
 				if (id > MAX_SOURCES)
 				{
+#ifdef USE_UNITY_DEBUG
 					Debug::Log("Source ID out of range", Colour::Red);
+#endif
 					return;
 				}
 				mSources[id]->UpdateDirectivity(directivity, mConfig->frequencyBands, mConfig->numReverbSources);
@@ -128,7 +132,9 @@ namespace RAC
 			{
 				if (id > MAX_SOURCES)
 				{
+#ifdef USE_UNITY_DEBUG
 					Debug::Log("Source ID out of range", Colour::Red);
+#endif
 					return;
 				}
 				mSources[id]->Update(position, orientation, distance);
@@ -143,7 +149,9 @@ namespace RAC
 			{
 				if (id > MAX_SOURCES)
 				{
+#ifdef USE_UNITY_DEBUG
 					Debug::Log("Source ID out of range", Colour::Red);
+#endif
 					return;
 				}
 				mSources[id]->Remove();
@@ -164,7 +172,9 @@ namespace RAC
 			{
 				if (id > MAX_SOURCES)
 				{
+#ifdef USE_UNITY_DEBUG
 					Debug::Log("Source ID out of range", Colour::Red);
+#endif
 					return std::nullopt;
 				}
 				return mSources[id]->GetPosition();
@@ -182,7 +192,9 @@ namespace RAC
 				PROFILE_UpdateAudioData
 				if (id > MAX_SOURCES)
 				{
+#ifdef USE_UNITY_DEBUG
 					Debug::Log("Source ID out of range", Colour::Red);
+#endif
 					return;
 				}
 				mSources[id]->UpdateData(source, vSources, mConfig);
@@ -208,7 +220,9 @@ namespace RAC
 			{
 				if (id > MAX_SOURCES)
 				{
+#ifdef USE_UNITY_DEBUG
 					Debug::Log("Source ID out of range", Colour::Red);
+#endif
 					return;
 				}
 				mSources[id]->SetInputBuffer(data);

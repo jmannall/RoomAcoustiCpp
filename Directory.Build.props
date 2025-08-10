@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  
+  <!-- ===== Common Configuration ===== -->
+  <PropertyGroup Label="UserMacros">
+    <PathTo3DTI>3dti_AudioToolkit\</PathTo3DTI>
+  </PropertyGroup>
+
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PreprocessorDefinitions>
+        _3DTI_AXIS_CONVENTION_UNITY;
+        %(PreprocessorDefinitions)
+      </PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>
+        $(ProjectDir)include;
+        $(SolutionDir)RoomAcoustiCpp\include;
+        $(SolutionDir)RoomAcoustiCpp\codegen\lib\myNN\include;
+        $(SolutionDir)$(PathTo3DTI)3dti_Toolkit;
+        $(SolutionDir)$(PathTo3DTI)3dti_ResourceManager;
+        $(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\boost_circular_buffer;
+        $(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\cereal\include;
+        $(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include;
+        $(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src;
+        <!-- $(SolutionDir)RoomAcoustiCpp\include\Spatialiser; -->
+        <!-- $C:\Program Files\MATLAB\R2024b\extern\include; -->
+        %(AdditionalIncludeDirectories)
+      </AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+
+  <!-- ===== Release Configuration ===== -->
+  <!-- Release -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <OutDir>$(SolutionDir)$(Platform)\Release\</OutDir>
+    <TargetName>RoomAcoustiCpp_$(Platform)</TargetName>
+  </PropertyGroup>
+
+  <!-- Release_Debug -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release_Debug'">
+    <OutDir>$(SolutionDir)$(Platform)\Release\</OutDir>
+    <TargetName>RoomAcoustiCpp_Debug_$(Platform)</TargetName>
+  </PropertyGroup>
+
+  <ItemDefinitionGroup Condition="'$(Configuration)' == 'Release_Debug'">
+    <ClCompile>
+      <PreprocessorDefinitions>
+        USE_UNITY_DEBUG;
+        DEBUG_INIT;
+        DEBUG_REMOVE;
+        DEBUG_IEM;
+        DEBUG_GEOMETRY;
+        IEM_FLAG;
+        %(PreprocessorDefinitions)
+      </PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+
+  <!-- Release_Profile -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release_Profile'">
+    <OutDir>$(SolutionDir)$(Platform)\Release\</OutDir>
+    <TargetName>RoomAcoustiCpp_Profile_$(Platform)</TargetName>
+  </PropertyGroup>
+
+  <ItemDefinitionGroup Condition="'$(Configuration)' == 'Release_Profile'">
+    <ClCompile>
+      <PreprocessorDefinitions>
+        USE_UNITY_PROFILER;
+        PROFILE_BACKGROUND_THREAD;
+        PROFILE_AUDIO_THREAD;
+        %(PreprocessorDefinitions)
+      </PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+
+  <!-- Release_ProfileDetailed -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release_ProfileDetailed'">
+    <OutDir>$(SolutionDir)$(Platform)\Release\</OutDir>
+    <TargetName>RoomAcoustiCpp_ProfileDetailed_$(Platform)</TargetName>
+  </PropertyGroup>
+
+  <ItemDefinitionGroup Condition="'$(Configuration)' == 'Release_ProfileDetailed'">
+    <ClCompile>
+      <PreprocessorDefinitions>
+        USE_UNITY_PROFILER;
+        PROFILE_BACKGROUND_THREAD;
+        PROFILE_BACKGROUND_THREAD_DETAILED;
+        PROFILE_AUDIO_THREAD;
+        PROFILE_AUDIO_THREAD_DETAILED;
+        %(PreprocessorDefinitions)
+      </PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+
+  <!-- ===== Project Detection ===== -->
+  <!-- Windows -->
+  <!-- <ItemDefinitionGroup Condition="'$(MyTargetPlatform)' == 'Windows'">
+    <ClCompile>
+      <PreprocessorDefinitions>WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup> -->
+
+  <!-- Android -->
+  <PropertyGroup Condition="'$(MyTargetPlatform)' == 'Android'">
+    <TargetName>lib$(TargetName)</TargetName>
+  </PropertyGroup>
+
+  <!-- <ItemDefinitionGroup Condition="'$(MyTargetPlatform)' == 'Android'">
+    <ClCompile>
+      <PreprocessorDefinitions>ANDROID;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup> -->
+
+  <Target Name="CopyOutputToSecondaryLocation" AfterTargets="Build" Condition="'$(MyTargetPlatform)' != 'Android'">
+    <MakeDir Directories="$(SolutionDir)\Plugins\$(Platform)" />
+    <Copy
+      SourceFiles="$(OutDir)$(TargetName)$(TargetExt)"
+      DestinationFolder="$(SolutionDir)\Plugins\$(Platform)" />
+  </Target>
+
+  <Target Name="CopyOutputToSecondaryLocation" AfterTargets="Build" Condition="'$(MyTargetPlatform)' == 'Android'">
+    <MakeDir Directories="$(SolutionDir)\Plugins\$(Platform)" />
+    <Copy
+      SourceFiles="$(ProjectDir)$(Platform)\$(Configuration)\$(TargetName)$(TargetExt)"
+      DestinationFolder="$(SolutionDir)\Plugins\$(Platform)" />
+  </Target>
+</Project>

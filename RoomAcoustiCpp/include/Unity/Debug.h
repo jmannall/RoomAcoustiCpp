@@ -6,6 +6,8 @@
 * @remarks Thanks to: https://stackoverflow.com/questions/43732825/use-debug-log-from-c
 */
 
+#ifdef USE_UNITY_DEBUG
+
 #ifndef Unity_Debug_h
 #define Unity_Debug_h
 
@@ -185,4 +187,5 @@ namespace RAC
         }
     }
 }
+#endif
 #endif

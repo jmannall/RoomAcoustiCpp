@@ -7,7 +7,6 @@
 
 // C++ headers
 #include <mutex>
-//#include <xmmintrin.h>
 #include <cmath>
 #include <numeric>  // For std::gcd
 
@@ -23,7 +22,9 @@
 namespace RAC
 {
 	using namespace Common;
+#ifdef USE_UNITY_DEBUG
 	using namespace Unity;
+#endif
 	namespace Spatialiser
 	{
 
@@ -221,12 +222,16 @@ namespace RAC
 			{
 				for (int j = 0; j < mChannels.size(); j++)
 				{
+#ifdef USE_UNITY_DEBUG
 					if (isnan(x[j]))
 						Debug::Log("X was nan", Colour::Red);
+#endif
 					y[j] = mChannels[j]->GetOutput(x[j] + data[j][i], lerpFactor);
 					outputBuffers[j][i] = y[j];
+#ifdef USE_UNITY_DEBUG
 					if (isnan(y[j]))
 						Debug::Log("Y was nan", Colour::Red);
+#endif
 				}
 				ProcessMatrix();
 			}

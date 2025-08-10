@@ -17,7 +17,9 @@
 namespace RAC
 {
 	using namespace Common;
+#ifdef USE_UNITY_DEBUG
 	using namespace Unity;
+#endif
 	namespace Spatialiser
 	{
 

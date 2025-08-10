@@ -38,7 +38,6 @@
 using namespace RAC::Spatialiser;
 using namespace RAC::Common;
 using namespace RAC::DSP;
-using namespace RAC::Unity;
 
 //////////////////// Variables ////////////////////
 

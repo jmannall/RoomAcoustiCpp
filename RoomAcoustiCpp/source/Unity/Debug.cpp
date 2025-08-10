@@ -4,6 +4,8 @@
 *
 */
 
+#ifdef USE_UNITY_DEBUG
+
 // C++ headers
 #include<stdio.h>
 #include <string>
@@ -165,3 +167,5 @@ void UnregisterIEMCallback()
     std::lock_guard lock(iemMutex);
     iemCallbackInstance = nullptr;
 }
+
+#endif

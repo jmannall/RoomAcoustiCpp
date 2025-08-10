@@ -27,7 +27,9 @@
 namespace RAC
 {
 	using namespace Common;
+#ifdef USE_UNITY_DEBUG
 	using namespace Unity;
+#endif
 	namespace Spatialiser
 	{
 
@@ -68,7 +70,9 @@ namespace RAC
 			{
 				if (targetT60 <= 0.0)
 				{
+#ifdef USE_UNITY_DEBUG
 					Debug::Log("T60 must be greater than 0", Colour::Red);
+#endif
 					return;
 				}
 				reverbFormula = ReverbFormula::Custom;

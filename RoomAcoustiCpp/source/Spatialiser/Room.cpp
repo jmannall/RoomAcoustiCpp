@@ -17,7 +17,9 @@
 
 namespace RAC
 {
+#ifdef USE_UNITY_DEBUG
 	using namespace Unity;
+#endif
 	namespace Spatialiser
 	{
 
@@ -575,13 +577,17 @@ namespace RAC
 
 			if (surfaceArea == 0.0)
 			{
+#ifdef USE_UNITY_DEBUG
 				Debug::Log("No walls initialised", Colour::Red);
+#endif
 				return T60;
 			}
 
 			if (volume < 0.0)
 			{
+#ifdef USE_UNITY_DEBUG
 				Debug::Log("Room volume less than or equal to 0", Colour::Red);
+#endif
 				return T60;
 			}
 
