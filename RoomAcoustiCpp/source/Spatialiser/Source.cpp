@@ -315,6 +315,7 @@ namespace RAC
 				outputBuffer[j++] += static_cast<Real>(bOutput.left[i]);
 				outputBuffer[j++] += static_cast<Real>(bOutput.right[i]);
 			}
+			inputBufferUpdated = false;
 			FreeAccess();
 		}
 
