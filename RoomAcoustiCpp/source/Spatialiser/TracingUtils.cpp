@@ -1076,13 +1076,13 @@ namespace RAC
 
         // ------------------------ RayPencil methods ------------------------
 
-        RayPencil::RayPencil(const Vec3& origin, int numDirections, bool hemisphereOnly) {
+        RayPencil::RayPencil(int numDirections, bool hemisphereOnly) {
             numRays = numDirections;
             rays.resize(numRays);
 
-            rays.Ox = origin.x;
-            rays.Oy = origin.y;
-            rays.Oz = origin.z;
+            rays.Ox = 0.0;
+            rays.Oy = 0.0;
+            rays.Oz = 0.0;
             rays.fill_uniform_sphere(hemisphereOnly);
 #ifdef PLUCKER_KERNEL
             rays.compute_moments();
@@ -1096,13 +1096,13 @@ namespace RAC
             std::vector<int> backTriangleIdx(numRays, -1);
         }
 
-        RayPencil::RayPencil(const Vec3& origin, const std::vector<Vec3>& directions) {
+        RayPencil::RayPencil(const std::vector<Vec3>& directions) {
             numRays = directions.size();
             rays.resize(numRays);
 
-            rays.Ox = origin.x;
-            rays.Oy = origin.y;
-            rays.Oz = origin.z;
+            rays.Ox = 0.0;
+            rays.Oy = 0.0;
+            rays.Oz = 0.0;
             for (int i = 0; i < numRays; ++i) {
                 rays.Dx[i] = directions[i].x;
                 rays.Dy[i] = directions[i].y;

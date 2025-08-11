@@ -170,11 +170,11 @@ namespace RAC
               * @param numDirections Number of directions to sample uniformly on the unit sphere.
               * @param hemisphereOnly If true, sample numDirections on the unit hemisphere (positive Z only) instead of the unit sphere.
               */
-            RayPencil(const Vec3& origin, int numDirections, bool hemisphereOnly);
+            RayPencil(int numDirections, bool hemisphereOnly);
 
             /* @brief Initialization given one origin point (same for all rays) and separate directions (different for every ray).
               */
-            RayPencil(const Vec3& origin, const std::vector<Vec3>& directions);
+            RayPencil(const std::vector<Vec3>& directions);
 
             /* @brief Update the origin position, without changing the relative directions.
               * N.B.: This resets all intersection data.

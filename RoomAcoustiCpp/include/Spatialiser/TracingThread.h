@@ -82,8 +82,8 @@ namespace RAC
 
 			// These will be used as temporary "buffers" in the hot loop; memory is only allocated once.
 			Vec<Real> energyContributions;			// This will have size `numPaths`
-			Coefficients<Real> sourceResidues;		// This will have size `numFDNs`
-			Coefficients<Real> listenerResidues;	// This will have size `numReverbDirections`
+			Coefficients<> sourceResidues;			// This will have size `numFDNs`
+			Coefficients<> listenerResidues;		// This will have size `numReverbDirections`
 
 			/**
 			* @brief Assigns each ray direction to the nearest reverb direction.
