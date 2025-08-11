@@ -101,6 +101,8 @@ namespace RAC
 		*/
 		void InitLateReverb(const Real volume, const Vec<>& dimensions, FDNMatrix matrix);
 
+		void InitRAVES(const std::string& folderPath, const FDNMatrix matrix);
+
 		/**
 		* Clears the internal FDN buffers.
 		*/

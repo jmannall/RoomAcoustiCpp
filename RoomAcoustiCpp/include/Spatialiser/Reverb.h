@@ -184,6 +184,24 @@ namespace RAC
 				ResetReverberator();
 			}
 
+			inline void SetEigenVectors (const std::vector<Vec<>>& rightEigenVectors, const std::vector<Vec<>>& leftEigenVectors)
+			{
+				this->rightEigenVectors = rightEigenVectors;
+				this->leftEigenVectors = leftEigenVectors;
+			}
+
+			inline Vec<>& GetRightEigenVectors(const int id)
+			{
+				assert(id < rightEigenVectors.size());
+				return rightEigenVectors[id];
+			}
+
+			inline Vec<>& GetLeftEigenVectors(const int id)
+			{
+				assert(id < leftEigenVectors.size());
+				return leftEigenVectors[id];
+			}
+
 			virtual void ResetReverberator() = 0;
 
 			virtual void SetTargetT60(const Coefficients<>& T60) = 0;
@@ -226,6 +244,13 @@ namespace RAC
 					directions.emplace_back(100.0 * reverbSource->GetShift());
 			}
 
+			virtual void InitLateReverb(const Coefficients<>& T60, const FDNMatrix matrix, const std::shared_ptr<Config> config) = 0;
+
+			virtual inline void InitLateReverb(const std::vector<Coefficients<>>& T60, const FDNMatrix matrix, const std::shared_ptr<Config> config)
+			{
+				InitLateReverb(T60[0], matrix, config);
+			}
+
 			virtual void InitLateReverb(const Coefficients<>& T60, const Vec<>& delayLineLengths, const FDNMatrix matrix, const std::shared_ptr<Config> config) = 0;
 
 			virtual inline void InitLateReverb(const std::vector<Coefficients<>>& T60, const Vec<>& delayLineLengths, const FDNMatrix matrix, const std::shared_ptr<Config> config)
@@ -245,12 +270,21 @@ namespace RAC
 
 			std::vector<Buffer<>> reverbSourceInputs;						// Input buffers for each reverb source
 			std::vector<std::unique_ptr<ReverbSource>> mReverbSources;		// Reverb sources to binauralise the FDN output
+
+			std::vector<Vec<>> rightEigenVectors;	// Right eigenvectors for RAVES
+			std::vector<Vec<>> leftEigenVectors;	// Left eigenvectors for RAVES
 		};
 
 		class SingleFDN : public Reverb
 		{
 		public:
 			SingleFDN(Binaural::CCore* core, const std::shared_ptr<Config> config) : Reverb(core, config) {}
+
+			void InitLateReverb(const Coefficients<>& T60, const FDNMatrix matrix, const std::shared_ptr<Config> config) override
+			{
+				Vec defaultDimensions = Vec({ 2.5, 4.0, 3.4 }); // Assume a shoebox
+				InitLateReverb(T60, defaultDimensions, matrix, config);
+			}
 
 			void InitLateReverb(const Coefficients<>& T60, const Vec<>& delayLineLengths, const FDNMatrix matrix, const std::shared_ptr<Config> config) override;
 
@@ -297,12 +331,17 @@ namespace RAC
 		public:
 			RAVES(Binaural::CCore* core, const std::shared_ptr<Config> config) : Reverb(core, config) {}
 
-			void InitLateReverb(const Coefficients<>& T60, const Vec<>& delayLineLengths, const FDNMatrix matrix, const std::shared_ptr<Config> config) override
+			void InitLateReverb(const Coefficients<>& T60, const FDNMatrix matrix, const std::shared_ptr<Config> config) override
 			{
-				InitLateReverb({ T60 }, delayLineLengths, matrix, config);
+				InitLateReverb({ T60 }, matrix, config);
 			}
 
-			void InitLateReverb(const std::vector<Coefficients<>>& T60, const Vec<>& delayLineLengths, const FDNMatrix matrix, const std::shared_ptr<Config> config) override;
+			void InitLateReverb(const std::vector<Coefficients<>>& T60, const FDNMatrix matrix, const std::shared_ptr<Config> config) override;
+
+			void InitLateReverb(const Coefficients<>& T60, const Vec<>& delayLineLengths, const FDNMatrix matrix, const std::shared_ptr<Config> config) override
+			{
+				InitLateReverb({ T60 }, matrix, config);
+			}
 
 			/**
 			* @brief Update listener residues for RAVES reverb

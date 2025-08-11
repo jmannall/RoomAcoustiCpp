@@ -68,6 +68,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Coefficients.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Complex.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Definitions.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\FileReader.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Matrix.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Matrix_private.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\RACProfiler.h" />

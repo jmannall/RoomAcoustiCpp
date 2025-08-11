@@ -7,6 +7,7 @@
 
 //Common headers
 #include "Common/RACProfiler.h"
+#include "Common/FileReader.h"
 
 // Spatialiser headers
 #include "Spatialiser/Globals.h"
@@ -322,14 +323,49 @@ namespace RAC
 			if (dimensions.Rows() == 0)
 			{
 				Debug::Log("No dimensions provided for room", Colour::Red);
-				Vec defaultDimensions = Vec(3); // Assume a shoebox
-				defaultDimensions[0] = 2.5; // Assume height
-				defaultDimensions[1] = 4.0; // Assume width
-				defaultDimensions[2] = volume / 10.0; // Calculate depth
-				mReverb->InitLateReverb(T60, defaultDimensions, matrix, mConfig);
+				mReverb->InitLateReverb(T60, matrix, mConfig);
 			}
 			else
 				mReverb->InitLateReverb(T60, dimensions, matrix, mConfig);
+		}
+
+		void Context::InitRAVES(const std::string& folderPath, const FDNMatrix matrix)
+		{
+			// Folder path should end with file separator
+			auto info = Parse1Dcsv<int>(folderPath + "info.csv");
+			int numTriangles = info[0];
+			int numPaths = info[1];
+			int numModes = info[2];
+
+			auto indexing = Parse2Dcsv<int>(folderPath + "indexing.csv");
+
+			// TODO: send indexing to ray tracing
+			assert(indexing.size() == numTriangles);
+
+			// TODO: Check every row size == numTriangles
+			// TODO: check every value between -1 and numPaths - 1
+
+			// TODO: Change this to Coefficeints for frequency dependence
+			std::vector<Real> t60s(numModes);
+			Vec<> energyDecay(numModes);
+			std::vector<Vec<>> rightEigenVectors(numModes);
+			std::vector<Vec<>> leftEigenVectors(numModes);
+			for (int i = 0; i < numModes; i++)
+			{
+				auto mode = Parse2Dcsv<Real>(folderPath + "mode_" + std::to_string(i + 1) + ".csv");
+				// TODO: Check row and col sizes
+				t60s[i] = mode[0][0];
+				energyDecay[i] = mode[0][1];
+
+				// Size of numPaths
+				rightEigenVectors[i] = mode[1];
+				leftEigenVectors[i] = mode[2];
+			}
+
+			mRayTracing->InitRoom(indexing, energyDecay);
+
+			mReverb->InitLateReverb(t60s, matrix, mConfig);
+			mReverb->SetEigenVectors(rightEigenVectors, leftEigenVectors);
 		}
 
 		////////////////////////////////////////

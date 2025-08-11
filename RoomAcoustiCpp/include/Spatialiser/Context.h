@@ -196,6 +196,8 @@ namespace RAC
 			*/
 			void InitLateReverb(const Real volume, const Vec<>& dimensions, const FDNMatrix matrix);
 
+			void InitRAVES(const std::string& folderPath, const FDNMatrix matrix);
+
 			inline void ResetFDN() { mReverb->Reset(); }
 
 			/**

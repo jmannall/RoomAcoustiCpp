@@ -267,6 +267,7 @@ namespace RAC
 			const int numFrames;					// Number of frames per audio callback
 			const int numReverbSources;						// Number of channels for late reverbration
 			const int numRavesFDNs{ 8 };			// Number of RAVES FDNs to use for late reverberation
+			const int numRays{ 1000 };				// Number of rays to use for ray tracing
 
 			const Real Q;								// Q factor for the GraphicEQ
 			const Coefficients<> frequencyBands;		// Frequency bands for the GraphicEQ

@@ -137,6 +137,15 @@ namespace RAC
 
 		////////////////////////////////////////
 
+		void InitRAVES(const std::string& folderPath, const FDNMatrix matrix)
+		{
+			auto context = GetContext();
+			if (context)
+				context->InitRAVES(folderPath);
+		}
+
+		////////////////////////////////////////
+
 		void ResetFDN()
 		{
 			auto context = GetContext();
