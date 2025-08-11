@@ -40,18 +40,19 @@ namespace RAC
 #endif
 #endif
 
-		//////////////////// Background Thread ////////////////////
+		//////////////////// IEM Thread ////////////////////
 
-		void BackgroundProcessor(Context* context)
+		////////////////////////////////////////
+
+		void IEMProcessor(Context* context)
 		{
 
 #ifdef DEBUG_INIT
-			Debug::Log("Begin background thread", Colour::Green);
+			Debug::Log("Begin image edge model thread", Colour::Green);
 #endif
 #ifdef USE_UNITY_PROFILER
-			RegisterBackgroundThread();
+			RegisterIEMThread();
 #endif
-			std::shared_ptr<Room> room = context->GetRoom();
 			std::shared_ptr<ImageEdge> imageEdgeModel = context->GetImageEdgeModel();
 
 			const int loopInterval_ms = 10;
@@ -69,10 +70,47 @@ namespace RAC
 			}
 
 #ifdef USE_UNITY_PROFILER
-			UnregisterBackgroundThread();
+			UnregisterIEMThread();
 #endif
 #ifdef DEBUG_REMOVE
-			Debug::Log("End background thread", Colour::Red);
+			Debug::Log("End image edge model thread", Colour::Red);
+#endif
+		}
+
+		//////////////////// Ray Tracing Thread ////////////////////
+
+		////////////////////////////////////////
+
+		void RayTracerProcessor(Context* context)
+		{
+
+#ifdef DEBUG_INIT
+			Debug::Log("Begin racy tracing thread", Colour::Green);
+#endif
+#ifdef USE_UNITY_PROFILER
+			RegisterRayTracingThread();
+#endif
+			std::shared_ptr<TracingThread> rayTracing = context->GetRayTracing();
+
+			const int loopInterval_ms = 50;
+			while (context->IsRunning())
+			{
+				auto startTime = std::chrono::steady_clock::now();
+
+				// Update IEM
+				rayTracing->RunTracing();
+
+				auto endTime = std::chrono::steady_clock::now();
+				auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
+				if (elapsedTime < loopInterval_ms)
+					std::this_thread::sleep_for(std::chrono::milliseconds(loopInterval_ms - elapsedTime));
+			}
+
+#ifdef USE_UNITY_PROFILER
+			UnregisterRayTracingThread();
+#endif
+#ifdef DEBUG_REMOVE
+			Debug::Log("End ray tracing thread", Colour::Red);
 #endif
 		}
 
@@ -80,7 +118,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		Context::Context(const std::shared_ptr<Config> config) : mConfig(config), mIsRunning(true), IEMThread(), applyHeadphoneEQ(false), headphoneEQ(2048)
+		Context::Context(const std::shared_ptr<Config> config) : mConfig(config), mIsRunning(true), IEMThread(), rayTracingThread(), applyHeadphoneEQ(false), headphoneEQ(2048)
 		{
 #ifdef DEBUG_INIT
 			Debug::Log("Init Context", Colour::Green);
@@ -108,12 +146,14 @@ namespace RAC
 			mSources = std::make_shared<SourceManager>(&mCore, mConfig);
 
 			mImageEdgeModel = std::make_shared<ImageEdge>(mRoom, mSources, mReverb, mConfig);
+			mRayTracing = std::make_shared<TracingThread>(mRoom, mSources, mReverb, mConfig);
 			
 			// Initialize NNs
 			myNN_initialize();
 
 			// Start background thread after all systems are initialized
-			IEMThread = std::thread(BackgroundProcessor, this);
+			IEMThread = std::thread(IEMProcessor, this);
+			rayTracingThread = std::thread(RayTracerProcessor, this);
 			
 
 			mInputBuffer = Buffer(mConfig->numFrames);
@@ -309,6 +349,7 @@ namespace RAC
 			}
 			mReverb->UpdateReverbSourcePositions(position);
 			mImageEdgeModel->SetListenerPosition(position);
+			mRayTracing->SetListenerPosition(position);
 		}
 
 		////////////////////////////////////////

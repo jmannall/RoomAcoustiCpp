@@ -15,8 +15,11 @@ bool* GetDevBuild();
 int RegisterThread();
 void UnregisterThread(int id);
 
-void RegisterBackgroundThread();
-void UnregisterBackgroundThread();
+void RegisterIEMThread();
+void UnregisterIEMThread();
+
+void RegisterRayTracingThread();
+void UnregisterRayTracingThread();
 
 int RegisterAudioThread();
 void UnregisterAudioThread(int id);

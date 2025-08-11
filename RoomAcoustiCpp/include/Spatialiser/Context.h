@@ -26,6 +26,7 @@
 #include "Spatialiser/Room.h"
 #include "Spatialiser/ImageEdge.h"
 #include "Spatialiser/HeadphoneEQ.h"
+#include "Spatialiser/TracingThread.h"
 
 // 3DTI Headers
 #include "Common/Transform.h"
@@ -181,6 +182,13 @@ namespace RAC
 			inline std::shared_ptr<ImageEdge> GetImageEdgeModel() { return mImageEdgeModel; }
 
 			/**
+			* @brief Returns a pointer to the ray tracing class.
+			*
+			* @return A pointer to the ray tracing class.
+			*/
+			inline std::shared_ptr<TracingThread> GetRayTracing() { return mRayTracing; }
+
+			/**
 			* @brief Sets the room volume and dimensions.
 			* 
 			* @param volume The volume of the room used to predict the reverberation time.
@@ -304,7 +312,9 @@ namespace RAC
 			*/
 			const std::shared_ptr<Config> mConfig;				// RAC Config
 			std::atomic<bool> mIsRunning;			// Flag to check if the spatialiser is running
-			std::thread IEMThread;		// Background thread to run the image edge model
+			std::thread IEMThread;			// Background thread to run the image edge model
+			std::thread rayTracingThread;	// Background thread to run the ray tracing model
+
 			Vec3 listenerPosition;		// Stored listener position
 			Real headRadius;			// Stored head radius from 3DTI
 			bool applyHeadphoneEQ;		// Flag to apply headphone EQ
@@ -334,6 +344,7 @@ namespace RAC
 			std::shared_ptr<Reverb> mReverb;			// Reverb class
 			std::shared_ptr<SourceManager> mSources;	// Source manager class
 			std::shared_ptr<ImageEdge> mImageEdgeModel;	// Image edge class
+			std::shared_ptr<TracingThread> mRayTracing;	// Ray tracing class
 
 			std::mutex audioMutex;		// Mutex for audio processing
 

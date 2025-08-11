@@ -15,7 +15,9 @@ IUnityProfiler* GetUnityProfiler() { return unityProfiler; }
 bool* GetDevBuild() { return isDevelopmentBuild; }
 
 // Threads
-static UnityProfilerThreadId backgroundThreadID = 999;
+static UnityProfilerThreadId IEMThreadID = 998;
+static UnityProfilerThreadId rayTracingThreadID = 999;
+
 static std::unordered_map<int, UnityProfilerThreadId> threadIDs;
 int nextThreadID = 0;
 
@@ -121,18 +123,34 @@ void UnregisterThread(int id)
 
 ////////////////////////////////////////
 
-void RegisterBackgroundThread()
+void RegisterIEMThread()
 {
 	if (GetDevBuild())
-		GetUnityProfiler()->RegisterThread(&backgroundThreadID, "Acoustics", "Background Thread");
+		GetUnityProfiler()->RegisterThread(&IEMThreadID, "Acoustics", "IEM Thread");
 }
 
 ////////////////////////////////////////
 
-void UnregisterBackgroundThread()
+void UnregisterIEMThread()
 {
 	if (GetDevBuild())
-		GetUnityProfiler()->UnregisterThread(backgroundThreadID);
+		GetUnityProfiler()->UnregisterThread(IEMThreadID);
+}
+
+////////////////////////////////////////
+
+void RegisterRayTracingThread()
+{
+	if (GetDevBuild())
+		GetUnityProfiler()->RegisterThread(&rayTracingThreadID, "Acoustics", "Ray TRacing Thread");
+}
+
+////////////////////////////////////////
+
+void UnregisterRayTracingThread()
+{
+	if (GetDevBuild())
+		GetUnityProfiler()->UnregisterThread(rayTracingThreadID);
 }
 
 ////////////////////////////////////////
