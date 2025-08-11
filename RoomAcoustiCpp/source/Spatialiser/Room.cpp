@@ -69,10 +69,6 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		/*const std::vector<Real>& Ax, const std::vector<Real>& Ay, const std::vector<Real>& Az,
-			const std::vector<Real>& Bx, const std::vector<Real>& By, const std::vector<Real>& Bz,
-			const std::vector<Real>& Cx, const std::vector<Real>& Cy, const std::vector<Real>& Cz);*/
-
 		void Room::CreateTriangleMeshSoA()
 		{
 			mTriangleMeshSoA.resize(mWalls.size());
