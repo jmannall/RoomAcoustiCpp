@@ -348,8 +348,8 @@ namespace RAC
 			// TODO: Change this to Coefficeints for frequency dependence
 			std::vector<Real> t60s(numModes);
 			Vec<> energyDecay(numModes);
-			std::vector<Vec<>> rightEigenVectors(numModes);
-			std::vector<Vec<>> leftEigenVectors(numModes);
+			std::vector<Vec<>> rightEigenvectors(numModes);
+			std::vector<Vec<>> leftEigenvectors(numModes);
 			for (int i = 0; i < numModes; i++)
 			{
 				auto mode = Parse2Dcsv<Real>(folderPath + "mode_" + std::to_string(i + 1) + ".csv");
@@ -358,14 +358,14 @@ namespace RAC
 				energyDecay[i] = mode[0][1];
 
 				// Size of numPaths
-				rightEigenVectors[i] = mode[1];
-				leftEigenVectors[i] = mode[2];
+				rightEigenvectors[i] = mode[1];
+				leftEigenvectors[i] = mode[2];
 			}
 
 			mRayTracing->InitRoom(indexing, energyDecay);
 
 			mReverb->InitLateReverb(t60s, matrix, mConfig);
-			mReverb->SetEigenVectors(rightEigenVectors, leftEigenVectors);
+			mReverb->SetEigenvectors(rightEigenvectors, leftEigenvectors);
 		}
 
 		////////////////////////////////////////

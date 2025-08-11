@@ -184,22 +184,22 @@ namespace RAC
 				ResetReverberator();
 			}
 
-			inline void SetEigenVectors (const std::vector<Vec<>>& rightEigenVectors, const std::vector<Vec<>>& leftEigenVectors)
+			inline void SetEigenvectors (const std::vector<Vec<>>& rightEigenvectors, const std::vector<Vec<>>& leftEigenvectors)
 			{
-				this->rightEigenVectors = rightEigenVectors;
-				this->leftEigenVectors = leftEigenVectors;
+				this->rightEigenvectors = rightEigenvectors;
+				this->leftEigenvectors = leftEigenvectors;
 			}
 
-			inline Vec<>& GetRightEigenVectors(const int id)
+			inline Vec<>& GetRightEigenvector(const int id)
 			{
-				assert(id < rightEigenVectors.size());
-				return rightEigenVectors[id];
+				assert(id < rightEigenvectors.size());
+				return rightEigenvectors[id];
 			}
 
-			inline Vec<>& GetLeftEigenVectors(const int id)
+			inline Vec<>& GetLeftEigenvector(const int id)
 			{
-				assert(id < leftEigenVectors.size());
-				return leftEigenVectors[id];
+				assert(id < leftEigenvectors.size());
+				return leftEigenvectors[id];
 			}
 
 			virtual void ResetReverberator() = 0;
@@ -271,8 +271,8 @@ namespace RAC
 			std::vector<Buffer<>> reverbSourceInputs;						// Input buffers for each reverb source
 			std::vector<std::unique_ptr<ReverbSource>> mReverbSources;		// Reverb sources to binauralise the FDN output
 
-			std::vector<Vec<>> rightEigenVectors;	// Right eigenvectors for RAVES
-			std::vector<Vec<>> leftEigenVectors;	// Left eigenvectors for RAVES
+			std::vector<Vec<>> rightEigenvectors;	// Right eigenvectors for RAVES
+			std::vector<Vec<>> leftEigenvectors;	// Left eigenvectors for RAVES
 		};
 
 		class SingleFDN : public Reverb

@@ -58,7 +58,7 @@ namespace RAC
 					for (int dir_idx = 0; dir_idx < numReverbDirections; ++dir_idx) {
 						computeEnergyContributions(dir_idx);
 						// TODO: Double-check theory: is any different normalization required (e.g. normalize by path etendue)? If constant, bake it into the eigenvectors; if not, implement it here.
-						listenerResidues[dir_idx] = Dot(energyContributions, sharedReverb.GetRightEigenvector(slope_idx));
+						listenerResidues[dir_idx] = Dot(energyContributions, sharedReverb->GetRightEigenvector(slope_idx));
 					}
 					sharedReverb->SetTargetListenerResidues(slope_idx, listenerResidues);
 				}
@@ -69,13 +69,13 @@ namespace RAC
 			for (Source::Data& source : mSources) {
 				if (source.hasChanged) {
 					hemispherePencil.moveOrigin(source.position);
-					hemispherePencil.traceAll(sharedRoom->CreateTriangleMeshSoA());
+					hemispherePencil.traceAll(sharedRoom->GetTriangleMeshSoA());
 
 					computeEnergyContributions();
 					// TODO: Double-check theory: is any different normalization required (e.g. normalize by path etendue)? If constant, bake it into the eigenvectors; if not, implement it here.
 
 					for (int slope_idx = 0; slope_idx < numFDNs; ++slope_idx) {
-						sourceResidues[slope_idx] = Dot(energyContributions, sharedReverb.GetLeftEigenvector(slope_idx));
+						sourceResidues[slope_idx] = Dot(energyContributions, sharedReverb->GetLeftEigenvector(slope_idx));
 					}
 					sharedSource->SetSourceTargetResidues(source.id, sourceResidues);
 				}

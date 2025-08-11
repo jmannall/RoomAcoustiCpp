@@ -38,6 +38,6 @@ inline std::vector<std::vector<T>> Parse2Dcsv(std::string filePath)
 template <typename T>
 inline std::vector<T> Parse1Dcsv(std::string filePath)
 {
-    return Parse2Dcsv(filePath)[0];
+    return Parse2Dcsv<T>(filePath)[0];
 }
 

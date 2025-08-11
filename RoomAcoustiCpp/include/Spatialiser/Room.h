@@ -20,6 +20,7 @@
 #include "Spatialiser/Types.h"
 #include "Spatialiser/Wall.h"
 #include "Spatialiser/Edge.h"
+#include "Spatialiser/TracingTypes.h"
 
 namespace RAC
 {
@@ -155,6 +156,10 @@ namespace RAC
 			* @return The edges of the room
 			*/
 			EdgeMap GetEdges() { std::lock_guard<std::mutex> lock(mEdgeMutex); return mEdges; }
+
+			void CreateTriangleMeshSoA();
+
+			inline const TriangleMeshSoA& GetTriangleMeshSoA() const { return mTriangleMeshSoA; }
 
 		private:
 			/**
@@ -332,6 +337,7 @@ namespace RAC
 			std::vector<size_t> mEmptyWallSlots;		// Available wall IDs
 			std::vector<TimerPair> mWallTimers;			// Wall IDs waiting to be made available
 			size_t nextWall;							// Next wall ID if none are available
+			TriangleMeshSoA mTriangleMeshSoA;			// Triangle mesh for ray tracing
 
 			PlaneMap mPlanes;							// Stored planes
 			std::vector<size_t> mEmptyPlaneSlots;		// Available plane IDs

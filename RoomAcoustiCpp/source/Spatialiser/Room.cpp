@@ -69,6 +69,89 @@ namespace RAC
 
 		////////////////////////////////////////
 
+		/*const std::vector<Real>& Ax, const std::vector<Real>& Ay, const std::vector<Real>& Az,
+			const std::vector<Real>& Bx, const std::vector<Real>& By, const std::vector<Real>& Bz,
+			const std::vector<Real>& Cx, const std::vector<Real>& Cy, const std::vector<Real>& Cz);*/
+
+		void Room::CreateTriangleMeshSoA()
+		{
+			mTriangleMeshSoA.resize(mWalls.size());
+
+			for (const auto& [i, wall] : mWalls)
+			{
+				Vertices vertices = wall.GetVertices();
+				Real Ax = vertices[0].x, Ay = vertices[0].y, Az = vertices[0].z;
+				Real Bx = vertices[1].x, By = vertices[1].y, Bz = vertices[1].z;
+				Real Cx = vertices[2].x, Cy = vertices[2].y, Cz = vertices[2].z;
+#ifdef PLUCKER_KERNEL
+#ifdef LEAN_PLUCKER
+				// TODO: Implement Lean Plücker
+#else // not LEAN_PLUCKER
+
+				// ----- Edge direction vectors -----
+				// Edge AB = B - A
+				mTriangleMeshSoA.edgeABDirectionX[i] = Bx - Ax;
+				mTriangleMeshSoA.edgeABDirectionY[i] = By - Ay;
+				mTriangleMeshSoA.edgeABDirectionZ[i] = Bz - Az;
+
+				// Edge BC = C - B
+				mTriangleMeshSoA.edgeBCDirectionX[i] = Cx - Bx;
+				mTriangleMeshSoA.edgeBCDirectionY[i] = Cy - By;
+				mTriangleMeshSoA.edgeBCDirectionZ[i] = Cz - Bz;
+
+				// Edge CA = A - C
+				mTriangleMeshSoA.edgeCADirectionX[i] = Ax - Cx;
+				mTriangleMeshSoA.edgeCADirectionY[i] = Ay - Cy;
+				mTriangleMeshSoA.edgeCADirectionZ[i] = Az - Cz;
+
+				// ----- Wedge terms (endpoint cross products) -----
+				// These are used by Plücker side predicates: s = dot(D, (PxQ)) + dot(M, (Q-P)).
+
+				// A x B
+				Vec3 wedge = Cross(vertices[0], vertices[1]);
+				mTriangleMeshSoA.edgeABWedge_AcrossB_X[i] = wedge.x;
+				mTriangleMeshSoA.edgeABWedge_AcrossB_Y[i] = wedge.y;
+				mTriangleMeshSoA.edgeABWedge_AcrossB_Z[i] = wedge.z;
+
+				// B x C
+				wedge = Cross(vertices[1], vertices[2]);
+				mTriangleMeshSoA.edgeBCWedge_BcrossC_X[i] = wedge.x;
+				mTriangleMeshSoA.edgeBCWedge_BcrossC_Y[i] = wedge.y;
+				mTriangleMeshSoA.edgeBCWedge_BcrossC_Z[i] = wedge.z;
+
+				// C x A
+				wedge = Cross(vertices[2], vertices[0]);
+				mTriangleMeshSoA.edgeCAWedge_CcrossA_X[i] = wedge.x;
+				mTriangleMeshSoA.edgeCAWedge_CcrossA_Y[i] = wedge.y;
+				mTriangleMeshSoA.edgeCAWedge_CcrossA_Z[i] = wedge.z;
+#endif // end LEAN_PLUCKER
+#else // not PLUCKER_KERNEL
+				// ----- Anchor vertex A -----
+				mTriangleMeshSoA.Ax = Ax;
+				mTriangleMeshSoA.Ay = Ay;
+				mTriangleMeshSoA.Az = Az;
+
+				// ----- Edges from A -----
+				mTriangleMeshSoA.edge1X[i] = Bx - Ax;
+				mTriangleMeshSoA.edge1Y[i] = By - Ay;
+				mTriangleMeshSoA.edge1Z[i] = Bz - Az;
+				mTriangleMeshSoA.edge2X[i] = Cx - Ax;
+				mTriangleMeshSoA.edge2Y[i] = Cy - Ay;
+				mTriangleMeshSoA.edge2Z[i] = Cz - Az;
+#endif // end PLUCKER_KERNEL
+
+				// ----- Plane parameters: normal n and plane constant d0 -----
+				Vec3 normal = wall.GetNormal();
+				mTriangleMeshSoA.nx[i] = normal.x;
+				mTriangleMeshSoA.ny[i] = normal.y;
+				mTriangleMeshSoA.nz[i] = normal.z;
+
+				mTriangleMeshSoA.d0[i] = wall.GetD();
+			}
+		}
+
+		////////////////////////////////////////
+
 		void Room::AssignWallToPlane(const size_t id)
 		{
 			auto it = mWalls.find(id);

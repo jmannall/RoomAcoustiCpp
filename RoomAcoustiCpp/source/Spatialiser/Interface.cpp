@@ -141,7 +141,7 @@ namespace RAC
 		{
 			auto context = GetContext();
 			if (context)
-				context->InitRAVES(folderPath);
+				context->InitRAVES(folderPath, matrix);
 		}
 
 		////////////////////////////////////////
