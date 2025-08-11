@@ -1,7 +1,8 @@
 # Unity Interface
 
-The Unity interface provides a set of modular c# scripts that can be used to integrate RoomAcoustiC++ into Unity projects.
+The Unity interface provides a set of modular c# scripts that can be used to integrate RoomAcoustiC++ into Unity projects
 The audio processing is built on top of the default Unity audio system.
+The interface is available on the GitHub repository [here](https://github.com/jmannall/RoomAcoustiCpp-Unity).
 
 ## RACManager
 The `RACManager` script is the main entry point for using RoomAcoustiC++ in Unity.

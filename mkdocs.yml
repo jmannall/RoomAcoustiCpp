@@ -77,6 +77,10 @@ extra:
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/jmannall/RoomAcoustiCpp
+      name: RoomAcoustiCpp
+    - icon: fontawesome/brands/github
+      link: https://github.com/jmannall/RoomAcoustiCpp-Unity
+      name: RoomAcoustiCpp-Unity
 
 markdown_extensions:
   - abbr
