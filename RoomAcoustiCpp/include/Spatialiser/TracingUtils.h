@@ -121,11 +121,11 @@ namespace RAC
 
             /* @brief For each ray, returns (by reference) the origin.
               */
-            void getOrigins(std::vector<Vec3>& origins);
+            void getOrigins(std::vector<Vec3>& origins) const;
 
             /* @brief For each ray, returns (by reference) the direction.
               */
-            void getDirections(std::vector<Vec3>& directions);
+            void getDirections(std::vector<Vec3>& directions) const;
 
             /* @brief For each ray, returns the total travel distance in meters. Values of NaN denote invalid intersections.
              * The distance depends on which function was called most recently:
@@ -134,7 +134,7 @@ namespace RAC
              *  if "trace()" was called more recently than "advance()":
              *      the distance refers to the intersection at "previous_intersected_triangle".
              */
-            void getTotalDistances(Vec<>& distances);
+            void getTotalDistances(Vec<>& distances) const;
 
             /* @brief For each ray, returns the incidence cosine of the latest intersection. Values of NaN denote invalid intersections.
              * The cosine depends on which function was called most recently:
@@ -143,16 +143,16 @@ namespace RAC
              *  if "trace()" was called more recently than "advance()":
              *      the cosine refers to the intersection at "previous_intersected_triangle".
              */
-            void getCosines(Vec<>& cosines);
+            void getCosines(Vec<>& cosines) const;
 
             /* Returns the indices of the previous and current polygon intersected by each ray.
              * Values of invalidIdx denote invalid intersections.
              */
-            void getIndices(std::vector<int>& current, std::vector<int>& previous);
+            void getIndices(std::vector<int>& current, std::vector<int>& previous) const;
 
             /* Returns every ray's radiance value. Values of NaN denote invalid intersections.
              */
-            void getRadiance(Vec<>& radiance);
+            void getRadiance(Vec<>& radiance) const;
         };
 
         /* @brief Class for tracing a pencil of rays with shared origin and different directions. */
@@ -203,26 +203,26 @@ namespace RAC
              * @param frontClusters Pointer to a pre-allocated integer buffer of size `numRays`, used for output values (see notes).
              * @param backClusters Pointer to a pre-allocated integer buffer of size `numRays`, used for output values (see notes).
              */
-            void clusterDirections(const std::vector<Vec3>& directions, std::vector<int>& frontClusters, std::vector<int>& backClusters);
+            void clusterDirections(const std::vector<Vec3>& directions, std::vector<int>& frontClusters, std::vector<int>& backClusters) const;
 
             /* @brief For each ray, returns (by reference) the direction.
               */
-            void getDirections(std::vector<Vec3>& directions);
+            void getDirections(std::vector<Vec3>& directions) const;
 
             /* @brief For each ray, returns (by reference) the distance in meters to the nearest front and back intersections.
               * Values of NaN denote invalid intersections.
               */
-            void getDistances(Vec<>& front, Vec<>& back);
+            void getDistances(Vec<>& front, Vec<>& back) const;
 
             /* @brief For each ray, returns (by reference) the incidence cosine of the nearest front and back intersections.
               * Values of NaN denote invalid intersections.
               */
-            void getCosines(Vec<>& front, Vec<>& back);
+            void getCosines(Vec<>& front, Vec<>& back) const;
 
             /* @brief For each ray, returns (by reference) the triangle index of the nearest front and back intersections.
               * Values of invalidIdx denote invalid intersections.
               */
-            void getIndices(std::vector<int>& front, std::vector<int>& back);
+            void getIndices(std::vector<int>& front, std::vector<int>& back) const;
         };
 	}
 }

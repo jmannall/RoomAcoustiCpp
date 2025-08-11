@@ -285,28 +285,6 @@ namespace RAC
              */
             void resize(int n);
         };
-
-        /**
-         * @brief Build a @ref TriangleMeshSoA from SoA vertex arrays @p A, @p B, and @p C.
-         *
-         * The triangle winding must be consistent (e.g., counter-clockwise when viewed from the "front").
-         *
-         * @param Ax X-components of vertex A for all triangles.
-         * @param Ay Y-components of vertex A for all triangles.
-         * @param Az Z-components of vertex A for all triangles.
-         * @param Bx X-components of vertex B for all triangles.
-         * @param By Y-components of vertex B for all triangles.
-         * @param Bz Z-components of vertex B for all triangles.
-         * @param Cx X-components of vertex C for all triangles.
-         * @param Cy Y-components of vertex C for all triangles.
-         * @param Cz Z-components of vertex C for all triangles.
-         * @return A populated @ref TrianglesSoA.
-         */
-        // TODO: Change the signature of this helper function to accept the current triangle encoding of Wall.
-        TriangleMeshSoA build_mesh_soa_from_vertices(
-            const std::vector<Real>& Ax, const std::vector<Real>& Ay, const std::vector<Real>& Az,
-            const std::vector<Real>& Bx, const std::vector<Real>& By, const std::vector<Real>& Bz,
-            const std::vector<Real>& Cx, const std::vector<Real>& Cy, const std::vector<Real>& Cz);
     }
 }
 

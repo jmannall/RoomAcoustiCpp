@@ -48,6 +48,12 @@ namespace RAC
 			void setNumberOfRays(int newNumRays);
 
 			/**
+			* @brief Set the propagation path indexing and decay rates of each mode.
+			* N.B.: This also prompts the contruction of the TriangleMeshSoA in Room.
+			*/
+			void InitRoom(const std::vector<std::vector<int>>& indexing, const Vec<>& decayRates);
+
+			/**
 			* @brief Process the ray-tracing from every new position and update the related residues.
 			*/
 			void RunTracing();
@@ -81,6 +87,7 @@ namespace RAC
 			std::mutex dataStoreMutex;				// Protects mListenerPositionStore
 
 			// These will be used as temporary "buffers" in the hot loop; memory is only allocated once.
+			Vec<Real> decayPerSecond;				// This will have size `numFDNs`
 			Vec<Real> energyContributions;			// This will have size `numPaths`
 			Coefficients<> sourceResidues;			// This will have size `numFDNs`
 			Coefficients<> listenerResidues;		// This will have size `numReverbDirections`

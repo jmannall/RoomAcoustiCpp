@@ -1026,7 +1026,7 @@ namespace RAC
 #endif // end PLUCKER_KERNEL
         }
 
-        void RayBundle::getOrigins(std::vector<Vec3>& origins) {
+        void RayBundle::getOrigins(std::vector<Vec3>& origins) const {
             assert(origins.size() == numRays);
             for (int i = 0; i < numRays; ++i) {
                 origins[i].x = rays.Ox[i];
@@ -1035,7 +1035,7 @@ namespace RAC
             }
         }
 
-        void RayBundle::getDirections(std::vector<Vec3>& directions) {
+        void RayBundle::getDirections(std::vector<Vec3>& directions) const {
             assert(directions.size() == numRays);
             for (int i = 0; i < numRays; ++i) {
                 directions[i].x = rays.Dx[i];
@@ -1044,21 +1044,21 @@ namespace RAC
             }
         }
 
-        void RayBundle::getTotalDistances(Vec<>& distances) {
+        void RayBundle::getTotalDistances(Vec<>& distances) const {
             assert(distances.size() == numRays);
             for (int i = 0; i < numRays; ++i) {
                 distances[i] = totalDistance[i];
             }
         }
 
-        void RayBundle::getCosines(Vec<>& cosines) {
+        void RayBundle::getCosines(Vec<>& cosines) const {
             assert(cosines.size() == numRays);
             for (int i = 0; i < numRays; ++i) {
                 cosines[i] = latestCosine[i];
             }
         }
 
-        void RayBundle::getIndices(std::vector<int>& current, std::vector<int>& previous) {
+        void RayBundle::getIndices(std::vector<int>& current, std::vector<int>& previous) const {
             assert(current.size() == numRays);
             assert(previous.size() == numRays);
             for (int i = 0; i < numRays; ++i) {
@@ -1067,7 +1067,7 @@ namespace RAC
             }
         }
 
-        void RayBundle::getRadiance(Vec<>& rad) {
+        void RayBundle::getRadiance(Vec<>& rad) const {
             assert(rad.size() == numRays);
             for (int i = 0; i < numRays; ++i) {
                 rad[i] = radiance[i];
@@ -1157,7 +1157,7 @@ namespace RAC
         }
         
         void RayPencil::clusterDirections(const std::vector<Vec3>& directions,
-            std::vector<int>& frontClusters, std::vector<int>& backClusters) {
+            std::vector<int>& frontClusters, std::vector<int>& backClusters) const {
             assert(frontClusters.size() == numRays);
             assert(backClusters.size() == numRays);
 
@@ -1186,7 +1186,7 @@ namespace RAC
             }
         }
 
-        void RayPencil::getDirections(std::vector<Vec3>& directions) {
+        void RayPencil::getDirections(std::vector<Vec3>& directions) const {
             assert(directions.size() == numRays);
             for (int i = 0; i < numRays; ++i) {
                 directions[i].x = rays.Dx[i];
@@ -1195,7 +1195,7 @@ namespace RAC
             }
         }
 
-        void RayPencil::getDistances(Vec<>& front, Vec<>& back) {
+        void RayPencil::getDistances(Vec<>& front, Vec<>& back) const {
             assert(front.size() == numRays);
             assert(back.size() == numRays);
             for (int i = 0; i < numRays; ++i) {
@@ -1204,7 +1204,7 @@ namespace RAC
             }
         }
 
-        void RayPencil::getCosines(Vec<>& front, Vec<>& back) {
+        void RayPencil::getCosines(Vec<>& front, Vec<>& back) const {
             assert(front.size() == numRays);
             assert(back.size() == numRays);
             for (int i = 0; i < numRays; ++i) {
@@ -1213,7 +1213,7 @@ namespace RAC
             }
         }
 
-        void RayPencil::getIndices(std::vector<int>& front, std::vector<int>& back) {
+        void RayPencil::getIndices(std::vector<int>& front, std::vector<int>& back) const {
             assert(front.size() == numRays);
             assert(back.size() == numRays);
             for (int i = 0; i < numRays; ++i) {

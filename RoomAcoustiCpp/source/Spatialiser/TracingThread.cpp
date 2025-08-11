@@ -5,35 +5,33 @@ namespace RAC
 	using namespace Common;
 	namespace Spatialiser
 	{
-		// TODO: Import Python data from existing 3-room environment for testing
-		
 		// TODO: Make all other required modifications of Context.h/.cpp
 
 		TracingThread::TracingThread(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const std::shared_ptr<Config>& config) :
-			mRoom(room), mSourceManager(sourceManager), mReverb(reverb), numReverbDirections(config->numReverbSources), numFDNs(config->numRavesFDNs),
+			mRoom(room), mSourceManager(sourceManager), mReverb(reverb),
+			numReverbDirections(config->numReverbSources), numFDNs(config->numRavesFDNs),
+			numRays(config->numRays), hemispherePencil(config->numRays, true),
 			sourceResidues(config->numRavesFDNs), listenerResidues(config->numReverbSources)
 		{
-			// TODO: Initialize `numRays` taking the value from somewhere. Passed as argument? new Config class? Global constant DEFAULT_NUM_RAYS?
-			numRays = 1000;
-			RayPencil hemispherePencil(numRays, true);
-
 			shared_ptr<Reverb> sharedReverb = mReverb.lock();
 			sharedReverb->GetReverbSourceDirections(reverbDirections);
 			clusterReverbDirections();
-
-			shared_ptr<Room> sharedRoom = mRoom.lock();
-			sharedRoom->GetTriangleMeshSoA(triangles);
-
-			// TODO: Initialize `numPaths` and `pathIndexing` taking the values from somewhere. Passed as arguments?
-			numPaths = 1;
-			std::vector<std::vector<int>> pathIndexing(1, std::vector<int>(1, 0));
-			Vec<Real> energyContributions(numPaths, 0.0);
 		}
 
 		void TracingThread::setNumberOfRays(int newNumRays) {
+			// TODO: Prevent data races.
 			numRays = newNumRays;
 			RayPencil hemispherePencil(numRays, true);
 			clusterReverbDirections();
+		}
+
+		void TracingThread::InitRoom(const std::vector<std::vector<int>>& indexing, const Vec<>& decayRates) {
+			shared_ptr<Room> sharedRoom = mRoom.lock();
+			triangles = sharedRoom->CreateTriangleMeshSoA();
+
+			assert(decayRates.Rows() == numFDNs);
+			pathIndexing = indexing;
+			decayPerSecond = decayRates;
 		}
 
 		void TracingThread::RunTracing() {
@@ -59,7 +57,7 @@ namespace RAC
 					for (int dir_idx = 0; dir_idx < numReverbDirections; ++dir_idx) {
 						computeEnergyContributions(dir_idx);
 						// TODO: Double-check theory: is any different normalization required (e.g. normalize by path etendue)? If constant, bake it into the eigenvectors; if not, implement it here.
-						listenerResidues[dir_idx] = Dot(energyContributions, mReverb.GetRightEigenvector(slope_idx));
+						listenerResidues[dir_idx] = Dot(energyContributions, sharedReverb.GetRightEigenvector(slope_idx));
 					}
 					sharedReverb->SetTargetListenerResidues(slope_idx, listenerResidues);
 				}
@@ -76,7 +74,7 @@ namespace RAC
 					// TODO: Double-check theory: is any different normalization required (e.g. normalize by path etendue)? If constant, bake it into the eigenvectors; if not, implement it here.
 
 					for (int slope_idx = 0; slope_idx < numFDNs; ++slope_idx) {
-						sourceResidues[slope_idx] = Dot(energyContributions, mReverb.GetLeftEigenvector(slope_idx));
+						sourceResidues[slope_idx] = Dot(energyContributions, sharedReverb.GetLeftEigenvector(slope_idx));
 					}
 					sharedSource->SetSourceTargetResidues(source.id, sourceResidues);
 				}
