@@ -27,7 +27,7 @@ namespace RAC
 
 		void TracingThread::InitRoom(const std::vector<std::vector<int>>& indexing, const Vec<>& decayRates) {
 			shared_ptr<Room> sharedRoom = mRoom.lock();
-			triangles = sharedRoom->CreateTriangleMeshSoA();
+			sharedRoom->CreateTriangleMeshSoA();
 
 			assert(decayRates.Rows() == numFDNs);
 			pathIndexing = indexing;
@@ -37,6 +37,7 @@ namespace RAC
 		void TracingThread::RunTracing() {
 			// TODO: PROFILE_TracingThread
 
+			shared_ptr<Room> sharedRoom = mRoom.lock();
 			shared_ptr<Reverb> sharedReverb = mReverb.lock();
 			shared_ptr<SourceManager> sharedSource = mSourceManager.lock();
 
@@ -51,7 +52,7 @@ namespace RAC
 			}
 			if (listenerMoved) {
 				hemispherePencil.moveOrigin(mListenerPosition);
-				hemispherePencil.traceAll(triangles);
+				hemispherePencil.traceAll(sharedRoom->GetTriangleMeshSoA());
 
 				for (int slope_idx = 0; slope_idx < numFDNs; ++slope_idx) {
 					for (int dir_idx = 0; dir_idx < numReverbDirections; ++dir_idx) {
@@ -68,7 +69,7 @@ namespace RAC
 			for (Source::Data& source : mSources) {
 				if (source.hasChanged) {
 					hemispherePencil.moveOrigin(source.position);
-					hemispherePencil.traceAll(triangles);
+					hemispherePencil.traceAll(sharedRoom->CreateTriangleMeshSoA());
 
 					computeEnergyContributions();
 					// TODO: Double-check theory: is any different normalization required (e.g. normalize by path etendue)? If constant, bake it into the eigenvectors; if not, implement it here.

@@ -65,7 +65,6 @@ namespace RAC
 
 			// The geometry is assumed unchanging.
 			int numPaths;									// Number of ART propagation paths
-			TriangleMeshSoA& triangles;						// Pointer to the (immutable) structure of arrays stored in Room
 			std::vector<std::vector<int>> pathIndexing;		// Index of the ART propagation path from triangle A to triangle B
 
 			// The number of reverb directions is assumed unchanging.
