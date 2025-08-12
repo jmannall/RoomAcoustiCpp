@@ -153,6 +153,11 @@ namespace RAC
 			WallMap GetWalls() { std::lock_guard<std::mutex> lock(mWallMutex); return mWalls; }
 
 			/**
+			* @return The walls of the room
+			*/
+			int GetNumberOfWalls() { std::lock_guard<std::mutex> lock(mWallMutex); return mWalls.size(); }
+
+			/**
 			* @return The edges of the room
 			*/
 			EdgeMap GetEdges() { std::lock_guard<std::mutex> lock(mEdgeMutex); return mEdges; }
