@@ -29,6 +29,12 @@ namespace RAC
 		{
 			size_t id;
 			std::lock_guard<std::mutex> lock(mWallMutex);
+			if (mWalls.size() == 0) // Assume new room being created. RAVES needs wall IDs from 0 to n
+			{
+				mEmptyWallSlots.clear();
+				mWallTimers.clear();
+				nextWall = 0;
+			}
 			if (!mEmptyWallSlots.empty()) // Assign wall to an existing ID
 			{
 				id = mEmptyWallSlots.back();
@@ -73,6 +79,7 @@ namespace RAC
 		{
 			mTriangleMeshSoA.resize(mWalls.size());
 
+			std::lock_guard<std::mutex> lock(mWallMutex);
 			for (const auto& [i, wall] : mWalls)
 			{
 				Vertices vertices = wall.GetVertices();
