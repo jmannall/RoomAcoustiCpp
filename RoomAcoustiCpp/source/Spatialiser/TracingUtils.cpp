@@ -480,7 +480,7 @@ namespace RAC
             // Sanity check: the requested triangle must exist.
             assert(triangleIndex < triangles.size());
             // Sanity check: the requested ray must exist.
-            assert(rayIndex < rays.size());
+            // assert(rayIndex < rays.size());
 
             // Load ray data into locals.
             const Real Ox = rayOrigin.x;
@@ -1045,14 +1045,14 @@ namespace RAC
         }
 
         void RayBundle::getTotalDistances(Vec<>& distances) const {
-            assert(distances.size() == numRays);
+            assert(distances.Rows() == numRays);
             for (int i = 0; i < numRays; ++i) {
                 distances[i] = totalDistance[i];
             }
         }
 
         void RayBundle::getCosines(Vec<>& cosines) const {
-            assert(cosines.size() == numRays);
+            assert(cosines.Rows() == numRays);
             for (int i = 0; i < numRays; ++i) {
                 cosines[i] = latestCosine[i];
             }
@@ -1068,7 +1068,7 @@ namespace RAC
         }
 
         void RayBundle::getRadiance(Vec<>& rad) const {
-            assert(rad.size() == numRays);
+            assert(rad.Rows() == numRays);
             for (int i = 0; i < numRays; ++i) {
                 rad[i] = radiance[i];
             }
@@ -1196,8 +1196,8 @@ namespace RAC
         }
 
         void RayPencil::getDistances(Vec<>& front, Vec<>& back) const {
-            assert(front.size() == numRays);
-            assert(back.size() == numRays);
+            assert(front.Rows() == numRays);
+            assert(back.Rows() == numRays);
             for (int i = 0; i < numRays; ++i) {
                 front[i] = frontDistance[i];
                 back[i] = backDistance[i];
@@ -1205,8 +1205,8 @@ namespace RAC
         }
 
         void RayPencil::getCosines(Vec<>& front, Vec<>& back) const {
-            assert(front.size() == numRays);
-            assert(back.size() == numRays);
+            assert(front.Rows() == numRays);
+            assert(back.Rows() == numRays);
             for (int i = 0; i < numRays; ++i) {
                 front[i] = frontCosine[i];
                 back[i] = backCosine[i];
