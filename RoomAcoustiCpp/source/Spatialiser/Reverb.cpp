@@ -286,12 +286,12 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void RAVES::InitLateReverb(const std::vector<Coefficients<>>& T60, const FDNMatrix matrix, const std::shared_ptr<Config> config)
+		void RAVES::InitLateReverb(const const std::vector<Real>& T60, const FDNMatrix matrix, const std::shared_ptr<Config> config)
 		{
 			Vec delayLineLengths = Vec({ 2.5, 4.0, 3.4 }); // Assume a shoebox
-			FDNPtr fdns = std::make_shared<std::vector<std::unique_ptr<FDN<Complex>>>>(config->numRavesFDNs);
+			FDNPtr fdns = std::make_shared<std::vector<std::unique_ptr<FDN<Complex>>>>(config->GetNumRavesFDNs());
 			// fdns->reserve(config->numRavesFDNs);
-			for (int i = 0; i < config->numRavesFDNs; i++)
+			for (int i = 0; i < config->GetNumRavesFDNs(); i++)
 			{
 				switch (matrix)
 				{

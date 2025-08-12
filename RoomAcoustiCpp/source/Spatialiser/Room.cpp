@@ -77,9 +77,9 @@ namespace RAC
 
 		void Room::CreateTriangleMeshSoA()
 		{
+			std::lock_guard<std::mutex> lock(mWallMutex);			
 			mTriangleMeshSoA.resize(mWalls.size());
 
-			std::lock_guard<std::mutex> lock(mWallMutex);
 			for (const auto& [i, wall] : mWalls)
 			{
 				Vertices vertices = wall.GetVertices();

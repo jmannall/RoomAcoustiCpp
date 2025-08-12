@@ -142,6 +142,20 @@ namespace RAC
 			mListener = mCore.CreateListener();
 			headRadius = mListener->GetHeadRadius();
 
+			switch (mConfig->lateReverbModel.load(std::memory_order_acquire))
+			{
+			case LateReverbModel::fdn:
+				mReverb = std::make_shared<SingleFDN>(&mCore, mConfig);
+				break;
+			case LateReverbModel::raves:
+				mReverb = std::make_shared<RAVES>(&mCore, mConfig);
+				break;
+			default:
+				// Unknown late reverb model, using default SingleFDN
+				mReverb = std::make_shared<SingleFDN>(&mCore, mConfig);
+				break;
+			}
+
 			InitialiseAudio();
 			mRoom = std::make_shared<Room>(mConfig->frequencyBands.Length());
 			mSources = std::make_shared<SourceManager>(&mCore, mConfig);
@@ -171,6 +185,7 @@ namespace RAC
 #endif
 			StopRunning();
 			IEMThread.join();
+			rayTracingThread.join();
 			if (audioThreadPool)
 				audioThreadPool->Stop();
 
@@ -205,26 +220,30 @@ namespace RAC
 
 		void Context::InitialiseAudio()
 		{
+			while (audioFlag.exchange(true, std::memory_order_acquire))
+				std::this_thread::yield();
+
 			size_t numThreads = std::min((unsigned int)8, std::thread::hardware_concurrency());
 			switch (mConfig->lateReverbModel.load(std::memory_order_acquire))
 			{
 			case LateReverbModel::fdn:
 				audioThreadPool = std::make_unique<AudioThreadPool>(numThreads, mConfig->numFrames, mConfig->numReverbSources, mConfig->numFrames, mConfig->numReverbSources);
-				mReverb = std::make_shared<SingleFDN>(&mCore, mConfig);
+				// mReverb = std::make_shared<SingleFDN>(&mCore, mConfig);
 				mReverbInput = Matrix<>(mConfig->numReverbSources, mConfig->numFrames);
 				break;
 			case LateReverbModel::raves:
-				audioThreadPool = std::make_unique<AudioThreadPool>(numThreads, mConfig->numFrames, mConfig->numRavesFDNs, 2 * mConfig->numFrames, mConfig->numReverbSources);
-				mReverb = std::make_shared<RAVES>(&mCore, mConfig);
-				mReverbInput = Matrix<>(mConfig->numRavesFDNs, 2 * mConfig->numFrames);
+				audioThreadPool = std::make_unique<AudioThreadPool>(numThreads, mConfig->numFrames, mConfig->GetNumRavesFDNs(), 2 * mConfig->numFrames, mConfig->numReverbSources);
+				// mReverb = std::make_shared<RAVES>(&mCore, mConfig);
+				mReverbInput = Matrix<>(mConfig->GetNumRavesFDNs(), 2 * mConfig->numFrames);
 				break;
 			default:
 				// Unknown late reverb model, using default SingleFDN
 				audioThreadPool = std::make_unique<AudioThreadPool>(numThreads, mConfig->numFrames, mConfig->numReverbSources, mConfig->numFrames, mConfig->numReverbSources);
-				mReverb = std::make_shared<SingleFDN>(&mCore, mConfig);
+				// mReverb = std::make_shared<SingleFDN>(&mCore, mConfig);
 				mReverbInput = Matrix<>(mConfig->numReverbSources, mConfig->numFrames);
 				break;
 			}
+			audioFlag.store(false, std::memory_order_release);
 		}
 
 		////////////////////////////////////////
@@ -287,32 +306,32 @@ namespace RAC
 		// reverbSend matrix (in case IE model slow to update)?
 		void Context::UpdateLateReverbModel(const LateReverbModel model)
 		{
-			while (audioFlag.exchange(true, std::memory_order_acquire))
-				std::this_thread::yield();
+			//while (audioFlag.exchange(true, std::memory_order_acquire))
+			//	std::this_thread::yield();
 
-			// SingleFDN currently not working - background thread keeps running. Tries to access Reverb when being changed/before initialised
-			mConfig->lateReverbModel.store(model, std::memory_order_release);
-			mImageEdgeModel->UpdateLateReverbModel(model);
-			audioThreadPool->Stop(); // Stop the audio thread pool to reinitialize the reverb
-			InitialiseAudio();
+			//// SingleFDN currently not working - background thread keeps running. Tries to access Reverb when being changed/before initialised
+			//mConfig->lateReverbModel.store(model, std::memory_order_release);
+			//mImageEdgeModel->UpdateLateReverbModel(model);
+			//audioThreadPool->Stop(); // Stop the audio thread pool to reinitialize the reverb
+			//InitialiseAudio();
 
-			if (model == LateReverbModel::raves)
-			{
-				std::vector<Coefficients<>> T60s(mConfig->numRavesFDNs, Coefficients<>(1));
-				for (int i = 0; i < mConfig->numRavesFDNs; ++i)
-					T60s[i] = (0.5 * i + 0.5) * mRoom->GetReverbTime();
-				Vec delayLineLengths({1.0, 1.7, 3.2});
-				mReverb->InitLateReverb(T60s, delayLineLengths, FDNMatrix::randomOrthogonal, mConfig);
-				std::vector<Absorption<>> listenerResidues(mConfig->numRavesFDNs, Absorption<>(mConfig->numReverbSources));
-				for (int i = 0; i < mConfig->numRavesFDNs; ++i)
-				{
-					for (int j = 0; j < mConfig->numReverbSources; ++j)
-						listenerResidues[i][j] = (0.5 * i - 0.5) + (0.2 * j - 0.6);
-				}
-				mReverb->SetTargetOutputFilters(listenerResidues);
-			}
+			//if (model == LateReverbModel::raves)
+			//{
+			//	std::vector<Coefficients<>> T60s(mConfig->numRavesFDNs, Coefficients<>(1));
+			//	for (int i = 0; i < mConfig->numRavesFDNs; ++i)
+			//		T60s[i] = (0.5 * i + 0.5) * mRoom->GetReverbTime();
+			//	Vec delayLineLengths({1.0, 1.7, 3.2});
+			//	mReverb->InitLateReverb(T60s, delayLineLengths, FDNMatrix::randomOrthogonal, mConfig);
+			//	std::vector<Absorption<>> listenerResidues(mConfig->numRavesFDNs, Absorption<>(mConfig->numReverbSources));
+			//	for (int i = 0; i < mConfig->numRavesFDNs; ++i)
+			//	{
+			//		for (int j = 0; j < mConfig->numReverbSources; ++j)
+			//			listenerResidues[i][j] = (0.5 * i - 0.5) + (0.2 * j - 0.6);
+			//	}
+			//	mReverb->SetTargetOutputFilters(listenerResidues);
+			//}
 
-			audioFlag.store(false, std::memory_order_release);
+			//audioFlag.store(false, std::memory_order_release);
 		}
 
 		////////////////////////////////////////
@@ -372,11 +391,16 @@ namespace RAC
 				rightEigenvectors[i] = mode[1];
 				leftEigenvectors[i] = mode[2];
 			}
+			// TODO: Update num source residuals based on num modes
 
-			mRayTracing->InitRoom(numPaths, indexing, energyDecay);
+			// TODO: Manage how number of modes is set and controlled by user
+			mConfig->numRavesFDNs.store(numModes, std::memory_order_release);
+			InitialiseAudio();
 
 			mReverb->InitLateReverb(t60s, matrix, mConfig);
 			mReverb->SetEigenvectors(rightEigenvectors, leftEigenvectors);
+
+			mRayTracing->InitRoom(numPaths, indexing, energyDecay);
 		}
 
 		////////////////////////////////////////

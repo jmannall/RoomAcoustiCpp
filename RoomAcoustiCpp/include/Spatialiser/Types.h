@@ -123,12 +123,7 @@ namespace RAC
 		{
 		public:
 
-			IEMConfig(DiffractionModel diffractionModel, LateReverbModel lateReverb) :
-				data(), lateReverbModel(lateReverb)
-			{
-				UpdateMaxOrder();
-				UpdateDiffractionModel(diffractionModel);
-			};
+			IEMConfig(DiffractionModel diffractionModel, LateReverbModel lateReverb) : IEMConfig(IEMData(), diffractionModel, lateReverb) {}
 
 			/**
 			* @brief Constructor for the IEMConfig class
@@ -202,8 +197,8 @@ namespace RAC
 			IEMData data;		// IEM configuration data
 
 		private:
-			int maxOrder;						// Maximum order of the IEM
-			int specularDiffOrderStore;			// Store the specular diffraction order
+			int maxOrder{ 0 };						// Maximum order of the IEM
+			int specularDiffOrderStore{ 0 };			// Store the specular diffraction order
 
 			LateReverbModel lateReverbModel;		// Late reverb model
 		};
@@ -261,12 +256,13 @@ namespace RAC
 
 			DiffractionModel GetDiffractionModel() const { return diffractionModel.load(std::memory_order_acquire); }
 
+			int GetNumRavesFDNs() const { return numRavesFDNs.load(std::memory_order_acquire); }
+
 			Real GetLerpFactor() const { return impulseResponseMode.load(std::memory_order_acquire) ? 1.0 : lerpFactor.load(std::memory_order_acquire); }
 
 			const int fs;							// Sample rate
 			const int numFrames;					// Number of frames per audio callback
-			const int numReverbSources;						// Number of channels for late reverbration
-			const int numRavesFDNs{ 8 };			// Number of RAVES FDNs to use for late reverberation
+			const int numReverbSources;				// Number of channels for late reverbration
 			const int numRays{ 1000 };				// Number of rays to use for ray tracing
 
 			const Real Q;								// Q factor for the GraphicEQ
@@ -282,9 +278,11 @@ namespace RAC
 			*/
 			std::atomic<Real> lerpFactor;		// Linear interpolation factor for audio processing
 
+			std::atomic<int> numRavesFDNs{ 1 };	// Number of RAVES FDNs to use for late reverberation
+
 			std::atomic<DiffractionModel> diffractionModel{ DiffractionModel::btm };	// Diffraction model
 			std::atomic<SpatialisationMode> spatialisationMode;		// Spatialisation mode
-			std::atomic<LateReverbModel> lateReverbModel{ LateReverbModel::none };	// Late reverberation mode
+			std::atomic<LateReverbModel> lateReverbModel{ LateReverbModel::raves };	// Late reverberation mode
 
 			std::atomic<bool> impulseResponseMode;
 			

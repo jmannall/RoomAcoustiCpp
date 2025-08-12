@@ -62,13 +62,13 @@ namespace RAC
 			inline void UpdateDiffractionModel(const DiffractionModel model)
 			{
 				lock_guard<std::mutex> lock(dataStoreMutex);
-				configChanged = mIEMConfigStore.UpdateDiffractionModel(model);
+				configChanged = configChanged || mIEMConfigStore.UpdateDiffractionModel(model);
 			}
 
 			inline void UpdateLateReverbModel(const LateReverbModel model)
 			{
 				lock_guard<std::mutex> lock(dataStoreMutex);
-				configChanged = mIEMConfigStore.UpdateLateReverbModel(model);
+				configChanged = configChanged || mIEMConfigStore.UpdateLateReverbModel(model);
 			}
 
 			/**

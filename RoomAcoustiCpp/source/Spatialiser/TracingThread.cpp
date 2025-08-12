@@ -7,10 +7,10 @@ namespace RAC
 	{
 		TracingThread::TracingThread(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const std::shared_ptr<Config>& config) :
 			mRoom(room), mSourceManager(sourceManager), mReverb(reverb),
-			numReverbDirections(config->numReverbSources), numFDNs(config->numRavesFDNs),
+			numReverbDirections(config->numReverbSources), numFDNs(config->GetNumRavesFDNs()),
 			numRays(config->numRays), hemispherePencil(config->numRays, true),
-			decayPerSecond(config->numRavesFDNs),
-			sourceResidues(config->numRavesFDNs), listenerResidues(config->numRavesFDNs, Coefficients<>(config->numReverbSources))
+			decayPerSecond(config->GetNumRavesFDNs()),
+			sourceResidues(config->GetNumRavesFDNs()), listenerResidues(config->GetNumRavesFDNs(), Coefficients<>(config->numReverbSources))
 		{
 			shared_ptr<Reverb> sharedReverb = mReverb.lock();
 			sharedReverb->GetReverbSourceDirections(reverbDirections);
@@ -46,10 +46,13 @@ namespace RAC
 			sharedRoom->CreateTriangleMeshSoA();
 
 			numPaths = paths;
+			numFDNs = decayRates.Rows();
 
 			assert(decayRates.Rows() == numFDNs);
 			pathIndexing = indexing;
 			decayPerSecond = decayRates;
+			sourceResidues = Coefficients<>(numFDNs);
+			listenerResidues.resize(numFDNs, Coefficients<>(numReverbDirections));
 
 			energyContributions = Vec<Real>(numPaths, 0.0);
 			contributionDelays = Vec<Real>(numPaths, 0.0);

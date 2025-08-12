@@ -45,7 +45,8 @@ namespace RAC
 
 			if (idx >= mBuffer.Length())
 				idx = 0;
-			T out = mAbsorptionFilter.GetOutput(mBuffer[idx], lerpFactor);
+			// T out = mAbsorptionFilter.GetOutput(mBuffer[idx], lerpFactor);
+			T out = mBuffer[idx];
 			mBuffer[idx] = input;
 			++idx;
 			return out;

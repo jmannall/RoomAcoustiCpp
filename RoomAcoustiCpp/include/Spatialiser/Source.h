@@ -80,7 +80,7 @@ namespace RAC
 			* @params config The spatialiser configuration
 			*/
 			Source(Binaural::CCore* core, ImageSourceManager& imageSources, const std::shared_ptr<Config>& config) : Access(), mCore(core), imageSources(imageSources), inputBuffer(config->numFrames), spatialisationMode(config->GetSpatialisationMode()),
-				ravesResidues(config->numRavesFDNs)
+				ravesResidues(config->GetNumRavesFDNs())
 			{
 				dataMutex = std::make_shared<std::mutex>();
 			}
