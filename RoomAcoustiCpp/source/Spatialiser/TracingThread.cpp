@@ -5,8 +5,6 @@ namespace RAC
 	using namespace Common;
 	namespace Spatialiser
 	{
-		// TODO: Make all other required modifications of Context.h/.cpp
-
 		TracingThread::TracingThread(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const std::shared_ptr<Config>& config) :
 			mRoom(room), mSourceManager(sourceManager), mReverb(reverb),
 			numReverbDirections(config->numReverbSources), numFDNs(config->numRavesFDNs),
@@ -19,13 +17,14 @@ namespace RAC
 		}
 
 		void TracingThread::setNumberOfRays(int newNumRays) {
-			// TODO: Prevent data races.
+			lock_guard<std::mutex> lock(rayPencilMutex);
 			numRays = newNumRays;
 			RayPencil hemispherePencil(numRays, true);
 			clusterReverbDirections();
 		}
 
 		void TracingThread::InitRoom(const std::vector<std::vector<int>>& indexing, const Vec<>& decayRates) {
+			lock_guard<std::mutex> lock(rayPencilMutex);
 			shared_ptr<Room> sharedRoom = mRoom.lock();
 			sharedRoom->CreateTriangleMeshSoA();
 
@@ -37,6 +36,7 @@ namespace RAC
 		void TracingThread::RunTracing() {
 			// TODO: PROFILE_TracingThread
 
+			lock_guard<std::mutex> lock(rayPencilMutex);
 			shared_ptr<Room> sharedRoom = mRoom.lock();
 			shared_ptr<Reverb> sharedReverb = mReverb.lock();
 			shared_ptr<SourceManager> sharedSource = mSourceManager.lock();

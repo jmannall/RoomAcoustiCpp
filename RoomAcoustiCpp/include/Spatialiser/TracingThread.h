@@ -62,6 +62,7 @@ namespace RAC
 			weak_ptr<Room> mRoom;							// Pointer to the room class
 			weak_ptr<SourceManager> mSourceManager;			// Pointer to the source manager class
 			weak_ptr<Reverb> mReverb;						// Pointer to the late reverb class
+			std::mutex rayPencilMutex;						// Protects hemispherePencil
 
 			// The geometry is assumed unchanging.
 			int numPaths;									// Number of ART propagation paths
