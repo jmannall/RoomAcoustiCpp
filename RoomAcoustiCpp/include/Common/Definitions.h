@@ -38,7 +38,7 @@ namespace RAC
 		const constexpr Real EPS_FACING = 1e-7;			// Tolerance for facing test: dot(n,O) + d0 > facing.
 		const constexpr Real EPS_EDGE = 1e-7;			// Tolerance for side predicates (edge-inclusive).
 		const constexpr Real EPS_PARALLEL = 1e-7;		// Tolerance for near-parallel plane denominator.
-		const constexpr Real EPS_SELFHIT = 1e-5;		// Minimum distance between ray origin and valid intersection.
+		const constexpr Real EPS_SELFHIT = 1e-3;		// Minimum distance between ray origin and valid intersection.
 		const constexpr Real EPS_ZFIGHT = 1e-5;			// Detection range for Z-fighting triangles.
 
 		//////////////////// Mathematical Constants ////////////////////
@@ -110,7 +110,7 @@ namespace RAC
 		const constexpr Real EPS_FACING = 1e-7f;		// Tolerance for facing test: dot(n,O) + d0 > facing.
 		const constexpr Real EPS_EDGE = 1e-7f;			// Tolerance for side predicates (edge-inclusive).
 		const constexpr Real EPS_PARALLEL = 1e-7f;		// Tolerance for near-parallel plane denominator.
-		const constexpr Real EPS_SELFHIT = 1e-5f;		// Minimum distance between ray origin and valid intersection.
+		const constexpr Real EPS_SELFHIT = 1e-3f;		// Minimum distance between ray origin and valid intersection.
 		const constexpr Real EPS_ZFIGHT = 1e-5f;		// Detection range for Z-fighting triangles.
 
 		//////////////////// Mathematical Constants ////////////////////

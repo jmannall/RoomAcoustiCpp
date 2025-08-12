@@ -1,3 +1,4 @@
+#pragma optimize ("", off)
 #include "Spatialiser/TracingUtils.h"
 
 namespace RAC
@@ -67,9 +68,9 @@ namespace RAC
 
             // ---------------------------------------------------------------------
             // 1) Facing test: ensure the triangle faces the ray origin.
-            //    faceNum = dot(n, O) + d0; require faceNum > eps_face
+            //    faceNum = dot(n, O) - d0; require faceNum > eps_face
             // ---------------------------------------------------------------------
-            const Real faceNum = nx * Ox + ny * Oy + nz * Oz + d0;
+            const Real faceNum = nx * Ox + ny * Oy + nz * Oz - d0;
             if (faceNum < EPS_FACING) {
                 distance = qNaN;
                 cosine = qNaN;
@@ -149,9 +150,9 @@ namespace RAC
 
             // ---------------------------------------------------------------------
             // 1) Facing test.
-            //    faceNum = dot(n, O) + d0 > eps_face
+            //    faceNum = dot(n, O) - d0 > eps_face
             // ---------------------------------------------------------------------
-            const Real faceNum = nx * Ox + ny * Oy + nz * Oz + d0;
+            const Real faceNum = nx * Ox + ny * Oy + nz * Oz - d0;
             if (faceNum < EPS_FACING) {
                 distance = qNaN;
                 cosine = qNaN;
@@ -300,9 +301,9 @@ namespace RAC
 
             // ---------------------------------------------------------------------
             // 1) Facing test: ensure the triangle faces the ray origin.
-            //    faceNum = dot(n, O) + d0; require faceNum > eps_face
+            //    faceNum = dot(n, O) - d0; require faceNum > eps_face
             // ---------------------------------------------------------------------
-            const Real faceNum = nx * Ox + ny * Oy + nz * Oz + d0;
+            const Real faceNum = nx * Ox + ny * Oy + nz * Oz - d0;
             if (faceNum < EPS_FACING) {
                 distance = qNaN;
                 cosine = qNaN;
@@ -382,9 +383,9 @@ namespace RAC
 
             // ---------------------------------------------------------------------
             // 1) Facing test.
-            //    faceNum = dot(n, O) + d0 > eps_face
+            //    faceNum = dot(n, O) - d0 > eps_face
             // ---------------------------------------------------------------------
-            const Real faceNum = nx * Ox + ny * Oy + nz * Oz + d0;
+            const Real faceNum = nx * Ox + ny * Oy + nz * Oz - d0;
             if (faceNum < EPS_FACING) {
                 distance = qNaN;
                 cosine = qNaN;
@@ -534,9 +535,9 @@ namespace RAC
 
             // ---------------------------------------------------------------------
             // 1) Facing test: ensure the triangle faces the ray origin.
-            //    faceNum = dot(n, O) + d0; require faceNum > eps_face
+            //    faceNum = dot(n, O) - d0; require faceNum > eps_face
             // ---------------------------------------------------------------------
-            const Real faceNum = nx * Ox + ny * Oy + nz * Oz + d0;
+            const Real faceNum = nx * Ox + ny * Oy + nz * Oz - d0;
             if (faceNum < EPS_FACING) {
                 distance = qNaN;
                 cosine = qNaN;
@@ -616,9 +617,9 @@ namespace RAC
 
             // ---------------------------------------------------------------------
             // 1) Facing test.
-            //    faceNum = dot(n, O) + d0 > eps_face
+            //    faceNum = dot(n, O) - d0 > eps_face
             // ---------------------------------------------------------------------
-            const Real faceNum = nx * Ox + ny * Oy + nz * Oz + d0;
+            const Real faceNum = nx * Ox + ny * Oy + nz * Oz - d0;
             if (faceNum < EPS_FACING) {
                 distance = qNaN;
                 cosine = qNaN;
@@ -1193,3 +1194,4 @@ namespace RAC
         }
 	}
 }
+#pragma optimize ("", on)
