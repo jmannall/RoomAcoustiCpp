@@ -51,7 +51,7 @@ namespace RAC
 			* @brief Set the propagation path indexing and decay rates of each mode.
 			* N.B.: This also prompts the contruction of the TriangleMeshSoA in Room.
 			*/
-			void InitRoom(const std::vector<std::vector<int>>& indexing, const Vec<>& decayRates);
+			void InitRoom(int paths, const std::vector<std::vector<int>>& indexing, const Vec<>& decayRates);
 
 			/**
 			* @brief Process the ray-tracing from every new position and update the related residues.

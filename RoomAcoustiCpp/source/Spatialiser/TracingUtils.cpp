@@ -31,8 +31,8 @@ namespace RAC
             const Real nz = triangles.nz[triangleIndex];
             const Real d0 = triangles.d0[triangleIndex];
 
-#ifdef PLUCKER_KERNEL
-#ifdef LEAN_PLUCKER
+#if PLUCKER_KERNEL
+#if LEAN_PLUCKER
             // TODO: Implement Lean Plücker
 #else // not LEAN_PLUCKER
             // Load ray moments into locals.
@@ -264,8 +264,8 @@ namespace RAC
             const Real nz = triangles.nz[triangleIndex];
             const Real d0 = triangles.d0[triangleIndex];
 
-#ifdef PLUCKER_KERNEL
-#ifdef LEAN_PLUCKER
+#if PLUCKER_KERNEL
+#if LEAN_PLUCKER
             // TODO: Implement Lean Plücker
 #else // not LEAN_PLUCKER
             // Load ray moments into locals.
@@ -497,8 +497,8 @@ namespace RAC
             const Real nz = triangles.nz[triangleIndex];
             const Real d0 = triangles.d0[triangleIndex];
 
-#ifdef PLUCKER_KERNEL
-#ifdef LEAN_PLUCKER
+#if PLUCKER_KERNEL
+#if LEAN_PLUCKER
             // TODO: Implement Lean Plücker
 #else // not LEAN_PLUCKER
             // Compute ray moments and load into locals.
@@ -734,13 +734,13 @@ namespace RAC
 
                 if (std::isnan(currentDist))
                     continue; // Invalid hit
-                if (currentDist < distanceBack - EPS_ZFIGHT || currentDist > distanceFront + EPS_ZFIGHT)
+                if ((currentDist + EPS_ZFIGHT < distanceBack) || (currentDist - EPS_ZFIGHT > distanceFront))
                     continue; // Outside of current best range
                 if (std::abs(currentDist) < EPS_SELFHIT)
                     continue; // Too close to origin
 
                 // Valid hit
-                if (currentDist > 0) {
+                if (currentDist > 0.0) {
                     if (std::abs(currentDist - distanceFront) < EPS_ZFIGHT) {
                         // Z-fighting, lower triangle index wins.
                         if (i < triangleIdxFront) {
@@ -756,7 +756,7 @@ namespace RAC
                     }
                 }
                 else {
-                    if (currentDist == distanceBack) {
+                    if (std::abs(currentDist - distanceBack) < EPS_ZFIGHT) {
                         // Z-fighting, lower triangle index wins
                         if (i < triangleIdxFront) {
                             triangleIdxBack = i;
@@ -771,21 +771,6 @@ namespace RAC
                     }
                 }
             }
-
-            if (std::isinf(distanceFront)) {
-                // If it's still the initial INFINITY value, there was no valid hit at all.
-                triangleIdxFront = -1;
-                distanceFront = qNaN;
-                cosineFront = qNaN;
-            }
-            if (std::isinf(distanceBack)) {
-                // If it's still the initial -INFINITY value, there was no valid hit at all.
-                triangleIdxBack = -1;
-                distanceBack = qNaN;
-                cosineBack = qNaN;
-            }
-            else // If the distanceBack is valid, return its absolute value.
-                distanceBack = -distanceBack;
         }
 
         void trace_ray(
@@ -810,15 +795,15 @@ namespace RAC
 
                 intersection_test(triangles, i, rays, rayIndex, currentDist, currentCos);
 
-                    if (std::isnan(currentDist))
-                        continue; // Invalid hit
-                if (currentDist < distanceBack - EPS_ZFIGHT || currentDist > distanceFront + EPS_ZFIGHT)
+                if (std::isnan(currentDist))
+                    continue; // Invalid hit
+                if ((currentDist + EPS_ZFIGHT < distanceBack) || (currentDist - EPS_ZFIGHT > distanceFront))
                     continue; // Outside of current best range
                 if (std::abs(currentDist) < EPS_SELFHIT)
                     continue; // Too close to origin
 
                 // Valid hit
-                if (currentDist > 0) {
+                if (currentDist > 0.0) {
                     if (std::abs(currentDist - distanceFront) < EPS_ZFIGHT) {
                         // Z-fighting, lower triangle index wins.
                         if (i < triangleIdxFront) {
@@ -834,7 +819,7 @@ namespace RAC
                     }
                 }
                 else {
-                    if (currentDist == distanceBack) {
+                    if (std::abs(currentDist - distanceBack) < EPS_ZFIGHT) {
                         // Z-fighting, lower triangle index wins
                         if (i < triangleIdxFront) {
                             triangleIdxBack = i;
@@ -888,15 +873,15 @@ namespace RAC
 
                 intersection_test(triangles, i, rayOrigin, rayDirection, currentDist, currentCos);
 
-                    if (std::isnan(currentDist))
-                        continue; // Invalid hit
-                if (currentDist < distanceBack - EPS_ZFIGHT || currentDist > distanceFront + EPS_ZFIGHT)
+                if (std::isnan(currentDist))
+                    continue; // Invalid hit
+                if ((currentDist + EPS_ZFIGHT < distanceBack) || (currentDist - EPS_ZFIGHT > distanceFront))
                     continue; // Outside of current best range
                 if (std::abs(currentDist) < EPS_SELFHIT)
                     continue; // Too close to origin
 
                 // Valid hit
-                if (currentDist > 0) {
+                if (currentDist > 0.0) {
                     if (std::abs(currentDist - distanceFront) < EPS_ZFIGHT) {
                         // Z-fighting, lower triangle index wins.
                         if (i < triangleIdxFront) {
@@ -912,7 +897,7 @@ namespace RAC
                     }
                 }
                 else {
-                    if (currentDist == distanceBack) {
+                    if (std::abs(currentDist - distanceBack) < EPS_ZFIGHT) {
                         // Z-fighting, lower triangle index wins
                         if (i < triangleIdxFront) {
                             triangleIdxBack = i;
@@ -927,21 +912,6 @@ namespace RAC
                     }
                 }
             }
-
-            if (std::isinf(distanceFront)) {
-                // If it's still the initial INFINITY value, there was no valid hit at all.
-                triangleIdxFront = -1;
-                distanceFront = qNaN;
-                cosineFront = qNaN;
-            }
-            if (std::isinf(distanceBack)) {
-                // If it's still the initial -INFINITY value, there was no valid hit at all.
-                triangleIdxBack = -1;
-                distanceBack = qNaN;
-                cosineBack = qNaN;
-            }
-            else // If the distanceBack is valid, return its absolute value.
-                distanceBack = -distanceBack;
         }
 
         // ------------------------ RayBundle methods ------------------------
@@ -958,16 +928,16 @@ namespace RAC
                 rays.Dy[i] = directions[i].y;
                 rays.Dz[i] = directions[i].z;
             }
-#ifdef PLUCKER_KERNEL
+#if PLUCKER_KERNEL
             rays.compute_moments();
 #endif // end PLUCKER_KERNEL
 
-            Vec<Real> radiance(numRays, 1);
-            Vec<Real> totalDistance(numRays, 0);
-            Vec<Real> latestDistance(numRays, 0);
-            Vec<Real> latestCosine(numRays, 0);
-            std::vector<int> latestTriangleIdx(numRays, -1);
-            std::vector<int> previousTriangleIdx(numRays, -1);
+            radiance = Vec<Real>(numRays, 1);
+            totalDistance = Vec<Real>(numRays, 0);
+            latestDistance = Vec<Real>(numRays, 0);
+            latestCosine = Vec<Real>(numRays, 0);
+            latestTriangleIdx = std::vector<int>(numRays, -1);
+            previousTriangleIdx = std::vector<int>(numRays, -1);
         }
 
         RayBundle::RayBundle(const std::vector<Vec3>& origins, const std::vector<Vec3>& directions) {
@@ -982,16 +952,16 @@ namespace RAC
                 rays.Dy[i] = directions[i].y;
                 rays.Dz[i] = directions[i].z;
             }
-#ifdef PLUCKER_KERNEL
+#if PLUCKER_KERNEL
             rays.compute_moments();
 #endif // end PLUCKER_KERNEL
 
-            Vec<Real> radiance(numRays, 1);
-            Vec<Real> totalDistance(numRays, 0);
-            Vec<Real> latestDistance(numRays, 0);
-            Vec<Real> latestCosine(numRays, 0);
-            std::vector<int> latestTriangleIdx(numRays, -1);
-            std::vector<int> previousTriangleIdx(numRays, -1);
+            radiance = Vec<Real>(numRays, 1);
+            totalDistance = Vec<Real>(numRays, 0);
+            latestDistance = Vec<Real>(numRays, 0);
+            latestCosine = Vec<Real>(numRays, 0);
+            latestTriangleIdx = std::vector<int>(numRays, -1);
+            previousTriangleIdx = std::vector<int>(numRays, -1);
         }
 
         void RayBundle::traceAll(const TriangleMeshSoA& triangles) {
@@ -1021,7 +991,7 @@ namespace RAC
 
         void RayBundle::advanceAndReflect(const TriangleMeshSoA& triangles) {
             // TODO: Port definition from a different project, if we ever want to trace multiple reflection orders.
-#ifdef PLUCKER_KERNEL
+#if PLUCKER_KERNEL
             rays.compute_moments();
 #endif // end PLUCKER_KERNEL
         }
@@ -1084,16 +1054,16 @@ namespace RAC
             rays.Oy = 0.0;
             rays.Oz = 0.0;
             rays.fill_uniform_sphere(hemisphereOnly);
-#ifdef PLUCKER_KERNEL
+#if PLUCKER_KERNEL
             rays.compute_moments();
 #endif // end PLUCKER_KERNEL
 
-            Vec<Real> frontDistance(numRays, 0);
-            Vec<Real> backDistance(numRays, 0);
-            Vec<Real> frontCosine(numRays, 0);
-            Vec<Real> backCosine(numRays, 0);
-            std::vector<int> frontTriangleIdx(numRays, -1);
-            std::vector<int> backTriangleIdx(numRays, -1);
+            frontDistance = Vec<Real>(numRays, 0);
+            backDistance = Vec<Real>(numRays, 0);
+            frontCosine = Vec<Real>(numRays, 0);
+            backCosine = Vec<Real>(numRays, 0);
+            frontTriangleIdx = std::vector<int>(numRays, -1);
+            backTriangleIdx = std::vector<int>(numRays, -1);
         }
 
         RayPencil::RayPencil(const std::vector<Vec3>& directions) {
@@ -1108,32 +1078,32 @@ namespace RAC
                 rays.Dy[i] = directions[i].y;
                 rays.Dz[i] = directions[i].z;
             }
-#ifdef PLUCKER_KERNEL
+#if PLUCKER_KERNEL
             rays.compute_moments();
 #endif // end PLUCKER_KERNEL
 
-            Vec<Real> frontDistance(numRays, 0);
-            Vec<Real> backDistance(numRays, 0);
-            Vec<Real> frontCosine(numRays, 0);
-            Vec<Real> backCosine(numRays, 0);
-            std::vector<int> frontTriangleIdx(numRays, -1);
-            std::vector<int> backTriangleIdx(numRays, -1);
+            frontDistance = Vec<Real>(numRays, 0);
+            backDistance = Vec<Real>(numRays, 0);
+            frontCosine = Vec<Real>(numRays, 0);
+            backCosine = Vec<Real>(numRays, 0);
+            frontTriangleIdx = std::vector<int>(numRays, -1);
+            backTriangleIdx = std::vector<int>(numRays, -1);
         }
 
         void RayPencil::moveOrigin(const Vec3& origin) {
             rays.Ox = origin.x;
             rays.Oy = origin.y;
             rays.Oz = origin.z;
-#ifdef PLUCKER_KERNEL
+#if PLUCKER_KERNEL
             rays.compute_moments();
 #endif // end PLUCKER_KERNEL
 
-            Vec<Real> frontDistance(numRays, 0);
-            Vec<Real> backDistance(numRays, 0);
-            Vec<Real> frontCosine(numRays, 0);
-            Vec<Real> backCosine(numRays, 0);
-            std::vector<int> frontTriangleIdx(numRays, -1);
-            std::vector<int> backTriangleIdx(numRays, -1);
+            frontDistance = Vec<Real>(numRays, 0);
+            backDistance = Vec<Real>(numRays, 0);
+            frontCosine = Vec<Real>(numRays, 0);
+            backCosine = Vec<Real>(numRays, 0);
+            frontTriangleIdx = std::vector<int>(numRays, -1);
+            backTriangleIdx = std::vector<int>(numRays, -1);
         }
 
         void RayPencil::traceAll(const TriangleMeshSoA& triangles) {

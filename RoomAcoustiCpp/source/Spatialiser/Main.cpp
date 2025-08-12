@@ -362,9 +362,9 @@ extern "C"
 	* @params path Folder path to RAVES precomputed files
 	* @param id The ID corresponding to a FDN matrix type.
 	*/
-	EXPORT void API RACInitRAVES(const char** path, int id)
+	EXPORT void API RACInitRAVES(const char* path, int id)
 	{
-		std::string folderPath = std::string(*(path));
+		std::string folderPath = std::string(path);
 
 		FDNMatrix fdnMatrix = FDNMatrix::householder; // Default to householder matrix
 		switch (id)

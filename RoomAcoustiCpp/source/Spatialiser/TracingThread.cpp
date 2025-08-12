@@ -9,11 +9,21 @@ namespace RAC
 			mRoom(room), mSourceManager(sourceManager), mReverb(reverb),
 			numReverbDirections(config->numReverbSources), numFDNs(config->numRavesFDNs),
 			numRays(config->numRays), hemispherePencil(config->numRays, true),
+			decayPerSecond(config->numRavesFDNs),
 			sourceResidues(config->numRavesFDNs), listenerResidues(config->numRavesFDNs, Coefficients<>(config->numReverbSources))
 		{
 			shared_ptr<Reverb> sharedReverb = mReverb.lock();
 			sharedReverb->GetReverbSourceDirections(reverbDirections);
 			clusterReverbDirections();
+
+			numPaths = 0;
+
+			frontDistances = Vec<Real>(numRays, 0.0);
+			backDistances = Vec<Real>(numRays, 0.0);
+			frontCosines = Vec<Real>(numRays, 0.0);
+			backCosines = Vec<Real>(numRays, 0.0);
+			frontIndices = std::vector<int>(numRays, -1);
+			backIndices = std::vector<int>(numRays, -1);
 		}
 
 		void TracingThread::setNumberOfRays(int newNumRays) {
@@ -30,14 +40,20 @@ namespace RAC
 			backIndices = std::vector<int>(numRays, -1);
 		}
 
-		void TracingThread::InitRoom(const std::vector<std::vector<int>>& indexing, const Vec<>& decayRates) {
+		void TracingThread::InitRoom(int paths, const std::vector<std::vector<int>>& indexing, const Vec<>& decayRates) {
 			lock_guard<std::mutex> lock(rayPencilMutex);
 			shared_ptr<Room> sharedRoom = mRoom.lock();
 			sharedRoom->CreateTriangleMeshSoA();
 
+			numPaths = paths;
+
 			assert(decayRates.Rows() == numFDNs);
 			pathIndexing = indexing;
 			decayPerSecond = decayRates;
+
+			energyContributions = Vec<Real>(numPaths, 0.0);
+			contributionDelays = Vec<Real>(numPaths, 0.0);
+			contributionDelayScaling = Vec<Real>(numPaths, 0.0);
 		}
 
 		void TracingThread::RunTracing() {
@@ -47,6 +63,9 @@ namespace RAC
 			shared_ptr<Room> sharedRoom = mRoom.lock();
 			shared_ptr<Reverb> sharedReverb = mReverb.lock();
 			shared_ptr<SourceManager> sharedSource = mSourceManager.lock();
+
+			if (numPaths == 0)
+				return;
 
 			bool listenerMoved = false;
 			{
@@ -108,8 +127,8 @@ namespace RAC
 
 		void TracingThread::clusterReverbDirections() {
 			// Re-allocate these in case the number of rays has changed.
-			std::vector<int> frontClusters(numRays, -1);
-			std::vector<int> backClusters(numRays, -1);
+			frontClusters = std::vector<int>(numRays, -1);
+			backClusters = std::vector<int>(numRays, -1);
 
 			hemispherePencil.clusterDirections(reverbDirections, frontClusters, backClusters);
 		}
@@ -131,6 +150,10 @@ namespace RAC
 			}
 
 			for (int i = 0; i < numRays; ++i) {
+				// Did the ray hit valid itriangles on both sides?
+				if ((frontIndices[i] == -1) || (backIndices[i] == -1))
+					continue;
+
 				if ((reverbDirectionIdx == -1) || (reverbDirectionIdx == frontClusters[i])) {
 					// Is the front ray self-shadowed?
 					if (SELF_SHADOWING_RADIUS > 0.0)

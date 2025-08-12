@@ -30,7 +30,7 @@ namespace RAC
             Dx.resize(n);
             Dy.resize(n);
             Dz.resize(n);
-#ifdef PLUCKER_KERNEL
+#if PLUCKER_KERNEL
             Mx.resize(n);
             My.resize(n);
             Mz.resize(n);
@@ -41,7 +41,7 @@ namespace RAC
             Dx.resize(n);
             Dy.resize(n);
             Dz.resize(n);
-#ifdef PLUCKER_KERNEL
+#if PLUCKER_KERNEL
             Mx.resize(n);
             My.resize(n);
             Mz.resize(n);
@@ -93,7 +93,7 @@ namespace RAC
             }
         }
 
-#ifdef PLUCKER_KERNEL
+#if PLUCKER_KERNEL
         void RayBundleSoA::compute_moments() {
             const int n = size();
             for (int i = 0; i < n; ++i) {
@@ -114,8 +114,8 @@ namespace RAC
 #endif // end PLUCKER_KERNEL
 
         void TriangleMeshSoA::resize(int n) {
-#ifdef PLUCKER_KERNEL
-#ifdef LEAN_PLUCKER
+#if PLUCKER_KERNEL
+#if LEAN_PLUCKER
             // TODO: Implement Lean Plücker
 #else // not LEAN_PLUCKER
             edgeABDirectionX.resize(n);

@@ -17,7 +17,7 @@ namespace RAC
 
         /**
          * @brief Intersect one triangle against one ray.
-         * Uses different algorithms depending on #ifdef PLUCKER_KERNEL and #ifdef LEAN_PLUCKER:
+         * Uses different algorithms depending on #if PLUCKER_KERNEL and #if LEAN_PLUCKER:
          * lean Plücker, fat Plücker, or Möller–Trumbore.
          *
          * The kernel enforces:
@@ -49,7 +49,7 @@ namespace RAC
 
         /**
          * @brief Intersect all triangles against one ray.
-         * Uses different algorithms depending on #ifdef PLUCKER_KERNEL and #ifdef LEAN_PLUCKER:
+         * Uses different algorithms depending on #if PLUCKER_KERNEL and #if LEAN_PLUCKER:
          * lean Plücker, fat Plücker, or Möller–Trumbore.
          *
          * The kernel enforces:

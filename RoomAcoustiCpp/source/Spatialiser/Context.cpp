@@ -337,14 +337,20 @@ namespace RAC
 			int numPaths = info[1];
 			int numModes = info[2];
 
+			assert(mRoom->GetNumberOfWalls() == numTriangles);
+
 			auto indexing = Parse2Dcsv<int>(folderPath + "indexing.csv");
 
-			// TODO: send indexing to ray tracing
 			assert(indexing.size() == numTriangles);
-
-			// TODO: Check every row size == numTriangles
-			// TODO: check every value between -1 and numPaths - 1
-
+			for (int i = 0; i < numTriangles; i++)
+				assert(indexing[i].size() == numTriangles);
+			for (int i = 0; i < numTriangles; i++) {
+				for (int j = 0; j < numTriangles; j++) {
+					assert(indexing[i][j] >= -1);
+					assert(indexing[i][j] < numPaths);
+				}
+			}
+			
 			// TODO: Change this to Coefficeints for frequency dependence
 			std::vector<Real> t60s(numModes);
 			Vec<> energyDecay(numModes);
@@ -353,7 +359,12 @@ namespace RAC
 			for (int i = 0; i < numModes; i++)
 			{
 				auto mode = Parse2Dcsv<Real>(folderPath + "mode_" + std::to_string(i + 1) + ".csv");
-				// TODO: Check row and col sizes
+
+				assert(mode.size() == 3);
+				assert(mode[0].size() == 2);
+				assert(mode[1].size() == numPaths);
+				assert(mode[2].size() == numPaths);
+
 				t60s[i] = mode[0][0];
 				energyDecay[i] = mode[0][1];
 
@@ -362,7 +373,7 @@ namespace RAC
 				leftEigenvectors[i] = mode[2];
 			}
 
-			mRayTracing->InitRoom(indexing, energyDecay);
+			mRayTracing->InitRoom(numPaths, indexing, energyDecay);
 
 			mReverb->InitLateReverb(t60s, matrix, mConfig);
 			mReverb->SetEigenvectors(rightEigenvectors, leftEigenvectors);

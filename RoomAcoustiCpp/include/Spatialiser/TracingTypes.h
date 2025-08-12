@@ -70,7 +70,7 @@ namespace RAC
          * For each ray i:
          *  - Origin O = (Ox[i], Oy[i], Oz[i])
          *  - Direction D = (Dx[i], Dy[i], Dz[i])
-         *  - #ifdef PLUCKER_KERNEL: Moment   M = O x D = (Mx[i], My[i], Mz[i])  (only used by Plücker tests; precomputed once and reused)
+         *  - #if PLUCKER_KERNEL: Moment   M = O x D = (Mx[i], My[i], Mz[i])  (only used by Plücker tests; precomputed once and reused)
          */
         struct RayBundleSoA {
             /** @name Ray origins */
@@ -87,7 +87,7 @@ namespace RAC
             std::vector<Real> Dz; /**< Z-components of ray directions. */
             ///@}
 
-#ifdef PLUCKER_KERNEL
+#if PLUCKER_KERNEL
             /** @name Ray moments (O x D) */
             ///@{
             std::vector<Real> Mx; /**< X-components of ray moments. */
@@ -114,7 +114,7 @@ namespace RAC
              */
             void fill_uniform_sphere(bool hemisphereOnly);
 
-#ifdef PLUCKER_KERNEL
+#if PLUCKER_KERNEL
             /**
              * @brief Compute the ray moment M = O x D for all rays in the bundle.
              *
@@ -148,7 +148,7 @@ namespace RAC
             std::vector<Real> Dz; /**< Z-components of ray directions. */
             ///@}
 
-#ifdef PLUCKER_KERNEL
+#if PLUCKER_KERNEL
             /** @name Ray moments (O x D) */
             ///@{
             std::vector<Real> Mx; /**< X-components of ray moments. */
@@ -175,7 +175,7 @@ namespace RAC
              */
             void fill_uniform_sphere(bool hemisphereOnly);
 
-#ifdef PLUCKER_KERNEL
+#if PLUCKER_KERNEL
             /**
              * @brief Compute the ray moment M = O x D for all rays in the bundle.
              *
@@ -191,8 +191,8 @@ namespace RAC
          *        either: fat Plücker tests, lean Plücker tests, fat Möller-Trumbore tests.
          */
         struct TriangleMeshSoA {
-#ifdef PLUCKER_KERNEL
-#ifdef LEAN_PLUCKER
+#if PLUCKER_KERNEL
+#if LEAN_PLUCKER
             // TODO: Implement Lean Plücker
 #else // not LEAN_PLUCKER
             /** Each triangle stores:

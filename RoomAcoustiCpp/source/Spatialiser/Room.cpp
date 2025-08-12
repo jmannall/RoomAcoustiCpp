@@ -86,8 +86,8 @@ namespace RAC
 				Real Ax = vertices[0].x, Ay = vertices[0].y, Az = vertices[0].z;
 				Real Bx = vertices[1].x, By = vertices[1].y, Bz = vertices[1].z;
 				Real Cx = vertices[2].x, Cy = vertices[2].y, Cz = vertices[2].z;
-#ifdef PLUCKER_KERNEL
-#ifdef LEAN_PLUCKER
+#if PLUCKER_KERNEL
+#if LEAN_PLUCKER
 				// TODO: Implement Lean Plücker
 #else // not LEAN_PLUCKER
 
@@ -130,9 +130,9 @@ namespace RAC
 #endif // end LEAN_PLUCKER
 #else // not PLUCKER_KERNEL
 				// ----- Anchor vertex A -----
-				mTriangleMeshSoA.Ax = Ax;
-				mTriangleMeshSoA.Ay = Ay;
-				mTriangleMeshSoA.Az = Az;
+				mTriangleMeshSoA.Ax[i] = Ax;
+				mTriangleMeshSoA.Ay[i] = Ay;
+				mTriangleMeshSoA.Az[i] = Az;
 
 				// ----- Edges from A -----
 				mTriangleMeshSoA.edge1X[i] = Bx - Ax;
