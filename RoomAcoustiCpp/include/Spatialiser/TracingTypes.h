@@ -13,6 +13,7 @@
 /* Controls line-triangle intersection kernel */
 #define PLUCKER_KERNEL false
 #define LEAN_PLUCKER false
+#define SELF_SHADOWING_RADIUS 0.0
 
 namespace RAC
 {

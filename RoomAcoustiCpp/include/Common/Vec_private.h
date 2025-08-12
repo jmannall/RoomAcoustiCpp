@@ -243,6 +243,11 @@ namespace RAC
 		* @brief Calculates the dot product of two vectors
 		*/
 		Real Dot(const Vec<>& u, const Vec<>& v);
+
+		/**
+		* @brief Calculates the sum of the element-wise product of three vectors
+		*/
+		Real ThreeWayDot(const Vec<>& u, const Vec<>& v, const Vec<>& w);
 	}
 }
 
