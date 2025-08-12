@@ -353,6 +353,32 @@ extern "C"
 	}
 
 	/**
+	* Initialises RAVES
+	* 
+	* The mapping is as follows:
+	* 0 -> Householder
+	* 1 -> Random orthogonal
+	* 
+	* @params path Folder path to RAVES precomputed files
+	* @param id The ID corresponding to a FDN matrix type.
+	*/
+	EXPORT void API RACInitRAVES(const char** path, int id)
+	{
+		std::string folderPath = std::string(*(path));
+
+		FDNMatrix fdnMatrix = FDNMatrix::householder; // Default to householder matrix
+		switch (id)
+		{
+		case(0):
+		{ fdnMatrix = FDNMatrix::householder; break; }
+		case(1):
+		{ fdnMatrix = FDNMatrix::randomOrthogonal; break; }
+		}
+
+		InitRAVES(folderPath, fdnMatrix);
+	}
+
+	/**
 	* Clears the internal FDN buffers.
 	*/
 	EXPORT void API RACResetFDN()
