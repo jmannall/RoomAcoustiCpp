@@ -141,5 +141,15 @@ namespace RAC
 				out += u[i] * v[i];
 			return out;
 		}
+
+		Real ThreeWayDot(const Vec<>& u, const Vec<>& v, const Vec<>& w)
+		{
+			assert(u.Rows() == v.Rows());
+			assert(u.Rows() == w.Rows());
+			Real out = 0.0;
+			for (int i = 0; i < u.Rows(); ++i)
+				out += u[i] * v[i] * w[i];
+			return out;
+		}
 	}
 }

@@ -83,6 +83,9 @@
     <ClCompile Include="UnitTest_OctaveBandFilter.cpp">
       <Filter>UnitTest</Filter>
     </ClCompile>
+    <ClCompile Include="UnitTest_TracingBasics.cpp">
+      <Filter>UnitTest</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\UtilityFunctions.h">

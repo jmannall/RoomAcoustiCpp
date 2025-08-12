@@ -87,10 +87,19 @@ namespace RAC
 			std::mutex dataStoreMutex;				// Protects mListenerPositionStore
 
 			// These will be used as temporary "buffers" in the hot loop; memory is only allocated once.
-			Vec<Real> decayPerSecond;				// This will have size `numFDNs`
-			Vec<Real> energyContributions;			// This will have size `numPaths`
-			Coefficients<> sourceResidues;			// This will have size `numFDNs`
-			Coefficients<> listenerResidues;		// This will have size `numReverbDirections`
+			Vec<Real> decayPerSecond;						// This will have size `numFDNs`
+			Vec<Real> energyContributions;					// This will have size `numPaths`
+			Vec<Real> contributionDelays;					// This will have size `numPaths`
+			Vec<Real> contributionDelayScaling;				// This will have size `numPaths`
+			Coefficients<> sourceResidues;					// This will have size `numFDNs`
+			std::vector<Coefficients<>> listenerResidues;	// This will have size `numFDNs, numReverbDirections`
+			// These will be used exclusively inside `computeEnergyContributions`. All six will have size `numRays`.
+			Vec<Real> frontDistances;			// This will have size `numRays`
+			Vec<Real> backDistances;			// This will have size `numRays`
+			Vec<Real> frontCosines;				// This will have size `numRays`
+			Vec<Real> backCosines;				// This will have size `numRays`
+			std::vector<int> frontIndices;		// This will have size `numRays`
+			std::vector<int> backIndices;		// This will have size `numRays`
 
 			/**
 			* @brief Assigns each ray direction to the nearest reverb direction.

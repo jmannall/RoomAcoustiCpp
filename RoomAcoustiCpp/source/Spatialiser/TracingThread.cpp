@@ -9,7 +9,7 @@ namespace RAC
 			mRoom(room), mSourceManager(sourceManager), mReverb(reverb),
 			numReverbDirections(config->numReverbSources), numFDNs(config->numRavesFDNs),
 			numRays(config->numRays), hemispherePencil(config->numRays, true),
-			sourceResidues(config->numRavesFDNs), listenerResidues(config->numReverbSources)
+			sourceResidues(config->numRavesFDNs), listenerResidues(config->numRavesFDNs, Coefficients<>(config->numReverbSources))
 		{
 			shared_ptr<Reverb> sharedReverb = mReverb.lock();
 			sharedReverb->GetReverbSourceDirections(reverbDirections);
@@ -21,6 +21,13 @@ namespace RAC
 			numRays = newNumRays;
 			RayPencil hemispherePencil(numRays, true);
 			clusterReverbDirections();
+
+			frontDistances = Vec<Real>(numRays, 0.0);
+			backDistances = Vec<Real>(numRays, 0.0);
+			frontCosines = Vec<Real>(numRays, 0.0);
+			backCosines = Vec<Real>(numRays, 0.0);
+			frontIndices = std::vector<int>(numRays, -1);
+			backIndices = std::vector<int>(numRays, -1);
 		}
 
 		void TracingThread::InitRoom(const std::vector<std::vector<int>>& indexing, const Vec<>& decayRates) {
@@ -54,13 +61,23 @@ namespace RAC
 				hemispherePencil.moveOrigin(mListenerPosition);
 				hemispherePencil.traceAll(sharedRoom->GetTriangleMeshSoA());
 
-				for (int slope_idx = 0; slope_idx < numFDNs; ++slope_idx) {
-					for (int dir_idx = 0; dir_idx < numReverbDirections; ++dir_idx) {
-						computeEnergyContributions(dir_idx);
-						// TODO: Double-check theory: is any different normalization required (e.g. normalize by path etendue)? If constant, bake it into the eigenvectors; if not, implement it here.
-						listenerResidues[dir_idx] = Dot(energyContributions, sharedReverb->GetRightEigenvector(slope_idx));
+				for (int dir_idx = 0; dir_idx < numReverbDirections; ++dir_idx) {
+					computeEnergyContributions(dir_idx);
+					for (int slope_idx = 0; slope_idx < numFDNs; ++slope_idx) {
+						for (int path_idx = 0; path_idx < numPaths; ++path_idx) {
+							contributionDelayScaling[path_idx] = std::pow(decayPerSecond[slope_idx], -contributionDelays[path_idx]);
+						}
+
+						listenerResidues[slope_idx][dir_idx] = 
+							ThreeWayDot(
+								energyContributions,
+								contributionDelayScaling,
+								sharedReverb->GetRightEigenvector(slope_idx));
 					}
-					sharedReverb->SetTargetListenerResidues(slope_idx, listenerResidues);
+				}
+
+				for (int slope_idx = 0; slope_idx < numFDNs; ++slope_idx) {
+					sharedReverb->SetTargetListenerResidues(slope_idx, listenerResidues[slope_idx]);
 				}
 			}
 
@@ -72,10 +89,17 @@ namespace RAC
 					hemispherePencil.traceAll(sharedRoom->GetTriangleMeshSoA());
 
 					computeEnergyContributions();
-					// TODO: Double-check theory: is any different normalization required (e.g. normalize by path etendue)? If constant, bake it into the eigenvectors; if not, implement it here.
 
 					for (int slope_idx = 0; slope_idx < numFDNs; ++slope_idx) {
-						sourceResidues[slope_idx] = Dot(energyContributions, sharedReverb->GetLeftEigenvector(slope_idx));
+						for (int path_idx = 0; path_idx < numPaths; ++path_idx) {
+							contributionDelayScaling[path_idx] = std::pow(decayPerSecond[slope_idx], -contributionDelays[path_idx]);
+						}
+
+						sourceResidues[slope_idx] = 
+							ThreeWayDot(
+								energyContributions,
+								contributionDelayScaling,
+								sharedReverb->GetLeftEigenvector(slope_idx));
 					}
 					sharedSource->SetSourceTargetResidues(source.id, sourceResidues);
 				}
@@ -92,34 +116,57 @@ namespace RAC
 
 		void TracingThread::computeEnergyContributions(int reverbDirectionIdx) {
 			int pathIdx;
-			std::vector<int> frontIndices(numRays, -1);
-			std::vector<int> backIndices(numRays, -1);
+			Real distance;
 
+			hemispherePencil.getDistances(frontDistances, backDistances);
 			hemispherePencil.getIndices(frontIndices, backIndices);
+			// If self-shadowing is enabled, get the incidence cosines as well.
+			if (SELF_SHADOWING_RADIUS > 0.0)
+				hemispherePencil.getCosines(frontCosines, backCosines);
 
 			// Reset contributions to 0
 			for (int i = 0; i < numPaths; ++i) {
-				// TODO: It would be nice to overload the = operator for element-wise Vec definition.
 				energyContributions[i] = 0;
+				contributionDelays[i] = 0;
 			}
 
 			for (int i = 0; i < numRays; ++i) {
 				if ((reverbDirectionIdx == -1) || (reverbDirectionIdx == frontClusters[i])) {
+					// Is the front ray self-shadowed?
+					if (SELF_SHADOWING_RADIUS > 0.0)
+						if (frontCosines[i] < SELF_SHADOWING_RADIUS / (2 * frontDistances[i]))
+							continue;
+
 					// Contribution of front ray
 					pathIdx = pathIndexing[frontIndices[i]][backIndices[i]];
+					distance = frontDistances[i];
 					energyContributions[pathIdx] += 1;
+					contributionDelays[pathIdx] += distance;
 				}
 
 				if ((reverbDirectionIdx == -1) || (reverbDirectionIdx == backClusters[i])) {
+					// Is the back ray self-shadowed?
+					if (SELF_SHADOWING_RADIUS > 0.0)
+						if (backCosines[i] < SELF_SHADOWING_RADIUS / (2 * backDistances[i]))
+							continue;
+
 					// Contribution of back ray
 					pathIdx = pathIndexing[backIndices[i]][frontIndices[i]];
+					distance = backDistances[i];
 					energyContributions[pathIdx] += 1;
+					contributionDelays[pathIdx] += distance;
 				}
 			}
 
 			// Normalize by number of rays
 			for (int i = 0; i < numPaths; ++i) {
-				// TODO: It would be nice to overload the / operator for element-wise Vec division, as already done for Vec3.
+				if (energyContributions[i] == 0)
+					continue;
+
+				// Turn the propagation distance (meters) into a propagation delay (seconds), and also take its average within each path.
+				// N.B.: The distances are averaged using the number of hits, NOT the total number of rays.
+				contributionDelays[i] /= energyContributions[i] * SPEED_OF_SOUND;
+				// Normalize the portion of rays in the path, AFTER having used it to average their distances.
 				energyContributions[i] /= numRays;
 			}
 		}
