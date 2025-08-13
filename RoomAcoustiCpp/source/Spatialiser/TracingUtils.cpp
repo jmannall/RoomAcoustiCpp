@@ -772,6 +772,21 @@ namespace RAC
                     }
                 }
             }
+
+            if (std::isinf(distanceFront)) {
+                // If it's still the initial INFINITY value, there was no valid hit at all.
+                triangleIdxFront = -1;
+                distanceFront = qNaN;
+                cosineFront = qNaN;
+            }
+            if (std::isinf(distanceBack)) {
+                // If it's still the initial -INFINITY value, there was no valid hit at all.
+                triangleIdxBack = -1;
+                distanceBack = qNaN;
+                cosineBack = qNaN;
+            }
+            else // If the distanceBack is valid, return its absolute value.
+                distanceBack = -distanceBack;
         }
 
         void trace_ray(
@@ -913,6 +928,21 @@ namespace RAC
                     }
                 }
             }
+
+            if (std::isinf(distanceFront)) {
+                // If it's still the initial INFINITY value, there was no valid hit at all.
+                triangleIdxFront = -1;
+                distanceFront = qNaN;
+                cosineFront = qNaN;
+            }
+            if (std::isinf(distanceBack)) {
+                // If it's still the initial -INFINITY value, there was no valid hit at all.
+                triangleIdxBack = -1;
+                distanceBack = qNaN;
+                cosineBack = qNaN;
+            }
+            else // If the distanceBack is valid, return its absolute value.
+                distanceBack = -distanceBack;
         }
 
         // ------------------------ RayBundle methods ------------------------

@@ -72,26 +72,63 @@ namespace RAC
 		// Note: these are very approximate distances. The important parts are the sign and validity.
 		Real EXPECTED_DIST[2][6][14] = {
 		{ /* origin index 0 */
-				{1.,  2.,  -1.,   -2.,   3.,  qNaN, 5e-4, qNaN, qNaN, -11., -12., qNaN, qNaN, qNaN}, /* dir 0 */
-				{1.,    qNaN,     qNaN, qNaN, qNaN, qNaN, 5e-4, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN}, /* dir 1 */
-				{1.,    qNaN, -1.,   -2.,   qNaN, qNaN, 5e-4, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN}, /* dir 2 */
-				{-1.,  -2.,  1.,    2.,    -3.,  qNaN, -5e-4, qNaN, qNaN, 11., 12., qNaN, qNaN, qNaN}, /* dir 3 */
-				{qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN}, /* dir 4 */
-				{qNaN, qNaN, qNaN, qNaN, qNaN, 1.,    -5e-4, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN}, /* dir 5 */
+			{1.,  2.,  -1.,   -2.,   3.,  qNaN, 5e-4, qNaN, qNaN, -11., -12., qNaN, qNaN, qNaN}, /* dir 0 */
+			{1.,    qNaN,     qNaN, qNaN, qNaN, qNaN, 5e-4, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN}, /* dir 1 */
+			{1.,    qNaN, -1.,   -2.,   qNaN, qNaN, 5e-4, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN}, /* dir 2 */
+			{-1.,  -2.,  1.,    2.,    -3.,  qNaN, -5e-4, qNaN, qNaN, 11., 12., qNaN, qNaN, qNaN}, /* dir 3 */
+			{qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN}, /* dir 4 */
+			{qNaN, qNaN, qNaN, qNaN, qNaN, 2.,    -5e-4, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN}, /* dir 5 */
 		},
 		{ /* origin index 1 */
-				{11., 12., qNaN, qNaN, 13., qNaN, 10.,   1.,    2.,    -1.,  -2.,  3.,    qNaN, 5e-4}, /* dir 0 */
-				{qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, 1.,    qNaN, qNaN, qNaN, qNaN, qNaN, 5e-4}, /* dir 1 */
-				{qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, 1.,    qNaN, -1.,   -2.,   qNaN, qNaN, 5e-4}, /* dir 2 */
-				{-11., -12., qNaN, qNaN, -13., qNaN, -10.,  -1.,   -2.,   1.,  2.,  -3.,   qNaN, -5e-4}, /* dir 3 */
-				{qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN}, /* dir 4 */
-				{qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, 1.,    -5e-4}, /* dir 5 */
+			{11., 12., qNaN, qNaN, 13., qNaN, 10.,   1.,    2.,    -1.,  -2.,  3.,    qNaN, 5e-4}, /* dir 0 */
+			{qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, 1.,    qNaN, qNaN, qNaN, qNaN, qNaN, 5e-4}, /* dir 1 */
+			{qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, 1.,    qNaN, -1.,   -2.,   qNaN, qNaN, 5e-4}, /* dir 2 */
+			{-11., -12., qNaN, qNaN, -13., qNaN, -10.,  -1.,   -2.,   1.,  2.,  -3.,   qNaN, -5e-4}, /* dir 3 */
+			{qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN}, /* dir 4 */
+			{qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, 2.,    -5e-4}, /* dir 5 */
+		},
+		};
+		// Note: these are very approximate distances. The important parts are the triangle index and validity.
+		Real EXPECTED_DIST_PAIR[2][6][2] = {
+		{ /* origin index 0 */
+			{1., 1.}, /* dir 0 */
+			{1., qNaN}, /* dir 1 */
+			{1., 1.}, /* dir 2 */
+			{1., 1.}, /* dir 3 */
+			{qNaN, qNaN}, /* dir 4 */
+			{2., qNaN}, /* dir 5 */
+		},
+		{ /* origin index 1 */
+			{1., 1.}, /* dir 0 */
+			{1., qNaN}, /* dir 1 */
+			{1., 1.}, /* dir 2 */
+			{1., 1.}, /* dir 3 */
+			{qNaN, qNaN}, /* dir 4 */
+			{2., qNaN}, /* dir 5 */
+		},
+		};
+		int EXPECTED_IDX_PAIR[2][6][2] = {
+		{ /* origin index 0 */
+			{0, 2}, /* dir 0 */
+			{0, -1}, /* dir 1 */
+			{0, 2}, /* dir 2 */
+			{2, 0}, /* dir 3 */
+			{-1, -1}, /* dir 4 */
+			{5, -1}, /* dir 5 */
+		},
+		{ /* origin index 1 */
+			{7, 9}, /* dir 0 */
+			{7, -1}, /* dir 1 */
+			{7, 9}, /* dir 2 */
+			{9, 7}, /* dir 3 */
+			{-1, -1}, /* dir 4 */
+			{12, -1}, /* dir 5 */
 		},
 		};
 
 	public:
-		// Test kernels for a single ray.
-		TEST_METHOD(SingleRayKernels)
+		// Test intersection_test for a single ray.
+		TEST_METHOD(SingleRayIntersection)
 		{
 			Room tRoom(1);
 			buildTestMesh(tRoom);
@@ -112,13 +149,11 @@ namespace RAC
 			tOrigins[0] = Vec3({ 0.1, 0.1, 1e-6 });
 			tOrigins[1] = Vec3({ 0.1, 0.1, 10.0  + 1e-6 });
 
-			Real expected_distance, result_distance;
-			Real expected_cosine, result_cosine;
-			for (int oi = 1; oi < 2; ++oi) {
+			Real expected_distance, result_distance, result_cosine;
+			for (int oi = 0; oi < 2; ++oi) {
 				for (int di = 0; di < 6; ++di) {
-					for (int ti = 13; ti < 14; ++ti) {
+					for (int ti = 0; ti < 14; ++ti) {
 						expected_distance = EXPECTED_DIST[oi][di][ti];
-						//TODO: expected_cosine = EXPECTED_COS[oi][di][ti];
 
 						intersection_test(
 							tRoom.GetTriangleMeshSoA(), ti,
@@ -149,15 +184,421 @@ namespace RAC
 			}
 		}
 
-		// TODO: Test kernels for a RayPencilSoA.
+		// Test trace_ray for a single ray.
+		TEST_METHOD(SingleRayTracing)
+		{
+			Room tRoom(1);
+			buildTestMesh(tRoom);
+			tRoom.CreateTriangleMeshSoA();
+			Assert::AreEqual(14, tRoom.GetTriangleMeshSoA().size(), L"The test room does not contain 14 triangles.");
 
-		// TODO: Test kernels for a RayBundleSoA.
+			std::vector<Vec3> tDirections;
+			tDirections.resize(6);
+			tDirections[0] = Vec3({ 0.0, 0.0, -1.0 });
+			tDirections[1] = Vec3({ 0.4, -0.1, -1.0 });
+			tDirections[2] = Vec3({ -0.1, -0.1, -1.0 });
+			tDirections[3] = Vec3({ 0.0, 0.0, 1.0 });
+			tDirections[4] = Vec3({ 1.0, 0.0, 0.0 });
+			tDirections[5] = Vec3({ 10.0, 10.0, 1.0 });
 
-		// TODO: Test methods of RayPencil.
-		//RayPencil tPencil(tDirections);
-		//tPencil.moveOrigin(tOrigins[0]);
-		//tPencil.traceAll(tRoom.GetTriangleMeshSoA());
+			std::vector<Vec3> tOrigins;
+			tOrigins.resize(2);
+			tOrigins[0] = Vec3({ 0.1, 0.1, 1e-6 });
+			tOrigins[1] = Vec3({ 0.1, 0.1, 10.0 + 1e-6 });
+
+			Real expected_distance_front, result_distance_front, result_cosine_front;
+			Real expected_distance_back, result_distance_back, result_cosine_back;
+			int expected_idx_front, result_idx_front, expected_idx_back, result_idx_back;
+			for (int oi = 0; oi < 2; ++oi) {
+				for (int di = 0; di < 6; ++di) {
+					expected_distance_front = EXPECTED_DIST_PAIR[oi][di][0];
+					expected_distance_back = EXPECTED_DIST_PAIR[oi][di][1];
+					expected_idx_front = EXPECTED_IDX_PAIR[oi][di][0];
+					expected_idx_back = EXPECTED_IDX_PAIR[oi][di][1];
+
+					trace_ray(
+						tRoom.GetTriangleMeshSoA(),
+						tOrigins[oi], tDirections[di],
+						result_idx_front, result_distance_front, result_cosine_front,
+						result_idx_back, result_distance_back, result_cosine_back);
+					// TODO: Repeat the test with ignoredTriangleIndex
+
+					std::string error = "\nCombination: ";
+					error += "\n\torigin " + ToStr(oi) + ", ";
+					error += "\n\tdirection " + ToStr(di) + " | ";
+					error += "\nexp. front dist. " + ToStr(expected_distance_front) + ", ";
+					error += "\nres. front dist. " + ToStr(result_distance_front) + ", ";
+					error += "\nexp. front idx " + ToStr(expected_idx_front) + ", ";
+					error += "\nres. front idx " + ToStr(result_idx_front) + ", ";
+					error += "\nexp. back dist. " + ToStr(expected_distance_back) + ", ";
+					error += "\nres. back dist. " + ToStr(result_distance_back) + ", ";
+					error += "\nexp. back idx " + ToStr(expected_idx_back) + ", ";
+					error += "\nres. back idx " + ToStr(result_idx_back) + ", ";
+					error += "\nres. front cosine " + ToStr(result_cosine_front) + ", ";
+					error += "\nres. back cosine " + ToStr(result_cosine_back);
+					std::wstring werror = std::wstring(error.begin(), error.end());
+					const wchar_t* werrorchar = werror.c_str();
+
+					// Either both or neither distance should be NaN.
+					Assert::AreEqual(std::isnan(expected_distance_front), std::isnan(result_distance_front), werrorchar);
+					Assert::AreEqual(std::isnan(expected_distance_back), std::isnan(result_distance_back), werrorchar);
+
+					// Either both or neither distance should be finite.
+					Assert::AreEqual(std::isnan(expected_distance_front), !std::isfinite(result_distance_front), werrorchar);
+					Assert::AreEqual(std::isnan(expected_distance_back), !std::isfinite(result_distance_back), werrorchar);
+
+					// The distances have the same sign (if neither is NaN).
+					if (!std::isnan(expected_distance_front))
+						Assert::AreEqual(std::signbit(expected_distance_front), std::signbit(result_distance_front), werrorchar);
+					if (!std::isnan(expected_distance_back))
+						Assert::AreEqual(std::signbit(expected_distance_back), std::signbit(result_distance_back), werrorchar);
+
+					// The triangle indices should match expectations.
+					Assert::AreEqual(expected_idx_front, result_idx_front, werrorchar);
+					Assert::AreEqual(expected_idx_back, result_idx_back, werrorchar);
+				}
+			}
+		}
+
+		// Test intersection_test using a RayPencilSoA.
+		TEST_METHOD(PencilSoAIntersection)
+		{
+			Room tRoom(1);
+			buildTestMesh(tRoom);
+			tRoom.CreateTriangleMeshSoA();
+			Assert::AreEqual(14, tRoom.GetTriangleMeshSoA().size(), L"The test room does not contain 14 triangles.");
+
+			std::vector<Vec3> tDirections;
+			tDirections.resize(6);
+			tDirections[0] = Vec3({ 0.0, 0.0, -1.0 });
+			tDirections[1] = Vec3({ 0.4, -0.1, -1.0 });
+			tDirections[2] = Vec3({ -0.1, -0.1, -1.0 });
+			tDirections[3] = Vec3({ 0.0, 0.0, 1.0 });
+			tDirections[4] = Vec3({ 1.0, 0.0, 0.0 });
+			tDirections[5] = Vec3({ 10.0, 10.0, 1.0 });
+
+			std::vector<Vec3> tOrigins;
+			tOrigins.resize(2);
+			tOrigins[0] = Vec3({ 0.1, 0.1, 1e-6 });
+			tOrigins[1] = Vec3({ 0.1, 0.1, 10.0 + 1e-6 });
+
+			RayPencilSoA rays;
+			rays.resize(6);
+			for (int i = 0; i < 6; ++i) {
+				rays.Dx[i] = tDirections[i].x;
+				rays.Dy[i] = tDirections[i].y;
+				rays.Dz[i] = tDirections[i].z;
+			}
+
+			Real expected_distance, result_distance, result_cosine;
+			for (int oi = 0; oi < 2; ++oi) {
+				rays.Ox = tOrigins[oi].x;
+				rays.Oy = tOrigins[oi].y;
+				rays.Oz = tOrigins[oi].z;
+#if PLUCKER_KERNEL
+				rays.compute_moments();
+#endif // end PLUCKER_KERNEL
+				for (int di = 0; di < 6; ++di) {
+					for (int ti = 0; ti < 14; ++ti) {
+						expected_distance = EXPECTED_DIST[oi][di][ti];
+
+						intersection_test(
+							tRoom.GetTriangleMeshSoA(), ti,
+							rays, di,
+							result_distance, result_cosine);
+
+						std::string error = "\nCombination: ";
+						error += "\n\torigin " + ToStr(oi) + ", ";
+						error += "\n\tdirection " + ToStr(di) + ", ";
+						error += "\n\ttriangle " + ToStr(ti) + " | ";
+						error += "\nexpected distance " + ToStr(expected_distance) + ", ";
+						error += "\nresult distance " + ToStr(result_distance) + ", ";
+						error += "\nresult cosine " + ToStr(result_cosine);
+						std::wstring werror = std::wstring(error.begin(), error.end());
+						const wchar_t* werrorchar = werror.c_str();
+
+						// Either both or neither distance should be NaN.
+						Assert::AreEqual(std::isnan(expected_distance), std::isnan(result_distance), werrorchar);
+
+						// Either both or neither distance should be finite.
+						Assert::AreEqual(std::isnan(expected_distance), !std::isfinite(result_distance), werrorchar);
+
+						// The distances have the same sign (if neither is NaN).
+						if (!std::isnan(expected_distance))
+							Assert::AreEqual(std::signbit(expected_distance), std::signbit(result_distance), werrorchar);
+					}
+				}
+			}
+		}
 		
-		// TODO: Test methods of RayBundle.
+		// Test trace_ray using a RayPencilSoA.
+		TEST_METHOD(PencilSoATracing)
+		{
+			Room tRoom(1);
+			buildTestMesh(tRoom);
+			tRoom.CreateTriangleMeshSoA();
+			Assert::AreEqual(14, tRoom.GetTriangleMeshSoA().size(), L"The test room does not contain 14 triangles.");
+
+			std::vector<Vec3> tDirections;
+			tDirections.resize(6);
+			tDirections[0] = Vec3({ 0.0, 0.0, -1.0 });
+			tDirections[1] = Vec3({ 0.4, -0.1, -1.0 });
+			tDirections[2] = Vec3({ -0.1, -0.1, -1.0 });
+			tDirections[3] = Vec3({ 0.0, 0.0, 1.0 });
+			tDirections[4] = Vec3({ 1.0, 0.0, 0.0 });
+			tDirections[5] = Vec3({ 10.0, 10.0, 1.0 });
+
+			std::vector<Vec3> tOrigins;
+			tOrigins.resize(2);
+			tOrigins[0] = Vec3({ 0.1, 0.1, 1e-6 });
+			tOrigins[1] = Vec3({ 0.1, 0.1, 10.0 + 1e-6 });
+
+			RayPencilSoA rays;
+			rays.resize(6);
+			for (int i = 0; i < 6; ++i) {
+				rays.Dx[i] = tDirections[i].x;
+				rays.Dy[i] = tDirections[i].y;
+				rays.Dz[i] = tDirections[i].z;
+			}
+
+			Real expected_distance_front, result_distance_front, result_cosine_front;
+			Real expected_distance_back, result_distance_back, result_cosine_back;
+			int expected_idx_front, result_idx_front, expected_idx_back, result_idx_back;
+			for (int oi = 0; oi < 2; ++oi) {
+				rays.Ox = tOrigins[oi].x;
+				rays.Oy = tOrigins[oi].y;
+				rays.Oz = tOrigins[oi].z;
+#if PLUCKER_KERNEL
+				rays.compute_moments();
+#endif // end PLUCKER_KERNEL
+				for (int di = 0; di < 6; ++di) {
+					expected_distance_front = EXPECTED_DIST_PAIR[oi][di][0];
+					expected_distance_back = EXPECTED_DIST_PAIR[oi][di][1];
+					expected_idx_front = EXPECTED_IDX_PAIR[oi][di][0];
+					expected_idx_back = EXPECTED_IDX_PAIR[oi][di][1];
+
+					trace_ray(
+						tRoom.GetTriangleMeshSoA(),
+						rays, di,
+						result_idx_front, result_distance_front, result_cosine_front,
+						result_idx_back, result_distance_back, result_cosine_back);
+					// TODO: Repeat the test with ignoredTriangleIndex
+
+					std::string error = "\nCombination: ";
+					error += "\n\torigin " + ToStr(oi) + ", ";
+					error += "\n\tdirection " + ToStr(di) + " | ";
+					error += "\nexp. front dist. " + ToStr(expected_distance_front) + ", ";
+					error += "\nres. front dist. " + ToStr(result_distance_front) + ", ";
+					error += "\nexp. front idx " + ToStr(expected_idx_front) + ", ";
+					error += "\nres. front idx " + ToStr(result_idx_front) + ", ";
+					error += "\nexp. back dist. " + ToStr(expected_distance_back) + ", ";
+					error += "\nres. back dist. " + ToStr(result_distance_back) + ", ";
+					error += "\nexp. back idx " + ToStr(expected_idx_back) + ", ";
+					error += "\nres. back idx " + ToStr(result_idx_back) + ", ";
+					error += "\nres. front cosine " + ToStr(result_cosine_front) + ", ";
+					error += "\nres. back cosine " + ToStr(result_cosine_back);
+					std::wstring werror = std::wstring(error.begin(), error.end());
+					const wchar_t* werrorchar = werror.c_str();
+
+					// Either both or neither distance should be NaN.
+					Assert::AreEqual(std::isnan(expected_distance_front), std::isnan(result_distance_front), werrorchar);
+					Assert::AreEqual(std::isnan(expected_distance_back), std::isnan(result_distance_back), werrorchar);
+
+					// Either both or neither distance should be finite.
+					Assert::AreEqual(std::isnan(expected_distance_front), !std::isfinite(result_distance_front), werrorchar);
+					Assert::AreEqual(std::isnan(expected_distance_back), !std::isfinite(result_distance_back), werrorchar);
+
+					// The distances have the same sign (if neither is NaN).
+					if (!std::isnan(expected_distance_front))
+						Assert::AreEqual(std::signbit(expected_distance_front), std::signbit(result_distance_front), werrorchar);
+					if (!std::isnan(expected_distance_back))
+						Assert::AreEqual(std::signbit(expected_distance_back), std::signbit(result_distance_back), werrorchar);
+
+					// The triangle indices should match expectations.
+					Assert::AreEqual(expected_idx_front, result_idx_front, werrorchar);
+					Assert::AreEqual(expected_idx_back, result_idx_back, werrorchar);
+				}
+			}
+		}
+		
+		// TODO: Test RayPencilSoA::fill_uniform_sphere
+
+		// Test intersection_test using a RayBundleSoA.
+		TEST_METHOD(BundleSoAIntersection)
+		{
+			Room tRoom(1);
+			buildTestMesh(tRoom);
+			tRoom.CreateTriangleMeshSoA();
+			Assert::AreEqual(14, tRoom.GetTriangleMeshSoA().size(), L"The test room does not contain 14 triangles.");
+
+			std::vector<Vec3> tDirections;
+			tDirections.resize(6);
+			tDirections[0] = Vec3({ 0.0, 0.0, -1.0 });
+			tDirections[1] = Vec3({ 0.4, -0.1, -1.0 });
+			tDirections[2] = Vec3({ -0.1, -0.1, -1.0 });
+			tDirections[3] = Vec3({ 0.0, 0.0, 1.0 });
+			tDirections[4] = Vec3({ 1.0, 0.0, 0.0 });
+			tDirections[5] = Vec3({ 10.0, 10.0, 1.0 });
+
+			std::vector<Vec3> tOrigins;
+			tOrigins.resize(2);
+			tOrigins[0] = Vec3({ 0.1, 0.1, 1e-6 });
+			tOrigins[1] = Vec3({ 0.1, 0.1, 10.0 + 1e-6 });
+
+			RayBundleSoA rays;
+			rays.resize(12);
+			for (int oi = 0; oi < 2; ++oi) {
+				for (int di = 0; di < 6; ++di) {
+					int ri = di + (oi * 6);
+					rays.Ox[ri] = tOrigins[oi].x;
+					rays.Oy[ri] = tOrigins[oi].y;
+					rays.Oz[ri] = tOrigins[oi].z;
+					rays.Dx[ri] = tDirections[di].x;
+					rays.Dy[ri] = tDirections[di].y;
+					rays.Dz[ri] = tDirections[di].z;
+				}
+			}
+#if PLUCKER_KERNEL
+			rays.compute_moments();
+#endif // end PLUCKER_KERNEL
+
+			Real expected_distance, result_distance, result_cosine;
+			for (int oi = 0; oi < 2; ++oi) {
+				for (int di = 0; di < 6; ++di) {
+					for (int ti = 0; ti < 14; ++ti) {
+						expected_distance = EXPECTED_DIST[oi][di][ti];
+
+						intersection_test(
+							tRoom.GetTriangleMeshSoA(), ti,
+							rays, di + (oi * 6),
+							result_distance, result_cosine);
+
+						std::string error = "\nCombination: ";
+						error += "\n\torigin " + ToStr(oi) + ", ";
+						error += "\n\tdirection " + ToStr(di) + ", ";
+						error += "\n\ttriangle " + ToStr(ti) + " | ";
+						error += "\nexpected distance " + ToStr(expected_distance) + ", ";
+						error += "\nresult distance " + ToStr(result_distance) + ", ";
+						error += "\nresult cosine " + ToStr(result_cosine);
+						std::wstring werror = std::wstring(error.begin(), error.end());
+						const wchar_t* werrorchar = werror.c_str();
+
+						// Either both or neither distance should be NaN.
+						Assert::AreEqual(std::isnan(expected_distance), std::isnan(result_distance), werrorchar);
+
+						// Either both or neither distance should be finite.
+						Assert::AreEqual(std::isnan(expected_distance), !std::isfinite(result_distance), werrorchar);
+
+						// The distances have the same sign (if neither is NaN).
+						if (!std::isnan(expected_distance))
+							Assert::AreEqual(std::signbit(expected_distance), std::signbit(result_distance), werrorchar);
+					}
+				}
+			}
+		}
+
+		// Test trace_ray using a RayBundleSoA.
+		TEST_METHOD(BundleSoATracing)
+		{
+			Room tRoom(1);
+			buildTestMesh(tRoom);
+			tRoom.CreateTriangleMeshSoA();
+			Assert::AreEqual(14, tRoom.GetTriangleMeshSoA().size(), L"The test room does not contain 14 triangles.");
+
+			std::vector<Vec3> tDirections;
+			tDirections.resize(6);
+			tDirections[0] = Vec3({ 0.0, 0.0, -1.0 });
+			tDirections[1] = Vec3({ 0.4, -0.1, -1.0 });
+			tDirections[2] = Vec3({ -0.1, -0.1, -1.0 });
+			tDirections[3] = Vec3({ 0.0, 0.0, 1.0 });
+			tDirections[4] = Vec3({ 1.0, 0.0, 0.0 });
+			tDirections[5] = Vec3({ 10.0, 10.0, 1.0 });
+
+			std::vector<Vec3> tOrigins;
+			tOrigins.resize(2);
+			tOrigins[0] = Vec3({ 0.1, 0.1, 1e-6 });
+			tOrigins[1] = Vec3({ 0.1, 0.1, 10.0 + 1e-6 });
+
+			RayBundleSoA rays;
+			rays.resize(12);
+			for (int oi = 0; oi < 2; ++oi) {
+				for (int di = 0; di < 6; ++di) {
+					int ri = di + (oi * 6);
+					rays.Ox[ri] = tOrigins[oi].x;
+					rays.Oy[ri] = tOrigins[oi].y;
+					rays.Oz[ri] = tOrigins[oi].z;
+					rays.Dx[ri] = tDirections[di].x;
+					rays.Dy[ri] = tDirections[di].y;
+					rays.Dz[ri] = tDirections[di].z;
+				}
+			}
+#if PLUCKER_KERNEL
+			rays.compute_moments();
+#endif // end PLUCKER_KERNEL
+
+			Real expected_distance_front, result_distance_front, result_cosine_front;
+			Real expected_distance_back, result_distance_back, result_cosine_back;
+			int expected_idx_front, result_idx_front, expected_idx_back, result_idx_back;
+			for (int oi = 0; oi < 2; ++oi) {
+				for (int di = 0; di < 6; ++di) {
+					expected_distance_front = EXPECTED_DIST_PAIR[oi][di][0];
+					expected_distance_back = EXPECTED_DIST_PAIR[oi][di][1];
+					expected_idx_front = EXPECTED_IDX_PAIR[oi][di][0];
+					expected_idx_back = EXPECTED_IDX_PAIR[oi][di][1];
+
+					trace_ray(
+						tRoom.GetTriangleMeshSoA(),
+						rays, di + (oi * 6),
+						result_idx_front, result_distance_front, result_cosine_front,
+						result_idx_back, result_distance_back, result_cosine_back);
+					// TODO: Repeat the test with ignoredTriangleIndex
+
+					std::string error = "\nCombination: ";
+					error += "\n\torigin " + ToStr(oi) + ", ";
+					error += "\n\tdirection " + ToStr(di) + " | ";
+					error += "\nexp. front dist. " + ToStr(expected_distance_front) + ", ";
+					error += "\nres. front dist. " + ToStr(result_distance_front) + ", ";
+					error += "\nexp. front idx " + ToStr(expected_idx_front) + ", ";
+					error += "\nres. front idx " + ToStr(result_idx_front) + ", ";
+					error += "\nexp. back dist. " + ToStr(expected_distance_back) + ", ";
+					error += "\nres. back dist. " + ToStr(result_distance_back) + ", ";
+					error += "\nexp. back idx " + ToStr(expected_idx_back) + ", ";
+					error += "\nres. back idx " + ToStr(result_idx_back) + ", ";
+					error += "\nres. front cosine " + ToStr(result_cosine_front) + ", ";
+					error += "\nres. back cosine " + ToStr(result_cosine_back);
+					std::wstring werror = std::wstring(error.begin(), error.end());
+					const wchar_t* werrorchar = werror.c_str();
+
+					// Either both or neither distance should be NaN.
+					Assert::AreEqual(std::isnan(expected_distance_front), std::isnan(result_distance_front), werrorchar);
+					Assert::AreEqual(std::isnan(expected_distance_back), std::isnan(result_distance_back), werrorchar);
+
+					// Either both or neither distance should be finite.
+					Assert::AreEqual(std::isnan(expected_distance_front), !std::isfinite(result_distance_front), werrorchar);
+					Assert::AreEqual(std::isnan(expected_distance_back), !std::isfinite(result_distance_back), werrorchar);
+
+					// The distances have the same sign (if neither is NaN).
+					if (!std::isnan(expected_distance_front))
+						Assert::AreEqual(std::signbit(expected_distance_front), std::signbit(result_distance_front), werrorchar);
+					if (!std::isnan(expected_distance_back))
+						Assert::AreEqual(std::signbit(expected_distance_back), std::signbit(result_distance_back), werrorchar);
+
+					// The triangle indices should match expectations.
+					Assert::AreEqual(expected_idx_front, result_idx_front, werrorchar);
+					Assert::AreEqual(expected_idx_back, result_idx_back, werrorchar);
+				}
+			}
+		}
+
+		// TODO: Test both constructors of RayPencil
+		// TODO: Test RayPencil::moveOrigin
+		// TODO: Test RayPencil::traceAll
+		// TODO: Test RayPencil::clusterDirections
+		
+		// TODO: Test both constructors of RayBundle
+		// TODO: Implement and test a third contructor of RayBundle, with single origin and hemisphere distribution
+		// TODO: Test RayBundle::traceAll
+		// TODO: Implement and test RayBundle::advanceAndReflect
+		// TODO: Implement and test RayBundle::clusterDirections
 	};
 }
