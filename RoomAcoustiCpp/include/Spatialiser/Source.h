@@ -159,9 +159,7 @@ namespace RAC
 			{
 				if (!GetAccess())
 					return;
-				ravesResidues.resize(numRavesFDNs);
-				for (int i = 0; i < numRavesFDNs; i++)
-					ravesResidues[i].SetTargetEnergy(0.0);
+				ravesResidues = std::vector<RAVESSourceResidue>(numRavesFDNs);
 			}
 
 			/**
