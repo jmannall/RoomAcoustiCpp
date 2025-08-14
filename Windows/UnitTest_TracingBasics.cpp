@@ -421,7 +421,7 @@ namespace RAC
 			}
 		}
 		
-		// TODO: Test RayPencilSoA::fill_uniform_sphere
+		// TODO: Test RayPencilSoA::fill_uniform_sphere (by clustering?)
 
 		// Test intersection_test using a RayBundleSoA.
 		TEST_METHOD(BundleSoAIntersection)

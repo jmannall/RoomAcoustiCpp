@@ -278,7 +278,7 @@ namespace RAC
 			*/
 			std::atomic<Real> lerpFactor;		// Linear interpolation factor for audio processing
 
-			std::atomic<int> numRavesFDNs{ 1 };	// Number of RAVES FDNs to use for late reverberation
+			std::atomic<int> numRavesFDNs{ 0 };	// Number of RAVES FDNs to use for late reverberation
 
 			std::atomic<DiffractionModel> diffractionModel{ DiffractionModel::btm };	// Diffraction model
 			std::atomic<SpatialisationMode> spatialisationMode;		// Spatialisation mode

@@ -7,10 +7,11 @@ namespace RAC
 	{
 		TracingThread::TracingThread(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const std::shared_ptr<Config>& config) :
 			mRoom(room), mSourceManager(sourceManager), mReverb(reverb),
-			numReverbDirections(config->numReverbSources), numFDNs(config->GetNumRavesFDNs()),
-			numRays(config->numRays), hemispherePencil(config->numRays, true),
+			numReverbDirections(config->numReverbSources), numFDNs(config->GetNumRavesFDNs()), numRays(config->numRays),
+			hemispherePencil(config->numRays, true),
 			decayPerSecond(config->GetNumRavesFDNs()),
-			sourceResidues(config->GetNumRavesFDNs()), listenerResidues(config->GetNumRavesFDNs(), Coefficients<>(config->numReverbSources))
+			sourceResidues(config->GetNumRavesFDNs()),
+			listenerResidues(config->GetNumRavesFDNs(), Coefficients<>(config->numReverbSources))
 		{
 			shared_ptr<Reverb> sharedReverb = mReverb.lock();
 			sharedReverb->GetReverbSourceDirections(reverbDirections);
