@@ -194,8 +194,27 @@ namespace RAC
 			}
 		}
 
+		// TODO: Make sure direction vectors are normalized in all relevant places.
+		
 		// TODO: Test RayPencil::clusterDirections
-		// TODO: Test hemisphere constructor of RayPencil, using clusterDirections
+		// TODO: Perfect Forward Match Test: Test with ray directions that exactly match reference directions (dot product = 1.0). Verify that the matching ray gets assigned to the correct reference direction index in frontClusters and -1 in backClusters.
+		// TODO: Perfect Backward Match Test : Test with ray directions that are exactly opposite to reference directions(dot product = -1.0). Verify that the matching ray gets - 1 in frontClusters and the correct reference direction index in backClusters.
+		// TODO: Mixed Forward / Backward Assignment Test : Test with a mix of rays where some match forward directions and others match backward directions, ensuring the correct clustering assignment logic.
+		// TODO: Single Reference Direction Test : Test with only one reference direction to ensure the algorithm works with minimal input.
+		// TODO: Single Ray Test : Test with only one ray in the pencil to ensure the algorithm handles minimal ray counts.
+		// TODO: Empty Reference Directions Test : Test behavior when the reference directions vector is empty(should handle gracefully or assert).
+		// TODO: Near - Zero Cosine Values Test : Test with very small positive and negative cosine similarities(e.g., ±1e - 15) to ensure floating - point precision doesn't cause incorrect clustering.
+		// TODO: Large Magnitude Directions Test : Test with non - normalized directions that have large magnitudes to verify the dot product calculation remains stable.
+		// TODO: Denormalized Input Directions Test : Test with reference directions that aren't unit vectors to ensure the cosine similarity calculation is still meaningful.
+		// TODO: All Rays Forward Clustering Test : Test scenarios where all rays should be assigned to forward clusters(no ray should get backward assignment).
+		// TODO: All Rays Backward Clustering Test : Test scenarios where all rays should be assigned to backward clusters(no ray should get forward assignment).
+		// TODO: Multiple Rays to Same Reference Test : Test multiple rays that should all cluster to the same reference direction, ensuring consistent assignment.
+		// TODO: Uninitialized Ray Data Test : Test behavior when the RayPencilSoA contains uninitialized or NaN values.
+		// TODO: Symmetry Test : For any ray direction d, if it clusters to reference r in forward, then direction - d should cluster to r in backward.
+		// TODO: Closest Match Verification Test : For each ray, verify that the assigned reference direction actually has the highest absolute cosine similarity among all reference directions.
+		// TODO: Mutual Exclusivity Test : Verify that for every ray index i, exactly one of frontClusters[i] == -1 or backClusters[i] == -1 is true (never both - 1 or both valid indices).
+		
+		// TODO: Test hemisphere constructor of RayPencil, using the already validated clusterDirections
 
 		// TODO: Test RayBundle::traceAll
 		// TODO: Implement and test RayBundle::advanceAndReflect

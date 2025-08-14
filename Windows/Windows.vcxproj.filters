@@ -23,9 +23,6 @@
     <ClCompile Include="source\dllmain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Test.cpp">
-      <Filter>UnitTest</Filter>
-    </ClCompile>
     <ClCompile Include="UnitTest_GraphicEQ.cpp">
       <Filter>UnitTest</Filter>
     </ClCompile>

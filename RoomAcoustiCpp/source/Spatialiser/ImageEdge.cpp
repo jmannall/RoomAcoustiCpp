@@ -109,7 +109,7 @@ namespace RAC
 				reverbRunning = UpdateLateReverbFilters(doIEM);
 
 #ifdef IEM_FLAG
-			Debug::IEMFlag(-1);
+			//Debug::IEMFlag(-1);
 #endif
 		}
 

@@ -537,6 +537,8 @@ namespace RAC
 
 			if (applyHeadphoneEQ)
 				headphoneEQ.ProcessAudio(outputBuffer, outputBuffer, lerpFactor);
+
+			audioFlag.store(false, std::memory_order_release);
 		}
 
 		////////////////////////////////////////
@@ -546,7 +548,7 @@ namespace RAC
 			mConfig->impulseResponseMode.store(mode, std::memory_order_release);
 			mSources->UpdateImpulseResponseMode(mode);
 			if (mode)
-				headphoneEQ.Reset();		// TO DO: Should this be here?
+				headphoneEQ.Reset();		// TODO: Should this be here?
 		}
 	}
 }

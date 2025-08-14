@@ -28,12 +28,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\dllmain.cpp" />
-    <ClCompile Include="Test.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_ProfileDetailed|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_Profile|x64'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="UnitTest_AirAbsorption.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_Debug|x64'">true</ExcludedFromBuild>
@@ -337,7 +331,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;WINDOWS_EXPORTS;_WINDOWS;_USRDLL;_HAS_STD_BYTE=0;_3DTI_AXIS_CONVENTION_UNITY;DEBUG_INIT;DEBUG_REMOVE;DEBUG_IEM;DEBUG_GEOMETRY;IEM_FLAG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;WINDOWS_EXPORTS;_WINDOWS;_USRDLL;_HAS_STD_BYTE=0;_3DTI_AXIS_CONVENTION_UNITY;DEBUG_INIT;DEBUG_REMOVE;DEBUG_IEM;DEBUG_GEOMETRY;IEM_FLAG;RTM_FLAG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>

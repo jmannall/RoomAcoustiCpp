@@ -101,7 +101,7 @@ namespace RAC
 		private:
 			/**
 			* @brief Initialises a matrix representing the filter responses used to calculate the gain parameters for the filters
-			* @ details: TO DO: Matrix inverse can behave badly if fc is not sensible eg: 250, 500 1e3, 20e3 20e3.
+			* @ details: TODO: Matrix inverse can behave badly if fc is not sensible eg: 250, 500 1e3, 20e3 20e3.
 			*
 			* @param fc The filter band center frequencies
 			* @param Q The Q factor for the filters

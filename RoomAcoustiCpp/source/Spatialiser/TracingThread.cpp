@@ -1,3 +1,4 @@
+#include "Unity/Debug.h"
 #include "Spatialiser/TracingThread.h"
 
 namespace RAC
@@ -127,6 +128,9 @@ namespace RAC
 					sharedSource->SetSourceTargetResidues(source.id, sourceResidues);
 				}
 			}
+#ifdef RTM_FLAG
+			Unity::Debug::IEMFlag(-1);
+#endif
 		}
 
 		void TracingThread::clusterReverbDirections() {

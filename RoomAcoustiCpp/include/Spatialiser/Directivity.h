@@ -634,7 +634,7 @@ namespace RAC
 		* @brief Genelec 8020c directivity data
 		*/
 		const Directivity GENELEC = Directivity({ 62.5, 125.0, 250.0, 500.0, 1e3, 2e3, 4e3, 8e3, 16e3 }, GENELEC_DIRECTIVITY, GENELEC_DIRECTIVITY_INDEX);
-		// TO DO: Calculate DTF Directivity Index. Or is it the same?
+		// TODO: Calculate DTF Directivity Index. Or is it the same?
 		const Directivity GENELEC_DTF = Directivity({ 62.5, 125.0, 250.0, 500.0, 1e3, 2e3, 4e3, 8e3, 16e3 }, GENELEC_DTF_DIRECTIVITY, GENELEC_DIRECTIVITY_INDEX);
 
 		/**

@@ -55,21 +55,6 @@ extern "C"
     DLLExport void UnregisterIEMCallback();
 }
 
-//////////////////// #defines ////////////////////
-
-/**
-* @brief Debugging flags for printing debug messages
-*/
-// #define DEBUG_INIT          // Send initialisation information to Unity for debugging purposes
-// #define DEBUG_REMOVE        // Send removal information to Unity for debugging purposes
-// #define DEBUG_IEM           // Send image edge model information to Unity for debugging purposes
-// #define DEBUG_GEOMETRY      // Send edge information to Unity for debugging purposes
-
-/**
-* @brief Debugging flags for completed iem model
-*/
-// #define IEM_FLAG            // Send IEM flag to Unity, used when measuring impulse responses
-
 namespace RAC
 {
     using namespace Common;
