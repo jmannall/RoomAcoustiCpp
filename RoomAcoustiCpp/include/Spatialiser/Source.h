@@ -151,6 +151,20 @@ namespace RAC
 			void UpdateDirectivity(const SourceDirectivity directivity, const Coefficients<>& frequencyBands, const int numLateReverbChannels);
 
 			/**
+			* @brief Updates the size of source residuals
+			*
+			* @params numRavesFDNs The new number of RAVES FDNs
+			*/
+			void UpdateNumRavesFDNs(const int numRavesFDNs)
+			{
+				if (!GetAccess())
+					return;
+				ravesResidues.resize(numRavesFDNs);
+				for (int i = 0; i < numRavesFDNs; i++)
+					ravesResidues[i].SetTargetEnergy(0.0);
+			}
+
+			/**
 			* @brief Updates the source position and orientation
 			* 
 			* @params position The new source position

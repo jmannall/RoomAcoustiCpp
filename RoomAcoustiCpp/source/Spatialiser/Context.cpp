@@ -234,6 +234,7 @@ namespace RAC
 			case LateReverbModel::raves:
 				audioThreadPool = std::make_unique<AudioThreadPool>(numThreads, mConfig->numFrames, mConfig->GetNumRavesFDNs(), 2 * mConfig->numFrames, mConfig->numReverbSources);
 				// mReverb = std::make_shared<RAVES>(&mCore, mConfig);
+				mSources->UpdateNumRavesFDNs(mConfig->GetNumRavesFDNs());
 				mReverbInput = Matrix<>(mConfig->GetNumRavesFDNs(), 2 * mConfig->numFrames);
 				break;
 			default:

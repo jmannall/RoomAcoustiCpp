@@ -97,6 +97,17 @@ namespace RAC
 				mSources[id]->UpdateDirectivity(directivity, mConfig->frequencyBands, mConfig->numReverbSources);
 			}
 
+			/**
+			* @brief Updates the size of source residuals for all active sources
+			*
+			* @params numRavesFDNs The new number of RAVES FDNs
+			*/
+			inline void UpdateNumRavesFDNs(const int numRavesFDNs)
+			{
+				for (auto& source : mSources)
+					source->UpdateNumRavesFDNs(numRavesFDNs);
+			}
+
 			inline int NextID() const
 			{
 				int nextID = 0;
