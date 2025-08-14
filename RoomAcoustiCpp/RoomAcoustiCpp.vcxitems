@@ -110,7 +110,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\ImageSourceManager.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Interface.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Globals.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\RAVESResidual.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\RAVESResidue.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\SourceManager.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Reverb.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Room.h" />

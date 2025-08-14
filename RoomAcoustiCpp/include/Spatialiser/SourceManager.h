@@ -98,7 +98,7 @@ namespace RAC
 			}
 
 			/**
-			* @brief Updates the size of source residuals for all active sources
+			* @brief Updates the size of source residues for all active sources
 			*
 			* @params numRavesFDNs The new number of RAVES FDNs
 			*/

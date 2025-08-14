@@ -353,7 +353,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Vec_private.h">
       <Filter>Header Files\Common</Filter>
     </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\RAVESResidual.h">
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\RAVESResidue.h">
       <Filter>Header Files\Spatialiser</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\TracingTypes.h">

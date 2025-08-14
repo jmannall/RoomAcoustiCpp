@@ -392,7 +392,7 @@ namespace RAC
 				rightEigenvectors[i] = mode[1];
 				leftEigenvectors[i] = mode[2];
 			}
-			// TODO: Update num source residuals based on num modes
+			// TODO: Update num source residues based on num modes
 
 			// TODO: Manage how number of modes is set and controlled by user
 			mConfig->numRavesFDNs.store(numModes, std::memory_order_release);

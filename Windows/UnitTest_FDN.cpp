@@ -346,8 +346,8 @@ namespace RAC
 		//	in[2] = 1.0;
 		//	in[3] = -2.0;
 
-		//	Coefficients<> residuals({ 1.0, 2.0, 3.0, -1.0, -2.0, -3.0, 0.0, 0.0 });
-		//	fdn.SetTargetResiduals(residuals);
+		//	Coefficients<> residues({ 1.0, 2.0, 3.0, -1.0, -2.0, -3.0, 0.0, 0.0 });
+		//	fdn.SetTargetResidues(residues);
 		//	std::vector<Buffer<Complex>> out(config->numReverbSources, Buffer<Complex>(config->numFrames));
 		//	for (int i = 0; i < 1; i++)
 		//		fdn.ProcessAudio(in, out, lerpFactor);
@@ -360,7 +360,7 @@ namespace RAC
 		//	int count = 0;
 		//	for (int i = 0; i < config->numReverbSources; i++)
 		//	{
-		//		if (residuals[i] == 0.0)
+		//		if (residues[i] == 0.0)
 		//		{
 		//			for (int j = 0; j < numFrames; j++)
 		//				Assert::IsTrue(out[i][j] == (Real)0.0, L"Output not zero.");

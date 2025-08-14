@@ -24,7 +24,7 @@
 #include "Spatialiser/ImageSource.h"
 #include "Spatialiser/ImageSourceManager.h"
 // RAVES headers
-#include "Spatialiser/RAVESResidual.h"
+#include "Spatialiser/RAVESResidue.h"
 
 // 3DTI headers
 #include "BinauralSpatializer/Core.h"
@@ -151,7 +151,7 @@ namespace RAC
 			void UpdateDirectivity(const SourceDirectivity directivity, const Coefficients<>& frequencyBands, const int numLateReverbChannels);
 
 			/**
-			* @brief Updates the size of source residuals
+			* @brief Updates the size of source residues
 			*
 			* @params numRavesFDNs The new number of RAVES FDNs
 			*/
@@ -339,7 +339,7 @@ namespace RAC
 			Buffer<> bStore;								// Internal scratch audio buffer
 			Buffer<> bStoreReverb;							// Internal audio buffer reverb send
 			std::vector<Parameter> ravesGains;
-			std::vector<RAVESSourceResidual> ravesResidues;			// Residues for the RAVES algorithm
+			std::vector<RAVESSourceResidue> ravesResidues;			// Residues for the RAVES algorithm
 
 			Vec3 currentPosition;						// Current source position
 			Vec4 currentOrientation;					// Current source orientation

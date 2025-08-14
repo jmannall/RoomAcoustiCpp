@@ -16,7 +16,7 @@
 // Spatialiser headers
 #include "Spatialiser/Types.h"
 // RAVES headers
-#include"Spatialiser/RAVESResidual.h"
+#include"Spatialiser/RAVESResidue.h"
 
 // Common headers
 #include "Common/Types.h"
@@ -305,7 +305,7 @@ namespace RAC
 			std::vector<std::unique_ptr<FDNChannel<T>>> mChannels;		// Internal delay line channels
 			
 			std::conditional_t<std::is_same_v<T, Complex>,
-				std::vector<RAVESListenerResidual>, std::nullptr_t> ravesResidues; // Residues for the RAVES algorithm
+				std::vector<RAVESListenerResidue>, std::nullptr_t> ravesResidues; // Residues for the RAVES algorithm
 
 			std::conditional_t<std::is_same_v<T, Complex>,
 				Buffer<Complex>, std::nullptr_t> delayBuffer;

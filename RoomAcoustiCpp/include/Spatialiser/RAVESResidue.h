@@ -1,12 +1,12 @@
 /*
-* @class Residual
+* @class Residue
 *
-* @brief Declaration of RAVES Residual class
+* @brief Declaration of RAVES Residue class
 *
 */
 
-#ifndef RoomAcoustiCpp_RAVESResidual_h
-#define RoomAcoustiCpp_RAVESResidual_h
+#ifndef RoomAcoustiCpp_RAVESResidue_h
+#define RoomAcoustiCpp_RAVESResidue_h
 
 // Common headers
 #include "Common/Types.h"
@@ -21,10 +21,10 @@ namespace RAC
 	using namespace DSP;
 	namespace Spatialiser
 	{
-		class RAVESResidual
+		class RAVESResidue
 		{
 		public:
-			RAVESResidual(Real energy) : currentEnergy(energy), targetEnergy(energy)
+			RAVESResidue(Real energy) : currentEnergy(energy), targetEnergy(energy)
 			{
 				parametersEqual.store(true, std::memory_order_release);
 			}
@@ -48,12 +48,12 @@ namespace RAC
 					currentEnergy = energy;
 				else
 					parametersEqual.store(false, std::memory_order_release);
-				UpdateResidual(currentEnergy);
+				UpdateResidue(currentEnergy);
 			}
 
-			virtual void UpdateResidual(Complex energy) = 0;
+			virtual void UpdateResidue(Complex energy) = 0;
 
-			Complex residual;		// Residual for the RAVES algorithm
+			Complex residue;		// Residue for the RAVES algorithm
 
 		private:
 
@@ -64,42 +64,42 @@ namespace RAC
 			std::atomic<bool> parametersEqual{ false };
 		};
 
-		class RAVESSourceResidual : public RAVESResidual
+		class RAVESSourceResidue : public RAVESResidue
 		{
 		public:
-			RAVESSourceResidual(Real energy = 0.0) : RAVESResidual(energy)
+			RAVESSourceResidue(Real energy = 0.0) : RAVESResidue(energy)
 			{
-				UpdateResidual(energy);
+				UpdateResidue(energy);
 			}
 
 			inline Complex GetOutput(Real input, Real lerpFactor)
 			{
 				if (!parametersEqual.load(std::memory_order_acquire))
 					InterpolateParameters(lerpFactor);
-				return input * residual;
+				return input * residue;
 			}
 
-			inline void UpdateResidual(Complex energy) override { residual = std::conj(std::sqrt(energy)); }
+			inline void UpdateResidue(Complex energy) override { residue = std::conj(std::sqrt(energy)); }
 		};
 
-		class RAVESListenerResidual : public RAVESResidual
+		class RAVESListenerResidue : public RAVESResidue
 		{
 		public:
-			RAVESListenerResidual(Real energy = 0.0) : RAVESResidual(energy)
+			RAVESListenerResidue(Real energy = 0.0) : RAVESResidue(energy)
 			{
-				UpdateResidual(energy);
+				UpdateResidue(energy);
 			}
 
 			inline Real GetOutput(Complex input, Real lerpFactor)
 			{
 				if (!parametersEqual.load(std::memory_order_acquire))
 					InterpolateParameters(lerpFactor);
-				return (input * residual).real();
+				return (input * residue).real();
 			}
 
-			inline void UpdateResidual(Complex energy) override { residual = std::sqrt(energy); }
+			inline void UpdateResidue(Complex energy) override { residue = std::sqrt(energy); }
 		};
 	}
 }
 
-#endif // RoomAcoustiCpp_RAVESResidual_h
+#endif // RoomAcoustiCpp_RAVESResidue_h

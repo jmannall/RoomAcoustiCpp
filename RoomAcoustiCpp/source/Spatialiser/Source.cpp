@@ -286,7 +286,7 @@ namespace RAC
 				{
 					for (int i = 0; i < reverbInput.Rows(); i++)
 					{
-						// TODO: Update num source residuals to numFDNs when InitRAVES()
+						// TODO: Update num source residues to numFDNs when InitRAVES()
 						Complex input = ravesResidues[i].GetOutput(inputBuffer[j], lerpFactor);
 						reverbInput[i][2 * j] = input.real();
 						reverbInput[i][2 * j + 1] = input.imag();

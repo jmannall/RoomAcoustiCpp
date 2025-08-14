@@ -1,4 +1,3 @@
-
 #include "CppUnitTest.h"
 #include "UtilityFunctions.h"
 
@@ -10,7 +9,7 @@ namespace RAC
 {
 	using namespace Spatialiser;
 
-	TEST_CLASS(TracingTypeBasics)
+	TEST_CLASS(TracingTypes)
 	{
 		// Build a room containing an assortment of triangles
 		void buildTestMesh(Room& tRoom) {
@@ -590,15 +589,6 @@ namespace RAC
 			}
 		}
 
-		// TODO: Test both constructors of RayPencil
-		// TODO: Test RayPencil::moveOrigin
-		// TODO: Test RayPencil::traceAll
-		// TODO: Test RayPencil::clusterDirections
-		
-		// TODO: Test both constructors of RayBundle
-		// TODO: Implement and test a third contructor of RayBundle, with single origin and hemisphere distribution
-		// TODO: Test RayBundle::traceAll
-		// TODO: Implement and test RayBundle::advanceAndReflect
-		// TODO: Implement and test RayBundle::clusterDirections
+		// TODO: Test RayBundleSoA::fill_uniform_sphere (by clustering?)
 	};
 }
