@@ -51,7 +51,7 @@ namespace RAC
 			reverbSend.store(LateReverbModel::none, std::memory_order_release);
 			hasChanged.store(true, std::memory_order_release);
 
-			Coefficients<> sourceResidues(config->GetNumRavesFDNs());
+			ravesResidues = std::vector<RAVESSourceResidue>(config->GetNumRavesFDNs());
 
 			ResetFDNSlots();
 			AllowAccess();

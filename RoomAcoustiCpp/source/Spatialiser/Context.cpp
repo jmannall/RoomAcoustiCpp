@@ -156,9 +156,9 @@ namespace RAC
 				break;
 			}
 
+			mSources = std::make_shared<SourceManager>(&mCore, mConfig);
 			InitialiseAudio();
 			mRoom = std::make_shared<Room>(mConfig->frequencyBands.Length());
-			mSources = std::make_shared<SourceManager>(&mCore, mConfig);
 
 			mImageEdgeModel = std::make_shared<ImageEdge>(mRoom, mSources, mReverb, mConfig);
 			mRayTracing = std::make_shared<TracingThread>(mRoom, mSources, mReverb, mConfig);
