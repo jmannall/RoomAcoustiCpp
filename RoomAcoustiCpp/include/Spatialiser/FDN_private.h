@@ -71,6 +71,7 @@ namespace RAC
 			*/
 			inline void SetTargetT60(const Coefficients<>& T60)
 			{
+				absorption.store(T60[0], std::memory_order_release);
 				mAbsorptionFilter.SetTargetGains(CalculateFilterGains(T60));
 			}
 
@@ -138,6 +139,7 @@ namespace RAC
 			Buffer<T> mBuffer;	// The internal delay line
 			int idx{ 0 };			// Current delay line read index
 
+			std::atomic<Real> absorption;
 			GraphicEQ<T> mAbsorptionFilter;		// The absorption filter to match the target decay time
 			std::conditional_t<std::is_same_v<T, Real>,
 				GraphicEQ<Real>, std::nullptr_t> mReflectionFilter;		// The reflection filter on the FDN output
