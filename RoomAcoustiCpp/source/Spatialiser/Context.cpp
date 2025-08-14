@@ -169,9 +169,6 @@ namespace RAC
 			// Start background thread after all systems are initialized
 			IEMThread = std::thread(IEMProcessor, this);
 			rayTracingThread = std::thread(RayTracerProcessor, this);
-			
-
-			mReverbInput = Matrix(mConfig->numReverbSources, mConfig->numFrames);
 		}
 
 		////////////////////////////////////////
@@ -537,7 +534,6 @@ namespace RAC
 
 			mSources->ProcessAudio(outputBuffer, mReverbInput, lerpFactor);
 			mReverb->ProcessAudio(mReverbInput, outputBuffer, lerpFactor);
-			mReverbInput.Reset();
 
 			if (applyHeadphoneEQ)
 				headphoneEQ.ProcessAudio(outputBuffer, outputBuffer, lerpFactor);

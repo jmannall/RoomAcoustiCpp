@@ -67,11 +67,11 @@ extern "C"
 	EXPORT bool API RACInit(int fs, int numFrames, int maxFDNChannels, float lerpFactor, float Q, const float* fBands, int numBands)
 	{
 		buffer.ResizeBuffer(2 * numFrames);
-		NUM_FREQUENCY_BANDS = numFrequencyBands;
+		NUM_FREQUENCY_BANDS = numBands;
 		NUM_FRAMES = numFrames;
-		Coefficients<> frequencyBands = Coefficients<>(numFrequencyBands);
-		for (int i = 0; i < numFrequencyBands; i++)
-			frequencyBands[i] = static_cast<Real>(frequencyBandData[i]);
+		Coefficients<> frequencyBands = Coefficients<>(numBands);
+		for (int i = 0; i < numBands; i++)
+			frequencyBands[i] = static_cast<Real>(fBands[i]);
 
 		int numFDNChannels = 0;
 		if (maxFDNChannels < 1)
@@ -95,12 +95,6 @@ extern "C"
 		else if (maxFDNChannels < 32)
 		{ numFDNChannels = 24; }
 		else { numFDNChannels = 32; }
-
-		numAbsorptionBands = numBands;
-		numAudioFrames = numFrames;
-		Coefficients frequencyBands = Coefficients(numBands);
-		for (int i = 0; i < numBands; i++)
-			frequencyBands[i] = static_cast<Real>(fBands[i]);
 
 		std::shared_ptr<Config> config = std::make_shared<Config>(fs, numFrames, numFDNChannels, static_cast<Real>(lerpFactor), static_cast<Real>(Q), frequencyBands);
 		return Init(config);
@@ -221,7 +215,7 @@ extern "C"
 	EXPORT void API RACUpdateIEMConfig(int direct, int reflOrder, int shadowDiffOrder, int specularDiffOrder, bool lateReverb, float minEdgeLength, float maxPathLen)
 	{
 		DirectSound directMode = SelectDirectMode(direct);
-		UpdateIEMConfig(IEMConfig(directMode, reflOrder, shadowDiffOrder, specularDiffOrder, lateReverb, static_cast<Real>(minEdgeLength),  static_cast<Real>(maxPathLen)));
+		UpdateIEMConfig(IEMData(directMode, reflOrder, shadowDiffOrder, specularDiffOrder, lateReverb, static_cast<Real>(minEdgeLength),  static_cast<Real>(maxPathLen)));
 	}
 
 	/**
@@ -229,11 +223,11 @@ extern "C"
 	*
 	* @param t60 The late reverberation time.s
 	*/
-	EXPORT void API RACUpdateReverbTime(const float* t60)
+	EXPORT void API RACUpdateReverbTime(const float* T60Data)
 	{
-		Coefficients T60 = Coefficients<>(static_cast<size_t>(numAbsorptionBands));
-		for (int i = 0; i < numAbsorptionBands; i++)
-			T60[i] = static_cast<Real>(t60[i]);
+		Coefficients T60 = Coefficients<>(static_cast<size_t>(NUM_FREQUENCY_BANDS));
+		for (int i = 0; i < NUM_FREQUENCY_BANDS; i++)
+			T60[i] = static_cast<Real>(T60Data[i]);
 
 		UpdateReverbTime(T60);
 	}
@@ -510,26 +504,23 @@ extern "C"
 	* This function should be called when a new wall is created. A wall must have 3 vertices.
 	* It will allocate resources for the new wall and return an ID that can be used to reference the wall in future calls.
 	*
-	* @param nX The x-coordinate of the wall's normal vector.
-	* @param nY The y-coordinate of the wall's normal vector.
-	* @param nZ The z-coordinate of the wall's normal vector.
-	* @param vData The vertices of the wall.
-	* @param absorption The frequency absorption coefficients.
+	* @param verticesData The vertices of the wall.
+	* @param absorptionData The frequency absorption coefficients.
 	*
 	* @return The ID of the new wall.
 	*/
-	EXPORT int API RACInitWall(const float* vData, const float* absorption)
+	EXPORT int API RACInitWall(const float* verticesData, const float* absorptionData)
 	{
-		std::vector<Real> a = std::vector<Real>(numAbsorptionBands);
-		for (int i = 0; i < numAbsorptionBands; i++)
-			a[i] = static_cast<Real>(absorption[i]);
-		Absorption abs = Absorption(a);
+		std::vector<Real> a = std::vector<Real>(NUM_FREQUENCY_BANDS);
+		for (int i = 0; i < NUM_FREQUENCY_BANDS; i++)
+			a[i] = static_cast<Real>(absorptionData[i]);
+		Absorption absorption = Absorption(a);
 
-		Vertices vertices = { Vec3(vData[0], vData[1], vData[2]),
-			Vec3(vData[3], vData[4], vData[5]),
-			Vec3(vData[6], vData[7], vData[8]) };
+		Vertices vertices = { Vec3(verticesData[0], verticesData[1], verticesData[2]),
+			Vec3(verticesData[3], verticesData[4], verticesData[5]),
+			Vec3(verticesData[6], verticesData[7], verticesData[8]) };
 
-		return static_cast<int>(InitWall(vertices, abs));
+		return static_cast<int>(InitWall(vertices, absorption));
 	}
 
 	/**
@@ -562,14 +553,14 @@ extern "C"
 	* @param id The ID of the wall to update.
 	* @param absorption The frequency absorption coefficients.
 	*/
-	EXPORT void API RACUpdateWallAbsorption(int id, const float* absorption)
+	EXPORT void API RACUpdateWallAbsorption(int id, const float* absorptionData)
 	{
-		std::vector<Real> a = std::vector<Real>(numAbsorptionBands);
-		for (int i = 0; i < numAbsorptionBands; i++)
-			a[i] = static_cast<Real>(absorption[i]);
-		Absorption abs = Absorption(a);
+		std::vector<Real> a = std::vector<Real>(NUM_FREQUENCY_BANDS);
+		for (int i = 0; i < NUM_FREQUENCY_BANDS; i++)
+			a[i] = static_cast<Real>(absorptionData[i]);
+		Absorption absorption = Absorption(a);
 
-		UpdateWallAbsorption(static_cast<size_t>(id), abs);
+		UpdateWallAbsorption(static_cast<size_t>(id), absorption);
 	}
 
 	/**
@@ -617,8 +608,8 @@ extern "C"
 	*/
 	EXPORT void API RACSubmitAudio(int id, const float* data)
 	{
-		Buffer<> buffer = Buffer<>(numAudioFrames);
-		std::transform(data, data + numAudioFrames, buffer.begin(),
+		Buffer<> buffer = Buffer<>(NUM_FRAMES);
+		std::transform(data, data + NUM_FRAMES, buffer.begin(),
 			[](float value) { return static_cast<Real>(value); });
 		SubmitAudio(static_cast<size_t>(id), buffer);
 	}
