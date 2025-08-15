@@ -144,7 +144,6 @@ namespace RAC
 			mChannels.reserve(config->numReverbSources);
 			for (int i = 0; i < config->numReverbSources; i++)
 				mChannels.push_back(std::make_unique<FDNChannel<Complex>>(delayLengths[i], T60, config));
-			SetTimeDelay(10.0 / SPEED_OF_SOUND, config->fs); // Time delay for 10m path propagation
 		}
 
 		////////////////////////////////////////
@@ -235,23 +234,23 @@ namespace RAC
 			{
 				x.Reset();
 				y.Reset();
-				delayBuffer.Reset();
+				precedingDelayBuffer.Reset();
 				clearBuffers.store(false, std::memory_order_release);
 			}
 
 			// Process feedback loop
 			for (int i = 0; i < outputBuffers[0].Length(); i++)
 			{
-				if (idx >= delayBuffer.Length())
-					idx = 0;
+				if (precedingDelayCursor >= precedingDelayBuffer.Length())
+					precedingDelayCursor = 0;
 				for (int j = 0; j < mChannels.size(); j++)
 				{
-					y[j] = mChannels[j]->GetOutput(x[j] + delayBuffer[idx], lerpFactor);
+					y[j] = mChannels[j]->GetOutput(x[j] + precedingDelayBuffer[precedingDelayCursor], lerpFactor);
 					outputBuffers[j][i] += ravesResidues[j].GetOutput(y[j], lerpFactor);
 				}
 				ProcessMatrix();
-				delayBuffer[idx] = inputData[i];
-				++idx;
+				precedingDelayBuffer[precedingDelayCursor] = inputData[i];
+				++precedingDelayCursor;
 			}
 		}
 

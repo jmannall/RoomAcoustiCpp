@@ -70,8 +70,6 @@ namespace RAC
 			Debug::RTMStartFlag();
 #endif
 
-			// TODO: Compensate FDN gain based on initial delay
-
 			lock_guard<std::mutex> lock(rayPencilMutex);
 			shared_ptr<Room> sharedRoom = mRoom.lock();
 			shared_ptr<Reverb> sharedReverb = mReverb.lock();
@@ -132,6 +130,9 @@ namespace RAC
 								energyContributions,
 								contributionDelayScaling,
 								sharedReverb->GetLeftEigenvector(slope_idx));
+
+						// Compensate FDN gain based on preceding delay.
+						sourceResidues[slope_idx] *= std::pow(decayPerSecond[slope_idx], sharedReverb->GetPrecedingDelay());
 					}
 					sharedSource->SetSourceTargetResidues(source.id, sourceResidues);
 				}

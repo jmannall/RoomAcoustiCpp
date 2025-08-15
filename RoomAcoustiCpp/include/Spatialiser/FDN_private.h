@@ -201,10 +201,11 @@ namespace RAC
 				return isZero;
 			}
 
-			inline void SetTimeDelay(Real delay, int fs)
+			inline void SetPrecedingDelay(Real delay, int fs)
 			requires std::is_same_v<T, Complex>
 			{
-				delayBuffer.ResizeBuffer(static_cast<int>(delay * fs));
+				precedingDelayBuffer.ResizeBuffer(static_cast<int>(delay * fs));
+				precedingDelayBuffer.Reset(); // TODO: Do we want to avoid resetting it?
 			}
 
 			inline void SubmitAudio(const std::vector<Real>& input)
@@ -309,11 +310,11 @@ namespace RAC
 			std::conditional_t<std::is_same_v<T, Complex>,
 				std::vector<RAVESListenerResidue>, std::nullptr_t> ravesResidues; // Residues for the RAVES algorithm
 
+			// Delay which precedes the entire late reverberation block:
 			std::conditional_t<std::is_same_v<T, Complex>,
-				Buffer<Complex>, std::nullptr_t> delayBuffer;
-
+				Buffer<Complex>, std::nullptr_t> precedingDelayBuffer;	// Buffer implementing the delay
 			std::conditional_t<std::is_same_v<T, Complex>,
-				int, std::nullptr_t> idx{ 0 };
+				int, std::nullptr_t> precedingDelayCursor{ 0 };			// Position of the read/write cursor within the buffer
 
 			std::conditional_t<std::is_same_v<T, Complex>,
 				const Complex*, std::nullptr_t> inputData{ nullptr };

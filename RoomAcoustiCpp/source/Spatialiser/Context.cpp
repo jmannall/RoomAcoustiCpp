@@ -233,6 +233,7 @@ namespace RAC
 				mReverbInput = Matrix<>(mConfig->GetNumRavesFDNs(), 2 * mConfig->numFrames);
 				break;
 			default:
+				// TODO: If the "default" behavior is identical to one of the other options, there is no need to repeat the code. We can make all switch statements more elegant.
 				// Unknown late reverb model, using default SingleFDN
 				audioThreadPool = std::make_unique<AudioThreadPool>(numThreads, mConfig->numFrames, mConfig->numReverbSources, mConfig->numFrames, mConfig->numReverbSources);
 				// mReverb = std::make_shared<SingleFDN>(&mCore, mConfig);

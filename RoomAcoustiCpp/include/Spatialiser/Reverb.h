@@ -133,6 +133,7 @@ namespace RAC
 				mReverbSources.reserve(config->numReverbSources);
 				for (int i = 0; i < config->numReverbSources; i++)
 					mReverbSources.emplace_back(std::make_unique<ReverbSource>(core, config, points[i], &reverbSourceInputs[i]));
+				SetPrecedingDelay(10.0 / SPEED_OF_SOUND, config->fs); // TODO: Pass the desired length in config; set it to 0 for SingleFDN
 			}
 
 			/**
@@ -233,6 +234,16 @@ namespace RAC
 			virtual void SetTargetListenerResidues(size_t id, const Coefficients<>& residues) { /*Do Nothing*/ }
 
 			/**
+			* @brief Update length of preceding delay for RAVES reverb
+			*
+			* @param delay The new length (in seconds) of the delay
+			* @param fs The sample rate
+			*/
+			virtual void SetPrecedingDelay(const Real delay, int fs) { /*Do Nothing*/ }
+
+			inline Real GetPrecedingDelay() const { return precedingDelayLength; }
+
+			/**
 			* @brief Calculate the end limits for reverb source directions
 			*
 			* @params directions The vector to add reverb source directions to
@@ -268,10 +279,12 @@ namespace RAC
 
 			static ReleasePool releasePool;		// Garbage collector for shared pointers after atomic replacement
 
+			Real precedingDelayLength;				// Length (in seconds) of the delay which precedes the FDNs in RAVES
+
 		private:
 
 			std::vector<Vec3> CalculateSourcePositions(const int numReverbSources) const;
-
+			
 			std::vector<Buffer<>> reverbSourceInputs;						// Input buffers for each reverb source
 			std::vector<std::unique_ptr<ReverbSource>> mReverbSources;		// Reverb sources to binauralise the FDN output
 
@@ -350,6 +363,14 @@ namespace RAC
 			* @param residues The new listener residues (size of numReverbSources)
 			*/
 			void SetTargetListenerResidues(size_t id, const Coefficients<>& residues) override;
+
+			inline void SetPrecedingDelay(const Real delay, int fs) override
+			{
+				precedingDelayLength = delay;
+				auto fdns = mFDNs.load();
+				for (int i = 0; i < fdns->size(); i++)
+					fdns->at(i)->SetPrecedingDelay(delay, fs);
+			}
 
 			inline void SetTargetT60(const Coefficients<>& T60) override { SetTargetT60s({ T60 }); }
 
