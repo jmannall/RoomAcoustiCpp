@@ -49,7 +49,7 @@ namespace RAC
 			mDirectivity.store(SourceDirectivity::omni, std::memory_order_release);
 
 			reverbSend.store(LateReverbModel::none, std::memory_order_release);
-			hasChanged.store(true, std::memory_order_release);
+			updateFlags.RecordChange();
 
 			ravesResidues = std::vector<RAVESSourceResidue>(config->GetNumRavesFDNs());
 
@@ -204,7 +204,7 @@ namespace RAC
 			mDirectivity.store(directivity, std::memory_order_release);
 			// Divide energy between late reverb channels. Multiply by six to mimic shoebox room first reflections energy
 			reverbInputFilter->SetTargetGains(6.0 * reverbInput / static_cast<Real>(numLateReverbChannels));
-			hasChanged.store(true, std::memory_order_release);
+			updateFlags.RecordChange();
 			FreeAccess();
 		}
 
@@ -335,7 +335,7 @@ namespace RAC
 				currentPosition = position;
 				currentOrientation = orientation;
 			}
-			hasChanged.store(true, std::memory_order_release);
+			updateFlags.RecordChange();
 			UpdateTransform(position, orientation);
 			FreeAccess();
 		}
@@ -364,7 +364,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		std::optional<Source::Data> Source::GetData()
+		std::optional<Source::Data> Source::GetData(ThreadID id)
 		{
 			if (!GetAccess())
 				return std::nullopt;
@@ -374,7 +374,7 @@ namespace RAC
 				return std::nullopt;
 			}
 			lock_guard<std::mutex>lock(*dataMutex);
-			Data data(-1, currentPosition, currentOrientation, mDirectivity.load(std::memory_order_acquire), hasChanged.exchange(false, std::memory_order_acq_rel));
+			Data data(-1, currentPosition, currentOrientation, mDirectivity.load(std::memory_order_acquire), updateFlags.HasChanged(id));
 			FreeAccess();
 			return data;
 		}

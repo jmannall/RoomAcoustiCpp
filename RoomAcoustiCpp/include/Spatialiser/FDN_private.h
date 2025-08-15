@@ -51,13 +51,13 @@ namespace RAC
 			// template <typename U = T, std::enable_if_t<std::is_same_v<U, Real>, bool> = true>
 			FDNChannel(const int delayLength, const Coefficients<>& T60, const std::shared_ptr<Config> config) requires std::is_same_v<T, Real> :
 				mT(static_cast<Real>(delayLength) / config->fs), mBuffer(delayLength),
-				mAbsorptionFilter(CalculateFilterGains(T60), config->frequencyBands, config->Q, config->fs),
+				absorption(CalculateFilterGains(T60)[0]), mAbsorptionFilter(CalculateFilterGains(T60), config->frequencyBands, config->Q, config->fs),
 				mReflectionFilter(config->frequencyBands, config->Q, config->fs) {}
 
 			template <typename U = T, std::enable_if_t<std::is_same_v<U, Complex>, bool> = true>
 			FDNChannel(const int delayLength, const Coefficients<>& T60, const std::shared_ptr<Config> config) requires std::is_same_v<T, Complex> :
 				mT(static_cast<Real>(delayLength) / config->fs), mBuffer(delayLength),
-				mAbsorptionFilter(CalculateFilterGains(T60), config->frequencyBands, config->Q, config->fs) {}
+				absorption(CalculateFilterGains(T60)[0]), mAbsorptionFilter(CalculateFilterGains(T60), config->frequencyBands, config->Q, config->fs) {}
 
 			/**
 			* @brief Default deconstructor

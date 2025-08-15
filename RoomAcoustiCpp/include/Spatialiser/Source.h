@@ -66,10 +66,37 @@ namespace RAC
 				Vec4 orientation;					// Source orientation
 				Vec3 forward;						// Source forward direction
 				SourceDirectivity directivity;		// Source directivity pattern
-				bool hasChanged;					// True if source data has changed since last update, false otherwise
+				bool needsUpdate;					// True if source data has changed since last update, false otherwise
 
-				Data(size_t id, const Vec3& position, const Vec4& orientation, const SourceDirectivity& directivity, bool hasChanged)
-					: id(id), position(position), forward(orientation.Forward()), orientation(orientation), directivity(directivity), hasChanged(hasChanged) {}
+				Data(size_t id, const Vec3& position, const Vec4& orientation, const SourceDirectivity& directivity, bool needsUpdate)
+					: id(id), position(position), forward(orientation.Forward()), orientation(orientation), directivity(directivity),
+					needsUpdate(needsUpdate) {}
+			};
+
+			struct UpdateFlags
+			{
+				void RecordChange()
+				{
+					imageEdgeFlag.store(true, std::memory_order_release);
+					rayTracingFlag.store(true, std::memory_order_release);
+				}
+
+				bool HasChanged(ThreadID id)
+				{
+					switch (id)
+					{
+					case ThreadID::imageEdge:
+						return imageEdgeFlag.exchange(false, std::memory_order_acq_rel);
+					case ThreadID::rayTracing:
+						return rayTracingFlag.exchange(false, std::memory_order_acq_rel);
+					default:
+						// TODO: Add documentation on undefined behavior
+						return false;
+					}
+				}
+
+				std::atomic<bool> imageEdgeFlag;
+				std::atomic<bool> rayTracingFlag;
 			};
 
 			/**
@@ -179,7 +206,7 @@ namespace RAC
 			*/
 			void UpdateData(const Source::AudioData source, const ImageSourceDataMap& imageSourceData, const std::shared_ptr<Config>& config);
 
-			std::optional<Data> GetData();
+			std::optional<Data> GetData(ThreadID id);
 
 			/**
 			* @return The current source position
@@ -196,11 +223,6 @@ namespace RAC
 			*/
 			inline SourceDirectivity GetDirectivity() const { return mDirectivity.load(std::memory_order_acquire); }
 
-			/**
-			* @return True if the source has changed since the last check
-			*/
-			inline bool HasChanged() { return hasChanged.exchange(false, std::memory_order_acq_rel); }
-			
 			inline void SetTargetResidues(const Coefficients<>& residues)
 			{
 				if (!GetAccess())
@@ -339,10 +361,10 @@ namespace RAC
 			std::vector<Parameter> ravesGains;
 			std::vector<RAVESSourceResidue> ravesResidues;			// Residues for the RAVES algorithm
 
-			Vec3 currentPosition;						// Current source position
-			Vec4 currentOrientation;					// Current source orientation
-			std::atomic<bool> hasChanged{ true };		// Flag to check if the source has changed
-			std::atomic<bool> isReset{ true };			// Flag to check if the source is ready to be initialised
+			Vec3 currentPosition;					// Current source position
+			Vec4 currentOrientation;				// Current source orientation
+			UpdateFlags updateFlags;				// Struct of flags to check if the source has changed since last update of each thread
+			std::atomic<bool> isReset{ true };		// Flag to check if the source is ready to be initialised
 
 			ImageSourceDataMap currentImageSources;		// Current image sources
 			std::vector<int> freeFDNChannels;			// Free FDN channels

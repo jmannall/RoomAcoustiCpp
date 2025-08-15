@@ -61,7 +61,7 @@ namespace RAC
 
 			shared_ptr<SourceManager> sharedSource = mSourceManager.lock();
 			sharedSource->ResetUnusedSources();
-			mSources = sharedSource->GetSourceData();
+			mSources = sharedSource->GetSourceData(ThreadID::imageEdge);
 
 			{
 				lock_guard<std::mutex> lock(dataStoreMutex);
@@ -90,7 +90,7 @@ namespace RAC
 			int i = 0;
 			for (Source::Data& source : mSources)
 			{
-				if (doIEM || source.hasChanged)
+				if (doIEM || source.needsUpdate)
 				{
 					mCurrentCycles[i] = !mCurrentCycles[i];
 					currentCycle = mCurrentCycles[i];

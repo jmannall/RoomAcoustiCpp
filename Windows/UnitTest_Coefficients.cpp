@@ -40,6 +40,17 @@ namespace RAC
 	{
 	public:
 
+		void TestRealInit(Coefficients<std::vector<Real>> input)
+		{
+			Real x = 1.0;
+		}
+
+		TEST_METHOD(InitReal)
+		{
+			Real input = 2.0;
+			TestRealInit(input);
+		}
+
 		TEST_METHOD(Addition)
 		{
 			Coefficients c1 = Coefficients(std::vector<Real>({ 2.0, 3.0 }));

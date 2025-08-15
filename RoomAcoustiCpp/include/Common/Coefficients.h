@@ -40,6 +40,9 @@ namespace RAC
 			template <typename U = T, std::enable_if_t<!std::is_constructible<U, size_t, Real>::value, int> = 0>
 			Coefficients(const Real in) { mCoefficients.fill(in); }
 
+			template <typename U = T, std::enable_if_t<std::is_constructible<U, size_t, Real>::value, int> = 0>
+			Coefficients(const Real in) : Coefficients(1, in) {}
+
 			/**
 			* @brief Constructor that initialises the Coefficients with zeros
 			*

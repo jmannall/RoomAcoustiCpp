@@ -144,7 +144,7 @@ namespace RAC
 			/**
 			* @return Position, orientation and directivity data for all sources
 			*/
-			std::vector<Source::Data> GetSourceData();
+			std::vector<Source::Data> GetSourceData(ThreadID id);
 
 			/**
 			* @brief Returns the position of the source with the given ID

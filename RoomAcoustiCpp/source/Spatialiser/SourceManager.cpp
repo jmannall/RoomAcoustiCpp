@@ -28,14 +28,14 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		std::vector<Source::Data> SourceManager::GetSourceData()
+		std::vector<Source::Data> SourceManager::GetSourceData(ThreadID id)
 		{
 			std::vector<Source::Data> sourceData;
 			sourceData.reserve(mSources.size());
 			int i = 0;
 			for (auto& source : mSources)
 			{
-				if (auto data = source->GetData(); data.has_value())
+				if (auto data = source->GetData(id); data.has_value())
 				{
 					data->id = i;
 					sourceData.push_back(*data);

@@ -64,6 +64,8 @@ namespace RAC
 		void TracingThread::RunTracing() {
 			// TODO: PROFILE_TracingThread
 
+			// TODO: Compensate FDN gain based on initial delay
+
 			lock_guard<std::mutex> lock(rayPencilMutex);
 			shared_ptr<Room> sharedRoom = mRoom.lock();
 			shared_ptr<Reverb> sharedReverb = mReverb.lock();
@@ -105,10 +107,10 @@ namespace RAC
 				}
 			}
 
-			mSources = sharedSource->GetSourceData();
+			mSources = sharedSource->GetSourceData(ThreadID::rayTracing);
 
 			for (Source::Data& source : mSources) {
-				if (source.hasChanged) {
+				if (source.needsUpdate) {
 					hemispherePencil.moveOrigin(source.position);
 					hemispherePencil.traceAll(sharedRoom->GetTriangleMeshSoA());
 

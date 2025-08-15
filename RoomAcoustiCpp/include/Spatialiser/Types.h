@@ -47,6 +47,12 @@ namespace RAC
 
 		//////////////////// Enum Data Types ////////////////////
 
+		enum class ThreadID
+		{
+			imageEdge,
+			rayTracing
+		};
+
 		enum class ReverbFormula
 		{
 			Sabine,
