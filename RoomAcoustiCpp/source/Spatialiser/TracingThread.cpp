@@ -1,8 +1,11 @@
-#include "Unity/Debug.h"
 #include "Spatialiser/TracingThread.h"
+
+// Unity headers
+#include "Unity/Debug.h"
 
 namespace RAC
 {
+	using namespace Unity;
 	using namespace Common;
 	namespace Spatialiser
 	{
@@ -63,6 +66,9 @@ namespace RAC
 
 		void TracingThread::RunTracing() {
 			// TODO: PROFILE_TracingThread
+#ifdef RTM_FLAG
+			Debug::RTMStartFlag();
+#endif
 
 			// TODO: Compensate FDN gain based on initial delay
 
@@ -131,7 +137,7 @@ namespace RAC
 				}
 			}
 #ifdef RTM_FLAG
-			Unity::Debug::IEMFlag(-1);
+			Debug::RTMEndFlag();
 #endif
 		}
 

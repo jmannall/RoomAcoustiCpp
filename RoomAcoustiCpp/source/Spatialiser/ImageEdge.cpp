@@ -49,6 +49,10 @@ namespace RAC
 			PROFILE_BackgroundThread
 			bool doIEM = false;
 
+#ifdef IEM_FLAG
+			Debug::IEMStartFlag();
+#endif
+
 			shared_ptr<Room> sharedRoom = mRoom.lock();
 			if (sharedRoom->HasChanged())
 			{
@@ -99,9 +103,6 @@ namespace RAC
 
 				sharedSource->UpdateSourceData(source.id, mSourceAudioDatas[i], imageSources[i]);
 
-#ifdef IEM_FLAG
-				Debug::IEMFlag(source.id);
-#endif
 				++i;
 			}	
 
@@ -109,7 +110,7 @@ namespace RAC
 				reverbRunning = UpdateLateReverbFilters(doIEM);
 
 #ifdef IEM_FLAG
-			//Debug::IEMFlag(-1);
+			Debug::IEMEndFlag();
 #endif
 		}
 

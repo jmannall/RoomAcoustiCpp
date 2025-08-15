@@ -118,12 +118,33 @@ namespace RAC
                 pathCallbackInstance(tmsg, &intersectionArray, (int)strlen(tmsg), 0);
         }
 
-		void Debug::IEMFlag(int id)
-		{
-            std::lock_guard lock(iemMutex);
-			if (iemCallbackInstance != nullptr)
-				iemCallbackInstance(id);
-		}
+        void Debug::IEMStartFlag()
+        {
+            std::lock_guard lock(iemStartMutex);
+            if (iemStartCallbackInstance != nullptr)
+                iemStartCallbackInstance();
+        }
+
+        void Debug::IEMEndFlag()
+        {
+            std::lock_guard lock(iemEndMutex);
+            if (iemEndCallbackInstance != nullptr)
+                iemEndCallbackInstance();
+        }
+
+        void Debug::RTMStartFlag()
+        {
+            std::lock_guard lock(rtmStartMutex);
+            if (rtmStartCallbackInstance != nullptr)
+                rtmStartCallbackInstance();
+        }
+
+        void Debug::RTMEndFlag()
+        {
+            std::lock_guard lock(rtmEndMutex);
+            if (rtmEndCallbackInstance != nullptr)
+                rtmEndCallbackInstance();
+        }
     }
 }
 
@@ -142,10 +163,28 @@ void RegisterPathCallback(FuncPathCallback cb)
 	pathCallbackInstance = cb;
 }
 
-void RegisterIEMCallback(FuncIEMCallback cb)
+void RegisterIEMStartCallback(FuncIEMStartCallback cb)
 {
-    std::lock_guard lock(iemMutex);
-    iemCallbackInstance = cb;
+    std::lock_guard lock(iemStartMutex);
+    iemStartCallbackInstance = cb;
+}
+
+void RegisterIEMEndCallback(FuncIEMEndCallback cb)
+{
+    std::lock_guard lock(iemEndMutex);
+    iemEndCallbackInstance = cb;
+}
+
+void RegisterRTMStartCallback(FuncRTMStartCallback cb)
+{
+    std::lock_guard lock(rtmStartMutex);
+    rtmStartCallbackInstance = cb;
+}
+
+void RegisterRTMEndCallback(FuncRTMEndCallback cb)
+{
+    std::lock_guard lock(rtmEndMutex);
+    rtmEndCallbackInstance = cb;
 }
 
 void UnregisterDebugCallback()
@@ -160,8 +199,26 @@ void UnregisterPathCallback()
 	pathCallbackInstance = nullptr;
 }
 
-void UnregisterIEMCallback()
+void UnregisterIEMStartCallback()
 {
-    std::lock_guard lock(iemMutex);
-    iemCallbackInstance = nullptr;
+    std::lock_guard lock(iemStartMutex);
+    iemStartCallbackInstance = nullptr;
+}
+
+void UnregisterIEMEndCallback()
+{
+    std::lock_guard lock(iemEndMutex);
+    iemEndCallbackInstance = nullptr;
+}
+
+void UnregisterRTMStartCallback()
+{
+    std::lock_guard lock(rtmStartMutex);
+    rtmStartCallbackInstance = nullptr;
+}
+
+void UnregisterRTMEndCallback()
+{
+    std::lock_guard lock(rtmEndMutex);
+    rtmEndCallbackInstance = nullptr;
 }

@@ -36,23 +36,38 @@
 
 static std::mutex debugMutex;		// Protects debugCallbackInstance
 static std::mutex pathMutex;		// Protects pathCallbackInstance
-static std::mutex iemMutex;		    // Protects iemCallbackInstance
+static std::mutex iemStartMutex;	// Protects iemStartCallbackInstance
+static std::mutex iemEndMutex;	    // Protects iemEndCallbackInstance
+static std::mutex rtmStartMutex;	// Protects rtmStartCallbackInstance
+static std::mutex rtmEndMutex;	    // Protects rtmEndCallbackInstance
 
 extern "C"
 {
     //Create a callback delegate
     typedef void(*FuncDebugCallback)(const char* message, int colour, int size);
 	typedef void(*FuncPathCallback)(const char* key, const float* intersections, int size, int numIntersections);
-    typedef void(*FuncIEMCallback)(int id);
+    typedef void(*FuncIEMStartCallback)();
+    typedef void(*FuncIEMEndCallback)();
+    typedef void(*FuncRTMStartCallback)();
+    typedef void(*FuncRTMEndCallback)();
     static FuncDebugCallback debugCallbackInstance = nullptr;
     static FuncPathCallback pathCallbackInstance = nullptr;
-	static FuncIEMCallback iemCallbackInstance = nullptr;
+    static FuncIEMStartCallback iemStartCallbackInstance = nullptr;
+    static FuncIEMEndCallback iemEndCallbackInstance = nullptr;
+    static FuncRTMStartCallback rtmStartCallbackInstance = nullptr;
+    static FuncRTMEndCallback rtmEndCallbackInstance = nullptr;
     DLLExport void RegisterDebugCallback(FuncDebugCallback cb);
 	DLLExport void RegisterPathCallback(FuncPathCallback cb);
-    DLLExport void RegisterIEMCallback(FuncIEMCallback cb);
+    DLLExport void RegisterIEMStartCallback(FuncIEMStartCallback cb);
+    DLLExport void RegisterIEMEndCallback(FuncIEMEndCallback cb);
+    DLLExport void RegisterRTMStartCallback(FuncRTMStartCallback cb);
+    DLLExport void RegisterRTMEndCallback(FuncRTMEndCallback cb);
     DLLExport void UnregisterDebugCallback();
 	DLLExport void UnregisterPathCallback();
-    DLLExport void UnregisterIEMCallback();
+    DLLExport void UnregisterIEMStartCallback();
+    DLLExport void UnregisterIEMEndCallback();
+    DLLExport void UnregisterRTMStartCallback();
+    DLLExport void UnregisterRTMEndCallback();
 }
 
 namespace RAC
@@ -80,7 +95,10 @@ namespace RAC
             static void send_path(const std::string& key, const std::vector<Vec3>& intersections, const Vec3& position);
             static void remove_path(const std::string& key);
 
-            static void IEMFlag(int id);
+            static void IEMStartFlag();
+            static void IEMEndFlag();
+            static void RTMStartFlag();
+            static void RTMEndFlag();
 
         private:
             static void send_log(const std::stringstream& ss, const Colour& colour);
