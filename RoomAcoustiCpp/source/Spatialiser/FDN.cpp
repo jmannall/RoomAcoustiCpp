@@ -235,6 +235,7 @@ namespace RAC
 			{
 				x.Reset();
 				y.Reset();
+				delayBuffer.Reset();
 				clearBuffers.store(false, std::memory_order_release);
 			}
 

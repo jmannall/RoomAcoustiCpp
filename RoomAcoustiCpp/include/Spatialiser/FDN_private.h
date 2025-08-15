@@ -137,7 +137,7 @@ namespace RAC
 
 			const Real mT;		// The current delay in seconds
 			Buffer<T> mBuffer;	// The internal delay line
-			int idx{ 0 };			// Current delay line read index
+			int idx{ 0 };		// Current delay line read index
 
 			std::atomic<Real> absorption;
 			GraphicEQ<T> mAbsorptionFilter;		// The absorption filter to match the target decay time
