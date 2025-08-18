@@ -288,11 +288,17 @@ namespace RAC
 
 		void RAVES::InitLateReverb(const const std::vector<Real>& T60, const FDNMatrix matrix, const std::shared_ptr<Config> config)
 		{
-			Vec delayLineLengths = Vec({ 2.5, 4.0, 3.4 }); // Assume a shoebox
+			std::vector<int> delayLineLengths(config->numReverbSources, -1);
+
 			FDNPtr fdns = std::make_shared<std::vector<std::unique_ptr<FDN<Complex>>>>(config->GetNumRavesFDNs());
 			// fdns->reserve(config->numRavesFDNs);
 			for (int i = 0; i < config->GetNumRavesFDNs(); i++)
 			{
+				// TODO: Be smarter about this
+				delayLineLengths = GetSetOfPrimes(100+i, config->numReverbSources, std::max(12, config->GetNumRavesFDNs()));
+
+				// TODO: Check if any of the values are -1 (error in generating the list of primes) and adapt accordingly
+
 				switch (matrix)
 				{
 				case FDNMatrix::householder:

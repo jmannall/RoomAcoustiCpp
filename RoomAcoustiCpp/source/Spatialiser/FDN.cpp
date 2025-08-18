@@ -125,8 +125,21 @@ namespace RAC
 			y(config->numReverbSources), feedbackMatrix(matrix)
 		{
 			assert(T60 > 0);
-			
+
 			std::vector<int> delayLengths = CalculateTimeDelay(dimensions, config->numReverbSources, config->fs);
+			mChannels.reserve(config->numReverbSources);
+			for (int i = 0; i < config->numReverbSources; i++)
+				mChannels.push_back(std::make_unique<FDNChannel<Real>>(delayLengths[i], T60, config));
+		}
+
+		////////////////////////////////////////
+
+		template<>
+		FDN<Real>::FDN(const Coefficients<>& T60, const std::vector<int>& delayLengths, const std::shared_ptr<Config> config, const Matrix<>& matrix) : x(config->numReverbSources),
+			y(config->numReverbSources), feedbackMatrix(matrix)
+		{
+			assert(T60 > 0);
+
 			mChannels.reserve(config->numReverbSources);
 			for (int i = 0; i < config->numReverbSources; i++)
 				mChannels.push_back(std::make_unique<FDNChannel<Real>>(delayLengths[i], T60, config));
@@ -141,6 +154,19 @@ namespace RAC
 			assert(T60 > 0);
 
 			std::vector<int> delayLengths = CalculateTimeDelay(dimensions, config->numReverbSources, config->fs);
+			mChannels.reserve(config->numReverbSources);
+			for (int i = 0; i < config->numReverbSources; i++)
+				mChannels.push_back(std::make_unique<FDNChannel<Complex>>(delayLengths[i], T60, config));
+		}
+
+		////////////////////////////////////////
+
+		template<>
+		FDN<Complex>::FDN(const Coefficients<>& T60, const std::vector<int>& delayLengths, const std::shared_ptr<Config> config, const Matrix<>& matrix) : x(config->numReverbSources),
+			y(config->numReverbSources), feedbackMatrix(matrix), ravesResidues(config->numReverbSources)
+		{
+			assert(T60 > 0);
+
 			mChannels.reserve(config->numReverbSources);
 			for (int i = 0; i < config->numReverbSources; i++)
 				mChannels.push_back(std::make_unique<FDNChannel<Complex>>(delayLengths[i], T60, config));

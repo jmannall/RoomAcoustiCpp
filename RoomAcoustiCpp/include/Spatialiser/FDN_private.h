@@ -165,6 +165,16 @@ namespace RAC
 			FDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<Config> config) : FDN(T60, dimensions, config, InitMatrix(config->numReverbSources)) {}
 
 			/**
+			* @brief Initialises an FDN with a target T60 and given delay line lengths
+			* @details Initialises with a default householder matrix
+			*
+			* @param T60 Target decay time
+			* @param delayLengths Delay line lengths (in samples)
+			* @param config The spatialiser configuration
+			*/
+			FDN(const Coefficients<>& T60, const std::vector<int>& delayLengths, const std::shared_ptr<Config> config) : FDN(T60, delayLengths, config, InitMatrix(config->numReverbSources)) {}
+
+			/**
 			* @brief Default deconstructor
 			*/
 			virtual ~FDN() {}
@@ -244,6 +254,16 @@ namespace RAC
 			* @param matrix The feedback matrix to use for the FDN
 			*/
 			FDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<Config> config, const Matrix<>& matrix);
+
+			/**
+			* @brief Initialises an FDN with a target T60 and given delay line lengths
+			*
+			* @param T60 Target decay time
+			* @param delayLengths Delay line lengths (in samples)
+			* @param config The spatialiser configuration
+			* @param matrix The feedback matrix to use for the FDN
+			*/
+			FDN(const Coefficients<>& T60, const std::vector<int>& delayLengths, const std::shared_ptr<Config> config, const Matrix<>& matrix);
 
 			/**
 			* @brief Processes a square feedback matrix
@@ -336,6 +356,17 @@ namespace RAC
 			*/
 			HouseHolderFDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<Config> config)
 				: FDN<T>(T60, dimensions, config, Matrix()), houseHolderFactor(2.0 / static_cast<Real>(config->numReverbSources)) {}
+			
+			/**
+			* @brief Initialises an FDN with a target T60 and given delay line lengths
+			* @details Initialises with a householder matrix
+			*
+			* @param T60 Target decay time
+			* @param delayLengths Delay line lengths (in samples)
+			* @param config The spatialiser configuration
+			*/
+			HouseHolderFDN(const Coefficients<>& T60, const std::vector<int>& delayLengths, const std::shared_ptr<Config> config)
+				: FDN<T>(T60, delayLengths, config, Matrix()), houseHolderFactor(2.0 / static_cast<Real>(config->numReverbSources)) {}
 
 			/**
 			* @brief Default deconstructor
@@ -371,6 +402,17 @@ namespace RAC
 			*/
 			RandomOrthogonalFDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<Config> config)
 				: FDN<T>(T60, dimensions, config, InitMatrix(config->numReverbSources)) {}
+
+			/**
+			* @brief Initialises an FDN with a target T60 and given delay line lengths
+			* @details Initialises with a random orthogonal matrix
+			*
+			* @param T60 Target decay time
+			* @param delayLengths Delay line lengths (in samples)
+			* @param config The spatialiser configuration
+			*/
+			RandomOrthogonalFDN(const Coefficients<>& T60, const std::vector<int>& delayLengths, const std::shared_ptr<Config> config)
+				: FDN<T>(T60, delayLengths, config, InitMatrix(config->numReverbSources)) {}
 
 			/**
 			* @brief Default deconstructor
