@@ -1,5 +1,8 @@
 #include "Spatialiser/TracingThread.h"
 
+// Common headers
+#include "Common/RACProfiler.h"
+
 // Unity headers
 #include "Unity/Debug.h"
 
@@ -65,7 +68,7 @@ namespace RAC
 		}
 
 		void TracingThread::RunTracing() {
-			// TODO: PROFILE_TracingThread
+			PROFILE_ReverbRayTracing
 #ifdef RTM_FLAG
 			Debug::RTMStartFlag();
 #endif

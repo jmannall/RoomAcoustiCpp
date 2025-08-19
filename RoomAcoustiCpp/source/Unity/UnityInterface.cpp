@@ -142,7 +142,7 @@ void UnregisterIEMThread()
 void RegisterRayTracingThread()
 {
 	if (GetDevBuild())
-		GetUnityProfiler()->RegisterThread(&rayTracingThreadID, "Acoustics", "Ray TRacing Thread");
+		GetUnityProfiler()->RegisterThread(&rayTracingThreadID, "Acoustics", "Ray Tracing Thread");
 }
 
 ////////////////////////////////////////
