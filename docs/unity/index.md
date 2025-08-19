@@ -23,5 +23,11 @@ However, if more interactivity is required, you will need to write custom script
 - [Introduction to Game Development](https://www.youtube.com/playlist?list=PLFt_AvWsXl0fnA91TcmkRyhhixX9CO3Lw) – Sebastian Lague
 
 ### Specific tutorials
+- [Creating an audio listener](racaudiolistener.md): How to create the audio listener.
 - [Creating an audio source](racaudiosource.md): How to create and configure audio sources.
+- [Creating scene geometry](racmesh.md): How to create room geometry and configure the room acoustic properties.
+- [Adding material properties](racmaterial.md): How to create a new material and assign it to the room geometry.
+- [Configuring the image edge model](imageedge.md): How to configure the image edge model for the room.
+- [Changing the RoomAcoustiC++ plugin](plugin.md): How to change the active RoomAcoustiC++ plugin.
+- [Receive debug messages and visualise the acoustic model](debug.md): How to use the `DebugCpp` script to aid debugging.
 - [Custom HRTF](hrtf.md): How to create and use a custom HRTF (Head-Related Transfer Function).
