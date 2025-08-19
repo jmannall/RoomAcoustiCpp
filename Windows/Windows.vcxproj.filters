@@ -23,9 +23,6 @@
     <ClCompile Include="source\dllmain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Test.cpp">
-      <Filter>UnitTest</Filter>
-    </ClCompile>
     <ClCompile Include="UnitTest_GraphicEQ.cpp">
       <Filter>UnitTest</Filter>
     </ClCompile>
@@ -45,9 +42,6 @@
       <Filter>UnitTest</Filter>
     </ClCompile>
     <ClCompile Include="UnitTest_Directivity.cpp">
-      <Filter>UnitTest</Filter>
-    </ClCompile>
-    <ClCompile Include="UnitTest_Regression.cpp">
       <Filter>UnitTest</Filter>
     </ClCompile>
     <ClCompile Include="UnitTest_LowPass.cpp">
