@@ -40,6 +40,54 @@ namespace RAC
 	{
 	public:
 
+		TEST_METHOD(InitArray)
+		{
+			const int n = 3;
+			std::array<Real, n> arr = { 2.0, 3.0, 5.0 };
+			Coefficients<std::array<Real, n>> c(arr);
+
+			for (int i = 0; i < arr.size(); i++)
+				Assert::AreEqual(arr[i], c[i], L"Error: Coefficients not initialised to vector");
+		}
+
+		TEST_METHOD(InitVector)
+		{
+			std::vector<Real> vec = { 2.0, 3.0, 5.0 };
+			Coefficients<> c(vec);
+
+			for (int i = 0; i < vec.size(); i++)
+				Assert::AreEqual(vec[i], c[i], L"Error: Coefficients not initialised to vector");
+		}
+
+		TEST_METHOD(InitLengthValue)
+		{
+			const int n = 3;
+			Real value = 6.0;
+			Coefficients<> c(n, value);
+
+			for (int i = 0; i < n; i++)
+				Assert::AreEqual(value, c[i], L"Error: Coefficients not initialised to value");
+		}
+
+		TEST_METHOD(InitValue)
+		{
+			const int n = 3;
+			Real value = 3.0;
+			Coefficients<std::array<Real, n>> c(value);
+
+			for (int i = 0; i < n; i++)
+				Assert::AreEqual(value, c[i], L"Error: Coefficients not initialised to value");
+		}
+
+		TEST_METHOD(InitLength)
+		{
+			int length = 3;
+			Coefficients<> c(length);
+
+			for (int i = 0; i < length; i++)
+				Assert::AreEqual(0.0, c[i], L"Error: Coefficients not initialised to zero");
+		}
+
 		TEST_METHOD(Addition)
 		{
 			Coefficients c1 = Coefficients(std::vector<Real>({ 2.0, 3.0 }));
