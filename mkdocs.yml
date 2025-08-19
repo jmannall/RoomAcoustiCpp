@@ -145,6 +145,15 @@ nav:
   - Unity Interface:
     - Overview: unity/index.md
     - Installation: unity/installation.md
+    - Beginner introduction: unity/introduction.md
+    - Creating an audio listener: unity/racaudiolistener.md
+    - Creating an audio source: unity/racaudiosource.md
+    - Creating room geometry: unity/racmesh.md
+    - Adding material properties: unity/racmaterial.md
+    - Configuring the image edge model: unity/imageedge.md
+    - Changing the RoomAcoustiC++ plugin: unity/plugin.md
+    - Receive debug messages and visualise the acoustic model: unity/debug.md
+    - Custom HRTF: unity/hrtf.md
   - API Reference:
     - API Reference: api/index.md
     - Interface: api/interface.md

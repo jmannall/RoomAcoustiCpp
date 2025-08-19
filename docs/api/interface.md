@@ -180,10 +180,10 @@ Submits an audio buffer for a source.
 
 ---
 
-### `#!cpp void GetOutput(float** bufferPtr)`
+### `#!cpp void GetOutput(Buffer<>& output)`
 Retrieves the processed output buffer.
 
-- `bufferPtr`: Pointer to output buffer.
+- `output`: Reference to output buffer.
 
 ---
 
@@ -261,9 +261,8 @@ UpdateSource(id, Vec3(1, 2, 3), Vec4(1, 0, 0, 0));
 
 SubmitAudio(id, Buffer<>(config->numFrames));
 
-Buffer<float> output(2 * config->numFrames);
-float* outputPtr = &output[0];
-GetOutput(&outputPtr);
+Buffer<> output(2 * config->numFrames);
+GetOutput(output);
 
 RemoveSource(id);
 for (size_t wallID : wallIDs)

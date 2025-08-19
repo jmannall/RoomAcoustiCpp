@@ -25,4 +25,4 @@ The FDN can be configured with the following parameters:
 
 - **Matrix:** Householder, RandomOrthogonal
 - **Room dimensions:** The dimensions of the room in meters (for a shoebox room this would be the width, height, depth). These determine the delay line lengths.
-- **Number of delay lines/reverb sources:** Determined the number of delay lines in the FDN and the number of reverb sources. A larger number increases the computational cost of the FDN but can improve the quality of the reverberation.
+- **Number of delay lines/reverb sources:** Determines the number of delay lines in the FDN and the number of reverb sources. A larger number increases the computational cost of the FDN but can improve the quality of the reverberation.

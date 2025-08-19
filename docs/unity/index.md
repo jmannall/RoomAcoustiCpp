@@ -4,30 +4,24 @@ The Unity interface provides a set of modular c# scripts that can be used to int
 The audio processing is built on top of the default Unity audio system.
 The interface is available on the GitHub repository [here](https://github.com/jmannall/RoomAcoustiCpp-Unity).
 
-## RACManager
-The `RACManager` script is the main entry point for using RoomAcoustiC++ in Unity.
-It handles the initialisation of the spatialiser and manages the acoustic model.
+## Tutorials
 
-## RACListener
-The `RACListener` script must be attached to the main camera or any GameObject that represents the listener in the scene.
+The following section provides short tutorials covering the different aspects of the RoomAcoustiC++ Unity interface.
+They are designed to help you get started with using the interface and understand its features.
 
-## RACSource
-The `RACSource` script should be attached to any GameObject that represents a sound source in the scene.
-The transform of the GameObject will be used to determine the position and orientation of the sound source.
-It overrides the default Unity AudioSource functions and the directivity and gain of the sound can be modified in the inspector
+COMING SOON: Video tutorial series.
 
-## RACMesh
-The `RACMesh` script should be attached to a GameObject as a parent to the mesh representing the scene geometry.
-It will automatically create and update walls based on the mesh geometry and apply the absorption properties defined in the `RACMaterial` script.
+### Getting started (Recommended for first time users)
 
-## RACMaterial
-The `RACMaterial` script is used to store `RACMaterialEntry` objects.
+- [Installation](installation.md): How to add RoomAcoustiCpp-Unity to your Unity project.
+- [Beginner introduction](introduction.md): An overview of the RoomAcoustiC++ Unity interface and how to create a simple scene.
 
-## RACMaterialEntry
-`RACMaterialEntry` is a ScriptableObject that stores the absorption properties of a material.
-A number of preset materials are provided.
-The material entry is paired with a Unity material.
+It is possible to use RoomAcoustiCpp-Unity by simply adding the premade C# scripts to the relevant GameObjects in your scene.
+However, if more interactivity is required, you will need to write custom scripts to control the behavior of the audio sources and listeners. For those unfamiliar with Unity the following tutorials are recommended as a starting point:
 
-## RACDebug
-The `RACDebug` script is used to visualise the RoomAcoustiC++ spatialisation system in Unity.
-If the RAC_Debug plugin is used and gizmos are enabled, it will draw the current edges, image source paths and reverb source positions in the scene view.
+- [The Unity Tutorial For Complete Beginners](https://www.youtube.com/watch?v=XtQMytORBmM) – Game Maker’s Toolkit
+- [Introduction to Game Development](https://www.youtube.com/playlist?list=PLFt_AvWsXl0fnA91TcmkRyhhixX9CO3Lw) – Sebastian Lague
+
+### Specific tutorials
+- [Creating an audio source](racaudiosource.md): How to create and configure audio sources.
+- [Custom HRTF](hrtf.md): How to create and use a custom HRTF (Head-Related Transfer Function).
