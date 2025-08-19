@@ -1,4 +1,4 @@
-# RoomAcoustiC++: Overview
+# Overview
 
 The **RoomAcoustiC++ (RAC)** library is a C++ library designed to support researchers and developers in the field of immersive audio and room acoustics.
 This section provides an overview of the library's features.

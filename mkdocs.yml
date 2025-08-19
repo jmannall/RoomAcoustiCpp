@@ -142,7 +142,7 @@ nav:
     - Overview: overview/index.md
     - Acoustic Model: overview/model.md
     - Diffraction: overview/diffraction.md
-  - Unity Interface:
+  - RoomAcoustiCpp-Unity:
     - Overview: unity/index.md
     - Installation: unity/installation.md
     - Beginner introduction: unity/introduction.md
@@ -154,8 +154,8 @@ nav:
     - Changing the RoomAcoustiC++ plugin: unity/plugin.md
     - Receive debug messages and visualise the acoustic model: unity/debug.md
     - Custom HRTF: unity/hrtf.md
-  - API Reference:
-    - API Reference: api/index.md
+  - API Reference (C++):
+    - API Reference (C++): api/index.md
     - Interface: api/interface.md
     - Structure: api/structure.md
     # - Common:

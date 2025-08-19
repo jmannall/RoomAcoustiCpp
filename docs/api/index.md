@@ -1,4 +1,4 @@
-# API Reference
+# API Overview
 
 The C++ API provides a set of functions for using the RoomAcoustiC++ library within your own applications.
 It is designed to be easy to use and integrate with existing C++ codebases.
