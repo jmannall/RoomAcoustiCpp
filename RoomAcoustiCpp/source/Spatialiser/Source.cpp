@@ -51,7 +51,7 @@ namespace RAC
 			reverbSend.store(LateReverbModel::none, std::memory_order_release);
 			updateFlags.RecordChange();
 
-			ravesResidues = std::vector<RAVESSourceResidue>(config->GetNumRavesFDNs());
+			ravesResidues = std::vector<RAVESSourceResidue>(config->GetNumRavesFDNs() * numFrequencyBands);
 
 			ResetFDNSlots();
 			AllowAccess();
@@ -284,13 +284,27 @@ namespace RAC
 			{
 				for (int j = 0; j < numFrames; j++)
 				{
+#ifdef FREQUENCY_DEPENDENT_RAVES
+					// TODO: Is there a better way to do this? Process entire octave band filter then handle residuals?
+					std::vector<Real> bands = octaveBandFilter.GetOutput(inputBuffer[j], lerpFactor);
+					int count = 0;
+					for (int i = 0; i < bands.size(); i++)
+					{
+						for (int k = 0; k < ravesResidues.size() / bands.size(); k++)
+						{
+							Complex input = ravesResidues[count].GetOutput(bands[i], lerpFactor);
+							reverbInput[count][2 * j] = input.real();
+							reverbInput[count++][2 * j + 1] = input.imag();
+						}
+					}
+#else
 					for (int i = 0; i < reverbInput.Rows(); i++)
 					{
-						// TODO: Update num source residues to numFDNs when InitRAVES()
 						Complex input = ravesResidues[i].GetOutput(inputBuffer[j], lerpFactor);
 						reverbInput[i][2 * j] = input.real();
 						reverbInput[i][2 * j + 1] = input.imag();
 					}
+#endif
 				}
 			}
 			{

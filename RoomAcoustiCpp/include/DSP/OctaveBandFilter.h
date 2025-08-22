@@ -75,7 +75,6 @@ namespace RAC
 				const int halfInputLine;	// The half length of the input line buffer (which is double buffered)
 			};
 
-			// typedef Coefficients<std::array<Real, 4>> Parameters; // add template?
 			typedef Coefficients<> Parameters;
 		public:
 			/**

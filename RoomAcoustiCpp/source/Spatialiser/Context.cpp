@@ -221,24 +221,26 @@ namespace RAC
 			size_t numThreads = std::min((unsigned int)8, std::thread::hardware_concurrency());
 			switch (mConfig->lateReverbModel.load(std::memory_order_acquire))
 			{
+			default:
 			case LateReverbModel::fdn:
 				audioThreadPool = std::make_unique<AudioThreadPool>(numThreads, mConfig->numFrames, mConfig->numReverbSources, mConfig->numFrames, mConfig->numReverbSources);
 				// mReverb = std::make_shared<SingleFDN>(&mCore, mConfig);
 				mReverbInput = Matrix<>(mConfig->numReverbSources, mConfig->numFrames);
 				break;
 			case LateReverbModel::raves:
+#ifdef FREQUENCY_DEPENDENT_RAVES
+				audioThreadPool = std::make_unique<AudioThreadPool>(numThreads, mConfig->numFrames, mConfig->GetNumRavesFDNs() * mConfig->frequencyBands.Length(), 2 * mConfig->numFrames, mConfig->numReverbSources);
+				// mReverb = std::make_shared<RAVES>(&mCore, mConfig);
+				mSources->UpdateNumRavesFDNs(mConfig->GetNumRavesFDNs() * mConfig->frequencyBands.Length());
+				mReverbInput = Matrix<>(mConfig->GetNumRavesFDNs() * mConfig->frequencyBands.Length(), 2 * mConfig->numFrames);
+				break;
+#else
 				audioThreadPool = std::make_unique<AudioThreadPool>(numThreads, mConfig->numFrames, mConfig->GetNumRavesFDNs(), 2 * mConfig->numFrames, mConfig->numReverbSources);
 				// mReverb = std::make_shared<RAVES>(&mCore, mConfig);
 				mSources->UpdateNumRavesFDNs(mConfig->GetNumRavesFDNs());
 				mReverbInput = Matrix<>(mConfig->GetNumRavesFDNs(), 2 * mConfig->numFrames);
 				break;
-			default:
-				// TODO: If the "default" behavior is identical to one of the other options, there is no need to repeat the code. We can make all switch statements more elegant.
-				// Unknown late reverb model, using default SingleFDN
-				audioThreadPool = std::make_unique<AudioThreadPool>(numThreads, mConfig->numFrames, mConfig->numReverbSources, mConfig->numFrames, mConfig->numReverbSources);
-				// mReverb = std::make_shared<SingleFDN>(&mCore, mConfig);
-				mReverbInput = Matrix<>(mConfig->numReverbSources, mConfig->numFrames);
-				break;
+#endif
 			}
 			audioFlag.store(false, std::memory_order_release);
 		}
@@ -394,7 +396,17 @@ namespace RAC
 			mConfig->numRavesFDNs.store(numModes, std::memory_order_release);
 			InitialiseAudio();
 
+#ifdef FREQUENCY_DEPENDENT_RAVES
+			// TODO: Make this not hardcoded
+			std::vector<Real> freqT60s(numModes * mConfig->frequencyBands.Length());
+			int count = 0;
+			for (int i = 0; i < mConfig->frequencyBands.Length(); i++)
+				for (int j = 0; j < numModes; j++)
+					freqT60s[count++] = (0.2 * (mConfig->frequencyBands.Length() - i - 1) + 0.5) * t60s[j];
+			mReverb->InitLateReverb(freqT60s, matrix, mConfig);
+#else
 			mReverb->InitLateReverb(t60s, matrix, mConfig);
+#endif
 			mReverb->SetEigenvectors(rightEigenvectors, leftEigenvectors);
 
 			mRayTracing->InitRoom(numPaths, indexing, energyDecay);

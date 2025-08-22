@@ -127,13 +127,15 @@ namespace RAC
 			for (int i = 0; i < numFrequencyBands - 2; i++)
 				outputs[i] = delayLines[i + numFrequencyBands - 1].GetOutput(outputs[i]);
 
-			Real output = 0.0;
+			return outputs;		// Return split bands
+
+			/*Real output = 0.0;
 			for (int i = 0; i < numFrequencyBands; i++)
 			{
 				outputs[i] *= currentGains[i];
 				output += outputs[i];
 			}
-			return outputs;
+			return outputs;*/
 			// return output;
 		}
 	}

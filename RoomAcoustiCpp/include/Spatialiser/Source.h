@@ -17,6 +17,10 @@
 #include "Common/Vec3.h"
 #include "Common/Vec4.h"
 #include "Common/Access.h"
+#include "Common/Coefficients.h"
+
+// DSP headers
+#include "DSP/OctaveBandFilter.h"
 
 // Spatialiser headers
 #include "Spatialiser/Types.h"
@@ -99,6 +103,8 @@ namespace RAC
 				std::atomic<bool> rayTracingFlag;
 			};
 
+			const int numFrequencyBands = 7;
+
 			/**
 			* @brief Default constructor
 			* 
@@ -107,7 +113,7 @@ namespace RAC
 			* @params config The spatialiser configuration
 			*/
 			Source(Binaural::CCore* core, ImageSourceManager& imageSources, const std::shared_ptr<Config>& config) : Access(), mCore(core), imageSources(imageSources), inputBuffer(config->numFrames), spatialisationMode(config->GetSpatialisationMode()),
-				ravesResidues(config->GetNumRavesFDNs())
+				ravesResidues(config->GetNumRavesFDNs() * numFrequencyBands), octaveBandFilter(Coefficients<>(config->frequencyBands.Length()), config->fs, config->frequencyBands.Length())
 			{
 				dataMutex = std::make_shared<std::mutex>();
 			}
@@ -227,9 +233,18 @@ namespace RAC
 			{
 				if (!GetAccess())
 					return;
+
+#ifdef FREQUENCY_DEPENDENT_RAVES
+				// TODO: Make this not hardcoded
+				int count = 0;
+				for (int i = 0; i < numFrequencyBands; i++)
+					for (int j = 0; j < residues.Length(); j++)
+						ravesResidues[count++].SetTargetEnergy((0.2 * (numFrequencyBands - i - 1) + 0.5) * residues[j]);
+#else
 				assert(residues.Length() == ravesResidues.size());
 				for (int i = 0; i < ravesResidues.size(); i++)
 					ravesResidues[i].SetTargetEnergy(residues[i]);
+#endif
 			}
 
 			/**
@@ -358,8 +373,11 @@ namespace RAC
 			Buffer<> inputBuffer;							// Input audio buffer for the source
 			Buffer<> bStore;								// Internal scratch audio buffer
 			Buffer<> bStoreReverb;							// Internal audio buffer reverb send
-			std::vector<Parameter> ravesGains;
 			std::vector<RAVESSourceResidue> ravesResidues;			// Residues for the RAVES algorithm
+
+#ifdef FREQUENCY_DEPENDENT_RAVES
+			OctaveBand octaveBandFilter;
+#endif
 
 			Vec3 currentPosition;					// Current source position
 			Vec4 currentOrientation;				// Current source orientation

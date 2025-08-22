@@ -48,6 +48,7 @@ namespace RAC
 			backIndices = std::vector<int>(numRays, -1);
 		}
 
+		// TODO: Make ray tracing frequency dependent
 		void TracingThread::InitRoom(int paths, const std::vector<std::vector<int>>& indexing, const Vec<>& decayRates) {
 			lock_guard<std::mutex> lock(rayPencilMutex);
 			shared_ptr<Room> sharedRoom = mRoom.lock();
