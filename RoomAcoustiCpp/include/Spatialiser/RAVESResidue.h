@@ -15,7 +15,7 @@
 // DSP headers
 #include "DSP/Interpolate.h"
 
-#define FREQUENCY_DEPENDENT_RAVES
+// #define FREQUENCY_DEPENDENT_RAVES
 
 namespace RAC
 {

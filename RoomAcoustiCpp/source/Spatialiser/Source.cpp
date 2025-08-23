@@ -51,7 +51,11 @@ namespace RAC
 			reverbSend.store(LateReverbModel::none, std::memory_order_release);
 			updateFlags.RecordChange();
 
+#ifdef FREQUENCY_DEPENDENT_RAVES
 			ravesResidues = std::vector<RAVESSourceResidue>(config->GetNumRavesFDNs() * numFrequencyBands);
+#else
+			ravesResidues = std::vector<RAVESSourceResidue>(config->GetNumRavesFDNs());
+#endif
 
 			ResetFDNSlots();
 			AllowAccess();

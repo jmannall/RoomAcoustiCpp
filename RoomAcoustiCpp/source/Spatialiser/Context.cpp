@@ -369,7 +369,7 @@ namespace RAC
 				}
 			}
 			
-			// TODO: Change this to Coefficeints for frequency dependence
+			// TODO: Change this to Coefficients for frequency dependence
 			std::vector<Real> t60s(numModes);
 			Vec<> energyDecay(numModes);
 			std::vector<Vec<>> rightEigenvectors(numModes);

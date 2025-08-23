@@ -107,6 +107,10 @@ namespace RAC
 								energyContributions,
 								contributionDelayScaling,
 								sharedReverb->GetRightEigenvector(slope_idx));
+
+#ifdef DEBUG_RTM
+						Debug::send_residue(listenerResidues[slope_idx][dir_idx], false, dir_idx, slope_idx);
+#endif
 					}
 				}
 
@@ -135,8 +139,12 @@ namespace RAC
 								contributionDelayScaling,
 								sharedReverb->GetLeftEigenvector(slope_idx));
 
-						// Compensate FDN gain based on preceding delay.
+						// Compensate gain based on preceding delay.
 						sourceResidues[slope_idx] *= std::pow(decayPerSecond[slope_idx], sharedReverb->GetPrecedingDelay());
+
+#ifdef DEBUG_RTM
+						Debug::send_residue(sourceResidues[slope_idx], true, source.id, slope_idx);
+#endif
 					}
 					sharedSource->SetSourceTargetResidues(source.id, sourceResidues);
 				}

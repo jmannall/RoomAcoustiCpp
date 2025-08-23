@@ -103,7 +103,9 @@ namespace RAC
 				std::atomic<bool> rayTracingFlag;
 			};
 
+#ifdef FREQUENCY_DEPENDENT_RAVES
 			const int numFrequencyBands = 7;
+#endif
 
 			/**
 			* @brief Default constructor
@@ -112,11 +114,19 @@ namespace RAC
 			* @param imageSources Reference to the image source array
 			* @params config The spatialiser configuration
 			*/
+#ifdef FREQUENCY_DEPENDENT_RAVES
 			Source(Binaural::CCore* core, ImageSourceManager& imageSources, const std::shared_ptr<Config>& config) : Access(), mCore(core), imageSources(imageSources), inputBuffer(config->numFrames), spatialisationMode(config->GetSpatialisationMode()),
 				ravesResidues(config->GetNumRavesFDNs() * numFrequencyBands), octaveBandFilter(Coefficients<>(config->frequencyBands.Length()), config->fs, config->frequencyBands.Length())
 			{
 				dataMutex = std::make_shared<std::mutex>();
 			}
+#else
+			Source(Binaural::CCore* core, ImageSourceManager& imageSources, const std::shared_ptr<Config>& config) : Access(), mCore(core), imageSources(imageSources), inputBuffer(config->numFrames), spatialisationMode(config->GetSpatialisationMode()),
+				ravesResidues(config->GetNumRavesFDNs())
+			{
+				dataMutex = std::make_shared<std::mutex>();
+			}
+#endif
 
 			/**
 			* @brief Default deconstructor

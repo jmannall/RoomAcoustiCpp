@@ -19,14 +19,14 @@ namespace RAC
     {
         //////////////////// Debug class ////////////////////
 
-        void  Debug::Log(const char* message, Colour colour)
+        void Debug::Log(const char* message, Colour colour)
         {
             std::lock_guard lock(debugMutex);
             if (debugCallbackInstance != nullptr)
                 debugCallbackInstance(message, (int)colour, (int)strlen(message));
         }
 
-        void  Debug::Log(const std::string message, Colour colour)
+        void Debug::Log(const std::string message, Colour colour)
         {
             std::lock_guard lock(debugMutex);
             const char* tmsg = message.c_str();
@@ -34,28 +34,28 @@ namespace RAC
                 debugCallbackInstance(tmsg, (int)colour, (int)strlen(tmsg));
         }
 
-        void  Debug::Log(const int message, Colour colour)
+        void Debug::Log(const int message, Colour colour)
         {
             std::stringstream ss;
             ss << message;
             send_log(ss, colour);
         }
 
-        void  Debug::Log(const char message, Colour colour)
+        void Debug::Log(const char message, Colour colour)
         {
             std::stringstream ss;
             ss << message;
             send_log(ss, colour);
         }
 
-        void  Debug::Log(const float message, Colour colour)
+        void Debug::Log(const float message, Colour colour)
         {
             std::stringstream ss;
             ss << message;
             send_log(ss, colour);
         }
 
-        void  Debug::Log(const double message, Colour colour)
+        void Debug::Log(const double message, Colour colour)
         {
             std::stringstream ss;
             ss << message;
@@ -118,6 +118,13 @@ namespace RAC
                 pathCallbackInstance(tmsg, &intersectionArray, (int)strlen(tmsg), 0);
         }
 
+        void Debug::send_residue(float residue, bool isSource, int channelIndex, int slopeIndex)
+        {
+            std::lock_guard lock(residueMutex);
+            if (residueCallbackInstance != nullptr)
+                residueCallbackInstance(residue, isSource, channelIndex, slopeIndex);
+        }
+
         void Debug::IEMStartFlag()
         {
             std::lock_guard lock(iemStartMutex);
@@ -159,8 +166,14 @@ void RegisterDebugCallback(FuncDebugCallback cb)
 
 void RegisterPathCallback(FuncPathCallback cb)
 {
-	std::lock_guard lock(pathMutex);
-	pathCallbackInstance = cb;
+    std::lock_guard lock(pathMutex);
+    pathCallbackInstance = cb;
+}
+
+void RegisterResidueCallback(FuncResidueCallback cb)
+{
+    std::lock_guard lock(residueMutex);
+    residueCallbackInstance = cb;
 }
 
 void RegisterIEMStartCallback(FuncIEMStartCallback cb)
@@ -195,8 +208,14 @@ void UnregisterDebugCallback()
 
 void UnregisterPathCallback()
 {
-	std::lock_guard lock(pathMutex);
-	pathCallbackInstance = nullptr;
+    std::lock_guard lock(pathMutex);
+    pathCallbackInstance = nullptr;
+}
+
+void UnregisterResidueCallback()
+{
+    std::lock_guard lock(residueMutex);
+    residueCallbackInstance = nullptr;
 }
 
 void UnregisterIEMStartCallback()
