@@ -10,7 +10,7 @@ Install [Unity Hub](https://unity.com/download).
 
 Copy the `RoomAcoustiCpp-Unity` folder into the `Assets` directory of your Unity project.
 
-- Download the latest version of RoomAcoustiCpp-Unity from the [release section](https://github.com/jmannall/RoomAcoustiCpp-Unity/releases/latest), or clone the repository with the following command
+- Download the latest version of RoomAcoustiCpp-Unity from the [release section](https://github.com/jmannall/RoomAcoustiCpp-Unity/releases/latest), or clone the repository with the following command:
 ```powershell
 # Navigate to the Unity project Assets directory 
 cd Assets
@@ -18,6 +18,7 @@ cd Assets
 # Clone the repository
 git clone https://github.com/jmannall/RoomAcoustiCpp-Unity.git
 ```
+
 ### Branch compatibility
 
 Check you are using the correct branch of the GitHub repository.

@@ -1,6 +1,6 @@
 # Creating room geometry
 
-To add geometry to RoomAcoustiC++, create an empty GameObject and add the `RACMesh` script.
+To add geometry to RAC, create an empty GameObject and add the `RACMesh` script.
 Assign any 3D objects (e.g. quads, cubes) as children of the GameObject with the `RACMesh` component.
 Quads are recommended over planes due to the reduced number of triangles in the default Unity mesh.
 

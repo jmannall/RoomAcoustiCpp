@@ -1,6 +1,8 @@
 # Diffraction Modelling
 
 In geometric acoustics, diffraction can be modelled using diffraction paths that travel from the source to the receiver via edges of the room geometry.
+Based on the geometry of the edge and relative position of the source and receiver, the frequency response can be calculated.
+When the source is in the shadow zone, as shown in Figure 1, diffraction exhibits a low-pass filter response with a roughly 3db/octave roll-off.
 
 <div align="center">
   <img src="../images/DiffractionZones.png" alt="Zones around a diffracting edge" width="600"/>
@@ -10,11 +12,11 @@ In geometric acoustics, diffraction can be modelled using diffraction paths that
 
 ## Models
 
-RoomAcoustiC++ implements multiple diffraction models.
+RAC implements multiple diffraction models:
 
 - **Attenuate:** Attenuates the sound based on the length of the diffraction path. It is a simple model that does not consider the angle of incidence or frequency-dependent effects.
 
-- **LPF:** Applies a 1st order low-pass filter at 1kHz to diffraction paths. It is a simple model that does not consider the angle of incidence.
+- **LPF:** Applies a 1st order low-pass filter at 1kHz to diffraction paths when the source is in the shadow zone. It is a simple model that does not consider the angle of incidence.
 
 - **UDFA:** The Universal Diffraction Filter Approximation[^1] uses multiple 1st order shelving IIR filters to model the low-pass filter response of diffraction paths.
 
@@ -25,6 +27,8 @@ RoomAcoustiC++ implements multiple diffraction models.
 - **UTD:** The Uniform Theory of Diffraction[^3] (UTD) model implemented using a Linkwitz-Riley filterbank[^4].
 
 - **BTM:** The Biot-Tolstoy-Medwin-Svensson[^5] (BTMS) model is a physically accurate model implemented using an FIR filter.
+
+Currently, only 1st order diffraction (paths that include a single diffracting edge) is supported.
 
 ---
 

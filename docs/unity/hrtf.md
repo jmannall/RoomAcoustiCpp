@@ -2,7 +2,10 @@
 
 RAC uses the [3D-TuneIn Toolkit](https://github.com/3DTune-In/3dti_AudioToolkit) (3DTI) for HRTF processing. Currently only the .3dti-hrtf file format is supported.
 If a custom HRTF file is desired, the 3DTI toolkit provides a [SOFATo3DTI converter](https://github.com/3DTune-In/3dti_AudioToolkit/releases/download/M20221031/HRTF_SOFATo3DTI.zip).
-It can be used as follows: `HRTF_SOFATo3DTI -i <SOFA file> -o <3dti-hrtf file>`.
+It can be used as follows: 
+```powershell
+HRTF_SOFATo3DTI -i <SOFA file> -o <3dti-hrtf file>
+```
 The SOFA file should have the interaural time delay (ITD) removed and left and right ear delays stored in the Delay variable of the SOFA file.
 
 ## Convert to minimum phase

@@ -40,7 +40,7 @@ Real rooms contain obstacles and edges that bend sound waves, producing diffract
 The Image Edge Model augments the image source approach by creating virtual "image edges".
 These are reflected in the same way as image sources and can be used to create diffraction paths from image sources.
 This allows the model to locate sound paths that include both diffraction and reflections.
-RoomAcoustiC++ currently only supports 1st-order diffraction but an extension to higher orders is planned.
+RAC currently only supports 1st-order diffraction but an extension to higher orders is planned.
 
 ## Configuration
 

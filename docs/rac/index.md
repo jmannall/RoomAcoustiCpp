@@ -1,7 +1,11 @@
 # Overview
 
 The **RoomAcoustiC++ (RAC)** library is a C++ library designed to support researchers and developers in the field of immersive audio and room acoustics.
-This section provides an overview of the library's features.
+It was developed for the purpose of perceptual experiments on the plausiblity of acoustic rendering methods for VR and AR scenarios.
+Now released open-source, the hope is to enable further research on the perception of room acoustics and provide an accessible and transparent tool for researchers across both technical and non-technical disciplines.
+
+This section provides an overview of the acoustic models implemented within RAC.
+It is designed as a high level summary that is relevant to both the [C++](../api/index.md) and [Unity](../unity/index.md) interfaces.
 
 ## Features
 
@@ -11,15 +15,6 @@ This section provides an overview of the library's features.
 * Diffraction modelling
 * FDN late reverberation
 * Dynamic geometry
-
-## Installation
-
-To use the C++ library, you need to add the RoomAcoustiC++ source and header files to your project and add `#!cpp #include "Spatialiser/Interface.h"`.
-You can clone the repository using the following command:
-
-```bash
-git clone --recurse-submodules https://github.com/jmannall/RoomAcoustiCpp.git
-```
 
 <!-- 
 ## Description

@@ -56,11 +56,11 @@ Similarly, you can control the audio source by calling the following functions:
 ```csharp
 RACAudioSource audioSource;
 
-audioSource.Play();       // Play the audio source. This creates the source in RoomAcoustiC++ if it is not already initialised
+audioSource.Play();       // Play the audio source. This creates the source in RAC if it is not already initialised
 audioSource.Pause();      // Pause the audio source
 audioSource.PlayPause();  // Toggle play/pause
-audioSource.Stop();       // Stop the audio source. This removes the source from RoomAcoustiC++
-audioSource.Restart();    // Restart the audio source in RoomAcoustiC++
+audioSource.Stop();       // Stop the audio source. This removes the source from RAC
+audioSource.Restart();    // Restart the audio source in RAC
 
 double time = AudioSettings.dspTime + 1.0;
 audioSource.PlayScheduled(time);    // Play the current clip in 1 second

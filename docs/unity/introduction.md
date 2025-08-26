@@ -7,10 +7,10 @@ The behaviour of GameObjects can be modified by attaching Components and C# scri
 - [Introduction to Game Development](https://www.youtube.com/playlist?list=PLFt_AvWsXl0fnA91TcmkRyhhixX9CO3Lw) – Sebastian Lague
 
 ## Overview
-RoomAcoustiCpp-Unity provides a number of premade C# scripts that represent the different components of the RoomAcoustiC++ spatialisation system, making it easy to integrate spatial audio into your Unity projects.
+RoomAcoustiCpp-Unity provides a number of premade C# scripts that represent the different components of the RAC spatialisation system, making it easy to integrate spatial audio into your Unity projects.
 
 ### RACManager
-The `RACManager` script is the main entry point for using RoomAcoustiC++ in Unity.
+The `RACManager` script is the main entry point for using RAC in Unity.
 It handles the initialisation of the spatialiser and manages the acoustic model.
 
 ### RACListener
@@ -34,12 +34,12 @@ A number of preset materials are provided.
 The material entry is paired with a Unity material.
 
 ### RACDebug
-The `RACDebug` script is used to visualise the RoomAcoustiC++ spatialisation system in Unity.
+The `RACDebug` script is used to visualise the RAC spatialisation system in Unity.
 If the RAC_Debug plugin is used and gizmos are enabled, it will draw the current edges, image source paths and reverb source positions in the scene view.
 
 ## Create your first scene
 
-The following steps outline how to create a simple scene in Unity and integrate RoomAcoustiC++.
+The following steps outline how to create a simple scene in Unity and integrate RAC.
 
 1. Create an empty GameObject and attach the RACManager script.
     1. Change the Image Edge Configuration to:

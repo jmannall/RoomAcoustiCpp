@@ -1,6 +1,6 @@
 # Changing the RoomAcoustiC++ plugin
 
-Four different plugins are provided for the RoomAcoustiC++ acoustic model.
+Four different RAC plugins are provided that enable additional functionality for visualising the acoustic model and profiling the underlying C++ code.
 They are controlled through a compiler flag that can be automatically assigned using the `RACManager` script.
 Simply select the desired plugin in the `RACManager` inspector and press **Apply Plugin**.
 This will update the compiler flag and rebuild the project with the selected plugin.

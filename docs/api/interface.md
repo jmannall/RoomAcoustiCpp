@@ -1,4 +1,7 @@
-Provides the main API for interacting with the RoomAcoustiC++ library, including initialisation, listener control, source and geometry creation and manipulation, and audio submission and retrieval.
+# Interface
+
+The `Interface.h` header file provides the main API for interacting with the RAC library, including initialisation, listener control, source and geometry creation and manipulation, and audio submission and retrieval.
+The `SubmitAudio` and `GetOutput` function calls are designed to be thread safe with all other function calls (though not each other).
 
 - **Namespace:** `RAC::Spatialiser`
 - **Header:** `Spatialiser/Interface.h`
@@ -74,6 +77,13 @@ Sets the diffraction model (Attenuate, LPF, UDFA, UDFA-I, NNBest, NNSmall, UTD, 
 
 ---
 
+### `#!cpp void UpdateImpulseResponseMode(const bool mode)`
+Sets impulse response mode.
+
+- `mode`: If true disables all interpolation.
+
+---
+
 ### `#!cpp void InitLateReverb(const Real volume, const Vec& dimensions, FDNMatrix matrix)`
 Initializes late reverberation with room volume, dimensions, and FDN matrix.
 
@@ -112,7 +122,7 @@ Updates the position and orientation of a source.
 
 - `id`: Source ID.
 - `position`: New position.
-- `orientation`: New orientation.
+- `orientation`: New orientation (quaternion).
 
 ---
 
@@ -170,7 +180,7 @@ Updates room planes and edges. Should be called after any updates to walls.
 
 ---
 
-## Audio
+## Audio (thread safe with all other function calls)
 
 ### `#!cpp void SubmitAudio(size_t id, const Buffer<>& data)`
 Submits an audio buffer for a source.
@@ -181,16 +191,9 @@ Submits an audio buffer for a source.
 ---
 
 ### `#!cpp void GetOutput(Buffer<>& output)`
-Retrieves the processed output buffer.
+Retrieves the processed output buffer. Should be called after all sources have submitted an audio buffer.
 
 - `output`: Reference to output buffer.
-
----
-
-### `#!cpp void UpdateImpulseResponseMode(const bool mode)`
-Sets impulse response mode.
-
-- `mode`: If true disables all interpolation.
 
 ---
 

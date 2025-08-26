@@ -1,6 +1,6 @@
 # Acoustic Model
 
-RoomAcoustiC++ implements a hybrid geometric acoustic and feedback delay network model for simulating sound propagation in rooms.
+RAC implements a hybrid geometric acoustic and feedback delay network model for simulating sound propagation in rooms.
 It is based on the model proposed by Wendt et al.[^1] with modifications to support diffraction and non-shoebox rooms.
 
 The Image Edge Model[^2] is used to simulate early reflections and diffraction.
@@ -26,7 +26,7 @@ It extends the classic Image Source Model[^3] by incorporating edge diffraction,
 
 ---
 
-Early reflections are modeled by treating each wall as a mirror that creates virtual *image sources*.
+Early reflections are modeled by treating each wall as a mirror that creates virtual **image sources**.
 For each reflection order, the position of the image source is calculated by mirroring the real source across the room's surfaces.
 The listener receives sound from both the direct source and its images, with each path having a distinct delay, attenuation, and direction.
 For each reflection path, the received signal at time ($t$) is given by:
@@ -44,14 +44,14 @@ where
 In arbitrary polyhedral rooms, each image source must be checked for valid intersections and then visibility to the listener.
 
 Real rooms contain obstacles and edges that bend sound waves, producing diffraction.
-The Image Edge Model augments the image source approach by creating virtual *image edges*.
+The Image Edge Model augments the image source approach by creating virtual **image edges**.
 These are reflected in the same way as image sources and can be used to create diffraction paths from image sources.
 This allows the model to locate sound paths that include both diffraction and reflections.
-RoomAcoustiC++ currently only supports 1st-order diffraction but an extension to higher orders is planned.
+RAC currently only supports 1st-order diffraction but an extension to higher orders is planned.
 
 The Image Edge Model can be configured with the following parameters:
 
-- **Direct sound**: none, doCheck (Check for obstructions), alwaysTrue (Do not check for obstructions).
+- **Direct sound**: None, Check for obstructions, Always visible (i.e do not check for obstructions).
 - **Reflection Order**: The maximum order paths including only reflections.
 - **Shadow Diffraction Order**: The maximum order of paths including shadowed diffraction.
 - **Specular Diffraction Order**: The maximum order of paths including non-shadowed edge diffraction.
@@ -61,7 +61,7 @@ The Image Edge Model can be configured with the following parameters:
 
 ## Feedback Delay Network
 
-Feedback Delay Networks[^4] (FDNs) are used to mimic the natural decay of sound for late reverberation by controlling the decay time and frequency response of late reveberation.
+Feedback Delay Networks[^4] (FDNs) are used to mimic the natural decay of sound for late reverberation by controlling the decay time and frequency response of late reverberation.
 They use a recursive structure with multiple delay lines allowing for efficient processing independent of the reverberation time.
 
 ---
