@@ -16,6 +16,12 @@ It is designed as a high level summary that is relevant to both the [C++](../api
 * FDN late reverberation
 * Dynamic geometry
 
+## Citable References
+
+If you make use of RAC in your own research or other projects, please consider citing the following publication:
+
+* Mannall J, Savioja L, Neidhardt A, Mason R, and De Sena E. "RoomAcoustiC++: An open-source room acoustic model for real-time audio simulations,” in Proc. AES Int. Conf. Headphone Tech., Espoo, Finland. 1-13, 2025.
+
 <!-- 
 ## Description
 
