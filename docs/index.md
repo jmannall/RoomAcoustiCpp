@@ -11,7 +11,7 @@ This site covers the following repositories with associated tools:
 
 ## Quick start
 
-* [C++ Interface](api/interface.md): If you are building a C++ audio program you can integrate the RAC library into your own application that handles the appropriate function calls to the API.
+* [C++ Interface](api/index.md): If you are building a C++ audio program you can integrate the RAC library into your own application that handles the appropriate function calls to the API.
 * [Unity Interface](unity/index.md): If you are a researcher or developer looking to use RAC you can use the provided Unity interface for efficient and simple control of the acoustic model (suitable for users with no or minimal coding experience).
 
 ## Credits
