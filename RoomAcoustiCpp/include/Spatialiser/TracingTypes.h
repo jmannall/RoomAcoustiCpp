@@ -21,6 +21,16 @@ namespace RAC
     namespace Spatialiser
     {
         /**
+         * @brief Compute a 3D norm: sqrt((x,y,z) · (x,y,z)).
+         *
+         * @param x X-component of the vector.
+         * @param y Y-component of the vector.
+         * @param z Z-component of the vector.
+         * @return The scalar norm.
+         */
+        Real norm3(Real x, Real y, Real z);
+
+        /**
          * @brief Compute a 3D dot product: (ax,ay,az) · (bx,by,bz).
          *
          * @param ax X-component of the first vector.
@@ -100,7 +110,7 @@ namespace RAC
              * @brief Number of rays stored.
              * @return Count of rays.
              */
-            int size() const { return Dx.size(); }
+            inline int size() const { return Dx.size(); }
 
             /**
              * @brief Resize all internal arrays to hold @p n rays.
@@ -113,6 +123,11 @@ namespace RAC
              * @param hemisphereOnly If true, generate a uniform sampling of the unit hemisphere (positive Z). Same number of points.
              */
             void fill_uniform_sphere(bool hemisphereOnly);
+
+            /**
+             * @brief Normalize all direction vectors.
+             */
+            void normalize_directions();
 
 #if PLUCKER_KERNEL
             /**
@@ -161,7 +176,7 @@ namespace RAC
              * @brief Number of rays stored.
              * @return Count of rays.
              */
-            int size() const { return Dx.size(); }
+            inline int size() const { return Dx.size(); }
 
             /**
              * @brief Resize all internal arrays to hold @p n rays.
@@ -174,6 +189,11 @@ namespace RAC
              * @param hemisphereOnly If true, generate a uniform sampling of the unit hemisphere (positive Z). Same number of points.
              */
             void fill_uniform_sphere(bool hemisphereOnly);
+
+            /**
+             * @brief Normalize all direction vectors.
+             */
+            void normalize_directions();
 
 #if PLUCKER_KERNEL
             /**
@@ -278,7 +298,7 @@ namespace RAC
              * @brief Number of triangles stored.
              * @return Count of triangles.
              */
-            int size() const { return d0.size(); }
+            inline int size() const { return d0.size(); }
 
             /**
              * @brief Resize all internal arrays to hold @p n triangles.

@@ -11,7 +11,8 @@ namespace RAC
         void intersection_test(
             const TriangleMeshSoA& triangles, int triangleIndex,
             const RayBundleSoA& rays, int rayIndex,
-            Real& distance, Real& cosine) {
+            Real& distance, Real& cosine)
+        {
             // Sanity check: the requested triangle must exist.
             assert(triangleIndex < triangles.size());
             // Sanity check: the requested ray must exist.
@@ -244,7 +245,8 @@ namespace RAC
         void intersection_test(
             const TriangleMeshSoA& triangles, int triangleIndex,
             const RayPencilSoA& rays, int rayIndex,
-            Real& distance, Real& cosine) {
+            Real& distance, Real& cosine)
+        {
             // Sanity check: the requested triangle must exist.
             assert(triangleIndex < triangles.size());
             // Sanity check: the requested ray must exist.
@@ -477,7 +479,8 @@ namespace RAC
         void intersection_test(
             const TriangleMeshSoA& triangles, int triangleIndex,
             const Vec3& rayOrigin, const Vec3& rayDirection,
-            Real& distance, Real& cosine) {
+            Real& distance, Real& cosine)
+        {
             // Sanity check: the requested triangle must exist.
             assert(triangleIndex < triangles.size());
             // Sanity check: the requested ray must exist.
@@ -715,7 +718,8 @@ namespace RAC
             const TriangleMeshSoA& triangles, const RayBundleSoA& rays, int rayIndex,
             int& triangleIdxFront, Real& distanceFront, Real& cosineFront,
             int& triangleIdxBack, Real& distanceBack, Real& cosineBack,
-            int ignoredTriangleIndex) {
+            int ignoredTriangleIndex)
+        {
             // Initialize per-ray front/back bests.
             triangleIdxFront = -1;
             triangleIdxBack = -1;
@@ -793,7 +797,8 @@ namespace RAC
             const TriangleMeshSoA& triangles, const RayPencilSoA& rays, int rayIndex,
             int& triangleIdxFront, Real& distanceFront, Real& cosineFront,
             int& triangleIdxBack, Real& distanceBack, Real& cosineBack,
-            int ignoredTriangleIndex) {
+            int ignoredTriangleIndex)
+        {
             // Initialize per-ray front/back bests.
             triangleIdxFront = -1;
             triangleIdxBack = -1;
@@ -871,7 +876,8 @@ namespace RAC
             const TriangleMeshSoA& triangles, const Vec3& rayOrigin, const Vec3& rayDirection,
             int& triangleIdxFront, Real& distanceFront, Real& cosineFront,
             int& triangleIdxBack, Real& distanceBack, Real& cosineBack,
-            int ignoredTriangleIndex) {
+            int ignoredTriangleIndex)
+        {
             // Initialize per-ray front/back bests.
             triangleIdxFront = -1;
             triangleIdxBack = -1;
@@ -946,8 +952,22 @@ namespace RAC
         }
 
         // ------------------------ RayBundle methods ------------------------
+
+        RayBundle::RayBundle()
+        {
+            numRays = 0;
+            rays.resize(0);
+
+            radiance = Vec<Real>(numRays, 1);
+            totalDistance = Vec<Real>(numRays);
+            latestDistance = Vec<Real>(numRays);
+            latestCosine = Vec<Real>(numRays);
+            latestTriangleIdx = std::vector<int>(numRays, -1);
+            previousTriangleIdx = std::vector<int>(numRays, -1);
+        }
         
-        RayBundle::RayBundle(const Vec3& origin, const std::vector<Vec3>& directions) {
+        RayBundle::RayBundle(const Vec3& origin, const std::vector<Vec3>& directions)
+        {
             numRays = directions.size();
             rays.resize(numRays);
 
@@ -959,19 +979,19 @@ namespace RAC
                 rays.Dy[i] = directions[i].y;
                 rays.Dz[i] = directions[i].z;
             }
-#if PLUCKER_KERNEL
-            rays.compute_moments();
-#endif // end PLUCKER_KERNEL
+            // Note that this also computes the moments if needed.
+            rays.normalize_directions();
 
             radiance = Vec<Real>(numRays, 1);
-            totalDistance = Vec<Real>(numRays, 0);
-            latestDistance = Vec<Real>(numRays, 0);
-            latestCosine = Vec<Real>(numRays, 0);
+            totalDistance = Vec<Real>(numRays);
+            latestDistance = Vec<Real>(numRays);
+            latestCosine = Vec<Real>(numRays);
             latestTriangleIdx = std::vector<int>(numRays, -1);
             previousTriangleIdx = std::vector<int>(numRays, -1);
         }
 
-        RayBundle::RayBundle(const std::vector<Vec3>& origins, const std::vector<Vec3>& directions) {
+        RayBundle::RayBundle(const std::vector<Vec3>& origins, const std::vector<Vec3>& directions)
+        {
             numRays = directions.size();
             rays.resize(numRays);
 
@@ -983,19 +1003,19 @@ namespace RAC
                 rays.Dy[i] = directions[i].y;
                 rays.Dz[i] = directions[i].z;
             }
-#if PLUCKER_KERNEL
-            rays.compute_moments();
-#endif // end PLUCKER_KERNEL
+            // Note that this also computes the moments if needed.
+            rays.normalize_directions();
 
             radiance = Vec<Real>(numRays, 1);
-            totalDistance = Vec<Real>(numRays, 0);
-            latestDistance = Vec<Real>(numRays, 0);
-            latestCosine = Vec<Real>(numRays, 0);
+            totalDistance = Vec<Real>(numRays);
+            latestDistance = Vec<Real>(numRays);
+            latestCosine = Vec<Real>(numRays);
             latestTriangleIdx = std::vector<int>(numRays, -1);
             previousTriangleIdx = std::vector<int>(numRays, -1);
         }
 
-        void RayBundle::traceAll(const TriangleMeshSoA& triangles) {
+        void RayBundle::traceAll(const TriangleMeshSoA& triangles)
+        {
             // Buffers for ray processing
             int triangleIdxFront, triangleIdxBack;
             Real distanceFront, distanceBack, cosineFront, cosineBack;
@@ -1020,14 +1040,16 @@ namespace RAC
             }
         }
 
-        void RayBundle::advanceAndReflect(const TriangleMeshSoA& triangles) {
+        void RayBundle::advanceAndReflect(const TriangleMeshSoA& triangles)
+        {
             // TODO: Port definition from a different project, if we ever want to trace multiple reflection orders.
-#if PLUCKER_KERNEL
-            rays.compute_moments();
-#endif // end PLUCKER_KERNEL
+            
+            // Note that this also computes the moments if needed.
+            rays.normalize_directions();
         }
 
-        void RayBundle::getOrigins(std::vector<Vec3>& origins) const {
+        void RayBundle::getOrigins(std::vector<Vec3>& origins) const
+        {
             assert(origins.size() == numRays);
             for (int i = 0; i < numRays; ++i) {
                 origins[i].x = rays.Ox[i];
@@ -1036,7 +1058,8 @@ namespace RAC
             }
         }
 
-        void RayBundle::getDirections(std::vector<Vec3>& directions) const {
+        void RayBundle::getDirections(std::vector<Vec3>& directions) const
+        {
             assert(directions.size() == numRays);
             for (int i = 0; i < numRays; ++i) {
                 directions[i].x = rays.Dx[i];
@@ -1045,21 +1068,22 @@ namespace RAC
             }
         }
 
-        void RayBundle::getTotalDistances(Vec<>& distances) const {
+        void RayBundle::getTotalDistances(Vec<>& distances) const
+        {
             assert(distances.Rows() == numRays);
-            for (int i = 0; i < numRays; ++i) {
+            for (int i = 0; i < numRays; ++i)
                 distances[i] = totalDistance[i];
-            }
         }
 
-        void RayBundle::getCosines(Vec<>& cosines) const {
+        void RayBundle::getCosines(Vec<>& cosines) const
+        {
             assert(cosines.Rows() == numRays);
-            for (int i = 0; i < numRays; ++i) {
+            for (int i = 0; i < numRays; ++i)
                 cosines[i] = latestCosine[i];
-            }
         }
 
-        void RayBundle::getIndices(std::vector<int>& current, std::vector<int>& previous) const {
+        void RayBundle::getIndices(std::vector<int>& current, std::vector<int>& previous) const
+        {
             assert(current.size() == numRays);
             assert(previous.size() == numRays);
             for (int i = 0; i < numRays; ++i) {
@@ -1068,36 +1092,51 @@ namespace RAC
             }
         }
 
-        void RayBundle::getRadiance(Vec<>& rad) const {
+        void RayBundle::getRadiance(Vec<>& rad) const
+        {
             assert(rad.Rows() == numRays);
-            for (int i = 0; i < numRays; ++i) {
+            for (int i = 0; i < numRays; ++i)
                 rad[i] = radiance[i];
-            }
         }
 
         // ------------------------ RayPencil methods ------------------------
 
-        RayPencil::RayPencil(int numDirections, bool hemisphereOnly) {
-            numRays = numDirections;
-            rays.resize(numRays);
+        RayPencil::RayPencil()
+        {
+            numRays = 0;
+            rays.resize(0);
 
-            rays.Ox = 0.0;
-            rays.Oy = 0.0;
-            rays.Oz = 0.0;
-            rays.fill_uniform_sphere(hemisphereOnly);
-#if PLUCKER_KERNEL
-            rays.compute_moments();
-#endif // end PLUCKER_KERNEL
-
-            frontDistance = Vec<Real>(numRays, 0);
-            backDistance = Vec<Real>(numRays, 0);
-            frontCosine = Vec<Real>(numRays, 0);
-            backCosine = Vec<Real>(numRays, 0);
+            frontDistance = Vec<Real>(numRays);
+            backDistance = Vec<Real>(numRays);
+            frontCosine = Vec<Real>(numRays);
+            backCosine = Vec<Real>(numRays);
             frontTriangleIdx = std::vector<int>(numRays, -1);
             backTriangleIdx = std::vector<int>(numRays, -1);
         }
 
-        RayPencil::RayPencil(const std::vector<Vec3>& directions) {
+        RayPencil::RayPencil(int numDirections, bool hemisphereOnly)
+        {
+            numRays = numDirections;
+            rays.resize(numRays);
+
+            exposeMirrorCopies = hemisphereOnly;
+
+            rays.Ox = 0.0;
+            rays.Oy = 0.0;
+            rays.Oz = 0.0;
+            // Note that this automatically normalizes the directions and computes the moments if needed.
+            rays.fill_uniform_sphere(hemisphereOnly);
+
+            frontDistance = Vec<Real>(numRays);
+            backDistance = Vec<Real>(numRays);
+            frontCosine = Vec<Real>(numRays);
+            backCosine = Vec<Real>(numRays);
+            frontTriangleIdx = std::vector<int>(numRays, -1);
+            backTriangleIdx = std::vector<int>(numRays, -1);
+        }
+
+        RayPencil::RayPencil(const std::vector<Vec3>& directions)
+        {
             numRays = directions.size();
             rays.resize(numRays);
 
@@ -1109,35 +1148,37 @@ namespace RAC
                 rays.Dy[i] = directions[i].y;
                 rays.Dz[i] = directions[i].z;
             }
-#if PLUCKER_KERNEL
-            rays.compute_moments();
-#endif // end PLUCKER_KERNEL
+            // Note that this also computes the moments if needed.
+            rays.normalize_directions();
 
-            frontDistance = Vec<Real>(numRays, 0);
-            backDistance = Vec<Real>(numRays, 0);
-            frontCosine = Vec<Real>(numRays, 0);
-            backCosine = Vec<Real>(numRays, 0);
+            frontDistance = Vec<Real>(numRays);
+            backDistance = Vec<Real>(numRays);
+            frontCosine = Vec<Real>(numRays);
+            backCosine = Vec<Real>(numRays);
             frontTriangleIdx = std::vector<int>(numRays, -1);
             backTriangleIdx = std::vector<int>(numRays, -1);
         }
 
-        void RayPencil::moveOrigin(const Vec3& origin) {
+        void RayPencil::moveOrigin(const Vec3& origin)
+        {
             rays.Ox = origin.x;
             rays.Oy = origin.y;
             rays.Oz = origin.z;
+
 #if PLUCKER_KERNEL
             rays.compute_moments();
 #endif // end PLUCKER_KERNEL
 
-            frontDistance = Vec<Real>(numRays, 0);
-            backDistance = Vec<Real>(numRays, 0);
-            frontCosine = Vec<Real>(numRays, 0);
-            backCosine = Vec<Real>(numRays, 0);
+            frontDistance = Vec<Real>(numRays);
+            backDistance = Vec<Real>(numRays);
+            frontCosine = Vec<Real>(numRays);
+            backCosine = Vec<Real>(numRays);
             frontTriangleIdx = std::vector<int>(numRays, -1);
             backTriangleIdx = std::vector<int>(numRays, -1);
         }
 
-        void RayPencil::traceAll(const TriangleMeshSoA& triangles) {
+        void RayPencil::traceAll(const TriangleMeshSoA& triangles)
+        {
             // Buffers for ray processing
             int temp_frontTriangleIdx, temp_backTriangleIdx;
             Real temp_frontDistance, temp_backDistance, temp_frontCosine, temp_backCosine;
@@ -1157,69 +1198,144 @@ namespace RAC
             }
         }
         
-        void RayPencil::clusterDirections(const std::vector<Vec3>& directions,
-            std::vector<int>& frontClusters, std::vector<int>& backClusters) const {
-            assert(frontClusters.size() == numRays);
-            assert(backClusters.size() == numRays);
+        void RayPencil::clusterDirections(
+            const std::vector<Vec3>& directions,
+            std::vector<int>& clusters) const
+        {
+            if (exposeMirrorCopies)
+                assert(clusters.size() == 2 * numRays);
+            else
+                assert(clusters.size() == numRays);
 
             // Buffer used while iterating
-            std::vector<Real> cosineSimilarity(directions.size(), 0.0);
-            int argMin, argMax;
+            std::vector<Real> cosineSimilarity(directions.size());
 
-            for (int i = 0; i < numRays; ++i) {
-                for (int j = 0; j < directions.size(); ++j) {
-                    cosineSimilarity[j] = dot3(
-                        rays.Dx[i], rays.Dy[i], rays.Dz[i],
-                        directions[j].x, directions[j].y, directions[j].z);
+            for (int i = 0; i < numRays; ++i)
+            {
+                if (directions.size() > 0)
+                {
+                    for (int j = 0; j < directions.size(); ++j)
+                    {
+                        // N.B.: Ray directions are guaranteed to have unit norm, cluster directions are ASSUMED to have unit norm.
+                        // If cluster directions have non-unit norms, it will result in "weighted" clustering.
+                        cosineSimilarity[j] = dot3(
+                            rays.Dx[i], rays.Dy[i], rays.Dz[i],
+                            directions[j].x, directions[j].y, directions[j].z);
+                    }
+                    clusters[i] = std::distance(cosineSimilarity.begin(), std::max_element(cosineSimilarity.begin(), cosineSimilarity.end()));
                 }
-                argMin = std::distance(cosineSimilarity.begin(), std::min_element(cosineSimilarity.begin(), cosineSimilarity.end()));
-                argMax = std::distance(cosineSimilarity.begin(), std::max_element(cosineSimilarity.begin(), cosineSimilarity.end()));
-                if (cosineSimilarity[argMax] >= -cosineSimilarity[argMin]) {
-                    // The highest positive dot product is greater than the absolute value of the lowest negative dot product,
-                    // i.e., the forward direction has found a better match than the backward direction.
-                    frontClusters[i] = argMax;
-                    backClusters[i] = -1;
-                } else {
-                    // The backward direction has found a better match than the forward direction.
-                    frontClusters[i] = -1;
-                    backClusters[i] = argMin;
+                else
+                    clusters[i] = -1;
+            }
+
+            if (exposeMirrorCopies)
+            {
+                // Append direct opposites
+                for (int i = 0; i < numRays; ++i)
+                {
+                    if (directions.size() > 0)
+                    {
+                        for (int j = 0; j < directions.size(); ++j)
+                        {
+                            // N.B.: Ray directions are guaranteed to have unit norm, cluster directions are ASSUMED to have unit norm.
+                            // If cluster directions have non-unit norms, it will result in "weighted" clustering.
+                            cosineSimilarity[j] = dot3(
+                                rays.Dx[i], rays.Dy[i], rays.Dz[i],
+                                directions[j].x, directions[j].y, directions[j].z);
+                        }
+                        // N.B.: We look for the MINIMUM this time
+                        clusters[i + numRays] = std::distance(cosineSimilarity.begin(), std::min_element(cosineSimilarity.begin(), cosineSimilarity.end()));
+                    }
+                    else
+                        clusters[i + numRays] = -1;
                 }
             }
         }
 
-        void RayPencil::getDirections(std::vector<Vec3>& directions) const {
-            assert(directions.size() == numRays);
+        void RayPencil::getDirections(std::vector<Vec3>& directions) const
+        {
+            if (exposeMirrorCopies)
+                assert(directions.size() == 2 * numRays);
+            else
+                assert(directions.size() == numRays);
+
             for (int i = 0; i < numRays; ++i) {
                 directions[i].x = rays.Dx[i];
                 directions[i].y = rays.Dy[i];
                 directions[i].z = rays.Dz[i];
             }
-        }
 
-        void RayPencil::getDistances(Vec<>& front, Vec<>& back) const {
-            assert(front.Rows() == numRays);
-            assert(back.Rows() == numRays);
-            for (int i = 0; i < numRays; ++i) {
-                front[i] = frontDistance[i];
-                back[i] = backDistance[i];
+            if (exposeMirrorCopies)
+            {
+                // Append direct opposites
+                for (int i = 0; i < numRays; ++i)
+                    directions[i + numRays] = -directions[i];
             }
         }
 
-        void RayPencil::getCosines(Vec<>& front, Vec<>& back) const {
-            assert(front.Rows() == numRays);
-            assert(back.Rows() == numRays);
-            for (int i = 0; i < numRays; ++i) {
-                front[i] = frontCosine[i];
-                back[i] = backCosine[i];
+        void RayPencil::getDistances(Vec<>& distances) const
+        {
+            if (exposeMirrorCopies)
+                assert(distances.Rows() == 2 * numRays);
+            else
+                assert(distances.Rows() == numRays);
+
+            for (int i = 0; i < numRays; ++i)
+                distances[i] = frontDistance[i];
+
+            if (exposeMirrorCopies)
+            {
+                // Append direct opposites
+                for (int i = 0; i < numRays; ++i)
+                    distances[i + numRays] = backDistance[i];
             }
         }
 
-        void RayPencil::getIndices(std::vector<int>& front, std::vector<int>& back) const {
-            assert(front.size() == numRays);
-            assert(back.size() == numRays);
-            for (int i = 0; i < numRays; ++i) {
+        void RayPencil::getCosines(Vec<>& cosines) const
+        {
+            if (exposeMirrorCopies)
+                assert(cosines.Rows() == 2 * numRays);
+            else
+                assert(cosines.Rows() == numRays);
+
+            for (int i = 0; i < numRays; ++i)
+                cosines[i] = frontCosine[i];
+
+            if (exposeMirrorCopies)
+            {
+                // Append direct opposites
+                for (int i = 0; i < numRays; ++i)
+                    cosines[i + numRays] = backCosine[i];
+            }
+        }
+
+        void RayPencil::getIndices(std::vector<int>& front, std::vector<int>& back) const
+        {
+            if (exposeMirrorCopies)
+            {
+                assert(front.size() == 2 * numRays);
+                assert(back.size() == 2 * numRays);
+            }
+            else
+            {
+                assert(front.size() == numRays);
+                assert(back.size() == numRays);
+            }
+
+            for (int i = 0; i < numRays; ++i)
+            {
                 front[i] = frontTriangleIdx[i];
                 back[i] = backTriangleIdx[i];
+            }
+
+            if (exposeMirrorCopies)
+            {
+                // Append direct opposites
+                for (int i = 0; i < numRays; ++i)
+                {
+                    front[i + numRays] = backTriangleIdx[i];
+                    back[i + numRays] = frontTriangleIdx[i];
+                }
             }
         }
 	}

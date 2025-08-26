@@ -354,7 +354,7 @@ namespace RAC
 		* @brief Performs a matrix multiplication
 		*/
 		template<typename T>
-		inline void Mulitply(Matrix<T>& out, const Matrix<T>& u, const Matrix<T>& v)
+		inline void Multiply(Matrix<T>& out, const Matrix<T>& u, const Matrix<T>& v)
 		{
 			assert(u.Cols() == v.Rows());
 			assert(out.Rows() == u.Rows());
@@ -380,7 +380,7 @@ namespace RAC
 		inline Matrix<T> operator*(const Matrix<T>& u, const Matrix<T>& v)
 		{
 			Matrix out = Matrix(u.Rows(), v.Cols());
-			Mulitply(out, u, v);
+			Multiply(out, u, v);
 			return out;
 		}
 

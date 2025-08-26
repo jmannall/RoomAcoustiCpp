@@ -72,7 +72,7 @@ namespace RAC
 			int numFDNs, numReverbDirections;
 			std::vector<Vec3> reverbDirections;
 			// The indexing of ray directions to reverb directions may change because the number of rays may change.
-			std::vector<int> frontClusters, backClusters;	// For each ray, the index of the reverb direction that the ray falls into
+			std::vector<int> rayClusters;			// For each ray, the index of the reverb direction that the ray falls into
 
 			// The number of rays may change at runtime.
 			int numRays;
@@ -93,11 +93,9 @@ namespace RAC
 			Vec<Real> contributionDelayScaling;				// This will have size `numPaths`
 			Coefficients<> sourceResidues;					// This will have size `numFDNs`
 			std::vector<Coefficients<>> listenerResidues;	// This will have size `numFDNs, numReverbDirections`
-			// These will be used exclusively inside `computeEnergyContributions`. All six will have size `numRays`.
-			Vec<Real> frontDistances;			// This will have size `numRays`
-			Vec<Real> backDistances;			// This will have size `numRays`
-			Vec<Real> frontCosines;				// This will have size `numRays`
-			Vec<Real> backCosines;				// This will have size `numRays`
+			// These will be used exclusively inside `computeEnergyContributions`. All four will have size `numRays`.
+			Vec<Real> rayDistances;			// This will have size `numRays`
+			Vec<Real> rayCosines;			// This will have size `numRays`
 			std::vector<int> frontIndices;		// This will have size `numRays`
 			std::vector<int> backIndices;		// This will have size `numRays`
 

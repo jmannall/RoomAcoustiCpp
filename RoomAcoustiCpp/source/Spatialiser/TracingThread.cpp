@@ -14,8 +14,7 @@ namespace RAC
 	{
 		TracingThread::TracingThread(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const std::shared_ptr<Config>& config) :
 			mRoom(room), mSourceManager(sourceManager), mReverb(reverb),
-			numReverbDirections(config->numReverbSources), numFDNs(config->GetNumRavesFDNs()), numRays(config->numRays),
-			hemispherePencil(config->numRays, true),
+			numReverbDirections(config->numReverbSources), numFDNs(config->GetNumRavesFDNs()),
 			decayPerSecond(config->GetNumRavesFDNs()),
 			sourceResidues(config->GetNumRavesFDNs()),
 			listenerResidues(config->GetNumRavesFDNs(), Coefficients<>(config->numReverbSources))
@@ -26,32 +25,46 @@ namespace RAC
 
 			numPaths = 0;
 
-			frontDistances = Vec<Real>(numRays, 0.0);
-			backDistances = Vec<Real>(numRays, 0.0);
-			frontCosines = Vec<Real>(numRays, 0.0);
-			backCosines = Vec<Real>(numRays, 0.0);
+			// Note: the number of rays is forced to be even, because `hemispherePencil` actually uses half as many rays under the hood.
+			if (config->numRays % 2 == 0)
+				numRays = config->numRays;
+			else
+				numRays = config->numRays + 1;
+
+			hemispherePencil = RayPencil(numRays / 2, true);
+
+			rayDistances = Vec<Real>(numRays);
+			rayCosines = Vec<Real>(numRays);
 			frontIndices = std::vector<int>(numRays, -1);
 			backIndices = std::vector<int>(numRays, -1);
+			rayClusters = std::vector<int>(numRays, -1);
 		}
 
 		void TracingThread::setNumberOfRays(int newNumRays) {
 			lock_guard<std::mutex> lock(rayPencilMutex);
-			numRays = newNumRays;
-			RayPencil hemispherePencil(numRays, true);
+
+			// Note: the number of rays is forced to be even, because `hemispherePencil` actually uses half as many rays under the hood.
+			if (newNumRays % 2 == 0)
+				numRays = newNumRays;
+			else
+				numRays = newNumRays + 1;
+
+			RayPencil hemispherePencil(numRays / 2, true);
+
 			clusterReverbDirections();
 
-			frontDistances = Vec<Real>(numRays, 0.0);
-			backDistances = Vec<Real>(numRays, 0.0);
-			frontCosines = Vec<Real>(numRays, 0.0);
-			backCosines = Vec<Real>(numRays, 0.0);
+			rayDistances = Vec<Real>(numRays);
+			rayCosines = Vec<Real>(numRays);
 			frontIndices = std::vector<int>(numRays, -1);
 			backIndices = std::vector<int>(numRays, -1);
+			rayClusters = std::vector<int>(numRays, -1);
 		}
 
 		// TODO: Make ray tracing frequency dependent
 		void TracingThread::InitRoom(int paths, const std::vector<std::vector<int>>& indexing, const Vec<>& decayRates) {
 			lock_guard<std::mutex> lock(rayPencilMutex);
 			shared_ptr<Room> sharedRoom = mRoom.lock();
+
 			sharedRoom->CreateTriangleMeshSoA();
 
 			numPaths = paths;
@@ -63,9 +76,9 @@ namespace RAC
 			sourceResidues = Coefficients<>(numFDNs);
 			listenerResidues.resize(numFDNs, Coefficients<>(numReverbDirections));
 
-			energyContributions = Vec<Real>(numPaths, 0.0);
-			contributionDelays = Vec<Real>(numPaths, 0.0);
-			contributionDelayScaling = Vec<Real>(numPaths, 0.0);
+			energyContributions = Vec<Real>(numPaths);
+			contributionDelays = Vec<Real>(numPaths);
+			contributionDelayScaling = Vec<Real>(numPaths);
 		}
 
 		void TracingThread::RunTracing() {
@@ -155,22 +168,18 @@ namespace RAC
 		}
 
 		void TracingThread::clusterReverbDirections() {
-			// Re-allocate these in case the number of rays has changed.
-			frontClusters = std::vector<int>(numRays, -1);
-			backClusters = std::vector<int>(numRays, -1);
-
-			hemispherePencil.clusterDirections(reverbDirections, frontClusters, backClusters);
+			hemispherePencil.clusterDirections(reverbDirections, rayClusters);
 		}
 
 		void TracingThread::computeEnergyContributions(int reverbDirectionIdx) {
 			int pathIdx;
 			Real distance;
 
-			hemispherePencil.getDistances(frontDistances, backDistances);
+			hemispherePencil.getDistances(rayDistances);
 			hemispherePencil.getIndices(frontIndices, backIndices);
 			// If self-shadowing is enabled, get the incidence cosines as well.
 			if (SELF_SHADOWING_RADIUS > 0.0)
-				hemispherePencil.getCosines(frontCosines, backCosines);
+				hemispherePencil.getCosines(rayCosines);
 
 			// Reset contributions to 0
 			for (int i = 0; i < numPaths; ++i) {
@@ -179,32 +188,20 @@ namespace RAC
 			}
 
 			for (int i = 0; i < numRays; ++i) {
-				// Did the ray hit valid itriangles on both sides?
+				// Did the ray hit valid triangles on both sides?
 				if ((frontIndices[i] == -1) || (backIndices[i] == -1))
 					continue;
 
-				if ((reverbDirectionIdx == -1) || (reverbDirectionIdx == frontClusters[i])) {
-					// Is the front ray self-shadowed?
+				// Does the ray fall within the bundle specified by `reverbDirectionIdx`?
+				if ((reverbDirectionIdx == -1) || (reverbDirectionIdx == rayClusters[i])) {
+					// Is the ray self-shadowed?
 					if (SELF_SHADOWING_RADIUS > 0.0)
-						if (frontCosines[i] < SELF_SHADOWING_RADIUS / (2 * frontDistances[i]))
+						if (rayCosines[i] < SELF_SHADOWING_RADIUS / (2 * rayDistances[i]))
 							continue;
 
-					// Contribution of front ray
+					// Add energy contribution of the ray
 					pathIdx = pathIndexing[frontIndices[i]][backIndices[i]];
-					distance = frontDistances[i];
-					energyContributions[pathIdx] += 1;
-					contributionDelays[pathIdx] += distance;
-				}
-
-				if ((reverbDirectionIdx == -1) || (reverbDirectionIdx == backClusters[i])) {
-					// Is the back ray self-shadowed?
-					if (SELF_SHADOWING_RADIUS > 0.0)
-						if (backCosines[i] < SELF_SHADOWING_RADIUS / (2 * backDistances[i]))
-							continue;
-
-					// Contribution of back ray
-					pathIdx = pathIndexing[backIndices[i]][frontIndices[i]];
-					distance = backDistances[i];
+					distance = rayDistances[i];
 					energyContributions[pathIdx] += 1;
 					contributionDelays[pathIdx] += distance;
 				}

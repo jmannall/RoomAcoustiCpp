@@ -12,7 +12,7 @@ namespace RAC
 	TEST_CLASS(TracingTypes)
 	{
 		// Build a room containing an assortment of triangles
-		void buildTestMesh(Room& tRoom) {
+		void buildTestMesh(Room& testRoom) {
 			std::vector<Vec3> allVertices;
 			allVertices.resize(42);
 			allVertices[0] = Vec3({ 0.0, 0.0, -1.0 });
@@ -58,13 +58,13 @@ namespace RAC
 			allVertices[40] = Vec3({ 1.0, 0.0, 10.0 });
 			allVertices[41] = Vec3({ 0.0, 1.0, 10.0 });
 
-			Wall tWall;
-			Vertices tVertices;
-			Absorption<> tAbsorption(0.5);
+			Wall testWall;
+			Vertices testVertices;
+			Absorption<> testAbsorption(0.5);
 			for (int i = 0; i < 40; i += 3) {
-				tVertices = Vertices({ allVertices[i], allVertices[i + 1], allVertices[i + 2] });
-				tWall = Wall(tVertices, tAbsorption);
-				tRoom.AddWall(tWall);
+				testVertices = Vertices({ allVertices[i], allVertices[i + 1], allVertices[i + 2] });
+				testWall = Wall(testVertices, testAbsorption);
+				testRoom.AddWall(testWall);
 			}
 		}
 
@@ -129,24 +129,24 @@ namespace RAC
 		// Test intersection_test for a single ray.
 		TEST_METHOD(SingleRayIntersection)
 		{
-			Room tRoom(1);
-			buildTestMesh(tRoom);
-			tRoom.CreateTriangleMeshSoA();
-			Assert::AreEqual(14, tRoom.GetTriangleMeshSoA().size(), L"The test room does not contain 14 triangles.");
+			Room testRoom(1);
+			buildTestMesh(testRoom);
+			testRoom.CreateTriangleMeshSoA();
+			Assert::AreEqual(14, testRoom.GetTriangleMeshSoA().size(), L"\nThe test room does not contain 14 triangles.");
 
-			std::vector<Vec3> tDirections;
-			tDirections.resize(6);
-			tDirections[0] = Vec3({ 0.0, 0.0, -1.0 });
-			tDirections[1] = Vec3({ 0.4, -0.1, -1.0 });
-			tDirections[2] = Vec3({ -0.1, -0.1, -1.0 });
-			tDirections[3] = Vec3({ 0.0, 0.0, 1.0 });
-			tDirections[4] = Vec3({ 1.0, 0.0, 0.0 });
-			tDirections[5] = Vec3({ 10.0, 10.0, 1.0 });
+			std::vector<Vec3> testDirections;
+			testDirections.resize(6);
+			testDirections[0] = Vec3({ 0.0, 0.0, -1.0 });
+			testDirections[1] = Vec3({ 0.4, -0.1, -1.0 });
+			testDirections[2] = Vec3({ -0.1, -0.1, -1.0 });
+			testDirections[3] = Vec3({ 0.0, 0.0, 1.0 });
+			testDirections[4] = Vec3({ 1.0, 0.0, 0.0 });
+			testDirections[5] = Vec3({ 10.0, 10.0, 1.0 });
 
-			std::vector<Vec3> tOrigins;
-			tOrigins.resize(2);
-			tOrigins[0] = Vec3({ 0.1, 0.1, 1e-6 });
-			tOrigins[1] = Vec3({ 0.1, 0.1, 10.0  + 1e-6 });
+			std::vector<Vec3> testOrigins;
+			testOrigins.resize(2);
+			testOrigins[0] = Vec3({ 0.1, 0.1, 1e-6 });
+			testOrigins[1] = Vec3({ 0.1, 0.1, 10.0  + 1e-6 });
 
 			Real expected_distance, result_distance, result_cosine;
 			for (int oi = 0; oi < 2; ++oi) {
@@ -155,8 +155,8 @@ namespace RAC
 						expected_distance = EXPECTED_DIST[oi][di][ti];
 
 						intersection_test(
-							tRoom.GetTriangleMeshSoA(), ti,
-							tOrigins[oi], tDirections[di],
+							testRoom.GetTriangleMeshSoA(), ti,
+							testOrigins[oi], testDirections[di],
 							result_distance, result_cosine);
 
 						std::string error = "\nCombination: ";
@@ -186,24 +186,24 @@ namespace RAC
 		// Test trace_ray for a single ray.
 		TEST_METHOD(SingleRayTracing)
 		{
-			Room tRoom(1);
-			buildTestMesh(tRoom);
-			tRoom.CreateTriangleMeshSoA();
-			Assert::AreEqual(14, tRoom.GetTriangleMeshSoA().size(), L"The test room does not contain 14 triangles.");
+			Room testRoom(1);
+			buildTestMesh(testRoom);
+			testRoom.CreateTriangleMeshSoA();
+			Assert::AreEqual(14, testRoom.GetTriangleMeshSoA().size(), L"\nThe test room does not contain 14 triangles.");
 
-			std::vector<Vec3> tDirections;
-			tDirections.resize(6);
-			tDirections[0] = Vec3({ 0.0, 0.0, -1.0 });
-			tDirections[1] = Vec3({ 0.4, -0.1, -1.0 });
-			tDirections[2] = Vec3({ -0.1, -0.1, -1.0 });
-			tDirections[3] = Vec3({ 0.0, 0.0, 1.0 });
-			tDirections[4] = Vec3({ 1.0, 0.0, 0.0 });
-			tDirections[5] = Vec3({ 10.0, 10.0, 1.0 });
+			std::vector<Vec3> testDirections;
+			testDirections.resize(6);
+			testDirections[0] = Vec3({ 0.0, 0.0, -1.0 });
+			testDirections[1] = Vec3({ 0.4, -0.1, -1.0 });
+			testDirections[2] = Vec3({ -0.1, -0.1, -1.0 });
+			testDirections[3] = Vec3({ 0.0, 0.0, 1.0 });
+			testDirections[4] = Vec3({ 1.0, 0.0, 0.0 });
+			testDirections[5] = Vec3({ 10.0, 10.0, 1.0 });
 
-			std::vector<Vec3> tOrigins;
-			tOrigins.resize(2);
-			tOrigins[0] = Vec3({ 0.1, 0.1, 1e-6 });
-			tOrigins[1] = Vec3({ 0.1, 0.1, 10.0 + 1e-6 });
+			std::vector<Vec3> testOrigins;
+			testOrigins.resize(2);
+			testOrigins[0] = Vec3({ 0.1, 0.1, 1e-6 });
+			testOrigins[1] = Vec3({ 0.1, 0.1, 10.0 + 1e-6 });
 
 			Real expected_distance_front, result_distance_front, result_cosine_front;
 			Real expected_distance_back, result_distance_back, result_cosine_back;
@@ -216,8 +216,8 @@ namespace RAC
 					expected_idx_back = EXPECTED_IDX_PAIR[oi][di][1];
 
 					trace_ray(
-						tRoom.GetTriangleMeshSoA(),
-						tOrigins[oi], tDirections[di],
+						testRoom.GetTriangleMeshSoA(),
+						testOrigins[oi], testDirections[di],
 						result_idx_front, result_distance_front, result_cosine_front,
 						result_idx_back, result_distance_back, result_cosine_back);
 					// TODO: Repeat the test with ignoredTriangleIndex
@@ -262,48 +262,49 @@ namespace RAC
 		// Test intersection_test using a RayPencilSoA.
 		TEST_METHOD(PencilSoAIntersection)
 		{
-			Room tRoom(1);
-			buildTestMesh(tRoom);
-			tRoom.CreateTriangleMeshSoA();
-			Assert::AreEqual(14, tRoom.GetTriangleMeshSoA().size(), L"The test room does not contain 14 triangles.");
+			Room testRoom(1);
+			buildTestMesh(testRoom);
+			testRoom.CreateTriangleMeshSoA();
+			Assert::AreEqual(14, testRoom.GetTriangleMeshSoA().size(), L"\nThe test room does not contain 14 triangles.");
 
-			std::vector<Vec3> tDirections;
-			tDirections.resize(6);
-			tDirections[0] = Vec3({ 0.0, 0.0, -1.0 });
-			tDirections[1] = Vec3({ 0.4, -0.1, -1.0 });
-			tDirections[2] = Vec3({ -0.1, -0.1, -1.0 });
-			tDirections[3] = Vec3({ 0.0, 0.0, 1.0 });
-			tDirections[4] = Vec3({ 1.0, 0.0, 0.0 });
-			tDirections[5] = Vec3({ 10.0, 10.0, 1.0 });
+			std::vector<Vec3> testDirections;
+			testDirections.resize(6);
+			testDirections[0] = Vec3({ 0.0, 0.0, -1.0 });
+			testDirections[1] = Vec3({ 0.4, -0.1, -1.0 });
+			testDirections[2] = Vec3({ -0.1, -0.1, -1.0 });
+			testDirections[3] = Vec3({ 0.0, 0.0, 1.0 });
+			testDirections[4] = Vec3({ 1.0, 0.0, 0.0 });
+			testDirections[5] = Vec3({ 10.0, 10.0, 1.0 });
 
-			std::vector<Vec3> tOrigins;
-			tOrigins.resize(2);
-			tOrigins[0] = Vec3({ 0.1, 0.1, 1e-6 });
-			tOrigins[1] = Vec3({ 0.1, 0.1, 10.0 + 1e-6 });
+			std::vector<Vec3> testOrigins;
+			testOrigins.resize(2);
+			testOrigins[0] = Vec3({ 0.1, 0.1, 1e-6 });
+			testOrigins[1] = Vec3({ 0.1, 0.1, 10.0 + 1e-6 });
 
-			RayPencilSoA rays;
-			rays.resize(6);
+			RayPencilSoA testRays;
+			testRays.resize(6);
 			for (int i = 0; i < 6; ++i) {
-				rays.Dx[i] = tDirections[i].x;
-				rays.Dy[i] = tDirections[i].y;
-				rays.Dz[i] = tDirections[i].z;
+				testRays.Dx[i] = testDirections[i].x;
+				testRays.Dy[i] = testDirections[i].y;
+				testRays.Dz[i] = testDirections[i].z;
 			}
 
 			Real expected_distance, result_distance, result_cosine;
 			for (int oi = 0; oi < 2; ++oi) {
-				rays.Ox = tOrigins[oi].x;
-				rays.Oy = tOrigins[oi].y;
-				rays.Oz = tOrigins[oi].z;
-#if PLUCKER_KERNEL
-				rays.compute_moments();
-#endif // end PLUCKER_KERNEL
+				testRays.Ox = testOrigins[oi].x;
+				testRays.Oy = testOrigins[oi].y;
+				testRays.Oz = testOrigins[oi].z;
+
+				// Note that this also computes the moments if needed.
+				testRays.normalize_directions();
+
 				for (int di = 0; di < 6; ++di) {
 					for (int ti = 0; ti < 14; ++ti) {
 						expected_distance = EXPECTED_DIST[oi][di][ti];
 
 						intersection_test(
-							tRoom.GetTriangleMeshSoA(), ti,
-							rays, di,
+							testRoom.GetTriangleMeshSoA(), ti,
+							testRays, di,
 							result_distance, result_cosine);
 
 						std::string error = "\nCombination: ";
@@ -333,43 +334,44 @@ namespace RAC
 		// Test trace_ray using a RayPencilSoA.
 		TEST_METHOD(PencilSoATracing)
 		{
-			Room tRoom(1);
-			buildTestMesh(tRoom);
-			tRoom.CreateTriangleMeshSoA();
-			Assert::AreEqual(14, tRoom.GetTriangleMeshSoA().size(), L"The test room does not contain 14 triangles.");
+			Room testRoom(1);
+			buildTestMesh(testRoom);
+			testRoom.CreateTriangleMeshSoA();
+			Assert::AreEqual(14, testRoom.GetTriangleMeshSoA().size(), L"\nThe test room does not contain 14 triangles.");
 
-			std::vector<Vec3> tDirections;
-			tDirections.resize(6);
-			tDirections[0] = Vec3({ 0.0, 0.0, -1.0 });
-			tDirections[1] = Vec3({ 0.4, -0.1, -1.0 });
-			tDirections[2] = Vec3({ -0.1, -0.1, -1.0 });
-			tDirections[3] = Vec3({ 0.0, 0.0, 1.0 });
-			tDirections[4] = Vec3({ 1.0, 0.0, 0.0 });
-			tDirections[5] = Vec3({ 10.0, 10.0, 1.0 });
+			std::vector<Vec3> testDirections;
+			testDirections.resize(6);
+			testDirections[0] = Vec3({ 0.0, 0.0, -1.0 });
+			testDirections[1] = Vec3({ 0.4, -0.1, -1.0 });
+			testDirections[2] = Vec3({ -0.1, -0.1, -1.0 });
+			testDirections[3] = Vec3({ 0.0, 0.0, 1.0 });
+			testDirections[4] = Vec3({ 1.0, 0.0, 0.0 });
+			testDirections[5] = Vec3({ 10.0, 10.0, 1.0 });
 
-			std::vector<Vec3> tOrigins;
-			tOrigins.resize(2);
-			tOrigins[0] = Vec3({ 0.1, 0.1, 1e-6 });
-			tOrigins[1] = Vec3({ 0.1, 0.1, 10.0 + 1e-6 });
+			std::vector<Vec3> testOrigins;
+			testOrigins.resize(2);
+			testOrigins[0] = Vec3({ 0.1, 0.1, 1e-6 });
+			testOrigins[1] = Vec3({ 0.1, 0.1, 10.0 + 1e-6 });
 
-			RayPencilSoA rays;
-			rays.resize(6);
+			RayPencilSoA testRays;
+			testRays.resize(6);
 			for (int i = 0; i < 6; ++i) {
-				rays.Dx[i] = tDirections[i].x;
-				rays.Dy[i] = tDirections[i].y;
-				rays.Dz[i] = tDirections[i].z;
+				testRays.Dx[i] = testDirections[i].x;
+				testRays.Dy[i] = testDirections[i].y;
+				testRays.Dz[i] = testDirections[i].z;
 			}
 
 			Real expected_distance_front, result_distance_front, result_cosine_front;
 			Real expected_distance_back, result_distance_back, result_cosine_back;
 			int expected_idx_front, result_idx_front, expected_idx_back, result_idx_back;
 			for (int oi = 0; oi < 2; ++oi) {
-				rays.Ox = tOrigins[oi].x;
-				rays.Oy = tOrigins[oi].y;
-				rays.Oz = tOrigins[oi].z;
-#if PLUCKER_KERNEL
-				rays.compute_moments();
-#endif // end PLUCKER_KERNEL
+				testRays.Ox = testOrigins[oi].x;
+				testRays.Oy = testOrigins[oi].y;
+				testRays.Oz = testOrigins[oi].z;
+
+				// Note that this also computes the moments if needed.
+				testRays.normalize_directions();
+
 				for (int di = 0; di < 6; ++di) {
 					expected_distance_front = EXPECTED_DIST_PAIR[oi][di][0];
 					expected_distance_back = EXPECTED_DIST_PAIR[oi][di][1];
@@ -377,8 +379,8 @@ namespace RAC
 					expected_idx_back = EXPECTED_IDX_PAIR[oi][di][1];
 
 					trace_ray(
-						tRoom.GetTriangleMeshSoA(),
-						rays, di,
+						testRoom.GetTriangleMeshSoA(),
+						testRays, di,
 						result_idx_front, result_distance_front, result_cosine_front,
 						result_idx_back, result_distance_back, result_cosine_back);
 					// TODO: Repeat the test with ignoredTriangleIndex
@@ -425,41 +427,41 @@ namespace RAC
 		// Test intersection_test using a RayBundleSoA.
 		TEST_METHOD(BundleSoAIntersection)
 		{
-			Room tRoom(1);
-			buildTestMesh(tRoom);
-			tRoom.CreateTriangleMeshSoA();
-			Assert::AreEqual(14, tRoom.GetTriangleMeshSoA().size(), L"The test room does not contain 14 triangles.");
+			Room testRoom(1);
+			buildTestMesh(testRoom);
+			testRoom.CreateTriangleMeshSoA();
+			Assert::AreEqual(14, testRoom.GetTriangleMeshSoA().size(), L"\nThe test room does not contain 14 triangles.");
 
-			std::vector<Vec3> tDirections;
-			tDirections.resize(6);
-			tDirections[0] = Vec3({ 0.0, 0.0, -1.0 });
-			tDirections[1] = Vec3({ 0.4, -0.1, -1.0 });
-			tDirections[2] = Vec3({ -0.1, -0.1, -1.0 });
-			tDirections[3] = Vec3({ 0.0, 0.0, 1.0 });
-			tDirections[4] = Vec3({ 1.0, 0.0, 0.0 });
-			tDirections[5] = Vec3({ 10.0, 10.0, 1.0 });
+			std::vector<Vec3> testDirections;
+			testDirections.resize(6);
+			testDirections[0] = Vec3({ 0.0, 0.0, -1.0 });
+			testDirections[1] = Vec3({ 0.4, -0.1, -1.0 });
+			testDirections[2] = Vec3({ -0.1, -0.1, -1.0 });
+			testDirections[3] = Vec3({ 0.0, 0.0, 1.0 });
+			testDirections[4] = Vec3({ 1.0, 0.0, 0.0 });
+			testDirections[5] = Vec3({ 10.0, 10.0, 1.0 });
 
-			std::vector<Vec3> tOrigins;
-			tOrigins.resize(2);
-			tOrigins[0] = Vec3({ 0.1, 0.1, 1e-6 });
-			tOrigins[1] = Vec3({ 0.1, 0.1, 10.0 + 1e-6 });
+			std::vector<Vec3> testOrigins;
+			testOrigins.resize(2);
+			testOrigins[0] = Vec3({ 0.1, 0.1, 1e-6 });
+			testOrigins[1] = Vec3({ 0.1, 0.1, 10.0 + 1e-6 });
 
-			RayBundleSoA rays;
-			rays.resize(12);
+			RayBundleSoA testRays;
+			testRays.resize(12);
 			for (int oi = 0; oi < 2; ++oi) {
 				for (int di = 0; di < 6; ++di) {
 					int ri = di + (oi * 6);
-					rays.Ox[ri] = tOrigins[oi].x;
-					rays.Oy[ri] = tOrigins[oi].y;
-					rays.Oz[ri] = tOrigins[oi].z;
-					rays.Dx[ri] = tDirections[di].x;
-					rays.Dy[ri] = tDirections[di].y;
-					rays.Dz[ri] = tDirections[di].z;
+					testRays.Ox[ri] = testOrigins[oi].x;
+					testRays.Oy[ri] = testOrigins[oi].y;
+					testRays.Oz[ri] = testOrigins[oi].z;
+					testRays.Dx[ri] = testDirections[di].x;
+					testRays.Dy[ri] = testDirections[di].y;
+					testRays.Dz[ri] = testDirections[di].z;
 				}
 			}
-#if PLUCKER_KERNEL
-			rays.compute_moments();
-#endif // end PLUCKER_KERNEL
+
+			// Note that this also computes the moments if needed.
+			testRays.normalize_directions();
 
 			Real expected_distance, result_distance, result_cosine;
 			for (int oi = 0; oi < 2; ++oi) {
@@ -468,8 +470,8 @@ namespace RAC
 						expected_distance = EXPECTED_DIST[oi][di][ti];
 
 						intersection_test(
-							tRoom.GetTriangleMeshSoA(), ti,
-							rays, di + (oi * 6),
+							testRoom.GetTriangleMeshSoA(), ti,
+							testRays, di + (oi * 6),
 							result_distance, result_cosine);
 
 						std::string error = "\nCombination: ";
@@ -499,41 +501,41 @@ namespace RAC
 		// Test trace_ray using a RayBundleSoA.
 		TEST_METHOD(BundleSoATracing)
 		{
-			Room tRoom(1);
-			buildTestMesh(tRoom);
-			tRoom.CreateTriangleMeshSoA();
-			Assert::AreEqual(14, tRoom.GetTriangleMeshSoA().size(), L"The test room does not contain 14 triangles.");
+			Room testRoom(1);
+			buildTestMesh(testRoom);
+			testRoom.CreateTriangleMeshSoA();
+			Assert::AreEqual(14, testRoom.GetTriangleMeshSoA().size(), L"\nThe test room does not contain 14 triangles.");
 
-			std::vector<Vec3> tDirections;
-			tDirections.resize(6);
-			tDirections[0] = Vec3({ 0.0, 0.0, -1.0 });
-			tDirections[1] = Vec3({ 0.4, -0.1, -1.0 });
-			tDirections[2] = Vec3({ -0.1, -0.1, -1.0 });
-			tDirections[3] = Vec3({ 0.0, 0.0, 1.0 });
-			tDirections[4] = Vec3({ 1.0, 0.0, 0.0 });
-			tDirections[5] = Vec3({ 10.0, 10.0, 1.0 });
+			std::vector<Vec3> testDirections;
+			testDirections.resize(6);
+			testDirections[0] = Vec3({ 0.0, 0.0, -1.0 });
+			testDirections[1] = Vec3({ 0.4, -0.1, -1.0 });
+			testDirections[2] = Vec3({ -0.1, -0.1, -1.0 });
+			testDirections[3] = Vec3({ 0.0, 0.0, 1.0 });
+			testDirections[4] = Vec3({ 1.0, 0.0, 0.0 });
+			testDirections[5] = Vec3({ 10.0, 10.0, 1.0 });
 
-			std::vector<Vec3> tOrigins;
-			tOrigins.resize(2);
-			tOrigins[0] = Vec3({ 0.1, 0.1, 1e-6 });
-			tOrigins[1] = Vec3({ 0.1, 0.1, 10.0 + 1e-6 });
+			std::vector<Vec3> testOrigins;
+			testOrigins.resize(2);
+			testOrigins[0] = Vec3({ 0.1, 0.1, 1e-6 });
+			testOrigins[1] = Vec3({ 0.1, 0.1, 10.0 + 1e-6 });
 
-			RayBundleSoA rays;
-			rays.resize(12);
+			RayBundleSoA testRays;
+			testRays.resize(12);
 			for (int oi = 0; oi < 2; ++oi) {
 				for (int di = 0; di < 6; ++di) {
 					int ri = di + (oi * 6);
-					rays.Ox[ri] = tOrigins[oi].x;
-					rays.Oy[ri] = tOrigins[oi].y;
-					rays.Oz[ri] = tOrigins[oi].z;
-					rays.Dx[ri] = tDirections[di].x;
-					rays.Dy[ri] = tDirections[di].y;
-					rays.Dz[ri] = tDirections[di].z;
+					testRays.Ox[ri] = testOrigins[oi].x;
+					testRays.Oy[ri] = testOrigins[oi].y;
+					testRays.Oz[ri] = testOrigins[oi].z;
+					testRays.Dx[ri] = testDirections[di].x;
+					testRays.Dy[ri] = testDirections[di].y;
+					testRays.Dz[ri] = testDirections[di].z;
 				}
 			}
-#if PLUCKER_KERNEL
-			rays.compute_moments();
-#endif // end PLUCKER_KERNEL
+
+			// Note that this also computes the moments if needed.
+			testRays.normalize_directions();
 
 			Real expected_distance_front, result_distance_front, result_cosine_front;
 			Real expected_distance_back, result_distance_back, result_cosine_back;
@@ -546,8 +548,8 @@ namespace RAC
 					expected_idx_back = EXPECTED_IDX_PAIR[oi][di][1];
 
 					trace_ray(
-						tRoom.GetTriangleMeshSoA(),
-						rays, di + (oi * 6),
+						testRoom.GetTriangleMeshSoA(),
+						testRays, di + (oi * 6),
 						result_idx_front, result_distance_front, result_cosine_front,
 						result_idx_back, result_distance_back, result_cosine_back);
 					// TODO: Repeat the test with ignoredTriangleIndex
@@ -590,5 +592,8 @@ namespace RAC
 		}
 
 		// TODO: Test RayBundleSoA::fill_uniform_sphere (by clustering?)
+
+		// TODO: Make sure surface normal vectors are normalized at all times.
+		// TODO: Make sure any other "assumed unit" vectors are normalized at all times.
 	};
 }

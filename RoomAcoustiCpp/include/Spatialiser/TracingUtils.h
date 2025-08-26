@@ -98,6 +98,9 @@ namespace RAC
             std::vector<int> latestTriangleIdx, previousTriangleIdx;
 
         public:
+            /* @brief Default constructor (0 rays)
+              */
+            RayBundle();
 
             /* @brief Initialization given one origin point (same for all rays) and separate directions (different for every ray).
              */
@@ -118,6 +121,10 @@ namespace RAC
             // TODO: Define this function if we ever want to trace multiple reflection orders.
             // TODO: Pass pointers to the absorption and scattering coeffs. to use for the reflections.
             void advanceAndReflect(const TriangleMeshSoA& triangles);
+
+            /* @brief Returns the number of rays in the bundle.
+              */
+            inline int getNumRays() const { return numRays; }
 
             /* @brief For each ray, returns (by reference) the origin.
               */
@@ -161,16 +168,25 @@ namespace RAC
             int numRays;
             RayPencilSoA rays;
 
+            // If this is true, `clusterDirections()` and all `get_()` methods behave as if this instance contained
+            //  twice as many rays as it actually does. They will report the results related to the real "forward" rays,
+            //  and then concatenate the results for their direct opposite directions. Tracing is performed only once.
+            bool exposeMirrorCopies = false;
+
             Vec<Real> frontDistance, backDistance, frontCosine, backCosine;
             std::vector<int> frontTriangleIdx, backTriangleIdx;
 
         public:
+            /* @brief Default constructor (0 rays)
+              */
+            RayPencil();
+
             /* @brief Initialization given one origin point.
               * @param origin 3D coordinates of the origin point.
               * @param numDirections Number of directions to sample uniformly on the unit sphere.
               * @param hemisphereOnly If true, sample numDirections on the unit hemisphere (positive Z only) instead of the unit sphere.
               */
-            RayPencil(int numDirections, bool hemisphereOnly);
+            RayPencil(int numDirections, bool hemisphereOnly = true);
 
             /* @brief Initialization given one origin point (same for all rays) and separate directions (different for every ray).
               */
@@ -185,25 +201,22 @@ namespace RAC
               */
             void traceAll(const TriangleMeshSoA& triangles);
 
-            /* @brief Cluster this pencil's directions based on their cosine similarity to a given set of directions. N.B.: assumes all directions are normalized.
+            /* @brief Cluster this pencil's directions based on their cosine similarity to a given set of directions. N.B.: assumes input directions are normalized.
              *
-             * This function returns (by reference) two arrays of integer values, `frontClusters` and `backClusters`.
-             * Both arrays have size `numRays` and contain values in the range [-1, directions.size()).
-             * For each ray direction in RayPencil, this function computes the cosine similarity between that ray direction and all reference directions,
-             *  as well as the cosine similarity between the opposite ray direction and all reference directions.
-             * If the smallest cosine similarity is found between the ray direction and a reference direction, then
-             *      frontClusters[ray_idx] is set to the index of the reference direction, and
-             *      backClusters[ray_idx] is set to -1.
-             * If the smallest cosine similarity is found between the OPPOSITE of the ray direction and a reference direction, then
-             *      frontClusters[ray_idx] is set to -1, and
-             *      backClusters[ray_idx] is set to the index of the reference direction.
-             * Note that `frontClusters[i] == -1` <==> `backClusters[i] != -1`.
+             * This function returns (by reference) an array of integer values, `clusters`.
+             * The array has size `numRays` and contains values in the range [-1, directions.size()).
+             * For each ray in RayPencil, this function computes the cosine similarity (dot product) between that ray's direction and all reference directions.
+             * The value of `clusters[ray_idx]` is the index of the reference direction with the highest cosine similarity to ray `ray_idx`.
+             * If `directions` is empty, all output values are set to -1.
              *
-             * @param directions The set of directions used for clustering.
-             * @param frontClusters Pointer to a pre-allocated integer buffer of size `numRays`, used for output values (see notes).
-             * @param backClusters Pointer to a pre-allocated integer buffer of size `numRays`, used for output values (see notes).
+             * @param directions The set of directions used for clustering. If these have non-unit norms, it will result in "weighted" clusters.
+             * @param clusters Pointer to a pre-allocated integer buffer of size `numRays`, used for output values.
              */
-            void clusterDirections(const std::vector<Vec3>& directions, std::vector<int>& frontClusters, std::vector<int>& backClusters) const;
+            void clusterDirections(const std::vector<Vec3>& directions, std::vector<int>& clusters) const;
+
+            /* @brief Returns the number of rays in the pencil.
+              */
+            inline int getNumRays() const { return exposeMirrorCopies ? 2 * numRays : numRays; }
 
             /* @brief For each ray, returns (by reference) the direction.
               */
@@ -212,12 +225,12 @@ namespace RAC
             /* @brief For each ray, returns (by reference) the distance in meters to the nearest front and back intersections.
               * Values of NaN denote invalid intersections.
               */
-            void getDistances(Vec<>& front, Vec<>& back) const;
+            void getDistances(Vec<>& distances) const;
 
             /* @brief For each ray, returns (by reference) the incidence cosine of the nearest front and back intersections.
               * Values of NaN denote invalid intersections.
               */
-            void getCosines(Vec<>& front, Vec<>& back) const;
+            void getCosines(Vec<>& cosines) const;
 
             /* @brief For each ray, returns (by reference) the triangle index of the nearest front and back intersections.
               * Values of invalidIdx denote invalid intersections.

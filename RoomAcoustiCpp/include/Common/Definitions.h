@@ -60,6 +60,7 @@ namespace RAC
 		const constexpr Real INV_LOG2_10 = 1.0 / LOG2_10;
 
 		const constexpr Real PHI = 1.61803398874989484820458683436563811772030917980576286213544862270526046281890; // golden ratio
+		const constexpr Real INV_PHI = 1.0 / PHI;
 
 		//////////////////// Mathematical Functions ////////////////////
 

@@ -5,7 +5,13 @@ namespace RAC
     using namespace Common;
     namespace Spatialiser
     {
-        Real dot3(Real ax, Real ay, Real az, Real bx, Real by, Real bz) {
+        Real norm3(Real x, Real y, Real z)
+        {
+            return std::sqrt(x * x + y * y + z * z);
+        }
+
+        Real dot3(Real ax, Real ay, Real az, Real bx, Real by, Real bz)
+        {
             return ax * bx + ay * by + az * bz;
         }
 
@@ -17,13 +23,15 @@ namespace RAC
             rz = ax * by - ay * bx;
         }
 
-        bool same_sign_with_zero_included(Real s1, Real s2, Real s3, Real eps) {
+        bool same_sign_with_zero_included(Real s1, Real s2, Real s3, Real eps)
+        {
             const bool allNonNeg = (s1 >= -eps) && (s2 >= -eps) && (s3 >= -eps);
             const bool allNonPos = (s1 <= eps) && (s2 <= eps) && (s3 <= eps);
             return allNonNeg || allNonPos;
         }
 
-        void RayBundleSoA::resize(int n) {
+        void RayBundleSoA::resize(int n)
+        {
             Ox.resize(n);
             Oy.resize(n);
             Oz.resize(n);
@@ -37,7 +45,8 @@ namespace RAC
 #endif // end PLUCKER_KERNEL
         }
 
-        void RayPencilSoA::resize(int n) {
+        void RayPencilSoA::resize(int n)
+        {
             Dx.resize(n);
             Dy.resize(n);
             Dz.resize(n);
@@ -49,12 +58,14 @@ namespace RAC
         }
 
         // TODO: These two function definitions are identical. I'm sure there's a more elegant way to do that.
-        void RayBundleSoA::fill_uniform_sphere(bool hemisphereOnly) {
+        void RayBundleSoA::fill_uniform_sphere(bool hemisphereOnly)
+        {
             const int N = hemisphereOnly ? 2 * size() : size();
             const Real Nr = static_cast<Real>(N);
             Real ir, z, r, phi;
 
-            for (int i = 0; i < N; ++i) {
+            for (int i = 0; i < N; ++i)
+            {
                 ir = static_cast<Real>(i);
 
                 /* Fibonacci sphere (a.k.a. Vogel sphere): equal-area spacing in z */
@@ -69,14 +80,19 @@ namespace RAC
                 Dy[i] = r * std::sin(phi);
                 Dz[i] = z;
             }
+
+            // Just to be sure, ensure normalization. Note that this also recomputes the moments if needed.
+            normalize_directions();
         }
 
-        void RayPencilSoA::fill_uniform_sphere(bool hemisphereOnly) {
+        void RayPencilSoA::fill_uniform_sphere(bool hemisphereOnly)
+        {
             const int N = hemisphereOnly ? 2 * size() : size();
             const Real Nr = static_cast<Real>(N);
             Real ir, z, r, phi;
 
-            for (int i = 0; i < N; ++i) {
+            for (int i = 0; i < N; ++i)
+            {
                 ir = static_cast<Real>(i);
 
                 /* Fibonacci sphere (a.k.a. Vogel sphere): equal-area spacing in z */
@@ -91,21 +107,60 @@ namespace RAC
                 Dy[i] = r * std::sin(phi);
                 Dz[i] = z;
             }
+
+            // Just to be sure, ensure normalization. Note that this also recomputes the moments if needed.
+            normalize_directions();
+        }
+
+        void RayBundleSoA::normalize_directions()
+        {
+            Real norm;
+            for (int i = 0; i < size(); ++i)
+            {
+                norm = norm3(Dx[i], Dy[i], Dz[i]);
+                if (norm == 0) continue;
+                if (norm == 1) continue;
+                Dx[i] /= norm;
+                Dy[i] /= norm;
+                Dz[i] /= norm;
+            }
+#if PLUCKER_KERNEL
+            compute_moments();
+#endif
+        }
+
+        void RayPencilSoA::normalize_directions()
+        {
+            Real norm;
+            for (int i = 0; i < size(); ++i)
+            {
+                norm = norm3(Dx[i], Dy[i], Dz[i]);
+                if (norm == 0) continue;
+                if (norm == 1) continue;
+                Dx[i] /= norm;
+                Dy[i] /= norm;
+                Dz[i] /= norm;
+            }
+#if PLUCKER_KERNEL
+            compute_moments();
+#endif
         }
 
 #if PLUCKER_KERNEL
-        void RayBundleSoA::compute_moments() {
-            const int n = size();
-            for (int i = 0; i < n; ++i) {
+        void RayBundleSoA::compute_moments()
+        {
+            for (int i = 0; i < size(); ++i)
+            {
                 cross3(Ox[i], Oy[i], Oz[i],
                     Dx[i], Dy[i], Dz[i],
                     Mx[i], My[i], Mz[i]);
             }
         }
 
-        void RayPencilSoA::compute_moments() {
-            const int n = size();
-            for (int i = 0; i < n; ++i) {
+        void RayPencilSoA::compute_moments()
+        {
+            for (int i = 0; i < size(); ++i)
+            {
                 cross3(Ox, Oy, Oz,
                     Dx[i], Dy[i], Dz[i],
                     Mx[i], My[i], Mz[i]);
@@ -113,7 +168,8 @@ namespace RAC
         }
 #endif // end PLUCKER_KERNEL
 
-        void TriangleMeshSoA::resize(int n) {
+        void TriangleMeshSoA::resize(int n)
+        {
 #if PLUCKER_KERNEL
 #if LEAN_PLUCKER
             // TODO: Implement Lean Plücker
