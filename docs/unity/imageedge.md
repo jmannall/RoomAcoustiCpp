@@ -1,6 +1,6 @@
 # Configure the acoustic model
 
-The acoustic model can be configured in the `RACManager` script. For an overview of the acoustic model see the [documentation of the acoustic model](../overview/model.md).
+The acoustic model can be configured in the `RACManager` script. For an overview of the acoustic model see the [documentation of the acoustic model](../rac/model.md).
 
 ## Configuration
 

@@ -143,6 +143,8 @@ nav:
     - Overview: rac/model.md
     - Diffraction: rac/diffraction.md
     - Spatialisation: rac/spatialisation.md
+    - Air Absorption: rac/airabsorption.md
+    - Source Directivity: rac/sourcedirectivity.md
   - Unity Interface:
     - Overview: unity/index.md
     - Installation: unity/installation.md
