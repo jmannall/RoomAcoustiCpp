@@ -71,7 +71,7 @@ namespace RAC
 			*/
 			inline void SetTargetT60(const Coefficients<>& T60)
 			{
-				absorption.store(T60[0], std::memory_order_release);
+				absorption.store(CalculateFilterGains(T60)[0], std::memory_order_release);
 				mAbsorptionFilter.SetTargetGains(CalculateFilterGains(T60));
 			}
 

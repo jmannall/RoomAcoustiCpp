@@ -145,10 +145,10 @@ namespace RAC
 			{
 				out = channel.GetOutput(0.0, lerpFactor);
 
-				//std::string error = "\n" + ToStr(i) + "th output not zero";
-				//std::wstring werror = std::wstring(error.begin(), error.end());
-				//const wchar_t* werrorchar = werror.c_str();
-				//Assert::AreEqual((Real)0.0, out, (Real)10e-16, werrorchar);
+				std::string error = "\n" + ToStr(i) + "th output not zero";
+				std::wstring werror = std::wstring(error.begin(), error.end());
+				const wchar_t* werrorchar = werror.c_str();
+				Assert::AreEqual((Real)0.0, out, (Real)10e-16, werrorchar);
 			}
 			out = channel.GetOutput(0.0, lerpFactor);
 			Assert::AreEqual(target, out, (Real)10e-16, L"Absorption filter not interpolating");
