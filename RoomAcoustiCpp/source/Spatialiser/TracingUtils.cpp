@@ -1,5 +1,8 @@
-#pragma optimize ("", off)
 #include "Spatialiser/TracingUtils.h"
+
+#if defined _DEBUG || defined DEBUG_RTM
+#pragma optimize("", off)
+#endif
 
 namespace RAC
 {
@@ -1340,4 +1343,7 @@ namespace RAC
         }
 	}
 }
-#pragma optimize ("", on)
+
+#if defined _DEBUG || defined DEBUG_RTM
+#pragma optimize("", on)
+#endif

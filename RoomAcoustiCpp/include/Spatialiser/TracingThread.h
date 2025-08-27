@@ -15,6 +15,10 @@
 #include "Spatialiser/SourceManager.h"
 #include "Spatialiser/TracingUtils.h" // Indirectly includes TracingTypes
 
+#if defined _DEBUG || defined DEBUG_RTM
+#pragma optimize("", off)
+#endif
+
 namespace RAC
 {
 	using namespace Common;
@@ -115,4 +119,9 @@ namespace RAC
 		};
 	}
 }
+
+#if defined _DEBUG || defined DEBUG_RTM
+#pragma optimize("", on)
+#endif
+
 #endif

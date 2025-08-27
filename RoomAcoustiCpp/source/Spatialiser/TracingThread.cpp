@@ -6,6 +6,10 @@
 // Unity headers
 #include "Unity/Debug.h"
 
+#if defined _DEBUG || defined DEBUG_RTM
+#pragma optimize("", off)
+#endif
+
 namespace RAC
 {
 	using namespace Unity;
@@ -21,23 +25,11 @@ namespace RAC
 		{
 			shared_ptr<Reverb> sharedReverb = mReverb.lock();
 			sharedReverb->GetReverbSourceDirections(reverbDirections);
-			clusterReverbDirections();
 
 			numPaths = 0;
 
-			// Note: the number of rays is forced to be even, because `hemispherePencil` actually uses half as many rays under the hood.
-			if (config->numRays % 2 == 0)
-				numRays = config->numRays;
-			else
-				numRays = config->numRays + 1;
-
-			hemispherePencil = RayPencil(numRays / 2, true);
-
-			rayDistances = Vec<Real>(numRays);
-			rayCosines = Vec<Real>(numRays);
-			frontIndices = std::vector<int>(numRays, -1);
-			backIndices = std::vector<int>(numRays, -1);
-			rayClusters = std::vector<int>(numRays, -1);
+			// This initializes the pencil, clusters the reverb directions, and allocates buffers of size numRays.
+			setNumberOfRays(config->numRays);
 		}
 
 		void TracingThread::setNumberOfRays(int newNumRays) {
@@ -49,15 +41,15 @@ namespace RAC
 			else
 				numRays = newNumRays + 1;
 
-			RayPencil hemispherePencil(numRays / 2, true);
-
-			clusterReverbDirections();
+			hemispherePencil = RayPencil(numRays / 2, true);
 
 			rayDistances = Vec<Real>(numRays);
 			rayCosines = Vec<Real>(numRays);
 			frontIndices = std::vector<int>(numRays, -1);
 			backIndices = std::vector<int>(numRays, -1);
 			rayClusters = std::vector<int>(numRays, -1);
+
+			hemispherePencil.clusterDirections(reverbDirections, rayClusters);
 		}
 
 		// TODO: Make ray tracing frequency dependent
@@ -167,10 +159,6 @@ namespace RAC
 #endif
 		}
 
-		void TracingThread::clusterReverbDirections() {
-			hemispherePencil.clusterDirections(reverbDirections, rayClusters);
-		}
-
 		void TracingThread::computeEnergyContributions(int reverbDirectionIdx) {
 			int pathIdx;
 			Real distance;
@@ -221,3 +209,7 @@ namespace RAC
 		}
 	}
 }
+
+#if defined _DEBUG || defined DEBUG_RTM
+#pragma optimize("", on)
+#endif

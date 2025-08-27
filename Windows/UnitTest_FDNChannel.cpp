@@ -130,17 +130,27 @@ namespace RAC
 			const Coefficients newT60({ 0.6, 0.6, 0.6, 0.6 });
 			const std::shared_ptr<Config> config = std::make_shared<Config>();
 			const Real lerpFactor = 1.0;
+			Real out;
 
 			const Real target = std::pow(10.0, (-60.0 * (static_cast<Real>(delay) / static_cast<Real>(config->fs)) / 20.0) / newT60[0]);
 
 			FDNChannel channel(delay, T60, config);
 			channel.SetTargetT60(newT60);
 
-			channel.GetOutput(0.0, lerpFactor);
-			channel.GetOutput(1.0, lerpFactor);
+			out = channel.GetOutput(0.0, lerpFactor);
+			//Assert::AreEqual((Real)0.0, out, (Real)10e-16, L"First output not zero");
+			out = channel.GetOutput(1.0, lerpFactor);
+			//Assert::AreEqual((Real)0.0, out, (Real)10e-16, L"Second output not zero");
 			for (int i = 1; i < delay; i++)
-				channel.GetOutput(0.0, lerpFactor);
-			Real out = channel.GetOutput(0.0, lerpFactor);
+			{
+				out = channel.GetOutput(0.0, lerpFactor);
+
+				//std::string error = "\n" + ToStr(i) + "th output not zero";
+				//std::wstring werror = std::wstring(error.begin(), error.end());
+				//const wchar_t* werrorchar = werror.c_str();
+				//Assert::AreEqual((Real)0.0, out, (Real)10e-16, werrorchar);
+			}
+			out = channel.GetOutput(0.0, lerpFactor);
 			Assert::AreEqual(target, out, (Real)10e-16, L"Absorption filter not interpolating");
 		}
 	};

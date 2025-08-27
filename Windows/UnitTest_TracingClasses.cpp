@@ -371,7 +371,7 @@ namespace RAC
 			Vec3 yDir({ 0.0, 1.0, 0.0 });
 			Vec3 zDir({ 0.0, 0.0, 1.0 });
 
-			std::vector<Vec3> testDirections;
+			std::vector<Vec3> testDirections, tempDirections;
 			std::vector<int> rayClusters;
 
 			RayPencil testPencil(0);
@@ -379,14 +379,15 @@ namespace RAC
 			// Test with one ray and multiple reference directions (basic assignment).
 			testDirections.resize(1);
 			testDirections[0] = Vec3({ 2.0, 0.1, 0.1 });
+
 			testPencil = RayPencil(testDirections);
+			rayClusters = std::vector<int>(1, -1);
 
 			testDirections.resize(3);
 			testDirections[0] = xDir;
 			testDirections[1] = yDir;
 			testDirections[2] = zDir;
 
-			rayClusters = std::vector<int>(1, -1);
 			testPencil.clusterDirections(testDirections, rayClusters);
 
 			Assert::AreEqual(0, rayClusters[0], L"\nExpected: first direction\n(single ray).");
@@ -399,14 +400,15 @@ namespace RAC
 			testDirections[3] = -xDir;
 			testDirections[4] = -yDir;
 			testDirections[5] = -zDir;
+
 			testPencil = RayPencil(testDirections);
+			rayClusters = std::vector<int>(testDirections.size(), -1);
 
 			testDirections.resize(0);
 
-			rayClusters = std::vector<int>(6, -1);
 			testPencil.clusterDirections(testDirections, rayClusters);
 
-			for (int di = 0; di < 6; ++di)
+			for (int di = 0; di < rayClusters.size(); ++di)
 				Assert::AreEqual(-1, rayClusters[di], L"\nExpected: no direction\n(empty dir).");
 			
 			// Test with multiple rays and one reference direction (basic front-back choice).
@@ -417,16 +419,16 @@ namespace RAC
 			testDirections[3] = -xDir;
 			testDirections[4] = -yDir;
 			testDirections[5] = -zDir;
+
 			testPencil = RayPencil(testDirections);
+			rayClusters = std::vector<int>(testDirections.size(), -1);
 
 			testDirections.resize(1);
-			testDirections[0] = xDir + yDir + zDir;
-			testDirections[0].Normalise();
+			testDirections[0] = UnitVector(xDir + yDir + zDir);
 
-			rayClusters = std::vector<int>(6, -1);
 			testPencil.clusterDirections(testDirections, rayClusters);
 
-			for (int di = 0; di < 6; ++di)
+			for (int di = 0; di < rayClusters.size(); ++di)
 				Assert::AreEqual(0, rayClusters[di], L"\nExpected: first direction\n(single dir).");
 			
 			// Test with multiple rays and multiple reference directions (all following tests).
@@ -436,32 +438,68 @@ namespace RAC
 			testDirections[0] = xDir;
 			testDirections[1] = yDir;
 			testDirections[2] = zDir;
-			testDirections[3] = xDir + yDir;
-			testDirections[4] = xDir + zDir;
-			testDirections[5] = yDir + zDir;
-			testDirections[6] = xDir + yDir + zDir;
-			testDirections[7] = -0.5 * xDir + yDir + zDir;
-			testDirections[8] = xDir - 0.5 * yDir + zDir;
-			testDirections[9] = xDir + yDir - 0.5 * zDir;
-			for (int di = 0; di < testDirections.size(); ++di)
-				testDirections[di].Normalise();
+			testDirections[3] = UnitVector(xDir + yDir);
+			testDirections[4] = UnitVector(xDir + zDir);
+			testDirections[5] = UnitVector(yDir + zDir);
+			testDirections[6] = UnitVector(xDir + yDir + zDir);
+			testDirections[7] = UnitVector(-0.5 * xDir + yDir + zDir);
+			testDirections[8] = UnitVector(xDir - 0.5 * yDir + zDir);
+			testDirections[9] = UnitVector(xDir + yDir - 0.5 * zDir);
 
 			// Scramble the signs to get a more "random" set of test directions.
 			for (int di = 0; di < testDirections.size(); di += 2)
 				testDirections[di] *= -1;
 
 			testPencil = RayPencil(testDirections);
-
 			rayClusters = std::vector<int>(testDirections.size(), -1);
+
+			testPencil.clusterDirections(testDirections, rayClusters);
+
+			for (int di = 0; di < rayClusters.size(); ++di)
+				Assert::AreEqual(di, rayClusters[di], L"\nExpected: direction with ray's index (identical).");
+
+			// Wiggle the directions a bit and repeat the test.
+			for (int di = 0; di < testDirections.size(); ++di)
+			{
+				testDirections[di] += Vec3({ 1e-2, 1e-2, 1e-2 });
+				testDirections[di].Normalise();
+			}
+
 			testPencil.clusterDirections(testDirections, rayClusters);
 
 			for (int di = 0; di < testDirections.size(); ++di)
-				Assert::AreEqual(di, rayClusters[di], L"\nExpected: direction with ray's index (identical, front).");
+				Assert::AreEqual(di, rayClusters[di], L"\nExpected: direction with ray's index (wiggled).");
 
-			// TODO: Wiggle the directions a bit and repeat the test.
+			// Try with more rays than directions.
+			// Note: this code should work without modification even if you change the size of testDirections, defined above.
+			int chunkSize = testDirections.size();
+			tempDirections.resize(9 * chunkSize);
+			for (int di = 0; di < chunkSize; ++di)
+				tempDirections[di] = testDirections[di];
 
-			// TODO: Try with more rays than directions.
-			
+			int chunkStart = testDirections.size();
+			for (int sx : {-1, 1})
+			{
+				for (int sy : {-1, 1})
+				{
+					for (int sz : {-1, 1})
+					{
+						Vec3 offset = Vec3({ sx * 1e-2, sy * 1e-2, sz * 1e-2 });
+						for (int di = 0; di < chunkSize; ++di)
+							tempDirections[di + chunkStart] = UnitVector(testDirections[di] + offset);
+						chunkStart += testDirections.size();
+					}
+				}
+			}
+
+			testPencil = RayPencil(tempDirections);
+			rayClusters = std::vector<int>(tempDirections.size(), -1);
+
+			testPencil.clusterDirections(testDirections, rayClusters);
+
+			for (int di = 0; di < rayClusters.size(); ++di)
+				Assert::AreEqual(di % chunkSize, rayClusters[di], L"\nExpected: direction with ray's index mod chunkSize (more rays than dirs).");
+
 			// TODO: Test with non-normalized directions to ensure the cosine similarity calculation is still meaningful (weighted clustering).
 		}
 
