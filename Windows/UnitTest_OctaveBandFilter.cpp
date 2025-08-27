@@ -33,6 +33,7 @@ namespace RAC
 			auto bands = filter.GetOutput(1.0, lerpFactor); // Get the output from the filter
 			for (int j = 0; j < numFrequencyBands; j++)
 			{
+				bands[j] *= gains[j];
 				outputs[j][0] = bands[j];
 				output[0] += bands[j];
 			}
@@ -42,6 +43,7 @@ namespace RAC
 				auto bands = filter.GetOutput(0.0, lerpFactor); // Get the output from the filter
 				for (int j = 0; j < numFrequencyBands; j++)
 				{
+					bands[j] *= gains[j];
 					outputs[j][i] = bands[j];
 					output[i] += bands[j];
 				}
