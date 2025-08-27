@@ -118,11 +118,11 @@ namespace RAC
                 pathCallbackInstance(tmsg, &intersectionArray, (int)strlen(tmsg), 0);
         }
 
-        void Debug::send_residue(float residue, bool isSource, int channelIndex, int slopeIndex)
+        void Debug::send_residue(float residue, bool isSource, int sourceIndex, int slopeIndex)
         {
             std::lock_guard lock(residueMutex);
             if (residueCallbackInstance != nullptr)
-                residueCallbackInstance(residue, isSource, channelIndex, slopeIndex);
+                residueCallbackInstance(residue, isSource, sourceIndex, slopeIndex);
         }
 
         void Debug::IEMStartFlag()

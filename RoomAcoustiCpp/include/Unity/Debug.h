@@ -47,7 +47,7 @@ extern "C"
     //Create a callback delegate
     typedef void(*FuncDebugCallback)(const char* message, int colour, int size);
     typedef void(*FuncPathCallback)(const char* key, const float* intersections, int size, int numIntersections);
-    typedef void(*FuncResidueCallback)(float residue, bool isSource, int channelIndex, int slopeIndex);
+    typedef void(*FuncResidueCallback)(float residue, bool isSource, int sourceIndex, int slopeIndex);
     typedef void(*FuncIEMStartCallback)();
     typedef void(*FuncIEMEndCallback)();
     typedef void(*FuncRTMStartCallback)();
@@ -100,7 +100,7 @@ namespace RAC
             static void send_path(const std::string& key, const std::vector<Vec3>& intersections, const Vec3& position);
             static void remove_path(const std::string& key);
 
-            static void send_residue(float residue, bool isSource, int channelIndex, int slopeIndex);
+            static void send_residue(float residue, bool isSource, int sourceIndex, int slopeIndex);
             
             static void IEMStartFlag();
             static void IEMEndFlag();
