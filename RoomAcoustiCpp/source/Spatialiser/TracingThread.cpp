@@ -19,6 +19,7 @@ namespace RAC
 		TracingThread::TracingThread(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const std::shared_ptr<Config>& config) :
 			mRoom(room), mSourceManager(sourceManager), mReverb(reverb),
 			numReverbDirections(config->numReverbSources), numFDNs(config->GetNumRavesFDNs()),
+			clustersSizes(config->numReverbSources),
 			decayPerSecond(config->GetNumRavesFDNs()),
 			sourceResidues(config->GetNumRavesFDNs()),
 			listenerResidues(config->GetNumRavesFDNs(), Coefficients<>(config->numReverbSources))
@@ -50,6 +51,15 @@ namespace RAC
 			rayClusters = std::vector<int>(numRays, -1);
 
 			hemispherePencil.clusterDirections(reverbDirections, rayClusters);
+			for (int dir_idx = 0; dir_idx < numReverbDirections; ++dir_idx)
+			{
+				clustersSizes[dir_idx] = 0;
+				for (int ray_idx = 0; ray_idx < numRays; ++ray_idx)
+				{
+					if (rayClusters[ray_idx] == dir_idx)
+						++clustersSizes[dir_idx];
+				}
+			}
 		}
 
 		// TODO: Make ray tracing frequency dependent
@@ -170,41 +180,44 @@ namespace RAC
 				hemispherePencil.getCosines(rayCosines);
 
 			// Reset contributions to 0
-			for (int i = 0; i < numPaths; ++i) {
-				energyContributions[i] = 0;
-				contributionDelays[i] = 0;
+			for (int path_idx = 0; path_idx < numPaths; ++path_idx) {
+				energyContributions[path_idx] = 0;
+				contributionDelays[path_idx] = 0;
 			}
 
-			for (int i = 0; i < numRays; ++i) {
+			for (int ray_idx = 0; ray_idx < numRays; ++ray_idx) {
 				// Did the ray hit valid triangles on both sides?
-				if ((frontIndices[i] == -1) || (backIndices[i] == -1))
+				if ((frontIndices[ray_idx] == -1) || (backIndices[ray_idx] == -1))
 					continue;
 
 				// Does the ray fall within the bundle specified by `reverbDirectionIdx`?
-				if ((reverbDirectionIdx == -1) || (reverbDirectionIdx == rayClusters[i])) {
+				if ((reverbDirectionIdx == -1) || (reverbDirectionIdx == rayClusters[ray_idx])) {
 					// Is the ray self-shadowed?
 					if (SELF_SHADOWING_RADIUS > 0.0)
-						if (rayCosines[i] < SELF_SHADOWING_RADIUS / (2 * rayDistances[i]))
+						if (rayCosines[ray_idx] < SELF_SHADOWING_RADIUS / (2 * rayDistances[ray_idx]))
 							continue;
 
 					// Add energy contribution of the ray
-					pathIdx = pathIndexing[frontIndices[i]][backIndices[i]];
-					distance = rayDistances[i];
+					pathIdx = pathIndexing[frontIndices[ray_idx]][backIndices[ray_idx]];
+					distance = rayDistances[ray_idx];
 					energyContributions[pathIdx] += 1;
 					contributionDelays[pathIdx] += distance;
 				}
 			}
 
 			// Normalize by number of rays
-			for (int i = 0; i < numPaths; ++i) {
-				if (energyContributions[i] == 0)
+			for (int path_idx = 0; path_idx < numPaths; ++path_idx) {
+				if (energyContributions[path_idx] == 0)
 					continue;
 
 				// Turn the propagation distance (meters) into a propagation delay (seconds), and also take its average within each path.
 				// N.B.: The distances are averaged using the number of hits, NOT the total number of rays.
-				contributionDelays[i] /= energyContributions[i] * SPEED_OF_SOUND;
+				contributionDelays[path_idx] /= energyContributions[path_idx] * SPEED_OF_SOUND;
 				// Normalize the portion of rays in the path, AFTER having used it to average their distances.
-				energyContributions[i] /= numRays;
+				if (reverbDirectionIdx == -1)
+					energyContributions[path_idx] /= numRays;
+				else
+					energyContributions[path_idx] /= (numReverbDirections * clustersSizes[reverbDirectionIdx]);
 			}
 		}
 	}
