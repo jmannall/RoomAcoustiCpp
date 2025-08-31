@@ -228,19 +228,11 @@ namespace RAC
 				mReverbInput = Matrix<>(mConfig->numReverbSources, mConfig->numFrames);
 				break;
 			case LateReverbModel::raves:
-#ifdef FREQUENCY_DEPENDENT_RAVES
-				audioThreadPool = std::make_unique<AudioThreadPool>(numThreads, mConfig->numFrames, mConfig->GetNumRavesFDNs() * mConfig->frequencyBands.Length(), 2 * mConfig->numFrames, mConfig->numReverbSources);
-				// mReverb = std::make_shared<RAVES>(&mCore, mConfig);
-				mSources->UpdateNumRavesFDNs(mConfig->GetNumRavesFDNs() * mConfig->frequencyBands.Length());
-				mReverbInput = Matrix<>(mConfig->GetNumRavesFDNs() * mConfig->frequencyBands.Length(), 2 * mConfig->numFrames);
-				break;
-#else
 				audioThreadPool = std::make_unique<AudioThreadPool>(numThreads, mConfig->numFrames, mConfig->GetNumRavesFDNs(), 2 * mConfig->numFrames, mConfig->numReverbSources);
 				// mReverb = std::make_shared<RAVES>(&mCore, mConfig);
 				mSources->UpdateNumRavesFDNs(mConfig->GetNumRavesFDNs());
 				mReverbInput = Matrix<>(mConfig->GetNumRavesFDNs(), 2 * mConfig->numFrames);
 				break;
-#endif
 			}
 			audioFlag.store(false, std::memory_order_release);
 		}
@@ -355,6 +347,11 @@ namespace RAC
 			int numPaths = info[1];
 			int numModes = info[2];
 
+			// TODO: Ensure info always has 4 entries
+			int numFrequencyBands = 1;
+			if (info.size() > 3)
+				numFrequencyBands = info[3];
+
 			assert(mRoom->GetNumberOfWalls() == numTriangles);
 
 			auto indexing = Parse2Dcsv<int>(folderPath + "indexing.csv");
@@ -369,44 +366,37 @@ namespace RAC
 				}
 			}
 			
-			// TODO: Change this to Coefficients for frequency dependence
-			std::vector<Real> t60s(numModes);
-			Vec<> energyDecay(numModes);
-			std::vector<Vec<>> rightEigenvectors(numModes);
-			std::vector<Vec<>> leftEigenvectors(numModes);
+			// Store mode_1_freq_1, mode_1_freq_2, mode_2_freq_1, mode_2_freq_2...
+			std::vector<Real> t60s(numModes * numFrequencyBands);
+			Vec<> energyDecay(numModes * numFrequencyBands);
+			std::vector<Vec<>> rightEigenvectors(numModes * numFrequencyBands);
+			std::vector<Vec<>> leftEigenvectors(numModes * numFrequencyBands);
+			int count = 0;
 			for (int i = 0; i < numModes; i++)
 			{
 				auto mode = Parse2Dcsv<Real>(folderPath + "mode_" + std::to_string(i + 1) + ".csv");
 
-				assert(mode.size() == 3);
-				assert(mode[0].size() == 2);
-				assert(mode[1].size() == numPaths);
-				assert(mode[2].size() == numPaths);
+				assert(mode.size() == 3 * numFrequencyBands);
+				for (int j = 0; j < numFrequencyBands; j++)
+				{
+					int idx = 3 * j;
+					assert(mode[idx].size() == 2);
+					assert(mode[idx + 1].size() == numPaths);
+					assert(mode[idx + 2].size() == numPaths);
 
-				t60s[i] = mode[0][0];
-				energyDecay[i] = mode[0][1];
+					t60s[count] = mode[idx][0];
+					energyDecay[count] = mode[idx][1];
 
-				// Size of numPaths
-				rightEigenvectors[i] = mode[1];
-				leftEigenvectors[i] = mode[2];
+					rightEigenvectors[count] = mode[idx + 1];
+					leftEigenvectors[count] = mode[idx + 2];
+					count++;
+				}
 			}
-			// TODO: Update num source residues based on num modes
-
 			// TODO: Manage how number of modes is set and controlled by user
-			mConfig->numRavesFDNs.store(numModes, std::memory_order_release);
+			mConfig->numRavesFDNs.store(numModes * numFrequencyBands, std::memory_order_release);
 			InitialiseAudio();
 
-#ifdef FREQUENCY_DEPENDENT_RAVES
-			// TODO: Make this not hardcoded
-			std::vector<Real> freqT60s(numModes * mConfig->frequencyBands.Length());
-			int count = 0;
-			for (int i = 0; i < mConfig->frequencyBands.Length(); i++)
-				for (int j = 0; j < numModes; j++)
-					freqT60s[count++] = (0.2 * (mConfig->frequencyBands.Length() - i - 1) + 0.5) * t60s[j];
-			mReverb->InitLateReverb(freqT60s, matrix, mConfig);
-#else
 			mReverb->InitLateReverb(t60s, matrix, mConfig);
-#endif
 			mReverb->SetEigenvectors(rightEigenvectors, leftEigenvectors);
 
 			mRayTracing->InitRoom(numPaths, indexing, energyDecay);

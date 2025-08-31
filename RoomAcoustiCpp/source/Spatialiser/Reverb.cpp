@@ -290,11 +290,7 @@ namespace RAC
 		{
 			std::vector<int> delayLineLengths(config->numReverbSources, -1);
 
-#ifdef FREQUENCY_DEPENDENT_RAVES
-			int numFDNs = config->GetNumRavesFDNs() * config->frequencyBands.Length();
-#else
 			int numFDNs = config->GetNumRavesFDNs();
-#endif
 			FDNPtr fdns = std::make_shared<std::vector<std::unique_ptr<FDN<Complex>>>>(numFDNs);
 			// fdns->reserve(config->numRavesFDNs);
 			for (int i = 0; i < numFDNs; i++)
@@ -349,15 +345,7 @@ namespace RAC
 				return;
 
 			auto fdns = mFDNs.load();
-#ifdef FREQUENCY_DEPENDENT_RAVES
-			// TODO: Make this not hardcoded
-			int numFrequencyBands = 7;
-			int stride = fdns->size() / numFrequencyBands;
-			for (int i = 0; i < numFrequencyBands; i++)
-				fdns->at(id + stride * i)->SetTargetResidues((0.2 * (numFrequencyBands - i - 1) + 0.5) * residues);
-#else
 			fdns->at(id)->SetTargetResidues(residues);
-#endif
 
 			running.store(true, std::memory_order_release);
 		}

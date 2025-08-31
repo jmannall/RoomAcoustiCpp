@@ -103,10 +103,6 @@ namespace RAC
 				std::atomic<bool> rayTracingFlag;
 			};
 
-#ifdef FREQUENCY_DEPENDENT_RAVES
-			const int numFrequencyBands = 7;
-#endif
-
 			/**
 			* @brief Default constructor
 			* 
@@ -116,7 +112,7 @@ namespace RAC
 			*/
 #ifdef FREQUENCY_DEPENDENT_RAVES
 			Source(Binaural::CCore* core, ImageSourceManager& imageSources, const std::shared_ptr<Config>& config) : Access(), mCore(core), imageSources(imageSources), inputBuffer(config->numFrames), spatialisationMode(config->GetSpatialisationMode()),
-				ravesResidues(config->GetNumRavesFDNs() * numFrequencyBands), octaveBandFilter(Coefficients<>(config->frequencyBands.Length()), config->fs, config->frequencyBands.Length())
+				ravesResidues(config->GetNumRavesFDNs()), octaveBandFilter(Coefficients<>(config->frequencyBands.Length()), config->fs, config->frequencyBands.Length())
 			{
 				dataMutex = std::make_shared<std::mutex>();
 			}
@@ -244,17 +240,9 @@ namespace RAC
 				if (!GetAccess())
 					return;
 
-#ifdef FREQUENCY_DEPENDENT_RAVES
-				// TODO: Make this not hardcoded
-				int count = 0;
-				for (int i = 0; i < numFrequencyBands; i++)
-					for (int j = 0; j < residues.Length(); j++)
-						ravesResidues[count++].SetTargetEnergy((0.2 * (numFrequencyBands - i - 1) + 0.5) * residues[j]);
-#else
 				assert(residues.Length() == ravesResidues.size());
 				for (int i = 0; i < ravesResidues.size(); i++)
 					ravesResidues[i].SetTargetEnergy(residues[i]);
-#endif
 			}
 
 			/**
