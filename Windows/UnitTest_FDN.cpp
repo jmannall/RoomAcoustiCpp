@@ -130,7 +130,7 @@ namespace RAC
 
 			Matrix in(config->numReverbSources, config->numFrames);
 			for (int i = 0; i < config->numReverbSources; i++)
-				in[i][1] = 1.0;
+				in(i, 1) = 1.0;
 
 			std::vector<Buffer<>> out(config->numReverbSources, Buffer<>(config->numFrames));
 			fdn.ProcessAudio(in, out, lerpFactor);
@@ -166,7 +166,7 @@ namespace RAC
 
 			Matrix in(config->numReverbSources, config->numFrames);
 			for (int i = 0; i < config->numReverbSources; i++)
-				in[i][1] = 1.0;
+				in(i, 1) = 1.0;
 
 			std::vector<Buffer<>> out(config->numReverbSources, Buffer<>(config->numFrames));
 			fdn.ProcessAudio(in, out, lerpFactor);
@@ -202,7 +202,7 @@ namespace RAC
 
 			Matrix in(config->numReverbSources, config->numFrames);
 			for (int i = 0; i < config->numReverbSources; i++)
-				in[i][1] = 1.0;
+				in(i, 1) = 1.0;
 
 			std::vector<Buffer<>> out(config->numReverbSources, Buffer<>(config->numFrames));
 			fdn.ProcessAudio(in, out, lerpFactor);
@@ -236,7 +236,7 @@ namespace RAC
 			fdn.SetTargetReflectionFilters(std::vector<Absorption<>>(config->numReverbSources, reflectionGains));
 
 			Matrix in(config->numReverbSources, config->numFrames);
-			in[0][0] = 1.0;
+			in(0, 0) = 1.0;
 
 			std::vector<Buffer<>> out(config->numReverbSources, Buffer<>(config->numFrames));
 			fdn.ProcessAudio(in, out, lerpFactor);
@@ -275,7 +275,7 @@ namespace RAC
 			fdn.SetTargetReflectionFilters(std::vector<Absorption<>>(config->numReverbSources, reflectionGains));
 
 			Matrix in(config->numReverbSources, config->numFrames);
-			in[0][0] = 1.0;
+			in(0, 0) = 1.0;
 
 			std::vector<Buffer<>> out(config->numReverbSources, Buffer<>(config->numFrames));
 			fdn.ProcessAudio(in, out, lerpFactor);
@@ -309,7 +309,7 @@ namespace RAC
 			fdn.SetTargetReflectionFilters(std::vector<Absorption<>>(config->numReverbSources, reflectionGains));
 
 			Matrix in(config->numReverbSources, config->numFrames);
-			in[0][0] = 1.0;
+			in(0, 0) = 1.0;
 
 			std::vector<Buffer<>> out(config->numReverbSources, Buffer<>(config->numFrames));
 			fdn.ProcessAudio(in, out, lerpFactor);

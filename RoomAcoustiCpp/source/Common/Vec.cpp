@@ -28,10 +28,9 @@ namespace RAC
 		template<typename T>
 		void Vec<T>::Init(const std::vector<T>& vector)
 		{
-			this->rows = static_cast<int>(vector.size());
-			this->data.resize(this->rows, std::vector<T>(1, 0.0));
-			for (int i = 0; i < this->rows; i++)
-				this->data[i][0] = vector[i];
+			this->data.cols = 1;
+			this->data.rows = static_cast<int>(vector.size());
+			this->data.data = vector;
 		}
 
 		////////////////////////////////////////
@@ -39,8 +38,8 @@ namespace RAC
 		void Vec<Real>::RandomNormalDistribution()
 		{
 			std::normal_distribution<Real> distribution; // mean 0, standard deviation 1
-			for (int i = 0; i < this->rows; i++)
-				this->data[i][0] = distribution(generator);
+			for (int i = 0; i < this->data.rows; i++)
+				this->data(i, 0) = distribution(generator);
 		}
 
 		////////////////////////////////////////
@@ -48,8 +47,8 @@ namespace RAC
 		void Vec<Real>::RandomUniformDistribution()
 		{
 			std::uniform_real_distribution<Real> distribution; // a 0, b 1
-			for (int i = 0; i < rows; i++)
-				data[i][0] = distribution(generator);
+			for (int i = 0; i < data.rows; i++)
+				data(i, 0) = distribution(generator);
 		}
 
 		////////////////////////////////////////
@@ -57,8 +56,8 @@ namespace RAC
 		void Vec<Real>::RandomUniformDistribution(Real a, Real b)
 		{
 			std::uniform_real_distribution<Real> distribution(a, b);
-			for (int i = 0; i < rows; i++)
-				data[i][0] = distribution(generator);
+			for (int i = 0; i < data.rows; i++)
+				data(i, 0) = distribution(generator);
 		}
 
 		////////////////////////////////////////
@@ -66,8 +65,8 @@ namespace RAC
 		void Vec<Real>::Normalise()
 		{
 			Real normal = CalculateNormal();
-			for (int i = 0; i < this->rows; i++)
-				this->data[i][0] = this->data[i][0] / normal;
+			for (int i = 0; i < this->data.rows; i++)
+				this->data(i, 0) = this->data(i, 0) / normal;
 		}
 
 		////////////////////////////////////////
@@ -76,8 +75,8 @@ namespace RAC
 		Real Vec<Real>::CalculateNormal() const
 		{
 			Real magnitude = 0.0;
-			for (int i = 0; i < this->rows; i++)
-				magnitude += this->data[i][0] * this->data[i][0];
+			for (int i = 0; i < this->data.rows; i++)
+				magnitude += this->data(i, 0) * this->data(i, 0);
 			return sqrt(magnitude);
 		}
 
@@ -85,16 +84,16 @@ namespace RAC
 
 		void Vec<Real>::Max(const Real min)
 		{
-			for (int i = 0; i < rows; i++)
-				data[i][0] = std::max(min, data[i][0]);
+			for (int i = 0; i < data.rows; i++)
+				data(i, 0) = std::max(min, data(i, 0));
 		}
 
 		////////////////////////////////////////
 
 		void Vec<Real>::Min(const Real max)
 		{
-			for (int i = 0; i < rows; i++)
-				data[i][0] = std::min(max, data[i][0]);
+			for (int i = 0; i < data.rows; i++)
+				data(i, 0) = std::min(max, data(i, 0));
 		}
 
 		////////////////////////////////////////
@@ -103,8 +102,8 @@ namespace RAC
 		T Vec<T>::Sum() const
 		{
 			T sum = 0.0;
-			for (int i = 0; i < this->cols; i++)
-				sum += this->data[i][0];
+			for (int i = 0; i < this->data.cols; i++)
+				sum += this->data(i, 0);
 			return sum;
 		}
 
@@ -118,8 +117,9 @@ namespace RAC
 		template<typename T>
 		void Rowvec<T>::Init(const std::vector<T>& vector)
 		{
-			this->cols = static_cast<int>(vector.size());
-			this->data[0] = vector;
+			this->data.rows = 1;
+			this->data.cols = static_cast<int>(vector.size());
+			this->data.data = vector;
 		}
 
 		////////////////////////////////////////
@@ -128,8 +128,8 @@ namespace RAC
 		T Rowvec<T>::Sum() const
 		{
 			T sum = 0.0;
-			for (int i = 0; i < this->cols; i++)
-				sum += this->data[0][i];
+			for (int i = 0; i < this->data.cols; i++)
+				sum += this->data(0, i);
 			return sum;
 		}
 

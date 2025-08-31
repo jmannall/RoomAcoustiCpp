@@ -50,7 +50,7 @@ namespace RAC
 			Vec(const int length, const T value) : Matrix<T>(length, 1)
 			{
 				for (int i = 0; i < length; ++i)
-					this->data[i][0] = value;
+					this->data(i, 0) = value;
 			}
 
 			/**
@@ -115,7 +115,7 @@ namespace RAC
 			/**
 			* @return The mean value of the vector
 			*/
-			inline T Mean() const { return Sum() / this->rows; }
+			inline T Mean() const { return Sum() / this->data.rows; }
 
 			/**
 			* @brief Access the vector at the specified index
@@ -123,7 +123,7 @@ namespace RAC
 			* @param i The index of the value to return
 			* @return The value at the specified index
 			*/
-			inline T operator[](const int i) const { return this->data[i][0]; }
+			inline T operator[](const int i) const { return this->data(i, 0); }
 
 			/**
 			* @brief Access the vector at the specified index
@@ -131,7 +131,7 @@ namespace RAC
 			* @param i The index of the value to return
 			* @return A reference to the value at the specified index
 			*/
-			inline T& operator[](const int i) { return this->data[i][0]; }
+			inline T& operator[](const int i) { return this->data(i, 0); }
 
 			/**
 			* @brief Assigns a Matrix to a Vec
@@ -184,7 +184,7 @@ namespace RAC
 			Rowvec(const int length, const T value) : Matrix<T>(1, length)
 			{
 				for (int i = 0; i < length; ++i)
-					this->data[0][i] = value;
+					this->data(0, i) = value;
 			}
 
 			/**
@@ -201,7 +201,7 @@ namespace RAC
 
 			T Sum() const;
 
-			inline T Mean() const { return Sum() / this->cols; }
+			inline T Mean() const { return Sum() / this->data.cols; }
 
 			/**
 			* @brief Access the vector at the specified index
@@ -209,7 +209,7 @@ namespace RAC
 			* @param i The index of the value to return
 			* @return The value at the specified index
 			*/
-			inline T operator[](const int i) const { return this->data[0][i]; }
+			inline T operator[](const int i) const { return this->data(0, i); }
 
 			/**
 			* @brief Access the vector at the specified index
@@ -217,7 +217,7 @@ namespace RAC
 			* @param i The index of the value to return
 			* @return A reference to the value at the specified index
 			*/
-			inline T& operator[](const int i) { return this->data[0][i]; }
+			inline T& operator[](const int i) { return this->data(0, i); }
 
 			/**
 			* @brief Assigns a Matrix to a Rowvec

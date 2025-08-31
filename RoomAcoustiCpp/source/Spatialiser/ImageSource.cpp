@@ -609,8 +609,8 @@ namespace RAC
 				if (fdnChannel > -1)
 				{
 					mSource->ProcessAnechoic(bMonoOutput, bOutput.left, bOutput.right);
-					std::transform(bMonoOutput.begin(), bMonoOutput.begin() + numFrames, reverbInput[fdnChannel].begin(), reverbInput[fdnChannel].begin(),
-						[](auto input, auto current) { return current + input; });
+					for (int i = 0; i < numFrames; i++)
+						reverbInput(fdnChannel, i) += bMonoOutput[i];
 				}
 				else
 					mSource->ProcessAnechoic(bOutput.left, bOutput.right);

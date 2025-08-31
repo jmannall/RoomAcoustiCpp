@@ -239,7 +239,7 @@ namespace RAC
 			{
 				for (int j = 0; j < mChannels.size(); j++)
 				{
-					y[j] = mChannels[j]->GetOutput(x[j] + data[j][i], lerpFactor);
+					y[j] = mChannels[j]->GetOutput(x[j] + data(j, i), lerpFactor);
 					outputBuffers[j][i] = y[j];
 				}
 				ProcessMatrix();
@@ -289,7 +289,7 @@ namespace RAC
 			{
 				x[j] = 0.0;
 				for (int k = 0; k < feedbackMatrix.Rows(); ++k)
-					x[j] += y[k] * feedbackMatrix[k][j];
+					x[j] += y[k] * feedbackMatrix(k, j);
 			}
 		}
 		
@@ -321,10 +321,7 @@ namespace RAC
 					for (int i = 0; i < numChannels; ++i)
 					{
 						for (int k = 0; k < j; k++)
-							section[i][k] = matrix[i][k];
-						std::vector<Real> test = matrix[i];
-						Real x = test[0];
-						Real y = matrix[i][0];
+							section(i, k) = matrix(i, k);
 					}
 
 					vector -= section * (section.Transpose() * vector);

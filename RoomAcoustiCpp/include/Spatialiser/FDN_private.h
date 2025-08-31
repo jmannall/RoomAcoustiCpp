@@ -218,10 +218,10 @@ namespace RAC
 				precedingDelayBuffer.Reset(); // TODO: Do we want to avoid resetting it?
 			}
 
-			inline void SubmitAudio(const std::vector<Real>& input)
+			inline void SubmitAudio(const Real* input)
 			requires std::is_same_v<T, Complex> 
 			{ 
-				inputData = reinterpret_cast<const Complex*>(input.data());
+				inputData = reinterpret_cast<const Complex*>(input);
 			}
 
 			/**
@@ -292,7 +292,7 @@ namespace RAC
 			{
 				Matrix<> matrix = Matrix<>(numChannels, numChannels);
 				for (int i = 0; i < matrix.Rows(); i++)
-					matrix[i][i] = 1.0;		// Initialise diagonal to 1.0
+					matrix(i, i) = 1.0;		// Initialise diagonal to 1.0
 				return matrix;
 			}
 

@@ -141,7 +141,7 @@ namespace RAC
 			out = tempLowShelf.GetFrequencyResponse(fc);
 
 			for (int i = 0; i < numFilters; i++)
-				filterResponseMatrix[0][i] += out[i];
+				filterResponseMatrix(0, i) += out[i];
 
 			for (int j = 1; j < numFilters - 1; j++)
 			{
@@ -149,14 +149,14 @@ namespace RAC
 				out = tempPeakingFilter.GetFrequencyResponse(fc);
 
 				for (int i = 0; i < out.Length(); i++)
-					filterResponseMatrix[j][i] += out[i];
+					filterResponseMatrix(j, i) += out[i];
 			}
 
 			const PeakHighShelf tempHighShelf(std::min(fc[numFilters - 2] * SQRT_2, (Real)20000.0), p, Q, fs); // Times SQRT_2. See constructor
 			out = tempHighShelf.GetFrequencyResponse(fc);
 
 			for (int i = 0; i < out.Length(); i++)
-				filterResponseMatrix[numFilters - 1][i] += out[i];
+				filterResponseMatrix(numFilters - 1, i) += out[i];
 
 			filterResponseMatrix.Inverse();
 			filterResponseMatrix *= pdb;

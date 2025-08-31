@@ -25,6 +25,17 @@ namespace RAC
 		template<typename T = Real>
 		class Matrix
 		{
+			struct ContiguousData
+			{
+				T& operator()(const int r, const int c) { return data[r * cols + c]; }
+				const T& operator()(const int r, const int c) const { return data[r * cols + c]; }
+
+				int rows, cols;
+				std::vector<T> data;
+
+				ContiguousData(int r, int c) : rows(r), cols(c), data(r * c, 0.0) {}
+			};
+
 		public:
 
 			/**
@@ -35,17 +46,17 @@ namespace RAC
 			/**
 			* Constructor that initialises a Matrix with zeros
 			*
-			* @param r The number of rows
+			* @param r The number of data.rows
 			* @param c The number of columns
 			*/
-			Matrix(const int r, const int c) : rows(r), cols(c) { AllocateSpace(); };
+			Matrix(const int r, const int c) : data(r, c), row(c), column(r) {};
 
 			/**
 			* Constructor that initialises a Matrix with data
 			*
 			* @param matrix The input data to initialise the matrix
 			*/
-			Matrix(const std::vector<std::vector<T>>& matrix) { Init(matrix); }
+			Matrix(const std::vector<std::vector<T>>& matrix) : data(0, 0) { Init(matrix); }
 
 			/**
 			* @brief Default deconstructor
@@ -57,8 +68,7 @@ namespace RAC
 			*/
 			inline void Reset()
 			{
-				for (auto& row : data)
-					std::fill(row.begin(), row.end(), 0.0);
+				std::fill(data.data.begin(), data.data.end(), 0.0);
 			}
 
 			/**
@@ -69,10 +79,10 @@ namespace RAC
 			*/
 			inline void AddColumn(const std::vector<T>& column, const int c)
 			{
-				assert(column.size() == rows);
-				assert(c < cols);
-				for (int i = 0; i < rows; i++)
-					data[i][c] = column[i];
+				assert(column.size() == data.rows);
+				assert(c < data.cols);
+				for (int i = 0; i < data.rows; i++)
+					data(i, c) = column[i];
 			}
 
 			/**
@@ -83,9 +93,10 @@ namespace RAC
 			*/
 			inline void AddRow(const std::vector<T>& row, const int r)
 			{
-				assert(row.size() == cols);
-				assert(r < rows);
-				data[r] = row;
+				assert(row.size() == data.cols);
+				assert(r < data.rows);
+				for (int i = 0; i < data.cols; i++)
+					data(r, i) = row[i];
 			}
 
 			/**
@@ -94,7 +105,13 @@ namespace RAC
 			* @param r The row to get
 			* @return Reference (const) to the row
 			*/
-			inline const std::vector<T>& GetRow(int r) const { assert(r < rows); return data[r]; }
+			inline const std::vector<T>& GetRow(int r)
+			{
+				assert(r < data.rows);
+				for (int i = 0; i < data.cols; i++)
+					row[i] = data(r, i);
+				return row;
+			}
 
 			/**
 			* @brief Get a column of the matrix
@@ -104,28 +121,30 @@ namespace RAC
 			*/
 			inline const std::vector<T>& GetColumn(int c)
 			{
-				assert(c < cols);
-				for (int i = 0; i < rows; i++)
-					column[i] = data[i][c];
+				assert(c < data.cols);
+				for (int i = 0; i < data.rows; i++)
+					column[i] = data(i, c);
 				return column;
 			}
+
+			const T* GetRowStartPtr(const int r) const { return &data(r, 0); }
 
 			/**
 			* @brief Get all data from the matrix
 			*
 			* @return Const reference to the matrix data
 			*/
-			inline const std::vector<std::vector<T>>& Data() const { return data; }
+			// inline const std::vector<std::vector<T>>& Data() const { return data; }
 
 			/**
-			* @return The number of rows
+			* @return The number of data.rows
 			*/
-			inline int Rows() const { return rows; }
+			inline int Rows() const { return data.rows; }
 
 			/**
 			* @return The number of columns
 			*/
-			inline int Cols() const { return cols; }
+			inline int Cols() const { return data.cols; }
 
 			/**
 			* @return The transpose of the matrix
@@ -171,7 +190,7 @@ namespace RAC
 			* @param r The index of the row to return
 			* @return A reference to the matrix row at the specified index
 			*/
-			inline std::vector<T>& operator[](const int r) { return data[r]; }
+			inline T& operator()(const int r, const int c) { return data(r, c); }
 
 			/**
 			* @brief Access the matrix row at the specified index
@@ -179,20 +198,20 @@ namespace RAC
 			* @param r The index of the row to return
 			* @return A const reference to the matrix row at the specified index
 			*/
-			inline const std::vector<T>& operator[](const int r) const { return data[r]; }
+			inline const T& operator()(const int r, const int c) const { return data(r, c); }
 
 			/**
 			* @brief Adds a matrix to the current matrix
 			*/
 			inline Matrix operator+=(const Matrix& matrix)
 			{
-				assert(rows == matrix.Rows());
-				assert(cols == matrix.Cols());
+				assert(data.rows == matrix.Rows());
+				assert(data.cols == matrix.Cols());
 
-				for (int i = 0; i < rows; i++)
+				for (int i = 0; i < data.rows; i++)
 				{
-					for (int j = 0; j < cols; j++)
-						data[i][j] += matrix[i][j];
+					for (int j = 0; j < data.cols; j++)
+						data(i, j) += matrix(i, j);
 				}
 				return *this;
 			}
@@ -202,13 +221,13 @@ namespace RAC
 			*/
 			inline Matrix operator-=(const Matrix& matrix)
 			{
-				assert(rows == matrix.Rows());
-				assert(cols == matrix.Cols());
+				assert(data.rows == matrix.Rows());
+				assert(data.cols == matrix.Cols());
 
-				for (int i = 0; i < rows; i++)
+				for (int i = 0; i < data.rows; i++)
 				{
-					for (int j = 0; j < cols; j++)
-						data[i][j] -= matrix[i][j];
+					for (int j = 0; j < data.cols; j++)
+						data(i, j) -= matrix(i, j);
 				}
 				return *this;
 			}
@@ -218,10 +237,10 @@ namespace RAC
 			*/
 			inline Matrix operator*=(const Real a)
 			{
-				for (int i = 0; i < rows; i++)
+				for (int i = 0; i < data.rows; i++)
 				{
-					for (int j = 0; j < cols; j++)
-						data[i][j] *= a;
+					for (int j = 0; j < data.cols; j++)
+						data(i, j) *= a;
 				}
 				return *this;
 			}
@@ -236,10 +255,10 @@ namespace RAC
 			*/
 			inline Matrix operator+=(const T a)
 			{
-				for (int i = 0; i < rows; i++)
+				for (int i = 0; i < data.rows; i++)
 				{
-					for (int j = 0; j < cols; j++)
-						data[i][j] += a;
+					for (int j = 0; j < data.cols; j++)
+						data(i, j) += a;
 				}
 				return *this;
 			}
@@ -251,8 +270,10 @@ namespace RAC
 
 		protected:
 
-			int rows, cols;							// Matrix dimensions
-			std::vector<std::vector<T>> data;	// Matrix data
+			ContiguousData data;
+			// int data.rows, data.cols;							// Matrix dimensions
+			// std::vector<std::vector<T>> data;	// Matrix data
+			std::vector<T> row;				// Stores a single row
 			std::vector<T> column;				// Stores a single column
 
 		private:
@@ -267,12 +288,12 @@ namespace RAC
 			/**
 			* @brief Initialise matrix data with zeros
 			*/
-			void AllocateSpace();
+			// void AllocateSpace();
 
 			/**
 			* @brief Clear matrix data
 			*/
-			inline void DeallocateSpace() { rows = 0; cols = 0; column.clear(); data.clear(); };
+			// inline void DeallocateSpace() { data.rows = 0; data.cols = 0; column.clear(); data.clear(); };
 		};
 
 		//////////////////// Operators ////////////////////
@@ -287,11 +308,22 @@ namespace RAC
 			assert(u.Rows() == v.Rows());
 			assert(u.Cols() == v.Cols());
 
+			if (u.Rows() != v.Rows())
+				return false;
+
+			if (u.Cols() != v.Cols())
+				return false;
+
 			bool equal = true;
 			int i = 0;
 			while (equal && i < u.Rows())
 			{
-				equal = u.GetRow(i) == v.GetRow(i);
+				int j = 0;
+				while (equal && j < u.Cols())
+				{
+					equal = u(i, j) == v(i, j);
+					j++;
+				}
 				i++;
 			}
 			return equal;
@@ -311,8 +343,8 @@ namespace RAC
 			{
 				for (int j = 0; j < u.Cols(); j++)
 				{
-					Real entry = u[i][j] + v[i][j];
-					out[i][j] = entry;
+					Real entry = u(i, j) + v(i, j);
+					out(i, j) = entry;
 				}
 			}
 			return out;
@@ -328,7 +360,7 @@ namespace RAC
 			for (int i = 0; i < mat.Rows(); i++)
 			{
 				for (int j = 0; j < mat.Cols(); j++)
-					out[i][j] = -mat[i][j];
+					out(i, j) = -mat(i, j);
 			}
 			return out;
 		}
@@ -345,7 +377,7 @@ namespace RAC
 			for (int i = 0; i < u.Rows(); i++)
 			{
 				for (int j = 0; j < u.Cols(); j++)
-					out[i][j] = u[i][j] - v[i][j];
+					out(i, j) = u(i, j) - v(i, j);
 			}
 			return out;
 		}
@@ -367,8 +399,8 @@ namespace RAC
 				{
 					sum = 0.0;
 					for (int k = 0; k < u.Cols(); ++k)
-						sum += u[i][k] * v[k][j];
-					out[i][j] = sum;
+						sum += u(i, k) * v(k, j);
+					out(i, j) = sum;
 				}
 			}
 		}
@@ -396,7 +428,7 @@ namespace RAC
 				for (int j = 0; j < mat.Cols(); j++)
 				{
 					for (int k = 0; k < mat.Cols(); k++)
-						out[i][j] = a * mat[i][j];
+						out(i, j) = a * mat(i, j);
 				}
 			}
 			return out;

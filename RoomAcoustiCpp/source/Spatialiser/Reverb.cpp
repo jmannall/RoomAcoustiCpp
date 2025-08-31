@@ -362,7 +362,7 @@ namespace RAC
 
 			auto fdns = mFDNs.load(); // Parallelise the processing of multiple FDNs
 			for (int i = 0; i < fdns->size(); i++)
-				fdns->at(i)->SubmitAudio(data[i]);
+				fdns->at(i)->SubmitAudio(data.GetRowStartPtr(i));
 
 			audioThreadPool->ProcessFDNs(*fdns, outputBuffers, lerpFactor);
 			/*for (int i = 0; i < fdns->size(); i++)

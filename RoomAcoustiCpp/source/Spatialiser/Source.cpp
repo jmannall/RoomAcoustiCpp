@@ -276,8 +276,8 @@ namespace RAC
 				}
 				for (int i = 0; i < reverbInput.Rows(); i++)
 				{
-					std::transform(bOutput.left.begin(), bOutput.left.end(), reverbInput[i].begin(),
-						reverbInput[i].begin(), std::plus<>());
+					for (int j = 0; j < numFrames; j++)
+						reverbInput(i, j) += bOutput.left[j];
 				}
 			}
 			else if (reverbSend.load(std::memory_order_acquire) == LateReverbModel::raves)
@@ -304,8 +304,8 @@ namespace RAC
 					for (int i = 0; i < reverbInput.Rows(); i++)
 					{
 						Complex input = ravesResidues[i].GetOutput(inputBuffer[j], lerpFactor);
-						reverbInput[i][2 * j] = input.real();
-						reverbInput[i][2 * j + 1] = input.imag();
+						reverbInput(i, 2 * j) = input.real();
+						reverbInput(i, 2 * j + 1) = input.imag();
 					}
 #endif
 				}
