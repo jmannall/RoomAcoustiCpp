@@ -25,15 +25,33 @@ namespace RAC
 		template<typename T = Real>
 		class Matrix
 		{
+			/**
+			* @brief Struct that stores matrix data in a contiguous vector
+			*/
 			struct ContiguousData
 			{
-				T& operator()(const int r, const int c) { return data[r * cols + c]; }
-				const T& operator()(const int r, const int c) const { return data[r * cols + c]; }
+				/**
+				* @brief Access an element in the matrix
+				* 
+				* @param r The index of the row
+				* @param c The index of the column
+				* @return A reference to the matrix element at the specified index
+				*/
+				T& operator()(const int r, const int c) { return matrix[r * cols + c]; }
 
-				int rows, cols;
-				std::vector<T> data;
+				/**
+				* @brief Access an element in the matrix
+				*
+				* @param r The index of the row
+				* @param c The index of the column
+				* @return A const reference to the matrix element at the specified index
+				*/
+				const T& operator()(const int r, const int c) const { return matrix[r * cols + c]; }
 
-				ContiguousData(int r, int c) : rows(r), cols(c), data(r * c, 0.0) {}
+				int rows, cols;				// Matrix dimensions
+				std::vector<T> matrix;		// Contiguous data storage
+
+				ContiguousData(int r, int c) : rows(r), cols(c), matrix(r * c, 0.0) {}
 			};
 
 		public:
@@ -56,7 +74,7 @@ namespace RAC
 			*
 			* @param matrix The input data to initialise the matrix
 			*/
-			Matrix(const std::vector<std::vector<T>>& matrix) : data(0, 0) { Init(matrix); }
+			// Matrix(const std::vector<std::vector<T>>& matrix) : data(matrix.size(), 0) { Init(matrix); }
 
 			/**
 			* @brief Default deconstructor
@@ -68,7 +86,7 @@ namespace RAC
 			*/
 			inline void Reset()
 			{
-				std::fill(data.data.begin(), data.data.end(), 0.0);
+				std::fill(data.matrix.begin(), data.matrix.end(), 0.0);
 			}
 
 			/**
@@ -130,13 +148,6 @@ namespace RAC
 			const T* GetRowStartPtr(const int r) const { return &data(r, 0); }
 
 			/**
-			* @brief Get all data from the matrix
-			*
-			* @return Const reference to the matrix data
-			*/
-			// inline const std::vector<std::vector<T>>& Data() const { return data; }
-
-			/**
 			* @return The number of data.rows
 			*/
 			inline int Rows() const { return data.rows; }
@@ -180,23 +191,34 @@ namespace RAC
 			*/
 			void Min(const Real max);
 
+			/**
+			* @brief Fills the matrix with random values from a uniform distribution between 0 and 1
+			*/
 			void RandomUniformDistribution();
 
+			/**
+			* @brief Fills the matrix with random values from a uniform distribution
+			* 
+			* @param a The lower bound of the distribution
+			* @param b The upper bound of the distribution
+			*/
 			void RandomUniformDistribution(Real a, Real b);
 
 			/**
-			* @brief Access the matrix row at the specified index
+			* @brief Access an element in the matrix
 			*
-			* @param r The index of the row to return
-			* @return A reference to the matrix row at the specified index
+			* @param r The index of the row
+			* @param c The index of the column
+			* @return A reference to the matrix element at the specified index
 			*/
 			inline T& operator()(const int r, const int c) { return data(r, c); }
 
 			/**
-			* @brief Access the matrix row at the specified index
+			* @brief Access an element in the matrix
 			*
-			* @param r The index of the row to return
-			* @return A const reference to the matrix row at the specified index
+			* @param r The index of the row
+			* @param c The index of the column
+			* @return A const reference to the matrix element at the specified index
 			*/
 			inline const T& operator()(const int r, const int c) const { return data(r, c); }
 
@@ -270,11 +292,9 @@ namespace RAC
 
 		protected:
 
-			ContiguousData data;
-			// int data.rows, data.cols;							// Matrix dimensions
-			// std::vector<std::vector<T>> data;	// Matrix data
-			std::vector<T> row;				// Stores a single row
-			std::vector<T> column;				// Stores a single column
+			ContiguousData data;		// Store matrix data in a contiguous vector
+			std::vector<T> row;			// Stores a single row
+			std::vector<T> column;		// Stores a single column
 
 		private:
 
@@ -284,16 +304,6 @@ namespace RAC
 			* @params matrix Data to inialise the matrix from
 			*/
 			void Init(const std::vector<std::vector<T>>& matrix);
-
-			/**
-			* @brief Initialise matrix data with zeros
-			*/
-			// void AllocateSpace();
-
-			/**
-			* @brief Clear matrix data
-			*/
-			// inline void DeallocateSpace() { data.rows = 0; data.cols = 0; column.clear(); data.clear(); };
 		};
 
 		//////////////////// Operators ////////////////////

@@ -50,20 +50,10 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		/*template<typename T>
-		void Matrix<T>::AllocateSpace()
-		{
-			for (int i = 0; i < data.rows; i++)
-				data.push_back(std::vector<T>(data.cols, 0.0));
-			column = std::vector<T>(data.rows);
-		}*/
-
-		////////////////////////////////////////
-
 		template<typename T>
 		Matrix<T> Matrix<T>::Transpose()
 		{
-			assert(data.rows * data.cols == data.data.size());
+			assert(data.rows * data.cols == data.matrix.size());
 			Matrix<T> matrix = Matrix<T>(data.cols, data.rows);
 			for (int i = 0; i < data.rows; i++)
 			{
@@ -81,7 +71,7 @@ namespace RAC
 			assert(data.rows == data.cols); // Matrix must be square
 
 			// Create the augmented matrix [A|I]
-			data.data.resize(2 * data.cols * data.rows, 0.0);
+			data.matrix.resize(2 * data.cols * data.rows, 0.0);
 			for (int i = 0; i < data.rows; i++)
 				data(data.rows + i, i) = 1.0;
 
@@ -108,15 +98,15 @@ namespace RAC
 				if (maxRow != i)
 				{
 					std::swap_ranges(
-						data.data.begin() + i * data.cols,
-						data.data.begin() + (i + 1) * data.cols,
-						data.data.begin() + maxRow * data.cols
+						data.matrix.begin() + i * data.cols,
+						data.matrix.begin() + (i + 1) * data.cols,
+						data.matrix.begin() + maxRow * data.cols
 					);
 
 					std::swap_ranges(
-						data.data.begin() + (i + data.rows) * data.cols,
-						data.data.begin() + (i + data.rows + 1) * data.cols,
-						data.data.begin() + (maxRow + data.rows) * data.cols
+						data.matrix.begin() + (i + data.rows) * data.cols,
+						data.matrix.begin() + (i + data.rows + 1) * data.cols,
+						data.matrix.begin() + (maxRow + data.rows) * data.cols
 					);
 				}
 				// std::swap(data[i], data[maxRow]);
@@ -145,52 +135,40 @@ namespace RAC
 			}
 
 			// Remove the identity matrix
-			data.data.erase(data.data.begin(), data.data.begin() + data.rows * data.cols);
-			data.data.shrink_to_fit();
+			data.matrix.erase(data.matrix.begin(), data.matrix.begin() + data.rows * data.cols);
+			data.matrix.shrink_to_fit();
 		}
 
 		////////////////////////////////////////
 
 		void Matrix<Real>::Log10()
 		{
-			for (int i = 0; i < data.rows; i++)
-			{
-				for (int j = 0; j < data.cols; j++)
-					data(i, j) = RAC::Common::Log10(data(i, j));
-			}
+			for (auto& value : data.matrix)
+				value = RAC::Common::Log10(value);
 		}
 
 		////////////////////////////////////////
 
 		void Matrix<Real>::Pow10()
 		{
-			for (int i = 0; i < data.rows; i++)
-			{
-				for (int j = 0; j < data.cols; j++)
-					data(i, j) = RAC::Common::Pow10(data(i, j));
-			}
+			for (auto& value : data.matrix)
+				value = RAC::Common::Pow10(value);
 		}
 
 		////////////////////////////////////////
 
 		void Matrix<Real>::Max(const Real min)
 		{
-			for (int i = 0; i < data.rows; i++)
-			{
-				for (int j = 0; j < data.cols; j++)
-					data(i, j) = std::max(min, data(i, j));
-			}
+			for (auto& value : data.matrix)
+				value = std::max(min, value);
 		}
 
 		////////////////////////////////////////
 
 		void Matrix<Real>::Min(const Real max)
 		{
-			for (int i = 0; i < data.rows; i++)
-			{
-				for (int j = 0; j < data.cols; j++)
-					data(i, j) = std::min(max, data(i, j));
-			}
+			for (auto& value : data.matrix)
+				value = std::min(max, value);
 		}
 
 		////////////////////////////////////////
@@ -198,11 +176,8 @@ namespace RAC
 		void Matrix<Real>::RandomUniformDistribution()
 		{
 			std::uniform_real_distribution<Real> distribution; // a 0, b 1
-			for (int i = 0; i < data.rows; i++)
-			{
-				for (int j = 0; j < data.cols; j++)
-					data(i, j) = distribution(generator);
-			}
+			for (auto& value : data.matrix)
+				value = distribution(generator);
 		}
 
 		////////////////////////////////////////
@@ -210,11 +185,8 @@ namespace RAC
 		void Matrix<Real>::RandomUniformDistribution(Real a, Real b)
 		{
 			std::uniform_real_distribution<Real> distribution(a, b);
-			for (int i = 0; i < data.rows; i++)
-			{
-				for (int j = 0; j < data.cols; j++)
-					data(i, j) = distribution(generator);
-			}
+			for (auto& value : data.matrix)
+				value = distribution(generator);
 		}
 	}
 }

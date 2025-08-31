@@ -30,7 +30,7 @@ namespace RAC
 		{
 			this->data.cols = 1;
 			this->data.rows = static_cast<int>(vector.size());
-			this->data.data = vector;
+			this->data.matrix = vector;
 		}
 
 		////////////////////////////////////////
@@ -119,7 +119,7 @@ namespace RAC
 		{
 			this->data.rows = 1;
 			this->data.cols = static_cast<int>(vector.size());
-			this->data.data = vector;
+			this->data.matrix = vector;
 		}
 
 		////////////////////////////////////////
