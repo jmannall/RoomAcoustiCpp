@@ -296,8 +296,8 @@ namespace RAC
 						{
 							int idx = i * groupSize + k;
 							Complex input = ravesResidues[idx].GetOutput(bands[i], lerpFactor);
-							reverbInput[idx][2 * j] = input.real();
-							reverbInput[idx][2 * j + 1] = input.imag();
+							reverbInput(idx, 2 * j) = input.real();
+							reverbInput(idx, 2 * j + 1) = input.imag();
 						}
 					}
 #else
