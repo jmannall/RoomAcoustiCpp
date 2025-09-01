@@ -42,6 +42,7 @@ where
 - $*$ denotes convolution.
 
 In arbitrary polyhedral rooms, each image source must be checked for valid intersections and then visibility to the listener.
+Each image source can be spatialised by applying a HRTF, or other panning technique based on the direction of arrival.
 
 Real rooms contain obstacles and edges that bend sound waves, producing diffraction.
 The Image Edge Model augments the image source approach by creating virtual **image edges**.
@@ -75,7 +76,7 @@ They use a recursive structure with multiple delay lines allowing for efficient 
 ---
 
 The absorption filters are used to control the frequency dependent decay time based on the decay of each delay line.
-The output of the FDN is spatialised by placing reverb sources around the the listener and applying the current spatialisation mode.
+The output of the FDN is spatialised by placing reverb sources around the the listener and applying a HRTF (or other panning technique) based on the direction relative to the listener.
 The reflection filters are set to the absorption of the nearest wall in the direction of the reverb source linked to each respective FDN channel.
 This simulates directional late reverberation, for example, if the listener is beside an absorbative wall, less reverberation will be heard from that direction.
 
@@ -87,7 +88,7 @@ The FDN can be configured with the following parameters:
 
 ---
 
-[^1]: Wendt T, et al. "A computationally-efficient and perceptually-plausible algorithm for binaural room impulse response simulation." J. Audio. Eng. Soc., 62:748-766, 2014.
+[^1]: Wendt T, et al. "A computationally-efficient and perceptually-plausible algorithm for binaural room impulse response simulation." J. Audio Eng. Soc., 62:748-766, 2014.
 [^2]: Erraji A, et al. "The image edge model." Acta Acust., 2021, 5:1-15, 2021.
 [^3]: Borish J. "Extension of the image model to arbitrary polyhedra." J. Acoust. Soc. Am., 75:1827–1836, 1984.
 [^4]: Jot J, and Chaigne A. "Digital delay networks for designing artificial reverberators." Proc. Audio Eng. Soc. Conv., Paris, France. 1-12, 1991.
