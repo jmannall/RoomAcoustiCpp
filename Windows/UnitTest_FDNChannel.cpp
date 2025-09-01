@@ -22,7 +22,7 @@ namespace RAC
 		{
 			const int delay = 127;
 			const Coefficients T60({ 0.1, 0.2, 0.3, 0.4 });
-			const std::shared_ptr<Config> config = std::make_shared<Config>();
+			const std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>();
 			const Real lerpFactor = config->GetLerpFactor();
 
 			FDNChannel channel(delay, T60, config);
@@ -38,7 +38,7 @@ namespace RAC
 			const int delay = 73;
 			const Coefficients T60({ 0.1, 0.2, 0.3, 0.4 });
 			const Coefficients reflectionGains({ 0.87, 0.75, 0.81, 0.84 });
-			const std::shared_ptr<Config> config = std::make_shared<Config>();
+			const std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>();
 			const Real lerpFactor = config->GetLerpFactor();
 
 			FDNChannel channel(delay, T60, config);
@@ -61,7 +61,7 @@ namespace RAC
 			const int delay = 73;
 			const Coefficients T60({ 0.1, 0.2, 0.3, 0.4 });
 			const Coefficients reflectionGains({ 0.87, 0.75, 0.81, 0.84 });
-			const std::shared_ptr<Config> config = std::make_shared<Config>();
+			const std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>();
 			const Real lerpFactor = config->GetLerpFactor();
 
 			FDNChannel channel(delay, T60, config);
@@ -87,7 +87,7 @@ namespace RAC
 			const Coefficients T60({ 0.1, 0.2, 0.3, 0.4 });
 			const Real target = 0.6;
 			const Coefficients reflectionGains({ target, target, target, target });
-			const std::shared_ptr<Config> config = std::make_shared<Config>();
+			const std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>();
 			const Real lerpFactor = 1.0;
 
 			FDNChannel channel(delay, T60, config);
@@ -108,7 +108,7 @@ namespace RAC
 		{
 			const int delay = 750;
 			const Coefficients T60({ 1.2, 1.2, 1.2, 1.2 });
-			const std::shared_ptr<Config> config = std::make_shared<Config>();
+			const std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>();
 			// config->lerpFactor = 0.5;
 			const Real lerpFactor = config->GetLerpFactor();
 
@@ -128,7 +128,7 @@ namespace RAC
 			const int delay = 100;
 			const Coefficients T60({ 0.2, 0.2, 0.2, 0.2 });
 			const Coefficients newT60({ 0.6, 0.6, 0.6, 0.6 });
-			const std::shared_ptr<Config> config = std::make_shared<Config>();
+			const std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>();
 			const Real lerpFactor = 1.0;
 			Real out;
 

@@ -37,7 +37,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Source::Init(const std::shared_ptr<Config>& config)
+		void Source::Init(const std::shared_ptr<DSPConfig>& config)
 		{
 			InitSource();
 			InitBuffers(config->numFrames);
@@ -359,7 +359,7 @@ namespace RAC
 
 		////////////////////////////////////////
 		
-		void Source::UpdateData(const Source::AudioData source, const ImageSourceDataMap& imageSourceData, const std::shared_ptr<Config>& config)
+		void Source::UpdateData(const Source::AudioData source, const ImageSourceDataMap& imageSourceData, const std::shared_ptr<DSPConfig>& config)
 		{
 			if (!GetAccess())
 				return;
@@ -463,7 +463,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Source::UpdateImageSources(const std::shared_ptr<Config>& config)
+		void Source::UpdateImageSources(const std::shared_ptr<DSPConfig>& config)
 		{
 			std::vector<std::string> keys;
 			for (auto& [key, vSource] : currentImageSources)
@@ -478,7 +478,7 @@ namespace RAC
 		
 		////////////////////////////////////////
 
-		bool Source::UpdateImageSource(int& id, ImageSourceData& data, const std::shared_ptr<Config>& config)
+		bool Source::UpdateImageSource(int& id, ImageSourceData& data, const std::shared_ptr<DSPConfig>& config)
 		{
 			if (id < 0)		// case: virtual source does not exist
 			{

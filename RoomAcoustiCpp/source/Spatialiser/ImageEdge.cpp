@@ -30,7 +30,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		ImageEdge::ImageEdge(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const std::shared_ptr<Config>& config) :
+		ImageEdge::ImageEdge(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const std::shared_ptr<DSPConfig>& config) :
 			mRoom(room), mSourceManager(sourceManager), mReverb(reverb), frequencyBands(config->frequencyBands), currentCycle(false), configChanged(true), reverbRunning(false),
 			mIEMConfig(config->GetDiffractionModel(), config->GetLateReverbModel()), mIEMConfigStore(config->GetDiffractionModel(), config->GetLateReverbModel())
 		{

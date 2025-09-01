@@ -96,7 +96,7 @@ extern "C"
 		{ numFDNChannels = 24; }
 		else { numFDNChannels = 32; }
 
-		std::shared_ptr<Config> config = std::make_shared<Config>(fs, numFrames, numFDNChannels, static_cast<Real>(lerpFactor), static_cast<Real>(Q), frequencyBands);
+		std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>(fs, numFrames, numFDNChannels, static_cast<Real>(lerpFactor), static_cast<Real>(Q), frequencyBands);
 		return Init(config);
 	}
 

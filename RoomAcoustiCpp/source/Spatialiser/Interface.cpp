@@ -25,7 +25,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		bool Init(const std::shared_ptr<Config> config)
+		bool Init(const std::shared_ptr<DSPConfig> config)
 		{
 			if (context) // Delete any existing context
 			{

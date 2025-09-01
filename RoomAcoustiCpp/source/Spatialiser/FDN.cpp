@@ -121,7 +121,7 @@ namespace RAC
 		////////////////////////////////////////
 
 		template<>
-		FDN<Real>::FDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<Config> config, const Matrix<>& matrix) : x(config->numReverbSources),
+		FDN<Real>::FDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<DSPConfig> config, const Matrix<>& matrix) : x(config->numReverbSources),
 			y(config->numReverbSources), feedbackMatrix(matrix)
 		{
 			assert(T60 > 0);
@@ -135,7 +135,7 @@ namespace RAC
 		////////////////////////////////////////
 
 		template<>
-		FDN<Real>::FDN(const Coefficients<>& T60, const std::vector<int>& delayLengths, const std::shared_ptr<Config> config, const Matrix<>& matrix) : x(config->numReverbSources),
+		FDN<Real>::FDN(const Coefficients<>& T60, const std::vector<int>& delayLengths, const std::shared_ptr<DSPConfig> config, const Matrix<>& matrix) : x(config->numReverbSources),
 			y(config->numReverbSources), feedbackMatrix(matrix)
 		{
 			assert(T60 > 0);
@@ -148,7 +148,7 @@ namespace RAC
 		////////////////////////////////////////
 
 		template<>
-		FDN<Complex>::FDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<Config> config, const Matrix<>& matrix) : x(config->numReverbSources),
+		FDN<Complex>::FDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<DSPConfig> config, const Matrix<>& matrix) : x(config->numReverbSources),
 			y(config->numReverbSources), feedbackMatrix(matrix), ravesResidues(config->numReverbSources)
 		{
 			assert(T60 > 0);
@@ -162,7 +162,7 @@ namespace RAC
 		////////////////////////////////////////
 
 		template<>
-		FDN<Complex>::FDN(const Coefficients<>& T60, const std::vector<int>& delayLengths, const std::shared_ptr<Config> config, const Matrix<>& matrix) : x(config->numReverbSources),
+		FDN<Complex>::FDN(const Coefficients<>& T60, const std::vector<int>& delayLengths, const std::shared_ptr<DSPConfig> config, const Matrix<>& matrix) : x(config->numReverbSources),
 			y(config->numReverbSources), feedbackMatrix(matrix), ravesResidues(config->numReverbSources)
 		{
 			assert(T60 > 0);

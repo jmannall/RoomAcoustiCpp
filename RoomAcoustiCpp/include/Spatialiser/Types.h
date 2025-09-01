@@ -122,108 +122,21 @@ namespace RAC
 				minEdgeLength(minEdgeLength), maxPathLength(maxPathLength) {}
 		};
 
-		/**
-		* @brief Configuration struct for the image edge model
-		*/
-		class IEMConfig
-		{
-		public:
-
-			IEMConfig(DiffractionModel diffractionModel, LateReverbModel lateReverb) : IEMConfig(IEMData(), diffractionModel, lateReverb) {}
-
-			/**
-			* @brief Constructor for the IEMConfig class
-			* 
-			* @param order The maximum reflection/diffraction order of the IEM
-			* @param direct The direct sound visibility model
-			* @param reflections The reflection flag
-			* @param diffraction The diffraction sound validity model
-			* @param diffractedReflections The diffraction sound validity model for reflections
-			* @param lateReverb The late reverberation flag
-			* @param minEdgeLength The minimum edge length for diffraction
-			*/
-			IEMConfig(IEMData data, DiffractionModel diffractionModel, LateReverbModel lateReverb) :
-				data(data), lateReverbModel(lateReverb)
-			{
-				UpdateMaxOrder();
-				UpdateDiffractionModel(diffractionModel);
-			};
-
-			inline bool UpdateDiffractionModel(DiffractionModel model)
-			{
-				if (model == DiffractionModel::btm || model == DiffractionModel::udfa)
-				{
-					bool hasChanged = data.specularDiffOrder == 0 && specularDiffOrderStore > 0;
-					data.specularDiffOrder = specularDiffOrderStore;
-					return hasChanged;
-				}
-				else
-				{
-					bool hasChanged = data.specularDiffOrder != 0;
-					data.specularDiffOrder = 0;	// Only BTM and UDFA support specular diffraction
-					return hasChanged;
-				}
-			}
-
-			inline bool UpdateLateReverbModel(LateReverbModel model)
-			{
-				if (lateReverbModel == model)
-					return false;
-				lateReverbModel = model;
-				return data.lateReverb; // If no late reverb, no need to update the model
-			}
-
-			inline void UpdateMaxOrder()
-			{
-				maxOrder = std::max(std::max(data.reflOrder, data.shadowDiffOrder), data.specularDiffOrder);
-			}
-
-			inline void Update(IEMData data, DiffractionModel diffractionModel, LateReverbModel lateReverb)
-			{
-				this->data = data;
-				UpdateMaxOrder();
-				UpdateDiffractionModel(diffractionModel);
-				UpdateLateReverbModel(lateReverb);
-			}
-
-			inline int MaxOrder() const { return maxOrder; }
-
-			inline LateReverbModel GetLateReverbModel(bool checkData = true) const
-			{
-				if (checkData)
-					return data.lateReverb ? lateReverbModel : LateReverbModel::none;
-				return lateReverbModel;
-			}
-
-			inline bool FeedsFDN(int order) const
-			{
-				return data.lateReverb && lateReverbModel == LateReverbModel::fdn && maxOrder == order;
-			}
-
-			IEMData data;		// IEM configuration data
-
-		private:
-			int maxOrder{ 0 };						// Maximum order of the IEM
-			int specularDiffOrderStore{ 0 };			// Store the specular diffraction order
-
-			LateReverbModel lateReverbModel;		// Late reverb model
-		};
-
 		// class Context;
 
 		/**
 		* @brief Configuration struct for RAC
 		*/
-		class Config
+		class DSPConfig
 		{
 		public:
 			/**
-			* @brief Default constructor for the Config class
+			* @brief Default constructor for the DSPConfig class
 			*/
-			Config() : Config(48000, 512, 12, (Real)2.0, (Real)0.98, Coefficients({ (Real)250.0, (Real)500.0, (Real)1000.0, (Real)2000.0 }), SpatialisationMode::none) {}
+			DSPConfig() : DSPConfig(48000, 512, 12, (Real)2.0, (Real)0.98, Coefficients({ (Real)250.0, (Real)500.0, (Real)1000.0, (Real)2000.0 }), SpatialisationMode::none) {}
 
 			/**
-			* @brief Constructor for the Config class
+			* @brief Constructor for the DSPConfig class
 			*
 			* @param sampleRate The sample rate
 			* @param numFrames The number of frames per audio callback
@@ -232,10 +145,10 @@ namespace RAC
 			* @param Q The Q factor for the GraphicEQ
 			* @param fBands The frequency bands for the GraphicEQ
 			*/
-			Config(int sampleRate, int numFrames, int numReverbSources, Real lerpFactor, Real Q, Coefficients<> fBands) : Config(sampleRate, numFrames, numReverbSources, lerpFactor, Q, fBands, SpatialisationMode::none) {}
+			DSPConfig(int sampleRate, int numFrames, int numReverbSources, Real lerpFactor, Real Q, Coefficients<> fBands) : DSPConfig(sampleRate, numFrames, numReverbSources, lerpFactor, Q, fBands, SpatialisationMode::none) {}
 
 			/**
-			* @brief Constructor for the Config class
+			* @brief Constructor for the DSPConfig class
 			*
 			* @param sampleRate The sample rate
 			* @param numFrames The number of frames per audio callback
@@ -245,7 +158,7 @@ namespace RAC
 			* @param fBands The frequency bands for the GraphicEQ
 			* @param mode The spatialisation mode
 			*/
-			Config(int sampleRate, int numFrames, int numReverbSources, Real lerpFactor, Real Q, Coefficients<> fBands, SpatialisationMode mode) :
+			DSPConfig(int sampleRate, int numFrames, int numReverbSources, Real lerpFactor, Real Q, Coefficients<> fBands, SpatialisationMode mode) :
 				fs(sampleRate), numFrames(numFrames), numReverbSources(numReverbSources), Q(Q), frequencyBands(fBands),
 				spatialisationMode(mode)
 			{
@@ -299,6 +212,93 @@ namespace RAC
 				this->lerpFactor.store(factor, std::memory_order_release);
 				return factor;
 			}
+		};
+
+		/**
+		* @brief Configuration struct for the image edge model
+		*/
+		class IEMConfig
+		{
+		public:
+
+			IEMConfig(DiffractionModel diffractionModel, LateReverbModel lateReverb) : IEMConfig(IEMData(), diffractionModel, lateReverb) {}
+
+			/**
+			* @brief Constructor for the IEMConfig class
+			*
+			* @param order The maximum reflection/diffraction order of the IEM
+			* @param direct The direct sound visibility model
+			* @param reflections The reflection flag
+			* @param diffraction The diffraction sound validity model
+			* @param diffractedReflections The diffraction sound validity model for reflections
+			* @param lateReverb The late reverberation flag
+			* @param minEdgeLength The minimum edge length for diffraction
+			*/
+			IEMConfig(IEMData data, DiffractionModel diffractionModel, LateReverbModel lateReverb) :
+				data(data), lateReverbModel(lateReverb)
+			{
+				UpdateMaxOrder();
+				UpdateDiffractionModel(diffractionModel);
+			};
+
+			inline bool UpdateDiffractionModel(DiffractionModel model)
+			{
+				if (model == DiffractionModel::btm || model == DiffractionModel::udfa)
+				{
+					bool hasChanged = data.specularDiffOrder == 0 && specularDiffOrderStore > 0;
+					data.specularDiffOrder = specularDiffOrderStore;
+					return hasChanged;
+				}
+				else
+				{
+					bool hasChanged = data.specularDiffOrder != 0;
+					data.specularDiffOrder = 0;	// Only BTM and UDFA support specular diffraction
+					return hasChanged;
+				}
+			}
+
+			inline bool UpdateLateReverbModel(LateReverbModel model)
+			{
+				if (lateReverbModel == model)
+					return false;
+				lateReverbModel = model;
+				return data.lateReverb; // If no late reverb, no need to update the model
+			}
+
+			inline void UpdateMaxOrder()
+			{
+				maxOrder = std::max(std::max(data.reflOrder, data.shadowDiffOrder), data.specularDiffOrder);
+			}
+
+			inline void Update(IEMData data, const std::shared_ptr<DSPConfig>& config)
+			{
+				this->data = data;
+				UpdateMaxOrder();
+				UpdateDiffractionModel(config->GetDiffractionModel());
+				UpdateLateReverbModel(config->GetLateReverbModel());
+			}
+
+			inline int MaxOrder() const { return maxOrder; }
+
+			inline LateReverbModel GetLateReverbModel(bool checkData = true) const
+			{
+				if (checkData)
+					return data.lateReverb ? lateReverbModel : LateReverbModel::none;
+				return lateReverbModel;
+			}
+
+			inline bool FeedsFDN(int order) const
+			{
+				return data.lateReverb && lateReverbModel == LateReverbModel::fdn && maxOrder == order;
+			}
+
+			IEMData data;		// IEM configuration data
+
+		private:
+			int maxOrder{ 0 };						// Maximum order of the IEM
+			int specularDiffOrderStore{ 0 };			// Store the specular diffraction order
+
+			LateReverbModel lateReverbModel;		// Late reverb model
 		};
 	}
 }

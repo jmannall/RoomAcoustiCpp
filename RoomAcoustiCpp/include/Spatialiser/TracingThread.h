@@ -37,7 +37,7 @@ namespace RAC
 			* @param sourceManager Pointer to the source manager class.
 			* @param reverb Pointer to the late reverb class.
 			*/
-			TracingThread(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const std::shared_ptr<Config>& config);
+			TracingThread(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const std::shared_ptr<DSPConfig>& config);
 
 			/**
 			* @brief Updates the stored listener position.

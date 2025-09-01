@@ -218,7 +218,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void ImageSource::Init(const Buffer<>* sourceBuffer, const std::shared_ptr<Config>& config, const ImageSourceData& data, int fdnChannel)
+		void ImageSource::Init(const Buffer<>* sourceBuffer, const std::shared_ptr<DSPConfig>& config, const ImageSourceData& data, int fdnChannel)
 		{
 			InitSource();
 			InitBuffers(config->numFrames);
@@ -247,7 +247,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void ImageSource::LateInit(const std::shared_ptr<Config>& config)
+		void ImageSource::LateInit(const std::shared_ptr<DSPConfig>& config)
 		{
 			DiffractionModel model = config->GetDiffractionModel();
 			UpdateDiffractionModel(model, config->fs);

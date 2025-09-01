@@ -83,7 +83,7 @@ namespace RAC
 			* 
 			* @param config The configuration for the spatialiser.
 			*/
-			Context(const std::shared_ptr<Config> config);
+			Context(const std::shared_ptr<DSPConfig> config);
 
 			/**
 			* @brief Default deconstructor.
@@ -312,7 +312,7 @@ namespace RAC
 			/**
 			* Spatialiser
 			*/
-			const std::shared_ptr<Config> mConfig;				// RAC Config
+			const std::shared_ptr<DSPConfig> mConfig;				// RAC DSPConfig
 			std::atomic<bool> mIsRunning;			// Flag to check if the spatialiser is running
 			std::thread IEMThread;			// Background thread to run the image edge model
 			std::thread rayTracingThread;	// Background thread to run the ray tracing model

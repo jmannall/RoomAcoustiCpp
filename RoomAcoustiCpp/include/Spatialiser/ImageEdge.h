@@ -40,7 +40,7 @@ namespace RAC
 			* @param reverb Pointer to the late reverb class
 			* @param frequencyBands Frequency bands for graphic equalisers
 			*/
-			ImageEdge(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const std::shared_ptr<Config>& numFrequencyBands);
+			ImageEdge(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const std::shared_ptr<DSPConfig>& numFrequencyBands);
 			
 			/**
 			* @brief Default deconstructor
@@ -52,10 +52,10 @@ namespace RAC
 			* 
 			* @param config The new configuration
 			*/
-			inline void UpdateIEMConfig(const IEMData& data, const std::shared_ptr<Config>& config)
+			inline void UpdateIEMConfig(const IEMData& data, const std::shared_ptr<DSPConfig>& config)
 			{
 				lock_guard<std::mutex> lock(dataStoreMutex);
-				mIEMConfigStore.Update(data, config->GetDiffractionModel(), config->GetLateReverbModel());
+				mIEMConfigStore.Update(data, config);
 				configChanged = true;
 			}
 

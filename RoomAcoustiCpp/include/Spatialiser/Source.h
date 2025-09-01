@@ -111,13 +111,13 @@ namespace RAC
 			* @params config The spatialiser configuration
 			*/
 #ifdef FREQUENCY_DEPENDENT_RAVES
-			Source(Binaural::CCore* core, ImageSourceManager& imageSources, const std::shared_ptr<Config>& config) : Access(), mCore(core), imageSources(imageSources), inputBuffer(config->numFrames), spatialisationMode(config->GetSpatialisationMode()),
+			Source(Binaural::CCore* core, ImageSourceManager& imageSources, const std::shared_ptr<DSPConfig>& config) : Access(), mCore(core), imageSources(imageSources), inputBuffer(config->numFrames), spatialisationMode(config->GetSpatialisationMode()),
 				ravesResidues(config->GetNumRavesFDNs()), octaveBandFilter(Coefficients<>(config->frequencyBands.Length()), config->fs, config->frequencyBands.Length())
 			{
 				dataMutex = std::make_shared<std::mutex>();
 			}
 #else
-			Source(Binaural::CCore* core, ImageSourceManager& imageSources, const std::shared_ptr<Config>& config) : Access(), mCore(core), imageSources(imageSources), inputBuffer(config->numFrames), spatialisationMode(config->GetSpatialisationMode()),
+			Source(Binaural::CCore* core, ImageSourceManager& imageSources, const std::shared_ptr<DSPConfig>& config) : Access(), mCore(core), imageSources(imageSources), inputBuffer(config->numFrames), spatialisationMode(config->GetSpatialisationMode()),
 				ravesResidues(config->GetNumRavesFDNs())
 			{
 				dataMutex = std::make_shared<std::mutex>();
@@ -141,7 +141,7 @@ namespace RAC
 			* 
 			* @param config The spatialiser configuration
 			*/
-			void Init(const std::shared_ptr<Config>& config);
+			void Init(const std::shared_ptr<DSPConfig>& config);
 
 			/**
 			* @brief Removes access to the source and flags image sources and input buffer for clearing
@@ -216,7 +216,7 @@ namespace RAC
 			* @params source The source audio DSP parameters
 			* @params vSources The current image sources
 			*/
-			void UpdateData(const Source::AudioData source, const ImageSourceDataMap& imageSourceData, const std::shared_ptr<Config>& config);
+			void UpdateData(const Source::AudioData source, const ImageSourceDataMap& imageSourceData, const std::shared_ptr<DSPConfig>& config);
 
 			std::optional<Data> GetData(ThreadID id);
 
@@ -340,7 +340,7 @@ namespace RAC
 			/**
 			* @brief Updates the audio thread image sources from the current image sources
 			*/
-			void UpdateImageSources(const std::shared_ptr<Config>& config);
+			void UpdateImageSources(const std::shared_ptr<DSPConfig>& config);
 
 			/**
 			* @brief Updates the audio thread data for a given image source
@@ -348,7 +348,7 @@ namespace RAC
 			* @params data The new image source data
 			* @return True if the image was destroyed successfully, false otherwise
 			*/
-			bool UpdateImageSource(int& id, ImageSourceData& data, const std::shared_ptr<Config>& config);
+			bool UpdateImageSource(int& id, ImageSourceData& data, const std::shared_ptr<DSPConfig>& config);
 
 			/**
 			* @return The next free FDN channel

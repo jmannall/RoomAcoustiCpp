@@ -38,7 +38,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		ReverbSource::ReverbSource(Binaural::CCore* core, const std::shared_ptr<Config> config, const Vec3& shift, const Buffer<>* inBuffer) : mCore(core), mShift(shift), inputBuffer(inBuffer), spatialisationMode(config->GetSpatialisationMode())
+		ReverbSource::ReverbSource(Binaural::CCore* core, const std::shared_ptr<DSPConfig> config, const Vec3& shift, const Buffer<>* inBuffer) : mCore(core), mShift(shift), inputBuffer(inBuffer), spatialisationMode(config->GetSpatialisationMode())
 		{
 			bInput = CMonoBuffer<float>(config->numFrames);
 			bOutput.left = CMonoBuffer<float>(config->numFrames);
@@ -245,7 +245,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void SingleFDN::InitLateReverb(const Coefficients<>& T60, const Vec<>& delayLineLengths, const FDNMatrix matrix, const std::shared_ptr<Config> config)
+		void SingleFDN::InitLateReverb(const Coefficients<>& T60, const Vec<>& delayLineLengths, const FDNMatrix matrix, const std::shared_ptr<DSPConfig> config)
 		{
             std::shared_ptr<FDN<>> fdn;
             switch (matrix)
@@ -286,7 +286,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void RAVES::InitLateReverb(const const std::vector<Real>& T60, const FDNMatrix matrix, const std::shared_ptr<Config> config)
+		void RAVES::InitLateReverb(const const std::vector<Real>& T60, const FDNMatrix matrix, const std::shared_ptr<DSPConfig> config)
 		{
 			std::vector<int> delayLineLengths(config->numReverbSources, -1);
 

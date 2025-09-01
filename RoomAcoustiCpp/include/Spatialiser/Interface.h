@@ -28,7 +28,7 @@ namespace RAC
 		* @param config The configuration of the spatialiser.
 		* @return True if the initialization was successful, false otherwise.
 		*/
-		bool Init(const std::shared_ptr<Config> config);
+		bool Init(const std::shared_ptr<DSPConfig> config);
 
 		/**
 		* Exits and cleans up the spatialiser.

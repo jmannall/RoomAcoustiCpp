@@ -88,7 +88,7 @@ namespace RAC
 			void Path::ValidPath()
 			{
 				valid = true;
-				if ((zA < 0) || (zA > eData.z))	// Config control over allow virtual zA?
+				if ((zA < 0) || (zA > eData.z))	// DSPConfig control over allow virtual zA?
 				{
 					zValid = false;
 					valid = false;

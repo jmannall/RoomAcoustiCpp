@@ -50,7 +50,7 @@ namespace RAC
 		{
 			const Coefficients T60({ 0.1, 0.2, 0.3, 0.4 });
 			const Absorption gains({ 0.87, 0.75, 0.81, 0.84 });
-			const std::shared_ptr<Config> config = std::make_shared<Config>();
+			const std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>();
 			const Real lerpFactor = config->GetLerpFactor();
 			const std::vector<Absorption<>> reflectionGains(config->numReverbSources, gains);
 
@@ -87,7 +87,7 @@ namespace RAC
 		{
 			const Coefficients T60({ 0.1, 0.2, 0.3, 0.4 });
 			const Absorption gains({ 1.0, 1.0, 1.0, 1.0 });
-			const std::shared_ptr<Config> config = std::make_shared<Config>();
+			const std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>();
 			const Real lerpFactor = config->GetLerpFactor();
 			const std::vector<Absorption<>> reflectionGains(config->numReverbSources, gains);
 
@@ -117,7 +117,7 @@ namespace RAC
 			const Real lerpFactor = 1.0;
 			const Real Q = 0.98;
 			const std::vector<Real> fBands = { 500.0, 1000.0, 2000.0, 4000.0 };
-			const std::shared_ptr<Config> config = std::make_shared<Config>(fs, numFrames, numReverbSources, lerpFactor, Q, fBands);
+			const std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>(fs, numFrames, numReverbSources, lerpFactor, Q, fBands);
 
 			const Coefficients T60({ target, target, target, target });
 			const Absorption gains({ 0.1, 0.05, 0.3, 0.25 });
@@ -153,7 +153,7 @@ namespace RAC
 			const Real lerpFactor = 1.0;
 			const Real Q = 0.98;
 			const std::vector<Real> fBands = { 500.0, 1000.0, 2000.0, 4000.0 };
-			const std::shared_ptr<Config> config = std::make_shared<Config>(fs, numFrames, numReverbSources, lerpFactor, Q, fBands);
+			const std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>(fs, numFrames, numReverbSources, lerpFactor, Q, fBands);
 
 			const Coefficients T60({ target, target, target, target });
 			const Absorption gains({ 0.1, 0.05, 0.3, 0.25 });
@@ -189,7 +189,7 @@ namespace RAC
 			const Real lerpFactor = 1.0;
 			const Real Q = 0.98;
 			const std::vector<Real> fBands = { 500.0, 1000.0, 2000.0, 4000.0 };
-			const std::shared_ptr<Config> config = std::make_shared<Config>(fs, numFrames, numReverbSources, lerpFactor, Q, fBands);
+			const std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>(fs, numFrames, numReverbSources, lerpFactor, Q, fBands);
 
 			const Coefficients T60({ target, target, target, target });
 			const Absorption gains({ 0.1, 0.05, 0.3, 0.25 });
@@ -225,7 +225,7 @@ namespace RAC
 			const Real lerpFactor = 1.0;
 			const Real Q = 0.98;
 			const std::vector<Real> fBands = { 500.0, 1000.0, 2000.0, 4000.0 };
-			const std::shared_ptr<Config> config = std::make_shared<Config>(fs, numFrames, numReverbSources, lerpFactor, Q, fBands);
+			const std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>(fs, numFrames, numReverbSources, lerpFactor, Q, fBands);
 
 			const Coefficients T60({ target, target, target, target });
 			const Absorption reflectionGains({ 0.1, 0.05, 0.3, 0.25 });
@@ -264,7 +264,7 @@ namespace RAC
 			const Real lerpFactor = 1.0;
 			const Real Q = 0.98;
 			const std::vector<Real> fBands = { 500.0, 1000.0, 2000.0, 4000.0 };
-			const std::shared_ptr<Config> config = std::make_shared<Config>(fs, numFrames, numReverbSources, lerpFactor, Q, fBands);
+			const std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>(fs, numFrames, numReverbSources, lerpFactor, Q, fBands);
 
 			const Coefficients T60({ target, target, target, target });
 			const Absorption reflectionGains({ 0.1, 0.05, 0.3, 0.25 });
@@ -298,7 +298,7 @@ namespace RAC
 			const Real lerpFactor = 1.0;
 			const Real Q = 0.98;
 			const std::vector<Real> fBands = { 500.0, 1000.0, 2000.0, 4000.0 };
-			const std::shared_ptr<Config> config = std::make_shared<Config>(fs, numFrames, numReverbSources, lerpFactor, Q, fBands);
+			const std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>(fs, numFrames, numReverbSources, lerpFactor, Q, fBands);
 
 			const Coefficients T60({ target, target, target, target });
 			const Absorption reflectionGains({ 0.1, 0.05, 0.3, 0.25 });
@@ -332,7 +332,7 @@ namespace RAC
 		//	const Real lerpFactor = 1.0;
 		//	const Real Q = 0.98;
 		//	const std::vector<Real> fBands = { 500.0, 1000.0, 2000.0, 4000.0 };
-		//	const std::shared_ptr<Config> config = std::make_shared<Config>(fs, numFrames, numReverbSources, lerpFactor, Q, fBands);
+		//	const std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>(fs, numFrames, numReverbSources, lerpFactor, Q, fBands);
 
 		//	const Coefficients T60({ target, target, target, target });
 		//	const Absorption gains({ (Real)0.1, (Real)0.05, (Real)0.3, (Real)0.25 });

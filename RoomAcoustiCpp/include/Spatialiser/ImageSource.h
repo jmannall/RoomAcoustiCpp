@@ -457,7 +457,7 @@ namespace RAC
 			* @param data The image source data to initialise with
 			* @param fdnChannel The FDN channel to feed, -1 if the image source does not feed the FDN
 			*/
-			void Init(const Buffer<>* inputBuffer, const std::shared_ptr<Config>& config, const ImageSourceData& data, int fdnChannel);
+			void Init(const Buffer<>* inputBuffer, const std::shared_ptr<DSPConfig>& config, const ImageSourceData& data, int fdnChannel);
 
 			/**
 			* @brief Update the image source and remove if no longer visible
@@ -540,7 +540,7 @@ namespace RAC
 			*
 			* @param config The current RAC configuration
 			*/
-			void LateInit(const std::shared_ptr<Config>& config);
+			void LateInit(const std::shared_ptr<DSPConfig>& config);
 
 			/**
 			* @brief Reset diffraction models and initialise the diffraction model with the given path

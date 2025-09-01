@@ -119,7 +119,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		Context::Context(const std::shared_ptr<Config> config) : mConfig(config), mIsRunning(true), IEMThread(), rayTracingThread(), applyHeadphoneEQ(false), headphoneEQ(2048)
+		Context::Context(const std::shared_ptr<DSPConfig> config) : mConfig(config), mIsRunning(true), IEMThread(), rayTracingThread(), applyHeadphoneEQ(false), headphoneEQ(2048)
 		{
 #ifdef DEBUG_INIT
 			Debug::Log("Init Context", Colour::Green);

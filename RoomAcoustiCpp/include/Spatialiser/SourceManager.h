@@ -44,7 +44,7 @@ namespace RAC
 			* @params core The 3DTI processing core
 			* @params config The spatialiser configuration
 			*/
-			SourceManager(Binaural::CCore* core, const std::shared_ptr<Config> config) : mCore(core), mConfig(config), mImageSources(core)
+			SourceManager(Binaural::CCore* core, const std::shared_ptr<DSPConfig> config) : mCore(core), mConfig(config), mImageSources(core)
 			{
 				for (auto& sources : mSources)
 					sources.emplace(core, mImageSources, config);
@@ -212,7 +212,7 @@ namespace RAC
 		private:
 			Binaural::CCore* mCore;			// 3DTI processing core
 
-			std::shared_ptr<Config> mConfig;			// Spatialiser configuration
+			std::shared_ptr<DSPConfig> mConfig;			// Spatialiser configuration
 
 			std::array<std::optional<Source>, MAX_SOURCES> mSources;	// Sources for the audio thread
 			ImageSourceManager mImageSources;							// Image sources for the audio thread

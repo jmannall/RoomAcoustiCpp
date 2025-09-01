@@ -16,7 +16,7 @@ namespace RAC
 	using namespace Common;
 	namespace Spatialiser
 	{
-		TracingThread::TracingThread(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const std::shared_ptr<Config>& config) :
+		TracingThread::TracingThread(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const std::shared_ptr<DSPConfig>& config) :
 			mRoom(room), mSourceManager(sourceManager), mReverb(reverb),
 			numReverbDirections(config->numReverbSources), numFDNs(config->GetNumRavesFDNs()),
 			clustersSizes(config->numReverbSources),

@@ -49,13 +49,13 @@ namespace RAC
 			* @param config Configuration of the spatialiser
 			*/
 			// template <typename U = T, std::enable_if_t<std::is_same_v<U, Real>, bool> = true>
-			FDNChannel(const int delayLength, const Coefficients<>& T60, const std::shared_ptr<Config> config) requires std::is_same_v<T, Real> :
+			FDNChannel(const int delayLength, const Coefficients<>& T60, const std::shared_ptr<DSPConfig> config) requires std::is_same_v<T, Real> :
 				mT(static_cast<Real>(delayLength) / config->fs), mBuffer(delayLength),
 				absorption(CalculateFilterGains(T60)[0]), mAbsorptionFilter(CalculateFilterGains(T60), config->frequencyBands, config->Q, config->fs),
 				mReflectionFilter(config->frequencyBands, config->Q, config->fs) {}
 
 			template <typename U = T, std::enable_if_t<std::is_same_v<U, Complex>, bool> = true>
-			FDNChannel(const int delayLength, const Coefficients<>& T60, const std::shared_ptr<Config> config) requires std::is_same_v<T, Complex> :
+			FDNChannel(const int delayLength, const Coefficients<>& T60, const std::shared_ptr<DSPConfig> config) requires std::is_same_v<T, Complex> :
 				mT(static_cast<Real>(delayLength) / config->fs), mBuffer(delayLength),
 				absorption(CalculateFilterGains(T60)[0]), mAbsorptionFilter(CalculateFilterGains(T60), config->frequencyBands, config->Q, config->fs) {}
 
@@ -162,7 +162,7 @@ namespace RAC
 			* @param dimensions Primary room dimensions that determine delay line lengths
 			* @param config The spatialiser configuration
 			*/
-			FDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<Config> config) : FDN(T60, dimensions, config, InitMatrix(config->numReverbSources)) {}
+			FDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<DSPConfig> config) : FDN(T60, dimensions, config, InitMatrix(config->numReverbSources)) {}
 
 			/**
 			* @brief Initialises an FDN with a target T60 and given delay line lengths
@@ -172,7 +172,7 @@ namespace RAC
 			* @param delayLengths Delay line lengths (in samples)
 			* @param config The spatialiser configuration
 			*/
-			FDN(const Coefficients<>& T60, const std::vector<int>& delayLengths, const std::shared_ptr<Config> config) : FDN(T60, delayLengths, config, InitMatrix(config->numReverbSources)) {}
+			FDN(const Coefficients<>& T60, const std::vector<int>& delayLengths, const std::shared_ptr<DSPConfig> config) : FDN(T60, delayLengths, config, InitMatrix(config->numReverbSources)) {}
 
 			/**
 			* @brief Default deconstructor
@@ -253,7 +253,7 @@ namespace RAC
 			* @param config The spatialiser configuration
 			* @param matrix The feedback matrix to use for the FDN
 			*/
-			FDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<Config> config, const Matrix<>& matrix);
+			FDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<DSPConfig> config, const Matrix<>& matrix);
 
 			/**
 			* @brief Initialises an FDN with a target T60 and given delay line lengths
@@ -263,7 +263,7 @@ namespace RAC
 			* @param config The spatialiser configuration
 			* @param matrix The feedback matrix to use for the FDN
 			*/
-			FDN(const Coefficients<>& T60, const std::vector<int>& delayLengths, const std::shared_ptr<Config> config, const Matrix<>& matrix);
+			FDN(const Coefficients<>& T60, const std::vector<int>& delayLengths, const std::shared_ptr<DSPConfig> config, const Matrix<>& matrix);
 
 			/**
 			* @brief Processes a square feedback matrix
@@ -354,7 +354,7 @@ namespace RAC
 			* @param dimensions Primary room dimensions that determine delay line lengths
 			* @param config The spatialiser configuration
 			*/
-			HouseHolderFDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<Config> config)
+			HouseHolderFDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<DSPConfig> config)
 				: FDN<T>(T60, dimensions, config, Matrix()), houseHolderFactor(2.0 / static_cast<Real>(config->numReverbSources)) {}
 			
 			/**
@@ -365,7 +365,7 @@ namespace RAC
 			* @param delayLengths Delay line lengths (in samples)
 			* @param config The spatialiser configuration
 			*/
-			HouseHolderFDN(const Coefficients<>& T60, const std::vector<int>& delayLengths, const std::shared_ptr<Config> config)
+			HouseHolderFDN(const Coefficients<>& T60, const std::vector<int>& delayLengths, const std::shared_ptr<DSPConfig> config)
 				: FDN<T>(T60, delayLengths, config, Matrix()), houseHolderFactor(2.0 / static_cast<Real>(config->numReverbSources)) {}
 
 			/**
@@ -400,7 +400,7 @@ namespace RAC
 			* @param dimensions Primary room dimensions that determine delay line lengths
 			* @param config The spatialiser configuration
 			*/
-			RandomOrthogonalFDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<Config> config)
+			RandomOrthogonalFDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<DSPConfig> config)
 				: FDN<T>(T60, dimensions, config, InitMatrix(config->numReverbSources)) {}
 
 			/**
@@ -411,7 +411,7 @@ namespace RAC
 			* @param delayLengths Delay line lengths (in samples)
 			* @param config The spatialiser configuration
 			*/
-			RandomOrthogonalFDN(const Coefficients<>& T60, const std::vector<int>& delayLengths, const std::shared_ptr<Config> config)
+			RandomOrthogonalFDN(const Coefficients<>& T60, const std::vector<int>& delayLengths, const std::shared_ptr<DSPConfig> config)
 				: FDN<T>(T60, delayLengths, config, InitMatrix(config->numReverbSources)) {}
 
 			/**
