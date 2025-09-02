@@ -123,11 +123,6 @@ namespace RAC
 								contributionDelayScaling,
 								sharedReverb->GetRightEigenvector(slope_idx));
 
-						// Each FDN channel carries (1 / numReverbDirections) of all energy in the FDN,
-						//  but the theory acts as if the total energy went into the listener residue.
-						// This scaling counteracts that.
-						listenerResidues[slope_idx][dir_idx] *= numReverbDirections;
-
 #ifdef DEBUG_RTM
 						Debug::send_residue(listenerResidues[slope_idx][dir_idx], false, dir_idx, slope_idx);
 #endif
@@ -153,18 +148,18 @@ namespace RAC
 							contributionDelayScaling[path_idx] = std::pow(decayPerSecond[slope_idx], -contributionDelays[path_idx]);
 						}
 
-						sourceResidues[slope_idx] = 
+						sourceResidues[slope_idx] =
 							ThreeWayDot(
 								energyContributions,
 								contributionDelayScaling,
 								sharedReverb->GetLeftEigenvector(slope_idx));
 
-						// Compensate gain based on preceding delay.
-						sourceResidues[slope_idx] *= std::pow(decayPerSecond[slope_idx], sharedReverb->GetPrecedingDelay());
-
 #ifdef DEBUG_RTM
 						Debug::send_residue(sourceResidues[slope_idx], true, source.id, slope_idx);
 #endif
+
+						// Compensate gain based on preceding delay.
+						sourceResidues[slope_idx] *= std::pow(decayPerSecond[slope_idx], sharedReverb->GetPrecedingDelay());
 					}
 					sharedSource->SetSourceTargetResidues(source.id, sourceResidues);
 				}

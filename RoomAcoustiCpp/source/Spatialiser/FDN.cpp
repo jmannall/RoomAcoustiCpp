@@ -126,10 +126,18 @@ namespace RAC
 		{
 			assert(T60 > 0);
 
+			// For the purpose of `powerNormalization`, see notes in FDN_private.h
+			powerNormalization = 0.0;
+
 			std::vector<int> delayLengths = CalculateTimeDelay(dimensions, config->numReverbSources, config->fs);
 			mChannels.reserve(config->numReverbSources);
 			for (int i = 0; i < config->numReverbSources; i++)
+			{
 				mChannels.push_back(std::make_unique<FDNChannel<Real>>(delayLengths[i], T60, config));
+				powerNormalization += static_cast<Real>(delayLengths[i]);
+			}
+
+			powerNormalization = std::sqrt(powerNormalization / static_cast<Real>(config->numReverbSources));
 		}
 
 		////////////////////////////////////////
@@ -140,9 +148,17 @@ namespace RAC
 		{
 			assert(T60 > 0);
 
+			// For the purpose of `powerNormalization`, see notes in FDN_private.h
+			powerNormalization = 0.0;
+
 			mChannels.reserve(config->numReverbSources);
 			for (int i = 0; i < config->numReverbSources; i++)
+			{
 				mChannels.push_back(std::make_unique<FDNChannel<Real>>(delayLengths[i], T60, config));
+				powerNormalization += static_cast<Real>(delayLengths[i]);
+			}
+
+			powerNormalization = std::sqrt(powerNormalization / static_cast<Real>(config->numReverbSources));
 		}
 
 		////////////////////////////////////////
@@ -153,10 +169,18 @@ namespace RAC
 		{
 			assert(T60 > 0);
 
+			// For the purpose of `powerNormalization`, see notes in FDN_private.h
+			powerNormalization = 0.0;
+
 			std::vector<int> delayLengths = CalculateTimeDelay(dimensions, config->numReverbSources, config->fs);
 			mChannels.reserve(config->numReverbSources);
 			for (int i = 0; i < config->numReverbSources; i++)
+			{
 				mChannels.push_back(std::make_unique<FDNChannel<Complex>>(delayLengths[i], T60, config));
+				powerNormalization += static_cast<Real>(delayLengths[i]);
+			}
+
+			powerNormalization = std::sqrt(powerNormalization / static_cast<Real>(config->numReverbSources));
 		}
 
 		////////////////////////////////////////
@@ -167,9 +191,17 @@ namespace RAC
 		{
 			assert(T60 > 0);
 
+			// For the purpose of `powerNormalization`, see notes in FDN_private.h
+			powerNormalization = 0.0;
+
 			mChannels.reserve(config->numReverbSources);
 			for (int i = 0; i < config->numReverbSources; i++)
+			{
 				mChannels.push_back(std::make_unique<FDNChannel<Complex>>(delayLengths[i], T60, config));
+				powerNormalization += static_cast<Real>(delayLengths[i]);
+			}
+
+			powerNormalization = std::sqrt(powerNormalization / static_cast<Real>(config->numReverbSources));
 		}
 
 		////////////////////////////////////////
@@ -275,7 +307,8 @@ namespace RAC
 					outputBuffers[j][i] += ravesResidues[j].GetOutput(y[j], lerpFactor);
 				}
 				ProcessMatrix();
-				precedingDelayBuffer[precedingDelayCursor] = inputData[i];
+				// For the purpose of `powerNormalization`, see notes in FDN_private.h
+				precedingDelayBuffer[precedingDelayCursor] = inputData[i] * powerNormalization;
 				++precedingDelayCursor;
 			}
 		}

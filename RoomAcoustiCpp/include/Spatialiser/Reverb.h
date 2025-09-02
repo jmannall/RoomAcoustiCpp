@@ -133,7 +133,8 @@ namespace RAC
 				mReverbSources.reserve(config->numReverbSources);
 				for (int i = 0; i < config->numReverbSources; i++)
 					mReverbSources.emplace_back(std::make_unique<ReverbSource>(core, config, points[i], &reverbSourceInputs[i]));
-				SetPrecedingDelay(10.0 / SPEED_OF_SOUND, config->fs); // TODO: Pass the desired length in config; set it to 0 for SingleFDN
+				//SetPrecedingDelay(10.0 / SPEED_OF_SOUND, config->fs); // TODO: Pass the desired length in config; set it to 0 for SingleFDN
+				SetPrecedingDelay(0.0, config->fs); // TODO: Pass the desired length in config; set it to 0 for SingleFDN
 			}
 
 			/**

@@ -326,6 +326,25 @@ namespace RAC
 			const Matrix<> feedbackMatrix;	// Feedback matrix
 
 			std::vector<std::unique_ptr<FDNChannel<T>>> mChannels;		// Internal delay line channels
+
+			/* The MoD-ART model relies on the assumption that each FDN's power output starts from a value of 1 at time 0.
+			 * The `powerNormalization` value is used to ensure that is the case. The following is an explanation of what's going on.
+			 * 
+			 * Let N be the number of delay lines in the FDN, and let M be the total number of taps in the FDN (sum of delay line lengths).
+			 * Say the FDN receives a single, unit-magnitude impulse as input. The value "1" is copied into the first sample of each delay line.
+			 * The FDN's state now consists of N taps set to 1, and M-N taps set to 0. This (N) is the power which will be circulated through the FDN.
+			 * If the FDN was lossless, this initial power would be circulated indefinitely.
+			 * **IF** the feedback matrix provides good mixing **AND** the delay line lengths provide decorrelated signals, the power would eventually
+			 * be spread uniformly over all taps: each tap would, on average, have a steady power of N/M.
+			 * This power-per-tap is equal to the power-per-sample leaving each delay line: the output signal of a line is just the value of its last tap.
+			 * In other words, the power output of each individual delay line is N/M, and the power output of the whole FDN is N*N/M.
+			 * In the case of a lossy FDN (finite T60), these are the starting power values, which then decay exponentially.
+			 * 
+			 * Each (directional) listener residue takes the output of a single delay line, and assumes that its power starts from a value of 1 at time 0.
+			 * In order to achieve this, the FDN's power needs to be multiplied by M/N.
+			 * The value of `powerNormalization` is therefore sqrt(M/N), because it is applied to the audio signal, not to its power.
+			 */
+			Real powerNormalization;
 			
 			std::conditional_t<std::is_same_v<T, Complex>,
 				std::vector<RAVESListenerResidue>, std::nullptr_t> ravesResidues; // Residues for the RAVES algorithm
