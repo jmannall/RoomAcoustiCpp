@@ -100,10 +100,29 @@ namespace RAC
 			*/
 			bool LoadSpatialisationFiles(const int hrtfResamplingStep, const std::vector<std::string>& filePaths);
 
+			/**
+			* @brief Initialises the Image Edge Model (IEM) and sets the diffraction model.
+			* 
+			* @param data The user defined IEM configuration data.
+			* @param model The diffraction model to use.
+			*/
 			bool InitEarlyReverb(const EarlyReverbData& data, DiffractionModel model);
 
+			/**
+			* @brief Initialises MoDART late reverberation.
+			* 
+			* @param data The user defined MoDART configuration data.
+			* @return True if the MoDART late reverberation was initialised successfully, false otherwise.
+			*/
 			bool InitMoDART(const MoDARTData& data);
 
+			/**
+			* @brief Initialises SingleFDN late reverberation.
+			*
+			* @param roomData The user defined room configuration data.
+			* @param data The user defined SingleFDN configuration data.
+			* @return True if the SingleFDN late reverberation was initialised successfully, false otherwise.
+			*/
 			bool InitSingleFDN(const RoomData& roomData, const LateReverbData& data);
 
 			/**

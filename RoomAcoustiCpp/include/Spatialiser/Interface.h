@@ -87,16 +87,28 @@ namespace RAC
 		void UpdateDiffractionModel(const DiffractionModel model);
 
 		/**
-		* Updates the volume and dimensions of the room.
+		* @brief Initialises the Image Edge Model (IEM) and sets the diffraction model.
 		*
-		* @param volume The volume of the room.
-		* @param dimensions The dimensions of the room for the delay lines.
+		* @param data The user defined IEM configuration data.
+		* @param model The diffraction model to use.
 		*/
 		bool InitEarlyReverb(const EarlyReverbData& data, DiffractionModel model);
 
-		// TODO: Add comments
+		/**
+		* @brief Initialises SingleFDN late reverberation.
+		*
+		* @param roomData The user defined room configuration data.
+		* @param data The user defined SingleFDN configuration data.
+		* @return True if the SingleFDN late reverberation was initialised successfully, false otherwise.
+		*/
 		bool InitSingleFDN(const RoomData& roomData, const LateReverbData& data);
 
+		/**
+		* @brief Initialises MoDART late reverberation.
+		*
+		* @param data The user defined MoDART configuration data.
+		* @return True if the MoDART late reverberation was initialised successfully, false otherwise.
+		*/
 		bool InitMoDART(const MoDARTData& data);
 
 		/**
