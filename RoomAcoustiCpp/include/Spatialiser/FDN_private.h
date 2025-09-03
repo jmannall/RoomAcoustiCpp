@@ -49,15 +49,15 @@ namespace RAC
 			* @param config Configuration of the spatialiser
 			*/
 			// template <typename U = T, std::enable_if_t<std::is_same_v<U, Real>, bool> = true>
-			FDNChannel(const int delayLength, const Coefficients<>& T60, const std::shared_ptr<DSPConfig> config) requires std::is_same_v<T, Real> :
-				mT(static_cast<Real>(delayLength) / config->fs), mBuffer(delayLength),
-				absorption(CalculateFilterGains(T60)[0]), mAbsorptionFilter(CalculateFilterGains(T60), config->frequencyBands, config->Q, config->fs),
-				mReflectionFilter(config->frequencyBands, config->Q, config->fs) {}
+			FDNChannel(const int delayLength, const Coefficients<>& T60, const std::shared_ptr<DSPConfig> dspConfig) requires std::is_same_v<T, Real> :
+				mT(static_cast<Real>(delayLength) / dspConfig->GetData().fs), mBuffer(delayLength),
+				absorption(CalculateFilterGains(T60)[0]), mAbsorptionFilter(CalculateFilterGains(T60), dspConfig->GetData().frequencyBands, dspConfig->GetData().Q, dspConfig->GetData().fs),
+				mReflectionFilter(dspConfig->GetData().frequencyBands, dspConfig->GetData().Q, dspConfig->GetData().fs) {}
 
 			template <typename U = T, std::enable_if_t<std::is_same_v<U, Complex>, bool> = true>
-			FDNChannel(const int delayLength, const Coefficients<>& T60, const std::shared_ptr<DSPConfig> config) requires std::is_same_v<T, Complex> :
-				mT(static_cast<Real>(delayLength) / config->fs), mBuffer(delayLength),
-				absorption(CalculateFilterGains(T60)[0]), mAbsorptionFilter(CalculateFilterGains(T60), config->frequencyBands, config->Q, config->fs) {}
+			FDNChannel(const int delayLength, const Coefficients<>& T60, const std::shared_ptr<DSPConfig> dspConfig) requires std::is_same_v<T, Complex> :
+				mT(static_cast<Real>(delayLength) / dspConfig->GetData().fs), mBuffer(delayLength),
+				absorption(CalculateFilterGains(T60)[0]), mAbsorptionFilter(CalculateFilterGains(T60), dspConfig->GetData().frequencyBands, dspConfig->GetData().Q, dspConfig->GetData().fs) {}
 
 			/**
 			* @brief Default deconstructor
@@ -160,9 +160,9 @@ namespace RAC
 			*
 			* @param T60 Target decay time
 			* @param dimensions Primary room dimensions that determine delay line lengths
-			* @param config The spatialiser configuration
+			* @param dspConfig The spatialiser configuration
 			*/
-			FDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<DSPConfig> config) : FDN(T60, dimensions, config, InitMatrix(config->numReverbSources)) {}
+			FDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<DSPConfig>& dspConfig) : FDN(T60, dimensions, dspConfig, InitMatrix(dspConfig->GetData().numReverbSources)) {}
 
 			/**
 			* @brief Initialises an FDN with a target T60 and given delay line lengths
@@ -170,9 +170,9 @@ namespace RAC
 			*
 			* @param T60 Target decay time
 			* @param delayLengths Delay line lengths (in samples)
-			* @param config The spatialiser configuration
+			* @param dspConfig The spatialiser configuration
 			*/
-			FDN(const Coefficients<>& T60, const std::vector<int>& delayLengths, const std::shared_ptr<DSPConfig> config) : FDN(T60, delayLengths, config, InitMatrix(config->numReverbSources)) {}
+			FDN(const Coefficients<>& T60, const std::vector<int>& delayLengths, const std::shared_ptr<DSPConfig>& dspConfig) : FDN(T60, delayLengths, dspConfig, InitMatrix(dspConfig->GetData().numReverbSources)) {}
 
 			/**
 			* @brief Default deconstructor
@@ -371,10 +371,10 @@ namespace RAC
 			*
 			* @param T60 Target decay time
 			* @param dimensions Primary room dimensions that determine delay line lengths
-			* @param config The spatialiser configuration
+			* @param dspConfig The spatialiser configuration
 			*/
-			HouseHolderFDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<DSPConfig> config)
-				: FDN<T>(T60, dimensions, config, Matrix()), houseHolderFactor(2.0 / static_cast<Real>(config->numReverbSources)) {}
+			HouseHolderFDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<DSPConfig>& dspConfig)
+				: FDN<T>(T60, dimensions, dspConfig, Matrix()), houseHolderFactor(2.0 / static_cast<Real>(dspConfig->GetData().numReverbSources)) {}
 			
 			/**
 			* @brief Initialises an FDN with a target T60 and given delay line lengths
@@ -382,10 +382,10 @@ namespace RAC
 			*
 			* @param T60 Target decay time
 			* @param delayLengths Delay line lengths (in samples)
-			* @param config The spatialiser configuration
+			* @param dspConfig The spatialiser configuration
 			*/
-			HouseHolderFDN(const Coefficients<>& T60, const std::vector<int>& delayLengths, const std::shared_ptr<DSPConfig> config)
-				: FDN<T>(T60, delayLengths, config, Matrix()), houseHolderFactor(2.0 / static_cast<Real>(config->numReverbSources)) {}
+			HouseHolderFDN(const Coefficients<>& T60, const std::vector<int>& delayLengths, const std::shared_ptr<DSPConfig>& dspConfig)
+				: FDN<T>(T60, delayLengths, dspConfig, Matrix()), houseHolderFactor(2.0 / static_cast<Real>(dspConfig->GetData().numReverbSources)) {}
 
 			/**
 			* @brief Default deconstructor
@@ -417,10 +417,10 @@ namespace RAC
 			*
 			* @param T60 Target decay time
 			* @param dimensions Primary room dimensions that determine delay line lengths
-			* @param config The spatialiser configuration
+			* @param dspConfig The spatialiser configuration
 			*/
-			RandomOrthogonalFDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<DSPConfig> config)
-				: FDN<T>(T60, dimensions, config, InitMatrix(config->numReverbSources)) {}
+			RandomOrthogonalFDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<DSPConfig>& dspConfig)
+				: FDN<T>(T60, dimensions, dspConfig, InitMatrix(dspConfig->GetData().numReverbSources)) {}
 
 			/**
 			* @brief Initialises an FDN with a target T60 and given delay line lengths
@@ -428,10 +428,10 @@ namespace RAC
 			*
 			* @param T60 Target decay time
 			* @param delayLengths Delay line lengths (in samples)
-			* @param config The spatialiser configuration
+			* @param dspConfig The spatialiser configuration
 			*/
-			RandomOrthogonalFDN(const Coefficients<>& T60, const std::vector<int>& delayLengths, const std::shared_ptr<DSPConfig> config)
-				: FDN<T>(T60, delayLengths, config, InitMatrix(config->numReverbSources)) {}
+			RandomOrthogonalFDN(const Coefficients<>& T60, const std::vector<int>& delayLengths, const std::shared_ptr<DSPConfig>& dspConfig)
+				: FDN<T>(T60, delayLengths, dspConfig, InitMatrix(dspConfig->GetData().numReverbSources)) {}
 
 			/**
 			* @brief Default deconstructor

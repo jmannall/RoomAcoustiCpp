@@ -16,13 +16,13 @@ namespace RAC
 	using namespace Common;
 	namespace Spatialiser
 	{
-		TracingThread::TracingThread(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const std::shared_ptr<DSPConfig>& config) :
+		TracingThread::TracingThread(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const LateReverbData& data, const std::shared_ptr<DSPConfig>& dspConfig) :
 			mRoom(room), mSourceManager(sourceManager), mReverb(reverb),
-			numReverbDirections(config->numReverbSources), numFDNs(config->GetNumRavesFDNs()),
-			clustersSizes(config->numReverbSources),
-			decayPerSecond(config->GetNumRavesFDNs()),
-			sourceResidues(config->GetNumRavesFDNs()),
-			listenerResidues(config->GetNumRavesFDNs(), Coefficients<>(config->numReverbSources))
+			numReverbDirections(dspConfig->GetData().numReverbSources), numFDNs(dspConfig->GetNumFDNs()),
+			clustersSizes(dspConfig->GetData().numReverbSources),
+			decayPerSecond(dspConfig->GetNumFDNs()),
+			sourceResidues(dspConfig->GetNumFDNs()),
+			listenerResidues(dspConfig->GetNumFDNs(), Coefficients<>(dspConfig->GetData().numReverbSources))
 		{
 			shared_ptr<Reverb> sharedReverb = mReverb.lock();
 			sharedReverb->GetReverbSourceDirections(reverbDirections);
@@ -30,7 +30,7 @@ namespace RAC
 			numPaths = 0;
 
 			// This initializes the pencil, clusters the reverb directions, and allocates buffers of size numRays.
-			setNumberOfRays(config->numRays);
+			setNumberOfRays(data.numRays);
 		}
 
 		void TracingThread::setNumberOfRays(int newNumRays) {
@@ -63,11 +63,8 @@ namespace RAC
 		}
 
 		// TODO: Make ray tracing frequency dependent
-		void TracingThread::InitRoom(int paths, const std::vector<std::vector<int>>& indexing, const Vec<>& decayRates) {
+		void TracingThread::InitRoom(int paths, const Matrix<int>& indexing, const Vec<>& decayRates) {
 			lock_guard<std::mutex> lock(rayPencilMutex);
-			shared_ptr<Room> sharedRoom = mRoom.lock();
-
-			sharedRoom->CreateTriangleMeshSoA();
 
 			numPaths = paths;
 			numFDNs = decayRates.Rows();
@@ -198,7 +195,7 @@ namespace RAC
 							continue;
 
 					// Add energy contribution of the ray
-					pathIdx = pathIndexing[frontIndices[ray_idx]][backIndices[ray_idx]];
+					pathIdx = pathIndexing(frontIndices[ray_idx], backIndices[ray_idx]);
 					distance = rayDistances[ray_idx];
 					energyContributions[pathIdx] += 1;
 					contributionDelays[pathIdx] += distance;

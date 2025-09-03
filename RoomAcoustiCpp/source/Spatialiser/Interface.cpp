@@ -25,7 +25,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		bool Init(const std::shared_ptr<DSPConfig> config)
+		bool Init(const DSPData& data)
 		{
 			if (context) // Delete any existing context
 			{
@@ -37,7 +37,7 @@ namespace RAC
 #ifdef DEBUG_INIT
 	Debug::Log("Create New Context", Colour::Green);
 #endif
-			context = std::make_shared<Context>(config);
+			context = std::make_shared<Context>(data);
 			return context->IsRunning();
 		}
 
@@ -83,7 +83,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void UpdateIEMConfig(const IEMData& data)
+		void UpdateIEMConfig(const EarlyReverbData& data)
 		{
 			auto context = GetContext();
 			if (context)
@@ -119,29 +119,32 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void UpdateLateReverbModel(const LateReverbModel model)
+		bool InitEarlyReverb(const EarlyReverbData& data, DiffractionModel model)
 		{
 			auto context = GetContext();
 			if (context)
-				context->UpdateLateReverbModel(model);
+				return context->InitEarlyReverb(data, model);
+			return false;
 		}
 
 		////////////////////////////////////////
 
-		void InitLateReverb(const Real volume, const Vec<>& dimensions, const FDNMatrix matrix)
+		bool InitSingleFDN(const RoomData& roomData, const LateReverbData& data)
 		{
 			auto context = GetContext();
 			if (context)
-				context->InitLateReverb(volume, dimensions, matrix);
+				return context->InitSingleFDN(roomData, data);
+			return false;
 		}
 
 		////////////////////////////////////////
 
-		void InitRAVES(const std::string& folderPath, const FDNMatrix matrix)
+		bool InitMoDART(const MoDARTData& data)
 		{
 			auto context = GetContext();
 			if (context)
-				context->InitRAVES(folderPath, matrix);
+				return context->InitMoDART(data);
+			return false;
 		}
 
 		////////////////////////////////////////
@@ -202,11 +205,11 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		size_t InitWall(const Vertices& vData, const Absorption<>& absorption)
+		size_t InitWall(const Vertices& vData, const Absorption<>& absorption, int polygonId = -1)
 		{
 			auto context = GetContext();
 			if (context)
-				return context->InitWall(vData, absorption);
+				return context->InitWall(vData, absorption, polygonId);
 			else
 				return -1;
 		}

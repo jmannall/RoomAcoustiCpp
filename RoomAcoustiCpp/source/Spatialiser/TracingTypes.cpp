@@ -212,6 +212,7 @@ namespace RAC
             nx.resize(n);
             ny.resize(n);
             nz.resize(n);
+            nodeID.resize(n);
             d0.resize(n);
         }
     }

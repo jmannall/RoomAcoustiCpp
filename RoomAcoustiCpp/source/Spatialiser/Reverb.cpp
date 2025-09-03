@@ -40,9 +40,10 @@ namespace RAC
 
 		ReverbSource::ReverbSource(Binaural::CCore* core, const std::shared_ptr<DSPConfig> config, const Vec3& shift, const Buffer<>* inBuffer) : mCore(core), mShift(shift), inputBuffer(inBuffer), spatialisationMode(config->GetSpatialisationMode())
 		{
-			bInput = CMonoBuffer<float>(config->numFrames);
-			bOutput.left = CMonoBuffer<float>(config->numFrames);
-			bOutput.right = CMonoBuffer<float>(config->numFrames);
+			int numFrames = config->GetData().numFrames;
+			bInput = CMonoBuffer<float>(numFrames);
+			bOutput.left = CMonoBuffer<float>(numFrames);
+			bOutput.right = CMonoBuffer<float>(numFrames);
 			InitSource();
 		}
 
@@ -245,19 +246,19 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void SingleFDN::InitLateReverb(const Coefficients<>& T60, const Vec<>& delayLineLengths, const FDNMatrix matrix, const std::shared_ptr<DSPConfig> config)
+		void SingleFDN::InitLateReverb(const Coefficients<>& T60, const Vec<>& delayLineLengths, const LateReverbData& data, const std::shared_ptr<DSPConfig>& dspConfig)
 		{
             std::shared_ptr<FDN<>> fdn;
-            switch (matrix)
+            switch (data.feedbackMatrix)
             {
             case FDNMatrix::householder:
-                fdn = std::make_shared<HouseHolderFDN<>>(T60, delayLineLengths, config);
+                fdn = std::make_shared<HouseHolderFDN<>>(T60, delayLineLengths, dspConfig);
                 break;
             case FDNMatrix::randomOrthogonal:
-                fdn = std::make_shared<RandomOrthogonalFDN<>>(T60, delayLineLengths, config);
+                fdn = std::make_shared<RandomOrthogonalFDN<>>(T60, delayLineLengths, dspConfig);
                 break;
             default:
-                fdn = std::make_shared<FDN<>>(T60, delayLineLengths, config);
+                fdn = std::make_shared<FDN<>>(T60, delayLineLengths, dspConfig);
                 break;
             }
 			releasePool.Add(fdn);
@@ -286,30 +287,34 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void RAVES::InitLateReverb(const const std::vector<Real>& T60, const FDNMatrix matrix, const std::shared_ptr<DSPConfig> config)
+		void RAVES::InitLateReverb(const MoDARTData& data, const std::shared_ptr<DSPConfig>& dspConfig)
 		{
-			std::vector<int> delayLineLengths(config->numReverbSources, -1);
+			int numFDNs = dspConfig->GetNumFDNs();
+			int numReverbSources = dspConfig->GetData().numReverbSources;
 
-			int numFDNs = config->GetNumRavesFDNs();
+			SetPrecedingDelay(data.preceedingDelay, dspConfig->GetData().fs);
+
+			std::vector<int> delayLineLengths(numReverbSources, -1);
+
 			FDNPtr fdns = std::make_shared<std::vector<std::unique_ptr<FDN<Complex>>>>(numFDNs);
 			// fdns->reserve(config->numRavesFDNs);
 			for (int i = 0; i < numFDNs; i++)
 			{
 				// TODO: Be smarter about this
-				delayLineLengths = GetSetOfPrimes(100+i, config->numReverbSources, std::max(12, numFDNs));
+				delayLineLengths = GetSetOfPrimes(100+i, numReverbSources, std::max(12, numFDNs));
 
 				// TODO: Check if any of the values are -1 (error in generating the list of primes) and adapt accordingly
 
-				switch (matrix)
+				switch (data.feedbackMatrix)
 				{
 				case FDNMatrix::householder:
-					fdns->at(i) = std::make_unique<HouseHolderFDN<Complex>>(T60[i], delayLineLengths, config);
+					fdns->at(i) = std::make_unique<HouseHolderFDN<Complex>>(data.t60s[i], delayLineLengths, dspConfig);
 					break;
 				case FDNMatrix::randomOrthogonal:
-					fdns->at(i) = std::make_unique<RandomOrthogonalFDN<Complex>>(T60[i], delayLineLengths, config);
+					fdns->at(i) = std::make_unique<RandomOrthogonalFDN<Complex>>(data.t60s[i], delayLineLengths, dspConfig);
 					break;
 				default:
-					fdns->at(i) = std::make_unique<FDN<Complex>>(T60[i], delayLineLengths, config);
+					fdns->at(i) = std::make_unique<FDN<Complex>>(data.t60s[i], delayLineLengths, dspConfig);
 					break;
 				}
 			}
@@ -317,24 +322,6 @@ namespace RAC
 
 			mFDNs.store(fdns, std::memory_order_release);
 			initialised.store(true, std::memory_order_release);
-		}
-
-		////////////////////////////////////////
-
-		void RAVES::SetTargetT60s(const std::vector<Coefficients<>>& T60s)
-		{
-			if (!initialised.load(std::memory_order_acquire))
-				return;
-
-			auto fdns = mFDNs.load();
-			assert(T60s.size() == fdns->size());
-			for (int i = 0; i < fdns->size(); i++)
-			{
-#ifdef DEBUG_INIT
-				Debug::Log("Init FDN: [" + CoefficientToStr(T60s[0]) + "]", Colour::Green);
-#endif
-				fdns->at(i)->SetTargetT60(T60s[i]);
-			}
 		}
 		
 		////////////////////////////////////////

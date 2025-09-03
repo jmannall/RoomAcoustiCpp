@@ -19,12 +19,14 @@ namespace RAC
 
         ////////////////////////////////////////
 
-        AudioThreadPool::AudioThreadPool(size_t numThreads, int numSamples, int numLateReverbChannels, int numLateReverbSamples, int numReverbSources)
+        AudioThreadPool::AudioThreadPool(size_t numThreads, const std::shared_ptr<DSPConfig>& dspConfig)
             : stop(false), threadCount(numThreads), tasks(MAX_IMAGESOURCES + MAX_SOURCES)
         {
-            threadOutputBuffers.resize(threadCount, Buffer<>(2 * numSamples));
-            threadReverbInputs.resize(threadCount, Matrix(numLateReverbChannels, numLateReverbSamples));
-            threadReverbOutputs.resize(threadCount, std::vector<Buffer<>>(numReverbSources, Buffer<>(numSamples)));
+			int numFrames = dspConfig->GetData().numFrames;
+            threadOutputBuffers.resize(threadCount, Buffer<>(2 * numFrames));
+
+            threadReverbInputs.resize(threadCount, Matrix(dspConfig->GetReverbInputDimensions()));
+            threadReverbOutputs.resize(threadCount, std::vector<Buffer<>>(dspConfig->GetData().numReverbSources, Buffer<>(numFrames)));
 
             for (size_t i = 0; i < threadCount; ++i)
             {

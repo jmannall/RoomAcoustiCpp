@@ -37,21 +37,22 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Source::Init(const std::shared_ptr<DSPConfig>& config)
+		void Source::Init(const std::shared_ptr<DSPConfig>& dspConfig)
 		{
 			InitSource();
-			InitBuffers(config->numFrames);
+			const DSPData& data = dspConfig->GetData();
+			InitBuffers(data.numFrames);
 
-			mAirAbsorption = std::make_unique<AirAbsorption>(1.0, config->fs);
-			directivityFilter = std::make_unique<GraphicEQ<>>(config->frequencyBands, config->Q, config->fs);
-			reverbInputFilter = std::make_unique<GraphicEQ<>>(config->frequencyBands, config->Q, config->fs);
+			mAirAbsorption = std::make_unique<AirAbsorption>(1.0, data.fs);
+			directivityFilter = std::make_unique<GraphicEQ<>>(data.frequencyBands, data.Q, data.fs);
+			reverbInputFilter = std::make_unique<GraphicEQ<>>(data.frequencyBands, data.Q, data.fs);
 
 			mDirectivity.store(SourceDirectivity::omni, std::memory_order_release);
 
 			reverbSend.store(LateReverbModel::none, std::memory_order_release);
 			updateFlags.RecordChange();
 
-			ravesResidues = std::vector<RAVESSourceResidue>(config->GetNumRavesFDNs());
+			ravesResidues = std::vector<RAVESSourceResidue>(dspConfig->GetNumFDNs());
 
 			ResetFDNSlots();
 			AllowAccess();
@@ -285,27 +286,21 @@ namespace RAC
 				for (int j = 0; j < numFrames; j++)
 				{
 #ifdef FREQUENCY_DEPENDENT_RAVES
-					// TODO: Is there a better way to do this? Process entire octave band filter then handle residuals?
+					// TODO: Check octave band filter frequencies match RAVES residues frequencies
 					std::vector<Real> bands = octaveBandFilter.GetOutput(inputBuffer[j], lerpFactor);
 
-					int numBands = bands.size();
-					int groupSize = ravesResidues.size() / numBands;
-					for (int i = 0; i < numBands; i++)
+					for (int i = 0; i < reverbInput.Rows(); i++)
 					{
-						for (int k = 0; k < groupSize; k++)
-						{
-							int idx = i * groupSize + k;
-							Complex input = ravesResidues[idx].GetOutput(bands[i], lerpFactor);
-							reverbInput(idx, 2 * j) = input.real();
-							reverbInput(idx, 2 * j + 1) = input.imag();
-						}
+						Complex input = ravesResidues[i].GetOutput(bands[ravesFrequencyIndexing[i]], lerpFactor);
+						reverbInput(i, 2 * j) += input.real();
+						reverbInput(i, 2 * j + 1) += input.imag();
 					}
 #else
 					for (int i = 0; i < reverbInput.Rows(); i++)
 					{
 						Complex input = ravesResidues[i].GetOutput(inputBuffer[j], lerpFactor);
-						reverbInput(i, 2 * j) = input.real();
-						reverbInput(i, 2 * j + 1) = input.imag();
+						reverbInput(i, 2 * j) += input.real();
+						reverbInput(i, 2 * j + 1) += input.imag();
 					}
 #endif
 				}
@@ -478,25 +473,25 @@ namespace RAC
 		
 		////////////////////////////////////////
 
-		bool Source::UpdateImageSource(int& id, ImageSourceData& data, const std::shared_ptr<DSPConfig>& config)
+		bool Source::UpdateImageSource(int& id, ImageSourceData& data, const std::shared_ptr<DSPConfig>& dspConfig)
 		{
 			if (id < 0)		// case: virtual source does not exist
 			{
 				int fdnChannel = -1;
 				if (data.IsFeedingFDN())
-					fdnChannel = AssignFDNChannel(config->numReverbSources);
+					fdnChannel = AssignFDNChannel(dspConfig->GetData().numReverbSources);
 
 				id = imageSources.NextID();
 				if (id < 0)		// No free slots
 					return false;
 
-				imageSources.at(id).Init(&inputBuffer, config, data, fdnChannel);
+				imageSources.at(id).Init(&inputBuffer, dspConfig, data, fdnChannel);
 			}
 			else
 			{
 				int fdnChannel = -1;
 				if (data.IsFeedingFDN() && imageSources.at(id).GetFDNChannel() < 0)
-					fdnChannel = AssignFDNChannel(config->numReverbSources);
+					fdnChannel = AssignFDNChannel(dspConfig->GetData().numReverbSources);
 
 				bool remove = imageSources.at(id).Update(data, fdnChannel);
 

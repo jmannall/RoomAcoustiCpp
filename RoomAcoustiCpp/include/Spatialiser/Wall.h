@@ -63,7 +63,7 @@ namespace RAC
 			* @param vData The vertices of the wall.
 			* @param absorption The material absorption property of the wall.
 			*/
-			Wall(const Vertices& vData, const Absorption<>& absorption) : mPlaneId(0), mAbsorption(absorption) { Update(vData); }
+			Wall(const Vertices& vData, const Absorption<>& absorption, int polygonId) : mPlaneId(0), mAbsorption(absorption), polygonId(polygonId) { Update(vData); }
 
 			/**
 			* Default deconstructor.
@@ -97,22 +97,21 @@ namespace RAC
 			inline bool EmptyEdges() const { return mEdges.size() < mVertices.size(); }
 
 			/**
-			* @brief Returns the normal of the wall
-			* 
 			* @return The normal of the wall
 			*/
 			inline Vec3 GetNormal() const { return mNormal; }
 
 			/**
-			* @brief Returns the distance of the wall from the origin along the normal direction
-			*
 			* @return The distance of the wall from the origin along the normal direction
 			*/
 			inline Real GetD() const { return d; }
 
 			/**
-			* @brief Returns the vertices of the wall
-			* 
+			* @return The ID of the polygon the wall is part of (used by MoDART)
+			*/
+			inline int GetPolygonID() const { return polygonId; }
+
+			/**
 			* @return The vertices of the wall
 			*/
 			inline Vertices GetVertices() const { return mVertices; }
@@ -123,36 +122,26 @@ namespace RAC
 			inline bool VertexMatch(const Vec3& x) const { return mVertices[0] == x || mVertices[1] == x || mVertices[2] == x; }
 
 			/**
-			* @brief Returns the material absorption properties of the wall
-			*
 			* @return The material absorption properties of the wall
 			*/
 			const inline Absorption<>& GetAbsorption() const { return mAbsorption; }
 
 			/**
-			* @brief Returns the area of the wall
-			*
 			* @return The area of the wall
 			*/
 			inline Real GetArea() const { return mAbsorption.mArea; }
 
 			/**
-			* @brief Returns the IDs of the connected edges
-			*
 			* @return The IDs of the connected edges
 			*/
 			inline std::vector<size_t> GetEdges() const { return mEdges; }
 
 			/**
-			* @brief Returns the ID of the plane the wall is part of
-			*
 			* @return The ID of the plane the wall is part of
 			*/
 			inline size_t GetPlaneID() const { return mPlaneId; }
 
 			/**
-			* @brief Sets the ID of the plane the wall is part of
-			* 
 			* @param id The ID of the plane the wall is part of
 			*/
 			inline void SetPlaneID(const size_t id) { mPlaneId = id; }
@@ -216,6 +205,7 @@ namespace RAC
 
 			size_t mPlaneId;				// ID of the plane the wall is part of
 			std::vector<size_t> mEdges;		// IDs of connected edges
+			int polygonId;					// ID of the polygon the wall is part of (used by MoDART)
 		};
 			
 		/**

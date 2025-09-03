@@ -22,7 +22,7 @@ namespace RAC
 			int id = NextID();
 			if (id < 0)
 				return id;
-			mSources[id]->Init(mConfig);
+			mSources[id]->Init(dspConfig);
 			return id;
 		}
 

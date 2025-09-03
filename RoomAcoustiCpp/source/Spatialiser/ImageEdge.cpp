@@ -30,16 +30,17 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		ImageEdge::ImageEdge(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const std::shared_ptr<DSPConfig>& config) :
-			mRoom(room), mSourceManager(sourceManager), mReverb(reverb), frequencyBands(config->frequencyBands), currentCycle(false), configChanged(true), reverbRunning(false),
-			mIEMConfig(config->GetDiffractionModel(), config->GetLateReverbModel()), mIEMConfigStore(config->GetDiffractionModel(), config->GetLateReverbModel())
+		ImageEdge::ImageEdge(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, const EarlyReverbData& data, const std::shared_ptr<DSPConfig>& dspConfig) :
+			mRoom(room), mSourceManager(sourceManager), frequencyBands(dspConfig->GetData().numFrequencyBands), currentCycle(false), configChanged(true), reverbRunning(false),
+			earlyReverbData(data, dspConfig->GetDiffractionModel()), earlyReverbDataIncoming(data, dspConfig->GetDiffractionModel())
 		{
 			sp = std::vector<std::vector<ImageSourceData>>();
 			sp.push_back(std::vector<ImageSourceData>());
 
-			shared_ptr<Reverb> sharedReverb = mReverb.lock();
-			sharedReverb->GetReverbSourceDirections(reverbDirections);
-			reverbAbsorptions = std::vector<Absorption<>>(static_cast<int>(reverbDirections.size()), Absorption(frequencyBands.Length()));
+			// TODO: Move to ray tracing thread
+			// shared_ptr<Reverb> sharedReverb = mReverb.lock();
+			// sharedReverb->GetReverbSourceDirections(reverbDirections);
+			// reverbAbsorptions = std::vector<Absorption<>>(static_cast<int>(reverbDirections.size()), Absorption(frequencyBands.Length()));
 		}
 
 		////////////////////////////////////////
@@ -76,7 +77,7 @@ namespace RAC
 				}
 				if (configChanged)
 				{
-					mIEMConfig = mIEMConfigStore;
+					earlyReverbData = earlyReverbDataIncoming;
 					configChanged = false;
 					doIEM = true;
 				}
@@ -86,7 +87,7 @@ namespace RAC
 			if (imageSources.size() != mSources.size())
 			{
 				imageSources.resize(mSources.size());
-				mSourceAudioDatas.resize(mSources.size(), Source::AudioData(frequencyBands.Length(), mIEMConfig.GetLateReverbModel()));
+				mSourceAudioDatas.resize(mSources.size(), Source::AudioData(frequencyBands.Length(), LateReverbModel::none)); // TODO: Revove late reverb model from here
 				mCurrentCycles.resize(mSources.size());
 				// doIEM = true;
 			}
@@ -104,10 +105,7 @@ namespace RAC
 				sharedSource->UpdateSourceData(source.id, mSourceAudioDatas[i], imageSources[i]);
 
 				++i;
-			}	
-
-			if (reverbRunning || doIEM)
-				reverbRunning = UpdateLateReverbFilters(doIEM);
+			}
 
 #ifdef IEM_FLAG
 			Debug::IEMEndFlag();
@@ -399,7 +397,7 @@ namespace RAC
 			PROFILE_Direct
 			bool lineOfSight = false;
 			// Direct sound
-			switch (mIEMConfig.data.direct)
+			switch (earlyReverbData.direct)
 			{
 			case DirectSound::doCheck:
 				lineOfSight = !LineRoomObstruction(mListenerPosition, source.position);
@@ -431,24 +429,21 @@ namespace RAC
 		{
 			PROFILE_ImageEdgeModel
 			direct.directivity = Direct(source);
-			direct.reverbSend = mIEMConfig.GetLateReverbModel();
+			// TODO: Move direct.reverbSend to ray tracing (rework)
 
-			if (mIEMConfig.MaxOrder() < 1)
+			if (earlyReverbData.maxOrder < 1)
 			{
 				sp.clear();
 				EraseOldEntries(imageSources);
 				return;
 			}
-			
-			if (direct.reverbSend == LateReverbModel::fdn && (mIEMConfig.data.reflOrder > 0 || mIEMConfig.data.shadowDiffOrder > 1))
-				direct.reverbSend = LateReverbModel::none;
 
-			if (sp.size() != mIEMConfig.MaxOrder())
-				sp.resize(mIEMConfig.MaxOrder(), std::vector<ImageSourceData>());
+			if (sp.size() != earlyReverbData.maxOrder)
+				sp.resize(earlyReverbData.maxOrder, std::vector<ImageSourceData>());
 
 			size_t counter = 0;
 
-			if ((mIEMConfig.data.shadowDiffOrder > 0 || mIEMConfig.data.specularDiffOrder > 0) && mEdges.size() > 0)
+			if ((earlyReverbData.shadowDiffOrder > 0 || earlyReverbData.specularDiffOrder > 0) && mEdges.size() > 0)
 				counter = FirstOrderDiffraction(source, imageSources);
 
 			if (mWalls.size() > 0)
@@ -457,7 +452,7 @@ namespace RAC
 
 				sp[0].resize(counter, ImageSourceData(frequencyBands.Length()));
 
-				if (mIEMConfig.MaxOrder() < 2)
+				if (earlyReverbData.maxOrder < 2)
 				{
 					EraseOldEntries(imageSources);
 					return;
@@ -480,11 +475,11 @@ namespace RAC
 			size_t size = sp[0].size();
 			size_t counter = 0;
 			int order;
-			bool feedsFDN = mIEMConfig.FeedsFDN(1);
+			bool feedsFDN = earlyReverbData.FeedsFDN(1);
 
 			for (const auto& [edgeID, edge] : mEdges)
 			{
-				if (edge.GetLength() < mIEMConfig.data.minEdgeLength)
+				if (edge.GetLength() < earlyReverbData.minEdgeLength)
 					continue;
 
 				// Source checks
@@ -493,7 +488,7 @@ namespace RAC
 				if (zone == EdgeZone::Invalid)
 					continue;
 
-				if (mIEMConfig.data.specularDiffOrder < 1 && zone == EdgeZone::NonShadowed)
+				if (earlyReverbData.specularDiffOrder < 1 && zone == EdgeZone::NonShadowed)
 					continue;
 
 				ImageSourceData& imageSource = counter < size ? sp[0][counter] : sp[0].emplace_back(frequencyBands.Length());
@@ -513,16 +508,16 @@ namespace RAC
 				if (edge.GetReceiverZone() == EdgeZone::Invalid)
 					continue;
 
-				if (mIEMConfig.data.specularDiffOrder < 1 && edge.GetReceiverZone() == EdgeZone::NonShadowed)
+				if (earlyReverbData.specularDiffOrder < 1 && edge.GetReceiverZone() == EdgeZone::NonShadowed)
 					continue;
 
 				if (!imageSource.GetDiffractionPath().valid)
 					continue;
 
 				if (imageSource.GetDiffractionPath().inShadowZone)
-					order = mIEMConfig.data.shadowDiffOrder;
+					order = earlyReverbData.shadowDiffOrder;
 				else
-					order = mIEMConfig.data.specularDiffOrder;
+					order = earlyReverbData.specularDiffOrder;
 
 				if (order < 1)
 					continue;
@@ -547,7 +542,7 @@ namespace RAC
 			PROFILE_FirstOrderReflections
 			size_t size = sp[0].size();
 
-			bool feedsFDN = mIEMConfig.FeedsFDN(1);
+			bool feedsFDN = earlyReverbData.FeedsFDN(1);
 			Vec3 position;
 			std::vector<Vec3> intersections = std::vector<Vec3>(1, Vec3());
 			for (const auto& [planeID, plane] : mPlanes)
@@ -555,7 +550,7 @@ namespace RAC
 				if (!plane.ReflectPointInPlane(position, source.position))
 					continue;
 
-				if ((position - mListenerPosition).Length() > mIEMConfig.data.maxPathLength)
+				if ((position - mListenerPosition).Length() > earlyReverbData.maxPathLength)
 					continue;
 
 				ImageSourceData& imageSource = counter < size ? sp[0][counter] : sp[0].emplace_back(frequencyBands.Length());
@@ -569,7 +564,7 @@ namespace RAC
 				imageSource.AddPlaneID(planeID);
 				imageSource.SetTransform(position);
 
-				if (mIEMConfig.data.reflOrder < 1)
+				if (earlyReverbData.reflOrder < 1)
 					continue;
 
 				if (!plane.GetReceiverValid())
@@ -602,11 +597,11 @@ namespace RAC
 			int order;
 			Vec3 position;
 			std::vector<Vec3> intersections = { Vec3() };
-			for (int refIdx = 1; refIdx < mIEMConfig.MaxOrder(); refIdx++)
+			for (int refIdx = 1; refIdx < earlyReverbData.maxOrder; refIdx++)
 			{
 				int refOrder = refIdx + 1;
 				int prevRefIdx = refIdx - 1;
-				const bool feedsFDN = mIEMConfig.FeedsFDN(refOrder);
+				const bool feedsFDN = earlyReverbData.FeedsFDN(refOrder);
 
 				intersections.emplace_back(Vec3());
 				// Check m is not null
@@ -632,7 +627,7 @@ namespace RAC
 					}
 					ProfileSection section(category);
 #endif
-					bool skipReflections = refOrder == mIEMConfig.MaxOrder() && mIEMConfig.data.reflOrder < refOrder;
+					bool skipReflections = refOrder == earlyReverbData.maxOrder && earlyReverbData.reflOrder < refOrder;
 					for (const auto& [planeID, plane] : mPlanes)
 					{
 						bool rValid = plane.GetReceiverValid();
@@ -662,7 +657,7 @@ namespace RAC
 								if (!plane.ReflectPointInPlane(position, vS.GetPosition()))
 									continue;
 
-								if ((position - mListenerPosition).Length() > mIEMConfig.data.maxPathLength)
+								if ((position - mListenerPosition).Length() > earlyReverbData.maxPathLength)
 									continue;
 
 								ImageSourceData& imageSource = counter < size ? sp[refIdx][counter] : sp[refIdx].emplace_back(vS);
@@ -679,7 +674,7 @@ namespace RAC
 								imageSource.AddPlaneID(planeID);
 								imageSource.SetTransform(position);
 
-								if (mIEMConfig.data.reflOrder < refOrder)
+								if (earlyReverbData.reflOrder < refOrder)
 									continue;
 
 								if (!rValid)
@@ -699,7 +694,7 @@ namespace RAC
 #endif
 							}
 							// HOD reflections (post diffraction)
-							else if (refIdx < mIEMConfig.data.shadowDiffOrder || refIdx < mIEMConfig.data.specularDiffOrder)
+							else if (refIdx < earlyReverbData.shadowDiffOrder || refIdx < earlyReverbData.specularDiffOrder)
 							{
 								const Edge& edge = vS.GetEdge();
 
@@ -759,13 +754,13 @@ namespace RAC
 								if (zone == EdgeZone::Invalid)
 									continue;
 
-								if (mIEMConfig.data.specularDiffOrder < refOrder && zone == EdgeZone::NonShadowed)
+								if (earlyReverbData.specularDiffOrder < refOrder && zone == EdgeZone::NonShadowed)
 									continue;
 
 								if (!imageSource.GetDiffractionPath().valid)
 									continue;
 
-								order = imageSource.GetDiffractionPath().inShadowZone ? mIEMConfig.data.shadowDiffOrder : mIEMConfig.data.specularDiffOrder;
+								order = imageSource.GetDiffractionPath().inShadowZone ? earlyReverbData.shadowDiffOrder : earlyReverbData.specularDiffOrder;
 
 								if (order < refOrder)
 									continue;
@@ -787,7 +782,7 @@ namespace RAC
 					}
 				}
 
-				if (mIEMConfig.data.specularDiffOrder < refOrder && mIEMConfig.data.shadowDiffOrder < refOrder)
+				if (earlyReverbData.specularDiffOrder < refOrder && earlyReverbData.shadowDiffOrder < refOrder)
 				{
 					sp[refIdx].resize(counter, ImageSourceData(frequencyBands.Length()));
 					continue;
@@ -809,7 +804,7 @@ namespace RAC
 #endif
 				for (const auto& [edgeID, edge] : mEdges)
 				{
-					if (edge.GetLength() < mIEMConfig.data.minEdgeLength)
+					if (edge.GetLength() < earlyReverbData.minEdgeLength)
 						continue;
 
 					EdgeZone rZone = edge.GetReceiverZone();
@@ -828,7 +823,7 @@ namespace RAC
 						if (zone == EdgeZone::Invalid)
 							continue;
 
-						if (mIEMConfig.data.specularDiffOrder < refOrder && zone == EdgeZone::NonShadowed)
+						if (earlyReverbData.specularDiffOrder < refOrder && zone == EdgeZone::NonShadowed)
 							continue;
 
 						ImageSourceData& imageSource = counter < size ? sp[refIdx][counter] : sp[refIdx].emplace_back(vS);
@@ -848,13 +843,13 @@ namespace RAC
 						if (rZone == EdgeZone::Invalid)
 							continue;
 
-						if (mIEMConfig.data.specularDiffOrder < refOrder && edge.GetReceiverZone() == EdgeZone::NonShadowed)
+						if (earlyReverbData.specularDiffOrder < refOrder && edge.GetReceiverZone() == EdgeZone::NonShadowed)
 							continue;
 
 						if (!imageSource.GetDiffractionPath().valid)
 							continue;
 
-						order = imageSource.GetDiffractionPath().inShadowZone ? mIEMConfig.data.shadowDiffOrder : mIEMConfig.data.specularDiffOrder;
+						order = imageSource.GetDiffractionPath().inShadowZone ? earlyReverbData.shadowDiffOrder : earlyReverbData.specularDiffOrder;
 
 						if (order < refOrder)
 							continue;
@@ -899,66 +894,67 @@ namespace RAC
 
 		bool ImageEdge::UpdateLateReverbFilters(bool updateFilters)
 		{
+			// TODO: Move to ray tracing
 			PROFILE_ReverbRayTracing
-			if (mIEMConfig.GetLateReverbModel(false) != LateReverbModel::fdn)
-				return reverbRunning;
-
-			if (!mIEMConfig.data.lateReverb)
-			{
-				for (int j = 0; j < reverbDirections.size(); j++)
-					reverbAbsorptions[j] = 0.0;
-				std::shared_ptr<Reverb> sharedReverb = mReverb.lock();
-				sharedReverb->SetTargetOutputFilters(reverbAbsorptions);
-#ifdef DEBUG_IEM
-				if (!mIEMConfig.data.lateReverb)
-				{
-					for (int j = 0; j < reverbDirections.size(); j++)
-						Debug::remove_path(IntToStr(j) + "l");
-				}
-#endif
-				return reverbRunning;
-			}
-
-			Real k;
-			Vec3 point, intersection;
-			for (int j = 0; j < reverbDirections.size(); j++)
-			{
-#ifdef DEBUG_IEM
-				Debug::send_path(IntToStr(j) + "l", { mListenerPosition }, reverbDirections[j]);
-#endif
-				std::vector<PlaneDistanceID> ks = std::vector(mPlanes.size(), PlaneDistanceID(0.0, -1));
-				point = mListenerPosition + reverbDirections[j];
-				int i = 0;
-				for (const auto& [planeID, plane] : mPlanes)
-				{
-					k = plane.PointPlanePosition(point);
-					if (plane.GetReceiverValid() && k < 0) // receiver in front of wall and point behind wall
-						ks[i] = PlaneDistanceID(k, planeID); // A more negative k means the plane is closer to the receiver
-					i++;
-				}
-				std::sort(ks.begin(), ks.end());
-				bool valid = false;
-				i = 0;
-				while (!valid && i < ks.size())
-				{
-					if (ks[i].first < 0.0)
-					{
-						auto itP = mPlanes.find(ks[i].second);
-						if (itP != mPlanes.end()) // case: plane exists
-						{
-							reverbAbsorptions[j] = 1.0;
-							valid = LinePlaneIntersection(mListenerPosition, point, itP->second, reverbAbsorptions[j], intersection);
-						}
-					}
-					i++;
-				}
-				if (!valid)
-					reverbAbsorptions[j] = 0.0;
-			}
-			std::shared_ptr<Reverb> sharedReverb = mReverb.lock();
-			sharedReverb->SetTargetOutputFilters(reverbAbsorptions);
-
-			return true;
+//			if (mIEMConfig.GetLateReverbModel(false) != LateReverbModel::fdn)
+//				return reverbRunning;
+//
+//			if (!mIEMConfig.GetData().lateReverb)
+//			{
+//				for (int j = 0; j < reverbDirections.size(); j++)
+//					reverbAbsorptions[j] = 0.0;
+//				std::shared_ptr<Reverb> sharedReverb = mReverb.lock();
+//				sharedReverb->SetTargetOutputFilters(reverbAbsorptions);
+//#ifdef DEBUG_IEM
+//				if (!mIEMConfig.GetData().lateReverb)
+//				{
+//					for (int j = 0; j < reverbDirections.size(); j++)
+//						Debug::remove_path(IntToStr(j) + "l");
+//				}
+//#endif
+//				return reverbRunning;
+//			}
+//
+//			Real k;
+//			Vec3 point, intersection;
+//			for (int j = 0; j < reverbDirections.size(); j++)
+//			{
+//#ifdef DEBUG_IEM
+//				Debug::send_path(IntToStr(j) + "l", { mListenerPosition }, reverbDirections[j]);
+//#endif
+//				std::vector<PlaneDistanceID> ks = std::vector(mPlanes.size(), PlaneDistanceID(0.0, -1));
+//				point = mListenerPosition + reverbDirections[j];
+//				int i = 0;
+//				for (const auto& [planeID, plane] : mPlanes)
+//				{
+//					k = plane.PointPlanePosition(point);
+//					if (plane.GetReceiverValid() && k < 0) // receiver in front of wall and point behind wall
+//						ks[i] = PlaneDistanceID(k, planeID); // A more negative k means the plane is closer to the receiver
+//					i++;
+//				}
+//				std::sort(ks.begin(), ks.end());
+//				bool valid = false;
+//				i = 0;
+//				while (!valid && i < ks.size())
+//				{
+//					if (ks[i].first < 0.0)
+//					{
+//						auto itP = mPlanes.find(ks[i].second);
+//						if (itP != mPlanes.end()) // case: plane exists
+//						{
+//							reverbAbsorptions[j] = 1.0;
+//							valid = LinePlaneIntersection(mListenerPosition, point, itP->second, reverbAbsorptions[j], intersection);
+//						}
+//					}
+//					i++;
+//				}
+//				if (!valid)
+//					reverbAbsorptions[j] = 0.0;
+//			}
+//			std::shared_ptr<Reverb> sharedReverb = mReverb.lock();
+//			sharedReverb->SetTargetOutputFilters(reverbAbsorptions);
+//
+//			return true;
 		}
 
 		////////////////////////////////////////

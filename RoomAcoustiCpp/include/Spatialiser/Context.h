@@ -83,14 +83,12 @@ namespace RAC
 			* 
 			* @param config The configuration for the spatialiser.
 			*/
-			Context(const std::shared_ptr<DSPConfig> config);
+			Context(const DSPData& data);
 
 			/**
 			* @brief Default deconstructor.
 			*/
 			~Context();
-
-			void InitialiseAudio();
 			
 			/**
 			* @brief Loads the HRTF, near field and ILD files from the given file paths.
@@ -101,7 +99,13 @@ namespace RAC
 			* @return True if the files were loaded successfully, false otherwise.
 			*/
 			bool LoadSpatialisationFiles(const int hrtfResamplingStep, const std::vector<std::string>& filePaths);
-				
+
+			bool InitEarlyReverb(const EarlyReverbData& data, DiffractionModel model);
+
+			bool InitMoDART(const MoDARTData& data);
+
+			bool InitSingleFDN(const RoomData& roomData, const LateReverbData& data);
+
 			/**
 			* @brief Sets the headphone EQ filters.
 			*
@@ -134,9 +138,9 @@ namespace RAC
 			*
 			* @param config The new IEM configuration.
 			*/
-			inline void UpdateIEMConfig(const IEMData& data)
+			inline void UpdateIEMConfig(const EarlyReverbData& data)
 			{
-				mImageEdgeModel->UpdateIEMConfig(data, mConfig);
+				mImageEdgeModel->UpdateIEMConfig(data, dspConfig);
 			}
 
 			/**
@@ -188,16 +192,6 @@ namespace RAC
 			*/
 			inline std::shared_ptr<TracingThread> GetRayTracing() { return mRayTracing; }
 
-			/**
-			* @brief Sets the room volume and dimensions.
-			* 
-			* @param volume The volume of the room used to predict the reverberation time.
-			* @param dimensions The dimensions of the room used to set the FDN delay lines.
-			*/
-			void InitLateReverb(const Real volume, const Vec<>& dimensions, const FDNMatrix matrix);
-
-			void InitRAVES(const std::string& folderPath, const FDNMatrix matrix);
-
 			inline void ResetFDN() { mReverb->Reset(); }
 
 			/**
@@ -244,10 +238,11 @@ namespace RAC
 			* 
 			* @param vData The vertices of the wall.
 			* @param absorption The absorption of the wall.
+			* @param polygonId The ID of the polygon the wall belongs to.
 			* 
 			* @return The ID of the new wall.
 			*/
-			size_t InitWall(const Vertices& vData, const Absorption<>& absorption);
+			size_t InitWall(const Vertices& vData, const Absorption<>& absorption, int polygonId);
 			
 			/**
 			* @brief Updates the position of a wall.
@@ -309,10 +304,14 @@ namespace RAC
 			void UpdateImpulseResponseMode(const bool mode);
 
 		private:
+			void InitLateReverb(const LateReverbData& data);
+
+			void CreateAudioThreadPool();
+
 			/**
 			* Spatialiser
 			*/
-			const std::shared_ptr<DSPConfig> mConfig;				// RAC DSPConfig
+			const std::shared_ptr<DSPConfig> dspConfig;				// RAC DSPConfig
 			std::atomic<bool> mIsRunning;			// Flag to check if the spatialiser is running
 			std::thread IEMThread;			// Background thread to run the image edge model
 			std::thread rayTracingThread;	// Background thread to run the ray tracing model
@@ -336,6 +335,9 @@ namespace RAC
 
 			std::atomic<bool> audioFlag{ false };	// Flag to check if the audio thread is processing
 
+			std::atomic<bool> earlyReverbInitialised{ false };	// True if the early reverberation has been initialised, false otherwise
+			std::atomic<bool> lateReverbInitialised{ false };	// True if the late reverberation has been initialised, false otherwise
+			
 			/**
 			* Handles
 			*/
@@ -344,8 +346,6 @@ namespace RAC
 			std::shared_ptr<SourceManager> mSources;	// Source manager class
 			std::shared_ptr<ImageEdge> mImageEdgeModel;	// Image edge class
 			std::shared_ptr<TracingThread> mRayTracing;	// Ray tracing class
-
-			std::mutex audioMutex;		// Mutex for audio processing
 
 			std::string logFile;		// Log file path
 #ifdef PROFILE_BACKGROUND_THREAD || PROFILE_AUDIO_THREAD

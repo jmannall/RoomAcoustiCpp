@@ -44,7 +44,7 @@ namespace RAC
 			* @params core The 3DTI processing core
 			* @params config The spatialiser configuration
 			*/
-			SourceManager(Binaural::CCore* core, const std::shared_ptr<DSPConfig> config) : mCore(core), mConfig(config), mImageSources(core)
+			SourceManager(Binaural::CCore* core, const std::shared_ptr<DSPConfig> config) : mCore(core), dspConfig(config), mImageSources(core)
 			{
 				for (auto& sources : mSources)
 					sources.emplace(core, mImageSources, config);
@@ -84,7 +84,7 @@ namespace RAC
 			* 
 			* @params model The new diffraction model
 			*/
-			inline void UpdateDiffractionModel(const DiffractionModel model) { mImageSources.UpdateDiffractionModel(model, mConfig->fs); }
+			inline void UpdateDiffractionModel(const DiffractionModel model) { mImageSources.UpdateDiffractionModel(model, dspConfig->GetData().fs); }
 
 			/**
 			* @brief Updates the source directivity for a given source ID
@@ -94,7 +94,7 @@ namespace RAC
 			*/
 			inline void UpdateSourceDirectivity(const size_t id, const SourceDirectivity directivity)
 			{
-				mSources[id]->UpdateDirectivity(directivity, mConfig->frequencyBands, mConfig->numReverbSources);
+				mSources[id]->UpdateDirectivity(directivity, dspConfig->GetData().frequencyBands, dspConfig->GetData().numReverbSources);
 			}
 
 			/**
@@ -102,10 +102,10 @@ namespace RAC
 			*
 			* @params numRavesFDNs The new number of RAVES FDNs
 			*/
-			inline void UpdateNumRavesFDNs(const int numRavesFDNs)
+			inline void UpdateSourceResidues(Vec<int> frequencyIndexing)
 			{
 				for (auto& source : mSources)
-					source->UpdateNumRavesFDNs(numRavesFDNs);
+					source->UpdateSourceResidues(frequencyIndexing);
 			}
 
 			inline int NextID() const
@@ -164,7 +164,7 @@ namespace RAC
 			inline void UpdateSourceData(const size_t id, const Source::AudioData source, const ImageSourceDataMap& vSources)
 			{
 				PROFILE_UpdateAudioData
-				mSources[id]->UpdateData(source, vSources, mConfig);
+				mSources[id]->UpdateData(source, vSources, dspConfig);
 			}
 
 			/**
@@ -212,7 +212,7 @@ namespace RAC
 		private:
 			Binaural::CCore* mCore;			// 3DTI processing core
 
-			std::shared_ptr<DSPConfig> mConfig;			// Spatialiser configuration
+			std::shared_ptr<DSPConfig> dspConfig;			// Spatialiser configuration
 
 			std::array<std::optional<Source>, MAX_SOURCES> mSources;	// Sources for the audio thread
 			ImageSourceManager mImageSources;							// Image sources for the audio thread

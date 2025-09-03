@@ -149,6 +149,8 @@ namespace RAC
 				mTriangleMeshSoA.ny[i] = normal.y;
 				mTriangleMeshSoA.nz[i] = normal.z;
 
+				mTriangleMeshSoA.nodeID[i] = wall.GetPolygonID();
+
 				mTriangleMeshSoA.d0[i] = wall.GetD();
 			}
 		}
@@ -641,12 +643,9 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		Coefficients<> Room::GetReverbTime()
+		std::pair<Coefficients<>, Real> Room::CalculateAbsorptionSurfaceArea()
 		{
-			if (reverbFormula == ReverbFormula::Custom)
-				return T60;
-
-			Coefficients absorption = Coefficients(numAbsorptionBands);
+			Coefficients absorption = Coefficients<>(numFrequencyBands, 1.0);
 			Real surfaceArea = 0.0;
 
 			{
@@ -657,32 +656,44 @@ namespace RAC
 					surfaceArea += wall.GetArea();
 				}
 			}
+			return { absorption, surfaceArea };
+		}
 
-			switch (reverbFormula)
+		////////////////////////////////////////
+
+		Coefficients<> Room::GetReverbTime()
+		{
+			std::lock_guard<std::mutex> lock(roomDataMutex);
+			if (roomData.formula == ReverbFormula::Custom)
+				return roomData.customT60;
+
+			auto [absorption, surfaceArea] = CalculateAbsorptionSurfaceArea();
+			switch (roomData.formula)
 			{
-			case(ReverbFormula::Sabine):
-				return Sabine(absorption);
-			case(ReverbFormula::Eyring):
-				return Eyring(absorption, surfaceArea);
 			default:
+			case ReverbFormula::Sabine:
 				return Sabine(absorption);
+			case ReverbFormula::Eyring:
+				return Eyring(absorption, surfaceArea);
+			case ReverbFormula::Custom:
+				return roomData.customT60;
 			}
 		}
 
 		////////////////////////////////////////
 
-		Coefficients<> Room::Sabine(const Coefficients<>& absorption)
+		Coefficients<> Room::Sabine(const Coefficients<>& absorption) const
 		{
 			Real factor = 24.0 * log(10.0) / SPEED_OF_SOUND;
-			return factor * mVolume / absorption;
+			return factor * roomData.volume / absorption;
 		}
 
 		////////////////////////////////////////
 
-		Coefficients<> Room::Eyring(const Coefficients<>& absorption, const Real& surfaceArea)
+		Coefficients<> Room::Eyring(const Coefficients<>& absorption, const Real& surfaceArea) const
 		{
 			Real factor = 24.0 * log(10.0) / SPEED_OF_SOUND;
-			return -factor * mVolume / ((1 - absorption / surfaceArea).Log() * surfaceArea);
+			return -factor * roomData.volume / ((1 - absorption / surfaceArea).Log() * surfaceArea);
 		}
 	}
 }

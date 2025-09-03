@@ -37,7 +37,7 @@ namespace RAC
 			* @param sourceManager Pointer to the source manager class.
 			* @param reverb Pointer to the late reverb class.
 			*/
-			TracingThread(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const std::shared_ptr<DSPConfig>& config);
+			TracingThread(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const LateReverbData& data, const std::shared_ptr<DSPConfig>& config);
 
 			/**
 			* @brief Updates the stored listener position.
@@ -55,7 +55,7 @@ namespace RAC
 			* @brief Set the propagation path indexing and decay rates of each mode.
 			* N.B.: This also prompts the contruction of the TriangleMeshSoA in Room.
 			*/
-			void InitRoom(int paths, const std::vector<std::vector<int>>& indexing, const Vec<>& decayRates);
+			void InitRoom(int paths, const Matrix<int>& indexing, const Vec<>& decayRates);
 
 			/**
 			* @brief Process the ray-tracing from every new position and update the related residues.
@@ -70,7 +70,7 @@ namespace RAC
 
 			// The geometry is assumed unchanging.
 			int numPaths;									// Number of ART propagation paths
-			std::vector<std::vector<int>> pathIndexing;		// Index of the ART propagation path from triangle A to triangle B
+			Matrix<int> pathIndexing;						// Index of the ART propagation path from triangle A to triangle B
 
 			// The number of reverb directions is assumed unchanging.
 			int numFDNs, numReverbDirections;

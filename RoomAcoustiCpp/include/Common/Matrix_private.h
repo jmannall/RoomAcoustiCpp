@@ -70,6 +70,13 @@ namespace RAC
 			Matrix(const int r, const int c) : data(r, c), row(c), column(r) {};
 
 			/**
+			* Constructor that initialises a Matrix with zeros
+			*
+			* @param size A pair containing the number of rows and columns
+			*/
+			Matrix(const std::pair<int, int>& size) : Matrix(size.first, size.second) {}
+
+			/**
 			* Constructor that initialises a Matrix with data
 			*
 			* @param matrix The input data to initialise the matrix

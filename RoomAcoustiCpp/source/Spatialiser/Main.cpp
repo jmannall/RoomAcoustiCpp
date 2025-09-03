@@ -48,6 +48,107 @@ static int NUM_FRAMES = 0;
 
 extern "C"
 {
+	FDNMatrix SelectFDNMatrix(int mat)
+	{
+		switch (mat)
+		{
+		default:
+		case(0):
+		{ return FDNMatrix::householder; }
+		case(1):
+		{ return FDNMatrix::randomOrthogonal; }
+		}
+	}
+
+	ReverbFormula SelectReverbFormula(int formula)
+	{
+		switch (formula)
+		{
+		default:
+		case(0):
+		{ return ReverbFormula::Sabine; }
+		case(1):
+		{ return ReverbFormula::Eyring; }
+		case(2):
+		{ return ReverbFormula::Custom; }
+		}
+	}
+
+	DirectSound SelectDirectMode(int dir)
+	{
+		switch (dir)
+		{
+		default:
+		case(0):
+		{ return DirectSound::none; }
+		case(1):
+		{ return DirectSound::doCheck; }
+		case(2):
+		{ return DirectSound::alwaysTrue; }
+		}
+	}
+
+	DiffractionSound SelectDiffractionMode(int diff)
+	{
+		switch (diff)
+		{
+		default:
+		case(0):
+		{ return DiffractionSound::none; }
+		case(1):
+		{ return DiffractionSound::shadowZone; }
+		case(2):
+		{ return DiffractionSound::allZones; }
+		}
+	}
+
+	DiffractionModel SelectDiffractionModel(int model)
+	{
+		switch (model)
+		{
+		default:
+		case(0):
+		{ return DiffractionModel::attenuate; }
+		case(1):
+		{ return DiffractionModel::lowPass; }
+		case(2):
+		{ return DiffractionModel::udfa; }
+		case(3):
+		{ return DiffractionModel::udfai; }
+		case(4):
+		{ return DiffractionModel::nnBest; }
+		case(5):
+		{ return DiffractionModel::nnSmall; }
+		case(6):
+		{ return DiffractionModel::utd; }
+		case(7):
+		{ return DiffractionModel::btm; }
+		}
+	}
+
+	Vec<> CreateVec(const float* data, int length)
+	{
+		Vec<> vec = Vec<>(length);
+		for (int i = 0; i < length; i++)
+			vec[i] = static_cast<Real>(data[i]);
+		return vec;
+	}
+
+	Vec<int> CreateIntVec(const int* data, int length)
+	{
+		Vec<int> vec = Vec<int>(length);
+		for (int i = 0; i < length; i++)
+			vec[i] = data[i];
+		return vec;
+	}
+
+	Coefficients<> CreateCoefficients(const float* data, int length)
+	{
+		Coefficients<> coeff = Coefficients<>(length);
+		for (int i = 0; i < length; i++)
+			coeff[i] = static_cast<Real>(data[i]);
+		return coeff;
+	}
 
 	//////////////////// API ////////////////////
 
@@ -56,48 +157,47 @@ extern "C"
 	*
 	* @param fs The sample rate for audio processing.
 	* @param numFrames The number of frames in an audio buffer.
-	* @param maxFDNChannels The number of feedback delay network channels.
+	* @param maxReverbSources The number of reverb sources.
 	* @param lerpFactor The interpolation factor for audio parameters.
 	* @param Q The quality factor for reflection filters. (0.77 is a good starting point)
-	* @param fBands The center frequency bands for reflection filters.
-	* @param numBands The number of frequency bands provided in the fBands parameter.
+	* @param frequencyData The center frequency bands for reflection filters.
+	* @param numFrequencyBands The number of frequency bands provided in the fBands parameter.
 	*
 	* @return True if the initialization was successful, false otherwise.
 	*/
-	EXPORT bool API RACInit(int fs, int numFrames, int maxFDNChannels, float lerpFactor, float Q, const float* fBands, int numBands)
+	EXPORT bool API RACInit(int fs, int numFrames, int maxReverbSources, float lerpFactor, float Q, const float* frequencyBandsData, int numFrequencyBands)
 	{
 		buffer.ResizeBuffer(2 * numFrames);
-		NUM_FREQUENCY_BANDS = numBands;
+		NUM_FREQUENCY_BANDS = numFrequencyBands;
 		NUM_FRAMES = numFrames;
-		Coefficients<> frequencyBands = Coefficients<>(numBands);
-		for (int i = 0; i < numBands; i++)
-			frequencyBands[i] = static_cast<Real>(fBands[i]);
 
-		int numFDNChannels = 0;
-		if (maxFDNChannels < 1)
-		{ numFDNChannels = 0; }
-		else if (maxFDNChannels < 2)
-		{ numFDNChannels = 1; }
-		else if (maxFDNChannels < 4)
-		{ numFDNChannels = 2; }
-		else if (maxFDNChannels < 6)
-		{ numFDNChannels = 4; }
-		else if (maxFDNChannels < 8)
-		{ numFDNChannels = 6; }
-		else if (maxFDNChannels < 12)
-		{ numFDNChannels = 8; }
-		else if (maxFDNChannels < 16)
-		{ numFDNChannels = 12; }
-		else if (maxFDNChannels < 20)
-		{ numFDNChannels = 16; }
-		else if (maxFDNChannels < 24)
-		{ numFDNChannels = 20; }
-		else if (maxFDNChannels < 32)
-		{ numFDNChannels = 24; }
-		else { numFDNChannels = 32; }
 
-		std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>(fs, numFrames, numFDNChannels, static_cast<Real>(lerpFactor), static_cast<Real>(Q), frequencyBands);
-		return Init(config);
+		Coefficients<> frequencyBands = CreateCoefficients(frequencyBandsData, numFrequencyBands);
+
+		int numReverbSources = 0;
+		if (maxReverbSources < 1)
+		{ numReverbSources = 0; }
+		else if (maxReverbSources < 2)
+		{ numReverbSources = 1; }
+		else if (maxReverbSources < 4)
+		{ numReverbSources = 2; }
+		else if (maxReverbSources < 6)
+		{ numReverbSources = 4; }
+		else if (maxReverbSources < 8)
+		{ numReverbSources = 6; }
+		else if (maxReverbSources < 12)
+		{ numReverbSources = 8; }
+		else if (maxReverbSources < 16)
+		{ numReverbSources = 12; }
+		else if (maxReverbSources < 20)
+		{ numReverbSources = 16; }
+		else if (maxReverbSources < 24)
+		{ numReverbSources = 20; }
+		else if (maxReverbSources < 32)
+		{ numReverbSources = 24; }
+		else { numReverbSources = 32; }
+
+		return Init(DSPData(fs, numFrames, numReverbSources, static_cast<Real>(lerpFactor), static_cast<Real>(Q), frequencyBands));
 	}
 
 	/**
@@ -123,6 +223,76 @@ extern "C"
 	{
 		std::vector<std::string> filePaths = { std::string(*(paths)), std::string(*(paths + 1)), std::string(*(paths + 2)) };
 		return LoadSpatialisationFiles(hrtfResamplingStep, filePaths);
+	}
+
+	/**
+	* Initialises the Image Edge Model (IEM) and sets the diffraction model.
+	*/
+	EXPORT bool API RACInitEarlyReverb(int direct, int reflOrder, int shadowDiffOrder, int specularDiffOrder, bool lateReverb, float minEdgeLength, float maxPathLen, int diffractionId)
+	{
+		DiffractionModel model = SelectDiffractionModel(diffractionId);
+		EarlyReverbData data(SelectDirectMode(direct), reflOrder, shadowDiffOrder, specularDiffOrder, lateReverb, static_cast<Real>(minEdgeLength), static_cast<Real>(maxPathLen));
+		return InitEarlyReverb(data, model);
+	}
+
+	/**
+	* Initialises SingleFDN late reverberation.
+	*
+	* @params volume The room volume in cubic meters.
+	* @params t60Data The late reverberation time in seconds for each frequency band.
+	* @params reverbFormulaId The ID corresponding to a reverberation formula.
+	* @parmas dimensionData The primary room dimensions in meters.
+	* @params numDimensions The number of dimensions provided in the dimensionData parameter.
+	* @params numRays The number of rays to use for ray tracing.
+	* @param matrixId The ID corresponding to a FDN matrix type.
+	*/
+	EXPORT bool API RACInitSingleFDN(float volume, const float* t60Data, int reverbFormulaId, const float* dimensionData, int numDimensions, int numRays, int matrixId)
+	{
+		Coefficients<> t60 = CreateCoefficients(t60Data, NUM_FREQUENCY_BANDS);
+		Vec<> dimensions = CreateVec(dimensionData, numDimensions);
+
+		RoomData roomData(static_cast<Real>(volume), t60, SelectReverbFormula(reverbFormulaId), dimensions);
+
+		LateReverbData data(numRays, SelectFDNMatrix(matrixId));
+		return InitSingleFDN(roomData, data);
+	}
+
+	/**
+	* Initialises MoDART late reverberation.
+	*
+	* @params numRays The number of rays to use for ray tracing.
+	* @param matrixId The ID corresponding to a FDN matrix type.
+	* @params indexingData The indexing matrix for MoDART.
+	* @oarams frequencyData The center frequency bands for each FDN.
+	* @params t60sData The late reverberation time in seconds for each FDN.
+	* @params energyDecayData The energy decay per second for each FDN.
+	* @params leftEigenvectorsData The left eigenvectors for each FDN.
+	* @params rightEigenvectorsData The right eigenvectors for each FDN.
+	* @params delay The delay in seconds before late reverberation starts.
+	* @params numFDNs The number of FDNs.
+	* @params numNodes The number of nodes in the indexing matrix.
+	* @params numPaths The number of propagation paths in MoDART.
+	*/
+	EXPORT bool API RACInitMoDART(int numRays, int matrixId, const int* indexingData, const int* frequencyIndexingData, const float* t60sData, const float* energyDecaysData, const float* leftEigenvectorsData, const float* rightEigenvectorsData, float delay, int numFDNs, int numNodes, int numPaths)
+	{
+		Vec<int> frequencyIndexing = CreateIntVec(frequencyIndexingData, numFDNs);
+		Vec<> t60s = CreateVec(t60sData, numFDNs);
+		Vec<> energyDecays = CreateVec(energyDecaysData, numFDNs);
+
+		Matrix<int> indexing = Matrix<int>(numNodes, numNodes);
+		for (int i = 0; i < numNodes; i++)
+			for (int j = 0; j < numNodes; j++)
+				indexing(i, j) = indexingData[i * numNodes + j];
+
+		std::vector<Vec<>> leftEigenvectors, rightEigenvectors;
+		for (int i = 0; i < numFDNs; i++)
+		{
+			leftEigenvectors.push_back(CreateVec(leftEigenvectorsData + i * numPaths, numPaths));
+			rightEigenvectors.push_back(CreateVec(rightEigenvectorsData + i * numPaths, numPaths));
+		}
+
+		MoDARTData data(numRays, SelectFDNMatrix(matrixId), indexing, frequencyIndexing, t60s, energyDecays, leftEigenvectors, rightEigenvectors, static_cast<Real>(delay));
+		return InitMoDART(data);
 	}
 
 	/**
@@ -156,45 +326,13 @@ extern "C"
 	{
 		switch (id)
 		{
+		default:
 		case(0):
 		{ UpdateSpatialisationMode(SpatialisationMode::none); break; }
 		case(1):
 		{ UpdateSpatialisationMode(SpatialisationMode::performance); break; }
 		case(2):
 		{ UpdateSpatialisationMode(SpatialisationMode::quality); break; }
-		default:
-		{ UpdateSpatialisationMode(SpatialisationMode::none); break; }
-		}
-	}
-
-
-	DirectSound SelectDirectMode(int dir)
-	{
-		switch (dir)
-		{
-		case(0):
-		{ return DirectSound::none; break; }
-		case(1):
-		{ return DirectSound::doCheck; break; }
-		case(2):
-		{ return DirectSound::alwaysTrue; break; }
-		default:
-		{ return DirectSound::none; break; }
-		}
-	}
-
-	DiffractionSound SelectDiffractionMode(int diff)
-	{
-		switch (diff)
-		{
-		case(0):
-		{ return DiffractionSound::none; break; }
-		case(1):
-		{ return DiffractionSound::shadowZone; break; }
-		case(2):
-		{ return DiffractionSound::allZones; break; }
-		default:
-		{ return DiffractionSound::none; break; }
 		}
 	}
 
@@ -214,8 +352,8 @@ extern "C"
 	*/
 	EXPORT void API RACUpdateIEMConfig(int direct, int reflOrder, int shadowDiffOrder, int specularDiffOrder, bool lateReverb, float minEdgeLength, float maxPathLen)
 	{
-		DirectSound directMode = SelectDirectMode(direct);
-		UpdateIEMConfig(IEMData(directMode, reflOrder, shadowDiffOrder, specularDiffOrder, lateReverb, static_cast<Real>(minEdgeLength),  static_cast<Real>(maxPathLen)));
+		EarlyReverbData data(SelectDirectMode(direct), reflOrder, shadowDiffOrder, specularDiffOrder, lateReverb, static_cast<Real>(minEdgeLength), static_cast<Real>(maxPathLen));
+		UpdateIEMConfig(data);
 	}
 
 	/**
@@ -223,13 +361,11 @@ extern "C"
 	*
 	* @param t60 The late reverberation time.s
 	*/
-	EXPORT void API RACUpdateReverbTime(const float* T60Data)
+	EXPORT void API RACUpdateReverbTime(const float* t60Data)
 	{
-		Coefficients T60 = Coefficients<>(NUM_FREQUENCY_BANDS);
-		for (int i = 0; i < NUM_FREQUENCY_BANDS; i++)
-			T60[i] = static_cast<Real>(T60Data[i]);
-
-		UpdateReverbTime(T60);
+		
+		Coefficients<> t60 = CreateCoefficients(t60Data, NUM_FREQUENCY_BANDS);
+		UpdateReverbTime(t60);
 	}
 
 	/**
@@ -242,19 +378,10 @@ extern "C"
 	* 
 	* @param id The ID corresponding to a reverb time formula.
 	*/
-	EXPORT void API RACUpdateReverbTimeModel(int id)
+	EXPORT void API RACUpdateReverbTimeModel(int formulaId)
 	{
-		switch (id)
-		{
-			case(0):
-			{ UpdateReverbTime(ReverbFormula::Sabine); break; }
-			case(1):
-			{ UpdateReverbTime(ReverbFormula::Eyring); break; }
-			case(2):
-			{ UpdateReverbTime(ReverbFormula::Custom); break; }
-			default:
-			{ UpdateReverbTime(ReverbFormula::Sabine); break; }
-		}
+		ReverbFormula formula = SelectReverbFormula(formulaId);
+		UpdateReverbTime(formula);
 	}
 
 	/**
@@ -272,110 +399,10 @@ extern "C"
 	*
 	* @param id The ID corresponding to a diffraction model.
 	*/
-	EXPORT void API RACUpdateDiffractionModel(int id)
+	EXPORT void API RACUpdateDiffractionModel(int diffractionId)
 	{
-		switch (id)
-		{
-		case(0):
-		{ UpdateDiffractionModel(DiffractionModel::attenuate); break; }
-		case(1):
-		{ UpdateDiffractionModel(DiffractionModel::lowPass); break; }
-		case(2):
-		{ UpdateDiffractionModel(DiffractionModel::udfa); break; }
-		case(3):
-		{ UpdateDiffractionModel(DiffractionModel::udfai); break; }
-		case(4):
-		{ UpdateDiffractionModel(DiffractionModel::nnBest); break; }
-		case(5):
-		{ UpdateDiffractionModel(DiffractionModel::nnSmall); break; }
-		case(6):
-		{ UpdateDiffractionModel(DiffractionModel::utd); break; }
-		case(7):
-		{ UpdateDiffractionModel(DiffractionModel::btm); break; }
-		default:
-		{ UpdateDiffractionModel(DiffractionModel::attenuate); break; }
-		}
-	}
-
-	/**
-	* Updates the model used to process late reverberation.
-	*
-	* The mapping is as follows:
-	* 0 -> Single FDN
-	* 1 -> RAVES
-	*
-	* @param id The ID corresponding to a late reverberation model.
-	*/
-	EXPORT void API RACUpdateLateReverbModel(int id)
-	{
-		switch (id)
-		{
-		case(0):
-		{ UpdateLateReverbModel(LateReverbModel::fdn); break; }
-		case(1):
-		{ UpdateLateReverbModel(LateReverbModel::raves); break; }
-		default:
-		{ UpdateLateReverbModel(LateReverbModel::fdn); break; }
-		}
-	}
-
-	/**
-	* Updates the volume and dimensions of the room.
-	*
-	* This function should be called when the volume or dimensions of the room changes and after all walls have been initialised.
-	* It will reset the Feedback Delay Network (FDN) so should be considered a new room rather than a dynamic change.
-	* 
-	* The mapping is as follows:
-	* 0 -> Householder
-	* 1 -> Random orthogonal
-	* 
-	* @param volume The volume (m^3) of the room.
-	* @param dim The dimensions (m) of the room for the delay lines.
-	* @param numDimensions The number of dimensions provided in the dim parameter. This must be a factor of numFDNChannels set in RACInit. 
-	* @param id The ID corresponding to a FDN matrix type.
-	*/
-	EXPORT void API RACUpdateRoom(float volume, const float* dim, int numDimensions, int id)
-	{
-		Vec dimensions = Vec(numDimensions);
-		for (int i = 0; i < numDimensions; i++)
-			dimensions[i] = static_cast<Real>(dim[i]);
-
-		FDNMatrix fdnMatrix = FDNMatrix::householder; // Default to householder matrix
-		switch (id)
-		{
-		case(0):
-		{ fdnMatrix = FDNMatrix::householder; break; }
-		case(1):
-		{ fdnMatrix = FDNMatrix::randomOrthogonal; break; }
-		}
-
-		InitLateReverb(static_cast<Real>(volume), dimensions, fdnMatrix);
-	}
-
-	/**
-	* Initialises RAVES
-	* 
-	* The mapping is as follows:
-	* 0 -> Householder
-	* 1 -> Random orthogonal
-	* 
-	* @params path Folder path to RAVES precomputed files
-	* @param id The ID corresponding to a FDN matrix type.
-	*/
-	EXPORT void API RACInitRAVES(const char* path, int id)
-	{
-		std::string folderPath = std::string(path);
-
-		FDNMatrix fdnMatrix = FDNMatrix::householder; // Default to householder matrix
-		switch (id)
-		{
-		case(0):
-		{ fdnMatrix = FDNMatrix::householder; break; }
-		case(1):
-		{ fdnMatrix = FDNMatrix::randomOrthogonal; break; }
-		}
-
-		InitRAVES(folderPath, fdnMatrix);
+		DiffractionModel model = SelectDiffractionModel(diffractionId);
+		UpdateDiffractionModel(model);
 	}
 
 	/**
@@ -479,9 +506,9 @@ extern "C"
 	* @param id The ID of the audio source to update.
 	* @param directivityID The new directivity of the source.
 	*/
-	EXPORT void API RACUpdateSourceDirectivity(int id, int directivityID)
+	EXPORT void API RACUpdateSourceDirectivity(int id, int directivityId)
 	{
-		SourceDirectivity directivity = SelectDirectivity(directivityID);
+		SourceDirectivity directivity = SelectDirectivity(directivityId);
 		UpdateSourceDirectivity(static_cast<size_t>(id), directivity);
 	}
 
@@ -509,7 +536,7 @@ extern "C"
 	*
 	* @return The ID of the new wall.
 	*/
-	EXPORT int API RACInitWall(const float* verticesData, const float* absorptionData)
+	EXPORT int API RACInitWall(const float* verticesData, const float* absorptionData, int polygonId)
 	{
 		std::vector<Real> a = std::vector<Real>(NUM_FREQUENCY_BANDS);
 		for (int i = 0; i < NUM_FREQUENCY_BANDS; i++)
@@ -520,7 +547,7 @@ extern "C"
 			Vec3(verticesData[3], verticesData[4], verticesData[5]),
 			Vec3(verticesData[6], verticesData[7], verticesData[8]) };
 
-		return static_cast<int>(InitWall(vertices, absorption));
+		return static_cast<int>(InitWall(vertices, absorption, polygonId));
 	}
 
 	/**

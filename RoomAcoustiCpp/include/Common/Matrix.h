@@ -22,6 +22,7 @@ namespace RAC
 {
 	namespace Common
 	{
+		extern template class Matrix<int>;
 		extern template class Matrix<Real>;
 		extern template class Matrix<Complex>;
 	}

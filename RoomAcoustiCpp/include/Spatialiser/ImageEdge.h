@@ -37,10 +37,10 @@ namespace RAC
 			* 
 			* @param room Pointer to the room class
 			* @param sourceManager Pointer to the source manager class
-			* @param reverb Pointer to the late reverb class
+			* @param data The user defined IEM configuration data
 			* @param frequencyBands Frequency bands for graphic equalisers
 			*/
-			ImageEdge(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const std::shared_ptr<DSPConfig>& numFrequencyBands);
+			ImageEdge(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, const EarlyReverbData& data, const std::shared_ptr<DSPConfig>& dspConfig);
 			
 			/**
 			* @brief Default deconstructor
@@ -50,25 +50,24 @@ namespace RAC
 			/**
 			* @brief Updates the image edge model configuration
 			* 
-			* @param config The new configuration
+			* @param data The user defined IEM configuration data
+			* @param dspConfig The current DSP configuration
+			* 
+			* @details We must pass DSPConfig here (instead of DiffractionModel) to ensure that
+			* if the diffraction model is changed at the same time as the IEM config we can't end up
+			* with a stale diffraction model.
 			*/
-			inline void UpdateIEMConfig(const IEMData& data, const std::shared_ptr<DSPConfig>& config)
+			inline void UpdateIEMConfig(const EarlyReverbData& data, const std::shared_ptr<DSPConfig> dspConfig)
 			{
 				lock_guard<std::mutex> lock(dataStoreMutex);
-				mIEMConfigStore.Update(data, config);
+				earlyReverbDataIncoming.Update(data, dspConfig->GetDiffractionModel());
 				configChanged = true;
 			}
 
 			inline void UpdateDiffractionModel(const DiffractionModel model)
 			{
 				lock_guard<std::mutex> lock(dataStoreMutex);
-				configChanged = configChanged || mIEMConfigStore.UpdateDiffractionModel(model);
-			}
-
-			inline void UpdateLateReverbModel(const LateReverbModel model)
-			{
-				lock_guard<std::mutex> lock(dataStoreMutex);
-				configChanged = configChanged || mIEMConfigStore.UpdateLateReverbModel(model);
+				configChanged = configChanged || earlyReverbDataIncoming.UpdateSpecularOrder(model);
 			}
 
 			/**
@@ -242,7 +241,6 @@ namespace RAC
 
 			weak_ptr<Room> mRoom;							// Pointer to the room class
 			weak_ptr<SourceManager> mSourceManager;			// Pointer to the source manager class
-			weak_ptr<Reverb> mReverb;						// Pointer to the late reverb class
 
 			PlaneMap mPlanes;									// Store planes
 			WallMap mWalls;										// Store walls
@@ -253,8 +251,9 @@ namespace RAC
 			ImageSourceDataStore sp;							// Store valid image sources while the image edge model is being run
 			std::vector<bool> mCurrentCycles;					// Oscillates true and false each time the image edge model is run
 
-			IEMConfig mIEMConfig;					// The image edge model configuration (can be accessed freely)
-			IEMConfig mIEMConfigStore;				// Stores the image edge model configuration (Mutex must be locked to access)
+			EarlyReverbData earlyReverbData;					// The user defined IEM configuration data (can be accessed freely)
+			EarlyReverbData earlyReverbDataIncoming;			// The user defined IEM configuration data (Mutex must be locked to access)
+
 			int specularDiffractionStore;			// Stores the specular diffraction order (Mutex must be locked to access)
 			bool doSpecularDiffraction;
 			Vec3 mListenerPosition;					// The listener position (can be accessed freely)

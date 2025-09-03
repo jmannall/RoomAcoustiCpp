@@ -295,6 +295,9 @@ namespace RAC
             std::vector<Real> nz; /**< Z-component of the triangle normal. */
             ///@}
 
+			/** @brief Node that the trianlge belongs to */
+            std::vector<int> nodeID;
+
             /** @brief Plane constant d0 such that dot(n, X) + d0 = 0. */
             std::vector<Real> d0;
 

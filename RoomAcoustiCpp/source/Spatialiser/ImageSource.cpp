@@ -218,19 +218,20 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void ImageSource::Init(const Buffer<>* sourceBuffer, const std::shared_ptr<DSPConfig>& config, const ImageSourceData& data, int fdnChannel)
+		void ImageSource::Init(const Buffer<>* sourceBuffer, const std::shared_ptr<DSPConfig>& dspConfig, const ImageSourceData& data, int fdnChannel)
 		{
 			InitSource();
-			InitBuffers(config->numFrames);
+			const DSPData& dspData = dspConfig->GetData();
+			InitBuffers(dspData.numFrames);
 
 			inputBuffer = sourceBuffer;
-			mFilter = make_unique<GraphicEQ<>>(data.GetAbsorption(), config->frequencyBands, config->Q, config->fs);
-			mAirAbsorption = make_unique<AirAbsorption>(data.GetDistance(), config->fs);
+			mFilter = make_unique<GraphicEQ<>>(data.GetAbsorption(), dspData.frequencyBands, dspData.Q, dspData.fs);
+			mAirAbsorption = make_unique<AirAbsorption>(data.GetDistance(), dspConfig->GetData().fs);
 
 			diffraction = data.IsDiffraction();
 			reflection = data.IsReflection();
 
-			InitDiffractionModel(config->GetDiffractionModel(), data.GetDiffractionPath(), config->fs);
+			InitDiffractionModel(dspConfig->GetDiffractionModel(), data.GetDiffractionPath(), dspData.fs);
 
 			feedsFDN.store(data.IsFeedingFDN(), std::memory_order_release);
 			mFDNChannel.store(fdnChannel, std::memory_order_release);
@@ -242,19 +243,19 @@ namespace RAC
 
 			AllowAccess();
 			isReset.store(false, std::memory_order_release);
-			LateInit(config);
+			LateInit(dspConfig);
 		}
 
 		////////////////////////////////////////
 
-		void ImageSource::LateInit(const std::shared_ptr<DSPConfig>& config)
+		void ImageSource::LateInit(const std::shared_ptr<DSPConfig>& dspConfig)
 		{
-			DiffractionModel model = config->GetDiffractionModel();
-			UpdateDiffractionModel(model, config->fs);
-			while (model != config->GetDiffractionModel())
+			DiffractionModel model = dspConfig->GetDiffractionModel();
+			UpdateDiffractionModel(model, dspConfig->GetData().fs);
+			while (model != dspConfig->GetDiffractionModel())
 			{
-				model = config->GetDiffractionModel();
-				UpdateDiffractionModel(model, config->fs);
+				model = dspConfig->GetDiffractionModel();
+				UpdateDiffractionModel(model, dspConfig->GetData().fs);
 			}
 		}
 

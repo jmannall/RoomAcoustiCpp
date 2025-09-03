@@ -117,8 +117,8 @@ namespace RAC
 				dataMutex = std::make_shared<std::mutex>();
 			}
 #else
-			Source(Binaural::CCore* core, ImageSourceManager& imageSources, const std::shared_ptr<DSPConfig>& config) : Access(), mCore(core), imageSources(imageSources), inputBuffer(config->numFrames), spatialisationMode(config->GetSpatialisationMode()),
-				ravesResidues(config->GetNumRavesFDNs())
+			Source(Binaural::CCore* core, ImageSourceManager& imageSources, const std::shared_ptr<DSPConfig>& dspConfig) : Access(), mCore(core), imageSources(imageSources), inputBuffer(dspConfig->GetData().numFrames), spatialisationMode(dspConfig->GetSpatialisationMode()),
+				ravesResidues(1) // TODO: Check if this is an issue
 			{
 				dataMutex = std::make_shared<std::mutex>();
 			}
@@ -194,11 +194,12 @@ namespace RAC
 			*
 			* @params numRavesFDNs The new number of RAVES FDNs
 			*/
-			void UpdateNumRavesFDNs(const int numRavesFDNs)
+			void UpdateSourceResidues(Vec<int> frequencyIndexing)
 			{
 				if (!GetAccess())
 					return;
-				ravesResidues = std::vector<RAVESSourceResidue>(numRavesFDNs);
+				ravesResidues = std::vector<RAVESSourceResidue>(frequencyIndexing.Rows());
+				ravesFrequencyIndexing = frequencyIndexing;
 			}
 
 			/**
@@ -371,7 +372,8 @@ namespace RAC
 			Buffer<> inputBuffer;							// Input audio buffer for the source
 			Buffer<> bStore;								// Internal scratch audio buffer
 			Buffer<> bStoreReverb;							// Internal audio buffer reverb send
-			std::vector<RAVESSourceResidue> ravesResidues;			// Residues for the RAVES algorithm
+			std::vector<RAVESSourceResidue> ravesResidues;	// Residues for the RAVES algorithm
+			Vec<int> ravesFrequencyIndexing;				// Frequency band indexing for RAVES residues
 
 #ifdef FREQUENCY_DEPENDENT_RAVES
 			OctaveBand octaveBandFilter;

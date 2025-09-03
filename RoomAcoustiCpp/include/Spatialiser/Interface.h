@@ -28,7 +28,7 @@ namespace RAC
 		* @param config The configuration of the spatialiser.
 		* @return True if the initialization was successful, false otherwise.
 		*/
-		bool Init(const std::shared_ptr<DSPConfig> config);
+		bool Init(const DSPData& data);
 
 		/**
 		* Exits and cleans up the spatialiser.
@@ -63,7 +63,7 @@ namespace RAC
 		*
 		* @param config The new configuration for the IEM.
 		*/
-		void UpdateIEMConfig(const IEMData& data);
+		void UpdateIEMConfig(const EarlyReverbData& data);
 
 		/**
 		* Updates the model in order to calculate the late reverberation time (T60).
@@ -87,21 +87,17 @@ namespace RAC
 		void UpdateDiffractionModel(const DiffractionModel model);
 
 		/**
-		* Updates the model used to process late reveberation.
-		*
-		* @param model The late reverberation model.
-		*/
-		void UpdateLateReverbModel(const LateReverbModel model);
-
-		/**
 		* Updates the volume and dimensions of the room.
 		*
 		* @param volume The volume of the room.
 		* @param dimensions The dimensions of the room for the delay lines.
 		*/
-		void InitLateReverb(const Real volume, const Vec<>& dimensions, FDNMatrix matrix);
+		bool InitEarlyReverb(const EarlyReverbData& data, DiffractionModel model);
 
-		void InitRAVES(const std::string& folderPath, const FDNMatrix matrix);
+		// TODO: Add comments
+		bool InitSingleFDN(const RoomData& roomData, const LateReverbData& data);
+
+		bool InitMoDART(const MoDARTData& data);
 
 		/**
 		* Clears the internal FDN buffers.
@@ -154,7 +150,7 @@ namespace RAC
 		* @param absorption The frequency absorption coefficients.
 		* @return The ID of the new wall.
 		*/
-		size_t InitWall(const Vertices& vData, const Absorption<>& absorption);
+		size_t InitWall(const Vertices& vData, const Absorption<>& absorption, int polygonId);
 		
 		/**
 		* Updates the position and orientation of the wall with the given ID.

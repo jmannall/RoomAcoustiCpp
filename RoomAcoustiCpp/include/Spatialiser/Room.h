@@ -42,26 +42,50 @@ namespace RAC
 			* 
 			* @params numFrequencyBands The number of frequency bands to use
 			*/
-			Room(const int numFrequencyBands) : nextPlane(0), nextWall(0), nextEdge(0), reverbFormula(ReverbFormula::Sabine), mVolume(0.0), T60(numFrequencyBands), numAbsorptionBands(numFrequencyBands), hasChanged(true) {}
+			Room(const int numFrequencyBands) : nextPlane(0), nextWall(0), nextEdge(0), roomData(numFrequencyBands), numFrequencyBands(numFrequencyBands), hasChanged(true) {}
 			
 			/**
 			* @brief Default deconstructor
 			*/
 			~Room() {};
 
+			inline void UpdateRoomData(const RoomData& data)
+			{
+				std::lock_guard<std::mutex> lock(roomDataMutex);
+				roomData = data;
+				roomData.Validate(numFrequencyBands);
+			}
+
 			/**
 			* @brief Update the reverb time formula and recalculates the reverb time
 			* 
 			* @params formula The new reverb time formula
+			* @return The new reverb time of the room
 			*/
-			inline void UpdateReverbTimeFormula(const ReverbFormula formula) { reverbFormula = formula; }
+			inline Coefficients<> GetReverbTime(const ReverbFormula formula)
+			{
+				{ std::lock_guard<std::mutex> lock(roomDataMutex); roomData.formula = formula; }
+				return GetReverbTime();
+			}
 
 			/**
-			* @brief Update the reverb time formula and recalculates the reverb time
-			*
-			* @params formula The new reverb time formula
+			* @brief Calculates the reverb time of the room based on the current formula
+			* 
+			* @return The reverb time of the room
 			*/
-			inline void UpdateReverbTime(const Coefficients<>& t) { reverbFormula = ReverbFormula::Custom; T60 = t; }
+			Coefficients<> GetReverbTime();
+
+			/**
+			* @brief Sets the reverb time formula to custom and sets the custom T60
+			*
+			* @params t60 The new reverb time
+			*/
+			inline void UpdateReverbTime(const Coefficients<>& t60)
+			{
+				std::lock_guard<std::mutex> lock(roomDataMutex);
+				roomData.formula = ReverbFormula::Custom;
+				roomData.customT60 = t60;
+			}
 
 			/**
 			* @brief Add a wall to the room
@@ -123,23 +147,16 @@ namespace RAC
 			/**
 			* @return The predicted reverb time of the room
 			*/
-			Coefficients<> GetReverbTime();
+			std::pair<Coefficients<>, Real> CalculateAbsorptionSurfaceArea();
 
-			/**
-			* @brief Get the predicted reverb time of the room with a given volume
-			* 
-			* @params volume The volume of the room
-			* @return The predicted reverb time of the room
-			*/
-			Coefficients<> GetReverbTime(const Real volume) { mVolume = std::max(volume, (Real)0.001); return GetReverbTime(); }
+			inline Vec<> GetDimensions() { std::lock_guard<std::mutex> lock(roomDataMutex); return roomData.dimensions; }
 
 			/**
 			* @return True if the room geometry has changed since last check, false otherwise
 			*/
 			bool HasChanged()
 			{
-				if (hasChanged) { hasChanged = false; return true; }
-				else { return false; }
+				return hasChanged.exchange(false, std::memory_order_acq_rel);
 			}
 
 			/**
@@ -321,7 +338,7 @@ namespace RAC
 			* @params absorption The total absorption of the room
 			* @return The reverb time of the room
 			*/
-			Coefficients<> Sabine(const Coefficients<>& absorption);
+			Coefficients<> Sabine(const Coefficients<>& absorption) const;
 
 			/**
 			* @brief Calculate the reverb time of the room using the Eyring formula
@@ -329,14 +346,12 @@ namespace RAC
 			* @params absorption The total absorption of the room
 			* @params surfaceArea The surface area of the room
 			*/
-			Coefficients<> Eyring(const Coefficients<>& absorption, const Real& surfaceArea);
+			Coefficients<> Eyring(const Coefficients<>& absorption, const Real& surfaceArea) const;
 
 			std::atomic<bool> hasChanged;		// True if the room geometry has changed since last check
 
-			Real mVolume;						// The volume of the room
-			Coefficients<> T60;					// The custom reverberation time of the room
-			ReverbFormula reverbFormula;		// The formula used to calculate the reverb time
-			int numAbsorptionBands;				// The number of frequency bands to use for late reverberation
+			RoomData roomData;					// Data about the room
+			int numFrequencyBands;				// Number of frequency bands for wall absorption
 
 			WallMap mWalls;								// Stored walls
 			std::vector<size_t> mEmptyWallSlots;		// Available wall IDs
@@ -357,6 +372,7 @@ namespace RAC
 			std::mutex mWallMutex;		// Protects mWalls. Must always be locked before Plane and Edge
 			std::mutex mPlaneMutex;		// Protects mPlanes. Can be locked after Edge (not before)
 			std::mutex mEdgeMutex;		// Protects mEdges. Cannot be locked after Plane
+			std::mutex roomDataMutex;	// Protects roomData
 		};
 	}
 }

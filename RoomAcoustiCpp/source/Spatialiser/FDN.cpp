@@ -121,87 +121,91 @@ namespace RAC
 		////////////////////////////////////////
 
 		template<>
-		FDN<Real>::FDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<DSPConfig> config, const Matrix<>& matrix) : x(config->numReverbSources),
-			y(config->numReverbSources), feedbackMatrix(matrix)
+		FDN<Real>::FDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<DSPConfig> dspConfig, const Matrix<>& matrix) : x(dspConfig->GetData().numReverbSources),
+			y(dspConfig->GetData().numReverbSources), feedbackMatrix(matrix)
 		{
 			assert(T60 > 0);
 
 			// For the purpose of `powerNormalization`, see notes in FDN_private.h
 			powerNormalization = 0.0;
 
-			std::vector<int> delayLengths = CalculateTimeDelay(dimensions, config->numReverbSources, config->fs);
-			mChannels.reserve(config->numReverbSources);
-			for (int i = 0; i < config->numReverbSources; i++)
+			int numReverbSources = dspConfig->GetData().numReverbSources;
+			std::vector<int> delayLengths = CalculateTimeDelay(dimensions, numReverbSources, dspConfig->GetData().fs);
+			mChannels.reserve(numReverbSources);
+			for (int i = 0; i < numReverbSources; i++)
 			{
-				mChannels.push_back(std::make_unique<FDNChannel<Real>>(delayLengths[i], T60, config));
+				mChannels.push_back(std::make_unique<FDNChannel<Real>>(delayLengths[i], T60, dspConfig));
 				powerNormalization += static_cast<Real>(delayLengths[i]);
 			}
 
-			powerNormalization = std::sqrt(powerNormalization / static_cast<Real>(config->numReverbSources));
+			powerNormalization = std::sqrt(powerNormalization / static_cast<Real>(numReverbSources));
 		}
 
 		////////////////////////////////////////
 
 		template<>
-		FDN<Real>::FDN(const Coefficients<>& T60, const std::vector<int>& delayLengths, const std::shared_ptr<DSPConfig> config, const Matrix<>& matrix) : x(config->numReverbSources),
-			y(config->numReverbSources), feedbackMatrix(matrix)
+		FDN<Real>::FDN(const Coefficients<>& T60, const std::vector<int>& delayLengths, const std::shared_ptr<DSPConfig> dspConfig, const Matrix<>& matrix) : x(dspConfig->GetData().numReverbSources),
+			y(dspConfig->GetData().numReverbSources), feedbackMatrix(matrix)
 		{
 			assert(T60 > 0);
 
 			// For the purpose of `powerNormalization`, see notes in FDN_private.h
 			powerNormalization = 0.0;
 
-			mChannels.reserve(config->numReverbSources);
-			for (int i = 0; i < config->numReverbSources; i++)
+			int numReverbSources = dspConfig->GetData().numReverbSources;
+			mChannels.reserve(numReverbSources);
+			for (int i = 0; i < numReverbSources; i++)
 			{
-				mChannels.push_back(std::make_unique<FDNChannel<Real>>(delayLengths[i], T60, config));
+				mChannels.push_back(std::make_unique<FDNChannel<Real>>(delayLengths[i], T60, dspConfig));
 				powerNormalization += static_cast<Real>(delayLengths[i]);
 			}
 
-			powerNormalization = std::sqrt(powerNormalization / static_cast<Real>(config->numReverbSources));
+			powerNormalization = std::sqrt(powerNormalization / static_cast<Real>(numReverbSources));
 		}
 
 		////////////////////////////////////////
 
 		template<>
-		FDN<Complex>::FDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<DSPConfig> config, const Matrix<>& matrix) : x(config->numReverbSources),
-			y(config->numReverbSources), feedbackMatrix(matrix), ravesResidues(config->numReverbSources)
+		FDN<Complex>::FDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<DSPConfig> dspConfig, const Matrix<>& matrix) : x(dspConfig->GetData().numReverbSources),
+			y(dspConfig->GetData().numReverbSources), feedbackMatrix(matrix), ravesResidues(dspConfig->GetData().numReverbSources)
 		{
 			assert(T60 > 0);
 
 			// For the purpose of `powerNormalization`, see notes in FDN_private.h
 			powerNormalization = 0.0;
 
-			std::vector<int> delayLengths = CalculateTimeDelay(dimensions, config->numReverbSources, config->fs);
-			mChannels.reserve(config->numReverbSources);
-			for (int i = 0; i < config->numReverbSources; i++)
+			int numReverbSources = dspConfig->GetData().numReverbSources;
+			std::vector<int> delayLengths = CalculateTimeDelay(dimensions, numReverbSources, dspConfig->GetData().fs);
+			mChannels.reserve(numReverbSources);
+			for (int i = 0; i < numReverbSources; i++)
 			{
-				mChannels.push_back(std::make_unique<FDNChannel<Complex>>(delayLengths[i], T60, config));
+				mChannels.push_back(std::make_unique<FDNChannel<Complex>>(delayLengths[i], T60, dspConfig));
 				powerNormalization += static_cast<Real>(delayLengths[i]);
 			}
 
-			powerNormalization = std::sqrt(powerNormalization / static_cast<Real>(config->numReverbSources));
+			powerNormalization = std::sqrt(powerNormalization / static_cast<Real>(numReverbSources));
 		}
 
 		////////////////////////////////////////
 
 		template<>
-		FDN<Complex>::FDN(const Coefficients<>& T60, const std::vector<int>& delayLengths, const std::shared_ptr<DSPConfig> config, const Matrix<>& matrix) : x(config->numReverbSources),
-			y(config->numReverbSources), feedbackMatrix(matrix), ravesResidues(config->numReverbSources)
+		FDN<Complex>::FDN(const Coefficients<>& T60, const std::vector<int>& delayLengths, const std::shared_ptr<DSPConfig> dspConfig, const Matrix<>& matrix) : x(dspConfig->GetData().numReverbSources),
+			y(dspConfig->GetData().numReverbSources), feedbackMatrix(matrix), ravesResidues(dspConfig->GetData().numReverbSources)
 		{
 			assert(T60 > 0);
 
 			// For the purpose of `powerNormalization`, see notes in FDN_private.h
 			powerNormalization = 0.0;
 
-			mChannels.reserve(config->numReverbSources);
-			for (int i = 0; i < config->numReverbSources; i++)
+			int numReverbSources = dspConfig->GetData().numReverbSources;
+			mChannels.reserve(numReverbSources);
+			for (int i = 0; i < numReverbSources; i++)
 			{
-				mChannels.push_back(std::make_unique<FDNChannel<Complex>>(delayLengths[i], T60, config));
+				mChannels.push_back(std::make_unique<FDNChannel<Complex>>(delayLengths[i], T60, dspConfig));
 				powerNormalization += static_cast<Real>(delayLengths[i]);
 			}
 
-			powerNormalization = std::sqrt(powerNormalization / static_cast<Real>(config->numReverbSources));
+			powerNormalization = std::sqrt(powerNormalization / static_cast<Real>(numReverbSources));
 		}
 
 		////////////////////////////////////////

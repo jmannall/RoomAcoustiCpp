@@ -91,11 +91,12 @@ namespace RAC
 			* @brief Constructor that initialises the audio thread pool with a given number of threads
             * 
 			* @param numThreads The number of threads to create in the pool
-			* @param numSamples The number of samples per audio frame
+			* @param numSamples The number of samples per mono audio buffer
 			* @param numLateReverbChannels The number of channels for late reverb processing
-            * @param numLateReverbSamples The number of samples per audio frame for late reverb send
+            * @param numLateReverbSamples The number of samples per audio buffer for late reverb send
+			* @param numReverbSources The number of reverb sources
             */
-            AudioThreadPool(size_t numThreads, int numSamples, int numLateReverbChannels, int numLateReverbSamples, int numReverbSources);
+            AudioThreadPool(size_t numThreads, const std::shared_ptr<DSPConfig>& dspConfig);
 
             /**
 			* @brief Default destructor that stops all threads

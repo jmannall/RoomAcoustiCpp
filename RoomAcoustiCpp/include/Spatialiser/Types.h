@@ -9,12 +9,14 @@
 // C++ headers
 #include <unordered_map>
 #include <array>
+#include <variant>
 
 // Common headers
 #include "Common/Types.h"
 #include "Common/Complex.h"
 #include "Common/Coefficients.h"
 #include "Common/Vec3.h"
+#include "Common/Vec.h"
 
 namespace RAC
 {
@@ -100,29 +102,47 @@ namespace RAC
 		enum class DiffractionSound { none, shadowZone, allZones };
 
 		//////////////////// Struct Data Types ////////////////////
-		
-		struct IEMData
+
+		/**
+		* @brief Struct that stores DSP configuration data
+		* 
+		* @details Used to store data that is used at initialisation and then remains constant
+		*/
+		struct DSPData
 		{
 		public:
-			DirectSound direct{ DirectSound::none };		// Direct sound visibiilty model
-			int reflOrder{ 0 };								// Maximum number of reflections in reflection only paths
-			int shadowDiffOrder{ 0 };						// Maximum number of reflections or diffractions in shadowed diffraction paths
-			int specularDiffOrder{ 0 };						// Maximum number of reflections or diffractions in specular diffraction paths
-			bool lateReverb{ false };						// True when late reverb enabled, flase otherwise
-			Real minEdgeLength{ 0.0 };						// Minimum edge length for diffraction
-			Real maxPathLength{ 1e10 };						// Maximum path length for imageSources
+			int fs{ 48000 };												// Sample rate
+			int numFrames{ 512 };											// Number of frames per audio callback
+			int numReverbSources{ 12 };										// Number of output channels for late reverberation
+			Real Q{ 0.98 };													// Q factor for the GraphicEQ
+			Coefficients<> frequencyBands;									// Frequency band center frequencies
+			int numFrequencyBands{ 0 };										// Number of frequency bands
 
-			IEMData() {}
+			DSPData() : frequencyBands(Coefficients<>({ (Real)250.0, (Real)500.0, (Real)1000.0, (Real)2000.0 }))
+			{}
 
-			IEMData(DirectSound direct, int reflOrder, int shadowDiffOrder, int specularDiffOrder, bool lateReverb) :
-				direct(direct), reflOrder(reflOrder), shadowDiffOrder(shadowDiffOrder), specularDiffOrder(specularDiffOrder), lateReverb(lateReverb) {}
+			DSPData(int sampleRate, int numFrames, int numReverbSources, Real lerpFactor, Real Q, Coefficients<> frequencyBands) :
+				fs(sampleRate), numFrames(numFrames), lerpFactor(CalculateLerpFactor(lerpFactor)), Q(Q), frequencyBands(frequencyBands),
+				numFrequencyBands(frequencyBands.Length()), numReverbSources(numReverbSources)
+			{}
 
-			IEMData(DirectSound direct, int reflOrder, int shadowDiffOrder, int specularDiffOrder, bool lateReverb, Real minEdgeLength, Real maxPathLength) :
-				direct(direct), reflOrder(reflOrder), shadowDiffOrder(shadowDiffOrder), specularDiffOrder(specularDiffOrder), lateReverb(lateReverb),
-				minEdgeLength(minEdgeLength), maxPathLength(maxPathLength) {}
+			inline Real GetLerpFactor() const { return lerpFactor; }
+
+			inline void UpdateLerpFactor(Real lerpFactor) { this->lerpFactor = CalculateLerpFactor(lerpFactor); }
+
+		private:
+			constexpr Real CalculateLerpFactor(Real lerpFactor)
+			{
+				Real factor = (Real)96.0 * lerpFactor / fs;
+				return std::max(std::min(factor, (Real)1.0), (Real)1.0 / fs);
+			}
+
+			/**
+			* @details 1 means DSP parameters are lerped over only 1 audio callback,
+			* 5 means lerped over 5 separate audio callbacks. Must be greater than 0
+			*/
+			Real lerpFactor{ CalculateLerpFactor((Real)2.0) };
 		};
-
-		// class Context;
 
 		/**
 		* @brief Configuration struct for RAC
@@ -131,174 +151,206 @@ namespace RAC
 		{
 		public:
 			/**
-			* @brief Default constructor for the DSPConfig class
-			*/
-			DSPConfig() : DSPConfig(48000, 512, 12, (Real)2.0, (Real)0.98, Coefficients({ (Real)250.0, (Real)500.0, (Real)1000.0, (Real)2000.0 }), SpatialisationMode::none) {}
-
-			/**
 			* @brief Constructor for the DSPConfig class
 			*
-			* @param sampleRate The sample rate
-			* @param numFrames The number of frames per audio callback
-			* @param numReverbSources The number of output channels for late reverberation
-			* @param lerpFactor The linear interpolation factor for audio processing
-			* @param Q The Q factor for the GraphicEQ
-			* @param fBands The frequency bands for the GraphicEQ
+			* @param data DSP data that remains constant once initialised
+			* @param models The diffraction and late reverberation models
 			*/
-			DSPConfig(int sampleRate, int numFrames, int numReverbSources, Real lerpFactor, Real Q, Coefficients<> fBands) : DSPConfig(sampleRate, numFrames, numReverbSources, lerpFactor, Q, fBands, SpatialisationMode::none) {}
+			DSPConfig(const DSPData& data) : data(data) {};
 
-			/**
-			* @brief Constructor for the DSPConfig class
-			*
-			* @param sampleRate The sample rate
-			* @param numFrames The number of frames per audio callback
-			* @param numReverbSources The number of output channels for late reverberation
-			* @param lerpFactor The linear interpolation factor for audio processing
-			* @param Q The Q factor for the GraphicEQ
-			* @param fBands The frequency bands for the GraphicEQ
-			* @param mode The spatialisation mode
-			*/
-			DSPConfig(int sampleRate, int numFrames, int numReverbSources, Real lerpFactor, Real Q, Coefficients<> fBands, SpatialisationMode mode) :
-				fs(sampleRate), numFrames(numFrames), numReverbSources(numReverbSources), Q(Q), frequencyBands(fBands),
-				spatialisationMode(mode)
-			{
-				UpdateLerpFactor(lerpFactor);
-			};
-
-			bool GetImpulseResponseMode() const { return impulseResponseMode.load(std::memory_order_acquire); }
-
-			SpatialisationMode GetSpatialisationMode() const { return spatialisationMode.load(std::memory_order_acquire); }
+			inline SpatialisationMode GetSpatialisationMode() const { return spatialisationMode.load(std::memory_order_acquire); }
 			
-			LateReverbModel GetLateReverbModel() const { return lateReverbModel.load(std::memory_order_acquire); }
+			inline DiffractionModel GetDiffractionModel() const { return diffractionModel.load(std::memory_order_acquire); }
 
-			bool CompareSpatialisationMode(const SpatialisationMode mode) const { return spatialisationMode.load(std::memory_order_acquire) != mode; }
+			inline LateReverbModel GetLateReverbModel() const { return lateReverbModel.load(std::memory_order_acquire); }
 
-			DiffractionModel GetDiffractionModel() const { return diffractionModel.load(std::memory_order_acquire); }
+			inline int GetNumFDNs() const { return numFDNs.load(std::memory_order_acquire); }
 
-			int GetNumRavesFDNs() const { return numRavesFDNs.load(std::memory_order_acquire); }
+			inline bool GetImpulseResponseMode() const { return impulseResponseMode.load(std::memory_order_acquire); }
 
-			Real GetLerpFactor() const { return impulseResponseMode.load(std::memory_order_acquire) ? 1.0 : lerpFactor.load(std::memory_order_acquire); }
+			inline void UpdateSpatialisationMode(const SpatialisationMode mode) { spatialisationMode.store(mode, std::memory_order_release); }
 
-			const int fs;							// Sample rate
-			const int numFrames;					// Number of frames per audio callback
-			const int numReverbSources;				// Number of channels for late reverbration
-			const int numRays{ 1000 };				// Number of rays to use for ray tracing
+			inline void UpdateDiffractionModel(const DiffractionModel model) { diffractionModel.store(model, std::memory_order_release); }
 
-			const Real Q;								// Q factor for the GraphicEQ
-			const Coefficients<> frequencyBands;		// Frequency bands for the GraphicEQ
+			inline void UpdateLateReverbModel(const LateReverbModel model, int numFDNs)
+			{
+				lateReverbModel.store(model, std::memory_order_release);
+				this->numFDNs.store(numFDNs, std::memory_order_release);
+			}
+
+			inline void UpdateImpulseResponseMode(const bool mode) { impulseResponseMode.store(mode, std::memory_order_release); }
+
+			inline bool CompareSpatialisationMode(const SpatialisationMode mode) const { return spatialisationMode.load(std::memory_order_acquire) != mode; }
+
+			Real GetLerpFactor() const { return impulseResponseMode.load(std::memory_order_acquire) ? 1.0 : data.GetLerpFactor(); }
+
+			inline std::pair<int, int> GetReverbInputDimensions()
+			{
+				switch (GetLateReverbModel())
+				{
+				case LateReverbModel::fdn:
+					return { data.numReverbSources, data.numFrames };
+				case LateReverbModel::raves:
+					return { GetNumFDNs(), 2 * data.numFrames};
+				}
+			}
+
+			inline const DSPData& GetData() const { return data; }
+
+			const DSPData data;
 
 		private:
-
-			friend class Context;		// Allow Context to access private members	
-
-			/**
-			* @details 1 means DSP parameters are lerped over only 1 audio callback,
-			* 5 means lerped over 5 separate audio callbacks. Must be greater than 0
-			*/
-			std::atomic<Real> lerpFactor;		// Linear interpolation factor for audio processing
-
-			std::atomic<int> numRavesFDNs{ 0 };	// Number of RAVES FDNs to use for late reverberation
-
-			std::atomic<DiffractionModel> diffractionModel{ DiffractionModel::btm };	// Diffraction model
-			std::atomic<SpatialisationMode> spatialisationMode;		// Spatialisation mode
-			std::atomic<LateReverbModel> lateReverbModel{ LateReverbModel::raves };	// Late reverberation mode
-
-			std::atomic<bool> impulseResponseMode;
-			
-			Real UpdateLerpFactor(const Real lerpFactor)
-			{
-				Real factor = (Real)96.0 * lerpFactor / fs;
-				factor = std::max(std::min(factor, (Real)1.0), (Real)1.0 / fs);
-				this->lerpFactor.store(factor, std::memory_order_release);
-				return factor;
-			}
+			std::atomic<SpatialisationMode> spatialisationMode{ SpatialisationMode::none };		// Spatialisation mode
+			std::atomic<DiffractionModel> diffractionModel{ DiffractionModel::nnSmall };										// Diffraction model
+			std::atomic<LateReverbModel> lateReverbModel{ LateReverbModel::none };										// Late reverberation model
+			std::atomic<bool> impulseResponseMode{ false };										// True if dsp interpolation is disabled, false otherwise
+			std::atomic<int> numFDNs{ 1 };														// Number of FDNs
 		};
 
 		/**
-		* @brief Configuration struct for the image edge model
+		* @brief Struct that stores the user early reverberation configuration data
 		*/
-		class IEMConfig
+		struct EarlyReverbData
 		{
 		public:
+			DirectSound direct{ DirectSound::none };		// Direct sound visibiilty model
+			int reflOrder{ 0 };								// Maximum number of reflections in reflection only paths
+			int shadowDiffOrder{ 0 };						// Maximum number of reflections or diffractions in shadowed diffraction paths
+			int specularDiffOrder{ 0 };						// Maximum number of reflections or diffractions in specular diffraction paths
+			Real minEdgeLength{ 0.0 };						// Minimum edge length for diffraction
+			Real maxPathLength{ 1e10 };						// Maximum path length for imageSources
 
-			IEMConfig(DiffractionModel diffractionModel, LateReverbModel lateReverb) : IEMConfig(IEMData(), diffractionModel, lateReverb) {}
-
-			/**
-			* @brief Constructor for the IEMConfig class
-			*
-			* @param order The maximum reflection/diffraction order of the IEM
-			* @param direct The direct sound visibility model
-			* @param reflections The reflection flag
-			* @param diffraction The diffraction sound validity model
-			* @param diffractedReflections The diffraction sound validity model for reflections
-			* @param lateReverb The late reverberation flag
-			* @param minEdgeLength The minimum edge length for diffraction
-			*/
-			IEMConfig(IEMData data, DiffractionModel diffractionModel, LateReverbModel lateReverb) :
-				data(data), lateReverbModel(lateReverb)
-			{
-				UpdateMaxOrder();
-				UpdateDiffractionModel(diffractionModel);
-			};
-
-			inline bool UpdateDiffractionModel(DiffractionModel model)
-			{
-				if (model == DiffractionModel::btm || model == DiffractionModel::udfa)
-				{
-					bool hasChanged = data.specularDiffOrder == 0 && specularDiffOrderStore > 0;
-					data.specularDiffOrder = specularDiffOrderStore;
-					return hasChanged;
-				}
-				else
-				{
-					bool hasChanged = data.specularDiffOrder != 0;
-					data.specularDiffOrder = 0;	// Only BTM and UDFA support specular diffraction
-					return hasChanged;
-				}
+			EarlyReverbData(DirectSound direct, int reflOrder, int shadowDiffOrder, int specularDiffOrder, bool lateReverb, Real minEdgeLength, Real maxPathLength) :
+				direct(direct), reflOrder(reflOrder), shadowDiffOrder(shadowDiffOrder), specularDiffOrder(specularDiffOrder),
+				minEdgeLength(minEdgeLength), maxPathLength(maxPathLength) {
 			}
 
-			inline bool UpdateLateReverbModel(LateReverbModel model)
+		private:
+			friend class ImageEdge;
+
+			EarlyReverbData(const EarlyReverbData& data, DiffractionModel model) :
+				direct(data.direct), reflOrder(data.reflOrder), shadowDiffOrder(data.shadowDiffOrder), specularDiffOrder(data.specularDiffOrder),
+				minEdgeLength(data.minEdgeLength), maxPathLength(data.maxPathLength)
 			{
-				if (lateReverbModel == model)
-					return false;
-				lateReverbModel = model;
-				return data.lateReverb; // If no late reverb, no need to update the model
+				UpdateMaxOrder();
+				UpdateSpecularOrder(model);
+			}
+
+			inline void Update(const EarlyReverbData& data, DiffractionModel model)
+			{
+				this->direct = data.direct;
+				this->reflOrder = data.reflOrder;
+				this->shadowDiffOrder = data.shadowDiffOrder;
+				this->specularDiffOrder = data.specularDiffOrder;
+				this->minEdgeLength = data.minEdgeLength;
+				this->maxPathLength = data.maxPathLength;
+				UpdateMaxOrder();
+				UpdateSpecularOrder(model);
 			}
 
 			inline void UpdateMaxOrder()
 			{
-				maxOrder = std::max(std::max(data.reflOrder, data.shadowDiffOrder), data.specularDiffOrder);
+				maxOrder = std::max(std::max(reflOrder, shadowDiffOrder), specularDiffOrder);
 			}
 
-			inline void Update(IEMData data, const std::shared_ptr<DSPConfig>& config)
+			inline bool UpdateSpecularOrder(DiffractionModel model)
 			{
-				this->data = data;
-				UpdateMaxOrder();
-				UpdateDiffractionModel(config->GetDiffractionModel());
-				UpdateLateReverbModel(config->GetLateReverbModel());
+				specularDiffOrderStore = specularDiffOrder; // Store the specular diffraction order
+				if (model == DiffractionModel::btm || model == DiffractionModel::udfa)
+				{
+					bool hasChanged = specularDiffOrder == 0 && specularDiffOrderStore > 0;
+					specularDiffOrder = specularDiffOrderStore;
+					return hasChanged;
+				}
+				else
+				{
+					bool hasChanged = specularDiffOrder != 0;
+					specularDiffOrder = 0;	// Only BTM and UDFA support specular diffraction
+					return hasChanged;
+				}
 			}
 
-			inline int MaxOrder() const { return maxOrder; }
+			inline bool FeedsFDN(int order) const { return maxOrder == order; }
 
-			inline LateReverbModel GetLateReverbModel(bool checkData = true) const
+			int maxOrder{ 0 };					// Maximum order of the image edge model
+			int specularDiffOrderStore{ 0 };	// Store the specular diffraction order
+		};
+
+		struct LateReverbData
+		{
+		public:
+			int numRays{ 1000 };
+			FDNMatrix feedbackMatrix{ FDNMatrix::randomOrthogonal };
+
+			LateReverbData(int numRays, FDNMatrix feedbackMatrix)
+				: numRays(numRays), feedbackMatrix(feedbackMatrix)
+			{}
+		};
+
+		struct RoomData
+		{
+		public:
+
+			RoomData(int numFrequencyBands) : RoomData((Real)34.0, Coefficients<>(numFrequencyBands), ReverbFormula::Sabine, Vec<>())
 			{
-				if (checkData)
-					return data.lateReverb ? lateReverbModel : LateReverbModel::none;
-				return lateReverbModel;
+				Validate(numFrequencyBands);
 			}
 
-			inline bool FeedsFDN(int order) const
-			{
-				return data.lateReverb && lateReverbModel == LateReverbModel::fdn && maxOrder == order;
-			}
+			RoomData(Real volume, const Coefficients<>& t60, ReverbFormula formula, const Vec<>& dimensions)
+				: volume(volume), formula(formula), dimensions(dimensions), customT60(t60)
+			{}
 
-			IEMData data;		// IEM configuration data
+			ReverbFormula formula{ ReverbFormula::Sabine };	// Reverberation formula
+			Real volume;									// Room volume
+			Vec<> dimensions;								// Room dimensions
+			Coefficients<> customT60;						// Custom T60
 
 		private:
-			int maxOrder{ 0 };						// Maximum order of the IEM
-			int specularDiffOrderStore{ 0 };			// Store the specular diffraction order
+			friend class Room;
 
-			LateReverbModel lateReverbModel;		// Late reverb model
+			inline void Validate(int numFrequencyBands)
+			{
+				if (dimensions.Rows() < 1) // No dimensions provided
+					dimensions = Vec<>({ (Real)2.5, (Real)4.0, (Real)3.4 }); // Default dimensions
+				volume = std::max(volume, (Real)0.001);
+
+				if (customT60.Length() != numFrequencyBands) // Invalid number of frequency bands
+					customT60 = Coefficients<>(numFrequencyBands, (Real)1.0); // Default T60
+				for (int i = 0; i < customT60.Length(); i++) // Ensure T60 is positive
+					customT60[i] = std::max(customT60[i], (Real)0.0);
+			}
+		};
+
+		struct MoDARTData : public LateReverbData
+		{
+		public:
+			Matrix<int> indexing;
+			Vec<int> frequencyIndexing;
+			Vec<> t60s;
+			Vec<> energyDecay;
+			std::vector<Vec<>> leftEigenvectors;
+			std::vector<Vec<>> rightEigenvectors;
+			Real preceedingDelay{ 0.0 };
+
+			MoDARTData(int numRays, FDNMatrix feedbackMatrix, Matrix<int> indexing, Vec<int> frequencyIndexing, Vec<> t60s, Vec<> energyDecay, std::vector<Vec<>> leftEigenvectors, std::vector<Vec<>> rightEigenvectors, Real preceedingDelay)
+				: LateReverbData(numRays, feedbackMatrix), indexing(indexing), frequencyIndexing(frequencyIndexing), t60s(t60s), energyDecay(energyDecay),
+				leftEigenvectors(leftEigenvectors), rightEigenvectors(rightEigenvectors), preceedingDelay(preceedingDelay)
+			{}
+		};
+
+		// TODO: Use this to pass data to audio processing.
+		// Would allow for easier switching between late reverb models.
+		// And remove need for as many atomic bools in Source and ImageSource
+		struct AudioData
+		{
+			AudioData(const std::shared_ptr<DSPConfig>& dspConfig)
+				: lerpFactor(dspConfig->GetLerpFactor()), lateReverbModel(dspConfig->GetLateReverbModel()),
+				spatialisationMode(dspConfig->GetSpatialisationMode())
+			{}
+
+			Real lerpFactor;
+			LateReverbModel lateReverbModel;
+			SpatialisationMode spatialisationMode;
 		};
 	}
 }

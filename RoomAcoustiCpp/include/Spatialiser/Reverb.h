@@ -127,14 +127,13 @@ namespace RAC
 			* @params core The 3DTI processing core
 			* @params config The spatialiser configuration
 			*/
-			Reverb(Binaural::CCore* core, const std::shared_ptr<DSPConfig> config) : reverbSourceInputs(config->numReverbSources, Buffer(config->numFrames))
+			Reverb(Binaural::CCore* core, const std::shared_ptr<DSPConfig> dspConfig) : reverbSourceInputs(dspConfig->GetData().numReverbSources, Buffer(dspConfig->GetData().numFrames))
 			{
-				const std::vector<Vec3> points = CalculateSourcePositions(config->numReverbSources);
-				mReverbSources.reserve(config->numReverbSources);
-				for (int i = 0; i < config->numReverbSources; i++)
-					mReverbSources.emplace_back(std::make_unique<ReverbSource>(core, config, points[i], &reverbSourceInputs[i]));
-				//SetPrecedingDelay(10.0 / SPEED_OF_SOUND, config->fs); // TODO: Pass the desired length in config; set it to 0 for SingleFDN
-				SetPrecedingDelay(0.0, config->fs); // TODO: Pass the desired length in config; set it to 0 for SingleFDN
+				int numReverbSources = dspConfig->GetData().numReverbSources;
+				const std::vector<Vec3> points = CalculateSourcePositions(numReverbSources);
+				mReverbSources.reserve(numReverbSources);
+				for (int i = 0; i < numReverbSources; i++)
+					mReverbSources.emplace_back(std::make_unique<ReverbSource>(core, dspConfig, points[i], &reverbSourceInputs[i]));
 			}
 
 			/**
@@ -206,17 +205,7 @@ namespace RAC
 
 			virtual void ResetReverberator() = 0;
 
-			virtual void SetTargetT60(const Coefficients<>& T60) = 0;
-
-			/**
-			* @brief Updates the target T60
-			*
-			* @params T60 The new decay time
-			*/
-			virtual inline void SetTargetT60s(const std::vector<Coefficients<>>& T60)
-			{
-				SetTargetT60(T60[0]);
-			}
+			virtual void SetTargetT60(const Coefficients<>& T60) { /*Do nothing*/ }
 
 			/**
 			* @brief Update reflection filters for directional dependent reverberation level
@@ -256,32 +245,13 @@ namespace RAC
 					directions.emplace_back(100.0 * reverbSource->GetShift());
 			}
 
-			virtual void InitLateReverb(const std::vector<Real>& T60, const FDNMatrix matrix, const std::shared_ptr<DSPConfig> config) = 0;
-
-			virtual void InitLateReverb(const Coefficients<>& T60, const FDNMatrix matrix, const std::shared_ptr<DSPConfig> config) = 0;
-
-			virtual void InitLateReverb(const Coefficients<>& T60, const Vec<>& delayLineLengths, const FDNMatrix matrix, const std::shared_ptr<DSPConfig> config) = 0;
-
-			/*virtual inline void InitLateReverb(const std::vector<Coefficients<>>& T60, const FDNMatrix matrix, const std::shared_ptr<DSPConfig> config)
-			{
-				InitLateReverb(T60[0], matrix, config);
-			}
-
-			virtual void InitLateReverb(const Coefficients<>& T60, const Vec<>& delayLineLengths, const FDNMatrix matrix, const std::shared_ptr<DSPConfig> config) = 0;*/
-
-			virtual inline void InitLateReverb(const std::vector<Coefficients<>>& T60, const Vec<>& delayLineLengths, const FDNMatrix matrix, const std::shared_ptr<DSPConfig> config)
-			{
-				InitLateReverb(T60[0], delayLineLengths, matrix, config);
-			}
-
 		protected:
 			std::atomic<bool> initialised{ false };		// True if T60 > 0.0 and T60 < 20.0 seconds
 			std::atomic<bool> running{ false };			// True if audio thread should process late reverberation
 
-			static ReleasePool releasePool;		// Garbage collector for shared pointers after atomic replacement
+			static ReleasePool releasePool;			// Garbage collector for shared pointers after atomic replacement
 
-			Real precedingDelayLength;				// Length (in seconds) of the delay which precedes the FDNs in RAVES
-
+			Real precedingDelayLength{ 0.0 };		// Length (in seconds) of the delay which precedes the FDNs in MoDART
 		private:
 
 			std::vector<Vec3> CalculateSourcePositions(const int numReverbSources) const;
@@ -289,24 +259,17 @@ namespace RAC
 			std::vector<Buffer<>> reverbSourceInputs;						// Input buffers for each reverb source
 			std::vector<std::unique_ptr<ReverbSource>> mReverbSources;		// Reverb sources to binauralise the FDN output
 
-			std::vector<Vec<>> rightEigenvectors;	// Right eigenvectors for RAVES
-			std::vector<Vec<>> leftEigenvectors;	// Left eigenvectors for RAVES
+			std::vector<Vec<>> rightEigenvectors;	// Right eigenvectors for MoDART
+			std::vector<Vec<>> leftEigenvectors;	// Left eigenvectors for MoDART
 		};
 
 		class SingleFDN : public Reverb
 		{
 		public:
-			SingleFDN(Binaural::CCore* core, const std::shared_ptr<DSPConfig> config) : Reverb(core, config) {}
-
-			void InitLateReverb(const std::vector<Real>& T60, const FDNMatrix matrix, const std::shared_ptr<DSPConfig> config) override {}
-
-			void InitLateReverb(const Coefficients<>& T60, const FDNMatrix matrix, const std::shared_ptr<DSPConfig> config) override
+			SingleFDN(Binaural::CCore* core, const Coefficients<>& t60, const Vec<> roomDimensions, const LateReverbData& data, const std::shared_ptr<DSPConfig> dspConfig) : Reverb(core, dspConfig)
 			{
-				Vec defaultDimensions = Vec({ 2.5, 4.0, 3.4 }); // Assume a shoebox
-				InitLateReverb(T60, defaultDimensions, matrix, config);
+				InitLateReverb(t60, roomDimensions, data, dspConfig);
 			}
-
-			void InitLateReverb(const Coefficients<>& T60, const Vec<>& delayLineLengths, const FDNMatrix matrix, const std::shared_ptr<DSPConfig> config) override;
 
 			/**
 			* @brief Resets the FDN and ReverbSources internal buffers to zero
@@ -323,7 +286,7 @@ namespace RAC
 			*/
 			void SetTargetT60(const Coefficients<>& T60) override;
 
-			inline void ProcessReverberator(const Matrix<>& data, std::vector<Buffer<>>& outputBuffers, const Real lerpFactor)
+			inline void ProcessReverberator(const Matrix<>& data, std::vector<Buffer<>>& outputBuffers, const Real lerpFactor) override
 			{
 				if (!initialised.load(std::memory_order_acquire))
 				{
@@ -342,6 +305,8 @@ namespace RAC
 			void SetTargetOutputFilters(const std::vector<Absorption<>>& gains);
 
 		private:
+			void InitLateReverb(const Coefficients<>& T60, const Vec<>& delayLineLengths, const LateReverbData& data, const std::shared_ptr<DSPConfig>& dspConfig);
+
 			std::atomic<std::shared_ptr<FDN<>>> mFDN;		// FDN for late reverberation processing
 
 		};
@@ -349,13 +314,11 @@ namespace RAC
 		class RAVES : public Reverb
 		{
 		public:
-			RAVES(Binaural::CCore* core, const std::shared_ptr<DSPConfig> config) : Reverb(core, config) {}
-
-			void InitLateReverb(const std::vector<Real>& T60, const FDNMatrix matrix, const std::shared_ptr<DSPConfig> config) override;
-
-			void InitLateReverb(const Coefficients<>& T60, const FDNMatrix matrix, const std::shared_ptr<DSPConfig> config) override {}
-
-			void InitLateReverb(const Coefficients<>& T60, const Vec<>& delayLineLengths, const FDNMatrix matrix, const std::shared_ptr<DSPConfig> config) override {}
+			RAVES(Binaural::CCore* core, const MoDARTData& data, const std::shared_ptr<DSPConfig> dspConfig) : Reverb(core, dspConfig)
+			{
+				InitLateReverb(data, dspConfig);
+				SetEigenvectors(data.rightEigenvectors, data.leftEigenvectors);
+			}
 
 			/**
 			* @brief Update listener residues for RAVES reverb
@@ -373,15 +336,6 @@ namespace RAC
 					fdns->at(i)->SetPrecedingDelay(delay, fs);
 			}
 
-			inline void SetTargetT60(const Coefficients<>& T60) override { SetTargetT60s({ T60 }); }
-
-			/**
-			* @brief Updates the target T60
-			*
-			* @params T60 The new decay time
-			*/
-			void SetTargetT60s(const std::vector<Coefficients<>>& T60s) override;
-
 			inline void ResetReverberator() override
 			{
 				auto fdns = mFDNs.load();
@@ -392,6 +346,8 @@ namespace RAC
 			void ProcessReverberator(const Matrix<>& data, std::vector<Buffer<>>& outputBuffers, const Real lerpFactor) override;
 
 		private:
+			void InitLateReverb(const MoDARTData& data, const std::shared_ptr<DSPConfig>& dspConfig);
+
 			using FDNPtr = std::shared_ptr<std::vector<std::unique_ptr<FDN<Complex>>>>;
 			std::atomic<FDNPtr> mFDNs;
 		};
