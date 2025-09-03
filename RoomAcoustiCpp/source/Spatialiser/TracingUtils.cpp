@@ -719,13 +719,13 @@ namespace RAC
         // TODO: The three definitions of this overloaded function are identical except for one line. I'm sure there's a more elegant way to do that.
         void trace_ray(
             const TriangleMeshSoA& triangles, const RayBundleSoA& rays, int rayIndex,
-            int& triangleIdxFront, Real& distanceFront, Real& cosineFront,
-            int& triangleIdxBack, Real& distanceBack, Real& cosineBack,
+            int& nodeIdFront, Real& distanceFront, Real& cosineFront,
+            int& nodeIdBack, Real& distanceBack, Real& cosineBack,
             int ignoredTriangleIndex)
         {
             // Initialize per-ray front/back bests.
-            triangleIdxFront = -1;
-            triangleIdxBack = -1;
+            nodeIdFront = -1;
+            nodeIdBack = -1;
             distanceFront = INFINITY;
             distanceBack = -INFINITY;
             cosineFront = qNaN;
@@ -751,14 +751,14 @@ namespace RAC
                 if (currentDist > 0.0) {
                     if (std::abs(currentDist - distanceFront) < EPS_ZFIGHT) {
                         // Z-fighting, lower triangle index wins.
-                        if (i < triangleIdxFront) {
-                            triangleIdxFront = i;
+                        if (i < nodeIdFront) {
+                            nodeIdFront = triangles.nodeID[i];
                             distanceFront = currentDist;
                             cosineFront = currentCos;
                         } // else {keep the previous best}
                     }
                     else {
-                        triangleIdxFront = i;
+                        nodeIdFront = triangles.nodeID[i];
                         distanceFront = currentDist;
                         cosineFront = currentCos;
                     }
@@ -766,14 +766,14 @@ namespace RAC
                 else {
                     if (std::abs(currentDist - distanceBack) < EPS_ZFIGHT) {
                         // Z-fighting, lower triangle index wins
-                        if (i < triangleIdxFront) {
-                            triangleIdxBack = i;
+                        if (i < nodeIdFront) {
+                            nodeIdBack = triangles.nodeID[i];
                             distanceBack = currentDist;
                             cosineBack = currentCos;
                         } // else {keep the previous best}
                     }
                     else {
-                        triangleIdxBack = i;
+                        nodeIdBack = triangles.nodeID[i];
                         distanceBack = currentDist;
                         cosineBack = currentCos;
                     }
@@ -782,13 +782,13 @@ namespace RAC
 
             if (std::isinf(distanceFront)) {
                 // If it's still the initial INFINITY value, there was no valid hit at all.
-                triangleIdxFront = -1;
+                nodeIdFront = -1;
                 distanceFront = qNaN;
                 cosineFront = qNaN;
             }
             if (std::isinf(distanceBack)) {
                 // If it's still the initial -INFINITY value, there was no valid hit at all.
-                triangleIdxBack = -1;
+                nodeIdBack = -1;
                 distanceBack = qNaN;
                 cosineBack = qNaN;
             }
@@ -798,13 +798,13 @@ namespace RAC
 
         void trace_ray(
             const TriangleMeshSoA& triangles, const RayPencilSoA& rays, int rayIndex,
-            int& triangleIdxFront, Real& distanceFront, Real& cosineFront,
-            int& triangleIdxBack, Real& distanceBack, Real& cosineBack,
+            int& nodeIdFront, Real& distanceFront, Real& cosineFront,
+            int& nodeIdBack, Real& distanceBack, Real& cosineBack,
             int ignoredTriangleIndex)
         {
             // Initialize per-ray front/back bests.
-            triangleIdxFront = -1;
-            triangleIdxBack = -1;
+            nodeIdFront = -1;
+            nodeIdBack = -1;
             distanceFront = INFINITY;
             distanceBack = -INFINITY;
             cosineFront = qNaN;
@@ -830,14 +830,14 @@ namespace RAC
                 if (currentDist > 0.0) {
                     if (std::abs(currentDist - distanceFront) < EPS_ZFIGHT) {
                         // Z-fighting, lower triangle index wins.
-                        if (i < triangleIdxFront) {
-                            triangleIdxFront = i;
+                        if (i < nodeIdFront) {
+                            nodeIdFront = triangles.nodeID[i];
                             distanceFront = currentDist;
                             cosineFront = currentCos;
                         } // else {keep the previous best}
                     }
                     else {
-                        triangleIdxFront = i;
+                        nodeIdFront = triangles.nodeID[i];
                         distanceFront = currentDist;
                         cosineFront = currentCos;
                     }
@@ -845,14 +845,14 @@ namespace RAC
                 else {
                     if (std::abs(currentDist - distanceBack) < EPS_ZFIGHT) {
                         // Z-fighting, lower triangle index wins
-                        if (i < triangleIdxFront) {
-                            triangleIdxBack = i;
+                        if (i < nodeIdFront) {
+                            nodeIdBack = triangles.nodeID[i];
                             distanceBack = currentDist;
                             cosineBack = currentCos;
                         } // else {keep the previous best}
                     }
                     else {
-                        triangleIdxBack = i;
+                        nodeIdBack = triangles.nodeID[i];
                         distanceBack = currentDist;
                         cosineBack = currentCos;
                     }
@@ -861,13 +861,13 @@ namespace RAC
 
             if (std::isinf(distanceFront)) {
                 // If it's still the initial INFINITY value, there was no valid hit at all.
-                triangleIdxFront = -1;
+                nodeIdFront = -1;
                 distanceFront = qNaN;
                 cosineFront = qNaN;
             }
             if (std::isinf(distanceBack)) {
                 // If it's still the initial -INFINITY value, there was no valid hit at all.
-                triangleIdxBack = -1;
+                nodeIdBack = -1;
                 distanceBack = qNaN;
                 cosineBack = qNaN;
             }
@@ -877,13 +877,13 @@ namespace RAC
 
         void trace_ray(
             const TriangleMeshSoA& triangles, const Vec3& rayOrigin, const Vec3& rayDirection,
-            int& triangleIdxFront, Real& distanceFront, Real& cosineFront,
-            int& triangleIdxBack, Real& distanceBack, Real& cosineBack,
+            int& nodeIdFront, Real& distanceFront, Real& cosineFront,
+            int& nodeIdBack, Real& distanceBack, Real& cosineBack,
             int ignoredTriangleIndex)
         {
             // Initialize per-ray front/back bests.
-            triangleIdxFront = -1;
-            triangleIdxBack = -1;
+            nodeIdFront = -1;
+            nodeIdBack = -1;
             distanceFront = INFINITY;
             distanceBack = -INFINITY;
             cosineFront = qNaN;
@@ -909,14 +909,14 @@ namespace RAC
                 if (currentDist > 0.0) {
                     if (std::abs(currentDist - distanceFront) < EPS_ZFIGHT) {
                         // Z-fighting, lower triangle index wins.
-                        if (i < triangleIdxFront) {
-                            triangleIdxFront = i;
+                        if (i < nodeIdFront) {
+                            nodeIdFront = triangles.nodeID[i];
                             distanceFront = currentDist;
                             cosineFront = currentCos;
                         } // else {keep the previous best}
                     }
                     else {
-                        triangleIdxFront = i;
+                        nodeIdFront = triangles.nodeID[i];
                         distanceFront = currentDist;
                         cosineFront = currentCos;
                     }
@@ -924,14 +924,14 @@ namespace RAC
                 else {
                     if (std::abs(currentDist - distanceBack) < EPS_ZFIGHT) {
                         // Z-fighting, lower triangle index wins
-                        if (i < triangleIdxFront) {
-                            triangleIdxBack = i;
+                        if (i < nodeIdFront) {
+                            nodeIdBack = triangles.nodeID[i];
                             distanceBack = currentDist;
                             cosineBack = currentCos;
                         } // else {keep the previous best}
                     }
                     else {
-                        triangleIdxBack = i;
+                        nodeIdBack = triangles.nodeID[i];
                         distanceBack = currentDist;
                         cosineBack = currentCos;
                     }
@@ -940,13 +940,13 @@ namespace RAC
 
             if (std::isinf(distanceFront)) {
                 // If it's still the initial INFINITY value, there was no valid hit at all.
-                triangleIdxFront = -1;
+                nodeIdFront = -1;
                 distanceFront = qNaN;
                 cosineFront = qNaN;
             }
             if (std::isinf(distanceBack)) {
                 // If it's still the initial -INFINITY value, there was no valid hit at all.
-                triangleIdxBack = -1;
+                nodeIdBack = -1;
                 distanceBack = qNaN;
                 cosineBack = qNaN;
             }
@@ -965,8 +965,8 @@ namespace RAC
             totalDistance = Vec<Real>(numRays);
             latestDistance = Vec<Real>(numRays);
             latestCosine = Vec<Real>(numRays);
-            latestTriangleIdx = std::vector<int>(numRays, -1);
-            previousTriangleIdx = std::vector<int>(numRays, -1);
+            latestNodeId = std::vector<int>(numRays, -1);
+            previousNodeId = std::vector<int>(numRays, -1);
         }
         
         RayBundle::RayBundle(const Vec3& origin, const std::vector<Vec3>& directions)
@@ -989,8 +989,8 @@ namespace RAC
             totalDistance = Vec<Real>(numRays);
             latestDistance = Vec<Real>(numRays);
             latestCosine = Vec<Real>(numRays);
-            latestTriangleIdx = std::vector<int>(numRays, -1);
-            previousTriangleIdx = std::vector<int>(numRays, -1);
+            latestNodeId = std::vector<int>(numRays, -1);
+            previousNodeId = std::vector<int>(numRays, -1);
         }
 
         RayBundle::RayBundle(const std::vector<Vec3>& origins, const std::vector<Vec3>& directions)
@@ -1013,14 +1013,14 @@ namespace RAC
             totalDistance = Vec<Real>(numRays);
             latestDistance = Vec<Real>(numRays);
             latestCosine = Vec<Real>(numRays);
-            latestTriangleIdx = std::vector<int>(numRays, -1);
-            previousTriangleIdx = std::vector<int>(numRays, -1);
+            latestNodeId = std::vector<int>(numRays, -1);
+            previousNodeId = std::vector<int>(numRays, -1);
         }
 
         void RayBundle::traceAll(const TriangleMeshSoA& triangles)
         {
             // Buffers for ray processing
-            int triangleIdxFront, triangleIdxBack;
+            int nodeIdFront, nodeIdBack;
             Real distanceFront, distanceBack, cosineFront, cosineBack;
 
             for (int i = 0; i < numRays; ++i) {
@@ -1030,14 +1030,14 @@ namespace RAC
 
                 trace_ray(
                     triangles, rays, i,
-                    triangleIdxFront, distanceFront, cosineFront,
-                    triangleIdxBack, distanceBack, cosineBack,
-                    latestTriangleIdx[i]);
+                    nodeIdFront, distanceFront, cosineFront,
+                    nodeIdBack, distanceBack, cosineBack,
+                    latestNodeId[i]);
 
                 // NB: Don't mess up the order of operations!
-                // Update previousTriangleIdx before overwriting latestTriangleIdx.
-                previousTriangleIdx[i] = latestTriangleIdx[i];
-                latestTriangleIdx[i] = triangleIdxBack;
+                // Update previousNodeId before overwriting latestNodeId.
+                previousNodeId[i] = latestNodeId[i];
+                latestNodeId[i] = nodeIdBack;
                 latestDistance[i] = distanceFront;
                 latestCosine[i] = cosineFront;
             }
@@ -1090,8 +1090,8 @@ namespace RAC
             assert(current.size() == numRays);
             assert(previous.size() == numRays);
             for (int i = 0; i < numRays; ++i) {
-                current[i] = latestTriangleIdx[i];
-                previous[i] = previousTriangleIdx[i];
+                current[i] = latestNodeId[i];
+                previous[i] = previousNodeId[i];
             }
         }
 
@@ -1113,8 +1113,8 @@ namespace RAC
             backDistance = Vec<Real>(numRays);
             frontCosine = Vec<Real>(numRays);
             backCosine = Vec<Real>(numRays);
-            frontTriangleIdx = std::vector<int>(numRays, -1);
-            backTriangleIdx = std::vector<int>(numRays, -1);
+            frontnodeId = std::vector<int>(numRays, -1);
+            backnodeId = std::vector<int>(numRays, -1);
         }
 
         RayPencil::RayPencil(int numDirections, bool hemisphereOnly)
@@ -1134,8 +1134,8 @@ namespace RAC
             backDistance = Vec<Real>(numRays);
             frontCosine = Vec<Real>(numRays);
             backCosine = Vec<Real>(numRays);
-            frontTriangleIdx = std::vector<int>(numRays, -1);
-            backTriangleIdx = std::vector<int>(numRays, -1);
+            frontnodeId = std::vector<int>(numRays, -1);
+            backnodeId = std::vector<int>(numRays, -1);
         }
 
         RayPencil::RayPencil(const std::vector<Vec3>& directions)
@@ -1158,8 +1158,8 @@ namespace RAC
             backDistance = Vec<Real>(numRays);
             frontCosine = Vec<Real>(numRays);
             backCosine = Vec<Real>(numRays);
-            frontTriangleIdx = std::vector<int>(numRays, -1);
-            backTriangleIdx = std::vector<int>(numRays, -1);
+            frontnodeId = std::vector<int>(numRays, -1);
+            backnodeId = std::vector<int>(numRays, -1);
         }
 
         void RayPencil::moveOrigin(const Vec3& origin)
@@ -1176,26 +1176,26 @@ namespace RAC
             backDistance = Vec<Real>(numRays);
             frontCosine = Vec<Real>(numRays);
             backCosine = Vec<Real>(numRays);
-            frontTriangleIdx = std::vector<int>(numRays, -1);
-            backTriangleIdx = std::vector<int>(numRays, -1);
+            frontnodeId = std::vector<int>(numRays, -1);
+            backnodeId = std::vector<int>(numRays, -1);
         }
 
         void RayPencil::traceAll(const TriangleMeshSoA& triangles)
         {
             // Buffers for ray processing
-            int temp_frontTriangleIdx, temp_backTriangleIdx;
+            int temp_frontnodeId, temp_backnodeId;
             Real temp_frontDistance, temp_backDistance, temp_frontCosine, temp_backCosine;
 
             for (int i = 0; i < numRays; ++i) {
                 trace_ray(
                     triangles, rays, i,
-                    temp_frontTriangleIdx, temp_frontDistance, temp_frontCosine,
-                    temp_backTriangleIdx, temp_backDistance, temp_backCosine);
+                    temp_frontnodeId, temp_frontDistance, temp_frontCosine,
+                    temp_backnodeId, temp_backDistance, temp_backCosine);
 
-                frontTriangleIdx[i] = temp_frontTriangleIdx;
+                frontnodeId[i] = temp_frontnodeId;
                 frontDistance[i] = temp_frontDistance;
                 frontCosine[i] = temp_frontCosine;
-                backTriangleIdx[i] = temp_backTriangleIdx;
+                backnodeId[i] = temp_backnodeId;
                 backDistance[i] = temp_backDistance;
                 backCosine[i] = temp_backCosine;
             }
@@ -1327,8 +1327,8 @@ namespace RAC
 
             for (int i = 0; i < numRays; ++i)
             {
-                front[i] = frontTriangleIdx[i];
-                back[i] = backTriangleIdx[i];
+                front[i] = frontnodeId[i];
+                back[i] = backnodeId[i];
             }
 
             if (exposeMirrorCopies)
@@ -1336,8 +1336,8 @@ namespace RAC
                 // Append direct opposites
                 for (int i = 0; i < numRays; ++i)
                 {
-                    front[i + numRays] = backTriangleIdx[i];
-                    back[i + numRays] = frontTriangleIdx[i];
+                    front[i + numRays] = backnodeId[i];
+                    back[i + numRays] = frontnodeId[i];
                 }
             }
         }
