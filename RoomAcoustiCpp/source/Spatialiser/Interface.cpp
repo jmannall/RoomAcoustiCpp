@@ -251,6 +251,15 @@ namespace RAC
 
 		////////////////////////////////////////
 
+		void RecordImpulseResponse(const Vec3& position, const Vec4& orientation, Buffer<>& outputBuffer)
+		{
+			auto context = GetContext();
+			if (context)
+				context->RecordImpulseResponse(position, orientation, outputBuffer);
+		}
+
+		////////////////////////////////////////
+
 		void UpdateImpulseResponseMode(const bool mode)
 		{
 			auto context = GetContext();

@@ -81,6 +81,10 @@ namespace RAC
 			*/
 			void RunIEM();
 
+			void ResetCounter() { iemCounter.store(0, std::memory_order_release); }
+
+			bool CounterIncremented() { return iemCounter.load(std::memory_order_acquire) > 1; }
+
 		private:
 			/**
 			* @brief Update the receiver validity for planes and edges
@@ -268,7 +272,8 @@ namespace RAC
 			bool configChanged;				// True if the image edge model configuration has changed since the last run
 			bool reverbRunning;				// True if the late reverb is running, false otherwise
 
-			std::mutex dataStoreMutex;				// Protects mListenerPositionStore, mIEMConfigStore
+			std::mutex dataStoreMutex;			// Protects mListenerPositionStore, mIEMConfigStore
+			std::atomic<int> iemCounter;		// Flags if RunIEM has completed
 		};
 	}
 }

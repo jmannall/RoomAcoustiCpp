@@ -113,6 +113,8 @@ namespace RAC
 #ifdef IEM_FLAG
 			Debug::IEMFlag(-1);
 #endif
+			if (int expected = iemCounter.load(std::memory_order_acquire); expected < 2)
+				iemCounter.compare_exchange_weak(expected, expected + 1, std::memory_order_acq_rel, std::memory_order_acquire);
 		}
 
 		////////////////////////////////////////

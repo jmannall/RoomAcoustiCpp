@@ -196,6 +196,16 @@ namespace RAC
 		void GetOutput(Buffer<>& outputBuffer);
 
 		/**
+		* @brief Record an impulse response using the current listener position
+		* @details Assumes istener position does not change during recording
+		*
+		* @params position The source position.
+		* @params orientation The source orientation (quaternion).
+		* @params outputBuffer Buffer to write to.
+		*/
+		void RecordImpulseResponse(const Vec3& position, const Vec4& orientation, Buffer<>& outputBuffer);
+
+		/**
 		* @brief Sets the spatialiser to impulse response mode if mode is true
 		*
 		* @params mode True if disable all interpolation, false otherwise.

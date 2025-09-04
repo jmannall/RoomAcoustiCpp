@@ -263,7 +263,7 @@ namespace RAC
 			void UpdatePlanesAndEdges();
 
 			/**
-			* @brief Sends an audio buffer to a source and adds the output to mOutputBuffer.
+			* @brief Sends an audio buffer to a source.
 			* 
 			* @param id The ID of the source to send the audio to.
 			* @param data The audio buffer.
@@ -271,13 +271,20 @@ namespace RAC
 			inline void SubmitAudio(size_t id, const Buffer<>& data) { PROFILE_SubmitAudio mSources->SetInputBuffer(id, data); }
 
 			/**
-			* @brief Accesses the output of the spatialiser.
-			* @details Processes the reverberation and adds the output to mOutputBuffer.
-			* This is copied to mSendBuffer and mOutuputBuffer and mReverbBuffer are reset.
+			* @brief Process the sources, image sources and late reverberation. The output is written to outputBuffer
 			* 
-			* @param bufferPtr Pointer to a float pointer that is pointed towards mSendBuffer.
+			* @param outputBuffer Buffer to write the processed audio to.
 			*/
-			void GetOutput(Buffer<>& sendBuffer);
+			void GetOutput(Buffer<>& outputBuffer);
+
+			/**
+			* @brief Record an impulse response using the current listener position
+			*
+			* @params position The source position.
+			* @params orientation The source orientation (quaternion).
+			* @params outputBuffer Buffer to write to.
+			*/
+			void RecordImpulseResponse(const Vec3& position, const Vec4& orientation, Buffer<>& outputBuffer);
 
 			/**
 			* @brief Sets the spatialiser to impulse response mode if mode is true

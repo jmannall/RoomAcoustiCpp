@@ -389,6 +389,62 @@ namespace RAC
 				headphoneEQ.ProcessAudio(outputBuffer, outputBuffer, lerpFactor);
 		}
 
+		void Context::RecordImpulseResponse(const Vec3& position, const Vec4& orientation, Buffer<>& outputBuffer)
+		{
+			size_t id = InitSource();
+			UpdateSource(id, position, orientation);
+
+			mImageEdgeModel->ResetCounter();
+			UpdateImpulseResponseMode(true);
+			ResetFDN();
+
+			Buffer<> input(mConfig->numFrames);
+			Buffer<> output(2.0 * mConfig->numFrames);
+
+			while (!mImageEdgeModel->CounterIncremented())
+				std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+			// Run once with empty input (ensures all interpolation is updated)
+			mSources->SetInputBuffer(id, input);
+			GetOutput(output);
+
+			int irLength = outputBuffer.Length();
+			int stereoBufferLength = output.Length();
+			int numBuffers = irLength / stereoBufferLength;
+			int remainder = irLength - numBuffers * stereoBufferLength;
+			int step = 1;
+			if (mConfig->GetSpatialisationMode() == SpatialisationMode::none)
+			{
+				step = 2;
+				numBuffers *= step;
+				if (remainder > mConfig->numFrames)
+				{
+					remainder -= mConfig->numFrames;
+					numBuffers++;
+				}
+			}
+
+			// Process buffers
+			int count = 0;
+			input[0] = 1.0;
+			for (int i = 0; i < numBuffers; i++)
+			{
+				mSources->SetInputBuffer(id, input);
+				GetOutput(output);
+				for (int j = 0; j < stereoBufferLength; j += step)
+					outputBuffer[count++] = output[j];
+				input[0] = 0.0;
+			}
+			// Process remaining samples
+			mSources->SetInputBuffer(id, input);
+			GetOutput(output);
+			for (int i = 0; i < step * remainder; i += step)
+				outputBuffer[count++] = output[i];
+
+			RemoveSource(id);
+			UpdateImpulseResponseMode(false);
+		}
+
 		////////////////////////////////////////
 
 		void Context::UpdateImpulseResponseMode(const bool mode)
