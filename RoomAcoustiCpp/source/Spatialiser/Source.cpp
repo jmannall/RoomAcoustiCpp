@@ -37,7 +37,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Source::Init(const std::shared_ptr<DSPConfig>& dspConfig)
+		void Source::Init(const std::shared_ptr<DSPConfig>& dspConfig, const Vec<int>& frequencyIndexing)
 		{
 			InitSource();
 			const DSPData& data = dspConfig->GetData();
@@ -52,7 +52,8 @@ namespace RAC
 			reverbSend.store(LateReverbModel::none, std::memory_order_release);
 			updateFlags.RecordChange();
 
-			ravesResidues = std::vector<RAVESSourceResidue>(dspConfig->GetNumFDNs());
+			if (dspConfig->GetLateReverbModel() == LateReverbModel::raves)
+				UpdateSourceResidues(frequencyIndexing);
 
 			ResetFDNSlots();
 			AllowAccess();
@@ -285,24 +286,15 @@ namespace RAC
 			{
 				for (int j = 0; j < numFrames; j++)
 				{
-#ifdef FREQUENCY_DEPENDENT_RAVES
-					// TODO: Check octave band filter frequencies match RAVES residues frequencies
 					std::vector<Real> bands = octaveBandFilter.GetOutput(inputBuffer[j], lerpFactor);
 
 					for (int i = 0; i < reverbInput.Rows(); i++)
 					{
-						Complex input = ravesResidues[i].GetOutput(bands[ravesFrequencyIndexing[i]], lerpFactor);
+						int bandIndex = octaveBandFilter.GetBandIndex(ravesResidues[i].frequencyIndex);
+						Complex input = ravesResidues[i].GetOutput(bands[bandIndex], lerpFactor);
 						reverbInput(i, 2 * j) += input.real();
 						reverbInput(i, 2 * j + 1) += input.imag();
 					}
-#else
-					for (int i = 0; i < reverbInput.Rows(); i++)
-					{
-						Complex input = ravesResidues[i].GetOutput(inputBuffer[j], lerpFactor);
-						reverbInput(i, 2 * j) += input.real();
-						reverbInput(i, 2 * j + 1) += input.imag();
-					}
-#endif
 				}
 			}
 			{
@@ -407,6 +399,7 @@ namespace RAC
 
 		void Source::ClearBuffers()
 		{
+			octaveBandFilter.ClearBuffers();
 			bInput.clear();
 			bOutput.left.clear();
 			bOutput.right.clear();

@@ -110,19 +110,11 @@ namespace RAC
 			* @param imageSources Reference to the image source array
 			* @params config The spatialiser configuration
 			*/
-#ifdef FREQUENCY_DEPENDENT_RAVES
-			Source(Binaural::CCore* core, ImageSourceManager& imageSources, const std::shared_ptr<DSPConfig>& config) : Access(), mCore(core), imageSources(imageSources), inputBuffer(dspConfig->GetData().numFrames), spatialisationMode(dspConfig->GetSpatialisationMode()),
-				ravesResidues(config->GetNumRavesFDNs()), octaveBandFilter(Coefficients<>(config->GetData().numFrequencyBands), config->fs, config->GetData().numFrequencyBands)
-			{
-				dataMutex = std::make_shared<std::mutex>();
-			}
-#else
 			Source(Binaural::CCore* core, ImageSourceManager& imageSources, const std::shared_ptr<DSPConfig>& dspConfig) : Access(), mCore(core), imageSources(imageSources), inputBuffer(dspConfig->GetData().numFrames), spatialisationMode(dspConfig->GetSpatialisationMode()),
-				ravesResidues(1) // TODO: Check if this is an issue
+				octaveBandFilter(dspConfig->GetData().frequencyBands, dspConfig->GetData().fs)
 			{
 				dataMutex = std::make_shared<std::mutex>();
 			}
-#endif
 
 			/**
 			* @brief Default deconstructor
@@ -141,7 +133,7 @@ namespace RAC
 			* 
 			* @param config The spatialiser configuration
 			*/
-			void Init(const std::shared_ptr<DSPConfig>& config);
+			void Init(const std::shared_ptr<DSPConfig>& config, const Vec<int>& frequencyIndexing);
 
 			/**
 			* @brief Removes access to the source and flags image sources and input buffer for clearing
@@ -192,14 +184,15 @@ namespace RAC
 			/**
 			* @brief Updates the size of source residues
 			*
-			* @params numRavesFDNs The new number of RAVES FDNs
+			* @params indexing The new frequency band indexing
 			*/
-			void UpdateSourceResidues(Vec<int> frequencyIndexing)
+			void UpdateSourceResidues(const Vec<int>& frequencyIndexing)
 			{
 				if (!GetAccess())
 					return;
 				ravesResidues = std::vector<RAVESSourceResidue>(frequencyIndexing.Rows());
-				ravesFrequencyIndexing = frequencyIndexing;
+				for (int i = 0; i < frequencyIndexing.Rows(); i++)
+					ravesResidues[i].frequencyIndex = frequencyIndexing[i];
 			}
 
 			/**
@@ -373,11 +366,8 @@ namespace RAC
 			Buffer<> bStore;								// Internal scratch audio buffer
 			Buffer<> bStoreReverb;							// Internal audio buffer reverb send
 			std::vector<RAVESSourceResidue> ravesResidues;	// Residues for the RAVES algorithm
-			Vec<int> ravesFrequencyIndexing;				// Frequency band indexing for RAVES residues
 
-#ifdef FREQUENCY_DEPENDENT_RAVES
-			OctaveBand octaveBandFilter;
-#endif
+			OctaveBand octaveBandFilter;		// Octave band filter for source residues
 
 			Vec3 currentPosition;					// Current source position
 			Vec4 currentOrientation;				// Current source orientation

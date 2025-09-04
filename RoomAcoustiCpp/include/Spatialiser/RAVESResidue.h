@@ -15,8 +15,6 @@
 // DSP headers
 #include "DSP/Interpolate.h"
 
-//#define FREQUENCY_DEPENDENT_RAVES
-
 namespace RAC
 {
 	using namespace Common;
@@ -69,7 +67,7 @@ namespace RAC
 		class RAVESSourceResidue : public RAVESResidue
 		{
 		public:
-			RAVESSourceResidue(Real energy = 0.0) : RAVESResidue(energy)
+			RAVESSourceResidue(int frequencyIndex = 0, Real energy = 0.0) : RAVESResidue(energy), frequencyIndex(frequencyIndex)
 			{
 				UpdateResidue(energy);
 			}
@@ -82,6 +80,8 @@ namespace RAC
 			}
 
 			inline void UpdateResidue(Complex energy) override { residue = std::conj(std::sqrt(energy)); }
+
+			int frequencyIndex;
 		};
 
 		class RAVESListenerResidue : public RAVESResidue

@@ -76,30 +76,25 @@ namespace RAC
 			};
 
 			typedef Coefficients<> Parameters;
+			typedef Coefficients<std::array<Real, 9>> CutOffFrequencies;
+			CutOffFrequencies cutOffFrequencies{ CutOffFrequencies({ 46.875, 93.75, 187.5, 375.0, 750.0, 1.5e3, 3e3, 6e3, 12e3 }) };	// Possible frequencyBands
+
 		public:
 			/**
 			* @brief Constructor that initialises the OctaveBand filter with given gains, sample rate and number of frequency bands
 			* 
-			* @param gains The target gain parameters for the filter
 			* @param fs The sample rate for calculating the filter coefficients
 			* @param numFrequencyBands The number of frequency bands for the filter
 			*/
-			OctaveBand(const Parameters& gains, int fs, int numFrequencyBands);
+			OctaveBand(const Coefficients<>& frequencies, int fs);
 
 			/**
-			* @brief Updates the target gains of the LinkwitzRiley filter
-			*
-			* @param gains The new target gain parameters
+			* @brief Returns the index of the octave band output that corresponds to a given frequency index
+			* 
+			* @param frequencyIndex The index of the frequency in the frequencies parameter given at construction
+			* @return The index of the octave band output that corresponds to the given frequency index
 			*/
-			inline void SetTargetGains(const Parameters& gains)
-			{
-				std::shared_ptr<Parameters> gainsCopy = std::make_shared<Parameters>(gains);
-
-				releasePool.Add(gainsCopy);
-				targetGains.store(gainsCopy, std::memory_order_release);
-				gainsEqual.store(false, std::memory_order_release);
-			};
-
+			int GetBandIndex(int frequencyIndex) const { return octaveBandIndices[frequencyIndex] - numTopBandsToSum; }
 			
 			/**
 			* @brief Returns the output of the OctaveBand filter given an input
@@ -109,6 +104,7 @@ namespace RAC
 			* @return A vector containing the outputs of each frequency band
 			*/
 			std::vector<Real> GetOutput(Real input, Real lerpFactor);
+
 
 			/**
 			* @brief Resets the filter buffers
@@ -122,24 +118,19 @@ namespace RAC
 			}
 
 		private:
-			/*
-			* @brief Linearly interpolates the current gains with the target gains
-			*
-			* @param lerpFactor The lerp factor for interpolation
-			*/
-			inline void InterpolateGains(const Real lerpFactor)
+			inline Vec<int> CreateFrequencyIndices(Coefficients<> frequencies)
 			{
-				gainsEqual.store(true, std::memory_order_release); // Prevents issues in case targetGains updated during this function call
-				const std::shared_ptr<const Parameters> gain = targetGains.load(std::memory_order_acquire);
-
-				Lerp(currentGains, *gain, lerpFactor);
-				if (Equals(currentGains, *gain))
-				{
-					currentGains = *gain;
-					return;
-				}
-				gainsEqual.store(false, std::memory_order_release);
+				Vec<int> indices = Vec<int>(frequencies.Length());
+				for (int i = 0; i < frequencies.Length(); i++)
+					indices[i] = GetFrequencyIndex(frequencies[i]);
+				return indices;
 			}
+
+			void InitFilter(int fs);
+
+			int GetFrequencyIndex(Real f) const;
+
+			std::vector<Real> CombineTopBands(const std::vector<Real>& bands);
 
 			/**
 			* @param fs The sample rate for calculating the filter coefficients
@@ -171,19 +162,17 @@ namespace RAC
 				return w;
 			}
 
-			const int numFrequencyBands;	// Number of frequency bands for the filter
+			const Vec<int> octaveBandIndices;
+
+			int numFrequencyBands;		// Number of frequency bands for the filter
+			int numTopBandsToSum;		// Number of highest octave bands to sum for the highest filter output
+			int numOutputBands;			// Number of output bands (numFrequencyBands - numTopBandsToSum)
 			const Real fc{ 12e3 };			// First cut-off frequency of the filter
 
 			std::vector<DelayLine> delayLines;				// Filter delay lines, ordered with complementary filter delays first and then followed by the correction delays (highest band to the lowest band)
 			std::vector<std::unique_ptr<Filter>> filters;	// Low-pass filters for each frequency band
 
-			std::atomic<std::shared_ptr<Parameters>> targetGains;	// Target filter band gains
-			Parameters currentGains;								// Current filter band gains
-
 			std::atomic<bool> initialised{ false };		// True if the filter has been initialised, false otherwise
-			std::atomic<bool> gainsEqual{ false };		// True if the current gains are know to be equal to the target gains
-
-			static ReleasePool releasePool;		// ReleasePool for managing memory of shared pointers
 		};
 	}
 }

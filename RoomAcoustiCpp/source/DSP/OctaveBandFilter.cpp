@@ -3,6 +3,8 @@
 *
 * @brief Declaration of OctaveBand filter class
 *
+* @remarks Based after Linear-Phase Octave Graphic Equalizer. Bruschi V, Valimaki V, Liski J, Cecchi L. 2022
+*
 */
 
 // C++ headers
@@ -69,12 +71,40 @@ namespace RAC
 
 		//////////////////// OctaveBand ////////////////////
 
-		ReleasePool OctaveBand::releasePool;
+		////////////////////////////////////////
+
+		OctaveBand::OctaveBand(const Coefficients<>& frequencies, int fs) :
+			octaveBandIndices(CreateFrequencyIndices(frequencies))
+		{
+			 std::vector<Real> uniqueIndices;
+			 int maxIndex = 0;
+			 int minIndex = cutOffFrequencies.Length();
+			 for (int i = 0; i < octaveBandIndices.Rows(); i++)
+			 {
+				 int index = octaveBandIndices[i];
+				 if (index > maxIndex)
+					 maxIndex = index;
+				 if (index < minIndex)
+					 minIndex = index;
+				 if (std::find(uniqueIndices.begin(), uniqueIndices.end(), index) == uniqueIndices.end())
+					 uniqueIndices.push_back(index);
+			 }
+
+			 numFrequencyBands = maxIndex + 1;
+			 numTopBandsToSum = minIndex;
+			 numOutputBands = numFrequencyBands - numTopBandsToSum;
+
+			 // Do not initialise filter if less than 1 frequency band
+			 if (uniqueIndices.size() == 1)
+				 return;
+			
+			InitFilter(fs);
+			initialised.store(true, std::memory_order_release);
+		}
 
 		////////////////////////////////////////
 
-		OctaveBand::OctaveBand(const Parameters& gains, int fs, int numFrequencyBands) :
-			numFrequencyBands(numFrequencyBands), currentGains(gains)
+		void OctaveBand::InitFilter(int fs)
 		{
 			Buffer<> h = CalculateH(fs);
 			Real midSample = 2 * fc / static_cast<Real>(fs);
@@ -97,46 +127,61 @@ namespace RAC
 				delayLines.emplace_back(delay * Dwin);
 				offset *= 2;
 			}
-
-			SetTargetGains(gains);
-
-			gainsEqual.store(true, std::memory_order_release);
-			initialised.store(true, std::memory_order_release);
 		}
 
 		////////////////////////////////////////
 
 		std::vector<Real> OctaveBand::GetOutput(Real input, Real lerpFactor)
 		{
-			std::vector<Real> outputs(numFrequencyBands, 0.0);
+			if (!initialised.load(std::memory_order_acquire)) // Do nothing if not initialised
+				return std::vector<Real>(1, input);
 
-			if (!initialised.load(std::memory_order_acquire))
-				return outputs;
-
-			if (!gainsEqual.load(std::memory_order_acquire))
-				InterpolateGains(lerpFactor);
-
-			for (int i = 0; i < numFrequencyBands - 1; i++)
+			std::vector<Real> bands(numFrequencyBands, input);
+			for (int i = 0; i < numFrequencyBands - 1; i++) // output 0 is 16kHz, output 1 is 8kHz etc
 			{
 				Real output = filters[i]->GetOutput(input);
-				outputs[i] = delayLines[i].GetOutput(input) - output;
+				bands[i] = delayLines[i].GetOutput(input) - output;
 				input = output;
 			}
-			outputs[numFrequencyBands - 1] = input;
+			bands[numFrequencyBands - 1] = input;
 
 			for (int i = 0; i < numFrequencyBands - 2; i++)
-				outputs[i] = delayLines[i + numFrequencyBands - 1].GetOutput(outputs[i]);
+				bands[i] = delayLines[i + numFrequencyBands - 1].GetOutput(bands[i]);
 
+			if (numOutputBands == numFrequencyBands)
+				return bands;
+			return CombineTopBands(bands);
+		}
+
+		////////////////////////////////////////
+
+		std::vector<Real> OctaveBand::CombineTopBands(const std::vector<Real>& bands)
+		{
+			std::vector<Real> outputs(numOutputBands, 0.0);
+			for (int i = 0; i < numOutputBands; i++)
+				outputs[i] = bands[i + numTopBandsToSum];
+			for (int i = 0; i < numTopBandsToSum; i++)
+				outputs[0] += bands[i];
 			return outputs;		// Return split bands
+		}
 
-			/*Real output = 0.0;
-			for (int i = 0; i < numFrequencyBands; i++)
+		////////////////////////////////////////
+
+		int OctaveBand::GetFrequencyIndex(Real f) const
+		{
+			int numEdges = cutOffFrequencies.Length();
+			if (f <= cutOffFrequencies[0])
+				return numEdges;
+
+			// Iterate from bottom to the top
+			for (int i = 1; i < numEdges; i++)
 			{
-				outputs[i] *= currentGains[i];
-				output += outputs[i];
+				if (f > cutOffFrequencies[i - 1] && f <= cutOffFrequencies[i])
+					return numEdges - i;
 			}
-			return outputs;*/
-			// return output;
+
+			// f > *cutOffFrequencies.end()
+			return 0;
 		}
 	}
 }

@@ -44,7 +44,8 @@ namespace RAC
 			* @params core The 3DTI processing core
 			* @params config The spatialiser configuration
 			*/
-			SourceManager(Binaural::CCore* core, const std::shared_ptr<DSPConfig> config) : mCore(core), dspConfig(config), mImageSources(core)
+			SourceManager(Binaural::CCore* core, const std::shared_ptr<DSPConfig> config)
+				: mCore(core), dspConfig(config), mImageSources(core), frequencyIndexing(1)
 			{
 				for (auto& sources : mSources)
 					sources.emplace(core, mImageSources, config);
@@ -100,12 +101,16 @@ namespace RAC
 			/**
 			* @brief Updates the size of source residues for all active sources
 			*
-			* @params numRavesFDNs The new number of RAVES FDNs
+			* @params indexing The new frequency band indexing
 			*/
-			inline void UpdateSourceResidues(Vec<int> frequencyIndexing)
+			inline void UpdateSourceResidues(const Vec<int>& indexing)
 			{
+				{
+					std::lock_guard<std::mutex> lock(frequencyIndexingMutex);
+					frequencyIndexing = indexing;
+				}
 				for (auto& source : mSources)
-					source->UpdateSourceResidues(frequencyIndexing);
+					source->UpdateSourceResidues(indexing);
 			}
 
 			inline int NextID() const
@@ -139,6 +144,11 @@ namespace RAC
 				mSources[id]->Update(position, orientation, distance);
 			}
 
+			/**
+			* @brief Removes a source from the source manager
+			* 
+			* @params id The ID of the source to remove
+			*/
 			inline void Remove(const size_t id) { mSources[id]->Remove(); }
 
 			/**
@@ -217,6 +227,8 @@ namespace RAC
 			std::array<std::optional<Source>, MAX_SOURCES> mSources;	// Sources for the audio thread
 			ImageSourceManager mImageSources;							// Image sources for the audio thread
 
+			std::mutex frequencyIndexingMutex;		// Mutex to protect frequency indexing
+			Vec<int> frequencyIndexing;				// Frequency band indexing for MoDART source residues
 		};
 	}
 }

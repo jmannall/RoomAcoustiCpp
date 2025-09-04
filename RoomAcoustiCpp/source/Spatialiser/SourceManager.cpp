@@ -22,7 +22,8 @@ namespace RAC
 			int id = NextID();
 			if (id < 0)
 				return id;
-			mSources[id]->Init(dspConfig);
+			std::lock_guard<std::mutex> lock(frequencyIndexingMutex);
+			mSources[id]->Init(dspConfig, frequencyIndexing);
 			return id;
 		}
 
