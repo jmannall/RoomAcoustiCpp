@@ -63,7 +63,7 @@ namespace RAC
 		*
 		* @param config The new configuration for the IEM.
 		*/
-		void UpdateIEMConfig(const EarlyReverbData& data);
+		void UpdateEarlyConfig(const EarlyReverbData& data);
 
 		/**
 		* Updates the model in order to calculate the late reverberation time (T60).

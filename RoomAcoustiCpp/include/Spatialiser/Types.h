@@ -227,7 +227,7 @@ namespace RAC
 			Real minEdgeLength{ 0.0 };						// Minimum edge length for diffraction
 			Real maxPathLength{ 1e10 };						// Maximum path length for imageSources
 
-			EarlyReverbData(DirectSound direct, int reflOrder, int shadowDiffOrder, int specularDiffOrder, bool lateReverb, Real minEdgeLength, Real maxPathLength) :
+			EarlyReverbData(DirectSound direct, int reflOrder, int shadowDiffOrder, int specularDiffOrder, Real minEdgeLength, Real maxPathLength) :
 				direct(direct), reflOrder(reflOrder), shadowDiffOrder(shadowDiffOrder), specularDiffOrder(specularDiffOrder),
 				minEdgeLength(minEdgeLength), maxPathLength(maxPathLength) {
 			}
@@ -286,11 +286,12 @@ namespace RAC
 		struct LateReverbData
 		{
 		public:
-			int numRays{ 1000 };
+			bool enabled{ true };
+			Real delay{ 0.0 };
 			FDNMatrix feedbackMatrix{ FDNMatrix::randomOrthogonal };
 
-			LateReverbData(int numRays, FDNMatrix feedbackMatrix)
-				: numRays(numRays), feedbackMatrix(feedbackMatrix)
+			LateReverbData(bool enabled, Real delay, FDNMatrix feedbackMatrix)
+				: enabled(enabled), delay(delay), feedbackMatrix(feedbackMatrix)
 			{}
 		};
 
@@ -331,17 +332,17 @@ namespace RAC
 		struct MoDARTData : public LateReverbData
 		{
 		public:
+			int numRays{ 1000 };
 			Matrix<int> indexing;
 			Vec<int> frequencyIndexing;
 			Vec<> t60s;
 			Vec<> energyDecay;
 			std::vector<Vec<>> leftEigenvectors;
 			std::vector<Vec<>> rightEigenvectors;
-			Real preceedingDelay{ 0.0 };
 
-			MoDARTData(int numRays, FDNMatrix feedbackMatrix, Matrix<int> indexing, Vec<int> frequencyIndexing, Vec<> t60s, Vec<> energyDecay, std::vector<Vec<>> leftEigenvectors, std::vector<Vec<>> rightEigenvectors, Real preceedingDelay)
-				: LateReverbData(numRays, feedbackMatrix), indexing(indexing), frequencyIndexing(frequencyIndexing), t60s(t60s), energyDecay(energyDecay),
-				leftEigenvectors(leftEigenvectors), rightEigenvectors(rightEigenvectors), preceedingDelay(preceedingDelay)
+			MoDARTData(bool enabled, Real delay, FDNMatrix feedbackMatrix, int numRays, Matrix<int> indexing, Vec<int> frequencyIndexing, Vec<> t60s, Vec<> energyDecay, std::vector<Vec<>> leftEigenvectors, std::vector<Vec<>> rightEigenvectors)
+				: LateReverbData(enabled, delay, feedbackMatrix), numRays(numRays), indexing(indexing), frequencyIndexing(frequencyIndexing), t60s(t60s), energyDecay(energyDecay),
+				leftEigenvectors(leftEigenvectors), rightEigenvectors(rightEigenvectors)
 			{}
 		};
 

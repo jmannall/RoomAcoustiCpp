@@ -157,7 +157,7 @@ namespace RAC
 			*
 			* @param config The new IEM configuration.
 			*/
-			inline void UpdateIEMConfig(const EarlyReverbData& data)
+			inline void UpdateEarlyConfig(const EarlyReverbData& data)
 			{
 				mImageEdgeModel->UpdateIEMConfig(data, dspConfig);
 			}

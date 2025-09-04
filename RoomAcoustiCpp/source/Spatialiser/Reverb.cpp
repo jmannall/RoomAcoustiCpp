@@ -292,7 +292,7 @@ namespace RAC
 			int numFDNs = dspConfig->GetNumFDNs();
 			int numReverbSources = dspConfig->GetData().numReverbSources;
 
-			SetPrecedingDelay(data.preceedingDelay, dspConfig->GetData().fs);
+			SetPrecedingDelay(data.delay, dspConfig->GetData().fs);
 
 			std::vector<int> delayLineLengths(numReverbSources, -1);
 

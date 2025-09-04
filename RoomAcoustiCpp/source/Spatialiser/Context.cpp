@@ -98,7 +98,7 @@ namespace RAC
 			{
 				auto startTime = std::chrono::steady_clock::now();
 
-				// Update IEM
+				// Update RTM
 				rayTracing->RunTracing();
 
 				auto endTime = std::chrono::steady_clock::now();

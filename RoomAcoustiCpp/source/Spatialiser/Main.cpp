@@ -228,10 +228,10 @@ extern "C"
 	/**
 	* Initialises the Image Edge Model (IEM) and sets the diffraction model.
 	*/
-	EXPORT bool API RACInitEarlyReverb(int direct, int reflOrder, int shadowDiffOrder, int specularDiffOrder, bool lateReverb, float minEdgeLength, float maxPathLen, int diffractionId)
+	EXPORT bool API RACInitEarlyReverb(int direct, int reflOrder, int shadowDiffOrder, int specularDiffOrder, float minEdgeLength, float maxPathLen, int diffractionId)
 	{
 		DiffractionModel model = SelectDiffractionModel(diffractionId);
-		EarlyReverbData data(SelectDirectMode(direct), reflOrder, shadowDiffOrder, specularDiffOrder, lateReverb, static_cast<Real>(minEdgeLength), static_cast<Real>(maxPathLen));
+		EarlyReverbData data(SelectDirectMode(direct), reflOrder, shadowDiffOrder, specularDiffOrder, static_cast<Real>(minEdgeLength), static_cast<Real>(maxPathLen));
 		return InitEarlyReverb(data, model);
 	}
 
@@ -253,27 +253,27 @@ extern "C"
 
 		RoomData roomData(static_cast<Real>(volume), t60, SelectReverbFormula(reverbFormulaId), dimensions);
 
-		LateReverbData data(numRays, SelectFDNMatrix(matrixId));
+		LateReverbData data(true, 0.0, SelectFDNMatrix(matrixId));
 		return InitSingleFDN(roomData, data);
 	}
 
 	/**
 	* Initialises MoDART late reverberation.
 	*
-	* @params numRays The number of rays to use for ray tracing.
+	* @params delay The delay in seconds before late reverberation starts.
 	* @param matrixId The ID corresponding to a FDN matrix type.
+	* @params numRays The number of rays to use for ray tracing.
 	* @params indexingData The indexing matrix for MoDART.
 	* @oarams frequencyData The center frequency bands for each FDN.
 	* @params t60sData The late reverberation time in seconds for each FDN.
 	* @params energyDecayData The energy decay per second for each FDN.
 	* @params leftEigenvectorsData The left eigenvectors for each FDN.
 	* @params rightEigenvectorsData The right eigenvectors for each FDN.
-	* @params delay The delay in seconds before late reverberation starts.
 	* @params numFDNs The number of FDNs.
 	* @params numNodes The number of nodes in the indexing matrix.
 	* @params numPaths The number of propagation paths in MoDART.
 	*/
-	EXPORT bool API RACInitMoDART(int numRays, int matrixId, const int* indexingData, const int* frequencyIndexingData, const float* t60sData, const float* energyDecaysData, const float* leftEigenvectorsData, const float* rightEigenvectorsData, float delay, int numFDNs, int numNodes, int numPaths)
+	EXPORT bool API RACInitMoDART(float delay, int matrixId, int numRays, const int* indexingData, const int* frequencyIndexingData, const float* t60sData, const float* energyDecaysData, const float* leftEigenvectorsData, const float* rightEigenvectorsData, int numFDNs, int numNodes, int numPaths)
 	{
 		Vec<int> frequencyIndexing = CreateIntVec(frequencyIndexingData, numFDNs);
 		Vec<> t60s = CreateVec(t60sData, numFDNs);
@@ -291,7 +291,7 @@ extern "C"
 			rightEigenvectors.push_back(CreateVec(rightEigenvectorsData + i * numPaths, numPaths));
 		}
 
-		MoDARTData data(numRays, SelectFDNMatrix(matrixId), indexing, frequencyIndexing, t60s, energyDecays, leftEigenvectors, rightEigenvectors, static_cast<Real>(delay));
+		MoDARTData data(true, static_cast<Real>(delay), SelectFDNMatrix(matrixId), numRays, indexing, frequencyIndexing, t60s, energyDecays, leftEigenvectors, rightEigenvectors);
 		return InitMoDART(data);
 	}
 
@@ -350,10 +350,23 @@ extern "C"
 	* @param specularDiffOrder The maximum number of reflections or diffractions in specular diffraction paths.
 	* @param rev Whether to consider late reverberation.
 	*/
-	EXPORT void API RACUpdateIEMConfig(int direct, int reflOrder, int shadowDiffOrder, int specularDiffOrder, bool lateReverb, float minEdgeLength, float maxPathLen)
+	EXPORT void API RACUpdateEarlyConfig(int direct, int reflOrder, int shadowDiffOrder, int specularDiffOrder, float minEdgeLength, float maxPathLen)
 	{
-		EarlyReverbData data(SelectDirectMode(direct), reflOrder, shadowDiffOrder, specularDiffOrder, lateReverb, static_cast<Real>(minEdgeLength), static_cast<Real>(maxPathLen));
-		UpdateIEMConfig(data);
+		EarlyReverbData data(SelectDirectMode(direct), reflOrder, shadowDiffOrder, specularDiffOrder, static_cast<Real>(minEdgeLength), static_cast<Real>(maxPathLen));
+		UpdateEarlyConfig(data);
+	}
+
+	/**
+	* Updates the configuration for the MoD-ART model.
+	*
+	* @param enabled Whether to run late reverberation at all.
+	* @param delay The delay preceding the late reverberation component, in seconds.
+	* @param numRays The number of rays used for MoD-ART energy injection and detection.
+	*/
+	EXPORT void API RACUpdateLateConfig(bool enabled, float delay, int numRays)
+	{
+		LateReverbData data(enabled, delay, numRays);
+		UpdateLateConfig(data);
 	}
 
 	/**

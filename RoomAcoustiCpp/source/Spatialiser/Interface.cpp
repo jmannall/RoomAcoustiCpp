@@ -83,11 +83,11 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void UpdateIEMConfig(const EarlyReverbData& data)
+		void UpdateEarlyConfig(const EarlyReverbData& data)
 		{
 			auto context = GetContext();
 			if (context)
-				context->UpdateIEMConfig(data);
+				context->UpdateEarlyConfig(data);
 		}
 
 		////////////////////////////////////////

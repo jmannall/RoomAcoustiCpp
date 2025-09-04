@@ -16,7 +16,8 @@ namespace RAC
 	using namespace Common;
 	namespace Spatialiser
 	{
-		TracingThread::TracingThread(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const LateReverbData& data, const std::shared_ptr<DSPConfig>& dspConfig) :
+		// TODO: Save MoDARTData instance, or copy its attributes?
+		TracingThread::TracingThread(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const MoDARTData& data, const std::shared_ptr<DSPConfig>& dspConfig) :
 			mRoom(room), mSourceManager(sourceManager), mReverb(reverb),
 			numReverbDirections(dspConfig->GetData().numReverbSources), numFDNs(dspConfig->GetNumFDNs()),
 			clustersSizes(dspConfig->GetData().numReverbSources),
@@ -62,7 +63,6 @@ namespace RAC
 			}
 		}
 
-		// TODO: Make ray tracing frequency dependent
 		void TracingThread::InitRoom(int paths, const Matrix<int>& indexing, const Vec<>& decayRates) {
 			lock_guard<std::mutex> lock(rayPencilMutex);
 
