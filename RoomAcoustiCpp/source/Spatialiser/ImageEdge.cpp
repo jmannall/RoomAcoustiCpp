@@ -954,7 +954,7 @@ namespace RAC
 //			std::shared_ptr<Reverb> sharedReverb = mReverb.lock();
 //			sharedReverb->SetTargetOutputFilters(reverbAbsorptions);
 //
-//			return true;
+			return true;
 		}
 
 		////////////////////////////////////////

@@ -150,6 +150,12 @@ namespace RAC
 		class DSPConfig
 		{
 		public:
+
+			/**
+			* @brief Default constructor for the DSPConfig class
+			*/
+			DSPConfig() : data() {};
+
 			/**
 			* @brief Constructor for the DSPConfig class
 			*
@@ -188,6 +194,7 @@ namespace RAC
 			{
 				switch (GetLateReverbModel())
 				{
+				default:
 				case LateReverbModel::fdn:
 					return { data.numReverbSources, data.numFrames };
 				case LateReverbModel::raves:

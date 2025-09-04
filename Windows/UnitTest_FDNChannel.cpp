@@ -112,7 +112,7 @@ namespace RAC
 			// config->lerpFactor = 0.5;
 			const Real lerpFactor = config->GetLerpFactor();
 
-			const Real target = std::pow(10.0, (-60.0 * (static_cast<Real>(delay) / static_cast<Real>(config->fs)) / 20.0) / T60[0]);
+			const Real target = std::pow(10.0, (-60.0 * (static_cast<Real>(delay) / static_cast<Real>(config->GetData().fs)) / 20.0) / T60[0]);
 
 			FDNChannel channel(delay, T60, config);
 
@@ -132,7 +132,7 @@ namespace RAC
 			const Real lerpFactor = 1.0;
 			Real out;
 
-			const Real target = std::pow(10.0, (-60.0 * (static_cast<Real>(delay) / static_cast<Real>(config->fs)) / 20.0) / newT60[0]);
+			const Real target = std::pow(10.0, (-60.0 * (static_cast<Real>(delay) / static_cast<Real>(config->GetData().fs)) / 20.0) / newT60[0]);
 
 			FDNChannel channel(delay, T60, config);
 			channel.SetTargetT60(newT60);

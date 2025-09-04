@@ -111,8 +111,8 @@ namespace RAC
 			* @params config The spatialiser configuration
 			*/
 #ifdef FREQUENCY_DEPENDENT_RAVES
-			Source(Binaural::CCore* core, ImageSourceManager& imageSources, const std::shared_ptr<DSPConfig>& config) : Access(), mCore(core), imageSources(imageSources), inputBuffer(config->numFrames), spatialisationMode(config->GetSpatialisationMode()),
-				ravesResidues(config->GetNumRavesFDNs()), octaveBandFilter(Coefficients<>(config->frequencyBands.Length()), config->fs, config->frequencyBands.Length())
+			Source(Binaural::CCore* core, ImageSourceManager& imageSources, const std::shared_ptr<DSPConfig>& config) : Access(), mCore(core), imageSources(imageSources), inputBuffer(dspConfig->GetData().numFrames), spatialisationMode(dspConfig->GetSpatialisationMode()),
+				ravesResidues(config->GetNumRavesFDNs()), octaveBandFilter(Coefficients<>(config->GetData().numFrequencyBands), config->fs, config->GetData().numFrequencyBands)
 			{
 				dataMutex = std::make_shared<std::mutex>();
 			}
