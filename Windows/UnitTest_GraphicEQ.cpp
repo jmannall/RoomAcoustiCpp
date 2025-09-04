@@ -177,6 +177,27 @@ namespace RAC
 			isZero = eq.SetTargetGains(std::vector<Real>(5, 0.0));
 			Assert::IsTrue(isZero, L"False when zero");
 		}
+
+		TEST_METHOD(SingleGain)
+		{
+			Real startGain = 0.7;
+			Real endGain = 0.5;
+			const Coefficients gain(std::vector<Real>(1, startGain));
+			const Coefficients fc(1, 500.0);
+			const Real Q = 0.98;
+			const int fs = 48e3;
+
+			const Real lerpFactor = 0.5;
+
+			GraphicEQ eq = GraphicEQ(gain, fc, Q, fs);
+
+			eq.SetTargetGains(std::vector<Real>(1, endGain));
+			Real input = RandomValue();
+			Real out = eq.GetOutput(input, lerpFactor);
+
+			Real currentGain = lerpFactor * endGain + (1.0 - lerpFactor) * startGain;
+			Assert::AreEqual(input * currentGain, out, L"Incorrect gain");
+		}
 	};
 #pragma optimize("", on)
 }

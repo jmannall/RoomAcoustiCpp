@@ -159,6 +159,9 @@ namespace RAC
 			if (!gainsEqual.load(std::memory_order_acquire))
 				InterpolateGain(lerpFactor);
 
+			if (numFilters == 3) // Only one peaking filter
+				return input * currentGain; // Single band EQ is just a gain
+
 			Real out = lowShelf->GetOutput(input, lerpFactor);
 			for (auto& filter : peakingFilters)
 				out = filter->GetOutput(out, lerpFactor);
