@@ -87,7 +87,7 @@ namespace RAC
 			if (imageSources.size() != mSources.size())
 			{
 				imageSources.resize(mSources.size());
-				mSourceAudioDatas.resize(mSources.size(), Source::AudioData(frequencyBands.Length(), LateReverbModel::none)); // TODO: Revove late reverb model from here
+				mSourceAudioDatas.resize(mSources.size(), Source::AudioData(frequencyBands.Length(), LateReverbModel::raves)); // TODO: Revove late reverb model from here
 				mCurrentCycles.resize(mSources.size());
 				// doIEM = true;
 			}

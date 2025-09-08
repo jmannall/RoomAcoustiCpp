@@ -360,11 +360,11 @@ namespace RAC
 			/**
 			* Handles
 			*/
-			std::shared_ptr<Room> mRoom;				// Room class
-			std::shared_ptr<Reverb> mReverb;			// Reverb class
-			std::shared_ptr<SourceManager> mSources;	// Source manager class
-			std::shared_ptr<ImageEdge> mImageEdgeModel;	// Image edge class
-			std::shared_ptr<TracingThread> mRayTracing;	// Ray tracing class
+			std::shared_ptr<Room> mRoom{ nullptr };					// Room class
+			std::shared_ptr<Reverb> mReverb{ nullptr };				// Reverb class
+			std::shared_ptr<SourceManager> mSources{ nullptr };		// Source manager class
+			std::shared_ptr<ImageEdge> mImageEdgeModel{ nullptr };	// Image edge class
+			std::shared_ptr<TracingThread> mRayTracing{ nullptr };	// Ray tracing class
 
 			std::string logFile;		// Log file path
 #ifdef PROFILE_BACKGROUND_THREAD || PROFILE_AUDIO_THREAD

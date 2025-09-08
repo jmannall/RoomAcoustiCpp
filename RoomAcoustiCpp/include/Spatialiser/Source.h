@@ -57,7 +57,7 @@ namespace RAC
 				Absorption<> directivity;	// Frequency dependent directivity
 				LateReverbModel reverbSend;				// True if direct sound feeds the late reverberation, false otherwise
 
-				AudioData(int len, LateReverbModel feedsFDN) : directivity(len), reverbSend(reverbSend) {}
+				AudioData(int len, LateReverbModel reverbSend) : directivity(len), reverbSend(reverbSend) {}
 			};
 
 			/**

@@ -292,8 +292,6 @@ namespace RAC
 			int numFDNs = dspConfig->GetNumFDNs();
 			int numReverbSources = dspConfig->GetData().numReverbSources;
 
-			SetPrecedingDelay(data.delay, dspConfig->GetData().fs);
-
 			std::vector<int> delayLineLengths(numReverbSources, -1);
 
 			FDNPtr fdns = std::make_shared<std::vector<std::unique_ptr<FDN<Complex>>>>(numFDNs);
@@ -321,6 +319,8 @@ namespace RAC
 			releasePool.Add(fdns);
 
 			mFDNs.store(fdns, std::memory_order_release);
+			SetPrecedingDelay(data.delay, dspConfig->GetData().fs);
+
 			initialised.store(true, std::memory_order_release);
 		}
 		

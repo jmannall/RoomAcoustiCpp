@@ -17,7 +17,7 @@ namespace RAC
 	namespace Spatialiser
 	{
 		// TODO: Save MoDARTData instance, or copy its attributes?
-		TracingThread::TracingThread(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const MoDARTData& data, const std::shared_ptr<DSPConfig>& dspConfig) :
+		TracingThread::TracingThread(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const LateReverbData& data, const std::shared_ptr<DSPConfig>& dspConfig) :
 			mRoom(room), mSourceManager(sourceManager), mReverb(reverb),
 			numReverbDirections(dspConfig->GetData().numReverbSources), numFDNs(dspConfig->GetNumFDNs()),
 			clustersSizes(dspConfig->GetData().numReverbSources),

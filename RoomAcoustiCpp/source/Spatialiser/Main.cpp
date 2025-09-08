@@ -260,9 +260,9 @@ extern "C"
 	/**
 	* Initialises MoDART late reverberation.
 	*
-	* @params delay The delay in seconds before late reverberation starts.
-	* @param matrixId The ID corresponding to a FDN matrix type.
 	* @params numRays The number of rays to use for ray tracing.
+	* @param matrixId The ID corresponding to a FDN matrix type.
+	* @params delay The delay in seconds before late reverberation starts.
 	* @params indexingData The indexing matrix for MoDART.
 	* @oarams frequencyData The center frequency bands for each FDN.
 	* @params t60sData The late reverberation time in seconds for each FDN.
@@ -273,7 +273,7 @@ extern "C"
 	* @params numNodes The number of nodes in the indexing matrix.
 	* @params numPaths The number of propagation paths in MoDART.
 	*/
-	EXPORT bool API RACInitMoDART(float delay, int matrixId, int numRays, const int* indexingData, const int* frequencyIndexingData, const float* t60sData, const float* energyDecaysData, const float* leftEigenvectorsData, const float* rightEigenvectorsData, int numFDNs, int numNodes, int numPaths)
+	EXPORT bool API RACInitMoDART(int numRays, int matrixId, float delay, const int* indexingData, const int* frequencyIndexingData, const float* t60sData, const float* energyDecaysData, const float* leftEigenvectorsData, const float* rightEigenvectorsData, int numFDNs, int numNodes, int numPaths)
 	{
 		Vec<int> frequencyIndexing = CreateIntVec(frequencyIndexingData, numFDNs);
 		Vec<> t60s = CreateVec(t60sData, numFDNs);
@@ -291,7 +291,7 @@ extern "C"
 			rightEigenvectors.push_back(CreateVec(rightEigenvectorsData + i * numPaths, numPaths));
 		}
 
-		MoDARTData data(true, static_cast<Real>(delay), SelectFDNMatrix(matrixId), numRays, indexing, frequencyIndexing, t60s, energyDecays, leftEigenvectors, rightEigenvectors);
+		MoDARTData data(true, numRays, SelectFDNMatrix(matrixId), static_cast<Real>(delay), indexing, frequencyIndexing, t60s, energyDecays, leftEigenvectors, rightEigenvectors);
 		return InitMoDART(data);
 	}
 
@@ -356,17 +356,18 @@ extern "C"
 		UpdateEarlyConfig(data);
 	}
 
-	/**
-	* Updates the configuration for the MoD-ART model.
-	*
-	* @param enabled Whether to run late reverberation at all.
-	* @param delay The delay preceding the late reverberation component, in seconds.
-	* @param numRays The number of rays used for MoD-ART energy injection and detection.
-	*/
-	EXPORT void API RACUpdateLateConfig(bool enabled, float delay, int numRays)
+	// TODO: Toggle late reverb on and off
+	// TODO: Update numRays at runtime
+	// TODO: Update preceeding delay at runtime? - link to max path length of early reflections?
+
+	EXPORT void API RACUpdateMoDARTLateConfig(bool enabled, float numRays, int delay)
 	{
-		LateReverbData data(enabled, delay, numRays);
-		UpdateLateConfig(data);
+		// TODO: Implement
+	}
+
+	EXPORT void API RACUpdateSingleFDNLateConfig(bool enabled, float numRays)
+	{
+		// TODO: Implement
 	}
 
 	/**

@@ -214,7 +214,8 @@ namespace RAC
 		void Context::UpdateSpatialisationMode(const SpatialisationMode mode)
 		{
 			dspConfig->UpdateSpatialisationMode(mode);
-			mReverb->UpdateSpatialisationMode(mode);
+			if (mReverb != nullptr)
+				mReverb->UpdateSpatialisationMode(mode);
 			mSources->UpdateSpatialisationMode(mode);
 		}
 
