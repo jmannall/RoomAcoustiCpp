@@ -399,15 +399,17 @@ namespace RAC
 			// Direct sound
 			switch (earlyReverbData.direct)
 			{
+			default:
 			case DirectSound::doCheck:
 				lineOfSight = !LineRoomObstruction(mListenerPosition, source.position);
 				break;
 			case DirectSound::alwaysTrue:
 				lineOfSight = true;
 				break;
-			default:
-				lineOfSight = false;
 			}
+
+			if ((source.position - mListenerPosition).Length() > earlyReverbData.maxPathLength)
+				lineOfSight = false;
 
 			if (lineOfSight)
 			{
@@ -497,9 +499,12 @@ namespace RAC
 					imageSource.Clear();
 				counter++;
 
+				imageSource.UpdateDiffractionPath(source.position, mListenerPosition, edge);
+				if (imageSource.GetDistance() > earlyReverbData.maxPathLength)
+					continue;
+
 				imageSource.Valid();
 				imageSource.AddEdgeID(edgeID);
-				imageSource.UpdateDiffractionPath(source.position, mListenerPosition, edge);
 
 				/*if (mIEMConfig.diffraction == DiffractionSound::none)
 					continue;*/
@@ -633,6 +638,9 @@ namespace RAC
 						bool rValid = plane.GetReceiverValid();
 						for (const ImageSourceData& vS : sp[prevRefIdx])
 						{
+							if (!vS.IsValid())
+								continue;
+
 							// HOD reflections
 							if (!vS.IsDiffraction())
 							{
@@ -737,13 +745,16 @@ namespace RAC
 								counter++;
 
 								imageSource.Reset();
-								imageSource.Valid();
-								imageSource.AddPlaneID(planeID);
 
 								// position = imageSource.GetPosition(prevRefIdx);
 								position = imageSource.GetDiffractionPath().sData.point;
 								plane.ReflectPointInPlaneNoCheck(position);
 								imageSource.UpdateDiffractionPath(position, mListenerPosition, plane);
+								if (imageSource.GetDistance() > earlyReverbData.maxPathLength)
+									continue;
+
+								imageSource.Valid();
+								imageSource.AddPlaneID(planeID);
 
 								if (!rValid)
 									continue;
@@ -810,6 +821,9 @@ namespace RAC
 					EdgeZone rZone = edge.GetReceiverZone();
 					for (const ImageSourceData& vS : sp[prevRefIdx])
 					{
+						if (!vS.IsValid())
+							continue;
+
 						if (vS.IsDiffraction())
 							continue;
 
@@ -835,9 +849,12 @@ namespace RAC
 						counter++;
 
 						imageSource.Reset();
+						imageSource.UpdateDiffractionPath(imageSource.GetPosition(prevRefIdx), mListenerPosition, edge);
+						if (imageSource.GetDistance() > earlyReverbData.maxPathLength)
+							continue;
+
 						imageSource.Valid();
 						imageSource.AddEdgeID(edgeID);
-						imageSource.UpdateDiffractionPath(imageSource.GetPosition(prevRefIdx), mListenerPosition, edge);
 
 						// Receiver checks
 						if (rZone == EdgeZone::Invalid)

@@ -253,6 +253,7 @@ namespace RAC
 				plane.ReflectPointInPlaneNoCheck(mDiffractionPath.sData.point);
 				mDiffractionPath.UpdateParameters(source, receiver);
 				SetTransform(source, mDiffractionPath.CalculateVirtualPostion());
+				SetDistance(receiver);
 			}
 
 			/**
