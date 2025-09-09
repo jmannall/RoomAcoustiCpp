@@ -11,6 +11,9 @@
 // C++ headers
 #include <cassert>
 #include <vector>
+#include <algorithm>
+#include <execution>
+#include <functional>
 
 // Common headers
 #include "Common/Types.h"
@@ -37,7 +40,7 @@ namespace RAC
 				* @param c The index of the column
 				* @return A reference to the matrix element at the specified index
 				*/
-				T& operator()(const int r, const int c) { return matrix[r * cols + c]; }
+				inline T& operator()(const int r, const int c) { return matrix[r * cols + c]; }
 
 				/**
 				* @brief Access an element in the matrix
@@ -46,7 +49,15 @@ namespace RAC
 				* @param c The index of the column
 				* @return A const reference to the matrix element at the specified index
 				*/
-				const T& operator()(const int r, const int c) const { return matrix[r * cols + c]; }
+				inline const T& operator()(const int r, const int c) const { return matrix[r * cols + c]; }
+
+				inline auto begin() { return matrix.begin(); }
+
+				inline auto end() { return matrix.end(); }
+
+				inline const auto begin() const { return matrix.begin(); }
+
+				inline const auto end() const { return matrix.end(); }
 
 				int rows, cols;				// Matrix dimensions
 				std::vector<T> matrix;		// Contiguous data storage
@@ -75,13 +86,6 @@ namespace RAC
 			* @param size A pair containing the number of rows and columns
 			*/
 			Matrix(const std::pair<int, int>& size) : Matrix(size.first, size.second) {}
-
-			/**
-			* Constructor that initialises a Matrix with data
-			*
-			* @param matrix The input data to initialise the matrix
-			*/
-			// Matrix(const std::vector<std::vector<T>>& matrix) : data(matrix.size(), 0) { Init(matrix); }
 
 			/**
 			* @brief Default deconstructor
@@ -229,6 +233,14 @@ namespace RAC
 			*/
 			inline const T& operator()(const int r, const int c) const { return data(r, c); }
 
+			inline const auto begin() const { return data.begin(); }
+
+			inline const auto end() const { return data.end(); }
+
+			inline auto begin() { return data.begin(); }
+
+			inline auto end() { return data.end(); }
+
 			/**
 			* @brief Adds a matrix to the current matrix
 			*/
@@ -237,11 +249,11 @@ namespace RAC
 				assert(data.rows == matrix.Rows());
 				assert(data.cols == matrix.Cols());
 
-				for (int i = 0; i < data.rows; i++)
-				{
-					for (int j = 0; j < data.cols; j++)
-						data(i, j) += matrix(i, j);
-				}
+				std::transform(std::execution::unseq,
+					begin(), end(),
+					matrix.begin(),
+					begin(),
+					std::plus<>{});
 				return *this;
 			}
 
@@ -253,11 +265,11 @@ namespace RAC
 				assert(data.rows == matrix.Rows());
 				assert(data.cols == matrix.Cols());
 
-				for (int i = 0; i < data.rows; i++)
-				{
-					for (int j = 0; j < data.cols; j++)
-						data(i, j) -= matrix(i, j);
-				}
+				std::transform(std::execution::unseq,
+					begin(), end(),
+					matrix.begin(),
+					begin(),
+					std::minus<>{});
 				return *this;
 			}
 
@@ -266,11 +278,8 @@ namespace RAC
 			*/
 			inline Matrix operator*=(const Real a)
 			{
-				for (int i = 0; i < data.rows; i++)
-				{
-					for (int j = 0; j < data.cols; j++)
-						data(i, j) *= a;
-				}
+				for (T& value : data.matrix)
+					value *= a;
 				return *this;
 			}
 
@@ -284,11 +293,8 @@ namespace RAC
 			*/
 			inline Matrix operator+=(const T a)
 			{
-				for (int i = 0; i < data.rows; i++)
-				{
-					for (int j = 0; j < data.cols; j++)
-						data(i, j) += a;
-				}
+				for (T& value : data.matrix)
+					value += a;
 				return *this;
 			}
 
@@ -355,15 +361,12 @@ namespace RAC
 			assert(u.Rows() == v.Rows());
 			assert(u.Cols() == v.Cols());
 
-			Matrix out = Matrix(u.Rows(), u.Cols());
-			for (int i = 0; i < u.Rows(); i++)
-			{
-				for (int j = 0; j < u.Cols(); j++)
-				{
-					Real entry = u(i, j) + v(i, j);
-					out(i, j) = entry;
-				}
-			}
+			Matrix<T> out = Matrix<T>(u.Rows(), u.Cols());
+			std::transform(std::execution::unseq,
+				u.begin(), u.end(),
+				v.begin(),
+				out.begin(),
+				std::plus<>{});
 			return out;
 		}
 
@@ -374,11 +377,10 @@ namespace RAC
 		inline Matrix<T> operator-(const Matrix<T>& mat)
 		{
 			Matrix out = Matrix(mat.Rows(), mat.Cols());
-			for (int i = 0; i < mat.Rows(); i++)
-			{
-				for (int j = 0; j < mat.Cols(); j++)
-					out(i, j) = -mat(i, j);
-			}
+			std::transform(std::execution::unseq,
+				mat.begin(), mat.end(),
+				out.begin(),
+				std::negate<>{});
 			return out;
 		}
 
@@ -390,12 +392,13 @@ namespace RAC
 		{
 			assert(u.Rows() == v.Rows());
 			assert(u.Cols() == v.Cols());
+
 			Matrix out = Matrix(u.Rows(), u.Cols());
-			for (int i = 0; i < u.Rows(); i++)
-			{
-				for (int j = 0; j < u.Cols(); j++)
-					out(i, j) = u(i, j) - v(i, j);
-			}
+			std::transform(std::execution::unseq,
+				u.begin(), u.end(),
+				v.begin(),
+				out.begin(),
+				std::minus<>{});
 			return out;
 		}
 
@@ -409,8 +412,17 @@ namespace RAC
 			assert(out.Rows() == u.Rows());
 			assert(out.Cols() == v.Cols());
 
-			Real sum = 0.0;
 			for (int i = 0; i < u.Rows(); ++i)
+			{
+				for (int k = 0; k < u.Cols(); ++k)
+				{
+					Real uik = u(i, k);
+					for (int j = 0; j < v.Cols(); ++j)
+						out(i, j) += uik * v(k, j);
+				}
+			}
+
+			/*for (int i = 0; i < u.Rows(); ++i)
 			{
 				for (int j = 0; j < v.Cols(); ++j)
 				{
@@ -419,7 +431,7 @@ namespace RAC
 						sum += u(i, k) * v(k, j);
 					out(i, j) = sum;
 				}
-			}
+			}*/
 		}
 
 		/**
@@ -440,14 +452,10 @@ namespace RAC
 		inline Matrix<T> operator*(const Real a, const Matrix<T>& mat)
 		{
 			Matrix out = Matrix(mat.Rows(), mat.Cols());
-			for (int i = 0; i < mat.Rows(); i++)
-			{
-				for (int j = 0; j < mat.Cols(); j++)
-				{
-					for (int k = 0; k < mat.Cols(); k++)
-						out(i, j) = a * mat(i, j);
-				}
-			}
+			std::transform(std::execution::unseq,
+				mat.begin(), mat.end(),
+				out.begin(),
+				[a](Real x) { return a * x; });
 			return out;
 		}
 

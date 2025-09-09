@@ -51,7 +51,7 @@ namespace RAC
 			const Coefficients T60({ 0.1, 0.2, 0.3, 0.4 });
 			const Absorption gains({ 0.87, 0.75, 0.81, 0.84 });
 			const std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>();
-			const Real lerpFactor = config->GetLerpFactor();
+			AudioData audioData(config);
 			int numReverbSources = config->GetData().numReverbSources;
 			int numFrames = config->GetData().numFrames;
 			const std::vector<Absorption<>> reflectionGains(numReverbSources, gains);
@@ -64,7 +64,7 @@ namespace RAC
 
 			std::vector<Buffer<>> out(numReverbSources, Buffer<>(numFrames));
 			fdn.SetTargetReflectionFilters(reflectionGains);
-			fdn.ProcessAudio(in, out, lerpFactor);
+			fdn.ProcessAudio(in, out, audioData);
 
 			for (int i = 0; i < numReverbSources; i++)
 			{
@@ -74,10 +74,11 @@ namespace RAC
 				Assert::AreNotEqual((Real)0.0, sum, L"ProcessAudio is zero");
 			}
 
-			fdn.Reset();
+			config->FlagClearBuffers();
+			audioData = AudioData(config);
 			in.Reset();
 
-			fdn.ProcessAudio(in, out, lerpFactor);
+			fdn.ProcessAudio(in, out, audioData);
 			for (int i = 0; i < numReverbSources; i++)
 			{
 				for (int j = 0; j < numFrames; j++)
@@ -90,7 +91,7 @@ namespace RAC
 			const Coefficients T60({ 0.1, 0.2, 0.3, 0.4 });
 			const Absorption gains({ 1.0, 1.0, 1.0, 1.0 });
 			const std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>();
-			const Real lerpFactor = config->GetLerpFactor();
+			AudioData audioData(config);
 			int numReverbSources = config->GetData().numReverbSources;
 			int numFrames = config->GetData().numFrames;
 			const std::vector<Absorption<>> reflectionGains(numReverbSources, gains);
@@ -103,7 +104,7 @@ namespace RAC
 			in.RandomUniformDistribution();
 
 			std::vector<Buffer<>> out(numReverbSources, Buffer<>(numFrames));
-			fdn.ProcessAudio(in, out, lerpFactor);
+			fdn.ProcessAudio(in, out, audioData);
 
 			for (int i = 0; i < numReverbSources; i++)
 			{
@@ -123,6 +124,7 @@ namespace RAC
 			const std::vector<Real> fBands = { 500.0, 1000.0, 2000.0, 4000.0 };
 			const DSPData data(fs, numFrames, numReverbSources, lerpFactor, Q, fBands);
 			const std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>(data);
+			AudioData audioData(config);
 
 			const Coefficients T60({ target, target, target, target });
 			const Absorption gains({ 0.1, 0.05, 0.3, 0.25 });
@@ -138,7 +140,7 @@ namespace RAC
 				in(i, 1) = 1.0;
 
 			std::vector<Buffer<>> out(numReverbSources, Buffer<>(numFrames));
-			fdn.ProcessAudio(in, out, lerpFactor);
+			fdn.ProcessAudio(in, out, audioData);
 
 			// Analyze Output Decay
 			Real decayTime = 0.0;
@@ -160,6 +162,7 @@ namespace RAC
 			const std::vector<Real> fBands = { 500.0, 1000.0, 2000.0, 4000.0 };
 			const DSPData data(fs, numFrames, numReverbSources, lerpFactor, Q, fBands);
 			const std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>(data);
+			AudioData audioData(config);
 
 			const Coefficients T60({ target, target, target, target });
 			const Absorption gains({ 0.1, 0.05, 0.3, 0.25 });
@@ -175,7 +178,7 @@ namespace RAC
 				in(i, 1) = 1.0;
 
 			std::vector<Buffer<>> out(numReverbSources, Buffer<>(numFrames));
-			fdn.ProcessAudio(in, out, lerpFactor);
+			fdn.ProcessAudio(in, out, audioData);
 
 			// Analyze Output Decay
 			Real decayTime = 0.0;
@@ -197,6 +200,7 @@ namespace RAC
 			const std::vector<Real> fBands = { 500.0, 1000.0, 2000.0, 4000.0 };
 			const DSPData data(fs, numFrames, numReverbSources, lerpFactor, Q, fBands);
 			const std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>(data);
+			AudioData audioData(config);
 
 			const Coefficients T60({ target, target, target, target });
 			const Absorption gains({ 0.1, 0.05, 0.3, 0.25 });
@@ -212,7 +216,7 @@ namespace RAC
 				in(i, 1) = 1.0;
 
 			std::vector<Buffer<>> out(numReverbSources, Buffer<>(numFrames));
-			fdn.ProcessAudio(in, out, lerpFactor);
+			fdn.ProcessAudio(in, out, audioData);
 
 			// Analyze Output Decay
 			Real decayTime = 0.0;
@@ -234,6 +238,7 @@ namespace RAC
 			const std::vector<Real> fBands = { 500.0, 1000.0, 2000.0, 4000.0 };
 			const DSPData data(fs, numFrames, numReverbSources, lerpFactor, Q, fBands);
 			const std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>(data);
+			AudioData audioData(config);
 
 			const Coefficients T60({ target, target, target, target });
 			const Absorption reflectionGains({ 0.1, 0.05, 0.3, 0.25 });
@@ -247,7 +252,7 @@ namespace RAC
 			in(0, 0) = 1.0;
 
 			std::vector<Buffer<>> out(numReverbSources, Buffer<>(numFrames));
-			fdn.ProcessAudio(in, out, lerpFactor);
+			fdn.ProcessAudio(in, out, audioData);
 
 			Real sum = 0.0;
 			for (int j = 0; j < numFrames; j++)
@@ -274,6 +279,7 @@ namespace RAC
 			const std::vector<Real> fBands = { 500.0, 1000.0, 2000.0, 4000.0 };
 			const DSPData data(fs, numFrames, numReverbSources, lerpFactor, Q, fBands);
 			const std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>(data);
+			AudioData audioData(config);
 
 			const Coefficients T60({ target, target, target, target });
 			const Absorption reflectionGains({ 0.1, 0.05, 0.3, 0.25 });
@@ -287,7 +293,7 @@ namespace RAC
 			in(0, 0) = 1.0;
 
 			std::vector<Buffer<>> out(numReverbSources, Buffer<>(numFrames));
-			fdn.ProcessAudio(in, out, lerpFactor);
+			fdn.ProcessAudio(in, out, audioData);
 
 			for (int i = 0; i < numReverbSources; i++)
 			{
@@ -309,6 +315,7 @@ namespace RAC
 			const std::vector<Real> fBands = { 500.0, 1000.0, 2000.0, 4000.0 };
 			const DSPData data(fs, numFrames, numReverbSources, lerpFactor, Q, fBands);
 			const std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>(data);
+			AudioData audioData(config);
 
 			const Coefficients T60({ target, target, target, target });
 			const Absorption reflectionGains({ 0.1, 0.05, 0.3, 0.25 });
@@ -322,7 +329,7 @@ namespace RAC
 			in(0, 0) = 1.0;
 
 			std::vector<Buffer<>> out(numReverbSources, Buffer<>(numFrames));
-			fdn.ProcessAudio(in, out, lerpFactor);
+			fdn.ProcessAudio(in, out, audioData);
 
 			for (int i = 0; i < numReverbSources; i++)
 			{

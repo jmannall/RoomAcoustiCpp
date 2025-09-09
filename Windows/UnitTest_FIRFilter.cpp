@@ -88,7 +88,7 @@ namespace RAC
 
 			for (int i = 0; i < 11; i++)
 				filter.GetOutput(RandomValue(), lerpFactor);
-			filter.Reset();
+			filter.ClearBuffers();
 
 			for (int i = 0; i < input.size(); i++)
 				Assert::AreEqual(output[i], filter.GetOutput(input[i], lerpFactor), EPS, L"Wrong output");

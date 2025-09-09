@@ -11,6 +11,9 @@
 // DSP headers
 #include "DSP/AudioThreadPool.h"
 
+// Common headers
+#include "Common/RACProfiler.h"
+
 namespace RAC
 {
 	namespace DSP
@@ -88,6 +91,7 @@ namespace RAC
 
             tasksRemaining.Lock();
 
+            PROFILE_Diffraction
             for (size_t t = 0; t < threadCount; ++t)
             {
                 outputBuffer += threadOutputBuffers[t];
