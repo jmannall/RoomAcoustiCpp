@@ -47,6 +47,7 @@ static const UnityProfilerMarkerDesc* reverbSourceMarker = nullptr;
 static const UnityProfilerMarkerDesc* fdnMarker = nullptr;
 static const UnityProfilerMarkerDesc* reflectionMarker = nullptr;
 static const UnityProfilerMarkerDesc* diffractionMarker = nullptr;
+static const UnityProfilerMarkerDesc* octaveBandMarker = nullptr;
 static const UnityProfilerMarkerDesc* airAbsorptionMarker = nullptr;
 static const UnityProfilerMarkerDesc* threedtiMarker = nullptr;
 
@@ -67,6 +68,7 @@ extern "C" void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API UnityPluginLoad(IUnit
 	unityProfiler->CreateMarker(&fdnMarker, "FDN", kUnityProfilerCategoryOther, kUnityProfilerMarkerFlagDefault, 0);
 	unityProfiler->CreateMarker(&reflectionMarker, "Reflection", kUnityProfilerCategoryOther, kUnityProfilerMarkerFlagDefault, 0);
 	unityProfiler->CreateMarker(&diffractionMarker, "Diffraction", kUnityProfilerCategoryOther, kUnityProfilerMarkerFlagDefault, 0);
+	unityProfiler->CreateMarker(&octaveBandMarker, "OctaveBand", kUnityProfilerCategoryOther, kUnityProfilerMarkerFlagDefault, 0);
 	unityProfiler->CreateMarker(&airAbsorptionMarker, "AirAbsorption", kUnityProfilerCategoryOther, kUnityProfilerMarkerFlagDefault, 0);
 	unityProfiler->CreateMarker(&threedtiMarker, "3DTI", kUnityProfilerCategoryOther, kUnityProfilerMarkerFlagDefault, 0);
 
@@ -544,6 +546,22 @@ void EndDiffraction()
 {
 	if (GetDevBuild())
 		GetUnityProfiler()->EndSample(diffractionMarker);
+}
+
+////////////////////////////////////////
+
+void BeginOctaveBand()
+{
+	if (GetDevBuild())
+		GetUnityProfiler()->BeginSample(octaveBandMarker);
+}
+
+////////////////////////////////////////
+
+void EndOctaveBand()
+{
+	if (GetDevBuild())
+		GetUnityProfiler()->EndSample(octaveBandMarker);
 }
 
 ////////////////////////////////////////

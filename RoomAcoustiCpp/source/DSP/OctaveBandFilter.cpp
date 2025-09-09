@@ -21,45 +21,26 @@ namespace RAC
 		
 		////////////////////////////////////////
 
-		Real OctaveBand::Filter::GetOutput(const Real input, const Real lerpFactor)
+		Real OctaveBand::Filter::GetOutput(const Real input)
 		{
-			if (!initialised.load(std::memory_order_acquire))
-				return 0.0;
+			const int index = count;
+			const int indexMinusHalf = index - halfOutputLine + 1;
 
-			Real output = 0.0;
-			int index = count;
-
-			// Using a double buffer size to avoid checks in process loop
-			inputLine[index] = input;
-			inputLine[index + halfInputLine] = input;
-
-			assert(currentIR.Length() >= irLength);
-			assert(irLength % 8 == 0);
-
-			// Assume length is always a multiple of 8
-			for (int i = 0; i < irLength; i += 8) // Every other sample is be zero
+			for (int i = 0; i < irLength; i++)
 			{
-				output += currentIR[i] * inputLine[index];
-				index += 2 * step;
-				output += currentIR[i + 1] * inputLine[index];
-				index += 2 * step;
-				output += currentIR[i + 2] * inputLine[index];
-				index += 2 * step;
-				output += currentIR[i + 3] * inputLine[index];
-				index += 2 * step;
-				output += currentIR[i + 4] * inputLine[index];
-				index += 2 * step;
-				output += currentIR[i + 5] * inputLine[index];
-				index += 2 * step;
-				output += currentIR[i + 6] * inputLine[index];
-				index += 2 * step;
-				output += currentIR[i + 7] * inputLine[index];
-				index += 2 * step;
+				Real value = currentIR[i] * input;
+				int offset = 2 * step * i;
+				outputLine[indexMinusHalf + offset] += value;
+				outputLine[index - offset] += value;
 			}
-			output += midSample * inputLine[count + midSampleStep];
+			outputLine[index - midSampleStep] += midSample * input;
 
-			if (--count < 0)
-				count = halfInputLine - 1;
+			Real output = outputLine[index] + outputLine[index - halfOutputLine];
+			outputLine[index] = 0.0;
+			outputLine[index - halfOutputLine] = 0.0;
+
+			if (--count < halfOutputLine)
+				count = 2 * halfOutputLine - 1;
 			return output;
 		}
 
@@ -87,6 +68,9 @@ namespace RAC
 			 numFrequencyBands = maxIndex + 1;
 			 numTopBandsToSum = minIndex;
 			 numOutputBands = numFrequencyBands - numTopBandsToSum;
+
+			 bands.resize(numFrequencyBands);
+			 outputs.resize(numOutputBands);
 
 			 // Do not initialise filter if less than 1 frequency band
 			 if (uniqueIndices.size() == 1)
@@ -125,12 +109,15 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		std::vector<Real> OctaveBand::GetOutput(Real input, Real lerpFactor)
+		const std::vector<Real>& OctaveBand::GetOutput(Real input, Real lerpFactor)
 		{
 			if (!initialised.load(std::memory_order_acquire)) // Do nothing if not initialised
-				return std::vector<Real>(1, input);
-
-			std::vector<Real> bands(numFrequencyBands, input);
+			{
+				for (Real& output : outputs)
+					output = input;
+				return outputs;
+			}
+			
 			for (int i = 0; i < numFrequencyBands - 1; i++) // output 0 is 16kHz, output 1 is 8kHz etc
 			{
 				Real output = filters[i]->GetOutput(input);
@@ -144,19 +131,19 @@ namespace RAC
 
 			if (numOutputBands == numFrequencyBands)
 				return bands;
-			return CombineTopBands(bands);
+
+			CombineTopBands(bands);
+			return outputs;
 		}
 
 		////////////////////////////////////////
 
-		std::vector<Real> OctaveBand::CombineTopBands(const std::vector<Real>& bands)
+		void OctaveBand::CombineTopBands(const std::vector<Real>& bands)
 		{
-			std::vector<Real> outputs(numOutputBands, 0.0);
 			for (int i = 0; i < numOutputBands; i++)
 				outputs[i] = bands[i + numTopBandsToSum];
 			for (int i = 0; i < numTopBandsToSum; i++)
 				outputs[0] += bands[i];
-			return outputs;		// Return split bands
 		}
 
 		////////////////////////////////////////

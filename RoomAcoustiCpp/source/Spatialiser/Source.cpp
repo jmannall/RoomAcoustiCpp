@@ -269,10 +269,10 @@ namespace RAC
 
 			if (audioData.lateReverbModel == LateReverbModel::raves)
 			{
-				PROFILE_Reflection
+				PROFILE_OctaveBand
 				for (int i = 0; i < numFrames; i++)
 				{
-					std::vector<Real> bands = octaveBandFilter.GetOutput(inputBuffer[i], audioData.lerpFactor);
+					const std::vector<Real>& bands = octaveBandFilter.GetOutput(inputBuffer[i], audioData.lerpFactor);
 					for (int j = 0; j < bands.size(); j++)
 						frequencyBands(j, i) = bands[j];
 				}

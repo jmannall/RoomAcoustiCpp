@@ -14,10 +14,10 @@
 
 #include "moodycamel/concurrentqueue.h"
 
-#define PROFILE_BACKGROUND_THREAD
-#define PROFILE_BACKGROUND_THREAD_DETAILED
-#define PROFILE_AUDIO_THREAD
-#define PROFILE_AUDIO_THREAD_DETAILED
+// #define PROFILE_BACKGROUND_THREAD
+// #define PROFILE_BACKGROUND_THREAD_DETAILED
+// #define PROFILE_AUDIO_THREAD
+// #define PROFILE_AUDIO_THREAD_DETAILED
 
 
 #ifdef PROFILE_AUDIO_THREAD_DETAILED
@@ -92,6 +92,8 @@
     PROFILER_CATEGORY(Reflection)
 #define PROFILE_Diffraction \
     PROFILER_CATEGORY(Diffraction)
+#define PROFILE_OctaveBand \
+    PROFILER_CATEGORY(OctaveBand)
 #define PROFILE_AirAbsorption \
     PROFILER_CATEGORY(AirAbsorption)
 #define PROFILE_Spatialisation \
@@ -107,6 +109,7 @@
 #define PROFILE_FDNComplexPair
 #define PROFILE_Reflection
 #define PROFILE_Diffraction
+#define PROFILE_OctaveBand
 #define PROFILE_AirAbsorption
 #define PROFILE_Spatialisation
 #endif
@@ -136,6 +139,7 @@ enum ProfilerCategories
     ReverbSource,
     Reflection,
     Diffraction,
+	OctaveBand,
     AirAbsorption,
     Spatialisation
 };
@@ -212,6 +216,9 @@ inline std::ostream& operator<<(std::ostream& os, const ProfilerCategories& cate
 		break;
 	case ProfilerCategories::Diffraction:
 		os << "Diffraction";
+		break;
+	case ProfilerCategories::OctaveBand:
+        os << "OctaveBand";
 		break;
 	case ProfilerCategories::AirAbsorption:
 		os << "AirAbsorption";
@@ -401,6 +408,9 @@ namespace RAC
                 case ProfilerCategories::Diffraction:
                     BeginDiffraction();
                     break;
+				case ProfilerCategories::OctaveBand:
+                    BeginOctaveBand();
+					break;
                 case ProfilerCategories::AirAbsorption:
                     BeginAirAbsorption();
                     break;
@@ -490,6 +500,9 @@ namespace RAC
                     break;
                 case ProfilerCategories::Diffraction:
                     EndDiffraction();
+                    break;
+                case ProfilerCategories::OctaveBand:
+                    EndOctaveBand();
                     break;
                 case ProfilerCategories::AirAbsorption:
                     EndAirAbsorption();

@@ -95,6 +95,9 @@ void EndReflection();
 void BeginDiffraction();
 void EndDiffraction();
 
+void BeginOctaveBand();
+void EndOctaveBand();
+
 void BeginAirAbsorption();
 void EndAirAbsorption();
 

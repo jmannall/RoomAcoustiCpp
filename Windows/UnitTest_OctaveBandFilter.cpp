@@ -39,6 +39,7 @@ namespace RAC
 				output[0] += bands[j];
 			}
 
+			Assert::AreEqual(target[0], output[0], 1e-16, L"Wrong output");
 			for (int i = 1; i < target.size(); i++)
 			{
 				auto bands = filter.GetOutput(0.0, lerpFactor); // Get the output from the filter

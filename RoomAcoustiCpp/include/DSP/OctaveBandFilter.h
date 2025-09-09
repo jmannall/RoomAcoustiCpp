@@ -42,7 +42,7 @@ namespace RAC
 			* 
 			* @remarks The impulse response is zero every other sample, so the filter only expects the non-zero samples
 			*/
-			class Filter : public FIRFilter
+			class Filter
 			{
 			public:
 
@@ -53,26 +53,35 @@ namespace RAC
 				* @param midSample The mid sample value of the impulse response (The only non-zero odd sample)
 				* @param step The step size for stretched versions of the base filter (h)
 				*/
-				Filter(const Buffer<>& h, Real midSample, int step) : FIRFilter(h, h.Length()), step(step), midSample(midSample), midSampleStep(step* (h.Length() - 1)),
-					halfInputLine(2 * step * maxFilterLength)
-				{
-					inputLine.ResizeBuffer(2 * halfInputLine);
-				}
+				Filter(const Buffer<>& h, Real midSample, int step) : currentIR(h), step(step), midSample(midSample), midSampleStep(step * (2 * h.Length() - 1)),
+					halfOutputLine(2 * step * (2 * h.Length() - 1) + 1), outputLine(4 * step * (2 * h.Length() - 1) + 2),
+					count(4 * step * (2 * h.Length() - 1) + 1), irLength(h.Length()) {}
 
 				/**
 				* @brief Returns the output of the Filter given an input
 				*
-				* @param input The input to the FIRFilter
-				* @param lerpFactor The lerp factor for interpolation
-				* @return The output of the FIRFilter
+				* @param input The input to the Filter
+				* @return The output of the Filter
 				*/
-				Real GetOutput(const Real input, const Real lerpFactor = 1.0) override;
+				Real GetOutput(const Real input);
+
+				/**
+				* @brief Set the internal input line to zeros
+				*/
+				inline void ClearBuffers() { outputLine.Reset(); }
 
 			private:
+
+				const Buffer<> currentIR;			// Current impulse response buffer
+				Buffer<> outputLine;
+
+				const Real midSample;		// Value of the mid sample in the impulse response
 				const int step;				// Step size for stretched versions of the base filter
 				const int midSampleStep;	// Sample index of the mid sample in the impulse response
-				const Real midSample;		// Value of the mid sample in the impulse response
-				const int halfInputLine;	// The half length of the input line buffer (which is double buffered)
+				const int halfOutputLine;	// Half the length of the output line
+				const int irLength;
+
+				int count;			// Current index in the output line
 			};
 
 			typedef Coefficients<> Parameters;
@@ -103,7 +112,7 @@ namespace RAC
 			* @param lerpFactor The lerp factor for interpolation
 			* @return A vector containing the outputs of each frequency band
 			*/
-			std::vector<Real> GetOutput(Real input, Real lerpFactor);
+			const std::vector<Real>& GetOutput(Real input, Real lerpFactor);
 
 
 			/**
@@ -132,7 +141,7 @@ namespace RAC
 
 			int GetFrequencyIndex(Real f) const;
 
-			std::vector<Real> CombineTopBands(const std::vector<Real>& bands);
+			void CombineTopBands(const std::vector<Real>& bands);
 
 			/**
 			* @param fs The sample rate for calculating the filter coefficients
@@ -141,10 +150,10 @@ namespace RAC
 			Buffer<> CalculateH(int fs)
 			{
 				std::array<Real, Lwin> window = GenerateHanningWindow();
-				Buffer<> h(Dwin + 1);
+				Buffer<> h((Dwin + 1) / 2);
 				int count = 0;
 				Real omega = PI_2 * fc / static_cast<Real>(fs);
-				for (int i = 0; i < Dwin + 1; i++)
+				for (int i = 0; i < (Dwin + 1) / 2; i++)
 					h[i] = window[2 * i] * (sin(omega * (2 * i - Dwin)) / (PI_1 * (2 * i - Dwin)));
 				return h;
 			}
@@ -164,6 +173,8 @@ namespace RAC
 				return w;
 			}
 
+			std::vector<Real> bands;
+			std::vector<Real> outputs;
 			const Vec<int> octaveBandIndices;
 
 			int numFrequencyBands;		// Number of frequency bands for the filter
