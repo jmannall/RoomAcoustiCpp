@@ -395,21 +395,24 @@ namespace RAC
 		Absorption<> ImageEdge::Direct(const Source::Data& source)
 		{
 			PROFILE_Direct
-			bool lineOfSight = false;
-			// Direct sound
-			switch (earlyReverbData.direct)
+			bool lineOfSight = (source.position - mListenerPosition).Length() <= earlyReverbData.maxPathLength;
+			if (lineOfSight)
 			{
-			default:
-			case DirectSound::doCheck:
-				lineOfSight = !LineRoomObstruction(mListenerPosition, source.position);
-				break;
-			case DirectSound::alwaysTrue:
-				lineOfSight = true;
-				break;
+				// Direct sound
+				switch (earlyReverbData.direct)
+				{
+				default:
+				case DirectSound::none:
+					lineOfSight = false;
+					break;
+				case DirectSound::doCheck:
+					lineOfSight = !LineRoomObstruction(mListenerPosition, source.position);
+					break;
+				case DirectSound::alwaysTrue:
+					lineOfSight = true;
+					break;
+				}
 			}
-
-			if ((source.position - mListenerPosition).Length() > earlyReverbData.maxPathLength)
-				lineOfSight = false;
 
 			if (lineOfSight)
 			{
