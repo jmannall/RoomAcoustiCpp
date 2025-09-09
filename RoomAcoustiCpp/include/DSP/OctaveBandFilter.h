@@ -117,6 +117,8 @@ namespace RAC
 					delayLine.Reset();
 			}
 
+			inline int NumBands() const { return numOutputBands; }
+
 		private:
 			inline Vec<int> CreateFrequencyIndices(Coefficients<> frequencies)
 			{
