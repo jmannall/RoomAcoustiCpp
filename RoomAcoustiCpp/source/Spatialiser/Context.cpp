@@ -209,21 +209,13 @@ namespace RAC
 			return result;
 		}
 
-		////////////////////////////////////////
-
-		void Context::UpdateSpatialisationMode(const SpatialisationMode mode)
-		{
-			dspConfig->UpdateSpatialisationMode(mode);
-			if (mReverb != nullptr)
-				mReverb->UpdateSpatialisationMode(mode);
-			mSources->UpdateSpatialisationMode(mode);
-		}
 
 		////////////////////////////////////////
 
 		void Context::UpdateReverbTime(const ReverbFormula model)
 		{
-			mReverb->SetTargetT60(mRoom->GetReverbTime(model));
+			if (lateReverbInitialised.load(std::memory_order_acquire))
+				mReverb->SetTargetT60(mRoom->GetReverbTime(model));
 		}
 
 		////////////////////////////////////////
@@ -231,7 +223,8 @@ namespace RAC
 		void Context::UpdateReverbTime(const Coefficients<>& T60)
 		{
 			mRoom->UpdateReverbTime(T60);
-			mReverb->SetTargetT60(T60);
+			if (lateReverbInitialised.load(std::memory_order_acquire))
+				mReverb->SetTargetT60(T60);
 		}
 
 		////////////////////////////////////////
@@ -344,7 +337,8 @@ namespace RAC
 				unique_lock<shared_mutex> lock(tuneInMutex);
 				mListener->SetListenerTransform(transform);
 			}
-			mReverb->UpdateReverbSourcePositions(position);
+			if (lateReverbInitialised.load(std::memory_order_acquire))
+				mReverb->UpdateReverbSourcePositions(position);
 			mImageEdgeModel->SetListenerPosition(position);
 			mRayTracing->SetListenerPosition(position);
 		}
@@ -422,7 +416,8 @@ namespace RAC
 		void Context::UpdateWallAbsorption(size_t id, const Absorption<>& absorption)
 		{
 			mRoom->UpdateWallAbsorption(id, absorption);
-			mReverb->SetTargetT60(mRoom->GetReverbTime());
+			if (lateReverbInitialised.load(std::memory_order_acquire))
+				mReverb->SetTargetT60(mRoom->GetReverbTime());
 		}
 
 		////////////////////////////////////////
@@ -460,27 +455,18 @@ namespace RAC
 			// Reset buffers
 			outputBuffer.Reset();
 			mReverbInput.Reset();
-			const Real lerpFactor = dspConfig->GetLerpFactor();
 
-			mSources->ProcessAudio(outputBuffer, mReverbInput, lerpFactor);
+			const AudioData audioData(dspConfig);
+
+			mSources->ProcessAudio(outputBuffer, mReverbInput, audioData);
 
 			if (lateReverbInitialised.load(std::memory_order_acquire))
-				mReverb->ProcessAudio(mReverbInput, outputBuffer, lerpFactor);
+				mReverb->ProcessAudio(mReverbInput, outputBuffer, audioData);
 
 			if (applyHeadphoneEQ)
-				headphoneEQ.ProcessAudio(outputBuffer, outputBuffer, lerpFactor);
+				headphoneEQ.ProcessAudio(outputBuffer, outputBuffer, audioData);
 
 			audioFlag.store(false, std::memory_order_release);
-		}
-
-		////////////////////////////////////////
-
-		void Context::UpdateImpulseResponseMode(const bool mode)
-		{
-			dspConfig->UpdateImpulseResponseMode(mode);
-			mSources->UpdateImpulseResponseMode(mode);
-			if (mode)
-				headphoneEQ.Reset();		// TODO: Should this be here?
 		}
 	}
 }

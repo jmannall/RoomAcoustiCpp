@@ -50,32 +50,10 @@ namespace RAC
 			* @param reverbInput The reverb input matrix to write to
 			* @param lerpFactor The lerp factor for interpolation
 			*/
-			inline void ProcessAudio(Buffer<>& outputBuffer, Matrix<>& reverbInput, const Real lerpFactor)
+			inline void ProcessAudio(Buffer<>& outputBuffer, Matrix<>& reverbInput, const AudioData& audioData)
 			{
 				for (auto& imageSource : mImageSources)
-					imageSource->ProcessAudio(outputBuffer, reverbInput, lerpFactor);
-			}
-
-			/**
-			* @brief Update the spatialisation mode for all image sources
-			* 
-			* @param mode The new spatialisation mode
-			*/
-			inline void UpdateSpatialisationMode(SpatialisationMode mode)
-			{
-				for (auto& imageSource : mImageSources)
-					imageSource->UpdateSpatialisationMode(mode);
-			}
-
-			/**
-			* @brief Update the impulse response mode for all image sources
-			*
-			* @param mode True if disable AttuenationSmoothing, false otherwise
-			*/
-			inline void UpdateImpulseResponseMode(bool mode)
-			{
-				for (auto& imageSource : mImageSources)
-					imageSource->UpdateImpulseResponseMode(mode);
+					imageSource->ProcessAudio(outputBuffer, reverbInput, audioData);
 			}
 
 			/**

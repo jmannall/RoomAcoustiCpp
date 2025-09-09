@@ -138,7 +138,7 @@ namespace RAC
 			*
 			* @param mode The new spatialisation mode.
 			*/
-			void UpdateSpatialisationMode(const SpatialisationMode mode);
+			inline void UpdateSpatialisationMode(const SpatialisationMode mode) { dspConfig->UpdateSpatialisationMode(mode); }
 
 			/**
 			* @brief Stop the spatialiser running.
@@ -211,7 +211,10 @@ namespace RAC
 			*/
 			inline std::shared_ptr<TracingThread> GetRayTracing() { return mRayTracing; }
 
-			inline void ResetFDN() { mReverb->Reset(); }
+			/**
+			* @brief Sets a flag to clear the late reverberation buffers.
+			*/
+			inline void ResetFDN() { dspConfig->FlagClearBuffers(); }
 
 			/**
 			* @brief Update the listener position and orientation.
@@ -320,7 +323,7 @@ namespace RAC
 			*
 			* @params mode True if disable all interpolation, false otherwise.
 			*/
-			void UpdateImpulseResponseMode(const bool mode);
+			inline void UpdateImpulseResponseMode(const bool mode) { dspConfig->UpdateImpulseResponseMode(mode); }
 
 		private:
 			void InitLateReverb(const LateReverbData& data);

@@ -26,12 +26,6 @@ namespace RAC
 			if (!initialised.load(std::memory_order_acquire))
 				return 0.0;
 
-			if (clearInputLine.load(std::memory_order_acquire))
-			{
-				inputLine.Reset();
-				clearInputLine.store(false, std::memory_order_release);
-			}
-
 			Real output = 0.0;
 			int index = count;
 

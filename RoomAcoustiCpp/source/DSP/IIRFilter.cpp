@@ -39,12 +39,6 @@ namespace RAC
 			if (!parametersEqual.load(std::memory_order_acquire))
 				InterpolateParameters(lerpFactor);
 
-			if (clearBuffers.load(std::memory_order_acquire))
-			{
-				y.Reset();
-				clearBuffers.store(false, std::memory_order_release);
-			}
-
 			Real v = input;
 			Real output = 0.0;
 			for (int i = 1; i <= order; ++i)
@@ -103,12 +97,6 @@ namespace RAC
 			if (!parametersEqual.load(std::memory_order_acquire))
 				InterpolateParameters(lerpFactor);
 
-			if (clearBuffers.load(std::memory_order_acquire))
-			{
-				y0 = 0.0; y1 = 0.0;
-				clearBuffers.store(false, std::memory_order_release);
-			}
-
 			In v = input;
 			In output = 0.0;
 
@@ -164,12 +152,6 @@ namespace RAC
 
 			if (!parametersEqual.load(std::memory_order_acquire))
 				InterpolateParameters(lerpFactor);
-
-			if (clearBuffers.load(std::memory_order_acquire))
-			{
-				y0 = 0.0;
-				clearBuffers.store(false, std::memory_order_release);
-			}
 
 			Real v = input;
 			Real output = 0.0;

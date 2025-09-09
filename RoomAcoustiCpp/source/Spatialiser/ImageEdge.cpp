@@ -87,7 +87,7 @@ namespace RAC
 			if (imageSources.size() != mSources.size())
 			{
 				imageSources.resize(mSources.size());
-				mSourceAudioDatas.resize(mSources.size(), Source::AudioData(frequencyBands.Length(), LateReverbModel::raves)); // TODO: Revove late reverb model from here
+				mSourceAudioDatas.resize(mSources.size(), Source::DSPParameters(frequencyBands.Length(), false)); // TODO: Revove late reverb model from here
 				mCurrentCycles.resize(mSources.size());
 				// doIEM = true;
 			}
@@ -425,7 +425,7 @@ namespace RAC
 			}
 		}
 
-		void ImageEdge::ReflectPointInRoom(const Source::Data& source, Source::AudioData& direct, ImageSourceDataMap& imageSources)
+		void ImageEdge::ReflectPointInRoom(const Source::Data& source, Source::DSPParameters& direct, ImageSourceDataMap& imageSources)
 		{
 			PROFILE_ImageEdgeModel
 			direct.directivity = Direct(source);

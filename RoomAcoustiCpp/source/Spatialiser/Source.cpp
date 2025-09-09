@@ -39,7 +39,7 @@ namespace RAC
 
 		void Source::Init(const std::shared_ptr<DSPConfig>& dspConfig, const Vec<int>& frequencyIndexing)
 		{
-			InitSource();
+			InitSource(dspConfig);
 			const DSPData& data = dspConfig->GetData();
 			InitBuffers(data.numFrames);
 
@@ -49,7 +49,6 @@ namespace RAC
 
 			mDirectivity.store(SourceDirectivity::omni, std::memory_order_release);
 
-			reverbSend.store(LateReverbModel::none, std::memory_order_release);
 			updateFlags.RecordChange();
 
 			if (dspConfig->GetLateReverbModel() == LateReverbModel::raves)
@@ -71,13 +70,14 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Source::InitSource()
+		void Source::InitSource(const std::shared_ptr<DSPConfig>& dspConfig)
 		{
 			unique_lock<shared_mutex> lock(tuneInMutex);
 			mSource = mCore->CreateSingleSourceDSP();
 			mSource->DisableFarDistanceEffect();
 			mSource->EnablePropagationDelay();
-			SetSpatialisationMode(spatialisationMode.load(std::memory_order_acquire));
+			SetSpatialisationMode(dspConfig->GetSpatialisationMode());
+			SetImpulseResponseMode(dspConfig->GetImpulseResponseMode());
 		}
 
 		////////////////////////////////////////
@@ -91,7 +91,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Source::InitReverbSendSource(const bool impulseResponseMode)
+		void Source::InitReverbSendSource(const std::shared_ptr<DSPConfig>& dspConfig)
 		{
 			unique_lock<shared_mutex> lock(tuneInMutex);
 			mReverbSendSource = mCore->CreateSingleSourceDSP();
@@ -100,11 +100,7 @@ namespace RAC
 			mReverbSendSource->DisableFarDistanceEffect();
 			mReverbSendSource->DisableNearFieldEffect();
 			mReverbSendSource->SetSpatializationMode(Binaural::TSpatializationMode::NoSpatialization);
-			if (impulseResponseMode)
-			{
-				mReverbSendSource->DisableDistanceAttenuationSmoothingAnechoic();
-				mReverbSendSource->DisableInterpolation();
-			}
+			SetImpulseResponseMode(dspConfig->GetImpulseResponseMode());
 		}
 
 		void Source::RemoveReverbSendSource()
@@ -239,7 +235,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Source::ProcessAudio(Buffer<>& outputBuffer, Matrix<>& reverbInput, const Real lerpFactor)
+		void Source::ProcessAudio(Buffer<>& outputBuffer, Matrix<>& reverbInput, const AudioData& audioData)
 		{
 			if (!GetAccess())
 				return;
@@ -253,19 +249,22 @@ namespace RAC
 			PROFILE_Source
 			const int numFrames = inputBuffer.Length();
 
-			if (bool mode = impulseResponseMode.load(std::memory_order_acquire); mode != currentImpulseResponseMode)
-				SetImpulseResponseMode(mode);
+			if (audioData.impulseResponseMode != currentImpulseResponseMode)
+			{
+				shared_lock<shared_mutex> lock(tuneInMutex);
+				SetImpulseResponseMode(audioData.impulseResponseMode);
+			}
 
-			if (SpatialisationMode mode = spatialisationMode.load(std::memory_order_acquire); mode != currentSpatialisationMode)
-				SetSpatialisationMode(mode);
+			if (audioData.spatialisationMode != currentSpatialisationMode)
+				SetSpatialisationMode(audioData.spatialisationMode);
 
-			mAirAbsorption->ProcessAudio(inputBuffer, bStore, lerpFactor);
+			mAirAbsorption->ProcessAudio(inputBuffer, bStore, audioData.lerpFactor);
 
-			if (reverbSend.load(std::memory_order_acquire) == LateReverbModel::fdn)
+			if (audioData.lateReverbModel == LateReverbModel::fdn)
 			{
 				{
 					PROFILE_Reflection
-					reverbInputFilter->ProcessAudio(bStore, bStoreReverb, lerpFactor);
+					reverbInputFilter->ProcessAudio(bStore, bStoreReverb, audioData.lerpFactor);
 				}
 				std::transform(bStoreReverb.begin(), bStoreReverb.end(), bInput.begin(),
 					[](auto value) { return static_cast<float>(value); });
@@ -282,16 +281,16 @@ namespace RAC
 						reverbInput(i, j) += bOutput.left[j];
 				}
 			}
-			else if (reverbSend.load(std::memory_order_acquire) == LateReverbModel::raves)
+			else if (audioData.lateReverbModel == LateReverbModel::raves)
 			{
 				for (int j = 0; j < numFrames; j++)
 				{
-					std::vector<Real> bands = octaveBandFilter.GetOutput(inputBuffer[j], lerpFactor);
+					std::vector<Real> bands = octaveBandFilter.GetOutput(inputBuffer[j], audioData.lerpFactor);
 
 					for (int i = 0; i < reverbInput.Rows(); i++)
 					{
 						int bandIndex = octaveBandFilter.GetBandIndex(ravesResidues[i].frequencyIndex);
-						Complex input = ravesResidues[i].GetOutput(bands[bandIndex], lerpFactor);
+						Complex input = ravesResidues[i].GetOutput(bands[bandIndex], audioData.lerpFactor);
 						reverbInput(i, 2 * j) += input.real();
 						reverbInput(i, 2 * j + 1) += input.imag();
 					}
@@ -299,7 +298,7 @@ namespace RAC
 			}
 			{
 				PROFILE_Reflection
-				directivityFilter->ProcessAudio(bStore, bStore, lerpFactor);
+				directivityFilter->ProcessAudio(bStore, bStore, audioData.lerpFactor);
 			}
 			std::transform(bStore.begin(), bStore.end(), bInput.begin(),
 				[](auto value) { return static_cast<float>(value); });
@@ -346,23 +345,19 @@ namespace RAC
 
 		////////////////////////////////////////
 		
-		void Source::UpdateData(const Source::AudioData source, const ImageSourceDataMap& imageSourceData, const std::shared_ptr<DSPConfig>& config)
+		void Source::UpdateData(const Source::DSPParameters source, const ImageSourceDataMap& imageSourceData, const std::shared_ptr<DSPConfig>& dspConfig)
 		{
 			if (!GetAccess())
 				return;
 			directivityFilter->SetTargetGains(source.directivity);
 
-			if (source.reverbSend == LateReverbModel::fdn && !mReverbSendSource)
-			{
-				InitReverbSendSource(config->GetImpulseResponseMode());
-				UpdateImpulseResponseMode(config->GetImpulseResponseMode());
-			}
-			if (source.reverbSend != LateReverbModel::fdn && mReverbSendSource)
+			if (source.feedsFDN && dspConfig->GetLateReverbModel() == LateReverbModel::fdn && !mReverbSendSource)
+				InitReverbSendSource(dspConfig);
+			if ((!source.feedsFDN || dspConfig->GetLateReverbModel() != LateReverbModel::fdn) && mReverbSendSource)
 				RemoveReverbSendSource();
-			reverbSend.store(source.reverbSend, std::memory_order_release);
 
 			UpdateImageSourceDataMap(imageSourceData);
-			UpdateImageSources(config);
+			UpdateImageSources(dspConfig);
 			FreeAccess();
 		}
 

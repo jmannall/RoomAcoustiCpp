@@ -183,7 +183,7 @@ namespace RAC
 			* @param imageSources The image source data to write to
 			* @param direct The direct sound audio data for the current source
 			*/
-			void ReflectPointInRoom(const Source::Data& source, Source::AudioData& direct, ImageSourceDataMap& imageSources);
+			void ReflectPointInRoom(const Source::Data& source, Source::DSPParameters& direct, ImageSourceDataMap& imageSources);
 
 			Absorption<> Direct(const Source::Data& source);
 
@@ -247,7 +247,7 @@ namespace RAC
 			EdgeMap mEdges;										// Store edges
 			std::vector<Source::Data> mSources;					// Store sources
 			std::vector<ImageSourceDataMap> imageSources;		// Store image sources
-			std::vector<Source::AudioData> mSourceAudioDatas;		// Store source audio data
+			std::vector<Source::DSPParameters> mSourceAudioDatas;		// Store source audio data
 			ImageSourceDataStore sp;							// Store valid image sources while the image edge model is being run
 			std::vector<bool> mCurrentCycles;					// Oscillates true and false each time the image edge model is run
 

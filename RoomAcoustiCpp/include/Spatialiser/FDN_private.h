@@ -92,14 +92,14 @@ namespace RAC
 			*/
 			inline void Reset() requires std::is_same_v<T, Real>
 			{
-				clearBuffers.store(true, std::memory_order_release);
+				mBuffer.Reset();
 				mAbsorptionFilter.ClearBuffers();
 				mReflectionFilter.ClearBuffers();
 			}
 
 			inline void Reset() requires std::is_same_v<T, Complex>
 			{
-				clearBuffers.store(true, std::memory_order_release);
+				mBuffer.Reset();
 				mAbsorptionFilter.ClearBuffers();
 			}
 
@@ -143,8 +143,6 @@ namespace RAC
 			GraphicEQ<T> mAbsorptionFilter;		// The absorption filter to match the target decay time
 			std::conditional_t<std::is_same_v<T, Real>,
 				GraphicEQ<Real>, std::nullptr_t> mReflectionFilter;		// The reflection filter on the FDN output
-
-			std::atomic<bool> clearBuffers{ false };		// Flag to clear buffers to zeros next time GetOutput is called
 		};
 
 		/**
@@ -230,19 +228,9 @@ namespace RAC
 			* @param data Multichannel audio data input (numChannels x numFrames)
 			* @param outputBuffers Output buffers to write to
 			*/
-			void ProcessAudio(const Matrix<>& data, std::vector<Buffer<>>& outputBuffers, const Real lerpFactor);
+			void ProcessAudio(const Matrix<>& data, std::vector<Buffer<>>& outputBuffers, const AudioData& audioData);
 
-			void ProcessAudio(std::vector<Buffer<>>& outputBuffers, const Real lerpFactor);
-
-			/**
-			* @brief Resets all internal FDN buffers to zero
-			*/
-			inline void Reset()
-			{
-				clearBuffers.store(true, std::memory_order_release);
-				for (auto& channel : mChannels)
-					channel->Reset();
-			}
+			void ProcessAudio(std::vector<Buffer<>>& outputBuffers, const AudioData& audioData);
 
 		protected:
 			/**
@@ -357,8 +345,6 @@ namespace RAC
 
 			std::conditional_t<std::is_same_v<T, Complex>,
 				const Complex*, std::nullptr_t> inputData{ nullptr };
-
-			std::atomic<bool> clearBuffers{ false };		// Flag to clear buffers to zeros next time GetOutput is called
 		};
 
 		template <typename T = Real>

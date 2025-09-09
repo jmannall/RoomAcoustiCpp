@@ -38,13 +38,13 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		ReverbSource::ReverbSource(Binaural::CCore* core, const std::shared_ptr<DSPConfig> config, const Vec3& shift, const Buffer<>* inBuffer) : mCore(core), mShift(shift), inputBuffer(inBuffer), spatialisationMode(config->GetSpatialisationMode())
+		ReverbSource::ReverbSource(Binaural::CCore* core, const std::shared_ptr<DSPConfig> dspConfig, const Vec3& shift, const Buffer<>* inBuffer) : mCore(core), mShift(shift), inputBuffer(inBuffer)
 		{
-			int numFrames = config->GetData().numFrames;
+			int numFrames = dspConfig->GetData().numFrames;
 			bInput = CMonoBuffer<float>(numFrames);
 			bOutput.left = CMonoBuffer<float>(numFrames);
 			bOutput.right = CMonoBuffer<float>(numFrames);
-			InitSource();
+			InitSource(dspConfig);
 		}
 
 		////////////////////////////////////////
@@ -62,7 +62,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void ReverbSource::InitSource()
+		void ReverbSource::InitSource(const std::shared_ptr<DSPConfig>& dspConfig)
 		{
 #ifdef DEBUG_INIT
 			Debug::Log("Init reverb source", Colour::Green);
@@ -78,7 +78,7 @@ namespace RAC
 				mSource->DisableInterpolation();
 				mSource->DisableNearFieldEffect();
 				mSource->DisableFarDistanceEffect();
-				SetSpatialisationMode(spatialisationMode.load(std::memory_order_acquire));
+				SetSpatialisationMode(dspConfig->GetSpatialisationMode());
 			}
 			
 		}
@@ -128,17 +128,14 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void ReverbSource::ProcessAudio(Buffer<>& outputBuffer)
+		void ReverbSource::ProcessAudio(Buffer<>& outputBuffer, const AudioData& audioData)
 		{
 			PROFILE_ReverbSource
-			if (clearBuffers.load(std::memory_order_acquire))
-			{
+			if (audioData.clearBuffers)
 				mSource->ResetSourceBuffers(); // Think this reallocates memory
-				clearBuffers.store(false, std::memory_order_release);
-			}
 
-			if (SpatialisationMode mode = spatialisationMode.load(std::memory_order_acquire); mode != currentSpatialisationMode)
-				SetSpatialisationMode(mode);
+			if (audioData.spatialisationMode != currentSpatialisationMode)
+				SetSpatialisationMode(audioData.spatialisationMode);
 
 			const int numFrames = inputBuffer->Length();
 
@@ -164,15 +161,6 @@ namespace RAC
 		//////////////////// Reverb class ////////////////////
 
 		ReleasePool Reverb::releasePool;
-
-		////////////////////////////////////////
-
-		void Reverb::UpdateSpatialisationMode(const SpatialisationMode mode)
-		{
-			unique_lock<shared_mutex> lock(tuneInMutex);
-			for (auto& source : mReverbSources)
-				source->UpdateSpatialisationMode(mode);
-		}
 
 		////////////////////////////////////////
 
@@ -217,15 +205,15 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Reverb::ProcessAudio(const Matrix<>& data, Buffer<>& outputBuffer, const Real lerpFactor)
+		void Reverb::ProcessAudio(const Matrix<>& data, Buffer<>& outputBuffer, const AudioData& audioData)
 		{
 			PROFILE_LateReverb
 			if (!running.load(std::memory_order_acquire))
 				return;
 
-			ProcessReverberator(data, reverbSourceInputs, lerpFactor);
+			ProcessReverberator(data, reverbSourceInputs, audioData);
 
-			audioThreadPool->ProcessReverbSources(mReverbSources, outputBuffer);
+			audioThreadPool->ProcessReverbSources(mReverbSources, outputBuffer, audioData);
 			/*for (auto& source : mReverbSources)
 				source->ProcessAudio(outputBuffer);*/
 		}
@@ -278,8 +266,8 @@ namespace RAC
 			bool isZero = mFDN.load(std::memory_order_acquire)->SetTargetReflectionFilters(gains);
 			if (isZero)
 			{
-				Reset();
 				running.store(false, std::memory_order_release);
+				// TODO: reset internal buffers of late reverb to zero
 			}
 			else
 				running.store(true, std::memory_order_release);
@@ -339,7 +327,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void RAVES::ProcessReverberator(const Matrix<>& data, std::vector<Buffer<>>& outputBuffers, const Real lerpFactor)
+		void RAVES::ProcessReverberator(const Matrix<>& data, std::vector<Buffer<>>& outputBuffers, const AudioData& audioData)
 		{
 			for (Buffer<>& buffer : outputBuffers)
 				buffer.Reset();
@@ -351,7 +339,7 @@ namespace RAC
 			for (int i = 0; i < fdns->size(); i++)
 				fdns->at(i)->SubmitAudio(data.GetRowStartPtr(i));
 
-			audioThreadPool->ProcessFDNs(*fdns, outputBuffers, lerpFactor);
+			audioThreadPool->ProcessFDNs(*fdns, outputBuffers, audioData);
 			/*for (int i = 0; i < fdns->size(); i++)
 				fdns->at(i)->ProcessAudio(outputBuffers, lerpFactor);*/
 		}

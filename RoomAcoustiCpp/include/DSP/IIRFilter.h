@@ -62,7 +62,7 @@ namespace RAC
 			/**
 			* @brief Set flag to clear buffers to zeros next time GetOutput is called
 			*/
-			inline void ClearBuffers() { clearBuffers.store(true, std::memory_order_release); }
+			inline void ClearBuffers() { y.Reset(); }
 
 			/**
 			* @brief Returns the filter response at given frequencies.
@@ -91,9 +91,6 @@ namespace RAC
 			* @param lerpFactor The lerp factor for interpolation
 			*/
 			virtual void InterpolateParameters(const Real lerpFactor) = 0;
-
-			std::atomic<bool> clearBuffers{ false };		// Flag to clear the output buffers to zeros next time GetOutput is called
-
 		};
 
 		/**
@@ -125,9 +122,9 @@ namespace RAC
 			Real GetOutput(const Real input, const Real lerpFactor);
 
 			/**
-			* @brief Set flag to clear buffers to zeros next time GetOutput is called
+			* @brief Set internal buffers to zero
 			*/
-			inline void ClearBuffers() { clearBuffers.store(true, std::memory_order_release); }
+			inline void ClearBuffers() { y0 = 0.0; }
 
 			/**
 			* @brief Returns the filter response at given frequencies.
@@ -155,9 +152,6 @@ namespace RAC
 			* @param lerpFactor The lerp factor for interpolation
 			*/
 			virtual void InterpolateParameters(const Real lerpFactor) = 0;
-
-			std::atomic<bool> clearBuffers{ false };		// Flag to clear the output buffers to zeros next time GetOutput is called
-
 		};
 
 		extern template class IIRFilter2<Real>;

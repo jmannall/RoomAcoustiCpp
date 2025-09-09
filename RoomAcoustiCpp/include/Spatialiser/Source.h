@@ -52,12 +52,12 @@ namespace RAC
 			/**
 			* @brief Struct that stores direct sound audio data
 			*/
-			struct AudioData
+			struct DSPParameters
 			{
 				Absorption<> directivity;	// Frequency dependent directivity
-				LateReverbModel reverbSend;				// True if direct sound feeds the late reverberation, false otherwise
+				bool feedsFDN;				// True if direct sound feeds the late reverberation, false otherwise
 
-				AudioData(int len, LateReverbModel reverbSend) : directivity(len), reverbSend(reverbSend) {}
+				DSPParameters(int len, bool feedsFDN) : directivity(len), feedsFDN(feedsFDN) {}
 			};
 
 			/**
@@ -108,9 +108,9 @@ namespace RAC
 			* 
 			* @param core The 3DTI processing core
 			* @param imageSources Reference to the image source array
-			* @params config The spatialiser configuration
+			* @params dspConfig The spatialiser configuration
 			*/
-			Source(Binaural::CCore* core, ImageSourceManager& imageSources, const std::shared_ptr<DSPConfig>& dspConfig) : Access(), mCore(core), imageSources(imageSources), inputBuffer(dspConfig->GetData().numFrames), spatialisationMode(dspConfig->GetSpatialisationMode()),
+			Source(Binaural::CCore* core, ImageSourceManager& imageSources, const std::shared_ptr<DSPConfig>& dspConfig) : Access(), mCore(core), imageSources(imageSources), inputBuffer(dspConfig->GetData().numFrames),
 				octaveBandFilter(dspConfig->GetData().frequencyBands, dspConfig->GetData().fs)
 			{
 				dataMutex = std::make_shared<std::mutex>();
@@ -159,21 +159,7 @@ namespace RAC
 				assert(data.Length() == inputBuffer.Length());
 				std::transform(data.begin(), data.end(), inputBuffer.begin(), [](Real val) { return val; });
 			}
-
-			/**
-			* @brief Updates the target spatialisation mode for the HRTF processing
-			*
-			* @params mode The new spatialisation mode
-			*/
-			inline void UpdateSpatialisationMode(const SpatialisationMode mode) { spatialisationMode.store(mode, std::memory_order_release); }
-
-			/**
-			* @brief Updates the target impulse response mode
-			*
-			* @params mode True if disable 3DTI Interpolation, false otherwise.
-			*/
-			inline void UpdateImpulseResponseMode(const bool mode) { impulseResponseMode.store(mode, std::memory_order_release); }
-
+			
 			/**
 			* @brief Updates the source directivity
 			* 
@@ -210,7 +196,7 @@ namespace RAC
 			* @params source The source audio DSP parameters
 			* @params vSources The current image sources
 			*/
-			void UpdateData(const Source::AudioData source, const ImageSourceDataMap& imageSourceData, const std::shared_ptr<DSPConfig>& config);
+			void UpdateData(const Source::DSPParameters source, const ImageSourceDataMap& imageSourceData, const std::shared_ptr<DSPConfig>& config);
 
 			std::optional<Data> GetData(ThreadID id);
 
@@ -244,9 +230,9 @@ namespace RAC
 			* 
 			* @param outputBuffer The output buffer to write to
 			* @param reverbInput The reverb input buffer to write to
-			* @param lerpFactor The lerp factor for interpolation
+			* @param audioData Data relevant to audio processing
 			*/
-			void ProcessAudio(Buffer<>& outputBuffer, Matrix<>& reverbInput, const Real lerpFactor);
+			void ProcessAudio(Buffer<>& outputBuffer, Matrix<>& reverbInput, const AudioData& audioData);
 
 			/**
 			* @brief Resets the source (if not in use) by clearing the buffers and removing the source from the 3DTI processing core
@@ -284,8 +270,10 @@ namespace RAC
 
 			/**
 			* @brief Initialises the source in the 3DTI core
+			* 
+			* @params dspConfig The spatialiser configuration
 			*/
-			void InitSource();
+			void InitSource(const std::shared_ptr<DSPConfig>& dspConfig);
 
 			/**
 			* @brief Removes the source from the 3DTI core
@@ -295,9 +283,9 @@ namespace RAC
 			/**
 			* @brief Initialises the reverb send source in the 3DTI core
 			*
-			* @param impulseResponseMode True if disable 3DTI Interpolation, false otherwise.
+			* @params dspConfig The spatialiser configuration
 			*/
-			void InitReverbSendSource(const bool impulseResponseMode);
+			void InitReverbSendSource(const std::shared_ptr<DSPConfig>& dspConfig);
 
 			/**
 			* @brief Removes the reverb send source from the 3DTI core
@@ -359,7 +347,6 @@ namespace RAC
 			std::unique_ptr<GraphicEQ<>> reverbInputFilter;		// Reverb energy based on directivity
 
 			std::atomic<SourceDirectivity> mDirectivity;						// Source directivity
-			std::atomic<LateReverbModel> reverbSend{ LateReverbModel::none };	// Current reverb model for reverb send
 
 			std::atomic<bool> clearInputBuffer{ false };	// True if the input buffer should be cleared, false otherwise
 			Buffer<> inputBuffer;							// Input audio buffer for the source
@@ -387,12 +374,9 @@ namespace RAC
 			CMonoBuffer<float> bMonoOutput;							// 3DTI mono output buffer
 				
 			shared_ptr<std::mutex> dataMutex;		// Protects currentPosition, currentOrientation
-
-			std::atomic<bool> impulseResponseMode{ false };		// True if the image source should be in impulse response mode, false otherwise
+			
 			bool currentImpulseResponseMode{ false };			// True if the image source is in impulse response mode, false otherwise
-
-			std::atomic<SpatialisationMode> spatialisationMode;								// Target spatialisation mode
-			SpatialisationMode currentSpatialisationMode{ SpatialisationMode::quality };	// Current spatialisation mode
+			SpatialisationMode currentSpatialisationMode{ SpatialisationMode::none };	// Current spatialisation mode
 
 			ImageSourceManager& imageSources;	// Image source manager for the audio thread
 

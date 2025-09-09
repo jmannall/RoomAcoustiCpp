@@ -46,16 +46,20 @@ namespace RAC
 			* @params inputBuffer The input audio buffer
 			* @params outputBuffer The output buffer to write to
 			*/
-			inline void ProcessAudio(const Buffer<>& inputBuffer, Buffer<>& outputBuffer, const Real lerpFactor)
+			inline void ProcessAudio(const Buffer<>& inputBuffer, Buffer<>& outputBuffer, const AudioData& audioData)
 			{
+				if (audioData.clearBuffers)
+				{
+					leftFilter.ClearBuffers();
+					rightFilter.ClearBuffers();
+				}
+
 				for (int i = 0; i < inputBuffer.Length(); i += 2)
 				{
-					outputBuffer[i] = leftFilter.GetOutput(inputBuffer[i], lerpFactor);
-					outputBuffer[i + 1] = rightFilter.GetOutput(inputBuffer[i + 1], lerpFactor);
+					outputBuffer[i] = leftFilter.GetOutput(inputBuffer[i], audioData.lerpFactor);
+					outputBuffer[i + 1] = rightFilter.GetOutput(inputBuffer[i + 1], audioData.lerpFactor);
 				}
 			}
-
-			inline void Reset() { leftFilter.Reset(); rightFilter.Reset(); }
 
 		private:
 			FIRFilter leftFilter;		// FIR filter for the left channel

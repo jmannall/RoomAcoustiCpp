@@ -480,20 +480,6 @@ namespace RAC
 			inline int GetFDNChannel() const { return mFDNChannel.load(std::memory_order_acquire); }
 
 			/**
-			* @brief Updates the target spatialisation mode for the HRTF processing
-			*
-			* @params mode The new spatialisation mode
-			*/
-			inline void UpdateSpatialisationMode(const SpatialisationMode mode) { spatialisationMode.store(mode, std::memory_order_release); }
-
-			/**
-			* @brief Updates the target impulse response mode
-			*
-			* @params mode True if disable 3DTI Interpolation, false otherwise.
-			*/
-			inline void UpdateImpulseResponseMode(const bool mode) { impulseResponseMode.store(mode, std::memory_order_release); }
-
-			/**
 			* @brief Update the diffraction model
 			*
 			* @params model The new diffraction model
@@ -508,7 +494,7 @@ namespace RAC
 			* @param reverbInput The reverb input buffer to write to
 			* @param lerpFactor The lerp factor for interpolation
 			*/
-			void ProcessAudio(Buffer<>& outputBuffer, Matrix<>& reverbInput, const Real lerpFactor);
+			void ProcessAudio(Buffer<>& outputBuffer, Matrix<>& reverbInput, const AudioData& audioData);
 
 			/**
 			* @brief Resets the image source by clearing the buffers and removing the source from the 3DTI processing core
@@ -553,8 +539,10 @@ namespace RAC
 
 			/**
 			* @brief Initialises the image source in the 3DTI processing core
+			* 
+			* @params dspConfig The spatialiser configuration
 			*/
-			void InitSource();
+			void InitSource(const std::shared_ptr<DSPConfig>& dspConfig);
 
 			/**
 			* @brief Romeves the image source from the 3DTI processing core
@@ -628,14 +616,11 @@ namespace RAC
 			std::atomic<std::shared_ptr<Diffraction::Model>> nextModel{ nullptr };		// Queued diffraction model
 			std::atomic<bool> isCrossFading{ false };									// True if currently crossfading between diffraction models, false otherwise
 
-			bool reflection{ false };					// True if the image source path includes any reflections, false otherwise
-			bool diffraction{ false };					// True if the image source path includes any diffractions, false otherwise
+			bool reflection{ false };			// True if the image source path includes any reflections, false otherwise
+			bool diffraction{ false };			// True if the image source path includes any diffractions, false otherwise
 
-			std::atomic<bool> impulseResponseMode{ false };		// True if the image source should be in impulse response mode, false otherwise
-			bool currentImpulseResponseMode{ false };			// True if the image source is in impulse response mode, false otherwise
-
-			std::atomic<SpatialisationMode> spatialisationMode;								// Target spatialisation mode
-			SpatialisationMode currentSpatialisationMode{ SpatialisationMode::quality };	// Current spatialisation mode
+			bool currentImpulseResponseMode{ false };									// True if the image source is in impulse response mode, false otherwise
+			SpatialisationMode currentSpatialisationMode{ SpatialisationMode::none };	// Current spatialisation mode
 
 			Binaural::CCore* mCore;										// 3DTI processing core
 			shared_ptr<Binaural::CSingleSourceDSP> mSource{ nullptr };	// 3DTI source

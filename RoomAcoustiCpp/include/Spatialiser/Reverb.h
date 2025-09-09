@@ -42,23 +42,16 @@ namespace RAC
 			* @brief Constructor that intialises a reverb source with a given position offset
 			*
 			* @params core The 3DTI processing core
-			* @params config The spatialiser configuration
+			* @params dspConfig The spatialiser configuration
 			* @params shift The position offset relative to the listener
 			* @params inBuffer Pointer to the input buffer to read from
 			*/
-			ReverbSource(Binaural::CCore* core, const std::shared_ptr<DSPConfig> config, const Vec3& shift, const Buffer<>* inBuffer);
+			ReverbSource(Binaural::CCore* core, const std::shared_ptr<DSPConfig> dspConfig, const Vec3& shift, const Buffer<>* inBuffer);
 
 			/**
 			* @brief Default deconstructor
 			*/
 			~ReverbSource();
-
-			/**
-			* @brief Updates the target spatialisation mode for the HRTF processing
-			*
-			* @params mode The new spatialisation mode
-			*/
-			inline void UpdateSpatialisationMode(const SpatialisationMode mode) { spatialisationMode.store(mode, std::memory_order_release); }
 
 			/**
 			* @return The position shift relative to the listener
@@ -76,19 +69,17 @@ namespace RAC
 			* @brief Process the current reverb source audio buffer
 			*
 			* @params outputBuffer The output buffer to write to
+			* @params audioData Data relevant to audio processing
 			*/
-			void ProcessAudio(Buffer<>& outputBuffer);
-
-			/**
-			* @brief Reset the internal buffers to zero
-			*/
-			inline void Reset() { clearBuffers.store(true, std::memory_order_release); }
+			void ProcessAudio(Buffer<>& outputBuffer, const AudioData& audioData);
 
 		private:
 			/**
 			* @brief Initialises the reverb source
+			* 
+			* @params dspConfig The spatialiser configuration
 			*/
-			void InitSource();
+			void InitSource(const std::shared_ptr<DSPConfig>& dspConfig);
 
 			/**
 			* @brief Update the spatialisation mode for the HRTF processing
@@ -107,9 +98,6 @@ namespace RAC
 
 			const Buffer<>* inputBuffer{ nullptr };		// Pointer to the input buffer
 
-			std::atomic<bool> clearBuffers{ false };		// Flag to clear buffers to zeros next time ProcessAudio is called
-
-			std::atomic<SpatialisationMode> spatialisationMode;								// Target spatialisation mode
 			SpatialisationMode currentSpatialisationMode{ SpatialisationMode::quality };	// Current spatialisation mode
 
 			static ReleasePool releasePool;		// Garbage collector for shared pointers after atomic replacement
@@ -125,7 +113,7 @@ namespace RAC
 			* @brief Constructor that intialises a default late reverberation with a 1s T60
 			*
 			* @params core The 3DTI processing core
-			* @params config The spatialiser configuration
+			* @params dspConfig The spatialiser configuration
 			*/
 			Reverb(Binaural::CCore* core, const std::shared_ptr<DSPConfig> dspConfig) : reverbSourceInputs(dspConfig->GetData().numReverbSources, Buffer(dspConfig->GetData().numFrames))
 			{
@@ -140,23 +128,16 @@ namespace RAC
 			* @brief Constructor that intialises late reveberation with a target T60 and given primary room dimensions
 			*
 			* @params core The 3DTI processing core
-			* @params config The spatialiser configuration
+			* @params dspConfig The spatialiser configuration
 			* @params dimensions Primary room dimensions that determine delay line lengths
 			* @params T60 Target decay time
 			*/
-			// Reverb(Binaural::CCore* core, const DSPConfig& config, const Vec& dimensions, const Coefficients& T60) {}
+			// Reverb(Binaural::CCore* core, const DSPConfig& dspConfig, const Vec& dimensions, const Coefficients& T60) {}
 
 			/**
 			* @brief Default deconstructor
 			*/
 			~Reverb() {}
-
-			/**
-			* @brief Update the spatialisation mode for the HRTF processing
-			*
-			* @params mode New spatialisation mode
-			*/
-			void UpdateSpatialisationMode(const SpatialisationMode mode);
 
 			/**
 			* @brief Updates the reverb source positions relative to the listener
@@ -171,19 +152,9 @@ namespace RAC
 			* @params data Multichannel audio data input
 			* @params ouputBuffer Stereo output buffer to write to
 			*/
-			void ProcessAudio(const Matrix<>& data, Buffer<>& outputBuffer, const Real lerpFactor);
+			void ProcessAudio(const Matrix<>& data, Buffer<>& outputBuffer, const AudioData& audioData);
 
-			virtual void ProcessReverberator(const Matrix<>& data, std::vector<Buffer<>>& outputBuffers, const Real lerpFactor) = 0;
-
-			/**
-			* @brief Resets the FDN and ReverbSources internal buffers to zero
-			*/
-			inline void Reset()
-			{
-				for (auto& reverbSource : mReverbSources)
-					reverbSource->Reset();
-				ResetReverberator();
-			}
+			virtual void ProcessReverberator(const Matrix<>& data, std::vector<Buffer<>>& outputBuffers, const AudioData& audioData) = 0;
 
 			inline void SetEigenvectors (const std::vector<Vec<>>& rightEigenvectors, const std::vector<Vec<>>& leftEigenvectors)
 			{
@@ -202,8 +173,6 @@ namespace RAC
 				assert(id < leftEigenvectors.size());
 				return leftEigenvectors[id];
 			}
-
-			virtual void ResetReverberator() = 0;
 
 			virtual void SetTargetT60(const Coefficients<>& T60) { /*Do nothing*/ }
 
@@ -253,7 +222,6 @@ namespace RAC
 
 			Real precedingDelayLength{ 0.0 };		// Length (in seconds) of the delay which precedes the FDNs in MoDART
 		private:
-
 			std::vector<Vec3> CalculateSourcePositions(const int numReverbSources) const;
 			
 			std::vector<Buffer<>> reverbSourceInputs;						// Input buffers for each reverb source
@@ -272,21 +240,13 @@ namespace RAC
 			}
 
 			/**
-			* @brief Resets the FDN and ReverbSources internal buffers to zero
-			*/
-			inline void ResetReverberator() override
-			{
-				mFDN.load(std::memory_order_acquire)->Reset();
-			}
-
-			/**
 			* @brief Updates the target T60
 			*
 			* @params T60 The new decay time
 			*/
 			void SetTargetT60(const Coefficients<>& T60) override;
 
-			inline void ProcessReverberator(const Matrix<>& data, std::vector<Buffer<>>& outputBuffers, const Real lerpFactor) override
+			inline void ProcessReverberator(const Matrix<>& data, std::vector<Buffer<>>& outputBuffers, const AudioData& audioData) override
 			{
 				if (!initialised.load(std::memory_order_acquire))
 				{
@@ -294,7 +254,7 @@ namespace RAC
 						outputBuffer.Reset();
 					return;
 				}
-				mFDN.load()->ProcessAudio(data, outputBuffers, lerpFactor);
+				mFDN.load()->ProcessAudio(data, outputBuffers, audioData);
 			}
 
 			/**
@@ -336,14 +296,7 @@ namespace RAC
 					fdns->at(i)->SetPrecedingDelay(delay, fs);
 			}
 
-			inline void ResetReverberator() override
-			{
-				auto fdns = mFDNs.load();
-				for (auto& fdn : *fdns)
-					fdn->Reset();
-			}
-
-			void ProcessReverberator(const Matrix<>& data, std::vector<Buffer<>>& outputBuffers, const Real lerpFactor) override;
+			void ProcessReverberator(const Matrix<>& data, std::vector<Buffer<>>& outputBuffers, const AudioData& audioData) override;
 
 		private:
 			void InitLateReverb(const MoDARTData& data, const std::shared_ptr<DSPConfig>& dspConfig);

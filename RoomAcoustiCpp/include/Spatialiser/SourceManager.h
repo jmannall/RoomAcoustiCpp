@@ -42,43 +42,19 @@ namespace RAC
 			* @brief Constructor that initialises the source manager with the given configuration.
 			* 
 			* @params core The 3DTI processing core
-			* @params config The spatialiser configuration
+			* @params dspConfig The spatialiser configuration
 			*/
-			SourceManager(Binaural::CCore* core, const std::shared_ptr<DSPConfig> config)
-				: mCore(core), dspConfig(config), mImageSources(core), frequencyIndexing(1)
+			SourceManager(Binaural::CCore* core, const std::shared_ptr<DSPConfig> dspConfig)
+				: mCore(core), dspConfig(dspConfig), mImageSources(core), frequencyIndexing(1)
 			{
 				for (auto& sources : mSources)
-					sources.emplace(core, mImageSources, config);
+					sources.emplace(core, mImageSources, dspConfig);
 			};
 			
 			/**
 			* @brief Default deconstructor
 			*/
 			~SourceManager() {};
-
-			/**
-			* @brief Updates the spatialisation mode for the HRTF processing
-			* 
-			* @params mode New spatialisation mode
-			*/
-			inline void UpdateSpatialisationMode(const SpatialisationMode mode)
-			{
-				mImageSources.UpdateSpatialisationMode(mode);
-				for (auto& source : mSources)
-					source->UpdateSpatialisationMode(mode);
-			}
-
-			/**
-			* @brief Updates the interpolation settings for recording impulse responses
-			*
-			* @params mode True if disable AttuenationSmoothing, false otherwise
-			*/
-			inline void UpdateImpulseResponseMode(const bool mode)
-			{
-				mImageSources.UpdateImpulseResponseMode(mode);
-				for (auto& source : mSources)
-					source->UpdateImpulseResponseMode(mode);
-			}
 
 			/**
 			* @brief Updates the diffraction model
@@ -171,7 +147,7 @@ namespace RAC
 			* @params source The source audio DSP parameters
 			* @params vSources The new image sources
 			*/
-			inline void UpdateSourceData(const size_t id, const Source::AudioData source, const ImageSourceDataMap& vSources)
+			inline void UpdateSourceData(const size_t id, const Source::DSPParameters source, const ImageSourceDataMap& vSources)
 			{
 				PROFILE_UpdateAudioData
 				mSources[id]->UpdateData(source, vSources, dspConfig);
@@ -208,12 +184,12 @@ namespace RAC
 			*/
 			inline void SetInputBuffer(const size_t id, const Buffer<>& data) { mSources[id]->SetInputBuffer(data); }
 
-			inline void ProcessAudio(Buffer<>& outputBuffer, Matrix<>& reverbInput, const Real lerpFactor)
+			inline void ProcessAudio(Buffer<>& outputBuffer, Matrix<>& reverbInput, const AudioData& audioData)
 			{
 				PROFILE_EarlyReflections
 				for (auto& source : mSources)	// Zero any input buffers for sources that are not in use (but may still have image sources)
 					source->ResetInputBuffer();
-				audioThreadPool->ProcessAllSources(mSources, mImageSources, outputBuffer, reverbInput, lerpFactor);
+				audioThreadPool->ProcessAllSources(mSources, mImageSources, outputBuffer, reverbInput, audioData);
 				/*for (auto& source : mSources)
 					source->ProcessAudio(outputBuffer, reverbInput, lerpFactor);
 				mImageSources.ProcessAudio(outputBuffer, reverbInput, lerpFactor);*/

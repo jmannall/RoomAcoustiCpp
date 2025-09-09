@@ -37,15 +37,10 @@ namespace RAC
 		template<typename T>
 		T FDNChannel<T>::GetOutput(const T input, const Real lerpFactor)
 		{
-			if (clearBuffers.load(std::memory_order_acquire))
-			{
-				mBuffer.Reset();
-				clearBuffers.store(false, std::memory_order_release);
-			}
-
 			if (idx >= mBuffer.Length())
 				idx = 0;
 			// T out = mAbsorptionFilter.GetOutput(mBuffer[idx], lerpFactor);
+			// TODO: Interpolate absorption if needed? - is this only changed on a full reset?
 			T out = absorption.load(std::memory_order_acquire) * mBuffer[idx];
 			mBuffer[idx] = input;
 			++idx;
@@ -260,14 +255,15 @@ namespace RAC
 		////////////////////////////////////////
 
 		template <>
-		void FDN<Real>::ProcessAudio(const Matrix<>& data, std::vector<Buffer<>>& outputBuffers, const Real lerpFactor)
+		void FDN<Real>::ProcessAudio(const Matrix<>& data, std::vector<Buffer<>>& outputBuffers, const AudioData& audioData)
 		{
 			PROFILE_FDN
-			if (clearBuffers.load(std::memory_order_acquire))
+			if (audioData.clearBuffers)
 			{
 				x.Reset();
 				y.Reset();
-				clearBuffers.store(false, std::memory_order_release);
+				for (auto& channel : mChannels)
+					channel->Reset();
 			}
 
 			// Process feedback loop
@@ -275,7 +271,7 @@ namespace RAC
 			{
 				for (int j = 0; j < mChannels.size(); j++)
 				{
-					y[j] = mChannels[j]->GetOutput(x[j] + data(j, i), lerpFactor);
+					y[j] = mChannels[j]->GetOutput(x[j] + data(j, i), audioData.lerpFactor);
 					outputBuffers[j][i] = y[j];
 				}
 				ProcessMatrix();
@@ -283,21 +279,22 @@ namespace RAC
 
 			// Process output filters
 			for (int i = 0; i < mChannels.size(); i++)
-				mChannels[i]->ProcessOutput(outputBuffers[i], outputBuffers[i], lerpFactor);
+				mChannels[i]->ProcessOutput(outputBuffers[i], outputBuffers[i], audioData.lerpFactor);
 		}
 
 		////////////////////////////////////////
 
 		template<>
-		void FDN<Complex>::ProcessAudio(std::vector<Buffer<>>& outputBuffers, const Real lerpFactor)
+		void FDN<Complex>::ProcessAudio(std::vector<Buffer<>>& outputBuffers, const AudioData& audioData)
 		{
 			PROFILE_FDN
-			if (clearBuffers.load(std::memory_order_acquire))
+			if (audioData.clearBuffers)
 			{
 				x.Reset();
 				y.Reset();
 				precedingDelayBuffer.Reset();
-				clearBuffers.store(false, std::memory_order_release);
+				for (auto& channel : mChannels)
+					channel->Reset();
 			}
 
 			// Process feedback loop
@@ -307,8 +304,8 @@ namespace RAC
 					precedingDelayCursor = 0;
 				for (int j = 0; j < mChannels.size(); j++)
 				{
-					y[j] = mChannels[j]->GetOutput(x[j] + precedingDelayBuffer[precedingDelayCursor], lerpFactor);
-					outputBuffers[j][i] += ravesResidues[j].GetOutput(y[j], lerpFactor);
+					y[j] = mChannels[j]->GetOutput(x[j] + precedingDelayBuffer[precedingDelayCursor], audioData.lerpFactor);
+					outputBuffers[j][i] += ravesResidues[j].GetOutput(y[j], audioData.lerpFactor);
 				}
 				ProcessMatrix();
 				// For the purpose of `powerNormalization`, see notes in FDN_private.h

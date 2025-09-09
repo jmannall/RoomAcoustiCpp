@@ -26,12 +26,6 @@ namespace RAC
 			if (!irsEqual.load(std::memory_order_acquire))
 				InterpolateIR(lerpFactor);
 
-			if (clearInputLine.load(std::memory_order_acquire))
-			{
-				inputLine.Reset();
-				clearInputLine.store(false, std::memory_order_release);
-			}
-
 			Real output = 0.0;
 			int index = count;
 

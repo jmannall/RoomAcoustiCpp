@@ -71,16 +71,15 @@ namespace RAC
 			bool SetTargetIR(const Buffer<>& ir);
 
 			/**
-			* @brief Set flag to clear input line to zeros next time GetOutput is called
+			* @brief Set the internal input line to zeros
 			*/
-			inline void Reset() { clearInputLine.store(true, std::memory_order_release); }
+			inline void ClearBuffers() { inputLine.Reset(); }
 
 		protected:
 			const int maxFilterLength;	// Maximum filter length
 			size_t irLength;		// Length of the current impulse response (should only be accessed from the audio thread)
 
 			std::atomic<bool> initialised;		// True if the filter has been initialised, false otherwise
-			std::atomic<bool> clearInputLine;	// Flag to clear input line
             
 			Buffer<> currentIR;	// Current impulse response buffer (should only be accessed from the audio thread)
 			Buffer<> inputLine;	// Input line buffer (should only be accessed from the audio thread)

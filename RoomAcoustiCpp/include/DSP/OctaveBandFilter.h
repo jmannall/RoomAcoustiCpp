@@ -112,7 +112,7 @@ namespace RAC
 			inline void ClearBuffers()
 			{
 				for (auto& filter : filters)
-					filter->Reset();
+					filter->ClearBuffers();
 				for (auto& delayLine : delayLines)
 					delayLine.Reset();
 			}

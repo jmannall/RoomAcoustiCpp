@@ -194,14 +194,15 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void ImageSource::InitSource()
+		void ImageSource::InitSource(const std::shared_ptr<DSPConfig>& dspConfig)
 		{
 			unique_lock<shared_mutex> lock(tuneInMutex);
 			mSource = mCore->CreateSingleSourceDSP();
 			mSource->EnablePropagationDelay();
 			mSource->DisableFarDistanceEffect();
 			mSource->DisableNearFieldEffect();
-			SetSpatialisationMode(spatialisationMode.load(std::memory_order_acquire));
+			SetSpatialisationMode(dspConfig->GetSpatialisationMode());
+			SetImpulseResponseMode(dspConfig->GetImpulseResponseMode());
 		}
 
 		////////////////////////////////////////
@@ -220,7 +221,7 @@ namespace RAC
 
 		void ImageSource::Init(const Buffer<>* sourceBuffer, const std::shared_ptr<DSPConfig>& dspConfig, const ImageSourceData& data, int fdnChannel)
 		{
-			InitSource();
+			InitSource(dspConfig);
 			const DSPData& dspData = dspConfig->GetData();
 			InitBuffers(dspData.numFrames);
 
@@ -404,7 +405,7 @@ namespace RAC
 				break;
 			}
 			}
-			currentSpatialisationMode = spatialisationMode;
+			currentSpatialisationMode = mode;
 		}
 
 		////////////////////////////////////////
@@ -561,7 +562,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void ImageSource::ProcessAudio(Buffer<>& outputBuffer, Matrix<>& reverbInput, const Real lerpFactor)
+		void ImageSource::ProcessAudio(Buffer<>& outputBuffer, Matrix<>& reverbInput, const AudioData& audioData)
 		{
 			if (!GetAccess())
 				return;
@@ -579,26 +580,26 @@ namespace RAC
 				return;
 			}
 
-			if (bool mode = impulseResponseMode.load(std::memory_order_acquire); mode != currentImpulseResponseMode)
-				SetImpulseResponseMode(mode);
+			if (audioData.impulseResponseMode != currentImpulseResponseMode)
+				SetImpulseResponseMode(audioData.impulseResponseMode);
 
-			if (SpatialisationMode mode = spatialisationMode.load(std::memory_order_acquire); mode != currentSpatialisationMode)
-				SetSpatialisationMode(mode);
+			if (audioData.spatialisationMode != currentSpatialisationMode)
+				SetSpatialisationMode(audioData.spatialisationMode);
 
 			const int numFrames = inputBuffer->Length();
 
 			{
 				PROFILE_Reflection
-				mFilter->ProcessAudio(*inputBuffer, bStore, lerpFactor);
+				mFilter->ProcessAudio(*inputBuffer, bStore, audioData.lerpFactor);
 			}
 
 			if (diffraction)
-				ProcessDiffraction(bStore, bStore, lerpFactor);
+				ProcessDiffraction(bStore, bStore, audioData.lerpFactor);
 
-			mAirAbsorption->ProcessAudio(bStore, bStore, lerpFactor);
+			mAirAbsorption->ProcessAudio(bStore, bStore, audioData.lerpFactor);
 
 			for (int i = 0; i < numFrames; i++)
-				bInput[i] = static_cast<float>(bStore[i] * gain.Use(lerpFactor));
+				bInput[i] = static_cast<float>(bStore[i] * gain.Use(audioData.lerpFactor));
 
 			{
 				PROFILE_Spatialisation
@@ -607,7 +608,7 @@ namespace RAC
 				mSource->SetBuffer(bInput);
 			
 				int fdnChannel = mFDNChannel.load(std::memory_order_acquire);
-				if (fdnChannel > -1)
+				if (audioData.lateReverbModel == LateReverbModel::fdn && fdnChannel > -1)
 				{
 					mSource->ProcessAnechoic(bMonoOutput, bOutput.left, bOutput.right);
 					for (int i = 0; i < numFrames; i++)

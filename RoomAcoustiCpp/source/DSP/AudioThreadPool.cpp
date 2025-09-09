@@ -53,7 +53,7 @@ namespace RAC
 
         ////////////////////////////////////////
 
-        void AudioThreadPool::ProcessAllSources(std::array<std::optional<Source>, MAX_SOURCES>& sources, ImageSourceManager& imageSources, Buffer<>& outputBuffer, Matrix<>& reverbInput, Real lerpFactor)
+        void AudioThreadPool::ProcessAllSources(std::array<std::optional<Source>, MAX_SOURCES>& sources, ImageSourceManager& imageSources, Buffer<>& outputBuffer, Matrix<>& reverbInput, const AudioData& audioData)
         {
             if (stop.load(std::memory_order_acquire))
                 return;
@@ -73,7 +73,7 @@ namespace RAC
                     tasksRemaining.Subtract();
                     continue;
                 }
-                Enqueue(&sources[i].value(), &tasksRemaining, lerpFactor);
+                Enqueue(&sources[i].value(), &tasksRemaining, audioData);
             }
 
             for (int i = 0; i < MAX_IMAGESOURCES; ++i)
@@ -83,7 +83,7 @@ namespace RAC
                     tasksRemaining.Subtract();
                     continue;
                 }
-                Enqueue(&imageSources.at(i), &tasksRemaining, lerpFactor);
+                Enqueue(&imageSources.at(i), &tasksRemaining, audioData);
             }
 
             tasksRemaining.Lock();
@@ -97,7 +97,7 @@ namespace RAC
 
         ////////////////////////////////////////
 
-        void AudioThreadPool::ProcessReverbSources(std::vector<std::unique_ptr<ReverbSource>>& reverbSources, Buffer<>& outputBuffer)
+        void AudioThreadPool::ProcessReverbSources(std::vector<std::unique_ptr<ReverbSource>>& reverbSources, Buffer<>& outputBuffer, const AudioData& audioData)
         {
             if (stop.load(std::memory_order_acquire))
                 return;
@@ -108,7 +108,7 @@ namespace RAC
                 threadOutputBuffers[t].Reset();
 
             for (size_t i = 0; i < reverbSources.size(); ++i)
-                Enqueue(reverbSources[i].get(), &tasksRemaining);
+                Enqueue(reverbSources[i].get(), &tasksRemaining, audioData);
 
             tasksRemaining.Lock();
 
@@ -116,7 +116,7 @@ namespace RAC
                 outputBuffer += threadOutputBuffers[t];
         }
 
-        void AudioThreadPool::ProcessFDNs(std::vector<std::unique_ptr<FDN<Complex>>>& FDNs, std::vector<Buffer<>>& outputBuffers, Real lerpFactor)
+        void AudioThreadPool::ProcessFDNs(std::vector<std::unique_ptr<FDN<Complex>>>& FDNs, std::vector<Buffer<>>& outputBuffers, const AudioData& audioData)
         {
             if (stop.load(std::memory_order_acquire))
                 return;
@@ -130,7 +130,7 @@ namespace RAC
             }
 
             for (size_t i = 0; i < FDNs.size(); ++i)
-                Enqueue(FDNs[i].get(), &tasksRemaining, lerpFactor);
+                Enqueue(FDNs[i].get(), &tasksRemaining, audioData);
 
             tasksRemaining.Lock();
 
