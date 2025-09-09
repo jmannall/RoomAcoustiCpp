@@ -52,7 +52,7 @@ namespace RAC
 			updateFlags.RecordChange();
 
 			if (dspConfig->GetLateReverbModel() == LateReverbModel::raves)
-				UpdateSourceResidues(frequencyIndexing);
+				UpdateMoDARTParameters(frequencyIndexing, data.numFrames);
 
 			ResetFDNSlots();
 			AllowAccess();
@@ -222,7 +222,7 @@ namespace RAC
 				return;
 			if (!CanEdit())
 				return;
-			if (!mSource)
+			if (!mSource) // TODO: Is this check necessary?
 				return;
 			currentImageSources.clear();
 			ClearBuffers();
@@ -235,7 +235,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Source::ProcessAudio(Buffer<>& outputBuffer, Matrix<>& reverbInput, const AudioData& audioData)
+		void Source::ProcessAudio(Buffer<>& outputBuffer, const AudioData& audioData)
 		{
 			if (!GetAccess())
 				return;
@@ -260,48 +260,23 @@ namespace RAC
 
 			mAirAbsorption->ProcessAudio(inputBuffer, bStore, audioData.lerpFactor);
 
-			if (audioData.lateReverbModel == LateReverbModel::fdn)
-			{
-				{
-					PROFILE_Reflection
-					reverbInputFilter->ProcessAudio(bStore, bStoreReverb, audioData.lerpFactor);
-				}
-				std::transform(bStoreReverb.begin(), bStoreReverb.end(), bInput.begin(),
-					[](auto value) { return static_cast<float>(value); });
-
-				{
-					shared_lock<shared_mutex> lock(tuneInMutex);
-					mReverbSendSource->SetSourceTransform(*transform.load(std::memory_order_acquire));
-					mReverbSendSource->SetBuffer(bInput);
-					mReverbSendSource->ProcessAnechoic(bOutput.left, bOutput.right);
-				}
-				for (int i = 0; i < reverbInput.Rows(); i++)
-				{
-					for (int j = 0; j < numFrames; j++)
-						reverbInput(i, j) += bOutput.left[j];
-				}
-			}
-			else if (audioData.lateReverbModel == LateReverbModel::raves)
-			{
-				for (int j = 0; j < numFrames; j++)
-				{
-					std::vector<Real> bands = octaveBandFilter.GetOutput(inputBuffer[j], audioData.lerpFactor);
-
-					for (int i = 0; i < reverbInput.Rows(); i++)
-					{
-						int bandIndex = octaveBandFilter.GetBandIndex(ravesResidues[i].frequencyIndex);
-						Complex input = ravesResidues[i].GetOutput(bands[bandIndex], audioData.lerpFactor);
-						reverbInput(i, 2 * j) += input.real();
-						reverbInput(i, 2 * j + 1) += input.imag();
-					}
-				}
-			}
 			{
 				PROFILE_Reflection
 				directivityFilter->ProcessAudio(bStore, bStore, audioData.lerpFactor);
 			}
 			std::transform(bStore.begin(), bStore.end(), bInput.begin(),
 				[](auto value) { return static_cast<float>(value); });
+
+			if (audioData.lateReverbModel == LateReverbModel::raves)
+			{
+				PROFILE_Reflection
+				for (int i = 0; i < numFrames; i++)
+				{
+					std::vector<Real> bands = octaveBandFilter.GetOutput(inputBuffer[i], audioData.lerpFactor);
+					for (int j = 0; j < bands.size(); j++)
+						frequencyBands(j, i) = bands[j];
+				}
+			}
 
 			{
 				PROFILE_Spatialisation
@@ -316,6 +291,80 @@ namespace RAC
 			{
 				outputBuffer[j++] += static_cast<Real>(bOutput.left[i]);
 				outputBuffer[j++] += static_cast<Real>(bOutput.right[i]);
+			}
+			FreeAccess();
+		}
+
+		////////////////////////////////////////
+
+		void Source::ProcessMoDARTSend(Matrix<>& reverbInput, const Real lerpFactor)
+		{
+			if (!GetAccess())
+				return;
+
+			const int numFrames = inputBuffer.Length();
+			const int numBands = octaveBandFilter.NumBands();
+
+			for (int i = 0; i < reverbInput.Rows(); i++)
+			{
+				int bandIndex = octaveBandFilter.GetBandIndex(ravesResidues[i].frequencyIndex);
+				for (int j = 0; j < numFrames; j++)
+				{
+					Complex input = ravesResidues[i].GetOutput(frequencyBands(bandIndex, j), lerpFactor);
+					reverbInput(i, 2 * j) += input.real();
+					reverbInput(i, 2 * j + 1) += input.imag();
+				}
+			}
+
+			// TODO: Optimise by reducing reverbInput stride length (also avoids constantly iterating over ravesResidue).
+			/*for (int j = 0; j < numFrames; j++)
+			{
+				std::vector<Real> bands = octaveBandFilter.GetOutput(inputBuffer[j], lerpFactor);
+				for (int i = 0; i < reverbInput.Rows(); i++)
+				{
+					int bandIndex = octaveBandFilter.GetBandIndex(ravesResidues[i].frequencyIndex);
+					Complex input = ravesResidues[i].GetOutput(bands[bandIndex], lerpFactor);
+					reverbInput(i, 2 * j) += input.real();
+					reverbInput(i, 2 * j + 1) += input.imag();
+				}
+			}*/
+			FreeAccess();
+		}
+
+		////////////////////////////////////////
+
+		void Source::ProcessSingleFDNSend(Matrix<>& reverbInput, const Real lerpFactor)
+		{
+			if (!GetAccess())
+				return;
+
+			PROFILE_Source
+			const int numFrames = inputBuffer.Length();
+
+			{
+				PROFILE_Reflection
+				reverbInputFilter->ProcessAudio(bStore, bStoreReverb, lerpFactor);
+			}
+
+			std::transform(bStoreReverb.begin(), bStoreReverb.end(), bInput.begin(),
+				[](auto value) { return static_cast<float>(value); });
+
+			{
+				shared_lock<shared_mutex> lock(tuneInMutex);
+				if (!mReverbSendSource) // Check if the reverb send source hasn't been removed
+				{
+					FreeAccess();
+					return;
+				}
+				mReverbSendSource->SetSourceTransform(*transform.load(std::memory_order_acquire));
+				mReverbSendSource->SetBuffer(bInput);
+				mReverbSendSource->ProcessAnechoic(bOutput.left, bOutput.right);
+			}
+			for (int i = 0; i < reverbInput.Rows(); i++)
+			{
+				auto start = reverbInput.begin() + i * numFrames;
+				for (int j = 0; j < numFrames; j++)
+					start[j] += static_cast<Real>(bOutput.left[j]);
 			}
 			FreeAccess();
 		}
@@ -352,9 +401,15 @@ namespace RAC
 			directivityFilter->SetTargetGains(source.directivity);
 
 			if (source.feedsFDN && dspConfig->GetLateReverbModel() == LateReverbModel::fdn && !mReverbSendSource)
+			{
 				InitReverbSendSource(dspConfig);
+				feedsFDN.store(true, std::memory_order_release);
+			}
 			if ((!source.feedsFDN || dspConfig->GetLateReverbModel() != LateReverbModel::fdn) && mReverbSendSource)
+			{
+				feedsFDN.store(false, std::memory_order_release);
 				RemoveReverbSendSource();
+			}
 
 			UpdateImageSourceDataMap(imageSourceData);
 			UpdateImageSources(dspConfig);
@@ -394,6 +449,7 @@ namespace RAC
 
 		void Source::ClearBuffers()
 		{
+			frequencyBands = Matrix<>();
 			octaveBandFilter.ClearBuffers();
 			bInput.clear();
 			bOutput.left.clear();

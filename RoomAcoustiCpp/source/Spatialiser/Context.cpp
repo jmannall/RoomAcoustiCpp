@@ -311,7 +311,7 @@ namespace RAC
 			mReverb = std::make_shared<RAVES>(&mCore, data, dspConfig);
 			InitLateReverb(data);
 
-			mSources->UpdateSourceResidues(data.frequencyIndexing);
+			mSources->UpdateMoDARTParameters(data.frequencyIndexing, dspConfig->GetData().numFrames);
 			mRoom->CreateTriangleMeshSoA();
 
 			int numPaths = data.rightEigenvectors[0].Rows();
@@ -458,10 +458,13 @@ namespace RAC
 
 			const AudioData audioData(dspConfig);
 
-			mSources->ProcessAudio(outputBuffer, mReverbInput, audioData);
+			mSources->ProcessAudio(outputBuffer, audioData);
 
 			if (lateReverbInitialised.load(std::memory_order_acquire))
+			{
+				mSources->ProcessLateReverbSend(mReverbInput, audioData);
 				mReverb->ProcessAudio(mReverbInput, outputBuffer, audioData);
+			}
 
 			if (applyHeadphoneEQ)
 				headphoneEQ.ProcessAudio(outputBuffer, outputBuffer, audioData);

@@ -495,7 +495,9 @@ namespace RAC
 			* @param reverbInput The reverb input buffer to write to
 			* @param lerpFactor The lerp factor for interpolation
 			*/
-			void ProcessAudio(Buffer<>& outputBuffer, Matrix<>& reverbInput, const AudioData& audioData);
+			void ProcessAudio(Buffer<>& outputBuffer, const AudioData& audioData);
+
+			void ProcessSingleFDNSend(Matrix<>& reverbInput, const Real lerpFactor);
 
 			/**
 			* @brief Resets the image source by clearing the buffers and removing the source from the 3DTI processing core

@@ -184,13 +184,6 @@ namespace RAC
 			void UpdateDiffractionModel(const DiffractionModel model);
 
 			/**
-			* @brief Updates the late reverb model.
-			*
-			* @param model The new late reverb model.
-			*/
-			void UpdateLateReverbModel(const LateReverbModel model);
-
-			/**
 			* @brief Returns a pointer to the room class.
 			* 
 			* @return A pointer to the room class.

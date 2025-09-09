@@ -53,7 +53,13 @@ namespace RAC
 			inline void ProcessAudio(Buffer<>& outputBuffer, Matrix<>& reverbInput, const AudioData& audioData)
 			{
 				for (auto& imageSource : mImageSources)
-					imageSource->ProcessAudio(outputBuffer, reverbInput, audioData);
+					imageSource->ProcessAudio(outputBuffer, audioData);
+			}
+
+			inline void ProcessSingleFDNSend(Matrix<>& reverbInput, const Real lerpFactor)
+			{
+				for (auto& imageSource : mImageSources)
+					imageSource->ProcessSingleFDNSend(reverbInput, lerpFactor);
 			}
 
 			/**

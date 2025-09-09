@@ -45,7 +45,7 @@ namespace RAC
                 /**
 				* @brief Pure virtual function to run the audio task
                 */
-                virtual void Run(Buffer<>& out, Matrix<>& reverbInput, std::vector<Buffer<>>& reverbOutput) = 0;
+                virtual void Run(Buffer<>& out, std::vector<Buffer<>>& reverbOutput) = 0;
 
                 /**
 				* @brief Default virtual destructor
@@ -66,14 +66,12 @@ namespace RAC
                 AudioTask(T* source = nullptr, SpinLock* tasksRemaining = nullptr, const AudioData& audioData = AudioData())
                     : source(source), audioData(audioData), tasksRemaining(tasksRemaining) {}
 
-                void Run(Buffer<>& output, Matrix<>& reverbInput, std::vector<Buffer<>>& reverbOutput) override
+                void Run(Buffer<>& output, std::vector<Buffer<>>& reverbOutput) override
                 {
-                    if constexpr (std::is_same_v<T, ReverbSource>)
-                        source->ProcessAudio(output, audioData);
-                    else if constexpr (std::is_same_v<T, FDN<Complex>>)
+                    if constexpr (std::is_same_v<T, FDN<Complex>>)
                         source->ProcessAudio(reverbOutput, audioData);
-                    else // Source, ImageSource
-                        source->ProcessAudio(output, reverbInput, audioData);
+                    else // Source, ImageSource, ReverbSource
+                        source->ProcessAudio(output, audioData);
                     tasksRemaining->Subtract();
                 }
 
@@ -113,7 +111,7 @@ namespace RAC
             void Enqueue(T* source, SpinLock* tasksRemaining, const AudioData& audioData)
             {
                 static_assert(std::is_member_function_pointer_v<decltype(&T::ProcessAudio)>, "T must have a ProcessAudio member function");
-                static_assert(std::is_same_v<decltype(&T::ProcessAudio), void (T::*)(Buffer<>&, Matrix<>&, const AudioData&)>, "T::ProcessAudio must be of type void (T::*)(Buffer<>&, Matrix<>&, const AudioData&)");
+                static_assert(std::is_same_v<decltype(&T::ProcessAudio), void (T::*)(Buffer<>&, const AudioData&)>, "T::ProcessAudio must be of type void (T::*)(Buffer<>&, const AudioData&)");
                 std::shared_ptr<AudioTaskBase> task = std::make_shared<AudioTask<T>>(source, tasksRemaining, audioData);
                 tasks.try_enqueue(std::move(task));
             }
@@ -170,7 +168,7 @@ namespace RAC
 			* @param reverbInput Reverb input matrix to write to
 			* @param audioData Data relevant to audio processing
             */
-            void ProcessAllSources(std::array<std::optional<Source>, MAX_SOURCES>& sources, ImageSourceManager& imageSources, Buffer<>& outputBuffer, Matrix<>& reverbInput, const AudioData& audioData);
+            void ProcessAllSources(std::array<std::optional<Source>, MAX_SOURCES>& sources, ImageSourceManager& imageSources, Buffer<>& outputBuffer, const AudioData& audioData);
 
             /**
 			* @brief Processes reverb sources
@@ -192,7 +190,7 @@ namespace RAC
 
 			std::vector<Buffer<>> threadOutputBuffers;      // Output buffers for each thread
             std::vector<std::vector<Buffer<>>> threadReverbOutputs;      // Reverb output matrices for each thread
-			std::vector<Matrix<>> threadReverbInputs;       // Reverb input matrices for each thread
+			// std::vector<Matrix<>> threadReverbInputs;       // Reverb input matrices for each thread
         };
     }
 }

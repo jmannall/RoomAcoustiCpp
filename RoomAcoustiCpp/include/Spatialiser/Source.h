@@ -168,17 +168,19 @@ namespace RAC
 			void UpdateDirectivity(const SourceDirectivity directivity, const Coefficients<>& frequencyBands, const int numLateReverbChannels);
 
 			/**
-			* @brief Updates the size of source residues
+			* @brief Updates the size of source residues and frequencyBands
 			*
 			* @params indexing The new frequency band indexing
+			* @params numFrames The number of frames per audio buffer
 			*/
-			void UpdateSourceResidues(const Vec<int>& frequencyIndexing)
+			void UpdateMoDARTParameters(const Vec<int>& frequencyIndexing, int numFrames)
 			{
 				if (!GetAccess())
 					return;
 				ravesResidues = std::vector<RAVESSourceResidue>(frequencyIndexing.Rows());
 				for (int i = 0; i < frequencyIndexing.Rows(); i++)
 					ravesResidues[i].frequencyIndex = frequencyIndexing[i];
+				frequencyBands = Matrix<>(octaveBandFilter.NumBands(), numFrames);
 			}
 
 			/**
@@ -232,7 +234,11 @@ namespace RAC
 			* @param reverbInput The reverb input buffer to write to
 			* @param audioData Data relevant to audio processing
 			*/
-			void ProcessAudio(Buffer<>& outputBuffer, Matrix<>& reverbInput, const AudioData& audioData);
+			void ProcessAudio(Buffer<>& outputBuffer, const AudioData& audioData);
+
+			void ProcessMoDARTSend(Matrix<>& reverbInput, const Real lerpFactor);
+
+			void ProcessSingleFDNSend(Matrix<>& reverbInput, const Real lerpFactor);
 
 			/**
 			* @brief Resets the source (if not in use) by clearing the buffers and removing the source from the 3DTI processing core
@@ -346,7 +352,8 @@ namespace RAC
 			std::unique_ptr<GraphicEQ<>> directivityFilter;		// Directivity filter
 			std::unique_ptr<GraphicEQ<>> reverbInputFilter;		// Reverb energy based on directivity
 
-			std::atomic<SourceDirectivity> mDirectivity;						// Source directivity
+			std::atomic<SourceDirectivity> mDirectivity;		// Source directivity
+			std::atomic<bool> feedsFDN{ false };				// True if direct sound feeds the late reverberation (SingleFDN), false otherwise
 
 			std::atomic<bool> clearInputBuffer{ false };	// True if the input buffer should be cleared, false otherwise
 			Buffer<> inputBuffer;							// Input audio buffer for the source
@@ -354,6 +361,7 @@ namespace RAC
 			Buffer<> bStoreReverb;							// Internal audio buffer reverb send
 			std::vector<RAVESSourceResidue> ravesResidues;	// Residues for the RAVES algorithm
 
+			Matrix<> frequencyBands;
 			OctaveBand octaveBandFilter;		// Octave band filter for source residues
 
 			Vec3 currentPosition;					// Current source position

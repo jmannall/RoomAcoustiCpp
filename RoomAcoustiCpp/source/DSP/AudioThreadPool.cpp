@@ -28,7 +28,6 @@ namespace RAC
 			int numFrames = dspConfig->GetData().numFrames;
             threadOutputBuffers.resize(threadCount, Buffer<>(2 * numFrames));
 
-            threadReverbInputs.resize(threadCount, Matrix(dspConfig->GetReverbInputDimensions()));
             threadReverbOutputs.resize(threadCount, std::vector<Buffer<>>(dspConfig->GetData().numReverbSources, Buffer<>(numFrames)));
 
             for (size_t i = 0; i < threadCount; ++i)
@@ -42,7 +41,7 @@ namespace RAC
                     while (!stop.load(std::memory_order_acquire))
                     {
                         while (tasks.try_dequeue(task))
-                            task->Run(threadOutputBuffers[i], threadReverbInputs[i], threadReverbOutputs[i]);
+                            task->Run(threadOutputBuffers[i], threadReverbOutputs[i]);
                         // Once the queue is empty, often a large wait until next used. _mm_pause() or SpinLock cause performance issues here causes 
                         std::this_thread::yield();
                     }
@@ -56,7 +55,7 @@ namespace RAC
 
         ////////////////////////////////////////
 
-        void AudioThreadPool::ProcessAllSources(std::array<std::optional<Source>, MAX_SOURCES>& sources, ImageSourceManager& imageSources, Buffer<>& outputBuffer, Matrix<>& reverbInput, const AudioData& audioData)
+        void AudioThreadPool::ProcessAllSources(std::array<std::optional<Source>, MAX_SOURCES>& sources, ImageSourceManager& imageSources, Buffer<>& outputBuffer, const AudioData& audioData)
         {
             if (stop.load(std::memory_order_acquire))
                 return;
@@ -64,10 +63,7 @@ namespace RAC
             SpinLock tasksRemaining(MAX_SOURCES + MAX_IMAGESOURCES);
 
             for (size_t t = 0; t < threadCount; ++t)
-            {
                 threadOutputBuffers[t].Reset();
-                threadReverbInputs[t].Reset();
-            }
 
             for (int i = 0; i < MAX_SOURCES; ++i)
             {
@@ -93,10 +89,7 @@ namespace RAC
 
             PROFILE_Diffraction
             for (size_t t = 0; t < threadCount; ++t)
-            {
                 outputBuffer += threadOutputBuffers[t];
-                reverbInput += threadReverbInputs[t];
-            }
         }
 
         ////////////////////////////////////////
@@ -116,6 +109,7 @@ namespace RAC
 
             tasksRemaining.Lock();
 
+            PROFILE_Diffraction
             for (size_t t = 0; t < threadCount; ++t)
                 outputBuffer += threadOutputBuffers[t];
         }
@@ -138,6 +132,7 @@ namespace RAC
 
             tasksRemaining.Lock();
 
+            PROFILE_Diffraction
             for (size_t t = 0; t < threadCount; ++t)
             {
                 for (size_t i = 0; i < outputBuffers.size(); ++i)

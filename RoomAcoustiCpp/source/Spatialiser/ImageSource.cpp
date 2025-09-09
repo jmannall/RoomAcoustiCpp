@@ -324,8 +324,8 @@ namespace RAC
 				return;
 			if (!CanEdit())
 				return;
-			if (!mSource)
-				return;
+			if (!mSource) // TODO: Is this check necessary?
+			 	return;
 			ClearBuffers();
 			RemoveSource();
 			ClearPointers();
@@ -562,7 +562,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void ImageSource::ProcessAudio(Buffer<>& outputBuffer, Matrix<>& reverbInput, const AudioData& audioData)
+		void ImageSource::ProcessAudio(Buffer<>& outputBuffer, const AudioData& audioData)
 		{
 			if (!GetAccess())
 				return;
@@ -607,13 +607,8 @@ namespace RAC
 				mSource->SetSourceTransform(*transform.load(std::memory_order_acquire));
 				mSource->SetBuffer(bInput);
 			
-				int fdnChannel = mFDNChannel.load(std::memory_order_acquire);
-				if (audioData.lateReverbModel == LateReverbModel::fdn && fdnChannel > -1)
-				{
+				if (audioData.lateReverbModel == LateReverbModel::fdn && mFDNChannel.load(std::memory_order_acquire) > -1)
 					mSource->ProcessAnechoic(bMonoOutput, bOutput.left, bOutput.right);
-					for (int i = 0; i < numFrames; i++)
-						reverbInput(fdnChannel, i) += bMonoOutput[i];
-				}
 				else
 					mSource->ProcessAnechoic(bOutput.left, bOutput.right);
 			}
@@ -625,7 +620,26 @@ namespace RAC
 			}
 
 			FreeAccess();
-			return;
+		}
+
+		////////////////////////////////////////
+
+		void ImageSource::ProcessSingleFDNSend(Matrix<>& reverbInput, const Real lerpFactor)
+		{
+			if (!GetAccess())
+				return;
+
+			PROFILE_ImageSource
+			const int numFrames = inputBuffer->Length();
+
+			int fdnChannel = mFDNChannel.load(std::memory_order_acquire);
+			if (fdnChannel > -1)
+			{
+				for (int i = 0; i < numFrames; i++)
+					reverbInput(fdnChannel, i) += static_cast<Real>(bMonoOutput[i]);
+			}
+
+			FreeAccess();
 		}
 
 		////////////////////////////////////////

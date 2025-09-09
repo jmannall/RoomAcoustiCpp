@@ -78,15 +78,16 @@ namespace RAC
 			* @brief Updates the size of source residues for all active sources
 			*
 			* @params indexing The new frequency band indexing
+			* @params numFrames The number of frames per audio buffer
 			*/
-			inline void UpdateSourceResidues(const Vec<int>& indexing)
+			inline void UpdateMoDARTParameters(const Vec<int>& indexing, int numFrames)
 			{
 				{
 					std::lock_guard<std::mutex> lock(frequencyIndexingMutex);
 					frequencyIndexing = indexing;
 				}
 				for (auto& source : mSources)
-					source->UpdateSourceResidues(indexing);
+					source->UpdateMoDARTParameters(frequencyIndexing, numFrames);
 			}
 
 			inline int NextID() const
@@ -184,15 +185,35 @@ namespace RAC
 			*/
 			inline void SetInputBuffer(const size_t id, const Buffer<>& data) { mSources[id]->SetInputBuffer(data); }
 
-			inline void ProcessAudio(Buffer<>& outputBuffer, Matrix<>& reverbInput, const AudioData& audioData)
+			inline void ProcessAudio(Buffer<>& outputBuffer, const AudioData& audioData)
 			{
 				PROFILE_EarlyReflections
 				for (auto& source : mSources)	// Zero any input buffers for sources that are not in use (but may still have image sources)
 					source->ResetInputBuffer();
-				audioThreadPool->ProcessAllSources(mSources, mImageSources, outputBuffer, reverbInput, audioData);
+				audioThreadPool->ProcessAllSources(mSources, mImageSources, outputBuffer, audioData);
 				/*for (auto& source : mSources)
 					source->ProcessAudio(outputBuffer, reverbInput, lerpFactor);
 				mImageSources.ProcessAudio(outputBuffer, reverbInput, lerpFactor);*/
+			}
+
+			inline void ProcessLateReverbSend(Matrix<>& reverbInput, const AudioData& audioData)
+			{
+				PROFILE_LateReverb
+				switch (audioData.lateReverbModel)
+				{
+				default:
+				case LateReverbModel::none:
+					return;
+				case LateReverbModel::raves:
+					for (auto& source : mSources)
+						source->ProcessMoDARTSend(reverbInput, audioData.lerpFactor);
+					break;
+				case LateReverbModel::fdn:
+					for (auto& source : mSources)
+						source->ProcessSingleFDNSend(reverbInput, audioData.lerpFactor);
+					mImageSources.ProcessSingleFDNSend(reverbInput, audioData.lerpFactor);
+					break;
+				}
 			}
 
 		private:
