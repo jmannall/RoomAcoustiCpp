@@ -19,6 +19,7 @@ namespace RAC
 	{
 		//////////////////// Matrix ////////////////////
 
+		template class Matrix<int>;
 		template class Matrix<Real>;
 		template class Matrix<Complex>;
 

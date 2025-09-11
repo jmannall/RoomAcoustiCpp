@@ -18,6 +18,7 @@ namespace RAC
 	{
 		//////////////////// Vec ////////////////////
 
+		template class Vec<int>;
 		template class Vec<Real>;
 		template class Vec<Complex>;
 
@@ -109,6 +110,7 @@ namespace RAC
 
 		//////////////////// Rowvec ////////////////////
 
+		template class Rowvec<int>;
 		template class Rowvec<Real>;
 		template class Rowvec<Complex>;
 
