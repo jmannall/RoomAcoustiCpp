@@ -200,6 +200,9 @@ namespace RAC
 			*/
 			virtual void SetPrecedingDelay(const Real delay, int fs) { /*Do Nothing*/ }
 
+			/**
+			* @return The length (in seconds) of the preceding delay
+			*/
 			inline Real GetPrecedingDelay() const { return precedingDelayLength; }
 
 			/**
@@ -220,6 +223,7 @@ namespace RAC
 
 			static ReleasePool releasePool;			// Garbage collector for shared pointers after atomic replacement
 
+			int delayOffset{ 0 };					// Offset (in samples) to apply to the preceding delay to account for octave band filtering
 			Real precedingDelayLength{ 0.0 };		// Length (in seconds) of the delay which precedes the FDNs in MoDART
 		private:
 			std::vector<Vec3> CalculateSourcePositions(const int numReverbSources) const;
@@ -288,12 +292,18 @@ namespace RAC
 			*/
 			void SetTargetListenerResidues(size_t id, const Coefficients<>& residues) override;
 
+			/**
+			* @brief Update length of preceding delay for RAVES reverb
+			*
+			* @param delay The new length (in seconds) of the delay
+			* @param fs The sample rate
+			*/
 			inline void SetPrecedingDelay(const Real delay, int fs) override
 			{
 				precedingDelayLength = delay;
 				auto fdns = mFDNs.load();
 				for (int i = 0; i < fdns->size(); i++)
-					fdns->at(i)->SetPrecedingDelay(delay, fs);
+					fdns->at(i)->SetPrecedingDelay(delay, delayOffset, fs);
 			}
 
 			void ProcessReverberator(const Matrix<>& data, std::vector<Buffer<>>& outputBuffers, const AudioData& audioData) override;

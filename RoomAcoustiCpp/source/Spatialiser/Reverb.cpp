@@ -307,6 +307,8 @@ namespace RAC
 			releasePool.Add(fdns);
 
 			mFDNs.store(fdns, std::memory_order_release);
+			OctaveBand temporaryFilter(dspConfig->GetData().frequencyBands, dspConfig->GetData().fs);
+			delayOffset = temporaryFilter.GetLatency();
 			SetPrecedingDelay(data.delay, dspConfig->GetData().fs);
 
 			initialised.store(true, std::memory_order_release);

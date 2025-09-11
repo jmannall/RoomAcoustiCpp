@@ -209,10 +209,10 @@ namespace RAC
 				return isZero;
 			}
 
-			inline void SetPrecedingDelay(Real delay, int fs)
+			inline void SetPrecedingDelay(Real delay, int offset, int fs)
 			requires std::is_same_v<T, Complex>
 			{
-				precedingDelayBuffer.ResizeBuffer(static_cast<int>(delay * fs));
+				precedingDelayBuffer.ResizeBuffer(std::max(0, static_cast<int>(delay * fs) - offset));
 				precedingDelayBuffer.Reset(); // TODO: Do we want to avoid resetting it?
 			}
 

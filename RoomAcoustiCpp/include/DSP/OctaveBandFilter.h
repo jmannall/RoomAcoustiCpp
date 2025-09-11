@@ -128,6 +128,8 @@ namespace RAC
 
 			inline int NumBands() const { return numOutputBands; }
 
+			inline int GetLatency() const { return (std::pow((Real)2.0, numFrequencyBands) - 1) * Dwin; }
+
 		private:
 			inline Vec<int> CreateFrequencyIndices(Coefficients<> frequencies)
 			{
