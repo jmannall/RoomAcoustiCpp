@@ -348,9 +348,29 @@ namespace RAC
 			Real delay{ 0.0 };
 
 			MoDARTData(bool enabled, int numRays, FDNMatrix feedbackMatrix, Real delay, Matrix<int> indexing, Vec<int> frequencyIndexing, Vec<> t60s, Vec<> energyDecay, std::vector<Vec<>> leftEigenvectors, std::vector<Vec<>> rightEigenvectors)
-				: LateReverbData(enabled, numRays, feedbackMatrix), indexing(indexing), frequencyIndexing(frequencyIndexing), t60s(t60s), energyDecay(energyDecay),
-				leftEigenvectors(leftEigenvectors), rightEigenvectors(rightEigenvectors), delay(delay)
-			{}
+				: LateReverbData(enabled, numRays, feedbackMatrix), indexing(indexing), delay(delay)
+			{
+				std::vector<Real> t60sData;
+				std::vector<int> frequencyIndexingData;
+				std::vector<Vec<>> leftEigenvectorsData;
+				std::vector<Vec<>> rightEigenvectorsData;
+				for (int i = 0; i < t60s.Rows(); i++)
+				{
+					if (t60s[i] > EPS)
+					{
+						t60sData.push_back(t60s[i]);
+						frequencyIndexingData.push_back(frequencyIndexing[i]);
+						this->leftEigenvectors.push_back(leftEigenvectors[i]);
+						this->rightEigenvectors.push_back(rightEigenvectors[i]);
+					}
+				}
+				this->t60s = Vec<>(t60sData);
+				this->frequencyIndexing = Vec<int>(frequencyIndexingData);
+
+				this->energyDecay = Vec<>(t60s.Rows());
+				for (int i = 0; i < this->t60s.Rows(); i++)
+					this->energyDecay[i] = Pow10(- 6.0 / this->t60s[i]);
+			}
 		};
 
 		// TODO: Use this to pass data to audio processing.

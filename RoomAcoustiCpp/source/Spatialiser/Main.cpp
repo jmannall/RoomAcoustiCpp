@@ -273,6 +273,7 @@ extern "C"
 	* @params numNodes The number of nodes in the indexing matrix.
 	* @params numPaths The number of propagation paths in MoDART.
 	*/
+	// TODO: Stop passing energy decays
 	EXPORT bool API RACInitMoDART(int numRays, int matrixId, float delay, const int* indexingData, const int* frequencyIndexingData, const float* t60sData, const float* energyDecaysData, const float* leftEigenvectorsData, const float* rightEigenvectorsData, int numFDNs, int numNodes, int numPaths)
 	{
 		Vec<int> frequencyIndexing = CreateIntVec(frequencyIndexingData, numFDNs);
