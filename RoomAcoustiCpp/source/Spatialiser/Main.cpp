@@ -280,19 +280,16 @@ extern "C"
 	* @params indexingData The indexing matrix for MoDART.
 	* @oarams frequencyData The center frequency bands for each FDN.
 	* @params t60sData The late reverberation time in seconds for each FDN.
-	* @params energyDecayData The energy decay per second for each FDN.
 	* @params leftEigenvectorsData The left eigenvectors for each FDN.
 	* @params rightEigenvectorsData The right eigenvectors for each FDN.
 	* @params numFDNs The number of FDNs.
 	* @params numNodes The number of nodes in the indexing matrix.
 	* @params numPaths The number of propagation paths in MoDART.
 	*/
-	// TODO: Stop passing energy decays
-	EXPORT bool API RACInitMoDART(bool enabled, int numRays, int matrixId, float delay, const int* indexingData, const int* frequencyIndexingData, const float* t60sData, const float* energyDecaysData, const float* leftEigenvectorsData, const float* rightEigenvectorsData, int numFDNs, int numNodes, int numPaths)
+	EXPORT bool API RACInitMoDART(bool enabled, int numRays, int matrixId, float delay, const int* indexingData, const int* frequencyIndexingData, const float* t60sData, const float* leftEigenvectorsData, const float* rightEigenvectorsData, int numFDNs, int numNodes, int numPaths)
 	{
 		Vec<int> frequencyIndexing = CreateIntVec(frequencyIndexingData, numFDNs);
 		Vec<> t60s = CreateVec(t60sData, numFDNs);
-		Vec<> energyDecays = CreateVec(energyDecaysData, numFDNs);
 
 		Matrix<int> indexing = Matrix<int>(numNodes, numNodes);
 		for (int i = 0; i < numNodes; i++)
@@ -306,7 +303,7 @@ extern "C"
 			rightEigenvectors.push_back(CreateVec(rightEigenvectorsData + i * numPaths, numPaths));
 		}
 
-		MoDARTData data(enabled, numRays, SelectFDNMatrix(matrixId), static_cast<Real>(delay), indexing, frequencyIndexing, t60s, energyDecays, leftEigenvectors, rightEigenvectors);
+		MoDARTData data(enabled, numRays, SelectFDNMatrix(matrixId), static_cast<Real>(delay), indexing, frequencyIndexing, t60s, leftEigenvectors, rightEigenvectors);
 		return InitMoDART(data);
 	}
 
