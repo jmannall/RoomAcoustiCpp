@@ -83,6 +83,15 @@ namespace RAC
 
 		////////////////////////////////////////
 
+		void EnableEarlyReverb(const bool enable)
+		{
+			auto context = GetContext();
+			if (context)
+				context->EnableEarlyReverb(enable);
+		}
+
+		////////////////////////////////////////
+
 		void UpdateEarlyConfig(const EarlyReverbData& data)
 		{
 			auto context = GetContext();
@@ -92,20 +101,47 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void UpdateReverbTime(const ReverbFormula model)
+		void EnableLateReverb(const bool enable)
 		{
 			auto context = GetContext();
 			if (context)
-				context->UpdateReverbTime(model);
+				context->EnableLateReverb(enable);
 		}
 
 		////////////////////////////////////////
 
-		void UpdateReverbTime(const Coefficients<>& T60)
+		void UpdateLateReverbNumberOfRays(const int numRays)
 		{
 			auto context = GetContext();
 			if (context)
-				context->UpdateReverbTime(T60);
+				context->UpdateLateReverbNumberOfRays(numRays);
+
+		}
+		////////////////////////////////////////
+
+		void UpdateMoDARTDelay(const Real delay)
+		{
+			auto context = GetContext();
+			if (context)
+				context->UpdateMoDARTDelay(delay);
+		}
+
+		////////////////////////////////////////
+
+		void UpdateSingleFDNReverbTime(const ReverbFormula model)
+		{
+			auto context = GetContext();
+			if (context)
+				context->UpdateSingleFDNReverbTime(model);
+		}
+
+		////////////////////////////////////////
+
+		void UpdateSingleFDNReverbTime(const Coefficients<>& T60)
+		{
+			auto context = GetContext();
+			if (context)
+				context->UpdateSingleFDNReverbTime(T60);
 		}
 
 		////////////////////////////////////////
@@ -119,11 +155,11 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		bool InitEarlyReverb(const EarlyReverbData& data, DiffractionModel model)
+		bool InitEarlyReverb(const bool enabled, const EarlyReverbData& data, const DiffractionModel model)
 		{
 			auto context = GetContext();
 			if (context)
-				return context->InitEarlyReverb(data, model);
+				return context->InitEarlyReverb(enabled, data, model);
 			return false;
 		}
 
@@ -149,11 +185,11 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void ResetFDN()
+		void ResetLateReverb()
 		{
 			auto context = GetContext();
 			if (context)
-				context->ResetFDN();
+				context->ResetLateReverb();
 		}
 
 		////////////////////////////////////////

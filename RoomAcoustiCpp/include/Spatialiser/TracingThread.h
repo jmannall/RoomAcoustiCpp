@@ -49,7 +49,7 @@ namespace RAC
 			*
 			* @param newNumRays The new number of rays. N.B.: this is the number of rays in each hemisphere; the actual traced directions are twice as many.
 			*/
-			void setNumberOfRays(int newNumRays);
+			void SetNumberOfRays(int newNumRays);
 
 			/**
 			* @brief Set the propagation path indexing and decay rates of each mode.

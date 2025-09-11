@@ -37,9 +37,9 @@ namespace RAC
 			* @param sampleRate The sample rate for calculating the filter coefficients
 			*/
 			AirAbsorption(const Real distance, const int sampleRate) : IIRFilter1(sampleRate), currentDistance(distance), targetDistance(distance),
-				constant(static_cast<Real>(sampleRate) / (SPEED_OF_SOUND * 7782.0))
+				constant(static_cast<Real>(sampleRate) / (SPEED_OF_SOUND * (Real)7782.0))
 			{
-				a0 = 1.0; b1 = 0.0; // Not used by this filter
+				a0 = (Real)1.0; b1 = (Real)0.0; // Not used by this filter
 				UpdateCoefficients(distance);
 
 				parametersEqual.store(true, std::memory_order_release);

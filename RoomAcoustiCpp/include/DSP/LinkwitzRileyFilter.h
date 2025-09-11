@@ -35,7 +35,7 @@ namespace RAC
 			*
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
-			LinkwitzRiley(const int sampleRate) : LinkwitzRiley(Parameters(1.0), { 176.0, 775.0, 3408.0 }, sampleRate) {}
+			LinkwitzRiley(const int sampleRate) : LinkwitzRiley(Parameters((Real)1.0), { (Real)176.0, (Real)775.0, (Real)3408.0 }, sampleRate) {}
 
 			/**
 			* @brief Constructor that initialises a default Linkwitz Riley filterbank
@@ -43,7 +43,7 @@ namespace RAC
 			* @param gains The filter band gains
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
-			LinkwitzRiley(const Parameters& gains, const int sampleRate) : LinkwitzRiley(gains, { 176.0, 775.0, 3408.0 }, sampleRate) {}
+			LinkwitzRiley(const Parameters& gains, const int sampleRate) : LinkwitzRiley(gains, { (Real)176.0, (Real)775.0, (Real)3408.0 }, sampleRate) {}
 
 			/**
 			* @brief Constructor that initialises a Linkwitz Riley filterbank with three cutoff frequencies

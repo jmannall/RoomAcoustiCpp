@@ -242,7 +242,7 @@ namespace RAC
 					}
 				}
 				t *= INV_SPEED_OF_SOUND;
-				t.Max(1.0 / static_cast<Real>(fs));
+				t.Max((Real)1.0 / static_cast<Real>(fs));
 
 				for (int i = 0; i < numReverbSources; i++)
 					delays[i] = static_cast<int>(round(t[i] * static_cast<Real>(fs)));
@@ -338,7 +338,7 @@ namespace RAC
 			Matrix<> matrix = Matrix<>(numChannels, numChannels);
 
 			Vec<> vector = Vec<>(numChannels);
-			vector.RandomUniformDistribution(-1.0, 1.0);
+			vector.RandomUniformDistribution((Real)-1.0, (Real)1.0);
 			vector.Normalise();
 			matrix.AddColumn(vector.GetColumn(0), 0);
 
@@ -348,7 +348,7 @@ namespace RAC
 				Real norm = 0;
 				while (norm < tol)
 				{
-					vector.RandomUniformDistribution(-1.0, 1.0);
+					vector.RandomUniformDistribution((Real)-1.0, (Real)1.0);
 
 					Matrix section = Matrix(numChannels, j);
 

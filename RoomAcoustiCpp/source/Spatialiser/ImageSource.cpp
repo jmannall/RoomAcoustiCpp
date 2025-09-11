@@ -240,7 +240,7 @@ namespace RAC
 			UpdateTransform(data.GetTransform());
 
 			if (data.IsVisible())
-				gain.SetTarget(1.0);
+				gain.SetTarget((Real)1.0);
 
 			AllowAccess();
 			isReset.store(false, std::memory_order_release);
@@ -266,7 +266,7 @@ namespace RAC
 		{
 			if (data.IsVisible())
 			{
-				gain.SetTarget(1.0);
+				gain.SetTarget((Real)1.0);
 				UpdateParameters(data, fdnChannel);
 			}
 			else
@@ -429,7 +429,7 @@ namespace RAC
 
 		void ImageSource::InitDiffractionModel(const DiffractionModel model, const Diffraction::Path& path, const int fs)
 		{
-			diffractionGain.Reset(1.0);
+			diffractionGain.Reset((Real)1.0);
 			isCrossFading.store(false, std::memory_order_release);
 			
 			if (!diffraction)
@@ -660,14 +660,14 @@ namespace RAC
 			Real factor = 0.0;
 			for (int i = 0; i < inBuffer.Length(); i++)
 			{
-				factor = diffractionGain.Use(0.03);	// Interpolation from one to zero takes 454 samples at 48kHz
-				outBuffer[i] *= 1.0f - factor;
+				factor = diffractionGain.Use((Real)0.03);	// Interpolation from one to zero takes 454 samples at 48kHz
+				outBuffer[i] *= (Real)1.0 - factor;
 				outBuffer[i] += bDiffStore[i] * factor;
 			}
 
 			if (diffractionGain.IsZero())
 			{
-				diffractionGain.Reset(1.0);
+				diffractionGain.Reset((Real)1.0);
 
 				fadeModel.swap(activeModel);
 

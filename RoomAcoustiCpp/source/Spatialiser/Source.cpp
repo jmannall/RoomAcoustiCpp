@@ -43,7 +43,7 @@ namespace RAC
 			const DSPData& data = dspConfig->GetData();
 			InitBuffers(data.numFrames);
 
-			mAirAbsorption = std::make_unique<AirAbsorption>(1.0, data.fs);
+			mAirAbsorption = std::make_unique<AirAbsorption>((Real)1.0, data.fs);
 			directivityFilter = std::make_unique<GraphicEQ<>>(data.frequencyBands, data.Q, data.fs);
 			reverbInputFilter = std::make_unique<GraphicEQ<>>(data.frequencyBands, data.Q, data.fs);
 
@@ -172,25 +172,25 @@ namespace RAC
 		void Source::UpdateDirectivity(const SourceDirectivity directivity, const Coefficients<>& frequencyBands, const int numLateReverbChannels)
 		{
 			GetAccess();
-			Coefficients<> reverbInput = Coefficients<>(frequencyBands.Length(), 1.0);
+			Coefficients<> reverbInput = Coefficients<>(frequencyBands.Length(), (Real)1.0);
 			switch (directivity)
 			{
 			case SourceDirectivity::omni:
 				break;
 			case SourceDirectivity::subcardioid:
-				reverbInput = 1.0 / 1.3;	// 1 / Directivity Factor (DF) -> DF = 10 ^ (Directivity Index / 20) 
+				reverbInput = (Real)(1.0 / 1.3);	// 1 / Directivity Factor (DF) -> DF = 10 ^ (Directivity Index / 20) 
 				break;
 			case SourceDirectivity::cardioid:
-				reverbInput = 1.0 / 1.7;
+				reverbInput = (Real)(1.0 / 1.7);
 				break;
 			case SourceDirectivity::supercardioid:
-				reverbInput = 1.0 / 1.9;
+				reverbInput = (Real)(1.0 / 1.9);
 				break;
 			case SourceDirectivity::hypercardioid:
-				reverbInput = 0.5;
+				reverbInput = (Real)(0.5);
 				break;
 			case SourceDirectivity::bidirectional:
-				reverbInput = 1.0 / 1.7;
+				reverbInput = (Real)(1.0 / 1.7);
 				break;
 			case SourceDirectivity::genelec8020c:
 				reverbInput = GENELEC.AverageResponse(frequencyBands);
@@ -201,7 +201,7 @@ namespace RAC
 			}
 			mDirectivity.store(directivity, std::memory_order_release);
 			// Divide energy between late reverb channels. Multiply by six to mimic shoebox room first reflections energy
-			reverbInputFilter->SetTargetGains(6.0 * reverbInput / static_cast<Real>(numLateReverbChannels));
+			reverbInputFilter->SetTargetGains((Real)6.0 * reverbInput / static_cast<Real>(numLateReverbChannels));
 			updateFlags.RecordChange();
 			FreeAccess();
 		}
@@ -258,17 +258,10 @@ namespace RAC
 			if (audioData.spatialisationMode != currentSpatialisationMode)
 				SetSpatialisationMode(audioData.spatialisationMode);
 
-			mAirAbsorption->ProcessAudio(inputBuffer, bStore, audioData.lerpFactor);
-
+			if (audioData.lateReverbModel == LateReverbModel::raves && audioData.lateReverbEnabled)
 			{
-				PROFILE_Reflection
-				directivityFilter->ProcessAudio(bStore, bStore, audioData.lerpFactor);
-			}
-			std::transform(bStore.begin(), bStore.end(), bInput.begin(),
-				[](auto value) { return static_cast<float>(value); });
-
-			if (audioData.lateReverbModel == LateReverbModel::raves)
-			{
+				if (audioData.clearBuffers)
+					octaveBandFilter.ClearBuffers();
 				PROFILE_OctaveBand
 				for (int i = 0; i < numFrames; i++)
 				{
@@ -277,6 +270,18 @@ namespace RAC
 						frequencyBands(j, i) = bands[j];
 				}
 			}
+
+			if (!audioData.earlyReverbEnabled)
+				return;
+
+			mAirAbsorption->ProcessAudio(inputBuffer, bStore, audioData.lerpFactor);
+
+			{
+				PROFILE_Reflection
+				directivityFilter->ProcessAudio(bStore, bStore, audioData.lerpFactor);
+			}
+			std::transform(bStore.begin(), bStore.end(), bInput.begin(),
+				[](auto value) { return static_cast<float>(value); });
 
 			{
 				PROFILE_Spatialisation
@@ -315,19 +320,6 @@ namespace RAC
 					reverbInput(i, 2 * j + 1) += input.imag();
 				}
 			}
-
-			// TODO: Optimise by reducing reverbInput stride length (also avoids constantly iterating over ravesResidue).
-			/*for (int j = 0; j < numFrames; j++)
-			{
-				std::vector<Real> bands = octaveBandFilter.GetOutput(inputBuffer[j], lerpFactor);
-				for (int i = 0; i < reverbInput.Rows(); i++)
-				{
-					int bandIndex = octaveBandFilter.GetBandIndex(ravesResidues[i].frequencyIndex);
-					Complex input = ravesResidues[i].GetOutput(bands[bandIndex], lerpFactor);
-					reverbInput(i, 2 * j) += input.real();
-					reverbInput(i, 2 * j + 1) += input.imag();
-				}
-			}*/
 			FreeAccess();
 		}
 

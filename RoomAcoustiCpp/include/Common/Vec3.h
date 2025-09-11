@@ -131,7 +131,7 @@ namespace RAC
 			*/
 			inline Vec3& operator/=(const Real& a)
 			{
-				*this *= (1.0 / a);
+				*this *= ((Real)1.0 / a);
 				return *this;
 			}
 

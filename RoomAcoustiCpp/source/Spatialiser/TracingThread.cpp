@@ -31,10 +31,10 @@ namespace RAC
 			numPaths = 0;
 
 			// This initializes the pencil, clusters the reverb directions, and allocates buffers of size numRays.
-			setNumberOfRays(data.numRays);
+			SetNumberOfRays(data.numRays);
 		}
 
-		void TracingThread::setNumberOfRays(int newNumRays) {
+		void TracingThread::SetNumberOfRays(int newNumRays) {
 			lock_guard<std::mutex> lock(rayPencilMutex);
 
 			// Note: the number of rays is forced to be even, because `hemispherePencil` actually uses half as many rays under the hood.

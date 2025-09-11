@@ -60,7 +60,8 @@ namespace RAC
             if (stop.load(std::memory_order_acquire))
                 return;
 
-            SpinLock tasksRemaining(MAX_SOURCES + MAX_IMAGESOURCES);
+			int maxNumTasks = audioData.earlyReverbEnabled ? MAX_SOURCES + MAX_IMAGESOURCES : MAX_SOURCES;
+            SpinLock tasksRemaining(maxNumTasks);
 
             for (size_t t = 0; t < threadCount; ++t)
                 threadOutputBuffers[t].Reset();
@@ -75,14 +76,17 @@ namespace RAC
                 Enqueue(&sources[i].value(), &tasksRemaining, audioData);
             }
 
-            for (int i = 0; i < MAX_IMAGESOURCES; ++i)
+            if (audioData.earlyReverbEnabled)
             {
-                if (imageSources.at(i).CanEdit())
+                for (int i = 0; i < MAX_IMAGESOURCES; ++i)
                 {
-                    tasksRemaining.Subtract();
-                    continue;
+                    if (imageSources.at(i).CanEdit())
+                    {
+                        tasksRemaining.Subtract();
+                        continue;
+                    }
+                    Enqueue(&imageSources.at(i), &tasksRemaining, audioData);
                 }
-                Enqueue(&imageSources.at(i), &tasksRemaining, audioData);
             }
 
             tasksRemaining.Lock();

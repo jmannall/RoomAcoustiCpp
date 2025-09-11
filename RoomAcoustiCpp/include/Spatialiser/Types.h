@@ -176,6 +176,10 @@ namespace RAC
 
 			inline bool GetClearBuffers() { return clearBuffers.exchange(false, std::memory_order_acq_rel); }
 
+			inline bool GetEarlyReverbEnabled() const { return earlyReverbEnabled.load(std::memory_order_acquire); }
+
+			inline bool GetLateReverbEnabled() const { return lateReverbEnabled.load(std::memory_order_acquire); }
+
 			inline void UpdateSpatialisationMode(const SpatialisationMode mode) { spatialisationMode.store(mode, std::memory_order_release); }
 
 			inline void UpdateDiffractionModel(const DiffractionModel model) { diffractionModel.store(model, std::memory_order_release); }
@@ -190,9 +194,13 @@ namespace RAC
 
 			inline void FlagClearBuffers() { clearBuffers.store(true, std::memory_order_release); }
 
+			inline void EnableEarlyReverb(const bool enable) { earlyReverbEnabled.store(enable, std::memory_order_release); }
+
+			inline void EnableLateReverb(const bool enable) { lateReverbEnabled.store(enable, std::memory_order_release); }
+
 			inline bool CompareSpatialisationMode(const SpatialisationMode mode) const { return spatialisationMode.load(std::memory_order_acquire) != mode; }
 
-			Real GetLerpFactor() const { return impulseResponseMode.load(std::memory_order_acquire) ? 1.0 : data.GetLerpFactor(); }
+			Real GetLerpFactor() const { return impulseResponseMode.load(std::memory_order_acquire) ? (Real)1.0 : data.GetLerpFactor(); }
 
 			inline std::pair<int, int> GetReverbInputDimensions()
 			{
@@ -216,7 +224,10 @@ namespace RAC
 			std::atomic<LateReverbModel> lateReverbModel{ LateReverbModel::none };										// Late reverberation model
 			std::atomic<bool> impulseResponseMode{ false };										// True if dsp interpolation is disabled, false otherwise
 			std::atomic<int> numFDNs{ 1 };														// Number of FDNs
-			std::atomic<bool> clearBuffers{ false };
+
+			std::atomic<bool> clearBuffers{ false };			// True if internal buffers should be cleared next audio frame
+			std::atomic<bool> earlyReverbEnabled{ false };		// True if early reverberation is enabled, false otherwise
+			std::atomic<bool> lateReverbEnabled{ false };		// True if late reverberation is enabled, false otherwise
 		};
 
 		/**
@@ -373,15 +384,12 @@ namespace RAC
 			}
 		};
 
-		// TODO: Use this to pass data to audio processing.
-		// Would allow for easier switching between late reverb models.
-		// And remove need for as many atomic bools in Source and ImageSource
 		struct AudioData
 		{
 			AudioData(const std::shared_ptr<DSPConfig>& dspConfig)
 				: lerpFactor(dspConfig->GetLerpFactor()), lateReverbModel(dspConfig->GetLateReverbModel()),
 				spatialisationMode(dspConfig->GetSpatialisationMode()), impulseResponseMode(dspConfig->GetImpulseResponseMode()),
-				clearBuffers(dspConfig->GetClearBuffers())
+				clearBuffers(dspConfig->GetClearBuffers()), earlyReverbEnabled(dspConfig->GetEarlyReverbEnabled()), lateReverbEnabled(dspConfig->GetLateReverbEnabled())
 			{}
 
 			Real lerpFactor;
@@ -389,6 +397,9 @@ namespace RAC
 			SpatialisationMode spatialisationMode;
 			bool impulseResponseMode;
 			bool clearBuffers;
+
+			bool earlyReverbEnabled;
+			bool lateReverbEnabled;
 		};
 	}
 }

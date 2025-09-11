@@ -153,7 +153,7 @@ extern "C"
 	//////////////////// API ////////////////////
 
 	/**
-	* Initializes the spatialiser with the given parameters.
+	* @brief Initializes the spatialiser with the given parameters.
 	*
 	* @param fs The sample rate for audio processing.
 	* @param numFrames The number of frames in an audio buffer.
@@ -201,7 +201,7 @@ extern "C"
 	}
 
 	/**
-	* Exits and cleans up the spatialiser.
+	* @brief Exits and cleans up the spatialiser.
 	*
 	* This function should be called when the spatialiser is no longer needed.
 	* It will free up any resources that the spatialiser is using.
@@ -212,7 +212,7 @@ extern "C"
 	}
 
 	/**
-	* Loads the HRTF, near field and ILD files.
+	* @brief Loads the HRTF, near field and ILD files.
 	*
 	* @param hrtfResamplingStep The step size for resampling the HRTF. This should be between 5 - 90. Smaller values indicate higher quality.
 	* @param paths An array of file paths in the order HRTF, near field and ILD files. The paths are expected to be null-terminated C strings.
@@ -226,18 +226,31 @@ extern "C"
 	}
 
 	/**
-	* Initialises the Image Edge Model (IEM) and sets the diffraction model.
+	* @brief Initialises the Image Edge Model (IEM) and sets the diffraction model.
+	* 
+	* The direct sound is mapped as follows.
+	* 0 -> none
+	* 1 -> doCheck
+	* 2 -> alwaysTrue
+	* 
+	* @param enabled True to enable early reflection DSP, false to disable.
+	* @param direct Whether to consider direct sound.
+	* @param reflOrder The maximum number of reflections in reflection only paths.
+	* @param shadowDiffOrder The maximum number of reflections or diffractions in shadowed diffraction paths.
+	* @param specularDiffOrder The maximum number of reflections or diffractions in specular diffraction paths.
+	* @param rev Whether to consider late reverberation.
 	*/
-	EXPORT bool API RACInitEarlyReverb(int direct, int reflOrder, int shadowDiffOrder, int specularDiffOrder, float minEdgeLength, float maxPathLen, int diffractionId)
+	EXPORT bool API RACInitEarlyReverb(bool enabled, int direct, int reflOrder, int shadowDiffOrder, int specularDiffOrder, float minEdgeLength, float maxPathLen, int diffractionId)
 	{
 		DiffractionModel model = SelectDiffractionModel(diffractionId);
 		EarlyReverbData data(SelectDirectMode(direct), reflOrder, shadowDiffOrder, specularDiffOrder, static_cast<Real>(minEdgeLength), static_cast<Real>(maxPathLen));
-		return InitEarlyReverb(data, model);
+		return InitEarlyReverb(enabled, data, model);
 	}
 
 	/**
-	* Initialises SingleFDN late reverberation.
+	* @brief Initialises SingleFDN late reverberation.
 	*
+	* @param enabled True to enable early reflection DSP, false to disable.
 	* @params volume The room volume in cubic meters.
 	* @params t60Data The late reverberation time in seconds for each frequency band.
 	* @params reverbFormulaId The ID corresponding to a reverberation formula.
@@ -246,20 +259,21 @@ extern "C"
 	* @params numRays The number of rays to use for ray tracing.
 	* @param matrixId The ID corresponding to a FDN matrix type.
 	*/
-	EXPORT bool API RACInitSingleFDN(float volume, const float* t60Data, int reverbFormulaId, const float* dimensionData, int numDimensions, int numRays, int matrixId)
+	EXPORT bool API RACInitSingleFDN(bool enabled, float volume, const float* t60Data, int reverbFormulaId, const float* dimensionData, int numDimensions, int numRays, int matrixId)
 	{
 		Coefficients<> t60 = CreateCoefficients(t60Data, NUM_FREQUENCY_BANDS);
 		Vec<> dimensions = CreateVec(dimensionData, numDimensions);
 
 		RoomData roomData(static_cast<Real>(volume), t60, SelectReverbFormula(reverbFormulaId), dimensions);
 
-		LateReverbData data(true, 0.0, SelectFDNMatrix(matrixId));
+		LateReverbData data(enabled, 0.0, SelectFDNMatrix(matrixId));
 		return InitSingleFDN(roomData, data);
 	}
 
 	/**
-	* Initialises MoDART late reverberation.
+	* @brief Initialises MoDART late reverberation.
 	*
+	* @param enabled True to enable early reflection DSP, false to disable.
 	* @params numRays The number of rays to use for ray tracing.
 	* @param matrixId The ID corresponding to a FDN matrix type.
 	* @params delay The delay in seconds before late reverberation starts.
@@ -274,7 +288,7 @@ extern "C"
 	* @params numPaths The number of propagation paths in MoDART.
 	*/
 	// TODO: Stop passing energy decays
-	EXPORT bool API RACInitMoDART(int numRays, int matrixId, float delay, const int* indexingData, const int* frequencyIndexingData, const float* t60sData, const float* energyDecaysData, const float* leftEigenvectorsData, const float* rightEigenvectorsData, int numFDNs, int numNodes, int numPaths)
+	EXPORT bool API RACInitMoDART(bool enabled, int numRays, int matrixId, float delay, const int* indexingData, const int* frequencyIndexingData, const float* t60sData, const float* energyDecaysData, const float* leftEigenvectorsData, const float* rightEigenvectorsData, int numFDNs, int numNodes, int numPaths)
 	{
 		Vec<int> frequencyIndexing = CreateIntVec(frequencyIndexingData, numFDNs);
 		Vec<> t60s = CreateVec(t60sData, numFDNs);
@@ -292,7 +306,7 @@ extern "C"
 			rightEigenvectors.push_back(CreateVec(rightEigenvectorsData + i * numPaths, numPaths));
 		}
 
-		MoDARTData data(true, numRays, SelectFDNMatrix(matrixId), static_cast<Real>(delay), indexing, frequencyIndexing, t60s, energyDecays, leftEigenvectors, rightEigenvectors);
+		MoDARTData data(enabled, numRays, SelectFDNMatrix(matrixId), static_cast<Real>(delay), indexing, frequencyIndexing, t60s, energyDecays, leftEigenvectors, rightEigenvectors);
 		return InitMoDART(data);
 	}
 
@@ -314,7 +328,7 @@ extern "C"
 	}
 
 	/**
-	* Sets the spatialisation mode (high quality, high performance or none).
+	* @brief Sets the spatialisation mode (high quality, high performance or none).
 	*
 	* The mapping is as follows:
 	* 0 -> none
@@ -338,7 +352,17 @@ extern "C"
 	}
 
 	/**
-	* Updates the configuration for the Image Edge Model (IEM).
+	* @brief Enables the late reverberation DSP.
+	*
+	* @param enable True to enable late reflections, false to disable.
+	*/
+	EXPORT void API RACEnableEarlyReverb(bool enable)
+	{
+		EnableEarlyReverb(enable);
+	}
+
+	/**
+	* @brief Updates the configuration for the Image Edge Model (IEM).
 	* 
 	* The direct sound is mapped as follows.
 	* 0 -> none
@@ -357,50 +381,8 @@ extern "C"
 		UpdateEarlyConfig(data);
 	}
 
-	// TODO: Toggle late reverb on and off
-	// TODO: Update numRays at runtime
-	// TODO: Update preceeding delay at runtime? - link to max path length of early reflections?
-
-	EXPORT void API RACUpdateMoDARTLateConfig(bool enabled, float numRays, int delay)
-	{
-		// TODO: Implement
-	}
-
-	EXPORT void API RACUpdateSingleFDNLateConfig(bool enabled, float numRays)
-	{
-		// TODO: Implement
-	}
-
 	/**
-	* Updates the late reverberation time (T60).
-	*
-	* @param t60 The late reverberation time.s
-	*/
-	EXPORT void API RACUpdateReverbTime(const float* t60Data)
-	{
-		
-		Coefficients<> t60 = CreateCoefficients(t60Data, NUM_FREQUENCY_BANDS);
-		UpdateReverbTime(t60);
-	}
-
-	/**
-	* Updates the model in order to calculate the late reverberation time (T60).
-	*
-	* The mapping is as follows:
-	* 0 -> Sabine
-	* 1 -> Eyring
-	* 2 -> Custom
-	* 
-	* @param id The ID corresponding to a reverb time formula.
-	*/
-	EXPORT void API RACUpdateReverbTimeModel(int formulaId)
-	{
-		ReverbFormula formula = SelectReverbFormula(formulaId);
-		UpdateReverbTime(formula);
-	}
-
-	/**
-	* Updates the model used to process diffraction.
+	* @brief Updates the model used to process diffraction.
 	*
 	* The mapping is as follows:
 	* 0 -> Atteuate (1 / r)
@@ -421,15 +403,73 @@ extern "C"
 	}
 
 	/**
-	* Clears the internal FDN buffers.
+	* @brief Enables the late reverberation DSP.
+	*
+	* @param enable True to enable late reflections, false to disable.
 	*/
-	EXPORT void API RACResetFDN()
+	EXPORT void API RACEnableLateReverb(bool enable)
 	{
-		ResetFDN();
+		EnableLateReverb(enable);
 	}
 
 	/**
-	* Updates the listener's position and orientation.
+	* @brief Sets the number of rays used in the late reverberation ray tracing.
+	*
+	* @param numRays The number of rays to use for ray tracing.
+	*/
+	EXPORT void API RACUpdateLateReverbNumberOfRays(int numRays)
+	{
+		UpdateLateReverbNumberOfRays(numRays);
+	}
+
+	/**
+	* @brief Updates the intial delay for MoDART late reverberation.
+	*
+	* @param delay The initial delay in seconds.
+	*/
+	EXPORT void API RACUpdateMoDARTDelay(float delay)
+	{
+		UpdateMoDARTDelay(static_cast<Real>(delay));
+	}
+
+	/**
+	* @brief Updates the late reverberation time (T60).
+	*
+	* @param t60 The late reverberation time.s
+	*/
+	EXPORT void API RACUpdateSingleFDNReverbTime(const float* t60Data)
+	{
+		
+		Coefficients<> t60 = CreateCoefficients(t60Data, NUM_FREQUENCY_BANDS);
+		UpdateSingleFDNReverbTime(t60);
+	}
+
+	/**
+	* @brief Updates the model in order to calculate the late reverberation time (T60).
+	*
+	* The mapping is as follows:
+	* 0 -> Sabine
+	* 1 -> Eyring
+	* 2 -> Custom
+	* 
+	* @param id The ID corresponding to a reverb time formula.
+	*/
+	EXPORT void API RACUpdateSingleFDNReverbTimeModel(int formulaId)
+	{
+		ReverbFormula formula = SelectReverbFormula(formulaId);
+		UpdateSingleFDNReverbTime(formula);
+	}
+
+	/**
+	* @brief Clears the internal FDN buffers.
+	*/
+	EXPORT void API RACResetLateReverb()
+	{
+		ResetLateReverb();
+	}
+
+	/**
+	* @brief Updates the listener's position and orientation.
 	*
 	* @param posX The x-coordinate of the listener's position.
 	* @param posY The y-coordinate of the listener's position.
@@ -445,9 +485,9 @@ extern "C"
 	}
 
 	/**
-	* Initializes a new audio source and returns its ID.
+	* @brief Initializes a new audio source and returns its ID.
 	*
-	* This function should be called when a new audio source is created.
+	* @details This function should be called when a new audio source is created.
 	* It will allocate resources for the new source and return an ID that can be used to reference the source in future calls.
 	*
 	* @return The ID of the new audio source.
@@ -458,7 +498,7 @@ extern "C"
 	}
 
 	/**
-	* Updates the position and orientation of the audio source with the given ID.
+	* @brief Updates the position and orientation of the audio source with the given ID.
 	*
 	* @param id The ID of the audio source to update.
 	* @param posX The x-coordinate of the source's position.
@@ -505,7 +545,7 @@ extern "C"
 	}
 
 	/**
-	* Updates the directivity of the audio source with the given ID.
+	* @brief Updates the directivity of the audio source with the given ID.
 	* 
 	* The mapping is as follows:
 	* 0 -> omni
@@ -528,9 +568,9 @@ extern "C"
 	}
 
 	/**
-	* Removes the audio source with the given ID.
+	* @brief Removes the audio source with the given ID.
 	*
-	* This function should be called when an audio source is no longer needed.
+	* @details This function should be called when an audio source is no longer needed.
 	* It will free up any resources that the source was using.
 	*
 	* @param id The ID of the audio source to remove.
@@ -541,9 +581,9 @@ extern "C"
 	}
 
 	/**
-	* Initializes a new wall with the given parameters and returns its ID.
+	* @brief Initializes a new wall with the given parameters and returns its ID.
 	*
-	* This function should be called when a new wall is created. A wall must have 3 vertices.
+	* @details This function should be called when a new wall is created. A wall must have 3 vertices.
 	* It will allocate resources for the new wall and return an ID that can be used to reference the wall in future calls.
 	*
 	* @param verticesData The vertices of the wall.
@@ -566,9 +606,9 @@ extern "C"
 	}
 
 	/**
-	* Updates the position and orientation of the wall with the given ID.
+	* @brief Updates the position and orientation of the wall with the given ID.
 	*
-	* This function should be called when the position or orientation of a wall changes.
+	* @details This function should be called when the position or orientation of a wall changes.
 	* It will update the internal representation of the wall to match the new position and orientation.
 	*
 	* @param id The ID of the wall to update.
@@ -587,9 +627,9 @@ extern "C"
 	}
 
 	/**
-	* Updates the absorption of the wall with the given ID.
+	* @brief Updates the absorption of the wall with the given ID.
 	*
-	* This function should be called when the absorption of a wall changes.
+	* @details This function should be called when the absorption of a wall changes.
 	* It will update the internal representation of the wall to match the new absorption and update the late reverberation time.
 	*
 	* @param id The ID of the wall to update.
@@ -606,9 +646,9 @@ extern "C"
 	}
 
 	/**
-	* Removes the wall with the given ID.
+	* @brief Removes the wall with the given ID.
 	*
-	* This function should be called when a wall is no longer needed.
+	* @details This function should be called when a wall is no longer needed.
 	* It will free up any resources that the wall was using and remove it from the spatialiser.
 	*
 	* @param id The ID of the wall to remove.
@@ -619,9 +659,9 @@ extern "C"
 	}
 
 	/**
-	* Updates the planes and edges of the room.
+	* @brief Updates the planes and edges of the room.
 	*
-	* This function should be called after all walls have been updated for a frame.
+	* @details This function should be called after all walls have been updated for a frame.
 	* It will update the planes and edges of the room to match the new wall positions and orientations.
 	*/
 	EXPORT void API RACUpdatePlanesAndEdges()
@@ -630,7 +670,7 @@ extern "C"
 	}
 
 	/**
-	* Updates the late reverberation gain.
+	* @brief Updates the late reverberation gain.
 	* 
 	* @param gain The new late reverberation gain.
 	*/
@@ -640,9 +680,9 @@ extern "C"
 	}
 
 	/**
-	* Submits an audio buffer to the audio source with the given ID.
+	* @brief Submits an audio buffer to the audio source with the given ID.
 	*
-	* This function should be called when there is a new audio buffer for a source.
+	* @details This function should be called when there is a new audio buffer for a source.
 	* It will process the audio buffer and add it to the output buffer.
 	*
 	* @param id The ID of the audio source to update.
@@ -657,9 +697,9 @@ extern "C"
 	}
 
 	/**
-	* Processes the output of the spatialiser.
+	* @brief Processes the output of the spatialiser.
 	*
-	* This function should be called after all audio sources have been updated for a frame.
+	* @details This function should be called after all audio sources have been updated for a frame.
 	* It will process the late reverberation and prepare the interleaved output buffer.
 	*
 	* @return True if the processing was successful and the output buffer is ready, false otherwise.
@@ -673,9 +713,9 @@ extern "C"
 	}
 
 	/**
-	* Returns a pointer to the output buffer of the spatialiser.
+	* @brief Returns a pointer to the output buffer of the spatialiser.
 	*
-	* This function should be called after RACProcessOutput has returned true.
+	* @details This function should be called after RACProcessOutput has returned true.
 	* It will return a pointer to the output buffer that contains the processed output buffer.
 	*
 	* @param buf A pointer to a float pointer. This will be set to point to the interleaved output buffer.
@@ -687,9 +727,9 @@ extern "C"
 	}
 
 	/**
-	* Sets the spatialiser to impulse response mode if mode is true
+	* @brief Sets the spatialiser to impulse response mode if mode is true
 	*
-	* This function should be called with true if the output of a stationary source is being recorded.
+	* @details This function should be called with true if the output of a stationary source is being recorded.
 	* 
 	* @param lerpFactor The default interpolation factor.
 	* @params mode True if disable all interpolation, false otherwise.

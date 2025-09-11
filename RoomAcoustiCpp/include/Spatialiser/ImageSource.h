@@ -121,7 +121,7 @@ namespace RAC
 			/**
 			* @brief Resets the absorption of the image source to 1
 			*/
-			inline void ResetAbsorption() { mAbsorption = 1.0; }
+			inline void ResetAbsorption() { mAbsorption = (Real)1.0; }
 
 			/**
 			* @return A reference to the absorption of the image source
@@ -606,11 +606,11 @@ namespace RAC
 			CEarPair<CMonoBuffer<float>> bOutput;		// 3DTI Stero Output buffer
 			CMonoBuffer<float> bMonoOutput;				// 3DTI Mono output buffer for reverb send
 
-			Parameter gain{ 0.0 };								// 1.0 if the source is visible, 0.0 otherwise
+			Parameter gain{ (Real)0.0 };								// 1.0 if the source is visible, 0.0 otherwise
 			std::unique_ptr<GraphicEQ<>> mFilter;					// Frequency dependent reflection and directivity filter
 			std::unique_ptr<AirAbsorption> mAirAbsorption;		// Air absorption filter
 
-			Parameter diffractionGain{ 1.0 };											// Gain for crossfading diffracton models
+			Parameter diffractionGain{ (Real)1.0 };											// Gain for crossfading diffracton models
 			Diffraction::Path mDiffractionPath;											// Diffraction path
 			std::atomic<DiffractionModel> currentDiffractionModel;						// Current diffraction model
 			std::shared_ptr<Diffraction::Model> activeModel;							// Active diffraction model for processing audio

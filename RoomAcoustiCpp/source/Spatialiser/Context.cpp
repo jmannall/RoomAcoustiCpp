@@ -212,7 +212,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Context::UpdateReverbTime(const ReverbFormula model)
+		void Context::UpdateSingleFDNReverbTime(const ReverbFormula model)
 		{
 			if (lateReverbInitialised.load(std::memory_order_acquire))
 				mReverb->SetTargetT60(mRoom->GetReverbTime(model));
@@ -220,7 +220,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Context::UpdateReverbTime(const Coefficients<>& T60)
+		void Context::UpdateSingleFDNReverbTime(const Coefficients<>& T60)
 		{
 			mRoom->UpdateReverbTime(T60);
 			if (lateReverbInitialised.load(std::memory_order_acquire))
@@ -248,7 +248,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		bool Context::InitEarlyReverb(const EarlyReverbData& data, DiffractionModel model)
+		bool Context::InitEarlyReverb(const bool enabled, const EarlyReverbData& data, const DiffractionModel model)
 		{
 			if (earlyReverbInitialised.load(std::memory_order_acquire))
 				return false;
@@ -259,6 +259,7 @@ namespace RAC
 			// Start background thread after all systems are initialized
 			IEMThread = std::thread(IEMProcessor, this);
 
+			EnableEarlyReverb(enabled);
 			earlyReverbInitialised.store(true, std::memory_order_release);
 			return true;
 		}
@@ -275,6 +276,7 @@ namespace RAC
 
 			// Start background thread after all systems are initialized
 			rayTracingThread = std::thread(RayTracerProcessor, this);
+			EnableLateReverb(data.enabled);
 		}
 
 		////////////////////////////////////////
@@ -458,9 +460,10 @@ namespace RAC
 
 			const AudioData audioData(dspConfig);
 
-			mSources->ProcessAudio(outputBuffer, audioData);
+			if (earlyReverbInitialised.load(std::memory_order_acquire) && (audioData.earlyReverbEnabled || audioData.lateReverbEnabled))
+				mSources->ProcessAudio(outputBuffer, audioData);
 
-			if (lateReverbInitialised.load(std::memory_order_acquire))
+			if (lateReverbInitialised.load(std::memory_order_acquire) && audioData.lateReverbEnabled)
 			{
 				mSources->ProcessLateReverbSend(mReverbInput, audioData);
 				mReverb->ProcessAudio(mReverbInput, outputBuffer, audioData);

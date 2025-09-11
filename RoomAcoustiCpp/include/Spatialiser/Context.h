@@ -103,10 +103,11 @@ namespace RAC
 			/**
 			* @brief Initialises the Image Edge Model (IEM) and sets the diffraction model.
 			* 
+			* @param enabled True to enable early reflection DSP, false to disable.
 			* @param data The user defined IEM configuration data.
 			* @param model The diffraction model to use.
 			*/
-			bool InitEarlyReverb(const EarlyReverbData& data, DiffractionModel model);
+			bool InitEarlyReverb(const bool enabled, const EarlyReverbData& data, const DiffractionModel model);
 
 			/**
 			* @brief Initialises MoDART late reverberation.
@@ -153,13 +154,52 @@ namespace RAC
 			bool IsRunning() const { return mIsRunning.load(std::memory_order_acquire); }
 
 			/**
+			* @brief Enables the early reverberation DSP.
+			*
+			* @param enable True to enable early reflections, false to disable.
+			*/
+			inline void EnableEarlyReverb(const bool enable) { dspConfig->EnableEarlyReverb(enable); }
+
+			/**
 			* @brief Updates the image edge model (IEM) configuration.
 			*
 			* @param config The new IEM configuration.
 			*/
-			inline void UpdateEarlyConfig(const EarlyReverbData& data)
+			inline void UpdateEarlyConfig(const EarlyReverbData& data) { mImageEdgeModel->UpdateIEMConfig(data, dspConfig); }
+
+			/**
+			* @brief Enables the late reverberation DSP.
+			*
+			* @details If reverb is being reenabled, the late reverb buffers are reset.
+			* 
+			* @param enable True to enable late reflections, false to disable.
+			*/
+			inline void EnableLateReverb(const bool enable)
 			{
-				mImageEdgeModel->UpdateIEMConfig(data, dspConfig);
+				if (enable && !dspConfig->GetLateReverbEnabled())
+					ResetLateReverb();
+				dspConfig->EnableLateReverb(enable);
+			}
+
+			/**
+			* @brief Sets the number of rays used in the late reverberation ray tracing.
+			*
+			* @param numRays The number of rays to use for ray tracing.
+			*/
+			inline void UpdateLateReverbNumberOfRays(const int numRays)
+			{
+				if (lateReverbInitialised.load(std::memory_order_acquire))
+					mRayTracing->SetNumberOfRays(numRays);
+			}
+
+			/**
+			* @brief Updates the intial delay for MoDART late reverberation.
+			*
+			* @param delay The initial delay in seconds.
+			*/
+			inline void UpdateMoDARTDelay(const Real delay)
+			{
+				// TODO: Implement
 			}
 
 			/**
@@ -167,14 +207,14 @@ namespace RAC
 			*
 			* @param model The model used to calculate the late reverberation time.
 			*/
-			void UpdateReverbTime(const ReverbFormula model);
+			void UpdateSingleFDNReverbTime(const ReverbFormula model);
 
 			/**
 			* Overrides the current late reverberation time (T60).
 			*
 			* @param T60 The late reverberation time.
 			*/
-			void UpdateReverbTime(const Coefficients<>& T60);
+			void UpdateSingleFDNReverbTime(const Coefficients<>& T60);
 
 			/**
 			* @brief Updates the diffraction model.
@@ -207,7 +247,7 @@ namespace RAC
 			/**
 			* @brief Sets a flag to clear the late reverberation buffers.
 			*/
-			inline void ResetFDN() { dspConfig->FlagClearBuffers(); }
+			inline void ResetLateReverb() { dspConfig->FlagClearBuffers(); }
 
 			/**
 			* @brief Update the listener position and orientation.
