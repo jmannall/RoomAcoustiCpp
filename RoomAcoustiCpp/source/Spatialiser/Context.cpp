@@ -209,6 +209,21 @@ namespace RAC
 			return result;
 		}
 
+		////////////////////////////////////////
+
+		void Context::UpdateMoDARTDelay(const Real delay)
+		{
+			if (!lateReverbInitialised.load(std::memory_order_acquire))
+				return;
+
+			while (audioFlag.exchange(true, std::memory_order_acquire))
+				std::this_thread::yield();
+
+			mReverb->SetPrecedingDelay(delay, dspConfig->GetData().fs);
+			ResetLateReverb();
+
+			audioFlag.store(false, std::memory_order_release);
+		}
 
 		////////////////////////////////////////
 
@@ -283,11 +298,11 @@ namespace RAC
 
 		bool Context::InitSingleFDN(const RoomData& roomData, const LateReverbData& data)
 		{
-			while (audioFlag.exchange(true, std::memory_order_acquire))
-				std::this_thread::yield();
-
 			if (lateReverbInitialised.load(std::memory_order_acquire))
 				return false;
+
+			while (audioFlag.exchange(true, std::memory_order_acquire))
+				std::this_thread::yield();
 
 			mRoom->UpdateRoomData(roomData);
 			dspConfig->UpdateLateReverbModel(LateReverbModel::fdn, 1);
@@ -303,11 +318,11 @@ namespace RAC
 
 		bool Context::InitMoDART(const MoDARTData& data)
 		{
-			while (audioFlag.exchange(true, std::memory_order_acquire))
-				std::this_thread::yield();
-
 			if (lateReverbInitialised.load(std::memory_order_acquire))
 				return false;
+
+			while (audioFlag.exchange(true, std::memory_order_acquire))
+				std::this_thread::yield();
 
 			dspConfig->UpdateLateReverbModel(LateReverbModel::raves, data.t60s.Rows());
 			mReverb = std::make_shared<RAVES>(&mCore, data, dspConfig);
@@ -444,6 +459,7 @@ namespace RAC
 
 		void Context::GetOutput(Buffer<>& outputBuffer)
 		{
+			outputBuffer.Reset();
 			if (audioFlag.exchange(true, std::memory_order_acquire))
 				return;
 
@@ -455,7 +471,6 @@ namespace RAC
 			}
 
 			// Reset buffers
-			outputBuffer.Reset();
 			mReverbInput.Reset();
 
 			const AudioData audioData(dspConfig);

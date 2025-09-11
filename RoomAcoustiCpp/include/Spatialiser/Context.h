@@ -197,10 +197,7 @@ namespace RAC
 			*
 			* @param delay The initial delay in seconds.
 			*/
-			inline void UpdateMoDARTDelay(const Real delay)
-			{
-				// TODO: Implement
-			}
+			void UpdateMoDARTDelay(const Real delay);
 
 			/**
 			* Updates the model in order to calculate the late reverberation time (T60).
