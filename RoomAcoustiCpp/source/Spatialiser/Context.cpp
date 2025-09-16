@@ -227,6 +227,16 @@ namespace RAC
 
 		////////////////////////////////////////
 
+		void Context::UpdateMoDARTMinimumReverbTime(const Real T60)
+		{
+			if (!lateReverbInitialised.load(std::memory_order_acquire))
+				return;
+
+			mReverb->SetMinimumT60(T60);
+		}
+
+		////////////////////////////////////////
+
 		void Context::UpdateSingleFDNReverbTime(const ReverbFormula model)
 		{
 			if (lateReverbInitialised.load(std::memory_order_acquire))

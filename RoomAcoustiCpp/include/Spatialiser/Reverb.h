@@ -201,6 +201,13 @@ namespace RAC
 			virtual void SetPrecedingDelay(const Real delay, int fs) { /*Do Nothing*/ }
 
 			/**
+			* @brief Update the minimum reverberation time to model for RAVES reverb
+			*
+			* @param T60 The minimum reverberation time in seconds
+			*/
+			virtual void SetMinimumT60(const Real T60) { /*Do Nothing*/ }
+
+			/**
 			* @return The length (in seconds) of the preceding delay
 			*/
 			inline Real GetPrecedingDelay() const { return precedingDelayLength; }
@@ -304,6 +311,13 @@ namespace RAC
 				auto fdns = mFDNs.load();
 				for (int i = 0; i < fdns->size(); i++)
 					fdns->at(i)->SetPrecedingDelay(delay, delayOffset, fs);
+			}
+
+			inline void SetMinimumT60(const Real T60) override
+			{
+				auto fdns = mFDNs.load();
+				for (int i = 0; i < fdns->size(); i++)
+					fdns->at(i)->SetMinimumReverbTime(T60);
 			}
 
 			void ProcessReverberator(const Matrix<>& data, std::vector<Buffer<>>& outputBuffers, const AudioData& audioData) override;

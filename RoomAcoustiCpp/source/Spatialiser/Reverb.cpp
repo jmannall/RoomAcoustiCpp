@@ -303,6 +303,7 @@ namespace RAC
 					fdns->at(i) = std::make_unique<FDN<Complex>>(data.t60s[i], delayLineLengths, dspConfig);
 					break;
 				}
+				fdns->at(i)->SetMinimumReverbTime(data.minimumT60);
 			}
 			releasePool.Add(fdns);
 

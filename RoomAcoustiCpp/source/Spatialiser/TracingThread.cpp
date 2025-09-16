@@ -85,7 +85,7 @@ namespace RAC
 #ifdef RTM_FLAG
 			Debug::RTMStartFlag();
 #endif
-
+			// TODO: Should we only update residues relevant to currently active FDNs (i.e T60 > minimumT60)?
 			lock_guard<std::mutex> lock(rayPencilMutex);
 			shared_ptr<Room> sharedRoom = mRoom.lock();
 			shared_ptr<Reverb> sharedReverb = mReverb.lock();

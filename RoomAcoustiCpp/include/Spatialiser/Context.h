@@ -200,6 +200,13 @@ namespace RAC
 			void UpdateMoDARTDelay(const Real delay);
 
 			/**
+			* @brief Updates the minimum reverberation time to model. Controls the number of modes in MoDART.
+			*
+			* @param T60 The minimum reverberation time in seconds.
+			*/
+			void UpdateMoDARTMinimumReverbTime(const Real T60);
+
+			/**
 			* Updates the model in order to calculate the late reverberation time (T60).
 			*
 			* @param model The model used to calculate the late reverberation time.

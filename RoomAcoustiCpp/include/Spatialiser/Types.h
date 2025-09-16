@@ -357,9 +357,10 @@ namespace RAC
 			std::vector<Vec<>> leftEigenvectors;
 			std::vector<Vec<>> rightEigenvectors;
 			Real delay{ 0.0 };
+			Real minimumT60{ 0.0 };
 
-			MoDARTData(bool enabled, int numRays, FDNMatrix feedbackMatrix, Real delay, Matrix<int> indexing, Vec<int> frequencyIndexing, Vec<> t60s, std::vector<Vec<>> leftEigenvectors, std::vector<Vec<>> rightEigenvectors)
-				: LateReverbData(enabled, numRays, feedbackMatrix), indexing(indexing), delay(delay)
+			MoDARTData(bool enabled, int numRays, FDNMatrix feedbackMatrix, Real delay, Real minimumT60, Matrix<int> indexing, Vec<int> frequencyIndexing, Vec<> t60s, std::vector<Vec<>> leftEigenvectors, std::vector<Vec<>> rightEigenvectors)
+				: LateReverbData(enabled, numRays, feedbackMatrix), indexing(indexing), delay(delay), minimumT60(minimumT60)
 			{
 				std::vector<Real> t60sData;
 				std::vector<int> frequencyIndexingData;

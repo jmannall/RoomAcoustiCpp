@@ -286,7 +286,7 @@ extern "C"
 	* @params numNodes The number of nodes in the indexing matrix.
 	* @params numPaths The number of propagation paths in MoDART.
 	*/
-	EXPORT bool API RACInitMoDART(bool enabled, int numRays, int matrixId, float delay, const int* indexingData, const int* frequencyIndexingData, const float* t60sData, const float* leftEigenvectorsData, const float* rightEigenvectorsData, int numFDNs, int numNodes, int numPaths)
+	EXPORT bool API RACInitMoDART(bool enabled, int numRays, int matrixId, float delay, float minimumT60, const int* indexingData, const int* frequencyIndexingData, const float* t60sData, const float* leftEigenvectorsData, const float* rightEigenvectorsData, int numFDNs, int numNodes, int numPaths)
 	{
 		Vec<int> frequencyIndexing = CreateIntVec(frequencyIndexingData, numFDNs);
 		Vec<> t60s = CreateVec(t60sData, numFDNs);
@@ -303,7 +303,7 @@ extern "C"
 			rightEigenvectors.push_back(CreateVec(rightEigenvectorsData + i * numPaths, numPaths));
 		}
 
-		MoDARTData data(enabled, numRays, SelectFDNMatrix(matrixId), static_cast<Real>(delay), indexing, frequencyIndexing, t60s, leftEigenvectors, rightEigenvectors);
+		MoDARTData data(enabled, numRays, SelectFDNMatrix(matrixId), static_cast<Real>(delay), static_cast<Real>(minimumT60), indexing, frequencyIndexing, t60s, leftEigenvectors, rightEigenvectors);
 		return InitMoDART(data);
 	}
 
@@ -427,6 +427,16 @@ extern "C"
 	EXPORT void API RACUpdateMoDARTDelay(float delay)
 	{
 		UpdateMoDARTDelay(static_cast<Real>(delay));
+	}
+
+	/**
+	* @brief Updates the minimum reverberation time to model. Controls the number of modes in MoDART.
+	*
+	* @param T60 The minimum reverberation time in seconds.
+	*/
+	EXPORT void API RACUpdateMoDARTMinimumReverbTime(float T60)
+	{
+		UpdateMoDARTMinimumReverbTime(static_cast<Real>(T60));
 	}
 
 	/**

@@ -117,7 +117,7 @@ namespace RAC
 
 		template<>
 		FDN<Real>::FDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<DSPConfig> dspConfig, const Matrix<>& matrix) : x(dspConfig->GetData().numReverbSources),
-			y(dspConfig->GetData().numReverbSources), feedbackMatrix(matrix)
+			y(dspConfig->GetData().numReverbSources), feedbackMatrix(matrix), mT60(nullptr)
 		{
 			assert(T60 > 0);
 
@@ -138,9 +138,10 @@ namespace RAC
 
 		////////////////////////////////////////
 
+		// TODO: Work out how to remove obsolete constructors for each type
 		template<>
-		FDN<Real>::FDN(const Coefficients<>& T60, const std::vector<int>& delayLengths, const std::shared_ptr<DSPConfig> dspConfig, const Matrix<>& matrix) : x(dspConfig->GetData().numReverbSources),
-			y(dspConfig->GetData().numReverbSources), feedbackMatrix(matrix)
+		FDN<Real>::FDN(const Real T60, const Vec<int>& delayLengths, const std::shared_ptr<DSPConfig> dspConfig, const Matrix<>& matrix) : x(dspConfig->GetData().numReverbSources),
+			y(dspConfig->GetData().numReverbSources), feedbackMatrix(matrix), mT60(nullptr)
 		{
 			assert(T60 > 0);
 
@@ -162,7 +163,7 @@ namespace RAC
 
 		template<>
 		FDN<Complex>::FDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<DSPConfig> dspConfig, const Matrix<>& matrix) : x(dspConfig->GetData().numReverbSources),
-			y(dspConfig->GetData().numReverbSources), feedbackMatrix(matrix), ravesResidues(dspConfig->GetData().numReverbSources)
+			y(dspConfig->GetData().numReverbSources), feedbackMatrix(matrix), ravesResidues(dspConfig->GetData().numReverbSources), mT60(0.0), enabled(false)
 		{
 			assert(T60 > 0);
 
@@ -184,8 +185,8 @@ namespace RAC
 		////////////////////////////////////////
 
 		template<>
-		FDN<Complex>::FDN(const Coefficients<>& T60, const std::vector<int>& delayLengths, const std::shared_ptr<DSPConfig> dspConfig, const Matrix<>& matrix) : x(dspConfig->GetData().numReverbSources),
-			y(dspConfig->GetData().numReverbSources), feedbackMatrix(matrix), ravesResidues(dspConfig->GetData().numReverbSources)
+		FDN<Complex>::FDN(const Real T60, const Vec<int>& delayLengths, const std::shared_ptr<DSPConfig> dspConfig, const Matrix<>& matrix) : x(dspConfig->GetData().numReverbSources),
+			y(dspConfig->GetData().numReverbSources), feedbackMatrix(matrix), ravesResidues(dspConfig->GetData().numReverbSources), mT60(T60), enabled(false)
 		{
 			assert(T60 > 0);
 
@@ -259,12 +260,7 @@ namespace RAC
 		{
 			PROFILE_FDN
 			if (audioData.clearBuffers)
-			{
-				x.Reset();
-				y.Reset();
-				for (auto& channel : mChannels)
-					channel->Reset();
-			}
+				Reset();
 
 			// Process feedback loop
 			for (int i = 0; i < data.Cols(); i++)
@@ -287,15 +283,12 @@ namespace RAC
 		template<>
 		void FDN<Complex>::ProcessAudio(std::vector<Buffer<>>& outputBuffers, const AudioData& audioData)
 		{
+			if (!enabled.load(std::memory_order_acquire))
+				return;
+
 			PROFILE_FDN
 			if (audioData.clearBuffers)
-			{
-				x.Reset();
-				y.Reset();
-				precedingDelayBuffer.Reset();
-				for (auto& channel : mChannels)
-					channel->Reset();
-			}
+				Reset();
 
 			// Process feedback loop
 			for (int i = 0; i < outputBuffers[0].Length(); i++)

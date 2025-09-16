@@ -128,6 +128,15 @@ namespace RAC
 
 		////////////////////////////////////////
 
+		void UpdateMoDARTMinimumReverbTime(const Real T60)
+		{
+			auto context = GetContext();
+			if (context)
+				context->UpdateMoDARTMinimumReverbTime(T60);
+		}
+
+		////////////////////////////////////////
+
 		void UpdateSingleFDNReverbTime(const ReverbFormula model)
 		{
 			auto context = GetContext();

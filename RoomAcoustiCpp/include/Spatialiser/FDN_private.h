@@ -170,7 +170,7 @@ namespace RAC
 			* @param delayLengths Delay line lengths (in samples)
 			* @param dspConfig The spatialiser configuration
 			*/
-			FDN(const Coefficients<>& T60, const std::vector<int>& delayLengths, const std::shared_ptr<DSPConfig>& dspConfig) : FDN(T60, delayLengths, dspConfig, InitMatrix(dspConfig->GetData().numReverbSources)) {}
+			FDN(const Real T60, const Vec<int>& delayLengths, const std::shared_ptr<DSPConfig>& dspConfig) : FDN(T60, delayLengths, dspConfig, InitMatrix(dspConfig->GetData().numReverbSources)) {}
 
 			/**
 			* @brief Default deconstructor
@@ -216,6 +216,19 @@ namespace RAC
 				precedingDelayBuffer.Reset(); // TODO: Do we want to avoid resetting it?
 			}
 
+			inline void SetMinimumReverbTime(Real T60)
+				requires std::is_same_v<T, Complex>
+			{
+				if (mT60 > T60)
+				{
+					if (!enabled.load(std::memory_order_acquire))
+						Reset();
+					enabled.store(true, std::memory_order_release);
+				}
+				else
+					enabled.store(false, std::memory_order_release);
+			}
+
 			inline void SubmitAudio(const Real* input)
 			requires std::is_same_v<T, Complex> 
 			{ 
@@ -241,7 +254,7 @@ namespace RAC
 			* @param config The spatialiser configuration
 			* @param matrix The feedback matrix to use for the FDN
 			*/
-			FDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<DSPConfig> config, const Matrix<>& matrix);
+			FDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<DSPConfig> dspConfig, const Matrix<>& matrix);
 
 			/**
 			* @brief Initialises an FDN with a target T60 and given delay line lengths
@@ -251,7 +264,7 @@ namespace RAC
 			* @param config The spatialiser configuration
 			* @param matrix The feedback matrix to use for the FDN
 			*/
-			FDN(const Coefficients<>& T60, const std::vector<int>& delayLengths, const std::shared_ptr<DSPConfig> config, const Matrix<>& matrix);
+			FDN(const Real T60, const Vec<int>& delayLengths, const std::shared_ptr<DSPConfig> dspConfig, const Matrix<>& matrix);
 
 			/**
 			* @brief Processes a square feedback matrix
@@ -262,6 +275,9 @@ namespace RAC
 			Rowvec<T> y;	// Previous output audio buffer
 
 		private:
+
+			inline void Reset();
+
 			/**
 			* @brief Calculate a sample delay based on given distances
 			*
@@ -343,9 +359,32 @@ namespace RAC
 			std::conditional_t<std::is_same_v<T, Complex>,
 				int, std::nullptr_t> precedingDelayCursor{ 0 };			// Position of the read/write cursor within the buffer
 
+			const std::conditional_t<std::is_same_v<T, Complex>,
+				Real, std::nullptr_t> mT60;
+
+			std::conditional_t<std::is_same_v<T, Complex>,
+				std::atomic<bool>, std::nullptr_t> enabled;
+
 			std::conditional_t<std::is_same_v<T, Complex>,
 				const Complex*, std::nullptr_t> inputData{ nullptr };
 		};
+
+		inline void FDN<Real>::Reset()
+		{
+			x.Reset();
+			y.Reset();
+			for (auto& channel : mChannels)
+				channel->Reset();
+		}
+
+		inline void FDN<Complex>::Reset()
+		{
+			x.Reset();
+			y.Reset();
+			precedingDelayBuffer.Reset();
+			for (auto& channel : mChannels)
+				channel->Reset();
+		}
 
 		template <typename T = Real>
 		class HouseHolderFDN : public FDN<T>
@@ -370,7 +409,7 @@ namespace RAC
 			* @param delayLengths Delay line lengths (in samples)
 			* @param dspConfig The spatialiser configuration
 			*/
-			HouseHolderFDN(const Coefficients<>& T60, const std::vector<int>& delayLengths, const std::shared_ptr<DSPConfig>& dspConfig)
+			HouseHolderFDN(const Real T60, const Vec<int>& delayLengths, const std::shared_ptr<DSPConfig>& dspConfig)
 				: FDN<T>(T60, delayLengths, dspConfig, Matrix()), houseHolderFactor(2.0 / static_cast<Real>(dspConfig->GetData().numReverbSources)) {}
 
 			/**
@@ -416,7 +455,7 @@ namespace RAC
 			* @param delayLengths Delay line lengths (in samples)
 			* @param dspConfig The spatialiser configuration
 			*/
-			RandomOrthogonalFDN(const Coefficients<>& T60, const std::vector<int>& delayLengths, const std::shared_ptr<DSPConfig>& dspConfig)
+			RandomOrthogonalFDN(const Real T60, const Vec<int>& delayLengths, const std::shared_ptr<DSPConfig>& dspConfig)
 				: FDN<T>(T60, delayLengths, dspConfig, InitMatrix(dspConfig->GetData().numReverbSources)) {}
 
 			/**
