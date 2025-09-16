@@ -160,7 +160,7 @@ namespace RAC
 			* @param dimensions Primary room dimensions that determine delay line lengths
 			* @param dspConfig The spatialiser configuration
 			*/
-			FDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<DSPConfig>& dspConfig) : FDN(T60, dimensions, dspConfig, InitMatrix(dspConfig->GetData().numReverbSources)) {}
+			FDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<DSPConfig>& dspConfig) : FDN(T60, dimensions, dspConfig, InitMatrix(dspConfig->GetData().fdnSize)) {}
 
 			/**
 			* @brief Initialises an FDN with a target T60 and given delay line lengths
@@ -170,7 +170,7 @@ namespace RAC
 			* @param delayLengths Delay line lengths (in samples)
 			* @param dspConfig The spatialiser configuration
 			*/
-			FDN(const Real T60, const Vec<int>& delayLengths, const std::shared_ptr<DSPConfig>& dspConfig) : FDN(T60, delayLengths, dspConfig, InitMatrix(dspConfig->GetData().numReverbSources)) {}
+			FDN(const Real T60, const Vec<int>& delayLengths, const std::shared_ptr<DSPConfig>& dspConfig) : FDN(T60, delayLengths, dspConfig, InitMatrix(dspConfig->GetData().fdnSize)) {}
 
 			/**
 			* @brief Default deconstructor
@@ -282,9 +282,11 @@ namespace RAC
 			* @brief Calculate a sample delay based on given distances
 			*
 			* @param dimensions Primary room dimensions
+			* @param fdnSize The number of channels in the FDN
+			* @param fs The sample rate
 			* @return Sample delays for each FDN channel
 			*/
-			std::vector<int> CalculateTimeDelay(const Vec<>& dimensions, const int numReverbSources, const int fs);
+			std::vector<int> CalculateTimeDelay(const Vec<>& dimensions, const int fdnSize, const int fs);
 
 			/**
 			* @brief Initialises a default diagonal matrix
@@ -331,6 +333,7 @@ namespace RAC
 
 			std::vector<std::unique_ptr<FDNChannel<T>>> mChannels;		// Internal delay line channels
 
+			// TODO: Update to consider numReverbSources is different from fdnSize
 			/* The MoD-ART model relies on the assumption that each FDN's power output starts from a value of 1 at time 0.
 			 * The `powerNormalization` value is used to ensure that is the case. The following is an explanation of what's going on.
 			 * 
@@ -399,7 +402,7 @@ namespace RAC
 			* @param dspConfig The spatialiser configuration
 			*/
 			HouseHolderFDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<DSPConfig>& dspConfig)
-				: FDN<T>(T60, dimensions, dspConfig, Matrix()), houseHolderFactor(2.0 / static_cast<Real>(dspConfig->GetData().numReverbSources)) {}
+				: FDN<T>(T60, dimensions, dspConfig, Matrix()), houseHolderFactor(2.0 / static_cast<Real>(dspConfig->GetData().fdnSize)) {}
 			
 			/**
 			* @brief Initialises an FDN with a target T60 and given delay line lengths
@@ -410,7 +413,7 @@ namespace RAC
 			* @param dspConfig The spatialiser configuration
 			*/
 			HouseHolderFDN(const Real T60, const Vec<int>& delayLengths, const std::shared_ptr<DSPConfig>& dspConfig)
-				: FDN<T>(T60, delayLengths, dspConfig, Matrix()), houseHolderFactor(2.0 / static_cast<Real>(dspConfig->GetData().numReverbSources)) {}
+				: FDN<T>(T60, delayLengths, dspConfig, Matrix()), houseHolderFactor(2.0 / static_cast<Real>(dspConfig->GetData().fdnSize)) {}
 
 			/**
 			* @brief Default deconstructor
@@ -445,7 +448,7 @@ namespace RAC
 			* @param dspConfig The spatialiser configuration
 			*/
 			RandomOrthogonalFDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<DSPConfig>& dspConfig)
-				: FDN<T>(T60, dimensions, dspConfig, InitMatrix(dspConfig->GetData().numReverbSources)) {}
+				: FDN<T>(T60, dimensions, dspConfig, InitMatrix(dspConfig->GetData().fdnSize)) {}
 
 			/**
 			* @brief Initialises an FDN with a target T60 and given delay line lengths
@@ -456,7 +459,7 @@ namespace RAC
 			* @param dspConfig The spatialiser configuration
 			*/
 			RandomOrthogonalFDN(const Real T60, const Vec<int>& delayLengths, const std::shared_ptr<DSPConfig>& dspConfig)
-				: FDN<T>(T60, delayLengths, dspConfig, InitMatrix(dspConfig->GetData().numReverbSources)) {}
+				: FDN<T>(T60, delayLengths, dspConfig, InitMatrix(dspConfig->GetData().fdnSize)) {}
 
 			/**
 			* @brief Default deconstructor

@@ -278,16 +278,15 @@ namespace RAC
 		void RAVES::InitLateReverb(const MoDARTData& data, const std::shared_ptr<DSPConfig>& dspConfig)
 		{
 			int numFDNs = dspConfig->GetNumFDNs();
-			int numReverbSources = dspConfig->GetData().numReverbSources;
+			int fdnSize = dspConfig->GetData().fdnSize;
 
-			std::vector<int> delayLineLengths(numReverbSources, -1);
+			std::vector<int> delayLineLengths(fdnSize, -1);
 
 			FDNPtr fdns = std::make_shared<std::vector<std::unique_ptr<FDN<Complex>>>>(numFDNs);
-			// fdns->reserve(config->numRavesFDNs);
 			for (int i = 0; i < numFDNs; i++)
 			{
 				// TODO: Be smarter about this
-				delayLineLengths = GetSetOfPrimes(100+i, numReverbSources, std::max(12, numFDNs));
+				delayLineLengths = GetSetOfPrimes(100+i, fdnSize, std::max(12, numFDNs));
 
 				// TODO: Check if any of the values are -1 (error in generating the list of primes) and adapt accordingly
 

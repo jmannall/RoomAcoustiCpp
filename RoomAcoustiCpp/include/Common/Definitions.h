@@ -25,6 +25,9 @@ namespace RAC
 		const constexpr size_t MAX_IMAGESOURCES = 1024;		// Maximum number of image sources
 		const constexpr size_t MAX_SOURCES = 128;			// Maximum number of sources
 
+		const constexpr int MIN_FDNSIZE = 6;				// Minimum number of FDN channels
+		const constexpr int MAX_FDNSIZE = 32;				// Maximum number of FDN channels
+
 #if DATA_TYPE_DOUBLE	// Double
 
 		const constexpr Real T_CELCIUS = 20.0;							// Temperature in degrees celcius

@@ -116,92 +116,93 @@ namespace RAC
 		////////////////////////////////////////
 
 		template<>
-		FDN<Real>::FDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<DSPConfig> dspConfig, const Matrix<>& matrix) : x(dspConfig->GetData().numReverbSources),
-			y(dspConfig->GetData().numReverbSources), feedbackMatrix(matrix), mT60(nullptr)
+		FDN<Real>::FDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<DSPConfig> dspConfig, const Matrix<>& matrix) : x(dspConfig->GetData().fdnSize),
+			y(dspConfig->GetData().fdnSize), feedbackMatrix(matrix), mT60(nullptr)
 		{
 			assert(T60 > 0);
 
 			// For the purpose of `powerNormalization`, see notes in FDN_private.h
 			powerNormalization = 0.0;
 
-			int numReverbSources = dspConfig->GetData().numReverbSources;
-			std::vector<int> delayLengths = CalculateTimeDelay(dimensions, numReverbSources, dspConfig->GetData().fs);
-			mChannels.reserve(numReverbSources);
-			for (int i = 0; i < numReverbSources; i++)
+			int fdnSize = dspConfig->GetData().fdnSize;
+			std::vector<int> delayLengths = CalculateTimeDelay(dimensions, fdnSize, dspConfig->GetData().fs);
+			mChannels.reserve(fdnSize);
+			for (int i = 0; i < fdnSize; i++)
 			{
 				mChannels.push_back(std::make_unique<FDNChannel<Real>>(delayLengths[i], T60, dspConfig));
 				powerNormalization += static_cast<Real>(delayLengths[i]);
 			}
 
-			powerNormalization = std::sqrt(powerNormalization / static_cast<Real>(numReverbSources));
+			powerNormalization = std::sqrt(powerNormalization / static_cast<Real>(fdnSize));
 		}
 
 		////////////////////////////////////////
 
 		// TODO: Work out how to remove obsolete constructors for each type
 		template<>
-		FDN<Real>::FDN(const Real T60, const Vec<int>& delayLengths, const std::shared_ptr<DSPConfig> dspConfig, const Matrix<>& matrix) : x(dspConfig->GetData().numReverbSources),
-			y(dspConfig->GetData().numReverbSources), feedbackMatrix(matrix), mT60(nullptr)
+		FDN<Real>::FDN(const Real T60, const Vec<int>& delayLengths, const std::shared_ptr<DSPConfig> dspConfig, const Matrix<>& matrix) : x(dspConfig->GetData().fdnSize),
+			y(dspConfig->GetData().fdnSize), feedbackMatrix(matrix), mT60(nullptr)
 		{
 			assert(T60 > 0);
 
 			// For the purpose of `powerNormalization`, see notes in FDN_private.h
 			powerNormalization = 0.0;
 
-			int numReverbSources = dspConfig->GetData().numReverbSources;
-			mChannels.reserve(numReverbSources);
-			for (int i = 0; i < numReverbSources; i++)
+			int fdnSize = dspConfig->GetData().fdnSize;
+			mChannels.reserve(fdnSize);
+			for (int i = 0; i < fdnSize; i++)
 			{
 				mChannels.push_back(std::make_unique<FDNChannel<Real>>(delayLengths[i], T60, dspConfig));
 				powerNormalization += static_cast<Real>(delayLengths[i]);
 			}
 
-			powerNormalization = std::sqrt(powerNormalization / static_cast<Real>(numReverbSources));
+			powerNormalization = std::sqrt(powerNormalization / static_cast<Real>(fdnSize));
 		}
 
 		////////////////////////////////////////
 
 		template<>
-		FDN<Complex>::FDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<DSPConfig> dspConfig, const Matrix<>& matrix) : x(dspConfig->GetData().numReverbSources),
-			y(dspConfig->GetData().numReverbSources), feedbackMatrix(matrix), ravesResidues(dspConfig->GetData().numReverbSources), mT60(0.0), enabled(false)
+		FDN<Complex>::FDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<DSPConfig> dspConfig, const Matrix<>& matrix) : x(dspConfig->GetData().fdnSize),
+			y(dspConfig->GetData().fdnSize), feedbackMatrix(matrix), ravesResidues(dspConfig->GetData().numReverbSources), mT60(0.0), enabled(false)
 		{
 			assert(T60 > 0);
 
 			// For the purpose of `powerNormalization`, see notes in FDN_private.h
 			powerNormalization = 0.0;
 
-			int numReverbSources = dspConfig->GetData().numReverbSources;
-			std::vector<int> delayLengths = CalculateTimeDelay(dimensions, numReverbSources, dspConfig->GetData().fs);
-			mChannels.reserve(numReverbSources);
-			for (int i = 0; i < numReverbSources; i++)
+			int fdnSize = dspConfig->GetData().fdnSize;
+			std::vector<int> delayLengths = CalculateTimeDelay(dimensions, fdnSize, dspConfig->GetData().fs);
+			mChannels.reserve(fdnSize);
+			for (int i = 0; i < fdnSize; i++)
 			{
 				mChannels.push_back(std::make_unique<FDNChannel<Complex>>(delayLengths[i], T60, dspConfig));
 				powerNormalization += static_cast<Real>(delayLengths[i]);
 			}
 
-			powerNormalization = std::sqrt(powerNormalization / static_cast<Real>(numReverbSources));
+			powerNormalization = std::sqrt(powerNormalization / static_cast<Real>(fdnSize));
 		}
 
 		////////////////////////////////////////
 
+		// TODO: Check power normalization with different FDN size and numReverbSources
 		template<>
-		FDN<Complex>::FDN(const Real T60, const Vec<int>& delayLengths, const std::shared_ptr<DSPConfig> dspConfig, const Matrix<>& matrix) : x(dspConfig->GetData().numReverbSources),
-			y(dspConfig->GetData().numReverbSources), feedbackMatrix(matrix), ravesResidues(dspConfig->GetData().numReverbSources), mT60(T60), enabled(false)
+		FDN<Complex>::FDN(const Real T60, const Vec<int>& delayLengths, const std::shared_ptr<DSPConfig> dspConfig, const Matrix<>& matrix) : x(dspConfig->GetData().fdnSize),
+			y(dspConfig->GetData().fdnSize), feedbackMatrix(matrix), ravesResidues(dspConfig->GetData().numReverbSources), mT60(T60), enabled(false)
 		{
 			assert(T60 > 0);
 
 			// For the purpose of `powerNormalization`, see notes in FDN_private.h
 			powerNormalization = 0.0;
 
-			int numReverbSources = dspConfig->GetData().numReverbSources;
-			mChannels.reserve(numReverbSources);
-			for (int i = 0; i < numReverbSources; i++)
+			int fdnSize = dspConfig->GetData().fdnSize;
+			mChannels.reserve(fdnSize);
+			for (int i = 0; i < fdnSize; i++)
 			{
 				mChannels.push_back(std::make_unique<FDNChannel<Complex>>(delayLengths[i], T60, dspConfig));
 				powerNormalization += static_cast<Real>(delayLengths[i]);
 			}
 
-			powerNormalization = std::sqrt(powerNormalization / static_cast<Real>(numReverbSources));
+			powerNormalization = std::sqrt(powerNormalization / static_cast<Real>(fdnSize));
 		}
 
 		////////////////////////////////////////
@@ -216,26 +217,26 @@ namespace RAC
 		////////////////////////////////////////
 
 		template<typename T>
-		std::vector<int> FDN<T>::CalculateTimeDelay(const Vec<>& dimensions, const int numReverbSources, const int fs)
+		std::vector<int> FDN<T>::CalculateTimeDelay(const Vec<>& dimensions, const int fdnSize, const int fs)
 		{
 			assert(dimensions.Rows() >  0);
 
-			Vec t = Vec(numReverbSources);
-			std::vector<int> delays = std::vector<int>(numReverbSources);
+			Vec t = Vec(fdnSize);
+			std::vector<int> delays = std::vector<int>(fdnSize);
 			if (dimensions.Rows() > 0)
 			{
 
-				assert(dimensions.Rows() <= numReverbSources);
+				assert(dimensions.Rows() <= fdnSize);
 
 				t.RandomUniformDistribution(-0.1, 0.1f);
 				t *= dimensions.Mean();
 
 				int k = 0;
-				while (k < numReverbSources)
+				while (k < fdnSize)
 				{
 					for (int i = 0; i < dimensions.Rows(); ++i)
 					{
-						if (k >= numReverbSources)
+						if (k >= fdnSize)
 							break;
 						assert(dimensions[i] > 0.0);
 						t[k] += dimensions[i];
@@ -245,7 +246,7 @@ namespace RAC
 				t *= INV_SPEED_OF_SOUND;
 				t.Max((Real)1.0 / static_cast<Real>(fs));
 
-				for (int i = 0; i < numReverbSources; i++)
+				for (int i = 0; i < fdnSize; i++)
 					delays[i] = static_cast<int>(round(t[i] * static_cast<Real>(fs)));
 				if (!IsSetMutuallyPrime(delays))
 					MakeSetMutuallyPrime(delays);
@@ -266,10 +267,11 @@ namespace RAC
 			for (int i = 0; i < data.Cols(); i++)
 			{
 				for (int j = 0; j < mChannels.size(); j++)
-				{
 					y[j] = mChannels[j]->GetOutput(x[j] + data(j, i), audioData.lerpFactor);
+
+				for (int j = 0; j < outputBuffers.size(); j++)
 					outputBuffers[j][i] = y[j];
-				}
+
 				ProcessMatrix();
 			}
 
@@ -296,10 +298,11 @@ namespace RAC
 				if (precedingDelayCursor >= precedingDelayBuffer.Length())
 					precedingDelayCursor = 0;
 				for (int j = 0; j < mChannels.size(); j++)
-				{
 					y[j] = mChannels[j]->GetOutput(x[j] + precedingDelayBuffer[precedingDelayCursor], audioData.lerpFactor);
+
+				for (int j = 0; j < outputBuffers.size(); j++)
 					outputBuffers[j][i] += ravesResidues[j].GetOutput(y[j], audioData.lerpFactor);
-				}
+
 				ProcessMatrix();
 				// For the purpose of `powerNormalization`, see notes in FDN_private.h
 				precedingDelayBuffer[precedingDelayCursor] = inputData[i] * powerNormalization;

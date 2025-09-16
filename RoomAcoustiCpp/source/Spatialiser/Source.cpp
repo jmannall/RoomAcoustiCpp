@@ -515,7 +515,7 @@ namespace RAC
 			{
 				int fdnChannel = -1;
 				if (data.IsFeedingFDN())
-					fdnChannel = AssignFDNChannel(dspConfig->GetData().numReverbSources);
+					fdnChannel = AssignFDNChannel(dspConfig->GetData().fdnSize);
 
 				id = imageSources.NextID();
 				if (id < 0)		// No free slots
@@ -527,7 +527,7 @@ namespace RAC
 			{
 				int fdnChannel = -1;
 				if (data.IsFeedingFDN() && imageSources.at(id).GetFDNChannel() < 0)
-					fdnChannel = AssignFDNChannel(dspConfig->GetData().numReverbSources);
+					fdnChannel = AssignFDNChannel(dspConfig->GetData().fdnSize);
 
 				bool remove = imageSources.at(id).Update(data, fdnChannel);
 
@@ -548,9 +548,9 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		int Source::AssignFDNChannel(const int numLateReverbChannels)
+		int Source::AssignFDNChannel(const int fdnSize)
 		{
-			if (freeFDNChannels.back() >= numLateReverbChannels)
+			if (freeFDNChannels.back() >= fdnSize)
 				freeFDNChannels.back() = 0;
 			int fdnChannel = static_cast<int>(freeFDNChannels.back());
 			if (freeFDNChannels.size() > 1)

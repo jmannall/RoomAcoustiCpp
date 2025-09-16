@@ -111,19 +111,20 @@ namespace RAC
 		struct DSPData
 		{
 		public:
-			int fs{ 48000 };												// Sample rate
-			int numFrames{ 512 };											// Number of frames per audio callback
-			int numReverbSources{ 12 };										// Number of output channels for late reverberation
-			Real Q{ 0.98 };													// Q factor for the GraphicEQ
-			Coefficients<> frequencyBands;									// Frequency band center frequencies
-			int numFrequencyBands{ 0 };										// Number of frequency bands
+			int fs{ 48000 };							// Sample rate
+			int numFrames{ 512 };						// Number of frames per audio callback
+			int numReverbSources{ 12 };					// Number of output channels for late reverberation
+			int fdnSize{ 12 };							// Size of the FDN (number of delay lines)
+			Real Q{ 0.98 };								// Q factor for the GraphicEQ
+			Coefficients<> frequencyBands;				// Frequency band center frequencies
+			int numFrequencyBands{ 0 };					// Number of frequency bands
 
 			DSPData() : frequencyBands(Coefficients<>({ (Real)250.0, (Real)500.0, (Real)1000.0, (Real)2000.0 }))
 			{}
 
-			DSPData(int sampleRate, int numFrames, int numReverbSources, Real lerpFactor, Real Q, Coefficients<> frequencyBands) :
-				fs(sampleRate), numFrames(numFrames), lerpFactor(CalculateLerpFactor(lerpFactor)), Q(Q), frequencyBands(frequencyBands),
-				numFrequencyBands(frequencyBands.Length()), numReverbSources(numReverbSources)
+			DSPData(int sampleRate, int numFrames, int numReverbSources, int fdnSize, Real lerpFactor, Real Q, Coefficients<> frequencyBands) :
+				fs(sampleRate), numFrames(numFrames), numReverbSources(CalculateNumReverbSources(numReverbSources)), fdnSize(CalculateFDNSize(fdnSize, this->numReverbSources)),
+				lerpFactor(CalculateLerpFactor(lerpFactor)), Q(Q), frequencyBands(frequencyBands), numFrequencyBands(frequencyBands.Length())
 			{}
 
 			inline Real GetLerpFactor() const { return lerpFactor; }
@@ -135,6 +136,36 @@ namespace RAC
 			{
 				Real factor = (Real)96.0 * lerpFactor / fs;
 				return std::max(std::min(factor, (Real)1.0), (Real)1.0 / fs);
+			}
+
+			constexpr int CalculateNumReverbSources(int maxReverbSources)
+			{
+				if (maxReverbSources < 2)
+					return 1;
+				else if (maxReverbSources < 4)
+					return 2;
+				else if (maxReverbSources < 6)
+					return 4;
+				else if (maxReverbSources < 8)
+					return 6;
+				else if (maxReverbSources < 12)
+					return 8;
+				else if (maxReverbSources < 16)
+					return 12;
+				else if (maxReverbSources < 20)
+					return 16;
+				else if (maxReverbSources < 24)
+					return 20;
+				else if (maxReverbSources < 32)
+					return 24;
+				else
+					return 32;
+			}
+
+			constexpr int CalculateFDNSize(int fdnSize, int numReverbSources)
+			{
+				fdnSize = std::min(std::max(fdnSize, MIN_FDNSIZE), MAX_FDNSIZE);
+				return std::max(fdnSize, numReverbSources);
 			}
 
 			/**
@@ -208,7 +239,7 @@ namespace RAC
 				{
 				default:
 				case LateReverbModel::fdn:
-					return { data.numReverbSources, data.numFrames };
+					return { data.fdnSize, data.numFrames };
 				case LateReverbModel::raves:
 					return { GetNumFDNs(), 2 * data.numFrames};
 				}
@@ -357,7 +388,7 @@ namespace RAC
 			std::vector<Vec<>> leftEigenvectors;
 			std::vector<Vec<>> rightEigenvectors;
 			Real delay{ 0.0 };
-			Real minimumT60{ 0.0 };
+			Real minimumT60{ 0.1 };
 
 			MoDARTData(bool enabled, int numRays, FDNMatrix feedbackMatrix, Real delay, Real minimumT60, Matrix<int> indexing, Vec<int> frequencyIndexing, Vec<> t60s, std::vector<Vec<>> leftEigenvectors, std::vector<Vec<>> rightEigenvectors)
 				: LateReverbData(enabled, numRays, feedbackMatrix), indexing(indexing), delay(delay), minimumT60(minimumT60)

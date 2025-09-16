@@ -157,7 +157,8 @@ extern "C"
 	*
 	* @param fs The sample rate for audio processing.
 	* @param numFrames The number of frames in an audio buffer.
-	* @param maxReverbSources The number of reverb sources.
+	* @param numReverbSources The number of reverb sources.
+	* @param fdnSize The number of channels in each feedback delay network
 	* @param lerpFactor The interpolation factor for audio parameters.
 	* @param Q The quality factor for reflection filters. (0.77 is a good starting point)
 	* @param frequencyData The center frequency bands for reflection filters.
@@ -165,39 +166,15 @@ extern "C"
 	*
 	* @return True if the initialization was successful, false otherwise.
 	*/
-	EXPORT bool API RACInit(int fs, int numFrames, int maxReverbSources, float lerpFactor, float Q, const float* frequencyBandsData, int numFrequencyBands)
+	EXPORT bool API RACInit(int fs, int numFrames, int numReverbSources, int fdnSize, float lerpFactor, float Q, const float* frequencyBandsData, int numFrequencyBands)
 	{
 		buffer.ResizeBuffer(2 * numFrames);
 		NUM_FREQUENCY_BANDS = numFrequencyBands;
 		NUM_FRAMES = numFrames;
 
-
 		Coefficients<> frequencyBands = CreateCoefficients(frequencyBandsData, numFrequencyBands);
 
-		int numReverbSources = 0;
-		if (maxReverbSources < 1)
-		{ numReverbSources = 0; }
-		else if (maxReverbSources < 2)
-		{ numReverbSources = 1; }
-		else if (maxReverbSources < 4)
-		{ numReverbSources = 2; }
-		else if (maxReverbSources < 6)
-		{ numReverbSources = 4; }
-		else if (maxReverbSources < 8)
-		{ numReverbSources = 6; }
-		else if (maxReverbSources < 12)
-		{ numReverbSources = 8; }
-		else if (maxReverbSources < 16)
-		{ numReverbSources = 12; }
-		else if (maxReverbSources < 20)
-		{ numReverbSources = 16; }
-		else if (maxReverbSources < 24)
-		{ numReverbSources = 20; }
-		else if (maxReverbSources < 32)
-		{ numReverbSources = 24; }
-		else { numReverbSources = 32; }
-
-		return Init(DSPData(fs, numFrames, numReverbSources, static_cast<Real>(lerpFactor), static_cast<Real>(Q), frequencyBands));
+		return Init(DSPData(fs, numFrames, numReverbSources, fdnSize, static_cast<Real>(lerpFactor), static_cast<Real>(Q), frequencyBands));
 	}
 
 	/**
