@@ -365,9 +365,12 @@ namespace RAC
 				mListener->SetListenerTransform(transform);
 			}
 			if (lateReverbInitialised.load(std::memory_order_acquire))
+			{
 				mReverb->UpdateReverbSourcePositions(position);
-			mImageEdgeModel->SetListenerPosition(position);
-			mRayTracing->SetListenerPosition(position);
+				mRayTracing->SetListenerPosition(position);
+			}
+			if (earlyReverbInitialised.load(std::memory_order_acquire))
+				mImageEdgeModel->SetListenerPosition(position);
 		}
 
 		////////////////////////////////////////
