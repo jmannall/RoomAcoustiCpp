@@ -97,9 +97,9 @@ namespace RAC
 			bool listenerMoved = false;
 			{
 				lock_guard<std::mutex> lock(dataStoreMutex);
-				if (mListenerPosition != mListenerPositionStore)
+				if (mListenerPosition != mListenerPositionIncoming)
 				{
-					mListenerPosition = mListenerPositionStore;
+					mListenerPosition = mListenerPositionIncoming;
 					listenerMoved = true;
 				}
 			}

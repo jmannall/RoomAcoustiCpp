@@ -209,6 +209,11 @@ namespace RAC
 		{
 			return Vec4(-v.w, -v.x, -v.y, -v.z);
 		}
+
+		inline Real Dot(const Vec4& u, const Vec4& v)
+		{
+			return u.w * v.w + u.x * v.x + u.y * v.y + u.z * v.z;
+		}
 	}
 }
 

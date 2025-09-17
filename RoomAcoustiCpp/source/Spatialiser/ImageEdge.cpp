@@ -31,7 +31,7 @@ namespace RAC
 		////////////////////////////////////////
 
 		ImageEdge::ImageEdge(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, const EarlyReverbData& data, const std::shared_ptr<DSPConfig>& dspConfig) :
-			mRoom(room), mSourceManager(sourceManager), frequencyBands(dspConfig->GetData().numFrequencyBands), currentCycle(false), configChanged(true), reverbRunning(false),
+			mRoom(room), mSourceManager(sourceManager), frequencyBands(dspConfig->GetData().numFrequencyBands),
 			earlyReverbData(data, dspConfig->GetDiffractionModel()), earlyReverbDataIncoming(data, dspConfig->GetDiffractionModel())
 		{
 			sp = std::vector<std::vector<ImageSourceData>>();
@@ -70,9 +70,10 @@ namespace RAC
 
 			{
 				lock_guard<std::mutex> lock(dataStoreMutex);
-				if (mListenerPosition != mListenerPositionStore)
+				if (listenerMoved)
 				{
-					mListenerPosition = mListenerPositionStore;
+					mListenerPosition = mListenerPositionIncoming;
+					listenerMoved = false;
 					doIEM = true;
 				}
 				if (configChanged)
@@ -87,9 +88,8 @@ namespace RAC
 			if (imageSources.size() != mSources.size())
 			{
 				imageSources.resize(mSources.size());
-				mSourceAudioDatas.resize(mSources.size(), Source::DSPParameters(frequencyBands.Length(), false)); // TODO: Revove late reverb model from here
+				mSourceAudioDatas.resize(mSources.size(), Source::DSPParameters(frequencyBands.Length(), false));
 				mCurrentCycles.resize(mSources.size());
-				// doIEM = true;
 			}
 
 			int i = 0;

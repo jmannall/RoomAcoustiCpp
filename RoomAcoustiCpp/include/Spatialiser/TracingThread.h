@@ -42,7 +42,13 @@ namespace RAC
 			/**
 			* @brief Updates the stored listener position.
 			*/
-			inline void SetListenerPosition(const Vec3& position) { lock_guard<std::mutex> lock(dataStoreMutex); mListenerPositionStore = position; }
+			inline void SetListenerPosition(const Vec3& position)
+			{
+				std::lock_guard<std::mutex> lock(dataStoreMutex);
+				if ((position - mListenerPositionIncoming).Length() < EPS_POSITION)
+					return;
+				mListenerPositionIncoming = position;
+			}
 
 			/**
 			* @brief Change the number of traced rays.
@@ -88,7 +94,7 @@ namespace RAC
 
 			// The listener position may change at runtime.
 			Vec3 mListenerPosition;					// The listener position (can be accessed freely)
-			Vec3 mListenerPositionStore;			// Stores the listener position (Mutex must be locked to access)
+			Vec3 mListenerPositionIncoming;			// The listener position (Mutex must be locked to access)
 			std::mutex dataStoreMutex;				// Protects mListenerPositionStore
 
 			// These will be used as temporary "buffers" in the hot loop; memory is only allocated once.

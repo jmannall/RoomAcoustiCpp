@@ -374,13 +374,16 @@ namespace RAC
 				FreeAccess();
 				return;
 			}
-			{
-				lock_guard<std::mutex>lock(*dataMutex);
-				currentPosition = position;
-				currentOrientation = orientation;
-			}
-			updateFlags.RecordChange();
 			UpdateTransform(position, orientation);
+			if ((position - currentPosition).Length() > EPS_POSITION || 2.0 * std::acos(std::abs(Dot(orientation, currentOrientation))) > EPS_ORIENTATION)
+			{
+				{
+					lock_guard<std::mutex>lock(*dataMutex);
+					currentPosition = position;
+					currentOrientation = orientation;
+				}
+				updateFlags.RecordChange();
+			}
 			FreeAccess();
 		}
 

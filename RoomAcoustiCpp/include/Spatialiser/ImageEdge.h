@@ -73,7 +73,14 @@ namespace RAC
 			/**
 			* @brief Updates the stored listener position
 			*/
-			inline void SetListenerPosition(const Vec3& position) { lock_guard<std::mutex> lock(dataStoreMutex); mListenerPositionStore = position; }
+			inline void SetListenerPosition(const Vec3& position)
+			{
+				lock_guard<std::mutex> lock(dataStoreMutex);
+				if ((position - mListenerPositionIncoming).Length() < EPS_POSITION)
+					return;
+				mListenerPositionIncoming = position;
+				listenerMoved = true;
+			}
 
 			/**
 			* @brief Process the image edge model and update the target image source data
@@ -257,15 +264,16 @@ namespace RAC
 			int specularDiffractionStore;			// Stores the specular diffraction order (Mutex must be locked to access)
 			bool doSpecularDiffraction;
 			Vec3 mListenerPosition;					// The listener position (can be accessed freely)
-			Vec3 mListenerPositionStore;			// Stores the listener position (Mutex must be locked to access)
+			Vec3 mListenerPositionIncoming;			// The listener position (Mutex must be locked to access)
 
 			std::vector<Vec3> reverbDirections;				// The directions of the late reverb sources
 			std::vector<Absorption<>> reverbAbsorptions;		// The absorption coefficients of the late reverb sources
 
 			Coefficients<> frequencyBands;	// Frequency bands for graphic equalisers
-			bool currentCycle;				// Stores the current cycle of the currently processed source
-			bool configChanged;				// True if the image edge model configuration has changed since the last run
-			bool reverbRunning;				// True if the late reverb is running, false otherwise
+			bool currentCycle{ false };				// Stores the current cycle of the currently processed source
+			bool configChanged{ true };				// True if the image edge model configuration has changed since the last run
+			bool listenerMoved{ true };				// True if the listener has moved since the last run
+			bool reverbRunning{ false };				// True if the late reverb is running, false otherwise
 
 			std::mutex dataStoreMutex;				// Protects mListenerPositionStore, mIEMConfigStore
 		};
