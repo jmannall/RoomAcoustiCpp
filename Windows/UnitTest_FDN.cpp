@@ -119,10 +119,11 @@ namespace RAC
 			const int fs = 48e3;
 			const int numFrames = static_cast<int>(fs * target * 1.2);
 			const int numReverbSources = 12;
+			const int fdnSize = 12;
 			const Real lerpFactor = 1.0;
 			const Real Q = 0.98;
 			const std::vector<Real> fBands = { 500.0, 1000.0, 2000.0, 4000.0 };
-			const DSPData data(fs, numFrames, numReverbSources, lerpFactor, Q, fBands);
+			const DSPData data(fs, numFrames, numReverbSources, fdnSize, lerpFactor, Q, fBands);
 			const std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>(data);
 			AudioData audioData(config);
 
@@ -157,10 +158,11 @@ namespace RAC
 			const int fs = 48e3;
 			const int numFrames = static_cast<int>(fs * target * 1.2);
 			const int numReverbSources = 12;
+			const int fdnSize = 12;
 			const Real lerpFactor = 1.0;
 			const Real Q = 0.98;
 			const std::vector<Real> fBands = { 500.0, 1000.0, 2000.0, 4000.0 };
-			const DSPData data(fs, numFrames, numReverbSources, lerpFactor, Q, fBands);
+			const DSPData data(fs, numFrames, numReverbSources, fdnSize, lerpFactor, Q, fBands);
 			const std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>(data);
 			AudioData audioData(config);
 
@@ -195,10 +197,11 @@ namespace RAC
 			const int fs = 48e3;
 			const int numFrames = static_cast<int>(fs * target * 1.2);
 			const int numReverbSources = 12;
+			const int fdnSize = 12;
 			const Real lerpFactor = 1.0;
 			const Real Q = 0.98;
 			const std::vector<Real> fBands = { 500.0, 1000.0, 2000.0, 4000.0 };
-			const DSPData data(fs, numFrames, numReverbSources, lerpFactor, Q, fBands);
+			const DSPData data(fs, numFrames, numReverbSources, fdnSize, lerpFactor, Q, fBands);
 			const std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>(data);
 			AudioData audioData(config);
 
@@ -233,10 +236,11 @@ namespace RAC
 			const int fs = 48e3;
 			const int numFrames = static_cast<int>(fs * target);
 			const int numReverbSources = 12;
+			const int fdnSize = 12;
 			const Real lerpFactor = 1.0;
 			const Real Q = 0.98;
 			const std::vector<Real> fBands = { 500.0, 1000.0, 2000.0, 4000.0 };
-			const DSPData data(fs, numFrames, numReverbSources, lerpFactor, Q, fBands);
+			const DSPData data(fs, numFrames, numReverbSources, fdnSize, lerpFactor, Q, fBands);
 			const std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>(data);
 			AudioData audioData(config);
 
@@ -274,10 +278,11 @@ namespace RAC
 			const int fs = 48e3;
 			const int numFrames = static_cast<int>(fs * target);
 			const int numReverbSources = 12;
+			const int fdnSize = 12;
 			const Real lerpFactor = 1.0;
 			const Real Q = 0.98;
 			const std::vector<Real> fBands = { 500.0, 1000.0, 2000.0, 4000.0 };
-			const DSPData data(fs, numFrames, numReverbSources, lerpFactor, Q, fBands);
+			const DSPData data(fs, numFrames, numReverbSources, fdnSize, lerpFactor, Q, fBands);
 			const std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>(data);
 			AudioData audioData(config);
 
@@ -310,10 +315,11 @@ namespace RAC
 			const int fs = 48e3;
 			const int numFrames = static_cast<int>(fs * target);
 			const int numReverbSources = 12;
+			const int fdnSize = 12;
 			const Real lerpFactor = 1.0;
 			const Real Q = 0.98;
 			const std::vector<Real> fBands = { 500.0, 1000.0, 2000.0, 4000.0 };
-			const DSPData data(fs, numFrames, numReverbSources, lerpFactor, Q, fBands);
+			const DSPData data(fs, numFrames, numReverbSources, fdnSize, lerpFactor, Q, fBands);
 			const std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>(data);
 			AudioData audioData(config);
 

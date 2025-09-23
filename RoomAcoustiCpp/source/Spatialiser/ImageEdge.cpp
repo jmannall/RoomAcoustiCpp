@@ -60,6 +60,7 @@ namespace RAC
 				// Recopy room data (planes, walls, edges)
 				mPlanes = sharedRoom->GetPlanes();
 				mWalls = sharedRoom->GetWalls();
+				mMaterials = sharedRoom->GetMaterials();
 				mEdges = sharedRoom->GetEdges();
 				doIEM = true;
 			}
@@ -211,7 +212,11 @@ namespace RAC
 
 				if (itW->second.LineWallIntersection(start, end, intersection))
 				{
-					absorption *= itW->second.GetAbsorption();
+					auto itM = mMaterials.find(itW->second.GetMaterialID());
+					if (itM == mMaterials.end()) // case: material doesn't exist
+						return false;
+
+					absorption *= itM->second;
 					if (start != intersection) // case: point on edge (consecutive intersections are identical)
 						return true;
 
@@ -392,27 +397,26 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		Absorption<> ImageEdge::Direct(const Source::Data& source)
+		Absorption<> ImageEdge::Direct(const Source::Data& source, bool lineOfSight)
 		{
 			PROFILE_Direct
-			bool lineOfSight = (source.position - mListenerPosition).Length() <= earlyReverbData.maxPathLength;
-			if (lineOfSight)
+			
+			// Direct sound
+			switch (earlyReverbData.direct)
 			{
-				// Direct sound
-				switch (earlyReverbData.direct)
-				{
-				default:
-				case DirectSound::none:
-					lineOfSight = false;
-					break;
-				case DirectSound::doCheck:
-					lineOfSight = !LineRoomObstruction(mListenerPosition, source.position);
-					break;
-				case DirectSound::alwaysTrue:
-					lineOfSight = true;
-					break;
-				}
+			default:
+			case DirectSound::none:
+				lineOfSight = false;
+				break;
+			case DirectSound::doCheck:
+				break;
+			case DirectSound::alwaysTrue:
+				lineOfSight = true;
+				break;
 			}
+
+			if (lineOfSight)
+				lineOfSight = (source.position - mListenerPosition).Length() <= earlyReverbData.maxPathLength;
 
 			if (lineOfSight)
 			{
@@ -433,15 +437,21 @@ namespace RAC
 		void ImageEdge::ReflectPointInRoom(const Source::Data& source, Source::DSPParameters& direct, ImageSourceDataMap& imageSources)
 		{
 			PROFILE_ImageEdgeModel
-			direct.directivity = Direct(source);
-			// TODO: Move direct.reverbSend to ray tracing (rework)
+			bool lineOfSight = !LineRoomObstruction(mListenerPosition, source.position);
+			direct.directivity = Direct(source, lineOfSight);
 
 			if (earlyReverbData.maxOrder < 1)
 			{
+				direct.feedsFDN = true;
 				sp.clear();
 				EraseOldEntries(imageSources);
 				return;
 			}
+
+			if (lineOfSight && earlyReverbData.reflOrder < 1)
+				direct.feedsFDN = true;
+			else
+				direct.feedsFDN = false;
 
 			if (sp.size() != earlyReverbData.maxOrder)
 				sp.resize(earlyReverbData.maxOrder, std::vector<ImageSourceData>());

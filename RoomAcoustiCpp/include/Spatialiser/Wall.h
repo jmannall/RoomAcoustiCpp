@@ -55,7 +55,7 @@ namespace RAC
 			/**
 			* Default constructor that initialises an empty wall.
 			*/
-			Wall() : mAbsorption(1), mPlaneId(0), d(0.0) {}
+			// Wall() : materialId(0), mPlaneId(0), d(0.0) {}
 
 			/**
 			* Constructor that initialises a wall.
@@ -63,7 +63,7 @@ namespace RAC
 			* @param vData The vertices of the wall.
 			* @param absorption The material absorption property of the wall.
 			*/
-			Wall(const Vertices& vData, const Absorption<>& absorption, int polygonId) : mPlaneId(0), mAbsorption(absorption), polygonId(polygonId) { Update(vData); }
+			Wall(const Vertices& vData, size_t materialId) : mPlaneId(0), materialId(materialId) { Update(vData); }
 
 			/**
 			* Default deconstructor.
@@ -107,9 +107,9 @@ namespace RAC
 			inline Real GetD() const { return d; }
 
 			/**
-			* @return The ID of the polygon the wall is part of (used by MoDART)
+			* @return The ID of the material the wall is made of
 			*/
-			inline int GetPolygonID() const { return polygonId; }
+			inline size_t GetMaterialID() const { return materialId; }
 
 			/**
 			* @return The vertices of the wall
@@ -124,12 +124,12 @@ namespace RAC
 			/**
 			* @return The material absorption properties of the wall
 			*/
-			const inline Absorption<>& GetAbsorption() const { return mAbsorption; }
+			// const inline Absorption<>& GetAbsorption() const { return mAbsorption; }
 
 			/**
 			* @return The area of the wall
 			*/
-			inline Real GetArea() const { return mAbsorption.mArea; }
+			inline Real GetArea() const { return area; }
 
 			/**
 			* @return The IDs of the connected edges
@@ -190,22 +190,23 @@ namespace RAC
 			*
 			* @param absorption The new absorption of the wall
 			*/
-			inline void Update(const Absorption<>& absorption) { Real area = GetArea(); mAbsorption = absorption; mAbsorption.mArea = area; }
+			// inline void Update(const Absorption<>& absorption) { Real area = GetArea(); mAbsorption = absorption; mAbsorption.mArea = area; }
 
 		private:
 			/**
 			* @brief Calculates the area of the wall (area of a triangle)
 			*/
-			inline void CalculateArea() { mAbsorption.mArea = 0.5 * (Cross(mVertices[0] - mVertices[1], mVertices[0] - mVertices[2]).Length()); }
+			inline void CalculateArea() { area = 0.5 * (Cross(mVertices[0] - mVertices[1], mVertices[0] - mVertices[2]).Length()); }
 
 			Vertices mVertices;				// Vertices of the wall
 			Vec3 mNormal;					// Normal of the wall
-			Real d;							// Distance of the wall from the origin along the normal direction
-			Absorption<> mAbsorption;			// Material absorption of the wall
+			Real d{ 0.0 };					// Distance of the wall from the origin along the normal direction
+			Real area{ 0.0 };				// Area of the wall
 
-			size_t mPlaneId;				// ID of the plane the wall is part of
+			size_t mPlaneId{ 0 };			// ID of the plane the wall is part of
+			size_t materialId{ 0 };			// ID of the material the wall is made of
 			std::vector<size_t> mEdges;		// IDs of connected edges
-			int polygonId;					// ID of the polygon the wall is part of (used by MoDART)
+			// TODO: Add patchID (for MoD-ART) back in.
 		};
 			
 		/**

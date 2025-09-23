@@ -212,7 +212,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		size_t InitSource()
+		int InitSource()
 		{
 			auto context = GetContext();
 			if (context)
@@ -250,11 +250,40 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		size_t InitWall(const Vertices& vData, const Absorption<>& absorption, int polygonId = -1)
+		int InitMaterial(const Absorption<>& material)
 		{
 			auto context = GetContext();
 			if (context)
-				return context->InitWall(vData, absorption, polygonId);
+				return context->InitMaterial(material);
+			else
+				return -1;
+		}
+
+		////////////////////////////////////////
+
+		void UpdateMaterial(const size_t id, const Absorption<>& material)
+		{
+			auto context = GetContext();
+			if (context)
+				context->UpdateMaterial(id, material);
+		}
+
+		////////////////////////////////////////
+
+		void RemoveMaterial(const size_t id)
+		{
+			auto context = GetContext();
+			if (context)
+				context->RemoveMaterial(id);
+		}
+
+		////////////////////////////////////////
+
+		int InitWall(const Vertices& vData, const size_t materialId)
+		{
+			auto context = GetContext();
+			if (context)
+				return context->InitWall(vData, materialId);
 			else
 				return -1;
 		}
@@ -266,15 +295,6 @@ namespace RAC
 			auto context = GetContext();
 			if (context)
 				context->UpdateWall(id, vData);
-		}
-
-		////////////////////////////////////////
-
-		void UpdateWallAbsorption(size_t id, const Absorption<>& absorption)
-		{
-			auto context = GetContext();
-			if (context)
-				context->UpdateWallAbsorption(id, absorption);
 		}
 
 		////////////////////////////////////////

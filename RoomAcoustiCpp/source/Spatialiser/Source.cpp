@@ -335,7 +335,7 @@ namespace RAC
 
 			{
 				PROFILE_Reflection
-				reverbInputFilter->ProcessAudio(bStore, bStoreReverb, lerpFactor);
+				reverbInputFilter->ProcessAudio(inputBuffer, bStoreReverb, lerpFactor);
 			}
 
 			std::transform(bStoreReverb.begin(), bStoreReverb.end(), bInput.begin(),

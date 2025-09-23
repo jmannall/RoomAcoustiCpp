@@ -185,11 +185,15 @@ namespace RAC
 			*/
 			inline void SetInputBuffer(const size_t id, const Buffer<>& data) { mSources[id]->SetInputBuffer(data); }
 
+			inline void ResetInputBuffers()
+			{
+				for (auto& source : mSources)	// Zero any input buffers for sources that are not in use (but may still have image sources)
+					source->ResetInputBuffer();
+			}
+
 			inline void ProcessAudio(Buffer<>& outputBuffer, const AudioData& audioData)
 			{
 				PROFILE_EarlyReflections
-				for (auto& source : mSources)	// Zero any input buffers for sources that are not in use (but may still have image sources)
-					source->ResetInputBuffer();
 				audioThreadPool->ProcessAllSources(mSources, mImageSources, outputBuffer, audioData);
 				/*for (auto& source : mSources)
 					source->ProcessAudio(outputBuffer, reverbInput, lerpFactor);

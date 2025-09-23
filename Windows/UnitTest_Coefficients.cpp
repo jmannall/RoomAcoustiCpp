@@ -25,7 +25,6 @@ template<> static std::wstring Microsoft::VisualStudio::CppUnitTestFramework::To
 	std::string str = "Absorption: ";
 	for (int i = 0; i < t.Length(); i++)
 		str += ToStr(t[i]) + ", ";
-	str += "Area: " + ToStr(t.mArea);
 	std::wstring werror = std::wstring(str.begin(), str.end());
 	return werror;
 }
@@ -108,21 +107,17 @@ namespace RAC
 			std::vector<Real> a = { (Real)0.5, (Real)0.7 };
 			std::vector<Real> b = { (Real)0.5, (Real)0.8 };
 
-			Absorption c1 = Absorption(a);
-			Absorption c2 = Absorption(b);
-			c1.mArea = 2.0;
-			c2.mArea = 5.0;
+			Absorption<> c1 = Absorption<>(a);
+			Absorption<> c2 = Absorption<>(b);
 
-			Absorption out = Absorption(c1.Length());
+			Absorption<> out = Absorption<>(c1.Length());
 			out[0] = sqrt(1.0 - a[0]) + sqrt(1.0 - b[0]);
 			out[1] = sqrt(1.0 - a[1]) + sqrt(1.0 - b[1]);
-			out.mArea = 7.0;
 			Assert::AreEqual(out, c1 + c2, L"Error: Incorrect addition");
 
 			Real x = 2.0;
 			out[0] = sqrt(1.0 - a[0]) + x;
 			out[1] = sqrt(1.0 - a[1]) + x;
-			out.mArea = 2.0;
 			Assert::AreEqual(out, c1 + x, L"Error: Incorrect factor addition");
 		}
 
@@ -133,19 +128,15 @@ namespace RAC
 
 			Absorption c1 = Absorption(a);
 			Absorption c2 = Absorption(b);
-			c1.mArea = 2.0;
-			c2.mArea = 5.0;
 
 			Absorption out = Absorption(c1.Length());
 			out[0] = sqrt(1.0 - a[0]) - sqrt(1.0 - b[0]);
 			out[1] = sqrt(1.0 - a[1]) - sqrt(1.0 - b[1]);
-			out.mArea = -3.0;
 			Assert::AreEqual(out, c1 - c2, L"Error: Incorrect subtraction");
 
 			Real x = 2.0;
 			out[0] = x - sqrt(1.0 - a[0]);
 			out[1] = x - sqrt(1.0 - a[1]);
-			out.mArea = 2.0;
 			Assert::AreEqual(out, x - c1, L"Error: Incorrect factor subtraction");
 		}
 
@@ -156,19 +147,15 @@ namespace RAC
 
 			Absorption c1 = Absorption(a);
 			Absorption c2 = Absorption(b);
-			c1.mArea = 2.0;
-			c2.mArea = 5.0;
 
 			Absorption out = Absorption(c1.Length());
 			out[0] = sqrt(1.0 - a[0]) * sqrt(1.0 - b[0]);
 			out[1] = sqrt(1.0 - a[1]) * sqrt(1.0 - b[1]);
-			out.mArea = 2.0;
 			Assert::AreEqual(out, c1 * c2, L"Error: Incorrect multiplication");
 
 			Real x = 2.0;
 			out[0] = sqrt(1.0 - a[0]) * x;
 			out[1] = sqrt(1.0 - a[1]) * x;
-			out.mArea = 2.0;
 			Assert::AreEqual(out, c1 * x, L"Error: Incorrect factor multiplication");
 		}
 
@@ -179,19 +166,15 @@ namespace RAC
 
 			Absorption c1 = Absorption(a);
 			Absorption c2 = Absorption(b);
-			c1.mArea = 2.0;
-			c2.mArea = 5.0;
 
 			Absorption out = Absorption(c1.Length());
 			out[0] = sqrt(1.0 - a[0]) / sqrt(1.0 - b[0]);
 			out[1] = sqrt(1.0 - a[1]) / sqrt(1.0 - b[1]);
-			out.mArea = 2.0;
 			Assert::AreEqual(out, c1 / c2, L"Error: Incorrect division");
 
 			Real x = 2.0;
 			out[0] = sqrt(1.0 - a[0]) / x;
 			out[1] = sqrt(1.0 - a[1]) / x;
-			out.mArea = 2.0;
 			Assert::AreEqual(out, c1 / x, L"Error: Incorrect factor division");
 		}
 	};

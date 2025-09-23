@@ -478,7 +478,7 @@ extern "C"
 	*/
 	EXPORT int API RACInitSource()
 	{
-		return static_cast<int>(InitSource());
+		return InitSource();
 	}
 
 	/**
@@ -564,6 +564,40 @@ extern "C"
 		RemoveSource(static_cast<size_t>(id));
 	}
 
+	EXPORT int API RACInitMaterial(const float* absorptionData)
+	{
+		std::vector<Real> a = std::vector<Real>(NUM_FREQUENCY_BANDS);
+		for (int i = 0; i < NUM_FREQUENCY_BANDS; i++)
+			a[i] = static_cast<Real>(absorptionData[i]);
+		Absorption absorption = Absorption(a);
+
+		return InitMaterial(absorption);
+	}
+
+	/**
+	* @brief Updates the absorption of the wall with the given ID.
+	*
+	* @details This function should be called when the absorption of a wall changes.
+	* It will update the internal representation of the wall to match the new absorption and update the late reverberation time.
+	*
+	* @param id The ID of the wall to update.
+	* @param absorption The frequency absorption coefficients.
+	*/
+	EXPORT void API RACUpdateMaterial(int id, const float* absorptionData)
+	{
+		std::vector<Real> a = std::vector<Real>(NUM_FREQUENCY_BANDS);
+		for (int i = 0; i < NUM_FREQUENCY_BANDS; i++)
+			a[i] = static_cast<Real>(absorptionData[i]);
+		Absorption absorption = Absorption(a);
+
+		UpdateMaterial(static_cast<size_t>(id), absorption);
+	}
+
+	EXPORT void API RACRemoveMaterial(int id)
+	{
+		RemoveMaterial(static_cast<size_t>(id));
+	}
+
 	/**
 	* @brief Initializes a new wall with the given parameters and returns its ID.
 	*
@@ -575,18 +609,13 @@ extern "C"
 	*
 	* @return The ID of the new wall.
 	*/
-	EXPORT int API RACInitWall(const float* verticesData, const float* absorptionData, int polygonId)
+	EXPORT int API RACInitWall(const float* verticesData, int materialId)
 	{
-		std::vector<Real> a = std::vector<Real>(NUM_FREQUENCY_BANDS);
-		for (int i = 0; i < NUM_FREQUENCY_BANDS; i++)
-			a[i] = static_cast<Real>(absorptionData[i]);
-		Absorption absorption = Absorption(a);
-
 		Vertices vertices = { Vec3(verticesData[0], verticesData[1], verticesData[2]),
 			Vec3(verticesData[3], verticesData[4], verticesData[5]),
 			Vec3(verticesData[6], verticesData[7], verticesData[8]) };
 
-		return static_cast<int>(InitWall(vertices, absorption, polygonId));
+		return InitWall(vertices, materialId);
 	}
 
 	/**
@@ -608,25 +637,6 @@ extern "C"
 			Vec3(vData[6], vData[7], vData[8]) };
 
 		UpdateWall(static_cast<size_t>(id), vertices);
-	}
-
-	/**
-	* @brief Updates the absorption of the wall with the given ID.
-	*
-	* @details This function should be called when the absorption of a wall changes.
-	* It will update the internal representation of the wall to match the new absorption and update the late reverberation time.
-	*
-	* @param id The ID of the wall to update.
-	* @param absorption The frequency absorption coefficients.
-	*/
-	EXPORT void API RACUpdateWallAbsorption(int id, const float* absorptionData)
-	{
-		std::vector<Real> a = std::vector<Real>(NUM_FREQUENCY_BANDS);
-		for (int i = 0; i < NUM_FREQUENCY_BANDS; i++)
-			a[i] = static_cast<Real>(absorptionData[i]);
-		Absorption absorption = Absorption(a);
-
-		UpdateWallAbsorption(static_cast<size_t>(id), absorption);
 	}
 
 	/**

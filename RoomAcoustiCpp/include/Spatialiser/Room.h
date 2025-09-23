@@ -42,7 +42,7 @@ namespace RAC
 			* 
 			* @params numFrequencyBands The number of frequency bands to use
 			*/
-			Room(const int numFrequencyBands) : nextPlane(0), nextWall(0), nextEdge(0), roomData(numFrequencyBands), numFrequencyBands(numFrequencyBands), hasChanged(true) {}
+			Room(const int numFrequencyBands) : roomData(numFrequencyBands), numFrequencyBands(numFrequencyBands), hasChanged(true) {}
 			
 			/**
 			* @brief Default deconstructor
@@ -87,6 +87,21 @@ namespace RAC
 				roomData.customT60 = t60;
 			}
 
+			size_t InitMaterial(const Absorption<>& material);
+
+			inline void UpdateMaterial(size_t id, const Absorption<>& material)
+			{
+				std::lock_guard<std::mutex> lock(mMaterialMutex);
+				auto it = mMaterials.find(id);
+				if (it == mMaterials.end()) // case: material does not exist
+					mMaterials.insert_or_assign(id, material);
+				else // case: material does exist
+					it->second = material;
+				RecordChange();
+			}
+
+			void RemoveMaterial(size_t id);
+
 			/**
 			* @brief Add a wall to the room
 			*/
@@ -104,20 +119,6 @@ namespace RAC
 				auto it = mWalls.find(id);
 				if (it == mWalls.end()) { return; } // case: wall does not exist
 				else { it->second.Update(vData); RecordChange(); } // case: wall does exist
-			}
-
-			/**
-			* @brief Update the absorption of the wall with the given ID
-			* 
-			* @params id The ID of the wall to update
-			* @params absorption The new absorption of the wall
-			*/
-			inline void UpdateWallAbsorption(const size_t id, const Absorption<>& absorption)
-			{
-				std::lock_guard<std::mutex> lock(mWallMutex);
-				auto it = mWalls.find(id);
-				if (it == mWalls.end()) { return; } // case: wall does not exist
-				else { it->second.Update(absorption); RecordChange(); } // case: wall does exist
 			}
 
 			/**
@@ -168,6 +169,11 @@ namespace RAC
 			* @return The walls of the room
 			*/
 			WallMap GetWalls() { std::lock_guard<std::mutex> lock(mWallMutex); return mWalls; }
+
+			/**
+			* @return The materials of the room
+			*/
+			MaterialMap GetMaterials() { std::lock_guard<std::mutex> lock(mMaterialMutex); return mMaterials; }
 
 			/**
 			* @return The walls of the room
@@ -330,7 +336,7 @@ namespace RAC
 			/**
 			* @brief Record a change in the room geometry
 			*/
-			void RecordChange() { hasChanged = true; }
+			void RecordChange() { hasChanged.store(true, std::memory_order_release); }
 
 			/**
 			* @brief Calculate the reverb time of the room using the Sabine formula
@@ -356,21 +362,26 @@ namespace RAC
 			WallMap mWalls;								// Stored walls
 			std::vector<size_t> mEmptyWallSlots;		// Available wall IDs
 			std::vector<TimerPair> mWallTimers;			// Wall IDs waiting to be made available
-			size_t nextWall;							// Next wall ID if none are available
+			size_t nextWall{ 0 };							// Next wall ID if none are available
 			TriangleMeshSoA mTriangleMeshSoA;			// Triangle mesh for ray tracing
 
 			PlaneMap mPlanes;							// Stored planes
 			std::vector<size_t> mEmptyPlaneSlots;		// Available plane IDs
 			std::vector<TimerPair> mPlaneTimers;		// Plane IDs waiting to be made available
-			size_t nextPlane;							// Next plane ID if none are available
+			size_t nextPlane{ 0 };							// Next plane ID if none are available
+
+			MaterialMap mMaterials;						// Stored materials
+			std::vector<size_t> mEmptyMaterialSlots;	// Available material IDs
+			size_t nextMaterial{ 0 };						// Next material ID if none are available
 
 			EdgeMap mEdges;								// Stored edges
 			std::vector<size_t> mEmptyEdgeSlots;		// Available edge IDs
 			std::vector<TimerPair> mEdgeTimers;			// Edge IDs waiting to be made available
-			size_t nextEdge;							// Next edge ID if none are available
+			size_t nextEdge{ 0 };							// Next edge ID if none are available
 
 			std::mutex mWallMutex;		// Protects mWalls. Must always be locked before Plane and Edge
 			std::mutex mPlaneMutex;		// Protects mPlanes. Can be locked after Edge (not before)
+			std::mutex mMaterialMutex;		// Protects mMaterials
 			std::mutex mEdgeMutex;		// Protects mEdges. Cannot be locked after Plane
 			std::mutex roomDataMutex;	// Protects roomData
 		};

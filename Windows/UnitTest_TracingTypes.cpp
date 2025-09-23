@@ -58,13 +58,13 @@ namespace RAC
 			allVertices[40] = Vec3({ 1.0, 0.0, 10.0 });
 			allVertices[41] = Vec3({ 0.0, 1.0, 10.0 });
 
-			Wall testWall;
 			Vertices testVertices;
 			Absorption<> testAbsorption(0.5);
 			int node = 0;
 			for (int i = 0; i < 40; i += 3) {
 				testVertices = Vertices({ allVertices[i], allVertices[i + 1], allVertices[i + 2] });
-				testWall = Wall(testVertices, testAbsorption, node++);
+				testRoom.InitMaterial(testAbsorption);
+				Wall testWall(testVertices, node++);
 				testRoom.AddWall(testWall);
 			}
 		}

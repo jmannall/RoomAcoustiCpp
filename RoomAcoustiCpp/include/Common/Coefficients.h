@@ -493,20 +493,23 @@ namespace RAC
 		class Absorption : public Coefficients<T>
 		{
 		public:
+
+			Absorption() : Absorption(1) {}
+
 			/**
 			* Constructor that initialises the Absorption with ones
 			*
 			* @param len The number of coefficients
 			*/
 			template <typename U = T, std::enable_if_t<std::is_constructible<U, size_t, Real>::value, int> = 0>
-			Absorption(int len) : Coefficients<T>(len, 1.0), mArea(0.0) {}
+			Absorption(int len) : Coefficients<T>(len, 1.0) {}
 
 			/**
 			* Constructor that initialises the Absorption from a std::vector
 			*
 			* @param R The material absorption
 			*/
-			Absorption(const T& R) : Coefficients<T>(static_cast<int>(R.size())), mArea(0.0)
+			Absorption(const T& R) : Coefficients<T>(static_cast<int>(R.size()))
 			{
 				for (int i = 0; i < this->mCoefficients.size(); i++)
 				{
@@ -555,7 +558,6 @@ namespace RAC
 				assert(this->mCoefficients.size() == v.Length());
 				for (int i = 0; i < this->mCoefficients.size(); i++)
 					this->mCoefficients[i] += v[i];
-				mArea += v.mArea;
 				return *this;
 			}
 
@@ -567,12 +569,11 @@ namespace RAC
 				assert(this->mCoefficients.size() == v.Length());
 				for (int i = 0; i < this->mCoefficients.size(); i++)
 					this->mCoefficients[i] -= v[i];
-				mArea -= v.mArea;
 				return *this;
 			}
 
 			/**
-			* @brief Multiplies absorption entries by a given set of absorption coefficients. No change to area
+			* @brief Multiplies absorption entries by a given set of absorption coefficients
 			*/
 			inline Absorption& operator*=(const Absorption& v)
 			{
@@ -583,7 +584,7 @@ namespace RAC
 			}
 
 			/**
-			* @brief Divides absorption entries by a given set of absorption coefficients. No change to area
+			* @brief Divides absorption entries by a given set of absorption coefficients
 			*/
 			inline Absorption& operator/=(const Absorption& v)
 			{
@@ -594,7 +595,7 @@ namespace RAC
 			}
 
 			/**
-			* @brief Adds a single value to all absorption entries. No change to area
+			* @brief Adds a single value to all absorption entries
 			*/
 			inline Absorption& operator+=(const Real a)
 			{
@@ -604,7 +605,7 @@ namespace RAC
 			}
 
 			/**
-			* @brief Multiplies absorption entries by a given value. No change to area
+			* @brief Multiplies absorption entries by a given value
 			*/
 			inline Absorption& operator*=(const Real a)
 			{
@@ -613,7 +614,16 @@ namespace RAC
 				return *this;
 			}
 
-			Real mArea;		// Area covered by the absorption coefficients
+			/**
+			* @brief Divides absorption entries by a given value
+			*/
+			inline Absorption& operator/=(const Real a)
+			{
+				Real reciprocal = 1.0 / a;
+				for (int i = 0; i < this->mCoefficients.size(); i++)
+					this->mCoefficients[i] *= reciprocal;
+				return *this;
+			}
 
 		private:
 		};
@@ -629,7 +639,7 @@ namespace RAC
 		template<typename T>		
 		inline Absorption<T> operator/(Absorption<T> u, const Absorption<T>& v) { return u /= v; }
 
-		template<typename T>		
+		template<typename T>
 		inline Absorption<T> operator+(Absorption<T> v, const Real a) { return v += a; }
 		template<typename T>		
 		inline Absorption<T> operator-(Absorption<T> v, const Real a) { return v += (-a); }
@@ -648,8 +658,6 @@ namespace RAC
 		inline bool operator==(const Absorption<T>& u, const Absorption<T>& v)
 		{
 			if (u.Length() != v.Length())
-				return false;
-			if (u.mArea != v.mArea)
 				return false;
 			for (int i = 0; i < u.Length(); i++)
 				if (u[i] != v[i])

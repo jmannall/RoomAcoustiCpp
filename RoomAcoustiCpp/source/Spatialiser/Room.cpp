@@ -25,11 +25,54 @@ namespace RAC
 
 		////////////////////////////////////////
 
+		size_t Room::InitMaterial(const Absorption<>& material)
+		{
+			size_t id;
+			std::lock_guard<std::mutex> lock(mMaterialMutex);
+			if (!mEmptyMaterialSlots.empty()) // Assign material to an existing ID
+			{
+				id = mEmptyMaterialSlots.back();
+				mEmptyMaterialSlots.pop_back();
+			}
+			else // Create a new ID
+				id = nextMaterial++;
+
+			// Check if material exists (in case UpdateMaterial was used to set material ID manually)
+			auto it = mMaterials.find(id);
+			while (it != mMaterials.end()) // case: material already exists
+			{
+				id++;
+				it = mMaterials.find(id);
+			}
+
+			mMaterials.insert_or_assign(id, material);
+			RecordChange();
+			return id;
+		}
+
+		////////////////////////////////////////
+
+		void Room::RemoveMaterial(size_t id)
+		{
+			std::lock_guard<std::mutex> lock(mMaterialMutex);
+			auto it = mMaterials.find(id);
+
+			if (it == mMaterials.end()) { return; } // case: material does not exist
+			else // case: material does exist
+			{
+				mMaterials.erase(it);
+				mEmptyMaterialSlots.push_back(id);
+				RecordChange();
+			}
+		}
+
+		////////////////////////////////////////
+
 		size_t Room::AddWall(Wall& wall)
 		{
 			size_t id;
 			std::lock_guard<std::mutex> lock(mWallMutex);
-			if (mWalls.size() == 0) // Assume new room being created. RAVES needs wall IDs from 0 to n
+			if (mWalls.size() == 0) // TODO: Is this check obselete now we have polygonID?
 			{
 				mEmptyWallSlots.clear();
 				mWallTimers.clear();
@@ -149,7 +192,7 @@ namespace RAC
 				mTriangleMeshSoA.ny[i] = normal.y;
 				mTriangleMeshSoA.nz[i] = normal.z;
 
-				mTriangleMeshSoA.nodeID[i] = wall.GetPolygonID();
+				mTriangleMeshSoA.patchId[i] = static_cast<int>(wall.GetMaterialID());
 
 				mTriangleMeshSoA.d0[i] = wall.GetD();
 			}
@@ -647,12 +690,22 @@ namespace RAC
 		{
 			Coefficients absorption = Coefficients<>(numFrequencyBands, 1.0);
 			Real surfaceArea = 0.0;
+			MaterialMap absorptionFactors;
 
+			{
+				std::lock_guard<std::mutex> lock(mMaterialMutex);
+				for (auto& [matID, material] : mMaterials)
+					absorptionFactors[matID] = (material * material - 1.0);
+			}
 			{
 				std::lock_guard<std::mutex> lock(mWallMutex);
 				for (const auto& [wallID, wall] : mWalls)
 				{
-					absorption -= (wall.GetAbsorption() * wall.GetAbsorption() - 1.0) * wall.GetArea();
+					int materialID = wall.GetMaterialID();
+					auto it = absorptionFactors.find(materialID);
+					if (it == absorptionFactors.end()) continue;
+
+					absorption -= it->second * wall.GetArea();
 					surfaceArea += wall.GetArea();
 				}
 			}

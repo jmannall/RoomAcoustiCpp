@@ -292,6 +292,12 @@ namespace RAC
 			*/
 			void RemoveSource(size_t id);
 
+			inline size_t InitMaterial(const Absorption<>& material) { return mRoom->InitMaterial(material); }
+
+			void UpdateMaterial(size_t id, const Absorption<>& material);
+
+			inline void RemoveMaterial(size_t id) { mRoom->RemoveMaterial(id); }
+
 			/**
 			* @brief Initialises a new wall in the spatialsier.
 			* 
@@ -301,7 +307,7 @@ namespace RAC
 			* 
 			* @return The ID of the new wall.
 			*/
-			size_t InitWall(const Vertices& vData, const Absorption<>& absorption, int polygonId);
+			size_t InitWall(const Vertices& vData, size_t materialID);
 			
 			/**
 			* @brief Updates the position of a wall.
@@ -309,15 +315,7 @@ namespace RAC
 			* @param id The ID of the wall to update.
 			* @param vData The new vertices of the wall.
 			*/
-			void UpdateWall(size_t id, const Vertices& vData);
-
-			/**
-			* @brief Updates the absorption of a wall.
-			*
-			* @param id The ID of the wall to update.
-			* @param absorption The new absorption of the wall.
-			*/
-			void UpdateWallAbsorption(size_t id, const Absorption<>& absorption);
+			inline void UpdateWall(size_t id, const Vertices& vData) { mRoom->UpdateWall(id, vData); }
 
 			/**
 			* @brief Removes a wall from the spatialiser.

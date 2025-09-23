@@ -229,10 +229,8 @@ namespace RAC
 
 		void Context::UpdateMoDARTMinimumReverbTime(const Real T60)
 		{
-			if (!lateReverbInitialised.load(std::memory_order_acquire))
-				return;
-
-			mReverb->SetMinimumT60(T60);
+			if (lateReverbInitialised.load(std::memory_order_acquire))
+				mReverb->SetMinimumT60(T60);
 		}
 
 		////////////////////////////////////////
@@ -297,8 +295,6 @@ namespace RAC
 
 			CreateAudioThreadPool();
 
-			mRayTracing = std::make_shared<TracingThread>(mRoom, mSources, mReverb, data, dspConfig);
-
 			// Start background thread after all systems are initialized
 			rayTracingThread = std::thread(RayTracerProcessor, this);
 			EnableLateReverb(data.enabled);
@@ -317,7 +313,11 @@ namespace RAC
 			mRoom->UpdateRoomData(roomData);
 			dspConfig->UpdateLateReverbModel(LateReverbModel::fdn, 1);
 			mReverb = std::make_shared<SingleFDN>(&mCore, mRoom->GetReverbTime(), mRoom->GetDimensions(), data, dspConfig);
+			mRayTracing = std::make_shared<SingleFDNTracing>(mRoom, mSources, mReverb, data, dspConfig);
+
 			InitLateReverb(data);
+
+			mRoom->CreateTriangleMeshSoA();
 
 			lateReverbInitialised.store(true, std::memory_order_release);
 			audioFlag.store(false, std::memory_order_release);
@@ -336,13 +336,12 @@ namespace RAC
 
 			dspConfig->UpdateLateReverbModel(LateReverbModel::raves, data.t60s.Rows());
 			mReverb = std::make_shared<RAVES>(&mCore, data, dspConfig);
+			mRayTracing = std::make_shared<MoDARTTracing>(mRoom, mSources, mReverb, data, dspConfig);
+
 			InitLateReverb(data);
 
 			mSources->UpdateMoDARTParameters(data.frequencyIndexing, dspConfig->GetData().numFrames);
 			mRoom->CreateTriangleMeshSoA();
-
-			int numPaths = data.rightEigenvectors[0].Rows();
-			mRayTracing->InitRoom(numPaths, data.indexing, data.energyDecay);
 
 			lateReverbInitialised.store(true, std::memory_order_release);
 			audioFlag.store(false, std::memory_order_release);
@@ -422,32 +421,25 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		size_t Context::InitWall(const Vertices& vData, const Absorption<>& absorption, int polygonId)
+		void Context::UpdateMaterial(size_t id, const Absorption<>& material)
+		{
+			mRoom->UpdateMaterial(id, material);
+			if (lateReverbInitialised.load(std::memory_order_acquire))
+				mReverb->SetTargetT60(mRoom->GetReverbTime());
+		}
+
+		////////////////////////////////////////
+
+		size_t Context::InitWall(const Vertices& vData, size_t materialID)
 		{
 #ifdef DEBUG_INIT
 	Debug::Log("Init Wall", Colour::Green);
 #endif
 
-			Wall wall = Wall(vData, absorption, polygonId);
+			Wall wall = Wall(vData, materialID);
 			size_t id = mRoom->AddWall(wall);
 			mRoom->InitEdges(id);
 			return id;
-		}
-
-		////////////////////////////////////////
-
-		void Context::UpdateWall(size_t id, const Vertices& vData)
-		{
-			mRoom->UpdateWall(id, vData);
-		}
-
-		////////////////////////////////////////
-
-		void Context::UpdateWallAbsorption(size_t id, const Absorption<>& absorption)
-		{
-			mRoom->UpdateWallAbsorption(id, absorption);
-			if (lateReverbInitialised.load(std::memory_order_acquire))
-				mReverb->SetTargetT60(mRoom->GetReverbTime());
 		}
 
 		////////////////////////////////////////
@@ -488,6 +480,7 @@ namespace RAC
 
 			const AudioData audioData(dspConfig);
 
+			mSources->ResetInputBuffers();
 			if (earlyReverbInitialised.load(std::memory_order_acquire) && (audioData.earlyReverbEnabled || audioData.lateReverbEnabled))
 				mSources->ProcessAudio(outputBuffer, audioData);
 
