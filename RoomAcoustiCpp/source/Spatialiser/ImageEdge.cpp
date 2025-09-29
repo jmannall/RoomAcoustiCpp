@@ -315,12 +315,13 @@ namespace RAC
 			Real ret = 0.0;
 			switch (source.directivity)
 			{
+			default:
 			case SourceDirectivity::omni:
 			{ directivity = 1.0; break; }
 			case SourceDirectivity::subcardioid:
 			{
 				Real angle = acos(Dot(source.forward, UnitVector(point - source.position)));
-				ret = 0.7 + 0.3 * cos(angle);
+				directivity = 0.7 + 0.3 * cos(angle);
 				break;
 			}
 			case SourceDirectivity::cardioid:
@@ -332,13 +333,13 @@ namespace RAC
 			case SourceDirectivity::supercardioid:
 			{
 				Real angle = std::acos(Dot(source.forward, UnitVector(point - source.position)));
-				ret = 0.37 + 0.63 * std::cos(angle);
+				ret = std::abs(0.37 + 0.63 * std::cos(angle));
 				break;
 			}
 			case SourceDirectivity::hypercardioid:
 			{
 				Real angle = std::acos(Dot(source.forward, UnitVector(point - source.position)));
-				ret = 0.25 + 0.75 * std::cos(angle);
+				ret = std::abs(0.25 + 0.75 * std::cos(angle));
 				break;
 			}
 			case SourceDirectivity::bidirectional:
@@ -352,11 +353,7 @@ namespace RAC
 				Vec3 direction = UnitVector(point - source.position);
 				Vec3 localDirection = source.orientation.RotateVector(direction);
 
-				Real theta = std::acos(localDirection.z);
-				Real phi = -std::atan2(localDirection.x, localDirection.y); // -phi converts from left-handed coordinate system to right-handed coordinate system
-				// Debug::Log("Theta: " + RealToStr(Rad2Deg(theta)) + ", Phi: " + RealToStr(Rad2Deg(phi < 0.0 ? phi + PI_2: phi)), Colour::Yellow);
-
-				directivity = GENELEC.Response(frequencyBands, theta, phi);
+				directivity = GENELEC.Response(frequencyBands, localDirection);
 				break;
 			}
 			case SourceDirectivity::genelec8020cDTF:
@@ -364,10 +361,7 @@ namespace RAC
 				Vec3 direction = UnitVector(point - source.position);
 				Vec3 localDirection = source.orientation.RotateVector(direction);
 
-				Real theta = std::acos(localDirection.z);
-				Real phi = -std::atan2(localDirection.x, localDirection.y); // -phi converts from left-handed coordinate system to right-handed coordinate system
-
-				directivity = GENELEC_DTF.Response(frequencyBands, theta, phi);
+				directivity = GENELEC_DTF.Response(frequencyBands, localDirection);
 				break;
 			}
 			case SourceDirectivity::qscK8:
@@ -375,14 +369,9 @@ namespace RAC
 				Vec3 direction = UnitVector(point - source.position);
 				Vec3 localDirection = source.orientation.RotateVector(direction);
 
-				Real theta = std::acos(localDirection.z);
-				Real phi = -std::atan2(localDirection.x, localDirection.y); // -phi converts from left-handed coordinate system to right-handed coordinate system
-
-				directivity = QSC_K8.Response(frequencyBands, theta, phi);
+				directivity = QSC_K8.Response(frequencyBands, localDirection);
 				break;
 			}
-			default:
-				directivity = 1.0;
 			}
 
 			if (ret != 0.0)

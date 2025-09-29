@@ -71,7 +71,7 @@ namespace RAC
 				Input input = CalculateInput(path);
 				Parameters output = RunNN(input);
 				if (!path.inShadowZone)
-					output.data[4] = 0.0;
+					output.data[4] = (Real)0.0;
 				return output;
 			}
 

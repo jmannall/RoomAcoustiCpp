@@ -269,7 +269,7 @@ namespace RAC
 			std::vector<Vec3> reverbDirections;				// The directions of the late reverb sources
 			std::vector<Absorption<>> reverbAbsorptions;		// The absorption coefficients of the late reverb sources
 
-			Coefficients<> frequencyBands;	// Frequency bands for graphic equalisers
+			Coefficients<> frequencyBands;			// Frequency bands for graphic equalisers
 			bool currentCycle{ false };				// Stores the current cycle of the currently processed source
 			bool configChanged{ true };				// True if the image edge model configuration has changed since the last run
 			bool listenerMoved{ true };				// True if the listener has moved since the last run
