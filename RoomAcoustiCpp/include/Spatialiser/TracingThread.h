@@ -39,6 +39,8 @@ namespace RAC
 			*/
 			TracingThread(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const LateReverbData& data, const std::shared_ptr<DSPConfig>& config);
 
+			virtual ~TracingThread() {};
+
 			/**
 			* @brief Updates the stored listener position.
 			*/
@@ -61,6 +63,15 @@ namespace RAC
 			* @brief Process the ray-tracing from every new position and update the related residues.
 			*/
 			virtual void RunTracing() = 0;
+
+			inline void ResetEndFlag()
+			{
+				while (!tracingStartFlag.load(std::memory_order_acquire))
+					std::this_thread::yield();
+				tracingEndFlag.store(false, std::memory_order_release);
+			}
+
+			inline bool HasCompleted() { return tracingEndFlag.load(std::memory_order_acquire); }
 
 		protected:
 			weak_ptr<Room> mRoom;							// Pointer to the room class
@@ -86,6 +97,9 @@ namespace RAC
 			Vec3 mListenerPosition;					// The listener position (can be accessed freely)
 			Vec3 mListenerPositionIncoming;			// The listener position (Mutex must be locked to access)
 			std::mutex dataStoreMutex;				// Protects mListenerPositionStore
+
+			std::atomic<bool> tracingStartFlag{ false };	// True if the ray tracing is running, false otherwise
+			std::atomic<bool> tracingEndFlag{ false };		// True if the ray tracing has finished running, false otherwise
 
 			// These will be used exclusively inside `computeEnergyContributions`. All four will have size `numRays`.
 			Vec<Real> rayDistances;				// This will have size `numRays`
@@ -113,6 +127,8 @@ namespace RAC
 			{
 				InitRoom(data.indexing, data.energyDecay);
 			}
+
+			~MoDARTTracing() {};
 
 			/**
 			* @brief Set the propagation path indexing and decay rates of each mode.
@@ -158,6 +174,8 @@ namespace RAC
 				TracingThread(room, sourceManager, reverb, data, dspConfig),
 				reflectionGains(dspConfig->GetData().numReverbSources, Absorption<>(dspConfig->GetData().numFrequencyBands))
 			{}
+
+			~SingleFDNTracing() {}
 
 			void RunTracing() override;
 

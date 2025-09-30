@@ -53,6 +53,7 @@ namespace RAC
 #ifdef IEM_FLAG
 			Debug::IEMStartFlag();
 #endif
+			iemStartFlag.store(true, std::memory_order_release);
 
 			shared_ptr<Room> sharedRoom = mRoom.lock();
 			if (sharedRoom->HasChanged())
@@ -111,6 +112,8 @@ namespace RAC
 #ifdef IEM_FLAG
 			Debug::IEMEndFlag();
 #endif
+			iemEndFlag.store(true, std::memory_order_release);
+			iemStartFlag.store(false, std::memory_order_release);
 		}
 
 		////////////////////////////////////////

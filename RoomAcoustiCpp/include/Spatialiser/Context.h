@@ -353,6 +353,8 @@ namespace RAC
 			*/
 			void GetOutput(Buffer<>& sendBuffer);
 
+			void RecordImpulseResponse(const Vec3& position, const Vec4& orientation, Buffer<>& outputBuffer);
+
 			/**
 			* @brief Sets the spatialiser to impulse response mode if mode is true
 			*

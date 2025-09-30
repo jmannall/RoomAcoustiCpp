@@ -158,12 +158,15 @@ namespace RAC
 			Debug::Log("Exit Context", Colour::Red);
 #endif
 			StopRunning();
-			IEMThread.join();
-			rayTracingThread.join();
+			if (IEMThread.joinable())
+				IEMThread.join();
+			if (rayTracingThread.joinable())
+				rayTracingThread.join();
 			if (audioThreadPool)
 				audioThreadPool->Stop();
 
 			mImageEdgeModel.reset();
+			mRayTracing.reset();
 			mSources.reset();
 			mRoom.reset();
 			mReverb.reset();
@@ -494,6 +497,71 @@ namespace RAC
 				headphoneEQ.ProcessAudio(outputBuffer, outputBuffer, audioData);
 
 			audioFlag.store(false, std::memory_order_release);
+		}
+
+		////////////////////////////////////////
+
+		void Context::RecordImpulseResponse(const Vec3& position, const Vec4& orientation, Buffer<>& outputBuffer)
+		{
+			size_t id = InitSource();
+			// TODO: Allow different directivities
+			UpdateSourceDirectivity(id, SourceDirectivity::genelec8020c);
+			UpdateSource(id, position, orientation);
+
+			mImageEdgeModel->ResetEndFlag();
+			mRayTracing->ResetEndFlag();
+			UpdateImpulseResponseMode(true);
+			ResetLateReverb();
+
+			int numFrames = dspConfig->GetData().numFrames;
+			Buffer<> input(numFrames);
+			Buffer<> output(2.0 * numFrames);
+
+			while (!mImageEdgeModel->HasCompleted())
+				std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+			while (!mRayTracing->HasCompleted())
+				std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+			// Run once with empty input (ensures all interpolation is updated)
+			mSources->SetInputBuffer(id, input);
+			GetOutput(output);
+
+			int irLength = outputBuffer.Length();
+			int stereoBufferLength = output.Length();
+			int numBuffers = irLength / stereoBufferLength;
+			int remainder = irLength - numBuffers * stereoBufferLength;
+			int step = 1;
+			if (dspConfig->GetSpatialisationMode() == SpatialisationMode::none)
+			{
+				step = 2;
+				numBuffers *= step;
+				if (remainder > numFrames)
+				{
+					remainder -= numFrames;
+					numBuffers++;
+				}
+			}
+
+			// Process buffers
+			int count = 0;
+			input[0] = 1.0;
+			for (int i = 0; i < numBuffers; i++)
+			{
+				mSources->SetInputBuffer(id, input);
+				GetOutput(output);
+				for (int j = 0; j < stereoBufferLength; j += step)
+					outputBuffer[count++] = output[j];
+				input[0] = 0.0;
+			}
+			// Process remaining samples
+			mSources->SetInputBuffer(id, input);
+			GetOutput(output);
+			for (int i = 0; i < step * remainder; i += step)
+				outputBuffer[count++] = output[i];
+
+			RemoveSource(id);
+			UpdateImpulseResponseMode(false);
 		}
 	}
 }

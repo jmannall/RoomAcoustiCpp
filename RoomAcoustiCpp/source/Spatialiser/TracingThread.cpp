@@ -77,6 +77,8 @@ namespace RAC
 #ifdef RTM_FLAG
 			Debug::RTMStartFlag();
 #endif
+			tracingStartFlag.store(true, std::memory_order_release);
+
 			// TODO: Should we only update residues relevant to currently active FDNs (i.e T60 > minimumT60)?
 			lock_guard<std::mutex> lock(rayPencilMutex);
 			shared_ptr<Room> sharedRoom = mRoom.lock();
@@ -160,6 +162,8 @@ namespace RAC
 #ifdef RTM_FLAG
 			Debug::RTMEndFlag();
 #endif
+			tracingEndFlag.store(true, std::memory_order_release);
+			tracingStartFlag.store(false, std::memory_order_release);
 		}
 
 		void MoDARTTracing::computeEnergyContributions(int reverbDirectionIdx) {
@@ -219,6 +223,8 @@ namespace RAC
 #ifdef RTM_FLAG
 				Debug::RTMStartFlag();
 #endif
+			tracingStartFlag.store(true, std::memory_order_release);
+
 			// TODO: Should we only update residues relevant to currently active FDNs (i.e T60 > minimumT60)?
 			lock_guard<std::mutex> lock(rayPencilMutex);
 			shared_ptr<Room> sharedRoom = mRoom.lock();
@@ -227,9 +233,9 @@ namespace RAC
 			bool listenerMoved = false;
 			{
 				lock_guard<std::mutex> lock(dataStoreMutex);
-				if (mListenerPosition != mListenerPositionStore)
+				if (mListenerPosition != mListenerPositionIncoming)
 				{
-					mListenerPosition = mListenerPositionStore;
+					mListenerPosition = mListenerPositionIncoming;
 					listenerMoved = true;
 				}
 			}
@@ -251,6 +257,8 @@ namespace RAC
 #ifdef RTM_FLAG
 			Debug::RTMEndFlag();
 #endif
+			tracingEndFlag.store(true, std::memory_order_release);
+			tracingStartFlag.store(false, std::memory_order_release);
 		}
 
 		void SingleFDNTracing::ComputeEnergyContributions(const MaterialMap& materials, int reverbDirectionIdx) {

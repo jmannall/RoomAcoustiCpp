@@ -721,6 +721,28 @@ extern "C"
 	}
 
 	/**
+	* @brief Record an impulse response using the current listener position
+	*
+	* Assumes listener position does not change during recording
+	*
+	* @param posX The x-coordinate of the source's position.
+	* @param posY The y-coordinate of the source's position.
+	* @param posZ The z-coordinate of the source's position.
+	* @param oriW The w-component of the source's orientation quaternion.
+	* @param oriX The x-component of the source's orientation quaternion.
+	* @param oriY The y-component of the source's orientation quaternion.
+	* @param oriZ The z-component of the source's orientation quaternion.
+	* @params outputBuffer Buffer to write to.
+	*/
+	EXPORT void API RACRecordImpulseResponse(float posX, float posY, float posZ, float oriW, float oriX, float oriY, float oriZ, float* sendBuffer, int numSamples)
+	{
+		Buffer<> outputBuffer(numSamples);
+		RecordImpulseResponse(Vec3(posX, posY, posZ), Vec4(oriW, oriX, oriY, oriZ), outputBuffer);
+		for (Real value : outputBuffer)
+			*sendBuffer++ = static_cast<float>(value);
+	}
+
+	/**
 	* @brief Sets the spatialiser to impulse response mode if mode is true
 	*
 	* @details This function should be called with true if the output of a stationary source is being recorded.

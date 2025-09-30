@@ -52,7 +52,7 @@ namespace RAC
 			updateFlags.RecordChange();
 
 			if (dspConfig->GetLateReverbModel() == LateReverbModel::raves)
-				UpdateMoDARTParameters(frequencyIndexing, data.numFrames);
+				InitMoDARTParameters(frequencyIndexing, data.numFrames);
 
 			ResetFDNSlots();
 			AllowAccess();
