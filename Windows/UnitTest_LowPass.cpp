@@ -39,7 +39,7 @@ namespace RAC
 
 		TEST_METHOD(Default)
 		{
-			const int fs = 48e3;
+			const int fs = 48000;
 			const Real lerpFactor = 0.5;
 
 			const Real fc = 1000.0;
@@ -55,7 +55,7 @@ namespace RAC
 
 		TEST_METHOD(ProcessAudio)
 		{
-			const int fs = 48e3;
+			const int fs = 48000;
 			const Real lerpFactor = 0.5;
 
 			const Real fc = 500.0;
@@ -71,7 +71,7 @@ namespace RAC
 
 		TEST_METHOD(IsInterpolating)
 		{
-			const int fs = 48e3;
+			const int fs = 48000;
 			const Real lerpFactor = 0.5;
 
 			const Real fc = 500.0;
@@ -90,7 +90,7 @@ namespace RAC
 
 		TEST_METHOD(ClearBuffers)
 		{
-			const int fs = 48e3;
+			const int fs = 48000;
 			const Real lerpFactor = 0.5;
 			const Real fc = 1700;
 

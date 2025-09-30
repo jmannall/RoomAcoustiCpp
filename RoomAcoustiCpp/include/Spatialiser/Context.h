@@ -405,7 +405,7 @@ namespace RAC
 			std::shared_ptr<TracingThread> mRayTracing{ nullptr };	// Ray tracing class
 
 			std::string logFile;		// Log file path
-#ifdef PROFILE_BACKGROUND_THREAD || PROFILE_AUDIO_THREAD
+#if defined(PROFILE_BACKGROUND_THREAD) || defined(PROFILE_AUDIO_THREAD)
 			std::string profileFile;	// Profile file path
 #endif
 		};

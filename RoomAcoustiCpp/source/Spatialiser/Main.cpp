@@ -46,113 +46,113 @@ static Buffer<> buffer(1);	// Return buffer
 static int NUM_FREQUENCY_BANDS = 0;	// Store number of frequency bands for any reflection filters
 static int NUM_FRAMES = 0;
 
-extern "C"
+FDNMatrix SelectFDNMatrix(int mat)
 {
-	FDNMatrix SelectFDNMatrix(int mat)
+	switch (mat)
 	{
-		switch (mat)
-		{
-		default:
-		case(0):
-		{ return FDNMatrix::householder; }
-		case(1):
-		{ return FDNMatrix::randomOrthogonal; }
-		}
+	default:
+	case(0):
+	{ return FDNMatrix::householder; }
+	case(1):
+	{ return FDNMatrix::randomOrthogonal; }
 	}
+}
 
-	ReverbFormula SelectReverbFormula(int formula)
+ReverbFormula SelectReverbFormula(int formula)
+{
+	switch (formula)
 	{
-		switch (formula)
-		{
-		default:
-		case(0):
-		{ return ReverbFormula::Sabine; }
-		case(1):
-		{ return ReverbFormula::Eyring; }
-		case(2):
-		{ return ReverbFormula::Custom; }
-		}
+	default:
+	case(0):
+	{ return ReverbFormula::Sabine; }
+	case(1):
+	{ return ReverbFormula::Eyring; }
+	case(2):
+	{ return ReverbFormula::Custom; }
 	}
+}
 
-	DirectSound SelectDirectMode(int dir)
+DirectSound SelectDirectMode(int dir)
+{
+	switch (dir)
 	{
-		switch (dir)
-		{
-		default:
-		case(0):
-		{ return DirectSound::none; }
-		case(1):
-		{ return DirectSound::doCheck; }
-		case(2):
-		{ return DirectSound::alwaysTrue; }
-		}
+	default:
+	case(0):
+	{ return DirectSound::none; }
+	case(1):
+	{ return DirectSound::doCheck; }
+	case(2):
+	{ return DirectSound::alwaysTrue; }
 	}
+}
 
-	DiffractionSound SelectDiffractionMode(int diff)
+DiffractionSound SelectDiffractionMode(int diff)
+{
+	switch (diff)
 	{
-		switch (diff)
-		{
-		default:
-		case(0):
-		{ return DiffractionSound::none; }
-		case(1):
-		{ return DiffractionSound::shadowZone; }
-		case(2):
-		{ return DiffractionSound::allZones; }
-		}
+	default:
+	case(0):
+	{ return DiffractionSound::none; }
+	case(1):
+	{ return DiffractionSound::shadowZone; }
+	case(2):
+	{ return DiffractionSound::allZones; }
 	}
+}
 
-	DiffractionModel SelectDiffractionModel(int model)
+DiffractionModel SelectDiffractionModel(int model)
+{
+	switch (model)
 	{
-		switch (model)
-		{
-		default:
-		case(0):
-		{ return DiffractionModel::attenuate; }
-		case(1):
-		{ return DiffractionModel::lowPass; }
-		case(2):
-		{ return DiffractionModel::udfa; }
-		case(3):
-		{ return DiffractionModel::udfai; }
-		case(4):
-		{ return DiffractionModel::nnBest; }
-		case(5):
-		{ return DiffractionModel::nnSmall; }
-		case(6):
-		{ return DiffractionModel::utd; }
-		case(7):
-		{ return DiffractionModel::btm; }
-		}
+	default:
+	case(0):
+	{ return DiffractionModel::attenuate; }
+	case(1):
+	{ return DiffractionModel::lowPass; }
+	case(2):
+	{ return DiffractionModel::udfa; }
+	case(3):
+	{ return DiffractionModel::udfai; }
+	case(4):
+	{ return DiffractionModel::nnBest; }
+	case(5):
+	{ return DiffractionModel::nnSmall; }
+	case(6):
+	{ return DiffractionModel::utd; }
+	case(7):
+	{ return DiffractionModel::btm; }
 	}
+}
 
-	Vec<> CreateVec(const float* data, int length)
-	{
-		Vec<> vec = Vec<>(length);
-		for (int i = 0; i < length; i++)
-			vec[i] = static_cast<Real>(data[i]);
-		return vec;
-	}
+Vec<> CreateVec(const float* data, int length)
+{
+	Vec<> vec = Vec<>(length);
+	for (int i = 0; i < length; i++)
+		vec[i] = static_cast<Real>(data[i]);
+	return vec;
+}
 
-	Vec<int> CreateIntVec(const int* data, int length)
-	{
-		Vec<int> vec = Vec<int>(length);
-		for (int i = 0; i < length; i++)
-			vec[i] = data[i];
-		return vec;
-	}
+Vec<int> CreateIntVec(const int* data, int length)
+{
+	Vec<int> vec = Vec<int>(length);
+	for (int i = 0; i < length; i++)
+		vec[i] = data[i];
+	return vec;
+}
 
-	Coefficients<> CreateCoefficients(const float* data, int length)
-	{
-		Coefficients<> coeff = Coefficients<>(length);
-		for (int i = 0; i < length; i++)
-			coeff[i] = static_cast<Real>(data[i]);
-		return coeff;
-	}
+Coefficients<> CreateCoefficients(const float* data, int length)
+{
+	Coefficients<> coeff = Coefficients<>(length);
+	for (int i = 0; i < length; i++)
+		coeff[i] = static_cast<Real>(data[i]);
+	return coeff;
+}
 
 	//////////////////// API ////////////////////
 
-	/**
+	extern "C"
+	{
+		/**
 	* @brief Initializes the spatialiser with the given parameters.
 	*
 	* @param fs The sample rate for audio processing.

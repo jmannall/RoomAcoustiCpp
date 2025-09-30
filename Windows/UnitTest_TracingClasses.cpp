@@ -312,8 +312,8 @@ namespace RAC
 				Assert::AreEqual(1.0, magnitude, 1e-6, werrorchar);
 			}
 
-			Vec<Real> rayDistances(testDirections.size());
-			Vec<Real> rayCosines(testDirections.size());
+			Vec<Real> rayDistances(SizeToInt(testDirections.size()));
+			Vec<Real> rayCosines(SizeToInt(testDirections.size()));
 			std::vector<int> frontIndices(testDirections.size());
 			std::vector<int> backIndices(testDirections.size());
 			Real expected_distance, result_distance, result_cosine;
@@ -474,12 +474,12 @@ namespace RAC
 
 			// Try with more rays than directions.
 			// Note: this code should work without modification even if you change the size of testDirections, defined above.
-			int chunkSize = testDirections.size();
+			int chunkSize = SizeToInt(testDirections.size());
 			tempDirections.resize(9 * chunkSize);
 			for (int di = 0; di < chunkSize; ++di)
 				tempDirections[di] = testDirections[di];
 
-			int chunkStart = testDirections.size();
+			int chunkStart = SizeToInt(testDirections.size());
 			for (int sx : {-1, 1})
 			{
 				for (int sy : {-1, 1})
@@ -489,7 +489,7 @@ namespace RAC
 						Vec3 offset = Vec3({ sx * 1e-2, sy * 1e-2, sz * 1e-2 });
 						for (int di = 0; di < chunkSize; ++di)
 							tempDirections[di + chunkStart] = UnitVector(testDirections[di] + offset);
-						chunkStart += testDirections.size();
+						chunkStart += SizeToInt(testDirections.size());
 					}
 				}
 			}

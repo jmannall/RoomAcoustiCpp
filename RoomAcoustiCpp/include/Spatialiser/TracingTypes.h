@@ -9,6 +9,7 @@
 #include "Common/Vec.h"
 #include "Common/Vec3.h"
 #include "Common/Types.h"
+#include "Common/Definitions.h"
 
 /* Controls line-triangle intersection kernel */
 #define PLUCKER_KERNEL false
@@ -114,7 +115,7 @@ namespace RAC
              * @brief Number of rays stored.
              * @return Count of rays.
              */
-            inline int size() const { return Dx.size(); }
+            inline int size() const { return SizeToInt( Dx.size() ); }
 
             /**
              * @brief Resize all internal arrays to hold @p n rays.
@@ -180,7 +181,7 @@ namespace RAC
              * @brief Number of rays stored.
              * @return Count of rays.
              */
-            inline int size() const { return Dx.size(); }
+            inline int size() const { return SizeToInt( Dx.size() ); }
 
             /**
              * @brief Resize all internal arrays to hold @p n rays.
@@ -305,7 +306,7 @@ namespace RAC
              * @brief Number of triangles stored.
              * @return Count of triangles.
              */
-            inline int size() const { return d0.size(); }
+            inline int size() const { return SizeToInt( d0.size() ); }
 
             /**
              * @brief Resize all internal arrays to hold @p n triangles.

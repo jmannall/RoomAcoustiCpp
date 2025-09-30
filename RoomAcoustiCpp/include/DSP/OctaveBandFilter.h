@@ -21,6 +21,7 @@
 #include "DSP/DelayLine.h"
 
 // Common headers
+#include "Common/Definitions.h"
 #include "Common/Types.h"
 #include "Common/Coefficients.h"
 #include "Common/ReleasePool.h"
@@ -53,9 +54,9 @@ namespace RAC
 				* @param midSample The mid sample value of the impulse response (The only non-zero odd sample)
 				* @param step The step size for stretched versions of the base filter (h)
 				*/
-				Filter(const Buffer<>& h, Real midSample, int step) : currentIR(h), step(step), midSample(midSample), midSampleStep(step * (2 * h.Length() - 1)),
-					halfOutputLine(2 * step * (2 * h.Length() - 1) + 1), outputLine(4 * step * (2 * h.Length() - 1) + 2),
-					count(4 * step * (2 * h.Length() - 1) + 1), irLength(h.Length()) {}
+				Filter(const Buffer<>& h, Real midSample, int step) : currentIR(h), step(step), midSample(midSample), midSampleStep(step * (2 * SizeToInt( h.Length() ) - 1)),
+					halfOutputLine(2 * step * (2 * SizeToInt(h.Length()) - 1) + 1), outputLine(4 * step * (2 * SizeToInt( h.Length() ) - 1) + 2),
+					count(4 * step * (2 * SizeToInt(h.Length()) - 1) + 1), irLength(SizeToInt(h.Length())) {}
 
 				/**
 				* @brief Returns the output of the Filter given an input
@@ -128,7 +129,7 @@ namespace RAC
 
 			inline int NumBands() const { return numOutputBands; }
 
-			inline int GetLatency() const { return (std::pow((Real)2.0, numFrequencyBands) - 1) * Dwin; }
+			inline int GetLatency() const { return static_cast<int>( (std::pow((Real)2.0, numFrequencyBands) - 1) * Dwin ); }
 
 		private:
 			inline Vec<int> CreateFrequencyIndices(Coefficients<> frequencies)

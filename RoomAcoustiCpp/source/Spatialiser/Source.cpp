@@ -247,7 +247,7 @@ namespace RAC
 			}
 
 			PROFILE_Source
-			const int numFrames = inputBuffer.Length();
+			const int numFrames = SizeToInt(inputBuffer.Length());
 
 			if (audioData.impulseResponseMode != currentImpulseResponseMode)
 			{
@@ -307,7 +307,7 @@ namespace RAC
 			if (!GetAccess())
 				return;
 
-			const int numFrames = inputBuffer.Length();
+			const int numFrames = SizeToInt(inputBuffer.Length());
 			const int numBands = octaveBandFilter.NumBands();
 
 			for (int i = 0; i < reverbInput.Rows(); i++)
@@ -331,7 +331,7 @@ namespace RAC
 				return;
 
 			PROFILE_Source
-			const int numFrames = inputBuffer.Length();
+			const int numFrames = SizeToInt(inputBuffer.Length());
 
 			{
 				PROFILE_Reflection

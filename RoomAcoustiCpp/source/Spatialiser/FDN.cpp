@@ -29,9 +29,6 @@ namespace RAC
 
 		//////////////////// FDN Channel class ////////////////////
 
-		template class FDNChannel<Real>;
-		template class FDNChannel<Complex>;
-
 		////////////////////////////////////////
 
 		template<typename T>
@@ -331,24 +328,25 @@ namespace RAC
 		template<typename T>
 		Matrix<> RandomOrthogonalFDN<T>::InitMatrix(const size_t numChannels)
 		{
-			Matrix<> matrix = Matrix<>(numChannels, numChannels);
+			const int numChannelsI = SizeToInt(numChannels);
+			Matrix<> matrix = Matrix<>(numChannelsI, numChannelsI);
 
-			Vec<> vector = Vec<>(numChannels);
+			Vec<> vector = Vec<>(numChannelsI);
 			vector.RandomUniformDistribution((Real)-1.0, (Real)1.0);
 			vector.Normalise();
 			matrix.AddColumn(vector.GetColumn(0), 0);
 
 			Real tol = 0.000001;
-			for (int j = 1; j < numChannels; ++j)
+			for (int j = 1; j < numChannelsI; ++j)
 			{
 				Real norm = 0;
 				while (norm < tol)
 				{
 					vector.RandomUniformDistribution((Real)-1.0, (Real)1.0);
 
-					Matrix section = Matrix(numChannels, j);
+					Matrix section = Matrix(numChannelsI, j);
 
-					for (int i = 0; i < numChannels; ++i)
+					for (int i = 0; i < numChannelsI; ++i)
 					{
 						for (int k = 0; k < j; k++)
 							section(i, k) = matrix(i, k);
@@ -362,5 +360,17 @@ namespace RAC
 			}
 			return matrix;
 		}
+
+		//////////////////// Instantiate ////////////////////
+
+		// we don't implement/use every function, so disable the warning (we can't re-enable it since the warning is generated after the file is parsed)
+		#ifdef _MSC_VER
+		#pragma warning (disable : 4661)
+		#endif
+
+		template class FDNChannel<Real>;
+		template class FDNChannel<Complex>;
+
+
 	}
 }

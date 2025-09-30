@@ -62,7 +62,7 @@ namespace RAC
 				int rows, cols;				// Matrix dimensions
 				std::vector<T> matrix;		// Contiguous data storage
 
-				ContiguousData(int r, int c) : rows(r), cols(c), matrix(r * c, 0.0) {}
+				ContiguousData(int r, int c) : rows(r), cols(c), matrix(r * c, T(0.0)) {}
 			};
 
 		public:
@@ -97,7 +97,7 @@ namespace RAC
 			*/
 			inline void Reset()
 			{
-				std::fill(data.matrix.begin(), data.matrix.end(), 0.0);
+				std::fill(data.matrix.begin(), data.matrix.end(), T(0));
 			}
 
 			/**
@@ -279,7 +279,7 @@ namespace RAC
 			inline Matrix operator*=(const Real a)
 			{
 				for (T& value : data.matrix)
-					value *= a;
+					value = static_cast<T>( a * value );
 				return *this;
 			}
 

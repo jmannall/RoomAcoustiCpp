@@ -971,7 +971,7 @@ namespace RAC
         
         RayBundle::RayBundle(const Vec3& origin, const std::vector<Vec3>& directions)
         {
-            numRays = directions.size();
+            numRays = SizeToInt(directions.size());
             rays.resize(numRays);
 
             for (int i = 0; i < numRays; ++i) {
@@ -995,7 +995,7 @@ namespace RAC
 
         RayBundle::RayBundle(const std::vector<Vec3>& origins, const std::vector<Vec3>& directions)
         {
-            numRays = directions.size();
+            numRays = SizeToInt(directions.size());
             rays.resize(numRays);
 
             for (int i = 0; i < numRays; ++i) {
@@ -1140,7 +1140,7 @@ namespace RAC
 
         RayPencil::RayPencil(const std::vector<Vec3>& directions)
         {
-            numRays = directions.size();
+            numRays = SizeToInt(directions.size());
             rays.resize(numRays);
 
             rays.Ox = 0.0;
@@ -1225,7 +1225,7 @@ namespace RAC
                             rays.Dx[i], rays.Dy[i], rays.Dz[i],
                             directions[j].x, directions[j].y, directions[j].z);
                     }
-                    clusters[i] = std::distance(cosineSimilarity.begin(), std::max_element(cosineSimilarity.begin(), cosineSimilarity.end()));
+                    clusters[i] = static_cast<int>( std::distance(cosineSimilarity.begin(), std::max_element(cosineSimilarity.begin(), cosineSimilarity.end())) );
                 }
                 else
                     clusters[i] = -1;
@@ -1247,7 +1247,7 @@ namespace RAC
                                 directions[j].x, directions[j].y, directions[j].z);
                         }
                         // N.B.: We look for the MINIMUM this time
-                        clusters[i + numRays] = std::distance(cosineSimilarity.begin(), std::min_element(cosineSimilarity.begin(), cosineSimilarity.end()));
+                        clusters[i + numRays] = static_cast<int>( std::distance(cosineSimilarity.begin(), std::min_element(cosineSimilarity.begin(), cosineSimilarity.end())) );
                     }
                     else
                         clusters[i + numRays] = -1;

@@ -86,7 +86,7 @@ namespace RAC
 			{
 				int idx = GetFrequencyIndex(f);
 				Complex output = coefficients[idx][0];
-				int len = std::sqrt(coefficients[idx].size());
+				int len = static_cast<int>( std::sqrt(coefficients[idx].size()) );
 				for (int i = 1; i < len; ++i)
 				{
 					for (int j = -i; j < i + 1; ++j)
@@ -106,7 +106,7 @@ namespace RAC
 
 			inline int GetFrequencyIndex(Real f) const
 			{
-				return std::upper_bound(fm.begin(), fm.end(), f) - fm.begin();
+				return SizeToInt( std::upper_bound(fm.begin(), fm.end(), f) - fm.begin() );
 			}
 
 			/**

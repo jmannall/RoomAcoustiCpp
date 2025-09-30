@@ -32,7 +32,7 @@ namespace RAC
 			std::vector<Real> phi(inputData[1]);
 			std::vector<Real> freq(inputFreq[0]);
 
-			int numTests = theta.size();
+			int numTests = SizeToInt(theta.size());
 			for (int i = 0; i < numTests; i++)
 			{
 				Absorption directivity = GENELEC.Response(freq, theta[i], phi[i]);
@@ -57,7 +57,7 @@ namespace RAC
 			std::vector<Real> phi(inputData[1]);
 			std::vector<Real> freq(inputFreq[0]);
 
-			int numTests = theta.size();
+			int numTests = SizeToInt(theta.size());
 			for (int i = 0; i < numTests; i++)
 			{
 				Absorption directivity = GENELEC_DTF.Response(freq, theta[i], phi[i]);
