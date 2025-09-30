@@ -87,6 +87,15 @@ namespace RAC
 			*/
 			void RunIEM();
 
+			inline void ResetEndFlag()
+			{
+				while (!iemStartFlag.load(std::memory_order_acquire))
+					std::this_thread::yield();
+				iemEndFlag.store(false, std::memory_order_release);
+			}
+
+			inline bool HasCompleted() { return iemEndFlag.load(std::memory_order_acquire); }
+
 		private:
 			/**
 			* @brief Update the receiver validity for planes and edges
@@ -276,7 +285,9 @@ namespace RAC
 			bool listenerMoved{ true };				// True if the listener has moved since the last run
 			bool reverbRunning{ false };				// True if the late reverb is running, false otherwise
 
-			std::mutex dataStoreMutex;				// Protects mListenerPositionStore, mIEMConfigStore
+			std::mutex dataStoreMutex;					// Protects mListenerPositionStore, mIEMConfigStore
+			std::atomic<bool> iemStartFlag{ false };	// True if the image edge model is running, false otherwise
+			std::atomic<bool> iemEndFlag{ false };		// True if the image edge model has finished running, false otherwise
 		};
 	}
 }

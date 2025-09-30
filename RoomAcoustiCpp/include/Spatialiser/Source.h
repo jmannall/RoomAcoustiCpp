@@ -173,10 +173,21 @@ namespace RAC
 			* @params indexing The new frequency band indexing
 			* @params numFrames The number of frames per audio buffer
 			*/
-			void UpdateMoDARTParameters(const Vec<int>& frequencyIndexing, int numFrames)
+			inline void UpdateMoDARTParameters(const Vec<int>& frequencyIndexing, int numFrames)
 			{
 				if (!GetAccess())
 					return;
+				InitMoDARTParameters(frequencyIndexing, numFrames);
+			}
+
+			/**
+			* @brief Updates the size of source residues and frequencyBands
+			*
+			* @params indexing The new frequency band indexing
+			* @params numFrames The number of frames per audio buffer
+			*/
+			inline void InitMoDARTParameters(const Vec<int>& frequencyIndexing, int numFrames)
+			{
 				ravesResidues = std::vector<RAVESSourceResidue>(frequencyIndexing.Rows());
 				for (int i = 0; i < frequencyIndexing.Rows(); i++)
 					ravesResidues[i].frequencyIndex = frequencyIndexing[i];

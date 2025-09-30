@@ -86,12 +86,21 @@
     <ClCompile Include="UnitTest_TracingClasses.cpp">
       <Filter>UnitTest</Filter>
     </ClCompile>
+    <ClCompile Include="ProfileScenes.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MoDARTLoader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\UtilityFunctions.h">
       <Filter>UnitTest</Filter>
     </ClInclude>
     <ClInclude Include="..\RoomAcoustiCpp\codegen\lib\myNN\include\omp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MoDARTLoader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
