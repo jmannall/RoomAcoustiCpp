@@ -165,7 +165,7 @@ namespace RAC
 		*
 		* @return The ID of the new audio source.
 		*/
-		size_t InitSource();
+		int InitSource();
 
 		/**
 		* @brief Updates the position and orientation of the audio source with the given ID.
@@ -191,6 +191,12 @@ namespace RAC
 		*/
 		void RemoveSource(const size_t id);
 
+		int InitMaterial(const Absorption<>& material);
+
+		void UpdateMaterial(size_t id, const Absorption<>& material);
+
+		void RemoveMaterial(size_t id);
+
 		/**
 		* @brief Initializes a new wall with the given parameters and returns its ID.
 		*
@@ -198,7 +204,7 @@ namespace RAC
 		* @param absorption The frequency absorption coefficients.
 		* @return The ID of the new wall.
 		*/
-		size_t InitWall(const Vertices& vData, const Absorption<>& absorption, int polygonId);
+		int InitWall(const Vertices& vData, const size_t materialId);
 		
 		/**
 		* @brief Updates the position and orientation of the wall with the given ID.
@@ -207,14 +213,6 @@ namespace RAC
 		* @param vData The new vertices of the wall.
 		*/
 		void UpdateWall(size_t id, const Vertices& vData);
-
-		/**
-		* @brief Updates the absorption of the wall with the given ID.
-		*
-		* @param id The ID of the wall to update.
-		* @param absorption The new absortion of the wall.
-		*/
-		void UpdateWallAbsorption(size_t id, const Absorption<>& absorption);
 
 		/**
 		* @brief Removes the wall with the given ID.

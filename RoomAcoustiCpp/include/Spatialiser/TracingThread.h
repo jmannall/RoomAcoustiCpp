@@ -58,28 +58,18 @@ namespace RAC
 			void SetNumberOfRays(int newNumRays);
 
 			/**
-			* @brief Set the propagation path indexing and decay rates of each mode.
-			* N.B.: This also prompts the contruction of the TriangleMeshSoA in Room.
-			*/
-			void InitRoom(int paths, const Matrix<int>& indexing, const Vec<>& decayRates);
-
-			/**
 			* @brief Process the ray-tracing from every new position and update the related residues.
 			*/
-			void RunTracing();
+			virtual void RunTracing() = 0;
 
-		private:
+		protected:
 			weak_ptr<Room> mRoom;							// Pointer to the room class
 			weak_ptr<SourceManager> mSourceManager;			// Pointer to the source manager class
 			weak_ptr<Reverb> mReverb;						// Pointer to the late reverb class
 			std::mutex rayPencilMutex;						// Protects hemispherePencil
 
-			// The geometry is assumed unchanging.
-			int numPaths;									// Number of ART propagation paths
-			Matrix<int> pathIndexing;						// Index of the ART propagation path from triangle A to triangle B
-
 			// The number of reverb directions is assumed unchanging.
-			int numFDNs, numReverbDirections;
+			int numReverbDirections;
 			std::vector<Vec3> reverbDirections;
 			// The indexing of ray directions to reverb directions may change because the number of rays may change.
 			std::vector<int> rayClusters;			// This will have size `numRays`. For each ray, the index of the reverb direction that the ray falls into.
@@ -97,13 +87,6 @@ namespace RAC
 			Vec3 mListenerPositionIncoming;			// The listener position (Mutex must be locked to access)
 			std::mutex dataStoreMutex;				// Protects mListenerPositionStore
 
-			// These will be used as temporary "buffers" in the hot loop; memory is only allocated once.
-			Vec<Real> decayPerSecond;						// This will have size `numFDNs`
-			Vec<Real> energyContributions;					// This will have size `numPaths`
-			Vec<Real> contributionDelays;					// This will have size `numPaths`
-			Vec<Real> contributionDelayScaling;				// This will have size `numPaths`
-			Coefficients<> sourceResidues;					// This will have size `numFDNs`
-			std::vector<Coefficients<>> listenerResidues;	// This will have size `numFDNs, numReverbDirections`
 			// These will be used exclusively inside `computeEnergyContributions`. All four will have size `numRays`.
 			Vec<Real> rayDistances;				// This will have size `numRays`
 			Vec<Real> rayCosines;				// This will have size `numRays`
@@ -114,7 +97,34 @@ namespace RAC
 			* @brief Assigns each ray direction to the nearest reverb direction.
 			*/
 			void clusterReverbDirections();
+		};
 
+		class MoDARTTracing : public TracingThread
+		{
+		public:
+
+			MoDARTTracing(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const MoDARTData& data, const std::shared_ptr<DSPConfig>& dspConfig) :
+				TracingThread(room, sourceManager, reverb, data, dspConfig),
+				decayPerSecond(dspConfig->GetNumFDNs()),
+				sourceResidues(dspConfig->GetNumFDNs()),
+				listenerResidues(dspConfig->GetNumFDNs(), Coefficients<>(dspConfig->GetData().numReverbSources)),
+				numFDNs(dspConfig->GetNumFDNs()),
+				numPaths(data.rightEigenvectors[0].Rows())
+			{
+				InitRoom(data.indexing, data.energyDecay);
+			}
+
+			/**
+			* @brief Set the propagation path indexing and decay rates of each mode.
+			*/
+			void InitRoom(const Matrix<int>& indexing, const Vec<>& decayRates);
+
+			/**
+			* @brief Process the ray-tracing from every new position and update the related residues.
+			*/
+			void RunTracing() override;
+
+		private:
 			/**
 			* @brief Computes the energy constributions of the ray pencil to each ART propagation path and stores them in the attribute `energyContributions`.
 			* Makes internal use of the latest tracing results stored in hemispherePencil in conjunction with pathIndexing.
@@ -123,6 +133,38 @@ namespace RAC
 			*						 Otherwise, only tally up the contributions of rays within the cluster with index `reverbDirectionIdx`.
 			*/
 			void computeEnergyContributions(int reverbDirectionIdx = -1);
+
+			// The geometry is assumed unchanging.
+			int numPaths;									// Number of ART propagation paths
+			Matrix<int> pathIndexing;						// Index of the ART propagation path from triangle A to triangle B
+
+			// The number of fdns is assumed unchanging.
+			int numFDNs;
+
+			// These will be used as temporary "buffers" in the hot loop; memory is only allocated once.
+			Vec<Real> decayPerSecond;						// This will have size `numFDNs`
+			Vec<Real> energyContributions;					// This will have size `numPaths`
+			Vec<Real> contributionDelays;					// This will have size `numPaths`
+			Vec<Real> contributionDelayScaling;				// This will have size `numPaths`
+			Coefficients<> sourceResidues;					// This will have size `numFDNs`
+			std::vector<Coefficients<>> listenerResidues;	// This will have size `numFDNs, numReverbDirections`
+		};
+
+		class SingleFDNTracing : public TracingThread
+		{
+		public:
+
+			SingleFDNTracing(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const LateReverbData& data, const std::shared_ptr<DSPConfig>& dspConfig) :
+				TracingThread(room, sourceManager, reverb, data, dspConfig),
+				reflectionGains(dspConfig->GetData().numReverbSources, Absorption<>(dspConfig->GetData().numFrequencyBands))
+			{}
+
+			void RunTracing() override;
+
+		private:
+			void ComputeEnergyContributions(const MaterialMap& materials, int reverbDirectionIdx = -1);
+
+			std::vector<Absorption<>> reflectionGains;	// This will have size `numReverbDirections`
 		};
 	}
 }

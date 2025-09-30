@@ -38,6 +38,7 @@ namespace RAC
 
 		typedef std::unordered_map<size_t, Plane> PlaneMap;									// Store planes
 		typedef std::unordered_map<size_t, Wall> WallMap;									// Store walls
+		typedef std::unordered_map<size_t, Absorption<>> MaterialMap;						// Store materials
 		typedef std::unordered_map<size_t, Edge> EdgeMap;									// Store edges
 		typedef std::unordered_map<size_t, Source> SourceMap;								// Store sources
 		typedef std::unordered_map<std::string, ImageSource> ImageSourceMap;				// Store image sources

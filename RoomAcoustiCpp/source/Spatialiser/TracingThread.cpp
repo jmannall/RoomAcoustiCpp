@@ -19,16 +19,11 @@ namespace RAC
 		// TODO: Save MoDARTData instance, or copy its attributes?
 		TracingThread::TracingThread(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const LateReverbData& data, const std::shared_ptr<DSPConfig>& dspConfig) :
 			mRoom(room), mSourceManager(sourceManager), mReverb(reverb),
-			numReverbDirections(dspConfig->GetData().numReverbSources), numFDNs(dspConfig->GetNumFDNs()),
-			clustersSizes(dspConfig->GetData().numReverbSources),
-			decayPerSecond(dspConfig->GetNumFDNs()),
-			sourceResidues(dspConfig->GetNumFDNs()),
-			listenerResidues(dspConfig->GetNumFDNs(), Coefficients<>(dspConfig->GetData().numReverbSources))
+			numReverbDirections(dspConfig->GetData().numReverbSources),
+			clustersSizes(dspConfig->GetData().numReverbSources)
 		{
 			shared_ptr<Reverb> sharedReverb = mReverb.lock();
 			sharedReverb->GetReverbSourceDirections(reverbDirections);
-
-			numPaths = 0;
 
 			// This initializes the pencil, clusters the reverb directions, and allocates buffers of size numRays.
 			SetNumberOfRays(data.numRays);
@@ -63,11 +58,8 @@ namespace RAC
 			}
 		}
 
-		void TracingThread::InitRoom(int paths, const Matrix<int>& indexing, const Vec<>& decayRates) {
+		void MoDARTTracing::InitRoom(const Matrix<int>& indexing, const Vec<>& decayRates) {
 			lock_guard<std::mutex> lock(rayPencilMutex);
-
-			numPaths = paths;
-			numFDNs = decayRates.Rows();
 
 			assert(decayRates.Rows() == numFDNs);
 			pathIndexing = indexing;
@@ -80,7 +72,7 @@ namespace RAC
 			contributionDelayScaling = Vec<Real>(numPaths);
 		}
 
-		void TracingThread::RunTracing() {
+		void MoDARTTracing::RunTracing() {
 			PROFILE_ReverbRayTracing
 #ifdef RTM_FLAG
 			Debug::RTMStartFlag();
@@ -109,6 +101,10 @@ namespace RAC
 
 				for (int dir_idx = 0; dir_idx < numReverbDirections; ++dir_idx) {
 					computeEnergyContributions(dir_idx);
+#ifdef DEBUG_RTM
+				Debug::send_path(IntToStr(dir_idx) + "l", { mListenerPosition }, reverbDirections[dir_idx]);
+#endif
+
 					for (int slope_idx = 0; slope_idx < numFDNs; ++slope_idx) {
 						for (int path_idx = 0; path_idx < numPaths; ++path_idx) {
 							contributionDelayScaling[path_idx] = std::pow(decayPerSecond[slope_idx], -contributionDelays[path_idx]);
@@ -166,7 +162,7 @@ namespace RAC
 #endif
 		}
 
-		void TracingThread::computeEnergyContributions(int reverbDirectionIdx) {
+		void MoDARTTracing::computeEnergyContributions(int reverbDirectionIdx) {
 			int pathIdx;
 			Real distance;
 
@@ -216,6 +212,86 @@ namespace RAC
 				else
 					energyContributions[path_idx] /= (numReverbDirections * clustersSizes[reverbDirectionIdx]);
 			}
+		}
+
+		void SingleFDNTracing::RunTracing() {
+			PROFILE_ReverbRayTracing
+#ifdef RTM_FLAG
+				Debug::RTMStartFlag();
+#endif
+			// TODO: Should we only update residues relevant to currently active FDNs (i.e T60 > minimumT60)?
+			lock_guard<std::mutex> lock(rayPencilMutex);
+			shared_ptr<Room> sharedRoom = mRoom.lock();
+			shared_ptr<Reverb> sharedReverb = mReverb.lock();
+
+			bool listenerMoved = false;
+			{
+				lock_guard<std::mutex> lock(dataStoreMutex);
+				if (mListenerPosition != mListenerPositionStore)
+				{
+					mListenerPosition = mListenerPositionStore;
+					listenerMoved = true;
+				}
+			}
+			if (listenerMoved)
+			{
+				hemispherePencil.moveOrigin(mListenerPosition);
+				hemispherePencil.traceAll(sharedRoom->GetTriangleMeshSoA());
+
+				MaterialMap materials = sharedRoom->GetMaterials();
+				for (int dir_idx = 0; dir_idx < numReverbDirections; ++dir_idx)
+				{
+					ComputeEnergyContributions(materials, dir_idx);
+#ifdef DEBUG_RTM
+					Debug::send_path(IntToStr(dir_idx) + "l", { mListenerPosition }, reverbDirections[dir_idx]);
+#endif
+				}
+				sharedReverb->SetTargetOutputFilters(reflectionGains);
+			}
+#ifdef RTM_FLAG
+			Debug::RTMEndFlag();
+#endif
+		}
+
+		void SingleFDNTracing::ComputeEnergyContributions(const MaterialMap& materials, int reverbDirectionIdx) {
+			int pathIdx;
+			Real distance;
+
+			// Reset contributions to 0
+			for (int dir_idx = 0; dir_idx < numReverbDirections; ++dir_idx)
+				reflectionGains[reverbDirectionIdx] = 0.0;
+
+			hemispherePencil.getDistances(rayDistances);
+			hemispherePencil.getIndices(frontIndices, backIndices);
+			// If self-shadowing is enabled, get the incidence cosines as well.
+			if (SELF_SHADOWING_RADIUS > 0.0)
+				hemispherePencil.getCosines(rayCosines);
+
+			for (int ray_idx = 0; ray_idx < numRays; ++ray_idx) {
+				// Did the ray hit valid triangles on both sides?
+				if ((frontIndices[ray_idx] == -1))
+					continue;
+
+				// Does the ray fall within the bundle specified by `reverbDirectionIdx`?
+				if ((reverbDirectionIdx == -1) || (reverbDirectionIdx == rayClusters[ray_idx])) {
+					// Is the ray self-shadowed?
+					if (SELF_SHADOWING_RADIUS > 0.0)
+						if (rayCosines[ray_idx] < SELF_SHADOWING_RADIUS / (2 * rayDistances[ray_idx]))
+							continue;
+
+					// Add energy contribution of the ray
+					auto it = materials.find(frontIndices[ray_idx]);
+					if (it == materials.end())
+						continue;
+					reflectionGains[reverbDirectionIdx] += it->second;
+				}
+			}
+
+			// Normalize by number of rays
+			if (reverbDirectionIdx == -1)
+				reflectionGains[reverbDirectionIdx] /= static_cast<Real>(numRays);
+			else
+				reflectionGains[reverbDirectionIdx] /= static_cast<Real>(clustersSizes[reverbDirectionIdx]);
 		}
 	}
 }

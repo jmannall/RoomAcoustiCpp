@@ -192,7 +192,7 @@ namespace RAC
 			*/
 			void ReflectPointInRoom(const Source::Data& source, Source::DSPParameters& direct, ImageSourceDataMap& imageSources);
 
-			Absorption<> Direct(const Source::Data& source);
+			Absorption<> Direct(const Source::Data& source, bool lineOfSight);
 
 			/**
 			* @brief Find all first order diffractions
@@ -251,6 +251,7 @@ namespace RAC
 
 			PlaneMap mPlanes;									// Store planes
 			WallMap mWalls;										// Store walls
+			MaterialMap mMaterials;								// Store materials
 			EdgeMap mEdges;										// Store edges
 			std::vector<Source::Data> mSources;					// Store sources
 			std::vector<ImageSourceDataMap> imageSources;		// Store image sources

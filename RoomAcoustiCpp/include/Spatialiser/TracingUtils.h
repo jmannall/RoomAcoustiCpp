@@ -66,30 +66,30 @@ namespace RAC
          * @param triangles Structure of Arrays containing the triangles.
          * @param rays Structure of Arrays containing the rays.
          * @param rayIndex Index of the ray to test.
-         * @param nodeIdFront Pointer receiving the node ID of nearest t > 0 hit, or -1 for invalid hits.
+         * @param patchIdFront Pointer receiving the node ID of nearest t > 0 hit, or -1 for invalid hits.
          * @param distanceFront Pointer receiving the line parameter |t| of nearest t > 0 hit, or NaN for invalid hits.
          * @param cosineFront Pointer receiving the incidence cosine of nearest t > 0 hit, or NaN for invalid hits.
-         * @param nodeIdBack Pointer receiving the node ID of nearest t < 0 hit, or -1 for invalid hits.
+         * @param patchIdBack Pointer receiving the node ID of nearest t < 0 hit, or -1 for invalid hits.
          * @param distanceBack Pointer receiving the line parameter |t| of nearest t < 0 hit, or NaN for invalid hits.
          * @param cosineBack Pointer receiving the incidence cosine of nearest t < 0 hit, or NaN for invalid hits.
          * @param ignoredTriangleIndex Index of the triangle to be ignored (self-hit avoidance).
          */
         void trace_ray(
             const TriangleMeshSoA& triangles, const RayBundleSoA& rays, int rayIndex,
-            int& nodeIdFront, Real& distanceFront, Real& cosineFront,
-            int& nodeIdBack, Real& distanceBack, Real& cosineBack,
+            int& patchIdFront, Real& distanceFront, Real& cosineFront,
+            int& patchIdBack, Real& distanceBack, Real& cosineBack,
             int ignoredTriangleIndex = -1);
         // Overloaded for ray pencil
         void trace_ray(
             const TriangleMeshSoA& triangles, const RayPencilSoA& rays, int rayIndex,
-            int& nodeIdFront, Real& distanceFront, Real& cosineFront,
-            int& nodeIdBack, Real& distanceBack, Real& cosineBack,
+            int& patchIdFront, Real& distanceFront, Real& cosineFront,
+            int& patchIdBack, Real& distanceBack, Real& cosineBack,
             int ignoredTriangleIndex = -1);
         // Overloaded for single ray
         void trace_ray(
             const TriangleMeshSoA& triangles, const Vec3& rayOrigin, const Vec3& rayDirection,
-            int& nodeIdFront, Real& distanceFront, Real& cosineFront,
-            int& nodeIdBack, Real& distanceBack, Real& cosineBack,
+            int& patchIdFront, Real& distanceFront, Real& cosineFront,
+            int& patchIdBack, Real& distanceBack, Real& cosineBack,
             int ignoredTriangleIndex = -1);
 
         /* @brief Class for tracing a bundle of rays with different origins and directions. */
@@ -99,7 +99,7 @@ namespace RAC
             RayBundleSoA rays;
             
             Vec<Real> radiance, totalDistance, latestDistance, latestCosine;
-            std::vector<int> latestNodeId, previousNodeId;
+            std::vector<int> latestPatchId, previousPatchId;
 
         public:
             /* @brief Default constructor (0 rays)
@@ -178,7 +178,7 @@ namespace RAC
             bool exposeMirrorCopies = false;
 
             Vec<Real> frontDistance, backDistance, frontCosine, backCosine;
-            std::vector<int> frontnodeId, backnodeId;
+            std::vector<int> frontpatchId, backpatchId;
 
         public:
             /* @brief Default constructor (0 rays)
