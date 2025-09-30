@@ -528,20 +528,9 @@ namespace RAC
 			GetOutput(output);
 
 			int irLength = outputBuffer.Length();
-			int stereoBufferLength = output.Length();
-			int numBuffers = irLength / stereoBufferLength;
-			int remainder = irLength - numBuffers * stereoBufferLength;
-			int step = 1;
-			if (dspConfig->GetSpatialisationMode() == SpatialisationMode::none)
-			{
-				step = 2;
-				numBuffers *= step;
-				if (remainder > numFrames)
-				{
-					remainder -= numFrames;
-					numBuffers++;
-				}
-			}
+			int outputBufferLength = output.Length();
+			int numBuffers = irLength / outputBufferLength;
+			int remainder = irLength - numBuffers * outputBufferLength;
 
 			// Process buffers
 			int count = 0;
@@ -550,14 +539,14 @@ namespace RAC
 			{
 				mSources->SetInputBuffer(id, input);
 				GetOutput(output);
-				for (int j = 0; j < stereoBufferLength; j += step)
+				for (int j = 0; j < outputBufferLength; j++)
 					outputBuffer[count++] = output[j];
 				input[0] = 0.0;
 			}
 			// Process remaining samples
 			mSources->SetInputBuffer(id, input);
 			GetOutput(output);
-			for (int i = 0; i < step * remainder; i += step)
+			for (int i = 0; i < remainder; i++)
 				outputBuffer[count++] = output[i];
 
 			RemoveSource(id);
