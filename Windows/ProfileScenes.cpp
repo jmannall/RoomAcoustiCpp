@@ -222,7 +222,8 @@ int main() {
             ProfileShoebox();
             break;
         case '2':
-            ProfileMoDART();
+            for (int i = 0; i < 10; ++i)
+				ProfileMoDART();
             break;
         case 'q':
             std::cout << "Exiting program!" << std::endl;
