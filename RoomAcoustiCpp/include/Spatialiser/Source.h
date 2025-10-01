@@ -178,6 +178,7 @@ namespace RAC
 				if (!GetAccess())
 					return;
 				InitMoDARTParameters(frequencyIndexing, numFrames);
+				FreeAccess();
 			}
 
 			/**
@@ -236,6 +237,7 @@ namespace RAC
 				assert(residues.Length() == ravesResidues.size());
 				for (int i = 0; i < ravesResidues.size(); i++)
 					ravesResidues[i].SetTargetEnergy(residues[i]);
+				FreeAccess();
 			}
 
 			/**

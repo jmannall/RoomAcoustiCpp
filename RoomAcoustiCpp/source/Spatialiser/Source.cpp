@@ -272,8 +272,10 @@ namespace RAC
 			}
 
 			if (!audioData.earlyReverbEnabled)
+			{
+				FreeAccess();
 				return;
-
+			}
 			mAirAbsorption->ProcessAudio(inputBuffer, bStore, audioData.lerpFactor);
 
 			{

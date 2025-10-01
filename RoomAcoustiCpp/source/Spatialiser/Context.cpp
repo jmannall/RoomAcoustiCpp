@@ -503,9 +503,12 @@ namespace RAC
 
 		void Context::RecordImpulseResponse(const Vec3& position, const Vec4& orientation, Buffer<>& outputBuffer)
 		{
-			size_t id = InitSource();
+			int id = InitSource();
+			if (id < 0)
+				return;
+
 			// TODO: Allow different directivities
-			UpdateSourceDirectivity(id, SourceDirectivity::genelec8020c);
+			UpdateSourceDirectivity(id, SourceDirectivity::omni);
 			UpdateSource(id, position, orientation);
 
 			mImageEdgeModel->ResetEndFlag();
