@@ -1,3 +1,6 @@
+
+#include <cassert>
+
 #include "Spatialiser/TracingUtils.h"
 
 #if defined _DEBUG || defined DEBUG_RTM
@@ -490,13 +493,13 @@ namespace RAC
             // assert(rayIndex < rays.size());
 
             // Load ray data into locals.
-            const Real Ox = rayOrigin.x;
-            const Real Oy = rayOrigin.y;
-            const Real Oz = rayOrigin.z;
+            const Real Ox = rayOrigin.x();
+            const Real Oy = rayOrigin.y();
+            const Real Oz = rayOrigin.z();
 
-            const Real Dx = rayDirection.x;
-            const Real Dy = rayDirection.y;
-            const Real Dz = rayDirection.z;
+            const Real Dx = rayDirection.x();
+            const Real Dy = rayDirection.y();
+            const Real Dz = rayDirection.z();
 
             // Load plane data into locals.
             const Real nx = triangles.nx[triangleIndex];
@@ -961,12 +964,12 @@ namespace RAC
             numRays = 0;
             rays.resize(0);
 
-            radiance = Vec<Real>(numRays, 1);
-            totalDistance = Vec<Real>(numRays);
-            latestDistance = Vec<Real>(numRays);
-            latestCosine = Vec<Real>(numRays);
-            latestPatchId = std::vector<int>(numRays, -1);
-            previousPatchId = std::vector<int>(numRays, -1);
+            radiance = Vec<>::Constant(numRays, 1.0);
+            totalDistance = Vec<>::Zero(numRays);
+            latestDistance = Vec<>::Zero(numRays);
+            latestCosine = Vec<>::Zero(numRays);
+            latestPatchId = Vec<int>::Constant(numRays, -1);
+            previousPatchId = Vec<int>::Constant(numRays, -1);
         }
         
         RayBundle::RayBundle(const Vec3& origin, const std::vector<Vec3>& directions)
@@ -975,22 +978,22 @@ namespace RAC
             rays.resize(numRays);
 
             for (int i = 0; i < numRays; ++i) {
-                rays.Ox[i] = origin.x;
-                rays.Oy[i] = origin.y;
-                rays.Oz[i] = origin.z;
-                rays.Dx[i] = directions[i].x;
-                rays.Dy[i] = directions[i].y;
-                rays.Dz[i] = directions[i].z;
+                rays.Ox[i] = origin.x();
+                rays.Oy[i] = origin.y();
+                rays.Oz[i] = origin.z();
+                rays.Dx[i] = directions[i].x();
+                rays.Dy[i] = directions[i].y();
+                rays.Dz[i] = directions[i].z();
             }
             // Note that this also computes the moments if needed.
             rays.normalize_directions();
 
-            radiance = Vec<Real>(numRays, 1);
-            totalDistance = Vec<Real>(numRays);
-            latestDistance = Vec<Real>(numRays);
-            latestCosine = Vec<Real>(numRays);
-            latestPatchId = std::vector<int>(numRays, -1);
-            previousPatchId = std::vector<int>(numRays, -1);
+            radiance = Vec<>::Constant(numRays, 1.0);
+            totalDistance = Vec<>::Zero(numRays);
+            latestDistance = Vec<>::Zero(numRays);
+            latestCosine = Vec<>::Zero(numRays);
+            latestPatchId = Vec<int>::Constant(numRays, -1);
+            previousPatchId = Vec<int>::Constant(numRays, -1);
         }
 
         RayBundle::RayBundle(const std::vector<Vec3>& origins, const std::vector<Vec3>& directions)
@@ -999,22 +1002,22 @@ namespace RAC
             rays.resize(numRays);
 
             for (int i = 0; i < numRays; ++i) {
-                rays.Ox[i] = origins[i].x;
-                rays.Oy[i] = origins[i].y;
-                rays.Oz[i] = origins[i].z;
-                rays.Dx[i] = directions[i].x;
-                rays.Dy[i] = directions[i].y;
-                rays.Dz[i] = directions[i].z;
+                rays.Ox[i] = origins[i].x();
+                rays.Oy[i] = origins[i].y();
+                rays.Oz[i] = origins[i].z();
+                rays.Dx[i] = directions[i].x();
+                rays.Dy[i] = directions[i].y();
+                rays.Dz[i] = directions[i].z();
             }
             // Note that this also computes the moments if needed.
             rays.normalize_directions();
 
-            radiance = Vec<Real>(numRays, 1);
-            totalDistance = Vec<Real>(numRays);
-            latestDistance = Vec<Real>(numRays);
-            latestCosine = Vec<Real>(numRays);
-            latestPatchId = std::vector<int>(numRays, -1);
-            previousPatchId = std::vector<int>(numRays, -1);
+            radiance = Vec<>::Constant(numRays, 1.0);
+            totalDistance = Vec<>::Zero(numRays);
+            latestDistance = Vec<>::Zero(numRays);
+            latestCosine = Vec<>::Zero(numRays);
+            latestPatchId = Vec<int>::Constant(numRays, -1);
+            previousPatchId = Vec<int>::Constant(numRays, -1);
         }
 
         void RayBundle::traceAll(const TriangleMeshSoA& triangles)
@@ -1025,21 +1028,21 @@ namespace RAC
 
             for (int i = 0; i < numRays; ++i) {
                 // Skip rays that are already invalid.
-                if (std::isnan(radiance[i]))
+                if (std::isnan(radiance(i)))
                     continue;
 
                 trace_ray(
                     triangles, rays, i,
                     patchIdFront, distanceFront, cosineFront,
                     patchIdBack, distanceBack, cosineBack,
-                    latestPatchId[i]);
+                    latestPatchId(i));
 
                 // NB: Don't mess up the order of operations!
                 // Update previousPatchId before overwriting latestPatchId.
-                previousPatchId[i] = latestPatchId[i];
-                latestPatchId[i] = patchIdBack;
-                latestDistance[i] = distanceFront;
-                latestCosine[i] = cosineFront;
+                previousPatchId(i) = latestPatchId(i);
+                latestPatchId(i) = patchIdBack;
+                latestDistance(i) = distanceFront;
+                latestCosine(i) = cosineFront;
             }
         }
 
@@ -1055,9 +1058,9 @@ namespace RAC
         {
             assert(origins.size() == numRays);
             for (int i = 0; i < numRays; ++i) {
-                origins[i].x = rays.Ox[i];
-                origins[i].y = rays.Oy[i];
-                origins[i].z = rays.Oz[i];
+                origins[i].x() = rays.Ox[i];
+                origins[i].y() = rays.Oy[i];
+                origins[i].z() = rays.Oz[i];
             }
         }
 
@@ -1065,33 +1068,34 @@ namespace RAC
         {
             assert(directions.size() == numRays);
             for (int i = 0; i < numRays; ++i) {
-                directions[i].x = rays.Dx[i];
-                directions[i].y = rays.Dy[i];
-                directions[i].z = rays.Dz[i];
+                directions[i].x() = rays.Dx[i];
+                directions[i].y() = rays.Dy[i];
+                directions[i].z() = rays.Dz[i];
             }
         }
 
+        // TODO: Can these not just use operator= ?
         void RayBundle::getTotalDistances(Vec<>& distances) const
         {
             assert(distances.Rows() == numRays);
             for (int i = 0; i < numRays; ++i)
-                distances[i] = totalDistance[i];
+                distances(i) = totalDistance(i);
         }
 
         void RayBundle::getCosines(Vec<>& cosines) const
         {
             assert(cosines.Rows() == numRays);
             for (int i = 0; i < numRays; ++i)
-                cosines[i] = latestCosine[i];
+                cosines(i) = latestCosine(i);
         }
 
-        void RayBundle::getIndices(std::vector<int>& current, std::vector<int>& previous) const
+        void RayBundle::getIndices(Vec<int>& current, Vec<int>& previous) const
         {
-            assert(current.size() == numRays);
-            assert(previous.size() == numRays);
+            assert(current.Rows() == numRays);
+            assert(previous.Rows() == numRays);
             for (int i = 0; i < numRays; ++i) {
-                current[i] = latestPatchId[i];
-                previous[i] = previousPatchId[i];
+                current(i) = latestPatchId(i);
+                previous(i) = previousPatchId(i);
             }
         }
 
@@ -1099,7 +1103,7 @@ namespace RAC
         {
             assert(rad.Rows() == numRays);
             for (int i = 0; i < numRays; ++i)
-                rad[i] = radiance[i];
+                rad(i) = radiance(i);
         }
 
         // ------------------------ RayPencil methods ------------------------
@@ -1109,12 +1113,12 @@ namespace RAC
             numRays = 0;
             rays.resize(0);
 
-            frontDistance = Vec<Real>(numRays);
-            backDistance = Vec<Real>(numRays);
-            frontCosine = Vec<Real>(numRays);
-            backCosine = Vec<Real>(numRays);
-            frontpatchId = std::vector<int>(numRays, -1);
-            backpatchId = std::vector<int>(numRays, -1);
+            frontDistance = Vec<>::Zero(numRays);
+            backDistance = Vec<>::Zero(numRays);
+            frontCosine = Vec<>::Zero(numRays);
+            backCosine = Vec<>::Zero(numRays);
+            frontpatchId = Vec<int>::Constant(numRays, -1);
+            backpatchId = Vec<int>::Constant(numRays, -1);
         }
 
         RayPencil::RayPencil(int numDirections, bool hemisphereOnly)
@@ -1130,12 +1134,12 @@ namespace RAC
             // Note that this automatically normalizes the directions and computes the moments if needed.
             rays.fill_uniform_sphere(hemisphereOnly);
 
-            frontDistance = Vec<Real>(numRays);
-            backDistance = Vec<Real>(numRays);
-            frontCosine = Vec<Real>(numRays);
-            backCosine = Vec<Real>(numRays);
-            frontpatchId = std::vector<int>(numRays, -1);
-            backpatchId = std::vector<int>(numRays, -1);
+            frontDistance = Vec<>::Zero(numRays);
+            backDistance = Vec<>::Zero(numRays);
+            frontCosine = Vec<>::Zero(numRays);
+            backCosine = Vec<>::Zero(numRays);
+            frontpatchId = Vec<int>::Constant(numRays, -1);
+            backpatchId = Vec<int>::Constant(numRays, -1);
         }
 
         RayPencil::RayPencil(const std::vector<Vec3>& directions)
@@ -1147,37 +1151,37 @@ namespace RAC
             rays.Oy = 0.0;
             rays.Oz = 0.0;
             for (int i = 0; i < numRays; ++i) {
-                rays.Dx[i] = directions[i].x;
-                rays.Dy[i] = directions[i].y;
-                rays.Dz[i] = directions[i].z;
+                rays.Dx[i] = directions[i].x();
+                rays.Dy[i] = directions[i].y();
+                rays.Dz[i] = directions[i].z();
             }
             // Note that this also computes the moments if needed.
             rays.normalize_directions();
 
-            frontDistance = Vec<Real>(numRays);
-            backDistance = Vec<Real>(numRays);
-            frontCosine = Vec<Real>(numRays);
-            backCosine = Vec<Real>(numRays);
-            frontpatchId = std::vector<int>(numRays, -1);
-            backpatchId = std::vector<int>(numRays, -1);
+            frontDistance = Vec<>::Zero(numRays);
+            backDistance = Vec<>::Zero(numRays);
+            frontCosine = Vec<>::Zero(numRays);
+            backCosine = Vec<>::Zero(numRays);
+            frontpatchId = Vec<int>::Constant(numRays, -1);
+            backpatchId = Vec<int>::Constant(numRays, -1);
         }
 
         void RayPencil::moveOrigin(const Vec3& origin)
         {
-            rays.Ox = origin.x;
-            rays.Oy = origin.y;
-            rays.Oz = origin.z;
+            rays.Ox = origin.x();
+            rays.Oy = origin.y();
+            rays.Oz = origin.z();
 
 #if PLUCKER_KERNEL
             rays.compute_moments();
 #endif // end PLUCKER_KERNEL
 
-            frontDistance = Vec<Real>(numRays);
-            backDistance = Vec<Real>(numRays);
-            frontCosine = Vec<Real>(numRays);
-            backCosine = Vec<Real>(numRays);
-            frontpatchId = std::vector<int>(numRays, -1);
-            backpatchId = std::vector<int>(numRays, -1);
+            frontDistance = Vec<>::Zero(numRays);
+            backDistance = Vec<>::Zero(numRays);
+            frontCosine = Vec<>::Zero(numRays);
+            backCosine = Vec<>::Zero(numRays);
+            frontpatchId = Vec<int>::Constant(numRays, -1);
+            backpatchId = Vec<int>::Constant(numRays, -1);
         }
 
         void RayPencil::traceAll(const TriangleMeshSoA& triangles)
@@ -1192,23 +1196,23 @@ namespace RAC
                     temp_frontpatchId, temp_frontDistance, temp_frontCosine,
                     temp_backpatchId, temp_backDistance, temp_backCosine);
 
-                frontpatchId[i] = temp_frontpatchId;
-                frontDistance[i] = temp_frontDistance;
-                frontCosine[i] = temp_frontCosine;
-                backpatchId[i] = temp_backpatchId;
-                backDistance[i] = temp_backDistance;
-                backCosine[i] = temp_backCosine;
+                frontpatchId(i) = temp_frontpatchId;
+                frontDistance(i) = temp_frontDistance;
+                frontCosine(i) = temp_frontCosine;
+                backpatchId(i) = temp_backpatchId;
+                backDistance(i) = temp_backDistance;
+                backCosine(i) = temp_backCosine;
             }
         }
         
         void RayPencil::clusterDirections(
             const std::vector<Vec3>& directions,
-            std::vector<int>& clusters) const
+            Vec<int>& clusters) const
         {
             if (exposeMirrorCopies)
-                assert(clusters.size() == 2 * numRays);
+                assert(clusters.Rows() == 2 * numRays);
             else
-                assert(clusters.size() == numRays);
+                assert(clusters.Rows() == numRays);
 
             // Buffer used while iterating
             std::vector<Real> cosineSimilarity(directions.size());
@@ -1223,12 +1227,12 @@ namespace RAC
                         // If cluster directions have non-unit norms, it will result in "weighted" clustering.
                         cosineSimilarity[j] = dot3(
                             rays.Dx[i], rays.Dy[i], rays.Dz[i],
-                            directions[j].x, directions[j].y, directions[j].z);
+                            directions[j].x(), directions[j].y(), directions[j].z());
                     }
-                    clusters[i] = std::distance(cosineSimilarity.begin(), std::max_element(cosineSimilarity.begin(), cosineSimilarity.end()));
+                    clusters(i) = std::distance(cosineSimilarity.begin(), std::max_element(cosineSimilarity.begin(), cosineSimilarity.end()));
                 }
                 else
-                    clusters[i] = -1;
+                    clusters(i) = -1;
             }
 
             if (exposeMirrorCopies)
@@ -1244,13 +1248,13 @@ namespace RAC
                             // If cluster directions have non-unit norms, it will result in "weighted" clustering.
                             cosineSimilarity[j] = dot3(
                                 rays.Dx[i], rays.Dy[i], rays.Dz[i],
-                                directions[j].x, directions[j].y, directions[j].z);
+                                directions[j].x(), directions[j].y(), directions[j].z());
                         }
                         // N.B.: We look for the MINIMUM this time
-                        clusters[i + numRays] = std::distance(cosineSimilarity.begin(), std::min_element(cosineSimilarity.begin(), cosineSimilarity.end()));
+                        clusters(i + numRays) = std::distance(cosineSimilarity.begin(), std::min_element(cosineSimilarity.begin(), cosineSimilarity.end()));
                     }
                     else
-                        clusters[i + numRays] = -1;
+                        clusters(i + numRays) = -1;
                 }
             }
         }
@@ -1263,9 +1267,9 @@ namespace RAC
                 assert(directions.size() == numRays);
 
             for (int i = 0; i < numRays; ++i) {
-                directions[i].x = rays.Dx[i];
-                directions[i].y = rays.Dy[i];
-                directions[i].z = rays.Dz[i];
+                directions[i].x() = rays.Dx[i];
+                directions[i].y() = rays.Dy[i];
+                directions[i].z() = rays.Dz[i];
             }
 
             if (exposeMirrorCopies)
@@ -1284,13 +1288,13 @@ namespace RAC
                 assert(distances.Rows() == numRays);
 
             for (int i = 0; i < numRays; ++i)
-                distances[i] = frontDistance[i];
+                distances(i) = frontDistance(i);
 
             if (exposeMirrorCopies)
             {
                 // Append direct opposites
                 for (int i = 0; i < numRays; ++i)
-                    distances[i + numRays] = backDistance[i];
+                    distances(i + numRays) = backDistance(i);
             }
         }
 
@@ -1302,33 +1306,33 @@ namespace RAC
                 assert(cosines.Rows() == numRays);
 
             for (int i = 0; i < numRays; ++i)
-                cosines[i] = frontCosine[i];
+                cosines(i) = frontCosine(i);
 
             if (exposeMirrorCopies)
             {
                 // Append direct opposites
                 for (int i = 0; i < numRays; ++i)
-                    cosines[i + numRays] = backCosine[i];
+                    cosines(i + numRays) = backCosine(i);
             }
         }
 
-        void RayPencil::getIndices(std::vector<int>& front, std::vector<int>& back) const
+        void RayPencil::getIndices(Vec<int>& front, Vec<int>& back) const
         {
             if (exposeMirrorCopies)
             {
-                assert(front.size() == 2 * numRays);
-                assert(back.size() == 2 * numRays);
+                assert(front.Rows() == 2 * numRays);
+                assert(back.Rows() == 2 * numRays);
             }
             else
             {
-                assert(front.size() == numRays);
-                assert(back.size() == numRays);
+                assert(front.Rows() == numRays);
+                assert(back.Rows() == numRays);
             }
 
             for (int i = 0; i < numRays; ++i)
             {
-                front[i] = frontpatchId[i];
-                back[i] = backpatchId[i];
+                front(i) = frontpatchId(i);
+                back(i) = backpatchId(i);
             }
 
             if (exposeMirrorCopies)
@@ -1336,8 +1340,8 @@ namespace RAC
                 // Append direct opposites
                 for (int i = 0; i < numRays; ++i)
                 {
-                    front[i + numRays] = backpatchId[i];
-                    back[i + numRays] = frontpatchId[i];
+                    front(i + numRays) = backpatchId(i);
+                    back(i + numRays) = frontpatchId(i);
                 }
             }
         }

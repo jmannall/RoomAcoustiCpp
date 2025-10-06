@@ -354,9 +354,11 @@ namespace RAC
 			}
 			for (int i = 0; i < reverbInput.Rows(); i++)
 			{
-				auto start = reverbInput.begin() + i * numFrames;
 				for (int j = 0; j < numFrames; j++)
-					start[j] += static_cast<Real>(bOutput.left[j]);
+					reverbInput(i, j) += static_cast<Real>(bOutput.left[j]);
+				/*auto start = reverbInput.begin() + i * numFrames;
+				for (int j = 0; j < numFrames; j++)
+					start[j] += static_cast<Real>(bOutput.left[j]);*/
 			}
 			FreeAccess();
 		}
@@ -375,7 +377,7 @@ namespace RAC
 				return;
 			}
 			UpdateTransform(position, orientation);
-			if ((position - currentPosition).Length() > EPS_POSITION || 2.0 * std::acos(std::abs(Dot(orientation, currentOrientation))) > EPS_ORIENTATION)
+			if ((position - currentPosition).Normal() > EPS_POSITION || 2.0 * std::acos(std::abs(orientation.dot(currentOrientation))) > EPS_ORIENTATION)
 			{
 				{
 					lock_guard<std::mutex>lock(*dataMutex);
@@ -468,8 +470,8 @@ namespace RAC
 		void Source::UpdateTransform(const Vec3& position, const Vec4& orientation)
 		{
 			std::shared_ptr<CTransform> transformCopy = std::make_shared<CTransform>();
-			transformCopy->SetOrientation(CQuaternion(static_cast<float>(orientation.w), static_cast<float>(orientation.x), static_cast<float>(orientation.y), static_cast<float>(orientation.z)));
-			transformCopy->SetPosition(CVector3(static_cast<float>(position.x), static_cast<float>(position.y), static_cast<float>(position.z)));
+			transformCopy->SetOrientation(CQuaternion(static_cast<float>(orientation.w()), static_cast<float>(orientation.x()), static_cast<float>(orientation.y()), static_cast<float>(orientation.z())));
+			transformCopy->SetPosition(CVector3(static_cast<float>(position.x()), static_cast<float>(position.y()), static_cast<float>(position.z())));
 			transform.store(transformCopy, std::memory_order_release);
 			releasePool.Add(transformCopy);
 		}

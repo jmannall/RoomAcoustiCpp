@@ -47,7 +47,7 @@ namespace RAC
 			inline void SetListenerPosition(const Vec3& position)
 			{
 				std::lock_guard<std::mutex> lock(dataStoreMutex);
-				if ((position - mListenerPositionIncoming).Length() < EPS_POSITION)
+				if ((position - mListenerPositionIncoming).Normal() < EPS_POSITION)
 					return;
 				mListenerPositionIncoming = position;
 			}
@@ -83,8 +83,8 @@ namespace RAC
 			int numReverbDirections;
 			std::vector<Vec3> reverbDirections;
 			// The indexing of ray directions to reverb directions may change because the number of rays may change.
-			std::vector<int> rayClusters;			// This will have size `numRays`. For each ray, the index of the reverb direction that the ray falls into.
-			std::vector<int> clustersSizes;			// This will have size `numReverbDirections`. For each reverb direction, the number of rays that fall into it.
+			Vec<int> rayClusters;			// This will have size `numRays`. For each ray, the index of the reverb direction that the ray falls into.
+			Vec<int> clustersSizes;			// This will have size `numReverbDirections`. For each reverb direction, the number of rays that fall into it.
 
 			// The number of rays may change at runtime.
 			int numRays;
@@ -104,8 +104,8 @@ namespace RAC
 			// These will be used exclusively inside `computeEnergyContributions`. All four will have size `numRays`.
 			Vec<Real> rayDistances;				// This will have size `numRays`
 			Vec<Real> rayCosines;				// This will have size `numRays`
-			std::vector<int> frontIndices;		// This will have size `numRays`
-			std::vector<int> backIndices;		// This will have size `numRays`
+			Vec<int> frontIndices;		// This will have size `numRays`
+			Vec<int> backIndices;		// This will have size `numRays`
 
 			/**
 			* @brief Assigns each ray direction to the nearest reverb direction.
@@ -158,10 +158,10 @@ namespace RAC
 			int numFDNs;
 
 			// These will be used as temporary "buffers" in the hot loop; memory is only allocated once.
-			Vec<Real> decayPerSecond;						// This will have size `numFDNs`
-			Vec<Real> energyContributions;					// This will have size `numPaths`
-			Vec<Real> contributionDelays;					// This will have size `numPaths`
-			Vec<Real> contributionDelayScaling;				// This will have size `numPaths`
+			Vec<> decayPerSecond;						// This will have size `numFDNs`
+			Vec<> energyContributions;					// This will have size `numPaths`
+			Vec<> contributionDelays;					// This will have size `numPaths`
+			Vec<> contributionDelayScaling;				// This will have size `numPaths`
 			Coefficients<> sourceResidues;					// This will have size `numFDNs`
 			std::vector<Coefficients<>> listenerResidues;	// This will have size `numFDNs, numReverbDirections`
 		};

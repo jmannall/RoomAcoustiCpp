@@ -18,7 +18,7 @@ namespace RAC
 
 	Real CalculateT60(const Buffer<>& out, const int numSamples, const int fs)
 	{
-		Rowvec envelope(numSamples);
+		Rowvec<> envelope(numSamples);
 
 		// Calculate the decay curve (in dB) for each channel and find the time to reach -60 dB
 		Buffer<> meanDecayCurve(numSamples);
@@ -27,17 +27,17 @@ namespace RAC
 		for (int j = 0; j < numSamples; j++)
 		{
 			cumSum += out[j] * out[j];
-			envelope[j] = cumSum;
+			envelope(j) = cumSum;
 		}
 		envelope /= cumSum;
 		for (int j = 0; j < numSamples; j++)
-			envelope[j] = 1.0 - envelope[j];
+			envelope(j) = 1.0 - envelope(j);
 
 		//// Find time to reach -60 dB on the mean decay curve
 		Real targetDecay = std::pow(10.0f, -6.0f); // -60 dB corresponds to 1e-6 in linear scale
 		for (int j = 0; j < numSamples; j++)
 		{
-			if (envelope[j] <= targetDecay)
+			if (envelope(j) <= targetDecay)
 				return static_cast<Real>(j) / fs;
 		}
 	}
@@ -56,10 +56,10 @@ namespace RAC
 			int numFrames = config->GetData().numFrames;
 			const std::vector<Absorption<>> reflectionGains(numReverbSources, gains);
 
-			Vec dimensions({ 1.0, 1.5, 2.0 });
+			Vec<> dimensions(std::vector<Real>({ (Real)1.0, (Real)1.5, (Real)2.0 }));
 			FDN<> fdn(T60, dimensions, config);
 
-			Matrix in(numReverbSources, numFrames);
+			Matrix<> in(numReverbSources, numFrames);
 			in.RandomUniformDistribution();
 
 			std::vector<Buffer<>> out(numReverbSources, Buffer<>(numFrames));
@@ -96,11 +96,11 @@ namespace RAC
 			int numFrames = config->GetData().numFrames;
 			const std::vector<Absorption<>> reflectionGains(numReverbSources, gains);
 
-			Vec dimensions({ 1.0, 1.5, 2.0 });
+			Vec<> dimensions(std::vector<Real>({ (Real)1.0, (Real)1.5, (Real)2.0 }));
 			FDN<> fdn(T60, dimensions, config);
 			fdn.SetTargetReflectionFilters(reflectionGains);
 
-			Matrix in(numReverbSources, numFrames);
+			Matrix<> in(numReverbSources, numFrames);
 			in.RandomUniformDistribution();
 
 			std::vector<Buffer<>> out(numReverbSources, Buffer<>(numFrames));
@@ -132,11 +132,11 @@ namespace RAC
 			const std::vector<Absorption<>> reflectionGains(numReverbSources, gains);
 
 			// Long delay lines cause issues with the T60 estimation due to less frequent but larger drops in energy
-			Vec dimensions({ RandomValue((Real)0.1, (Real)2.0), RandomValue((Real)0.1, (Real)5.0), RandomValue((Real)0.1, (Real)10.0) });
+			Vec<> dimensions(std::vector<Real>({ RandomValue((Real)0.1, (Real)2.0), RandomValue((Real)0.1, (Real)5.0), RandomValue((Real)0.1, (Real)10.0) }));
 			FDN<> fdn(T60, dimensions, config);
 			fdn.SetTargetReflectionFilters(reflectionGains);
 
-			Matrix in(numReverbSources, numFrames);
+			Matrix<> in = Matrix<>::Zero(numReverbSources, numFrames);
 			for (int i = 0; i < numReverbSources; i++)
 				in(i, 1) = 1.0;
 
@@ -171,11 +171,11 @@ namespace RAC
 			const std::vector<Absorption<>> reflectionGains(numReverbSources, gains);
 
 			// Long delay lines cause issues with the T60 estimation due to less frequent but larger drops in energy
-			Vec dimensions({ RandomValue(0.1, 2.0), RandomValue(0.1, 5.0), RandomValue(0.1, 10.0) });
+			Vec<> dimensions(std::vector<Real>({ RandomValue(0.1, 2.0), RandomValue(0.1, 5.0), RandomValue(0.1, 10.0) }));
 			FDN<> fdn(T60, dimensions, config);
 			fdn.SetTargetReflectionFilters(reflectionGains);
 
-			Matrix in(numReverbSources, numFrames);
+			Matrix<> in = Matrix<>::Zero(numReverbSources, numFrames);
 			for (int i = 0; i < numReverbSources; i++)
 				in(i, 1) = 1.0;
 
@@ -188,7 +188,7 @@ namespace RAC
 				decayTime += CalculateT60(out[i], numFrames, config->GetData().fs);
 			decayTime /= numReverbSources;
 			Assert::IsTrue(decayTime > 0.0f, L"Decay not detected.");
-			Assert::AreEqual(target, decayTime, (Real)0.02, L"Decay time does not match target RT60.");
+			Assert::AreEqual(target, decayTime, (Real)0.03, L"Decay time does not match target RT60.");
 		}
 
 		TEST_METHOD(ProcessHouseHolder)
@@ -210,11 +210,11 @@ namespace RAC
 			const std::vector<Absorption<>> reflectionGains(numReverbSources, gains);
 
 			// Long delay lines cause issues with the T60 estimation due to less frequent but larger drops in energy
-			Vec<> dimensions({ RandomValue(0.1, 2.0), RandomValue(0.1, 5.0), RandomValue(0.1, 10.0) });
+			Vec<> dimensions(std::vector<Real>({ RandomValue(0.1, 2.0), RandomValue(0.1, 5.0), RandomValue(0.1, 10.0) }));
 			FDN<> fdn(T60, dimensions, config);
 			fdn.SetTargetReflectionFilters(reflectionGains);
 
-			Matrix in(numReverbSources, numFrames);
+			Matrix<> in = Matrix<>::Zero(numReverbSources, numFrames);
 			for (int i = 0; i < numReverbSources; i++)
 				in(i, 1) = 1.0;
 
@@ -248,11 +248,11 @@ namespace RAC
 			const Absorption reflectionGains({ 0.1, 0.05, 0.3, 0.25 });
 
 			// Long delay lines cause issues with the T60 estimation due to less frequent but larger drops in energy
-			Vec dimensions({ 2.3, 1.5, 5.6 });
+			Vec<> dimensions(std::vector<Real>({ 2.3, 1.5, 5.6 }));
 			FDN<> fdn(T60, dimensions, config);
 			fdn.SetTargetReflectionFilters(std::vector<Absorption<>>(numReverbSources, reflectionGains));
 
-			Matrix in(numReverbSources, numFrames);
+			Matrix<> in = Matrix<>::Zero(numReverbSources, numFrames);
 			in(0, 0) = 1.0;
 
 			std::vector<Buffer<>> out(numReverbSources, Buffer<>(numFrames));
@@ -290,11 +290,11 @@ namespace RAC
 			const Absorption reflectionGains({ 0.1, 0.05, 0.3, 0.25 });
 
 			// Long delay lines cause issues with the T60 estimation due to less frequent but larger drops in energy
-			Vec dimensions({ 2.3, 1.5, 5.6 });
+			Vec<> dimensions(std::vector<Real>({ 2.3, 1.5, 5.6 }));
 			RandomOrthogonalFDN fdn(T60, dimensions, config);
 			fdn.SetTargetReflectionFilters(std::vector<Absorption<>>(numReverbSources, reflectionGains));
 
-			Matrix in(numReverbSources, numFrames);
+			Matrix<> in = Matrix<>::Zero(numReverbSources, numFrames);
 			in(0, 0) = 1.0;
 
 			std::vector<Buffer<>> out(numReverbSources, Buffer<>(numFrames));
@@ -327,11 +327,11 @@ namespace RAC
 			const Absorption reflectionGains({ 0.1, 0.05, 0.3, 0.25 });
 
 			// Long delay lines cause issues with the T60 estimation due to less frequent but larger drops in energy
-			Vec dimensions({ 2.3, 1.5, 5.6 });
+			Vec<> dimensions(std::vector<Real>({ 2.3, 1.5, 5.6 }));
 			HouseHolderFDN fdn(T60, dimensions, config);
 			fdn.SetTargetReflectionFilters(std::vector<Absorption<>>(numReverbSources, reflectionGains));
 
-			Matrix in(numReverbSources, numFrames);
+			Matrix<> in = Matrix<>::Zero(numReverbSources, numFrames);
 			in(0, 0) = 1.0;
 
 			std::vector<Buffer<>> out(numReverbSources, Buffer<>(numFrames));

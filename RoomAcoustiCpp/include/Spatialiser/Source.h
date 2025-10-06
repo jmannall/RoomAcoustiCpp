@@ -73,7 +73,7 @@ namespace RAC
 				bool needsUpdate;					// True if source data has changed since last update, false otherwise
 
 				Data(size_t id, const Vec3& position, const Vec4& orientation, const SourceDirectivity& directivity, bool needsUpdate)
-					: id(id), position(position), forward(orientation.Forward()), orientation(orientation), directivity(directivity),
+					: id(id), position(position), forward(Forward(orientation)), orientation(orientation), directivity(directivity),
 					needsUpdate(needsUpdate) {}
 			};
 
@@ -190,7 +190,7 @@ namespace RAC
 			{
 				ravesResidues = std::vector<RAVESSourceResidue>(frequencyIndexing.Rows());
 				for (int i = 0; i < frequencyIndexing.Rows(); i++)
-					ravesResidues[i].frequencyIndex = frequencyIndexing[i];
+					ravesResidues[i].frequencyIndex = frequencyIndexing(i);
 				frequencyBands = Matrix<>(octaveBandFilter.NumBands(), numFrames);
 			}
 

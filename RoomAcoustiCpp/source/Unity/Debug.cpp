@@ -93,13 +93,13 @@ namespace RAC
             int count = 0;
             for (size_t i = 0; i < size - 1; ++i)
             {
-                intersectionArray[count++] = intersections[i].x;
-                intersectionArray[count++] = intersections[i].y;
-                intersectionArray[count++] = intersections[i].z;
+                intersectionArray[count++] = intersections[i].x();
+                intersectionArray[count++] = intersections[i].y();
+                intersectionArray[count++] = intersections[i].z();
             }
-            intersectionArray[count++] = position.x;
-            intersectionArray[count++] = position.y;
-            intersectionArray[count++] = position.z;
+            intersectionArray[count++] = position.x();
+            intersectionArray[count++] = position.y();
+            intersectionArray[count++] = position.z();
 
             if (pathCallbackInstance != nullptr)
                 pathCallbackInstance(tmsg, &intersectionArray[0], (int)strlen(tmsg), (int)size);

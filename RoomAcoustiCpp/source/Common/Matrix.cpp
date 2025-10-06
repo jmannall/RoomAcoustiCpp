@@ -13,6 +13,7 @@
 #include "Common/Definitions.h"
 #include "Common/Complex.h"
 
+#if MATRIX_LIBRARY == CUSTOM_FLAG
 namespace RAC
 {
 	namespace Common
@@ -52,7 +53,7 @@ namespace RAC
 		////////////////////////////////////////
 
 		template<typename T>
-		Matrix<T> Matrix<T>::Transpose()
+		Matrix<T> Matrix<T>::Transposed()
 		{
 			assert(data.rows * data.cols == data.matrix.size());
 			Matrix<T> matrix = Matrix<T>(data.cols, data.rows);
@@ -66,9 +67,18 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Matrix<Real>::Inverse()
+		Matrix<Real> Matrix<Real>::InverseMatrix() const
 		{
-			// TODO: Add unit tests for this function
+			Matrix<Real> inverse = *this;
+			inverse.Invert();
+			return inverse;
+		}
+
+		////////////////////////////////////////
+
+		template<>
+		void Matrix<Real>::Invert()
+		{
 			assert(data.rows == data.cols); // Matrix must be square
 
 			// Create the augmented matrix [A|I]
@@ -191,3 +201,4 @@ namespace RAC
 		}
 	}
 }
+#endif // MATRIX_LIBRARY == CUSTOM_FLAG

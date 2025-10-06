@@ -35,7 +35,8 @@ namespace RAC
 			int numTests = theta.size();
 			for (int i = 0; i < numTests; i++)
 			{
-				Absorption directivity = GENELEC.Response(freq, theta[i], phi[i]);
+				Vec3 direction = Vec3(std::sin(theta[i]) * std::sin(-phi[i]), std::sin(theta[i]) * std::cos(-phi[i]), std::cos(theta[i]));
+				Absorption directivity = GENELEC.Response(freq, direction);
 
 				for (int j = 0; j < freq.size(); j++)
 				{
@@ -60,7 +61,8 @@ namespace RAC
 			int numTests = theta.size();
 			for (int i = 0; i < numTests; i++)
 			{
-				Absorption directivity = GENELEC_DTF.Response(freq, theta[i], phi[i]);
+				Vec3 direction = Vec3(std::sin(theta[i]) * std::sin(-phi[i]), std::sin(theta[i]) * std::cos(-phi[i]), std::cos(theta[i]));
+				Absorption directivity = GENELEC_DTF.Response(freq, direction);
 
 				for (int j = 0; j < freq.size(); j++)
 				{

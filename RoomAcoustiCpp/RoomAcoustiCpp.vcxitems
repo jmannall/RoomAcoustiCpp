@@ -95,6 +95,10 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\LinkwitzRileyFilter.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\OctaveBandFilter.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\Parameter.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Eigen\DenseBaseAddons.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Eigen\MatrixAddons.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Eigen\MatrixBaseAddons.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Eigen\QuaternionBaseAddons.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\moodycamel\concurrentqueue.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\AirAbsorption.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Context.h" />

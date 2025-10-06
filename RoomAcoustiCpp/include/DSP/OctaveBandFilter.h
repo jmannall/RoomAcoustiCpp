@@ -103,7 +103,7 @@ namespace RAC
 			* @param frequencyIndex The index of the frequency in the frequencies parameter given at construction
 			* @return The index of the octave band output that corresponds to the given frequency index
 			*/
-			int GetBandIndex(int frequencyIndex) const { return octaveBandIndices[frequencyIndex] - numTopBandsToSum; }
+			int GetBandIndex(int frequencyIndex) const { return octaveBandIndices(frequencyIndex) - numTopBandsToSum; }
 			
 			/**
 			* @brief Returns the output of the OctaveBand filter given an input
@@ -135,7 +135,7 @@ namespace RAC
 			{
 				Vec<int> indices = Vec<int>(frequencies.Length());
 				for (int i = 0; i < frequencies.Length(); i++)
-					indices[i] = GetFrequencyIndex(frequencies[i]);
+					indices(i) = GetFrequencyIndex(frequencies[i]);
 				return indices;
 			}
 

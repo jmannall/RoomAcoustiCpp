@@ -76,7 +76,7 @@ namespace RAC
 			inline void SetListenerPosition(const Vec3& position)
 			{
 				lock_guard<std::mutex> lock(dataStoreMutex);
-				if ((position - mListenerPositionIncoming).Length() < EPS_POSITION)
+				if ((position - mListenerPositionIncoming).Normal() < EPS_POSITION)
 					return;
 				mListenerPositionIncoming = position;
 				listenerMoved = true;

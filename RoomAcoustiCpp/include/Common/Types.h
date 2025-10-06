@@ -18,6 +18,24 @@ namespace RAC
 {
 	namespace Common
 	{
+
+		/**
+		* Contols Matrix library
+		*/
+#define EIGEN_FLAG 0
+#define CUSTOM_FLAG 1
+			
+#ifdef USE_EIGEN
+#define MATRIX_LIBRARY EIGEN_FLAG
+#elif USE_CUSTOM
+#define MATRIX_LIBRARY CUSTOM_FLAG
+#endif
+
+#define EIGEN_MATRIX_PLUGIN "Eigen/MatrixAddons.h"
+#define EIGEN_MATRIXBASE_PLUGIN "Eigen/MatrixBaseAddons.h"
+#define EIGEN_DENSEBASE_PLUGIN "Eigen/DenseBaseAddons.h"
+#define EIGEN_QUATERNIONBASE_PLUGIN "Eigen/QuaternionBaseAddons.h"
+
 		/**
 		* Contols Real typedef
 		*/

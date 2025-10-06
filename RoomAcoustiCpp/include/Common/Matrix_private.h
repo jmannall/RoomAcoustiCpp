@@ -18,6 +18,7 @@
 // Common headers
 #include "Common/Types.h"
 
+#if MATRIX_LIBRARY == CUSTOM_FLAG
 namespace RAC
 {
 	namespace Common
@@ -92,6 +93,12 @@ namespace RAC
 			*/
 			~Matrix() {};
 
+			// Static factory: zeros
+			static Matrix Zero(const int r, const int c) { return Matrix(r, c); }
+
+			// Static factory: constant
+			static Matrix Constant(const int r, const int c, const T value) { return Matrix(r, c, value); }
+
 			/**
 			* @brief Reset the matrix to zeros
 			*/
@@ -134,7 +141,7 @@ namespace RAC
 			* @param r The row to get
 			* @return Reference (const) to the row
 			*/
-			inline const std::vector<T>& GetRow(int r)
+			inline const std::vector<T>& Row(int r)
 			{
 				assert(r < data.rows);
 				for (int i = 0; i < data.cols; i++)
@@ -148,15 +155,13 @@ namespace RAC
 			* @param c The column to get
 			* @return Reference (const) to the column
 			*/
-			inline const std::vector<T>& GetColumn(int c)
+			inline const std::vector<T>& Col(int c)
 			{
 				assert(c < data.cols);
 				for (int i = 0; i < data.rows; i++)
 					column[i] = data(i, c);
 				return column;
 			}
-
-			const T* GetRowStartPtr(const int r) const { return &data(r, 0); }
 
 			/**
 			* @return The number of data.rows
@@ -171,12 +176,12 @@ namespace RAC
 			/**
 			* @return The transpose of the matrix
 			*/
-			Matrix Transpose();
+			Matrix Transposed();
 
 			/**
-			* @brief Inverts the matrix
+			* @return The inverse of the matrix
 			*/
-			void Inverse();
+			Matrix<> InverseMatrix() const;
 
 			/**
 			* @brief Calculates the Log10 of the matrix (element-wise)
@@ -310,6 +315,17 @@ namespace RAC
 			std::vector<T> column;		// Stores a single column
 
 		private:
+			/**
+			* Constructor that initialises a Matrix with zeros
+			*
+			* @param r The number of data.rows
+			* @param c The number of columns
+			* @param value The value to initialise the matrix with
+			*/
+			Matrix(const int r, const int c, const T value) : data(r, c), row(c), column(r)
+			{
+				std::fill(data.matrix.begin(), data.matrix.end(), value);
+			};
 
 			/**
 			* @brief Initialise matrix data from std::vector structure
@@ -317,6 +333,11 @@ namespace RAC
 			* @params matrix Data to inialise the matrix from
 			*/
 			void Init(const std::vector<std::vector<T>>& matrix);
+
+			/**
+			* @brief Inverts the matrix
+			*/
+			void Invert();
 		};
 
 		//////////////////// Operators ////////////////////
@@ -474,3 +495,4 @@ namespace RAC
 }
 
 #endif // Common_Matrix_private_h
+#endif // MATRIX_LIBRARY == CUSTOM_FLAG

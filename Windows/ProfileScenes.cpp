@@ -8,50 +8,56 @@
 
 #include "MoDARTLoader.h"
 
+#define _CRTDBG_MAP_ALLOC
+#include <crtdbg.h>
+
 using namespace RAC::Spatialiser;
 using namespace RAC::Common;
 using namespace RAC::DSP;
 
 std::vector<size_t> CreateShoeboxRoom(Vec3 pos, size_t materialId)
 {
-    double volume = pos.x * pos.y * pos.z;
+    Real posX = pos.x();
+    Real posY = pos.y();
+    Real posZ = pos.z();
+
     std::vector<size_t> wallIDs(12);
-    wallIDs[0] = InitWall({ Vec3(0.0, pos.y, 0.0),
-            Vec3(pos.x, pos.y, 0.0),
-            Vec3(pos.x, pos.y, pos.z) }, materialId);
-    wallIDs[1] = InitWall({ Vec3(0.0, pos.y, 0.0),
-            Vec3(pos.x, pos.y, pos.z),
-            Vec3(0.0, pos.y, pos.z) }, materialId);
-    wallIDs[2] = InitWall({ Vec3(pos.x, 0.0, 0.0),
-            Vec3(0.0, 0.0, 0.0),
-            Vec3(0.0, 0.0, pos.z) }, materialId);
-    wallIDs[3] = InitWall({ Vec3(pos.x, 0.0, 0.0),
-            Vec3(0.0, 0.0, pos.z),
-            Vec3(pos.x, 0.0, pos.z) }, materialId);
-    wallIDs[4] = InitWall({ Vec3(pos.x, 0.0, pos.z),
-            Vec3(pos.x, pos.y, pos.z),
-            Vec3(pos.x, pos.y, 0.0) }, materialId);
-    wallIDs[5] = InitWall({ Vec3(pos.x, 0.0, pos.z),
-            Vec3(pos.x, pos.y, 0.0),
-            Vec3(pos.x, 0.0, 0.0) }, materialId);
-    wallIDs[6] = InitWall({ Vec3(0.0, 0.0, 0.0),
-            Vec3(0.0, pos.y, 0.0),
-            Vec3(0.0, pos.y, pos.z) }, materialId);
-    wallIDs[7] = InitWall({ Vec3(0.0, 0.0, 0.0),
-            Vec3(0.0, pos.y, pos.z),
-            Vec3(0.0, 0.0, pos.z) }, materialId);
-    wallIDs[8] = InitWall({ Vec3(0.0, 0.0, 0.0),
-            Vec3(pos.x, 0.0, 0.0),
-            Vec3(pos.x, pos.y, 0.0) }, materialId);
-    wallIDs[9] = InitWall({ Vec3(0.0, 0.0, 0.0),
-            Vec3(pos.x, pos.y, 0.0),
-            Vec3(0.0, pos.y, 0.0) }, materialId);
-    wallIDs[10] = InitWall({ Vec3(0.0, pos.y, pos.z),
-            Vec3(pos.x, pos.y, pos.z),
-            Vec3(pos.x, 0.0, pos.z) }, materialId);
-    wallIDs[11] = InitWall({ Vec3(0.0, pos.y, pos.z),
-            Vec3(pos.x, 0.0, pos.z),
-            Vec3(0.0, 0.0, pos.z) }, materialId);
+    wallIDs[0] = InitWall({ Vec3((Real)0.0, posY, (Real)0.0),
+            Vec3(posX, posY, (Real)0.0),
+            Vec3(posX, posY, posZ) }, materialId);
+    wallIDs[1] = InitWall({ Vec3((Real)0.0, posY, (Real)0.0),
+            Vec3(posX, posY, posZ),
+            Vec3((Real)0.0, posY, posZ) }, materialId);
+    wallIDs[2] = InitWall({ Vec3(posX, (Real)0.0, (Real)0.0),
+            Vec3((Real)0.0, (Real)0.0, (Real)0.0),
+            Vec3((Real)0.0, (Real)0.0, posZ) }, materialId);
+    wallIDs[3] = InitWall({ Vec3(posX, (Real)0.0, (Real)0.0),
+            Vec3((Real)0.0, (Real)0.0, posZ),
+            Vec3(posX, (Real)0.0, posZ) }, materialId);
+    wallIDs[4] = InitWall({ Vec3(posX, (Real)0.0, posZ),
+            Vec3(posX, posY, posZ),
+            Vec3(posX, posY, (Real)0.0) }, materialId);
+    wallIDs[5] = InitWall({ Vec3(posX, (Real)0.0, posZ),
+            Vec3(posX, posY, (Real)0.0),
+            Vec3(posX, (Real)0.0, (Real)0.0) }, materialId);
+    wallIDs[6] = InitWall({ Vec3((Real)0.0, (Real)0.0, (Real)0.0),
+            Vec3((Real)0.0, posY, (Real)0.0),
+            Vec3((Real)0.0, posY, posZ) }, materialId);
+    wallIDs[7] = InitWall({ Vec3((Real)0.0, (Real)0.0, (Real)0.0),
+            Vec3((Real)0.0, posY, posZ),
+            Vec3((Real)0.0, (Real)0.0, posZ) }, materialId);
+    wallIDs[8] = InitWall({ Vec3((Real)0.0, (Real)0.0, (Real)0.0),
+            Vec3(posX, (Real)0.0, (Real)0.0),
+            Vec3(posX, posY, (Real)0.0) }, materialId);
+    wallIDs[9] = InitWall({ Vec3((Real)0.0, (Real)0.0, (Real)0.0),
+            Vec3(posX, posY, (Real)0.0),
+            Vec3((Real)0.0, posY, (Real)0.0) }, materialId);
+    wallIDs[10] = InitWall({ Vec3((Real)0.0, posY, posZ),
+            Vec3(posX, posY, posZ),
+            Vec3(posX, (Real)0.0, posZ) }, materialId);
+    wallIDs[11] = InitWall({ Vec3((Real)0.0, posY, posZ),
+            Vec3(posX, (Real)0.0, posZ),
+            Vec3((Real)0.0, (Real)0.0, posZ) }, materialId);
     UpdatePlanesAndEdges();
 	return wallIDs;
 }
@@ -85,7 +91,7 @@ void ProfileShoebox()
     int reflOrder = 2;
     int shadowOrder = 2;
     int specularOrder = 1;
-    Real minEdgeLength = 0.0;
+    Real minEdgeLength = (Real)0.0;
     Real maxPathLength = 1e4; // No limit on path length
     EarlyReverbData earlyReverbData(dir, reflOrder, shadowOrder, specularOrder, minEdgeLength, maxPathLength);
 
@@ -102,22 +108,22 @@ void ProfileShoebox()
     int numRays = 1e3;
     FDNMatrix matrix = FDNMatrix::randomOrthogonal;
 
-    Real volume = pos.x * pos.y * pos.z;
+    Real volume = pos.Sum();
     Coefficients<> t60({ 0.8, 0.7, 0.65, 0.63, 0.6, 0.55, 0.48 });
     ReverbFormula formula = ReverbFormula::Custom;
-    Vec<> dimensions({ pos.x, pos.y, pos.z });
+    Vec<> dimensions{ { pos.x(), pos.y(), pos.z()} };
     RoomData roomData(volume, t60, formula, dimensions);
 
     LateReverbData lateReverbData(true, numRays, matrix);
 
     InitSingleFDN(roomData, lateReverbData);
 
-    Vec3 listenerPos(0.0, 2.0, 0.0);
-    Vec4 listenerOri(1.0, 0.0, 0.0, 0.0);
+    Vec3 listenerPos((Real)0.0, (Real)2.0, (Real)0.0);
+    Vec4 listenerOri((Real)1.0, (Real)0.0, (Real)0.0, (Real)0.0);
     UpdateListener(listenerPos, listenerOri);
 
-    Vec3 sourcePos(1.0, 2.0, 3.0);
-    Vec4 sourceOri(1.0, 0.0, 0.0, 0.0);
+    Vec3 sourcePos((Real)1.0, (Real)2.0, (Real)3.0);
+    Vec4 sourceOri((Real)1.0, (Real)0.0, (Real)0.0, (Real)0.0);
 
     // Stereo output buffer
     int numBuffers = 10;
@@ -162,7 +168,7 @@ void ProfileMoDART()
     int reflOrder = 2;
     int shadowOrder = 2;
     int specularOrder = 1;
-    Real minEdgeLength = 0.0;
+    Real minEdgeLength = (Real)0.0;
     Real maxPathLength = 1e4; // No limit on path length
     EarlyReverbData earlyReverbData(dir, reflOrder, shadowOrder, specularOrder, minEdgeLength, maxPathLength);
 
@@ -183,12 +189,12 @@ void ProfileMoDART()
         return;
     }
 
-    Vec3 listenerPos(2.0, 1.0, 6.8);
-    Vec4 listenerOri(1.0, 0.0, 0.0, 0.0);
+    Vec3 listenerPos((Real)2.0, (Real)1.0, (Real)6.8);
+    Vec4 listenerOri((Real)1.0, (Real)0.0, (Real)0.0, (Real)0.0);
     UpdateListener(listenerPos, listenerOri);
 
-    Vec3 sourcePos(2.0, 1.5, 2.0);
-    Vec4 sourceOri(1.0, 0.0, 0.0, 0.0);
+    Vec3 sourcePos((Real)2.0, (Real)1.5, (Real)2.0);
+    Vec4 sourceOri((Real)1.0, (Real)0.0, (Real)0.0, (Real)0.0);
 
     // Stereo output buffer
     int numBuffers = 10;
@@ -207,6 +213,8 @@ void ProfileMoDART()
 int main() {
     std::cout << "Start program!" << std::endl;
     std::cout << "Enter a profile key or press q to exit." << std::endl;
+
+    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 
     char key;
     while (true)

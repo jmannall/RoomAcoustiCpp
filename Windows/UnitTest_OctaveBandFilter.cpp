@@ -39,7 +39,7 @@ namespace RAC
 				output[0] += bands[j];
 			}
 
-			Assert::AreEqual(target[0], output[0], 1e-16, L"Wrong output");
+			Assert::AreEqual(target[0], output[0], (Real)1e-16, L"Wrong output");
 			for (int i = 1; i < target.size(); i++)
 			{
 				auto bands = filter.GetOutput(0.0, lerpFactor); // Get the output from the filter
@@ -49,7 +49,7 @@ namespace RAC
 					outputs[j][i] = bands[j];
 					output[i] += bands[j];
 				}
-				Assert::AreEqual(target[i], output[i], 1e-16, L"Wrong output");
+				Assert::AreEqual(target[i], output[i], (Real)1e-16, L"Wrong output");
 			}
 		}
 
@@ -153,7 +153,7 @@ namespace RAC
 			const int fs = 48e3;
 			const Real lerpFactor = 1.0;
 
-			Coefficients<> frequencies({ 2e3 });
+			Coefficients<> frequencies({ (Real)2e3 });
 			OctaveBand filter = OctaveBand(frequencies, fs);
 
 			Real input = 0.8;

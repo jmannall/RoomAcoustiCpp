@@ -99,7 +99,7 @@ namespace RAC
             RayBundleSoA rays;
             
             Vec<Real> radiance, totalDistance, latestDistance, latestCosine;
-            std::vector<int> latestPatchId, previousPatchId;
+            Vec<int> latestPatchId, previousPatchId;
 
         public:
             /* @brief Default constructor (0 rays)
@@ -159,7 +159,7 @@ namespace RAC
             /* Returns the indices of the previous and current polygon intersected by each ray.
              * Values of invalidIdx denote invalid intersections.
              */
-            void getIndices(std::vector<int>& current, std::vector<int>& previous) const;
+            void getIndices(Vec<int>& current, Vec<int>& previous) const;
 
             /* Returns every ray's radiance value. Values of NaN denote invalid intersections.
              */
@@ -178,7 +178,7 @@ namespace RAC
             bool exposeMirrorCopies = false;
 
             Vec<Real> frontDistance, backDistance, frontCosine, backCosine;
-            std::vector<int> frontpatchId, backpatchId;
+            Vec<int> frontpatchId, backpatchId;
 
         public:
             /* @brief Default constructor (0 rays)
@@ -216,7 +216,7 @@ namespace RAC
              * @param directions The set of directions used for clustering. If these have non-unit norms, it will result in "weighted" clusters.
              * @param clusters Pointer to a pre-allocated integer buffer of size `numRays`, used for output values.
              */
-            void clusterDirections(const std::vector<Vec3>& directions, std::vector<int>& clusters) const;
+            void clusterDirections(const std::vector<Vec3>& directions, Vec<int>& clusters) const;
 
             /* @brief Returns the number of rays in the pencil.
               */
@@ -239,7 +239,7 @@ namespace RAC
             /* @brief For each ray, returns (by reference) the node ID of the nearest front and back intersections.
               * Values of invalidIdx denote invalid intersections.
               */
-            void getIndices(std::vector<int>& front, std::vector<int>& back) const;
+            void getIndices(Vec<int>& front, Vec<int>& back) const;
         };
 	}
 }

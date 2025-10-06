@@ -227,8 +227,7 @@ bool LoadIndexingFromCsv(const std::string& indexingFilePath, Matrix<int>& outPa
         std::cerr << "Invalid number of nodes in path indexing csv file." << std::endl;
         return false;
     }
-    outPathIndexing = Matrix<int>(numRows, numCols);
-    std::fill(outPathIndexing.begin(), outPathIndexing.end(), -1);
+    outPathIndexing = Matrix<int>::Constant(numRows, numCols, -1);
 
     int row, col, val;
     for (int k = 0; k < numPaths; ++k) {
@@ -324,7 +323,7 @@ bool LoadModesFromCsv(const std::string& modalDataFilePath, int numFreqBands, in
                 std::cerr << "Insufficient left eigenvector data for fdn " << fdnIdx << "." << std::endl;
                 return false;
             }
-            outLeftEigenvectors[fdnIdx][i] = std::stof(token);
+            outLeftEigenvectors[fdnIdx](i) = std::stof(token);
         }
 
         // Read left eigenvector line
@@ -342,12 +341,15 @@ bool LoadModesFromCsv(const std::string& modalDataFilePath, int numFreqBands, in
                 std::cerr << "Insufficient right eigenvector data for fdn " << fdnIdx << "." << std::endl;
                 return false;
             }
-            outRightEigenvectors[fdnIdx][i] = std::stof(token);
+            outRightEigenvectors[fdnIdx](i) = std::stof(token);
         }
     }
 
-    outFrequencyBandIndexing = Vec<int>(freqBands);
-    outT60s = Vec<>(t60s);
+    outFrequencyBandIndexing = Vec<int>(freqBands.size());
+	std::copy(outFrequencyBandIndexing.begin(), outFrequencyBandIndexing.end(), freqBands.data());
+
+	outT60s = Vec<>(t60s.size());
+	std::copy(outT60s.begin(), outT60s.end(), t60s.data());
 
     return true;
 }
@@ -436,7 +438,7 @@ bool LoadMoDARTScene(const std::string& modartPath, const Coefficients<>& target
 
     // Internal parameters `bandIdxs, T60s, leftVecs, rightVecs, numFDNs` match what was read from the files.
     // They need to be truncated/repeated to match the current frequency bands of RAC.
-    std::vector<int> resizedFrequencyBandIndexing;
+    std::vector<int> resizedFreqBandIndexing;
     std::vector<Real> resizedT60s;
     std::vector<Vec<>> resizedLeftEigenvectors;
     std::vector<Vec<>> resizedRightEigenvectors;
@@ -447,23 +449,29 @@ bool LoadMoDARTScene(const std::string& modartPath, const Coefficients<>& target
     for (int localIdx = 0; localIdx < numFDNs; ++localIdx)
     {
         // Find the best match for this slope's frequency band among the requested bands.
-        oldBandIdx = frequencyBandIndexing[localIdx];
+        oldBandIdx = frequencyBandIndexing(localIdx);
         newBandIdx = BestBandMatch(frequencies[oldBandIdx], targetFreqs);
 
         // Only record this slope if its frequency band matches one of the requested bands.
         // If the user removed any of the octave bands through the GUI, some slopes will not find a match and will be ignored.
         if (std::abs(frequencies[oldBandIdx] - targetFreqs[newBandIdx]) < EPS)
         {
-            resizedFrequencyBandIndexing.push_back(newBandIdx);
-            resizedT60s.push_back(t60s[localIdx]);
+            resizedFreqBandIndexing.push_back(newBandIdx);
+            resizedT60s.push_back(t60s(localIdx));
             resizedLeftEigenvectors.push_back(leftEigenvectors[localIdx]);
             resizedRightEigenvectors.push_back(rightEigenvectors[localIdx]);
         }
     }
     // TODO: Currently assuming RAC does not include frequency bands not covered by MoD-ART frequencies.
 
+    Vec<int> newFreqBandIndexing(resizedFreqBandIndexing.size());
+    std::copy(newFreqBandIndexing.begin(), newFreqBandIndexing.end(), resizedFreqBandIndexing.data());
+
+    Vec<> newT60s(resizedT60s.size());
+    std::copy(newT60s.begin(), newT60s.end(), resizedT60s.data());
+
     Real delay = 0.1;
     Real minT60 = 0.2;
-    MoDARTData modartData(true, data.numRays, data.feedbackMatrix, delay, minT60, pathIndexing, resizedFrequencyBandIndexing, resizedT60s, resizedLeftEigenvectors, resizedRightEigenvectors);
+    MoDARTData modartData(true, data.numRays, data.feedbackMatrix, delay, minT60, pathIndexing, newFreqBandIndexing, newT60s, resizedLeftEigenvectors, resizedRightEigenvectors);
     return InitMoDART(modartData);
 }

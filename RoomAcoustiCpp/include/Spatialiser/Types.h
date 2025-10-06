@@ -16,6 +16,7 @@
 #include "Common/Complex.h"
 #include "Common/Coefficients.h"
 #include "Common/Vec3.h"
+#include "Common/Matrix.h"
 #include "Common/Vec.h"
 
 namespace RAC
@@ -369,7 +370,7 @@ namespace RAC
 			inline void Validate(int numFrequencyBands)
 			{
 				if (dimensions.Rows() < 1) // No dimensions provided
-					dimensions = Vec<>({ (Real)2.5, (Real)4.0, (Real)3.4 }); // Default dimensions
+					dimensions = Vec<>(std::vector<Real>({ (Real)2.5, (Real)4.0, (Real)3.4 })); // Default dimensions
 				volume = std::max(volume, (Real)0.001);
 
 				if (customT60.Length() != numFrequencyBands) // Invalid number of frequency bands
@@ -400,10 +401,10 @@ namespace RAC
 				std::vector<Vec<>> rightEigenvectorsData;
 				for (int i = 0; i < t60s.Rows(); i++)
 				{
-					if (t60s[i] > EPS)
+					if (t60s(i) > EPS)
 					{
-						t60sData.push_back(t60s[i]);
-						frequencyIndexingData.push_back(frequencyIndexing[i]);
+						t60sData.push_back(t60s(i));
+						frequencyIndexingData.push_back(frequencyIndexing(i));
 						this->leftEigenvectors.push_back(leftEigenvectors[i]);
 						this->rightEigenvectors.push_back(rightEigenvectors[i]);
 					}
@@ -413,7 +414,7 @@ namespace RAC
 
 				this->energyDecay = Vec<>(t60s.Rows());
 				for (int i = 0; i < this->t60s.Rows(); i++)
-					this->energyDecay[i] = Pow10(- 6.0 / this->t60s[i]);
+					this->energyDecay(i) = Pow10(- 6.0 / this->t60s(i));
 			}
 		};
 

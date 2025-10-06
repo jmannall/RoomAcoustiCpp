@@ -56,7 +56,7 @@ namespace RAC
 			 int minIndex = cutOffFrequencies.Length();
 			 for (int i = 0; i < octaveBandIndices.Rows(); i++)
 			 {
-				 int index = octaveBandIndices[i];
+				 int index = octaveBandIndices(i);
 				 if (index > maxIndex)
 					 maxIndex = index;
 				 if (index < minIndex)

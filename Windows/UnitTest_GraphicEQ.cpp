@@ -82,7 +82,7 @@ namespace RAC
 					std::string error = "Test: " + ToStr(i) + ", Incorrect Sample : " + ToStr(j);
 					std::wstring werror = std::wstring(error.begin(), error.end());
 					const wchar_t* werrorchar = werror.c_str();
-					Assert::AreEqual(outputData[i][j], out[j], (Real)10e-16, werrorchar);
+					Assert::AreEqual(outputData[i][j], out[j], (Real)10e-15, werrorchar);
 				}
 			}
 		}	

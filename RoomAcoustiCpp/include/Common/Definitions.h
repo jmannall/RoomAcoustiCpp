@@ -135,6 +135,7 @@ namespace RAC
 		const constexpr Real INV_LOG2_10 = 1.0f / LOG2_10;
 
 		const constexpr Real PHI = 1.61803398874989484820458683436563811772030917980576286213544862270526046281890f; // golden ratio
+		const constexpr Real INV_PHI = 1.0f / PHI;
 
 		//////////////////// Epsilons ////////////////////
 
@@ -409,35 +410,6 @@ namespace RAC
 			9883,	9887,	9901,	9907,	9923,	9929,	9931,	9941,	9949,	9967,
 			9973
 		} ;
-
-		/**
-		 * @brief Get a set of prime numbers (returns -1 if the requested range exceeds the known primes)
-		 * 
-		 * @param minIndex Index (within the list of primes) of the first prime to include
-		 * @param length The number of primes to return
-		 * @param stride Step between subsequent primes in the resulting set (1 means adjacent primes)
-		 * @return Vector of primes
-		 */
-		inline std::vector<int> GetSetOfPrimes(int minIndex, int length, int stride)
-		{
-			std::vector<int> result(length, -1);
-
-			// TODO: Throw an exception in either case.
-			if (stride == 0)
-				return result;
-			if (minIndex < 0 || minIndex >= sizeof(PRIMES))
-				return result;
-
-			int i = minIndex;
-			for (int j = 0; j < length; ++j)
-			{
-				result[j] = PRIMES[i];
-				i += stride;
-				if (i < 0 || i >= sizeof(PRIMES))
-					break;
-			}
-			return result;
-		}
 	}
 }
 

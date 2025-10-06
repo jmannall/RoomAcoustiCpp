@@ -15,6 +15,7 @@
 #include "Common/Types.h"
 #include "Common/Matrix.h"
 
+#if MATRIX_LIBRARY == CUSTOM_FLAG
 namespace RAC
 {
 	namespace Common
@@ -42,18 +43,6 @@ namespace RAC
 			Vec(const int length) : Matrix<T>(length, 1) {}
 
 			/**
-			* Constructor that initialises a Rowvec with a given value
-			*
-			* @param length The length of the vector
-			* @param value The value to initialise the vector with
-			*/
-			Vec(const int length, const T value) : Matrix<T>(length, 1)
-			{
-				for (int i = 0; i < length; ++i)
-					this->data(i, 0) = value;
-			}
-
-			/**
 			* Constructor that initialises a Vec with data
 			*
 			* @param vector The input data to initialise the vector
@@ -64,6 +53,12 @@ namespace RAC
 			* @brief Default deconstructor
 			*/
 			~Vec() {};
+
+			// Static factory: zeros
+			static Vec Zero(const int length) { return Vec(length); }
+
+			// Static factory: constant
+			static Vec Constant(const int length, const T value) { return Vec(length, value); }
 
 			/**
 			* @brief Randomly fills the vector with values from a normal distribution
@@ -91,7 +86,7 @@ namespace RAC
 			/**
 			* @return The normal of the vector
 			*/
-			Real CalculateNormal() const;
+			Real Normal() const;
 
 			/**
 			* @brief Applies the max function to each element in the vector
@@ -123,7 +118,7 @@ namespace RAC
 			* @param i The index of the value to return
 			* @return The value at the specified index
 			*/
-			inline T operator[](const int i) const { return this->data(i, 0); }
+			inline T operator()(const int i) const { return this->data(i, 0); }
 
 			/**
 			* @brief Access the vector at the specified index
@@ -131,7 +126,7 @@ namespace RAC
 			* @param i The index of the value to return
 			* @return A reference to the value at the specified index
 			*/
-			inline T& operator[](const int i) { return this->data(i, 0); }
+			inline T& operator()(const int i) { return this->data(i, 0); }
 
 			/**
 			* @brief Assigns a Matrix to a Vec
@@ -144,6 +139,17 @@ namespace RAC
 			}
 
 		private:
+			/**
+			* Constructor that initialises a Rowvec with a given value
+			*
+			* @param length The length of the vector
+			* @param value The value to initialise the vector with
+			*/
+			Vec(const int length, const T value) : Matrix<T>(length, 1)
+			{
+				for (int i = 0; i < length; ++i)
+					this->data(i, 0) = value;
+			}
 
 			/**
 			* @brief Initialise vector data from a std::vector
@@ -176,18 +182,6 @@ namespace RAC
 			Rowvec(const int length) : Matrix<T>(1, length) {}
 
 			/**
-			* Constructor that initialises a Rowvec with a given value
-			* 
-			* @param length The length of the vector
-			* @param value The value to initialise the vector with
-			*/
-			Rowvec(const int length, const T value) : Matrix<T>(1, length)
-			{
-				for (int i = 0; i < length; ++i)
-					this->data(0, i) = value;
-			}
-
-			/**
 			* Constructor that initialises a Rowvec with data
 			*
 			* @param vector The input data to initialise the vector
@@ -199,6 +193,12 @@ namespace RAC
 			*/
 			~Rowvec() {}
 
+			// Static factory: zeros
+			static Rowvec Zero(const int length) { return Rowvec(length); }
+
+			// Static factory: constant
+			static Rowvec Constant(const int length, const T value) { return Rowvec(length, value); }
+
 			T Sum() const;
 
 			inline T Mean() const { return Sum() / this->data.cols; }
@@ -209,7 +209,7 @@ namespace RAC
 			* @param i The index of the value to return
 			* @return The value at the specified index
 			*/
-			inline T operator[](const int i) const { return this->data(0, i); }
+			inline T operator()(const int i) const { return this->data(0, i); }
 
 			/**
 			* @brief Access the vector at the specified index
@@ -217,7 +217,7 @@ namespace RAC
 			* @param i The index of the value to return
 			* @return A reference to the value at the specified index
 			*/
-			inline T& operator[](const int i) { return this->data(0, i); }
+			inline T& operator()(const int i) { return this->data(0, i); }
 
 			/**
 			* @brief Assigns a Matrix to a Rowvec
@@ -230,6 +230,17 @@ namespace RAC
 			}
 
 		private:
+			/**
+			* Constructor that initialises a Rowvec with a given value
+			*
+			* @param length The length of the vector
+			* @param value The value to initialise the vector with
+			*/
+			Rowvec(const int length, const T value) : Matrix<T>(1, length)
+			{
+				for (int i = 0; i < length; ++i)
+					this->data(0, i) = value;
+			}
 
 			/**
 			* @brief Initialise vector data from a std::vector
@@ -252,3 +263,4 @@ namespace RAC
 }
 
 #endif // Common_Vec_private_h
+#endif // MATRIX_LIBRARY == CUSTOM_FLAG

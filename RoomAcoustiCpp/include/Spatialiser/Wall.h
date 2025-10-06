@@ -42,7 +42,7 @@ namespace RAC
 		* @return A pair containing a boolean indicating if the line intersects the triangle and the distance to the intersection point
 		*/
 		std::pair<bool, Vec3> IntersectTriangle(const Vec3& v1, const Vec3& v2, const Vec3& v3, const Vec3& origin, const Vec3& dir, const bool returnIntersection);
-
+		
 		/**
 		* Class that represents a Wall in the room
 		*
@@ -155,8 +155,7 @@ namespace RAC
 			* 
 			* @return The distance of the point from the wall in the direction of the normal
 			*/
-			inline Real PointWallPosition(const Vec3& point) const { return Dot(point, mNormal) - d; }
-
+			inline Real PointWallPosition(const Vec3& point) const { return point.dot(mNormal) - d; }
 			/**
 			* @brief Determines if a given line intersects the wall and stores the intersection point
 			*
@@ -196,7 +195,7 @@ namespace RAC
 			/**
 			* @brief Calculates the area of the wall (area of a triangle)
 			*/
-			inline void CalculateArea() { area = 0.5 * (Cross(mVertices[0] - mVertices[1], mVertices[0] - mVertices[2]).Length()); }
+			inline void CalculateArea() { area = 0.5 * ((mVertices[0] - mVertices[1]).cross(mVertices[0] - mVertices[2]).Normal()); }
 
 			Vertices mVertices;				// Vertices of the wall
 			Vec3 mNormal;					// Normal of the wall
@@ -299,7 +298,7 @@ namespace RAC
 			* 
 			* @return True if the wall and plane are coplanar, false otherwise
 			*/
-			bool IsCoplanar(const Wall& wall) const { return mNormal == wall.GetNormal() && d == wall.GetD(); }
+			inline bool IsCoplanar(const Wall& wall) const { return mNormal == wall.GetNormal() && d == wall.GetD(); }
 
 			/**
 			* @brief Determines the position of a point relative to the plane
@@ -310,7 +309,7 @@ namespace RAC
 			* 
 			* @return The distance of the point from the plane in the direction of the normal
 			*/
-			Real PointPlanePosition(const Vec3& point) const { return Dot(point, mNormal) - d; }
+			inline Real PointPlanePosition(const Vec3& point) const { return point.dot(mNormal) - d; }
 
 			/**
 			* @brief Determines if the plane obstruct a given line

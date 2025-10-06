@@ -18,6 +18,7 @@
 #include "Common/Types.h"
 #include "Common/Vec3.h"
 #include "Common/ReleasePool.h"
+#include "Common/Vec.h"
 
 // Spatialiser headers
 #include "Spatialiser/Types.h"

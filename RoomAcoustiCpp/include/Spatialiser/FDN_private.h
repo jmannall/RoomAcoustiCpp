@@ -15,7 +15,6 @@
 
 // Spatialiser headers
 #include "Spatialiser/Types.h"
-// RAVES headers
 #include"Spatialiser/RAVESResidue.h"
 
 // Common headers
@@ -229,11 +228,28 @@ namespace RAC
 					enabled.store(false, std::memory_order_release);
 			}
 
-			inline void SubmitAudio(const Real* input)
+#if MATRIX_LIBRARY == EIGEN_FLAG
+			inline void SubmitAudio(const Vec<Real>& input)
+				requires std::is_same_v<T, Complex>
+			{
+				for (int i = 0, j = 0; i < inputData.Rows(); i++, j += 2)
+					inputData(i) = Complex(input(j), input(j + 1));
+			}
+#else
+			inline void SubmitAudio(const Matrix<>& input, int row)
+				requires std::is_same_v<T, Complex>
+			{
+				for (int i = 0, j = 0; i < inputData.Rows(); i++, j += 2)
+					inputData(i) = Complex(input(j, row), input(j + 1, row));
+			}
+#endif
+			
+
+			/*inline void SubmitAudio(const Real* input)
 			requires std::is_same_v<T, Complex> 
 			{ 
 				inputData = reinterpret_cast<const Complex*>(input);
-			}
+			}*/
 
 			/**
 			* @brief Processes a single audio buffer
@@ -286,7 +302,7 @@ namespace RAC
 			* @param fs The sample rate
 			* @return Sample delays for each FDN channel
 			*/
-			std::vector<int> CalculateTimeDelay(const Vec<>& dimensions, const int fdnSize, const int fs);
+			Vec<int> CalculateTimeDelay(const Vec<>& dimensions, const int fdnSize, const int fs);
 
 			/**
 			* @brief Initialises a default diagonal matrix
@@ -296,7 +312,7 @@ namespace RAC
 			*/
 			static inline Matrix<> InitMatrix(const size_t numChannels)
 			{
-				Matrix<> matrix = Matrix<>(numChannels, numChannels);
+				Matrix<> matrix = Matrix<>::Zero(numChannels, numChannels);
 				for (int i = 0; i < matrix.Rows(); i++)
 					matrix(i, i) = 1.0;		// Initialise diagonal to 1.0
 				return matrix;
@@ -312,7 +328,7 @@ namespace RAC
 			*
 			* @param numbers The set of numbers to check
 			*/
-			static bool IsSetMutuallyPrime(const std::vector<int>& numbers);
+			static bool IsSetMutuallyPrime(const Vec<int>& numbers);
 
 			/**
 			* @brief Checks if a single entry in a set of numbers is mutually prime with all other entries
@@ -320,14 +336,14 @@ namespace RAC
 			* @param numbers The set of numbers to check
 			* @param idx The index of the entry to check
 			*/
-			static bool IsEntryMutuallyPrime(const std::vector<int>& numbers, int idx);
+			static bool IsEntryMutuallyPrime(const Vec<int>& numbers, int idx);
 
 			/**
 			* @brief Makes a set of numbers mutually prime by iteratively adjusting each entry
 			*
 			* @param numbers The set of numbers to adjust
 			*/
-			static void MakeSetMutuallyPrime(std::vector<int>& numbers);
+			static void MakeSetMutuallyPrime(Vec<int>& numbers);
 
 			const Matrix<> feedbackMatrix;	// Feedback matrix
 
@@ -368,8 +384,9 @@ namespace RAC
 			std::conditional_t<std::is_same_v<T, Complex>,
 				std::atomic<bool>, std::nullptr_t> enabled;
 
+			// TODO: Change to buffer
 			std::conditional_t<std::is_same_v<T, Complex>,
-				const Complex*, std::nullptr_t> inputData{ nullptr };
+				Vec<Complex>, std::nullptr_t> inputData;
 		};
 
 		inline void FDN<Real>::Reset()
@@ -402,7 +419,7 @@ namespace RAC
 			* @param dspConfig The spatialiser configuration
 			*/
 			HouseHolderFDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<DSPConfig>& dspConfig)
-				: FDN<T>(T60, dimensions, dspConfig, Matrix()), houseHolderFactor(2.0 / static_cast<Real>(dspConfig->GetData().fdnSize)) {}
+				: FDN<T>(T60, dimensions, dspConfig, Matrix<>()), houseHolderFactor(2.0 / static_cast<Real>(dspConfig->GetData().fdnSize)) {}
 			
 			/**
 			* @brief Initialises an FDN with a target T60 and given delay line lengths
@@ -413,7 +430,7 @@ namespace RAC
 			* @param dspConfig The spatialiser configuration
 			*/
 			HouseHolderFDN(const Real T60, const Vec<int>& delayLengths, const std::shared_ptr<DSPConfig>& dspConfig)
-				: FDN<T>(T60, delayLengths, dspConfig, Matrix()), houseHolderFactor(2.0 / static_cast<Real>(dspConfig->GetData().fdnSize)) {}
+				: FDN<T>(T60, delayLengths, dspConfig, Matrix<>()), houseHolderFactor(2.0 / static_cast<Real>(dspConfig->GetData().fdnSize)) {}
 
 			/**
 			* @brief Default deconstructor
@@ -427,7 +444,7 @@ namespace RAC
 			{
 				T entry = houseHolderFactor * this->y.Sum();
 				for (int i = 0; i < this->y.Cols(); i++)
-					this->x[i] = entry - this->y[i];
+					this->x(i) = entry - this->y(i);
 			}
 
 		private:

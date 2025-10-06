@@ -37,11 +37,11 @@ namespace RAC
 			auto targetGains = CalculateGains(gain);
 
 			// Increasing the low shelf frequency by SQRT_2 creates a smoother response at low frequencies
-			lowShelf = std::make_unique<PeakLowShelf<T>>(f[0] * SQRT_2, targetGains.first[0], Q, sampleRate);
+			lowShelf = std::make_unique<PeakLowShelf<T>>(f[0] * SQRT_2, targetGains.first(0), Q, sampleRate);
 			for (int i = 1; i < numFilters - 1; i++)
-				peakingFilters.emplace_back(std::make_unique<PeakingFilter<T>>(f[i], targetGains.first[i], Q, sampleRate));
+				peakingFilters.emplace_back(std::make_unique<PeakingFilter<T>>(f[i], targetGains.first(i), Q, sampleRate));
 			// (same as fc[numFilters - 1] * 2 / SQRT_2 ) Decreasing the high shelf frequency by SQRT_2 creates a smoother response at high frequencies
-			highShelf = std::make_unique<PeakHighShelf<T>>(std::min(f[numFilters - 2] * SQRT_2, (Real)20000.0), targetGains.first[numFilters - 1], Q, sampleRate);
+			highShelf = std::make_unique<PeakHighShelf<T>>(std::min(f[numFilters - 2] * SQRT_2, (Real)20000.0), targetGains.first(numFilters - 1), Q, sampleRate);
 
 			targetGain.store(targetGains.second, std::memory_order_release);
 			currentGain = targetGains.second;
@@ -68,10 +68,10 @@ namespace RAC
 			const auto targetGains = CalculateGains(gains);
 			targetGain.store(targetGains.second, std::memory_order_release);
 			gainsEqual.store(false, std::memory_order_release);
-			lowShelf->SetTargetGain(targetGains.first[0]);
+			lowShelf->SetTargetGain(targetGains.first(0));
 			for (int i = 1; i < numFilters - 1; i++)
-				peakingFilters[i - 1]->SetTargetGain(targetGains.first[i]);
-			highShelf->SetTargetGain(targetGains.first[numFilters - 1]);
+				peakingFilters[i - 1]->SetTargetGain(targetGains.first(i));
+			highShelf->SetTargetGain(targetGains.first(numFilters - 1));
 			return false;
 		}
 
@@ -82,23 +82,26 @@ namespace RAC
 		{
 			assert(gains.Length() + 2 == numFilters);
 
-			Rowvec inputGains(std::vector<Real>(numFilters, 1.0));
+			// TODO: Should this be coefficients?
+			Rowvec<> inputGains = Rowvec<>::Constant(numFilters, 1.0);
+
 			if (gains <= 0.0)
 				return std::make_pair(inputGains, (Real)0.0);
 
 			if (gains.Length() == 1)
 			{
-				inputGains[0] = gains[0];
-				inputGains[1] = gains[0];
-				inputGains[2] = gains[0];
+				inputGains(0) = gains[0];
+				inputGains(1) = gains[0];
+				inputGains(2) = gains[0];
 			}
 			else
 			{
-				inputGains[0] = (gains[0] + gains[1]) / 2.0; // Low shelf gain
+				inputGains(0) = (gains[0] + gains[1]) / 2.0; // Low shelf gain
 				for (int i = 1; i < numFilters - 1; i++)
-					inputGains[i] = gains[i - 1]; // Peaking filter gains
-				inputGains[numFilters - 1] = (gains[numFilters - 4] + gains[numFilters - 3]) / 2.0; // High shelf gain
+					inputGains(i) = gains[i - 1]; // Peaking filter gains
+				inputGains(numFilters - 1) = (gains[numFilters - 4] + gains[numFilters - 3]) / 2.0; // High shelf gain
 			}
+
 			inputGains.Max(EPS); // Prevent log10(0)
 			inputGains.Log10();
 
@@ -131,6 +134,7 @@ namespace RAC
 		void GraphicEQ<T>::InitMatrix(const Coefficients<>& fc, const Real Q, const Real fs)
 		{
 			assert(fc.Length() == numFilters);
+			filterResponseMatrix.Reset();
 
 			Real pdb = 6.0;
 			Real p = pow(10.0, pdb / 20.0);
@@ -158,7 +162,7 @@ namespace RAC
 			for (int i = 0; i < out.Length(); i++)
 				filterResponseMatrix(numFilters - 1, i) += out[i];
 
-			filterResponseMatrix.Inverse();
+			filterResponseMatrix = filterResponseMatrix.InverseMatrix();
 			filterResponseMatrix *= pdb;
 		}
 

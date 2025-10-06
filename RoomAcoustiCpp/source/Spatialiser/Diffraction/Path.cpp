@@ -34,9 +34,9 @@ namespace RAC
 
 			void Path::CalculateT(SRData* data)
 			{
-				Vec3 k = UnitVector(data->point - mEdge.GetEdgeCoord(data->z));
-				data->t = acos(Dot(k, mEdge.GetEdgeNormal()));
-				data->rot = signbit(Dot(Cross(k, mEdge.GetEdgeNormal()), mEdge.GetEdgeVector()));
+				Vec3 k = (data->point - mEdge.GetEdgeCoord(data->z)).Normalised();
+				data->t = acos(k.dot(mEdge.GetEdgeNormal()));
+				data->rot = signbit(k.cross(mEdge.GetEdgeNormal()).dot(mEdge.GetEdgeVector()));
 			}
 
 			////////////////////////////////////////

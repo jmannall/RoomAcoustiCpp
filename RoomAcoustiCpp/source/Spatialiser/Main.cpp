@@ -130,7 +130,7 @@ extern "C"
 	{
 		Vec<> vec = Vec<>(length);
 		for (int i = 0; i < length; i++)
-			vec[i] = static_cast<Real>(data[i]);
+			vec(i) = static_cast<Real>(data[i]);
 		return vec;
 	}
 
@@ -138,7 +138,7 @@ extern "C"
 	{
 		Vec<int> vec = Vec<int>(length);
 		for (int i = 0; i < length; i++)
-			vec[i] = data[i];
+			vec(i) = data[i];
 		return vec;
 	}
 
@@ -268,7 +268,7 @@ extern "C"
 		Vec<int> frequencyIndexing = CreateIntVec(frequencyIndexingData, numFDNs);
 		Vec<> t60s = CreateVec(t60sData, numFDNs);
 
-		Matrix<int> indexing = Matrix<int>(numNodes, numNodes);
+		Matrix<int> indexing(numNodes, numNodes);
 		for (int i = 0; i < numNodes; i++)
 			for (int j = 0; j < numNodes; j++)
 				indexing(i, j) = indexingData[i * numNodes + j];
@@ -566,7 +566,7 @@ extern "C"
 
 	EXPORT int API RACInitMaterial(const float* absorptionData)
 	{
-		std::vector<Real> a = std::vector<Real>(NUM_FREQUENCY_BANDS);
+		std::vector<Real> a(NUM_FREQUENCY_BANDS);
 		for (int i = 0; i < NUM_FREQUENCY_BANDS; i++)
 			a[i] = static_cast<Real>(absorptionData[i]);
 		Absorption absorption = Absorption(a);
@@ -585,7 +585,7 @@ extern "C"
 	*/
 	EXPORT void API RACUpdateMaterial(int id, const float* absorptionData)
 	{
-		std::vector<Real> a = std::vector<Real>(NUM_FREQUENCY_BANDS);
+		std::vector<Real> a(NUM_FREQUENCY_BANDS);
 		for (int i = 0; i < NUM_FREQUENCY_BANDS; i++)
 			a[i] = static_cast<Real>(absorptionData[i]);
 		Absorption absorption = Absorption(a);

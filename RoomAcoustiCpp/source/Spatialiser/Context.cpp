@@ -294,7 +294,8 @@ namespace RAC
 
 		void Context::InitLateReverb(const LateReverbData& data)
 		{
-			mReverbInput = Matrix<>(dspConfig->GetReverbInputDimensions());
+			auto dimensions = dspConfig->GetReverbInputDimensions();
+			mReverbInput = Matrix<>::Zero(dimensions.first, dimensions.second);
 
 			CreateAudioThreadPool();
 
@@ -359,8 +360,8 @@ namespace RAC
 
 			// Set listener position and orientation
 			CTransform transform;
-			transform.SetOrientation(CQuaternion(static_cast<float>(orientation.w), static_cast<float>(orientation.x), static_cast<float>(orientation.y), static_cast<float>(orientation.z)));
-			transform.SetPosition(CVector3(static_cast<float>(position.x), static_cast<float>(position.y), static_cast<float>(position.z)));
+			transform.SetOrientation(CQuaternion(static_cast<float>(orientation.w()), static_cast<float>(orientation.x()), static_cast<float>(orientation.y()), static_cast<float>(orientation.z())));
+			transform.SetPosition(CVector3(static_cast<float>(position.x()), static_cast<float>(position.y()), static_cast<float>(position.z())));
 			
 			{
 				unique_lock<shared_mutex> lock(tuneInMutex);
@@ -390,7 +391,7 @@ namespace RAC
 
 		void Context::UpdateSource(size_t id, const Vec3& position, const Vec4& orientation)
 		{
-			Real distance = (position - listenerPosition).Length();
+			Real distance = (position - listenerPosition).Normal();
 
 			// Ensure source is outside listener head radius
 			if (distance < headRadius)
@@ -398,10 +399,10 @@ namespace RAC
 				Vec3 newPosition = position;
 				if (distance == 0.0)
 					newPosition = mSources->GetSourcePosition(id);
-				distance = (newPosition - listenerPosition).Length();
+				distance = (newPosition - listenerPosition).Normal();
 				if (distance == 0.0)
 					newPosition = listenerPosition + Vec3(1.0,0.0,0.0);
-				newPosition = listenerPosition + UnitVector(newPosition - listenerPosition) * headRadius;
+				newPosition = listenerPosition + (newPosition - listenerPosition).Normalised() * headRadius;
 
 				// Update source position, orientation and virtual sources
 				mSources->Update(id, newPosition, orientation, headRadius);

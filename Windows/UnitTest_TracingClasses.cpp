@@ -1,6 +1,9 @@
 #include "CppUnitTest.h"
 #include "UtilityFunctions.h"
 
+#include "Common/Definitions.h"
+#include "Common/Vec3.h"
+
 #include "Spatialiser/Room.h"
 #include "Spatialiser/TracingUtils.h"
 
@@ -128,7 +131,7 @@ namespace RAC
 				// Equilateral triangle on the equator (great circle)
 				for (int k = 0; k < 3; ++k) {
 					Real theta = PI_2 * k / 3.0;
-					verts[k] = Vec3({ std::cos(theta), std::sin(theta), 0.0 });
+					verts[k] = Vec3(std::cos(theta), std::sin(theta), (Real)0.0);
 				}
 				return;
 			}
@@ -186,7 +189,7 @@ namespace RAC
 				{
 					for (int sz : {-1, 1})
 					{
-						verts[i] = Vec3({ 0.0, sy * s1, sz * sP });
+						verts[i] = Vec3((Real)0.0, sy * s1, sz * sP);
 						++i;
 					}
 				}
@@ -195,7 +198,7 @@ namespace RAC
 				{
 					for (int sy : {-1, 1})
 					{
-						verts[i] = Vec3({ sx * s1, sy * sP, 0.0 });
+						verts[i] = Vec3(sx * s1, sy * sP, (Real)0.0);
 						++i;
 					}
 				}
@@ -204,7 +207,7 @@ namespace RAC
 				{
 					for (int sz : {-1, 1})
 					{
-						verts[i] = Vec3({ sx * sP, 0.0, sz * s1 });
+						verts[i] = Vec3(sx * sP, (Real)0.0, sz * s1);
 						++i;
 					}
 				}
@@ -240,7 +243,7 @@ namespace RAC
 				{
 					for (int sz : {-1, 1})
 					{
-						verts[i] = Vec3({ 0.0, INV_PHI * sy * s, PHI * sz * s });
+						verts[i] = Vec3((Real)0.0, INV_PHI * sy * s, PHI * sz * s);
 						++i;
 					}
 				}
@@ -250,7 +253,7 @@ namespace RAC
 				{
 					for (int sy : {-1, 1})
 					{
-						verts[i] = Vec3({ INV_PHI * sx * s, PHI * sy * s, 0.0 });
+						verts[i] = Vec3(INV_PHI * sx * s, PHI * sy * s, (Real)0.0);
 						++i;
 					}
 				}
@@ -260,7 +263,7 @@ namespace RAC
 				{
 					for (int sz : {-1, 1})
 					{
-						verts[i] = Vec3({ PHI * sx * s, 0.0, INV_PHI * sz * s });
+						verts[i] = Vec3(PHI * sx * s, (Real)0.0, INV_PHI * sz * s);
 						++i;
 					}
 				}
@@ -303,19 +306,19 @@ namespace RAC
 			std::vector<Vec3> actualDirections(testDirections.size());
 			testPencil.getDirections(actualDirections);
 			for (int di = 0; di < actualDirections.size(); ++di) {
-				Real magnitude = norm3(actualDirections[di].x, actualDirections[di].y, actualDirections[di].z);
+				Real magnitude = norm3(actualDirections[di].x(), actualDirections[di].y(), actualDirections[di].z());
 
 				std::string error = "\nDirection vector " + ToStr(di) + " is not normalized.";
 				std::wstring werror = std::wstring(error.begin(), error.end());
 				const wchar_t* werrorchar = werror.c_str();
 
-				Assert::AreEqual(1.0, magnitude, 1e-6, werrorchar);
+				Assert::AreEqual((Real)1.0, magnitude, (Real)1e-6, werrorchar);
 			}
 
 			Vec<Real> rayDistances(testDirections.size());
 			Vec<Real> rayCosines(testDirections.size());
-			std::vector<int> frontIndices(testDirections.size());
-			std::vector<int> backIndices(testDirections.size());
+			Vec<int> frontIndices(testDirections.size());
+			Vec<int> backIndices(testDirections.size());
 			Real expected_distance, result_distance, result_cosine;
 			int expected_idx_front, result_idx_front, expected_idx_back, result_idx_back;
 			for (int oi = 0; oi < 2; ++oi) {
@@ -331,10 +334,10 @@ namespace RAC
 					expected_idx_front = EXPECTED_IDX_PAIR[oi][di][0];
 					expected_idx_back = EXPECTED_IDX_PAIR[oi][di][1];
 
-					result_idx_front = frontIndices[di];
-					result_distance = rayDistances[di];
-					result_cosine = rayCosines[di];
-					result_idx_back = backIndices[di];
+					result_idx_front = frontIndices(di);
+					result_distance = rayDistances(di);
+					result_cosine = rayCosines(di);
+					result_idx_back = backIndices(di);
 
 					std::string error = "\nCombination: ";
 					error += "\n\torigin " + ToStr(oi) + ", ";
@@ -374,7 +377,7 @@ namespace RAC
 			Vec3 zDir({ 0.0, 0.0, 1.0 });
 
 			std::vector<Vec3> testDirections, tempDirections;
-			std::vector<int> rayClusters;
+			Vec<int> rayClusters = Vec<int>::Constant(1, -1);
 
 			RayPencil testPencil(0);
 
@@ -383,7 +386,6 @@ namespace RAC
 			testDirections[0] = Vec3({ 2.0, 0.1, 0.1 });
 
 			testPencil = RayPencil(testDirections);
-			rayClusters = std::vector<int>(1, -1);
 
 			testDirections.resize(3);
 			testDirections[0] = xDir;
@@ -392,7 +394,7 @@ namespace RAC
 
 			testPencil.clusterDirections(testDirections, rayClusters);
 
-			Assert::AreEqual(0, rayClusters[0], L"\nExpected: first direction\n(single ray).");
+			Assert::AreEqual(0, rayClusters(0), L"\nExpected: first direction\n(single ray).");
 
 			// Test with multiple rays and zero reference directions (all outputs == -1).
 			testDirections.resize(6);
@@ -410,8 +412,8 @@ namespace RAC
 
 			testPencil.clusterDirections(testDirections, rayClusters);
 
-			for (int di = 0; di < rayClusters.size(); ++di)
-				Assert::AreEqual(-1, rayClusters[di], L"\nExpected: no direction\n(empty dir).");
+			for (int di = 0; di < rayClusters.Rows(); ++di)
+				Assert::AreEqual(-1, rayClusters(di), L"\nExpected: no direction\n(empty dir).");
 			
 			// Test with multiple rays and one reference direction (basic front-back choice).
 			testDirections.resize(6);
@@ -423,15 +425,15 @@ namespace RAC
 			testDirections[5] = -zDir;
 
 			testPencil = RayPencil(testDirections);
-			rayClusters = std::vector<int>(testDirections.size(), -1);
+			rayClusters = Vec<int>::Constant(testDirections.size(), -1);
 
 			testDirections.resize(1);
-			testDirections[0] = UnitVector(xDir + yDir + zDir);
+			testDirections[0] = (xDir + yDir + zDir).Normalised();
 
 			testPencil.clusterDirections(testDirections, rayClusters);
 
-			for (int di = 0; di < rayClusters.size(); ++di)
-				Assert::AreEqual(0, rayClusters[di], L"\nExpected: first direction\n(single dir).");
+			for (int di = 0; di < rayClusters.Rows(); ++di)
+				Assert::AreEqual(0, rayClusters(di), L"\nExpected: first direction\n(single dir).");
 			
 			// Test with multiple rays and multiple reference directions (all following tests).
 
@@ -440,13 +442,13 @@ namespace RAC
 			testDirections[0] = xDir;
 			testDirections[1] = yDir;
 			testDirections[2] = zDir;
-			testDirections[3] = UnitVector(xDir + yDir);
-			testDirections[4] = UnitVector(xDir + zDir);
-			testDirections[5] = UnitVector(yDir + zDir);
-			testDirections[6] = UnitVector(xDir + yDir + zDir);
-			testDirections[7] = UnitVector(-0.5 * xDir + yDir + zDir);
-			testDirections[8] = UnitVector(xDir - 0.5 * yDir + zDir);
-			testDirections[9] = UnitVector(xDir + yDir - 0.5 * zDir);
+			testDirections[3] = (xDir + yDir).Normalised();
+			testDirections[4] = (xDir + zDir).Normalised();
+			testDirections[5] = (yDir + zDir).Normalised();
+			testDirections[6] = (xDir + yDir + zDir).Normalised();
+			testDirections[7] = (-0.5 * xDir + yDir + zDir).Normalised();
+			testDirections[8] = (xDir - 0.5 * yDir + zDir).Normalised();
+			testDirections[9] = (xDir + yDir - 0.5 * zDir).Normalised();
 
 			// Scramble the signs to get a more "random" set of test directions.
 			for (int di = 0; di < testDirections.size(); di += 2)
@@ -457,8 +459,8 @@ namespace RAC
 
 			testPencil.clusterDirections(testDirections, rayClusters);
 
-			for (int di = 0; di < rayClusters.size(); ++di)
-				Assert::AreEqual(di, rayClusters[di], L"\nExpected: direction with ray's index (identical).");
+			for (int di = 0; di < rayClusters.Rows(); ++di)
+				Assert::AreEqual(di, rayClusters(di), L"\nExpected: direction with ray's index (identical).");
 
 			// Wiggle the directions a bit and repeat the test.
 			for (int di = 0; di < testDirections.size(); ++di)
@@ -470,7 +472,7 @@ namespace RAC
 			testPencil.clusterDirections(testDirections, rayClusters);
 
 			for (int di = 0; di < testDirections.size(); ++di)
-				Assert::AreEqual(di, rayClusters[di], L"\nExpected: direction with ray's index (wiggled).");
+				Assert::AreEqual(di, rayClusters(di), L"\nExpected: direction with ray's index (wiggled).");
 
 			// Try with more rays than directions.
 			// Note: this code should work without modification even if you change the size of testDirections, defined above.
@@ -488,7 +490,7 @@ namespace RAC
 					{
 						Vec3 offset = Vec3({ sx * 1e-2, sy * 1e-2, sz * 1e-2 });
 						for (int di = 0; di < chunkSize; ++di)
-							tempDirections[di + chunkStart] = UnitVector(testDirections[di] + offset);
+							tempDirections[di + chunkStart] = (testDirections[di] + offset).Normalised();
 						chunkStart += testDirections.size();
 					}
 				}
@@ -499,8 +501,8 @@ namespace RAC
 
 			testPencil.clusterDirections(testDirections, rayClusters);
 
-			for (int di = 0; di < rayClusters.size(); ++di)
-				Assert::AreEqual(di % chunkSize, rayClusters[di], L"\nExpected: direction with ray's index mod chunkSize (more rays than dirs).");
+			for (int di = 0; di < rayClusters.Rows(); ++di)
+				Assert::AreEqual(di % chunkSize, rayClusters(di), L"\nExpected: direction with ray's index mod chunkSize (more rays than dirs).");
 
 			// TODO: Test with non-normalized directions to ensure the cosine similarity calculation is still meaningful (weighted clustering).
 		}
@@ -509,7 +511,6 @@ namespace RAC
 		TEST_METHOD(PencilClassHemisphere)
 		{
 			std::vector<Vec3> testDirections;
-			std::vector<int> rayClusters;
 			int effectiveNumRays;
 
 			for (int numRays = 100; numRays < 10001; numRays *= 10)
@@ -525,14 +526,14 @@ namespace RAC
 
 						effectiveNumRays = testPencil.getNumRays();
 
-						rayClusters = std::vector<int>(effectiveNumRays, -1);
+						Vec<int> rayClusters = Vec<int>::Constant(effectiveNumRays, -1);
 						testPencil.clusterDirections(testDirections, rayClusters);
 
 						for (int ci = 0; ci < numClusters; ++ci)
 						{
 							tally[ci] = 0;
 							for (int ri = 0; ri < effectiveNumRays; ++ri)
-								if (rayClusters[ri] == ci)
+								if (rayClusters(ri) == ci)
 									tally[ci] += 1;
 						}
 
