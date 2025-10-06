@@ -19,16 +19,35 @@
 #include "Common/Types.h"
 #include "Common/Definitions.h"
 
+// Eigen headers
+#if MATRIX_LIBRARY == EIGEN_FLAG
+#include <Eigen/Dense>
+#endif
+
 namespace RAC
 {
 	namespace Common
 	{
+#if MATRIX_LIBRARY == EIGEN_FLAG
+		template<typename T = Real, int len = Eigen::Dynamic>
+		using Coefficients = Eigen::Array<T, len, 1>;
+
+		template<typename T = Real>
+		using Absorption = Eigen::Array<T, Eigen::Dynamic, 1>;
+		/*template<typename T = Real>
+		using Coefficients = Eigen::Array<T, Eigen::Dynamic, 1>;*/
+
+#elif MATRIX_LIBRARY == CUSTOM_FLAG
 		/**
 		* @brief Class that stores abitrary coefficients
 		*/
-		template <class T = std::vector<Real>>
+		template <typename T = Real, size_t Size = 0>
 		class Coefficients
 		{
+			using Container = std::conditional_t<
+				Size == 0,
+				std::vector<T>,
+				std::array<T, Size>>;
 		public:
 
 			/**
@@ -37,19 +56,16 @@ namespace RAC
 			* @param in The value for the coefficients
 			* @details Used for std::array (predetermined size)
 			*/
-			template <typename U = T, std::enable_if_t<!std::is_constructible<U, size_t, Real>::value, int> = 0>
-			Coefficients(const Real in) { mCoefficients.fill(in); }
+			Coefficients(const Real in) requires (Size != 0) { mCoefficients.fill(in); }
 
-			template <typename U = T, std::enable_if_t<std::is_constructible<U, size_t, Real>::value, int> = 0>
-			Coefficients(const Real in) : Coefficients(1, in) {}
+			Coefficients(const Real in) requires (Size == 0) : Coefficients(1, in) {}
 
 			/**
 			* @brief Constructor that initialises the Coefficients with zeros
 			*
 			* @param len The number of coefficients
 			*/
-			template <typename U = T, std::enable_if_t<std::is_constructible<U, size_t, Real>::value, int> = 0>
-			Coefficients(const int len) : Coefficients(len, 0.0) {}
+			Coefficients(const int len) requires (Size == 0) : Coefficients(len, 0.0) {}
 
 			/**
 			* @brief Constructor that initialises the Coefficients with a given value
@@ -57,15 +73,16 @@ namespace RAC
 			* @param len The number of coefficients
 			* @param in The initialisation value
 			*/
-			template <typename U = T, std::enable_if_t<std::is_constructible<U, size_t, Real>::value, int> = 0>
-			Coefficients(const int len, const Real in) : mCoefficients(len, in) {}
+			Coefficients(const int len, const Real in) requires (Size == 0) : mCoefficients(len, in) {}
 
 			/**
 			* @brief Constructor that initialises the Coefficients from a std::vector
 			*
 			* @param coefficients The vector of coefficients
 			*/
-			Coefficients(const T& coefficients) : mCoefficients(coefficients) {}
+			Coefficients(const std::vector<T>& coefficients) requires (Size == 0) : mCoefficients(coefficients) {}
+
+			Coefficients(const std::array<T, Size>& coefficients) requires (Size != 0) : mCoefficients(coefficients) {}
 
 			/**
 			* @brief Default deconstructor
@@ -307,14 +324,14 @@ namespace RAC
 			inline const auto end() const { return mCoefficients.end(); }
 
 		protected:
-			T mCoefficients; // Array or vector of coefficients
+			Container mCoefficients; // Array or vector of coefficients
 		};
 
 		/**
 		* @brief Calculates the sine of the coefficients
 		*/
-		template<typename T>
-		inline Coefficients<T> Sin(Coefficients<T> v)
+		template <typename T, size_t Size>
+		inline Coefficients<T, Size> Sin(Coefficients<T, Size> v)
 		{
 			for (int i = 0; i < v.Length(); i++)
 				v[i] = sin(v[i]);
@@ -324,8 +341,8 @@ namespace RAC
 		/**
 		* @brief Calculates the cosine of the coefficients
 		*/
-		template<typename T>
-		inline Coefficients<T> Cos(Coefficients<T> v)
+		template <typename T, size_t Size>
+		inline Coefficients<T, Size> Cos(Coefficients<T, Size> v)
 		{
 			for (int i = 0; i < v.Length(); i++)
 				v[i] = cos(v[i]);
@@ -335,8 +352,8 @@ namespace RAC
 		/**
 		* @brief Calculates the absolute value of the coefficients
 		*/
-		template<typename T>
-		inline Coefficients<T> Abs(Coefficients<T> v)
+		template <typename T, size_t Size>
+		inline Coefficients<T, Size> Abs(Coefficients<T, Size> v)
 		{
 			for (int i = 0; i < v.Length(); i++)
 				v[i] = abs(v[i]);
@@ -346,8 +363,8 @@ namespace RAC
 		/**
 		* @brief Calculates the sum of the coefficients
 		*/
-		template<typename T>
-		inline Real Sum(Coefficients<T> v)
+		template <typename T, size_t Size>
+		inline Real Sum(Coefficients<T, Size> v)
 		{
 			Real output = 0.0;
 			for (int i = 0; i < v.Length(); i++)
@@ -357,31 +374,31 @@ namespace RAC
 
 		//////////////////// Coefficient operator overloads ////////////////////
 
-		template<typename T>
-		inline Coefficients<T> operator-(Coefficients<T> u, const Coefficients<T>& v) { return u -= v; }
-		template<typename T>		
-		inline Coefficients<T> operator+(Coefficients<T> u, const Coefficients<T>& v) { return u += v; }
-		template<typename T>		
-		inline Coefficients<T> operator*(Coefficients<T> u, const Coefficients<T>& v) { return u *= v; }
-		template<typename T>		
-		inline Coefficients<T> operator/(Coefficients<T> u, const Coefficients<T>& v) { return u /= v; }
+		template <typename T, size_t Size>
+		inline Coefficients<T, Size> operator-(Coefficients<T, Size> u, const Coefficients<T, Size>& v) { return u -= v; }
+		template <typename T, size_t Size>
+		inline Coefficients<T, Size> operator+(Coefficients<T, Size> u, const Coefficients<T, Size>& v) { return u += v; }
+		template <typename T, size_t Size>
+		inline Coefficients<T, Size> operator*(Coefficients<T, Size> u, const Coefficients<T, Size>& v) { return u *= v; }
+		template <typename T, size_t Size>
+		inline Coefficients<T, Size> operator/(Coefficients<T, Size> u, const Coefficients<T, Size>& v) { return u /= v; }
 		
-		template<typename T>		
-		inline Coefficients<T> operator+(Coefficients<T> v, const Real a) { return v += a; }
-		template<typename T>		
-		inline Coefficients<T> operator+(const Real a, Coefficients<T> v) { return v += a; }
-		template<typename T>		
-		inline Coefficients<T> operator-(Coefficients<T> v, const Real a) { return v += (-a); }
-		template<typename T>		
-		inline Coefficients<T> operator-(const Real a, Coefficients<T> v) { return -v += a; }
-		template<typename T>		
-		inline Coefficients<T> operator*(Coefficients<T> v, const Real a) { return v *= a; }
-		template<typename T>		
-		inline Coefficients<T> operator*(const Real a, Coefficients<T> v) { return v *= a; }
-		template<typename T>		
-		inline Coefficients<T> operator/(Coefficients<T> v, const Real a) { return v *= (1.0 / a); }
-		template<typename T>		
-		inline Coefficients<T> operator/(const Real a, const Coefficients<T>& v) { Coefficients<T> u = Coefficients<T>(v.Length(), a);  return u /= v; }
+		template <typename T, size_t Size>		
+		inline Coefficients<T, Size> operator+(Coefficients<T, Size> v, const Real a) { return v += a; }
+		template <typename T, size_t Size>		
+		inline Coefficients<T, Size> operator+(const Real a, Coefficients<T, Size> v) { return v += a; }
+		template <typename T, size_t Size>		
+		inline Coefficients<T, Size> operator-(Coefficients<T, Size> v, const Real a) { return v += (-a); }
+		template <typename T, size_t Size>		
+		inline Coefficients<T, Size> operator-(const Real a, Coefficients<T, Size> v) { return -v += a; }
+		template <typename T, size_t Size>		
+		inline Coefficients<T, Size> operator*(Coefficients<T, Size> v, const Real a) { return v *= a; }
+		template <typename T, size_t Size>		
+		inline Coefficients<T, Size> operator*(const Real a, Coefficients<T, Size> v) { return v *= a; }
+		template <typename T, size_t Size>		
+		inline Coefficients<T, Size> operator/(Coefficients<T, Size> v, const Real a) { return v *= (1.0 / a); }
+		template <typename T, size_t Size>		
+		inline Coefficients<T, Size> operator/(const Real a, const Coefficients<T, Size>& v) { Coefficients<T, Size> u = Coefficients<T, Size>(v.Length(), a);  return u /= v; }
 
 		/**
 		* @brief prints a Coeffcient using std::cout << coefficient << std::endl;
@@ -403,8 +420,8 @@ namespace RAC
 		/**
 		* @return True if all coefficient entries are equal to a, false otherwise
 		*/
-		template <typename T>
-		inline bool operator==(const Coefficients<T>& v, const Real a)
+		template <typename T, size_t Size>
+		inline bool operator==(const Coefficients<T, Size>& v, const Real a)
 		{
 			for (int i = 0; i < v.Length(); i++)
 				if (v[i] != a)
@@ -415,8 +432,8 @@ namespace RAC
 		/**
 		* @return True if any coefficient entries are not equal to a, false otherwise
 		*/
-		template <typename T>
-		inline bool operator!=(const Coefficients<T>& v, const Real a)
+		template <typename T, size_t Size>
+		inline bool operator!=(const Coefficients<T, Size>& v, const Real a)
 		{
 			return !(v == a);
 		}
@@ -425,8 +442,8 @@ namespace RAC
 		* @brief Performs an element-wise comparison
 		* @return True if all element pairs are equal, false otherwise
 		*/
-		template <typename T>
-		inline bool operator==(const Coefficients<T>& u, const Coefficients<T>& v)
+		template <typename T, size_t Size>
+		inline bool operator==(const Coefficients<T, Size>& u, const Coefficients<T, Size>& v)
 		{
 			if (u.Length() != v.Length())
 				return false;
@@ -440,8 +457,8 @@ namespace RAC
 		* @brief Performs an element-wise comparison
 		* @return True if any element pairs are unequal, false otherwise
 		*/
-		template <typename T>
-		inline bool operator!=(const Coefficients<T>& u, const Coefficients<T>& v)
+		template <typename T, size_t Size>
+		inline bool operator!=(const Coefficients<T, Size>& u, const Coefficients<T, Size>& v)
 		{
 			return !(u == v);
 		}
@@ -450,8 +467,8 @@ namespace RAC
 		* @brief Performs an element-wise comparison
 		* @return True if all element pairs satisfy the condition, false otherwise
 		*/
-		template <typename T>
-		inline bool operator>(const Coefficients<T>& u, const Coefficients<T>& v)
+		template <typename T, size_t Size>
+		inline bool operator>(const Coefficients<T, Size>& u, const Coefficients<T, Size>& v)
 		{
 			assert(u.Length() == v.Length());
 			for (int i = 0; i < u.Length(); i++)
@@ -464,8 +481,8 @@ namespace RAC
 		* @brief Performs an element-wise comparison
 		* @return True if all element pairs satisfy the condition, false otherwise
 		*/
-		template <typename T>
-		inline bool operator<(const Coefficients<T>& u, const Coefficients<T>& v)
+		template <typename T, size_t Size>
+		inline bool operator<(const Coefficients<T, Size>& u, const Coefficients<T, Size>& v)
 		{
 			assert(u.Length() == v.Length());
 			for (int i = 0; i < u.Length(); i++)
@@ -474,8 +491,8 @@ namespace RAC
 			return true;
 		}
 
-		template <typename T>
-		inline Coefficients<T> Pow(Coefficients<T> u, Real x)
+		template <typename T, size_t Size>
+		inline Coefficients<T, Size> Pow(Coefficients<T, Size> u, Real x)
 		{
 			for (int i = 0; i < u.Length(); i++)
 				u[i] = pow(u[i], x);
@@ -489,8 +506,7 @@ namespace RAC
 		* 
 		* @details Stores reflectance -> sqrt(1 - R). Where R is the absortion property of the material
 		*/
-		template <typename T = std::vector<Real>>
-		class Absorption : public Coefficients<T>
+		class Absorption : public Coefficients<>
 		{
 		public:
 
@@ -501,15 +517,14 @@ namespace RAC
 			*
 			* @param len The number of coefficients
 			*/
-			template <typename U = T, std::enable_if_t<std::is_constructible<U, size_t, Real>::value, int> = 0>
-			Absorption(int len) : Coefficients<T>(len, 1.0) {}
+			Absorption(int len) : Coefficients<>(len, 1.0) {}
 
 			/**
 			* Constructor that initialises the Absorption from a std::vector
 			*
 			* @param R The material absorption
 			*/
-			Absorption(const T& R) : Coefficients<T>(static_cast<int>(R.size()))
+			Absorption(const std::vector<Real>& R) : Coefficients<>(static_cast<int>(R.size()))
 			{
 				for (int i = 0; i < this->mCoefficients.size(); i++)
 				{
@@ -630,32 +645,22 @@ namespace RAC
 
 		//////////////////// Absorption operator overloads ////////////////////
 
-		template<typename T>
-		inline Absorption<T> operator+(Absorption<T> u, const Absorption<T>& v) { return u += v; }
-		template<typename T>		
-		inline Absorption<T> operator-(Absorption<T> u, const Absorption<T>& v) { return u -= v; }
-		template<typename T>		
-		inline Absorption<T> operator*(Absorption<T> u, const Absorption<T>& v) { return u *= v; }
-		template<typename T>		
-		inline Absorption<T> operator/(Absorption<T> u, const Absorption<T>& v) { return u /= v; }
+		inline Absorption operator+(Absorption u, const Absorption& v) { return u += v; }
+		inline Absorption operator-(Absorption u, const Absorption& v) { return u -= v; }
+		inline Absorption operator*(Absorption u, const Absorption& v) { return u *= v; }
+		inline Absorption operator/(Absorption u, const Absorption& v) { return u /= v; }
 
-		template<typename T>
-		inline Absorption<T> operator+(Absorption<T> v, const Real a) { return v += a; }
-		template<typename T>		
-		inline Absorption<T> operator-(Absorption<T> v, const Real a) { return v += (-a); }
-		template<typename T>		
-		inline Absorption<T> operator-(const Real a, Absorption<T> v) { return -v += a; }
-		template<typename T>		
-		inline Absorption<T> operator*(Absorption<T> v, const Real a) { return v *= a; }
-		template<typename T>		
-		inline Absorption<T> operator/(Absorption<T> v, const Real a) { return v *= (1.0 / a); }
+		inline Absorption operator+(Absorption v, const Real a) { return v += a; }
+		inline Absorption operator-(Absorption v, const Real a) { return v += (-a); }
+		inline Absorption operator-(const Real a, Absorption v) { return -v += a; }
+		inline Absorption operator*(Absorption v, const Real a) { return v *= a; }
+		inline Absorption operator/(Absorption v, const Real a) { return v *= (1.0 / a); }
 
 		/**
 		* @brief Performs an element-wise comparison
 		* @return True if all element pairs and the areas are equal, false otherwise
 		*/
-		template<typename T>
-		inline bool operator==(const Absorption<T>& u, const Absorption<T>& v)
+		inline bool operator==(const Absorption& u, const Absorption& v)
 		{
 			if (u.Length() != v.Length())
 				return false;
@@ -669,8 +674,8 @@ namespace RAC
 		* @brief Performs an element-wise comparison
 		* @return True if any element pairs or the areas are unequal, false otherwise
 		*/
-		template<typename T>
-		inline bool operator!=(const Absorption<T>& u, const Absorption<T>& v) { return !(u == v); }
+		inline bool operator!=(const Absorption& u, const Absorption& v) { return !(u == v); }
+#endif // MATRIX_LIBRARY == CUSTOM_FLAG
 	}
 }
 

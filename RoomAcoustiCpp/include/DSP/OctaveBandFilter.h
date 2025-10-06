@@ -84,8 +84,14 @@ namespace RAC
 				int count;			// Current index in the output line
 			};
 
+#if MATRIX_LIBRARY == EIGEN_FLAG
 			typedef Coefficients<> Parameters;
-			typedef Coefficients<std::array<Real, 9>> CutOffFrequencies;
+			typedef Coefficients<Real, 9> CutOffFrequencies;
+#else
+			typedef Coefficients<> Parameters;
+			typedef Coefficients<Real, 9> CutOffFrequencies;
+#endif
+
 			CutOffFrequencies cutOffFrequencies{ CutOffFrequencies({ 46.875, 93.75, 187.5, 375.0, 750.0, 1.5e3, 3e3, 6e3, 12e3 }) };	// Possible frequencyBands
 
 		public:

@@ -53,14 +53,14 @@ namespace RAC
 			*
 			* @return The directivity at the given frequency for a given direction
 			*/
-			inline Absorption<> Response(const Coefficients<>& frequencies, const Vec3& direction) const
+			inline Absorption Response(const Coefficients<>& frequencies, const Vec3& direction) const
 			{
 				// theta 0 to PI(0 to 180 degrees) 0 points along the forward axis, PI / 2 perpendicular to the forward axis and PI is opposing the forward axis
 				// phi 0 to 2PI(360 degrees) where 0 is the front, top or rear of the source and PI is the bottom of the source(rotates clockwise around the forward axis).
 				Real theta = std::acos(direction.z());
 				Real phi = -std::atan2(direction.x(), direction.y()); // -phi converts from left-handed coordinate system to right-handed coordinate system
 
-				Absorption<> output(frequencies.Length());
+				Absorption output(frequencies.Length());
 				for (int i = 0; i < frequencies.Length(); ++i)
 					output[i] = SingleResponse(frequencies[i], theta, phi);
 				return output;

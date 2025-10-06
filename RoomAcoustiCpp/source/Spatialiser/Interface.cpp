@@ -250,7 +250,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		int InitMaterial(const Absorption<>& material)
+		int InitMaterial(const Absorption& material)
 		{
 			auto context = GetContext();
 			if (context)
@@ -261,7 +261,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void UpdateMaterial(const size_t id, const Absorption<>& material)
+		void UpdateMaterial(const size_t id, const Absorption& material)
 		{
 			auto context = GetContext();
 			if (context)

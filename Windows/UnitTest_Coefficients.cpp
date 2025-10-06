@@ -11,7 +11,7 @@ using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 //////////////////// Assert templates ////////////////////
 
-template<> static std::wstring Microsoft::VisualStudio::CppUnitTestFramework::ToString<RAC::Common::Coefficients<std::vector<RAC::Common::Real>>>(const RAC::Common::Coefficients<std::vector<RAC::Common::Real>>& t)
+template<> static std::wstring Microsoft::VisualStudio::CppUnitTestFramework::ToString<RAC::Common::Coefficients<RAC::Common::Real>>(const RAC::Common::Coefficients<RAC::Common::Real>& t)
 {
 	std::string str = "Coefficients: ";
 	for (int i = 0; i < t.Length(); i++)
@@ -20,7 +20,7 @@ template<> static std::wstring Microsoft::VisualStudio::CppUnitTestFramework::To
 	return werror;
 }
 
-template<> static std::wstring Microsoft::VisualStudio::CppUnitTestFramework::ToString<RAC::Common::Absorption<std::vector<RAC::Common::Real>>>(const RAC::Common::Absorption<std::vector<RAC::Common::Real>>& t)
+template<> static std::wstring Microsoft::VisualStudio::CppUnitTestFramework::ToString<RAC::Common::Absorption>(const RAC::Common::Absorption& t)
 {
 	std::string str = "Absorption: ";
 	for (int i = 0; i < t.Length(); i++)
@@ -39,7 +39,7 @@ namespace RAC
 	{
 	public:
 
-		void TestRealInit(Coefficients<std::vector<Real>> input)
+		void TestRealInit(Coefficients<> input)
 		{
 			Real x = 1.0;
 		}
@@ -107,10 +107,10 @@ namespace RAC
 			std::vector<Real> a = { (Real)0.5, (Real)0.7 };
 			std::vector<Real> b = { (Real)0.5, (Real)0.8 };
 
-			Absorption<> c1 = Absorption<>(a);
-			Absorption<> c2 = Absorption<>(b);
+			Absorption c1 = Absorption(a);
+			Absorption c2 = Absorption(b);
 
-			Absorption<> out = Absorption<>(c1.Length());
+			Absorption out = Absorption(c1.Length());
 			out[0] = sqrt(1.0 - a[0]) + sqrt(1.0 - b[0]);
 			out[1] = sqrt(1.0 - a[1]) + sqrt(1.0 - b[1]);
 			Assert::AreEqual(out, c1 + c2, L"Error: Incorrect addition");

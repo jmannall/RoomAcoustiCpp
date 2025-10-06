@@ -197,7 +197,7 @@ namespace RAC
 			* @param gains The target reflection filter gains for each channel
 			* @return True if all channels have zero target reflection gains, false otherwise
 			*/
-			inline bool SetTargetReflectionFilters(const std::vector<Absorption<>>& gains)
+			inline bool SetTargetReflectionFilters(const std::vector<Absorption>& gains)
 			requires std::is_same_v<T, Real>
 			{
 				// assert(gains.size() == mChannels.size());

@@ -40,7 +40,7 @@ namespace RAC
 			// TODO: Move to ray tracing thread
 			// shared_ptr<Reverb> sharedReverb = mReverb.lock();
 			// sharedReverb->GetReverbSourceDirections(reverbDirections);
-			// reverbAbsorptions = std::vector<Absorption<>>(static_cast<int>(reverbDirections.size()), Absorption(frequencyBands.Length()));
+			// reverbAbsorptions = std::vector<Absorption>(static_cast<int>(reverbDirections.size()), Absorption(frequencyBands.Length()));
 		}
 
 		////////////////////////////////////////
@@ -135,7 +135,7 @@ namespace RAC
 		{
 			int bounceIdx = static_cast<int>(intersections.size()) - 1;
 			imageSource.ResetAbsorption();
-			Absorption<>& absorption = imageSource.GetAbsorption();
+			Absorption& absorption = imageSource.GetAbsorption();
 			bool valid = false;
 			if (imageSource.IsReflection(bounceIdx))
 			{
@@ -193,7 +193,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		bool ImageEdge::LinePlaneIntersection(const Vec3& start, const Vec3& end, const Plane& plane, Absorption<>& absorption, Vec3& intersection) const
+		bool ImageEdge::LinePlaneIntersection(const Vec3& start, const Vec3& end, const Plane& plane, Absorption& absorption, Vec3& intersection) const
 		{
 			if (plane.LinePlaneIntersection(start, end))
 			{
@@ -205,7 +205,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		bool ImageEdge::LineWallIntersection(const Vec3& start, const Vec3& end, const std::vector<size_t>& wallIDs, Absorption<>& absorption, Vec3& intersection) const
+		bool ImageEdge::LineWallIntersection(const Vec3& start, const Vec3& end, const std::vector<size_t>& wallIDs, Absorption& absorption, Vec3& intersection) const
 		{
 			for (const size_t wallID : wallIDs)
 			{
@@ -317,7 +317,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		Absorption<> ImageEdge::CalculateDirectivity(const Source::Data& source, const Vec3& point) const
+		Absorption ImageEdge::CalculateDirectivity(const Source::Data& source, const Vec3& point) const
 		{
 			Absorption directivity(frequencyBands.Length());
 			Real ret = 0.0;
@@ -391,7 +391,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		Absorption<> ImageEdge::Direct(const Source::Data& source, bool lineOfSight)
+		Absorption ImageEdge::Direct(const Source::Data& source, bool lineOfSight)
 		{
 			PROFILE_Direct
 			

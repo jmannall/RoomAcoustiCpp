@@ -124,7 +124,7 @@ namespace RAC
 			/**
 			* @return The material absorption properties of the wall
 			*/
-			// const inline Absorption<>& GetAbsorption() const { return mAbsorption; }
+			// const inline Absorption& GetAbsorption() const { return mAbsorption; }
 
 			/**
 			* @return The area of the wall
@@ -189,7 +189,7 @@ namespace RAC
 			*
 			* @param absorption The new absorption of the wall
 			*/
-			// inline void Update(const Absorption<>& absorption) { Real area = GetArea(); mAbsorption = absorption; mAbsorption.mArea = area; }
+			// inline void Update(const Absorption& absorption) { Real area = GetArea(); mAbsorption = absorption; mAbsorption.mArea = area; }
 
 		private:
 			/**

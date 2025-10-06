@@ -149,8 +149,8 @@ namespace RAC
 		* @params end The target coefficients
 		* @params factor The interpolation factor (must be between 0 and 1)
 		*/
-		template<typename T>
-		inline void Lerp(Coefficients<T>& start, const Coefficients<T>& end, const Real factor)
+		template<typename T, size_t Size>
+		inline void Lerp(Coefficients<T, Size>& start, const Coefficients<T, Size>& end, const Real factor)
 		{
 			assert(0.0 < factor && factor <= 1.0);	
 			assert(start.Length() == end.Length());
@@ -182,8 +182,8 @@ namespace RAC
 		* @params v Coefficients 2
 		* @returns True if equal within the threshold EPS, false otherwise
 		*/
-		template<typename T>
-		inline bool Equals(const Coefficients<T>& u, const Coefficients<T>& v, const Real threshold = EPS)
+		template<typename T, size_t Size>
+		inline bool Equals(const Coefficients<T, Size>& u, const Coefficients<T, Size>& v, const Real threshold = EPS)
 		{
 			if (u.Length() != v.Length())
 				return false;

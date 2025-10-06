@@ -156,7 +156,7 @@ namespace RAC
 					gSB[i] = std::abs(AD * (EqHalf(PI_EPS, k[i], n, L) + EqHalf(2 * path.sData.t + PI_EPS, k[i], n, L)));
 				}
 				Real idx = (path.bA - PI_1) / (path.eData.t - path.sData.t - PI_1);
-				Coefficients<std::array<Real, 4>> oldGains = (1.0 - idx) * g / gSB + idx * g * dSR;
+				Coefficients<Real, 4> oldGains = (1.0 - idx) * g / gSB + idx * g * dSR;
 				return Pow(g / gSB, 1.0 - idx) * Pow(g * dSR, idx);
 			}
 

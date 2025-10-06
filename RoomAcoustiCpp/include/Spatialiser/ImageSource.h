@@ -116,7 +116,7 @@ namespace RAC
 			*
 			* @param absorption The absorption to add
 			*/
-			inline void AddAbsorption(const Absorption<>& absorption) { mAbsorption *= absorption; }
+			inline void AddAbsorption(const Absorption& absorption) { mAbsorption *= absorption; }
 
 			/**
 			* @brief Resets the absorption of the image source to 1
@@ -126,12 +126,12 @@ namespace RAC
 			/**
 			* @return A reference to the absorption of the image source
 			*/
-			inline Absorption<>& GetAbsorption() { return mAbsorption; }
+			inline Absorption& GetAbsorption() { return mAbsorption; }
 
 			/**
 			* @return The absorption of the image source
 			*/
-			inline const Absorption<>& GetAbsorption() const { return mAbsorption; }
+			inline const Absorption& GetAbsorption() const { return mAbsorption; }
 
 			/**
 			* @brief Creates a string key representing the image source path
@@ -415,7 +415,7 @@ namespace RAC
 			Vec4 previousPlane;						// Previous reflected plane information where: w -> D, x, y, z -> Normal
 
 			Diffraction::Path mDiffractionPath;			// Diffraction path of the image source
-			Absorption<> mAbsorption;					// Wall absorption of the image source
+			Absorption mAbsorption;					// Wall absorption of the image source
 			Real distance;								// Distance of the image source from the listener
 			CTransform transform;						// 3DTI transform of the image source
 

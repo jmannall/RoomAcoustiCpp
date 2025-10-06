@@ -25,7 +25,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		size_t Room::InitMaterial(const Absorption<>& material)
+		size_t Room::InitMaterial(const Absorption& material)
 		{
 			size_t id;
 			std::lock_guard<std::mutex> lock(mMaterialMutex);

@@ -425,7 +425,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Context::UpdateMaterial(size_t id, const Absorption<>& material)
+		void Context::UpdateMaterial(size_t id, const Absorption& material)
 		{
 			mRoom->UpdateMaterial(id, material);
 			if (lateReverbInitialised.load(std::memory_order_acquire))

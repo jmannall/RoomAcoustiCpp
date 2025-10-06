@@ -95,6 +95,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\LinkwitzRileyFilter.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\OctaveBandFilter.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\Parameter.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Eigen\ArrayBaseAddons.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Eigen\DenseBaseAddons.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Eigen\MatrixAddons.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Eigen\MatrixBaseAddons.h" />

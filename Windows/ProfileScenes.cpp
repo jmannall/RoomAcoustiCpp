@@ -101,7 +101,7 @@ void ProfileShoebox()
 
     // Create shoebox
     Vec3 pos(7.0, 3.0, 4.0);
-    Absorption<> absorption({ 0.03, 0.03, 0.04, 0.06, 0.09, 0.1, 0.12 });
+    Absorption absorption({ 0.03, 0.03, 0.04, 0.06, 0.09, 0.1, 0.12 });
 	size_t materialId = InitMaterial(absorption);
     auto wallIds = CreateShoeboxRoom(pos, materialId);
 

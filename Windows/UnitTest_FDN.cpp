@@ -54,7 +54,7 @@ namespace RAC
 			AudioData audioData(config);
 			int numReverbSources = config->GetData().numReverbSources;
 			int numFrames = config->GetData().numFrames;
-			const std::vector<Absorption<>> reflectionGains(numReverbSources, gains);
+			const std::vector<Absorption> reflectionGains(numReverbSources, gains);
 
 			Vec<> dimensions(std::vector<Real>({ (Real)1.0, (Real)1.5, (Real)2.0 }));
 			FDN<> fdn(T60, dimensions, config);
@@ -94,7 +94,7 @@ namespace RAC
 			AudioData audioData(config);
 			int numReverbSources = config->GetData().numReverbSources;
 			int numFrames = config->GetData().numFrames;
-			const std::vector<Absorption<>> reflectionGains(numReverbSources, gains);
+			const std::vector<Absorption> reflectionGains(numReverbSources, gains);
 
 			Vec<> dimensions(std::vector<Real>({ (Real)1.0, (Real)1.5, (Real)2.0 }));
 			FDN<> fdn(T60, dimensions, config);
@@ -129,7 +129,7 @@ namespace RAC
 
 			const Coefficients T60({ target, target, target, target });
 			const Absorption gains({ 0.1, 0.05, 0.3, 0.25 });
-			const std::vector<Absorption<>> reflectionGains(numReverbSources, gains);
+			const std::vector<Absorption> reflectionGains(numReverbSources, gains);
 
 			// Long delay lines cause issues with the T60 estimation due to less frequent but larger drops in energy
 			Vec<> dimensions(std::vector<Real>({ RandomValue((Real)0.1, (Real)2.0), RandomValue((Real)0.1, (Real)5.0), RandomValue((Real)0.1, (Real)10.0) }));
@@ -168,7 +168,7 @@ namespace RAC
 
 			const Coefficients T60({ target, target, target, target });
 			const Absorption gains({ 0.1, 0.05, 0.3, 0.25 });
-			const std::vector<Absorption<>> reflectionGains(numReverbSources, gains);
+			const std::vector<Absorption> reflectionGains(numReverbSources, gains);
 
 			// Long delay lines cause issues with the T60 estimation due to less frequent but larger drops in energy
 			Vec<> dimensions(std::vector<Real>({ RandomValue(0.1, 2.0), RandomValue(0.1, 5.0), RandomValue(0.1, 10.0) }));
@@ -207,7 +207,7 @@ namespace RAC
 
 			const Coefficients T60({ target, target, target, target });
 			const Absorption gains({ 0.1, 0.05, 0.3, 0.25 });
-			const std::vector<Absorption<>> reflectionGains(numReverbSources, gains);
+			const std::vector<Absorption> reflectionGains(numReverbSources, gains);
 
 			// Long delay lines cause issues with the T60 estimation due to less frequent but larger drops in energy
 			Vec<> dimensions(std::vector<Real>({ RandomValue(0.1, 2.0), RandomValue(0.1, 5.0), RandomValue(0.1, 10.0) }));
@@ -250,7 +250,7 @@ namespace RAC
 			// Long delay lines cause issues with the T60 estimation due to less frequent but larger drops in energy
 			Vec<> dimensions(std::vector<Real>({ 2.3, 1.5, 5.6 }));
 			FDN<> fdn(T60, dimensions, config);
-			fdn.SetTargetReflectionFilters(std::vector<Absorption<>>(numReverbSources, reflectionGains));
+			fdn.SetTargetReflectionFilters(std::vector<Absorption>(numReverbSources, reflectionGains));
 
 			Matrix<> in = Matrix<>::Zero(numReverbSources, numFrames);
 			in(0, 0) = 1.0;
@@ -292,7 +292,7 @@ namespace RAC
 			// Long delay lines cause issues with the T60 estimation due to less frequent but larger drops in energy
 			Vec<> dimensions(std::vector<Real>({ 2.3, 1.5, 5.6 }));
 			RandomOrthogonalFDN fdn(T60, dimensions, config);
-			fdn.SetTargetReflectionFilters(std::vector<Absorption<>>(numReverbSources, reflectionGains));
+			fdn.SetTargetReflectionFilters(std::vector<Absorption>(numReverbSources, reflectionGains));
 
 			Matrix<> in = Matrix<>::Zero(numReverbSources, numFrames);
 			in(0, 0) = 1.0;
@@ -329,7 +329,7 @@ namespace RAC
 			// Long delay lines cause issues with the T60 estimation due to less frequent but larger drops in energy
 			Vec<> dimensions(std::vector<Real>({ 2.3, 1.5, 5.6 }));
 			HouseHolderFDN fdn(T60, dimensions, config);
-			fdn.SetTargetReflectionFilters(std::vector<Absorption<>>(numReverbSources, reflectionGains));
+			fdn.SetTargetReflectionFilters(std::vector<Absorption>(numReverbSources, reflectionGains));
 
 			Matrix<> in = Matrix<>::Zero(numReverbSources, numFrames);
 			in(0, 0) = 1.0;

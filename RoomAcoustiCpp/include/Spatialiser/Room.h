@@ -87,9 +87,9 @@ namespace RAC
 				roomData.customT60 = t60;
 			}
 
-			size_t InitMaterial(const Absorption<>& material);
+			size_t InitMaterial(const Absorption& material);
 
-			inline void UpdateMaterial(size_t id, const Absorption<>& material)
+			inline void UpdateMaterial(size_t id, const Absorption& material)
 			{
 				std::lock_guard<std::mutex> lock(mMaterialMutex);
 				auto it = mMaterials.find(id);

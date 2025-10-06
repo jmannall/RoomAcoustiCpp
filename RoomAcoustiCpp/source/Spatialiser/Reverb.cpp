@@ -257,7 +257,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void SingleFDN::SetTargetOutputFilters(const std::vector<Absorption<>>& gains)
+		void SingleFDN::SetTargetOutputFilters(const std::vector<Absorption>& gains)
 		{
 			PROFILE_UpdateAudioData
 			if (!initialised.load(std::memory_order_acquire))
