@@ -28,11 +28,7 @@ namespace RAC
 		// NOTE!!! default values of Peaking filters 1000Hz, 1.0 gain. Not good for lr filter
 		class LinkwitzRiley
 		{
-#if MATRIX_LIBRARY == EIGEN_FLAG
 			typedef Coefficients<Real, 4> Parameters;
-#else
-			typedef Coefficients<Real, 4> Parameters;
-#endif
 		public:
 			/**
 			* @brief Constructor that initialises a default Linkwitz Riley filterbank

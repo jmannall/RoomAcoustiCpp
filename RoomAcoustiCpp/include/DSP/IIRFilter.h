@@ -303,11 +303,7 @@ namespace RAC
 		*/
 		class ZPKFilter : public IIRFilter2<>
 		{
-#if MATRIX_LIBRARY == EIGEN_FLAG
 			using Parameters = Coefficients<Real, 5>;
-#else
-			using Parameters = Coefficients<Real, 5>;
-#endif
 		public:
 			/**
 			* @brief Constructor that initialises a default second order IIRFilter with a given sample rate

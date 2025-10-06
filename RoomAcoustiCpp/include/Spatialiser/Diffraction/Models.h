@@ -916,11 +916,8 @@ namespace RAC
 			*/
 			class BTM : public Model
 			{
-#if MATRIX_LIBRARY == EIGEN_FLAG
-				using Parameters = Coefficients<Real, 4>;
-#else
 				using Parameters = Coefficients<Real, 4>; // Parameters type that stores 4 values
-#endif
+
 				/**
 				* @brief Struct that stores the limits for the integral calculation
 				*/
