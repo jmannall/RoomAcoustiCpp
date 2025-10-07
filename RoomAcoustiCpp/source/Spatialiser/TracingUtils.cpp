@@ -230,10 +230,6 @@ namespace RAC
             // 3) Parallel test + compute t.
             //    If |det| is tiny, treat as parallel (report no hit).
             //    Otherwise: t = (e2 · qvec) / det
-            //
-            // NOTE: We postpone the parallel test until here to mirror the control
-            // flow of your Plücker kernel (inside first, then parallel); we never
-            // divide by det before checking it.
             // ---------------------------------------------------------------------
             if (std::abs(det) <= EPS_PARALLEL) {
                 distance = qNaN;
