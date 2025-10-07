@@ -392,5 +392,8 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Eigen\ArrayBaseAddons.h">
       <Filter>Header Files\Eigen</Filter>
     </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Eigen\ArrayAddons.h">
+      <Filter>Header Files\Eigen</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

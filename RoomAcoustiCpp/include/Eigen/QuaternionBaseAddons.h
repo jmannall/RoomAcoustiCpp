@@ -8,5 +8,5 @@ EIGEN_DEVICE_FUNC inline Quaternion<Scalar> Normalised() const { return normaliz
 template <class OtherDerived>
 EIGEN_DEVICE_FUNC inline Scalar Dot(const QuaternionBase<OtherDerived>& other) const { return dot(other); }
 
-EIGEN_DEVICE_FUNC Quaternion<Scalar> Inverse() const { return inverse(); }
+EIGEN_DEVICE_FUNC Quaternion<Scalar> InverseMatrix() const { return inverse(); }
 EIGEN_DEVICE_FUNC Quaternion<Scalar> Conjugate() const { return conjugate(); }

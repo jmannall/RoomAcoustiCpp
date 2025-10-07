@@ -34,14 +34,26 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		template<typename T>
-		T FDNChannel<T>::GetOutput(const T input, const Real lerpFactor)
+		template<>
+		Real FDNChannel<Real>::GetOutput(const Real input, const Real lerpFactor)
 		{
 			if (idx >= mBuffer.Length())
 				idx = 0;
-			// T out = mAbsorptionFilter.GetOutput(mBuffer[idx], lerpFactor);
+			Real out = mAbsorptionFilter.GetOutput(mBuffer[idx], lerpFactor);
+			mBuffer[idx] = input;
+			++idx;
+			return out;
+		}
+
+		////////////////////////////////////////
+
+		template<>
+		Complex FDNChannel<Complex>::GetOutput(const Complex input, const Real lerpFactor)
+		{
+			if (idx >= mBuffer.Length())
+				idx = 0;
 			// TODO: Interpolate absorption if needed? - is this only changed on a full reset?
-			T out = absorption.load(std::memory_order_acquire) * mBuffer[idx];
+			Complex out = mAbsorptionFilter.load(std::memory_order_acquire) * mBuffer[idx];
 			mBuffer[idx] = input;
 			++idx;
 			return out;
@@ -111,127 +123,6 @@ namespace RAC
 					numbers(i) = original;
 				}
 			}
-		}
-
-		////////////////////////////////////////
-
-		template<>
-		FDN<Real>::FDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<DSPConfig> dspConfig, const Matrix<>& matrix) : x(dspConfig->GetData().fdnSize),
-			y(dspConfig->GetData().fdnSize), feedbackMatrix(matrix), mT60(nullptr), inputData(nullptr)
-		{
-			assert(T60 > 0);
-
-#if MATRIX_LIBRARY == EIGEN_FLAG
-			x.SetConstant(0.0);
-			y.SetConstant(0.0);
-#endif
-
-			// For the purpose of `powerNormalization`, see notes in FDN_private.h
-			powerNormalization = 0.0;
-
-			int fdnSize = dspConfig->GetData().fdnSize;
-			Vec<int> delayLengths = CalculateTimeDelay(dimensions, fdnSize, dspConfig->GetData().fs);
-			mChannels.reserve(fdnSize);
-			for (int i = 0; i < fdnSize; i++)
-			{
-				mChannels.push_back(std::make_unique<FDNChannel<Real>>(delayLengths(i), T60, dspConfig));
-				powerNormalization += static_cast<Real>(delayLengths(i));
-			}
-
-			powerNormalization = std::sqrt(powerNormalization / static_cast<Real>(fdnSize));
-		}
-
-		////////////////////////////////////////
-
-		// TODO: Work out how to remove obsolete constructors for each type
-		template<>
-		FDN<Real>::FDN(const Real T60, const Vec<int>& delayLengths, const std::shared_ptr<DSPConfig> dspConfig, const Matrix<>& matrix) : x(dspConfig->GetData().fdnSize),
-			y(dspConfig->GetData().fdnSize), feedbackMatrix(matrix), mT60(nullptr), inputData(nullptr)
-		{
-			assert(T60 > 0);
-
-#if MATRIX_LIBRARY == EIGEN_FLAG
-			x.SetConstant(0.0);
-			y.SetConstant(0.0);
-#endif
-
-			// For the purpose of `powerNormalization`, see notes in FDN_private.h
-			powerNormalization = 0.0;
-
-			int fdnSize = dspConfig->GetData().fdnSize;
-			mChannels.reserve(fdnSize);
-			for (int i = 0; i < fdnSize; i++)
-			{
-				mChannels.push_back(std::make_unique<FDNChannel<Real>>(delayLengths(i), T60, dspConfig));
-				powerNormalization += static_cast<Real>(delayLengths(i));
-			}
-
-			powerNormalization = std::sqrt(powerNormalization / static_cast<Real>(fdnSize));
-		}
-
-		////////////////////////////////////////
-
-		template<>
-		FDN<Complex>::FDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<DSPConfig> dspConfig, const Matrix<>& matrix) : x(dspConfig->GetData().fdnSize),
-			y(dspConfig->GetData().fdnSize), feedbackMatrix(matrix), ravesResidues(dspConfig->GetData().numReverbSources), mT60(0.0), inputData(dspConfig->GetData().numFrames), enabled(false)
-		{
-			assert(T60 > 0);
-
-#if MATRIX_LIBRARY == EIGEN_FLAG
-			x.SetConstant(0.0);
-			y.SetConstant(0.0);
-#endif
-
-			// For the purpose of `powerNormalization`, see notes in FDN_private.h
-			powerNormalization = 0.0;
-
-			int fdnSize = dspConfig->GetData().fdnSize;
-			Vec<int> delayLengths = CalculateTimeDelay(dimensions, fdnSize, dspConfig->GetData().fs);
-			mChannels.reserve(fdnSize);
-			for (int i = 0; i < fdnSize; i++)
-			{
-				mChannels.push_back(std::make_unique<FDNChannel<Complex>>(delayLengths(i), T60, dspConfig));
-				powerNormalization += static_cast<Real>(delayLengths(i));
-			}
-
-			powerNormalization = std::sqrt(powerNormalization / static_cast<Real>(fdnSize));
-		}
-
-		////////////////////////////////////////
-
-		// TODO: Check power normalization with different FDN size and numReverbSources
-		template<>
-		FDN<Complex>::FDN(const Real T60, const Vec<int>& delayLengths, const std::shared_ptr<DSPConfig> dspConfig, const Matrix<>& matrix) : x(dspConfig->GetData().fdnSize),
-			y(dspConfig->GetData().fdnSize), feedbackMatrix(matrix), ravesResidues(dspConfig->GetData().numReverbSources), mT60(T60), inputData(dspConfig->GetData().numFrames), enabled(false)
-		{
-			assert(T60 > 0);
-
-#if MATRIX_LIBRARY == EIGEN_FLAG
-			x.SetConstant(0.0);
-			y.SetConstant(0.0);
-#endif
-
-			// For the purpose of `powerNormalization`, see notes in FDN_private.h
-			powerNormalization = 0.0;
-
-			int fdnSize = dspConfig->GetData().fdnSize;
-			mChannels.reserve(fdnSize);
-			for (int i = 0; i < fdnSize; i++)
-			{
-				mChannels.push_back(std::make_unique<FDNChannel<Complex>>(delayLengths(i), T60, dspConfig));
-				powerNormalization += static_cast<Real>(delayLengths(i));
-			}
-
-			powerNormalization = std::sqrt(powerNormalization / static_cast<Real>(fdnSize));
-		}
-
-		////////////////////////////////////////
-
-		template<typename T>
-		void FDN<T>::SetTargetT60(const Coefficients<>& T60)
-		{
-			for (int i = 0; i < mChannels.size(); i++)
-				mChannels[i]->SetTargetT60(T60);
 		}
 
 		////////////////////////////////////////

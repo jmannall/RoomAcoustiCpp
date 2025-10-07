@@ -25,3 +25,11 @@ EIGEN_DEVICE_FUNC inline RowXpr Row(Index i) { return row(i); }
 EIGEN_DEVICE_FUNC inline ConstRowXpr Row(Index i) const { return row(i); }
 EIGEN_DEVICE_FUNC inline ColXpr Col(Index i) { return col(i); }
 EIGEN_DEVICE_FUNC inline ConstColXpr Col(Index i) const { return col(i); }
+
+template <typename OtherDerived>
+EIGEN_DEVICE_FUNC inline bool IsApprox(const DenseBase<OtherDerived>& other) const { return isApprox(other); }
+
+EIGEN_DEVICE_FUNC inline bool IsLessThan(const Scalar& value) const { return (this->derived() < value).all(); }
+EIGEN_DEVICE_FUNC inline bool IsGreaterThan(const Scalar& value) const { return (this->derived() > value).all(); }
+EIGEN_DEVICE_FUNC inline bool IsLessEqThan(const Scalar& value) const { return (this->derived() <= value).all(); }
+EIGEN_DEVICE_FUNC inline bool IsGreaterEqThan(const Scalar& value) const { return (this->derived() >= value).all(); }

@@ -40,7 +40,7 @@ namespace RAC
 			// TODO: Move to ray tracing thread
 			// shared_ptr<Reverb> sharedReverb = mReverb.lock();
 			// sharedReverb->GetReverbSourceDirections(reverbDirections);
-			// reverbAbsorptions = std::vector<Absorption>(static_cast<int>(reverbDirections.size()), Absorption(frequencyBands.Length()));
+			// reverbAbsorptions = std::vector<Coefficients<>>(static_cast<int>(reverbDirections.size()), Coefficients<>(frequencyBands.Length()));
 		}
 
 		////////////////////////////////////////
@@ -135,7 +135,7 @@ namespace RAC
 		{
 			int bounceIdx = static_cast<int>(intersections.size()) - 1;
 			imageSource.ResetAbsorption();
-			Absorption& absorption = imageSource.GetAbsorption();
+			Coefficients<>& absorption = imageSource.GetAbsorption();
 			bool valid = false;
 			if (imageSource.IsReflection(bounceIdx))
 			{
@@ -193,7 +193,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		bool ImageEdge::LinePlaneIntersection(const Vec3& start, const Vec3& end, const Plane& plane, Absorption& absorption, Vec3& intersection) const
+		bool ImageEdge::LinePlaneIntersection(const Vec3& start, const Vec3& end, const Plane& plane, Coefficients<>& absorption, Vec3& intersection) const
 		{
 			if (plane.LinePlaneIntersection(start, end))
 			{
@@ -205,7 +205,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		bool ImageEdge::LineWallIntersection(const Vec3& start, const Vec3& end, const std::vector<size_t>& wallIDs, Absorption& absorption, Vec3& intersection) const
+		bool ImageEdge::LineWallIntersection(const Vec3& start, const Vec3& end, const std::vector<size_t>& wallIDs, Coefficients<>& absorption, Vec3& intersection) const
 		{
 			for (const size_t wallID : wallIDs)
 			{
@@ -317,19 +317,19 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		Absorption ImageEdge::CalculateDirectivity(const Source::Data& source, const Vec3& point) const
+		Coefficients<> ImageEdge::CalculateDirectivity(const Source::Data& source, const Vec3& point) const
 		{
-			Absorption directivity(frequencyBands.Length());
+			Coefficients<> directivity(frequencyBands.Length());
 			Real ret = 0.0;
 			switch (source.directivity)
 			{
 			default:
 			case SourceDirectivity::omni:
-			{ directivity = 1.0; break; }
+			{ directivity.SetConstant(1.0); break; }
 			case SourceDirectivity::subcardioid:
 			{
 				Real angle = std::acos(source.forward.dot((point - source.position).Normalised()));
-				directivity = 0.7 + 0.3 * cos(angle);
+				directivity.SetConstant(0.7 + 0.3 * cos(angle));
 				break;
 			}
 			case SourceDirectivity::cardioid:
@@ -385,13 +385,13 @@ namespace RAC
 			}
 
 			if (ret != 0.0)
-				directivity = ret < EPS ? EPS : ret;
+				directivity.SetConstant(ret < EPS ? EPS : ret);
 			return directivity;
 		}
 
 		////////////////////////////////////////
 
-		Absorption ImageEdge::Direct(const Source::Data& source, bool lineOfSight)
+		Coefficients<> ImageEdge::Direct(const Source::Data& source, bool lineOfSight)
 		{
 			PROFILE_Direct
 			
@@ -424,7 +424,7 @@ namespace RAC
 #ifdef DEBUG_IEM
 				Debug::remove_path(IntToStr(source.id) + "s");
 #endif
-				return 0.0;
+				return Coefficients<>::Constant(frequencyBands.Length(), 0.0);
 			}
 		}
 
@@ -903,7 +903,7 @@ namespace RAC
 
 		void ImageEdge::InitImageSource(const Source::Data& source, const Vec3& intersection, ImageSourceData& imageSource, ImageSourceDataMap& imageSources, bool feedsFDN)
 		{
-			Absorption directivity(frequencyBands.Length());
+			Coefficients<> directivity(frequencyBands.Length());
 			directivity = CalculateDirectivity(source, intersection);
 			imageSource.AddAbsorption(directivity);
 

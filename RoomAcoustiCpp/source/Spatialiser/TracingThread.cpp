@@ -265,7 +265,7 @@ namespace RAC
 
 			// Reset contributions to 0
 			for (int dir_idx = 0; dir_idx < numReverbDirections; ++dir_idx)
-				reflectionGains[reverbDirectionIdx] = 0.0;
+				reflectionGains[reverbDirectionIdx].Reset();
 
 			hemispherePencil.getDistances(rayDistances);
 			hemispherePencil.getIndices(frontIndices, backIndices);

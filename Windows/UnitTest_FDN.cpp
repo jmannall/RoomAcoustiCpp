@@ -48,13 +48,13 @@ namespace RAC
 
 		TEST_METHOD(Reset)
 		{
-			const Coefficients T60({ 0.1, 0.2, 0.3, 0.4 });
-			const Absorption gains({ 0.87, 0.75, 0.81, 0.84 });
+			const Coefficients<> T60(std::vector<Real>({ 0.1, 0.2, 0.3, 0.4 }));
+			const Coefficients<> gains(std::vector<Real>({ 0.87, 0.75, 0.81, 0.84 }));
 			const std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>();
 			AudioData audioData(config);
 			int numReverbSources = config->GetData().numReverbSources;
 			int numFrames = config->GetData().numFrames;
-			const std::vector<Absorption> reflectionGains(numReverbSources, gains);
+			const std::vector<Coefficients<>> reflectionGains(numReverbSources, gains);
 
 			Vec<> dimensions(std::vector<Real>({ (Real)1.0, (Real)1.5, (Real)2.0 }));
 			FDN<> fdn(T60, dimensions, config);
@@ -88,13 +88,13 @@ namespace RAC
 
 		TEST_METHOD(ReflectionFilters)
 		{
-			const Coefficients T60({ 0.1, 0.2, 0.3, 0.4 });
-			const Absorption gains({ 1.0, 1.0, 1.0, 1.0 });
+			const Coefficients<> T60(std::vector<Real>({ 0.1, 0.2, 0.3, 0.4 }));
+			const Coefficients<> gains(std::vector<Real>({ 1.0, 1.0, 1.0, 1.0 }));
 			const std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>();
 			AudioData audioData(config);
 			int numReverbSources = config->GetData().numReverbSources;
 			int numFrames = config->GetData().numFrames;
-			const std::vector<Absorption> reflectionGains(numReverbSources, gains);
+			const std::vector<Coefficients<>> reflectionGains(numReverbSources, CalculateReflectance(gains));
 
 			Vec<> dimensions(std::vector<Real>({ (Real)1.0, (Real)1.5, (Real)2.0 }));
 			FDN<> fdn(T60, dimensions, config);
@@ -127,9 +127,9 @@ namespace RAC
 			const std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>(data);
 			AudioData audioData(config);
 
-			const Coefficients T60({ target, target, target, target });
-			const Absorption gains({ 0.1, 0.05, 0.3, 0.25 });
-			const std::vector<Absorption> reflectionGains(numReverbSources, gains);
+			const Coefficients<> T60(std::vector<Real>({ target, target, target, target }));
+			const Coefficients<> gains(std::vector<Real>({ 0.1, 0.05, 0.3, 0.25 }));
+			const std::vector<Coefficients<>> reflectionGains(numReverbSources, gains);
 
 			// Long delay lines cause issues with the T60 estimation due to less frequent but larger drops in energy
 			Vec<> dimensions(std::vector<Real>({ RandomValue((Real)0.1, (Real)2.0), RandomValue((Real)0.1, (Real)5.0), RandomValue((Real)0.1, (Real)10.0) }));
@@ -166,9 +166,9 @@ namespace RAC
 			const std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>(data);
 			AudioData audioData(config);
 
-			const Coefficients T60({ target, target, target, target });
-			const Absorption gains({ 0.1, 0.05, 0.3, 0.25 });
-			const std::vector<Absorption> reflectionGains(numReverbSources, gains);
+			const Coefficients<> T60(std::vector<Real>({ target, target, target, target }));
+			const Coefficients<> gains(std::vector<Real>({ 0.1, 0.05, 0.3, 0.25 }));
+			const std::vector<Coefficients<>> reflectionGains(numReverbSources, gains);
 
 			// Long delay lines cause issues with the T60 estimation due to less frequent but larger drops in energy
 			Vec<> dimensions(std::vector<Real>({ RandomValue(0.1, 2.0), RandomValue(0.1, 5.0), RandomValue(0.1, 10.0) }));
@@ -205,9 +205,9 @@ namespace RAC
 			const std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>(data);
 			AudioData audioData(config);
 
-			const Coefficients T60({ target, target, target, target });
-			const Absorption gains({ 0.1, 0.05, 0.3, 0.25 });
-			const std::vector<Absorption> reflectionGains(numReverbSources, gains);
+			const Coefficients<> T60(std::vector<Real>({ target, target, target, target }));
+			const Coefficients<> gains(std::vector<Real>({ 0.1, 0.05, 0.3, 0.25 }));
+			const std::vector<Coefficients<>> reflectionGains(numReverbSources, gains);
 
 			// Long delay lines cause issues with the T60 estimation due to less frequent but larger drops in energy
 			Vec<> dimensions(std::vector<Real>({ RandomValue(0.1, 2.0), RandomValue(0.1, 5.0), RandomValue(0.1, 10.0) }));
@@ -244,13 +244,13 @@ namespace RAC
 			const std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>(data);
 			AudioData audioData(config);
 
-			const Coefficients T60({ target, target, target, target });
-			const Absorption reflectionGains({ 0.1, 0.05, 0.3, 0.25 });
+			const Coefficients<> T60(std::vector<Real>({ target, target, target, target }));
+			const Coefficients<> reflectionGains(std::vector<Real>({ 0.1, 0.05, 0.3, 0.25 }));
 
 			// Long delay lines cause issues with the T60 estimation due to less frequent but larger drops in energy
 			Vec<> dimensions(std::vector<Real>({ 2.3, 1.5, 5.6 }));
 			FDN<> fdn(T60, dimensions, config);
-			fdn.SetTargetReflectionFilters(std::vector<Absorption>(numReverbSources, reflectionGains));
+			fdn.SetTargetReflectionFilters(std::vector<Coefficients<>>(numReverbSources, reflectionGains));
 
 			Matrix<> in = Matrix<>::Zero(numReverbSources, numFrames);
 			in(0, 0) = 1.0;
@@ -286,13 +286,13 @@ namespace RAC
 			const std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>(data);
 			AudioData audioData(config);
 
-			const Coefficients T60({ target, target, target, target });
-			const Absorption reflectionGains({ 0.1, 0.05, 0.3, 0.25 });
+			const Coefficients<> T60(std::vector<Real>({ target, target, target, target }));
+			const Coefficients<> reflectionGains(std::vector<Real>({ 0.1, 0.05, 0.3, 0.25 }));
 
 			// Long delay lines cause issues with the T60 estimation due to less frequent but larger drops in energy
 			Vec<> dimensions(std::vector<Real>({ 2.3, 1.5, 5.6 }));
 			RandomOrthogonalFDN fdn(T60, dimensions, config);
-			fdn.SetTargetReflectionFilters(std::vector<Absorption>(numReverbSources, reflectionGains));
+			fdn.SetTargetReflectionFilters(std::vector<Coefficients<>>(numReverbSources, reflectionGains));
 
 			Matrix<> in = Matrix<>::Zero(numReverbSources, numFrames);
 			in(0, 0) = 1.0;
@@ -323,13 +323,13 @@ namespace RAC
 			const std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>(data);
 			AudioData audioData(config);
 
-			const Coefficients T60({ target, target, target, target });
-			const Absorption reflectionGains({ 0.1, 0.05, 0.3, 0.25 });
+			const Coefficients<> T60(std::vector<Real>({ target, target, target, target }));
+			const Coefficients<> reflectionGains(std::vector<Real>({ 0.1, 0.05, 0.3, 0.25 }));
 
 			// Long delay lines cause issues with the T60 estimation due to less frequent but larger drops in energy
 			Vec<> dimensions(std::vector<Real>({ 2.3, 1.5, 5.6 }));
 			HouseHolderFDN fdn(T60, dimensions, config);
-			fdn.SetTargetReflectionFilters(std::vector<Absorption>(numReverbSources, reflectionGains));
+			fdn.SetTargetReflectionFilters(std::vector<Coefficients<>>(numReverbSources, reflectionGains));
 
 			Matrix<> in = Matrix<>::Zero(numReverbSources, numFrames);
 			in(0, 0) = 1.0;

@@ -23,6 +23,7 @@
 // Common headers
 #include "Common/Types.h"
 #include "Common/Complex.h"
+#include "Common/Coefficients.h"
 
 // Spatialiser headers
 #include "Spatialiser/Diffraction/Path.h"
@@ -900,7 +901,7 @@ namespace RAC
 				Complex FresnelIntegral(Real x) const;
 
 				const Parameters k = LinkwitzRiley::DefaultFM() * PI_2 / SPEED_OF_SOUND;	// Wave numbers for calculating UTD gains
-				const std::array<Complex, 4> E = InitE();									// Coefficients for the UTD calculation
+				const std::array<Complex, 4> E = InitE();									// Coefficients<> for the UTD calculation
 
 				LinkwitzRiley lrFilter;		// Linkwitz Riley filterbank
 			};
@@ -979,10 +980,10 @@ namespace RAC
 						Real minus = path.sData.t - path.rData.t;
 						theta = Parameters({ PI_1 + plus, PI_1 + minus, PI_1 - minus, PI_1 - plus });
 						vTheta = v * theta;
-						thetaSq = theta * theta;
-						absTheta = Abs(vTheta);
-						sinTheta = Sin(vTheta);
-						cosTheta = Cos(vTheta);
+						thetaSq = theta.Square();
+						absTheta = vTheta.Abs();
+						sinTheta = vTheta.Sin();
+						cosTheta = vTheta.Cos();
 
 						int n0 = (int)round(samplesPerMetre * R0);
 						Real x = (n0 + 0.5) / samplesPerMetre;

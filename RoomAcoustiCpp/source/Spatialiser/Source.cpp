@@ -172,25 +172,26 @@ namespace RAC
 		void Source::UpdateDirectivity(const SourceDirectivity directivity, const Coefficients<>& frequencyBands, const int numLateReverbChannels)
 		{
 			GetAccess();
-			Coefficients<> reverbInput = Coefficients<>(frequencyBands.Length(), (Real)1.0);
+			Coefficients<> reverbInput = Coefficients<>::Constant(frequencyBands.Length(), 1.0);
 			switch (directivity)
 			{
+			default:
 			case SourceDirectivity::omni:
 				break;
 			case SourceDirectivity::subcardioid:
-				reverbInput = (Real)(1.0 / 1.3);	// 1 / Directivity Factor (DF) -> DF = 10 ^ (Directivity Index / 20) 
+				reverbInput.SetConstant((Real)(1.0 / 1.3));	// 1 / Directivity Factor (DF) -> DF = 10 ^ (Directivity Index / 20) 
 				break;
 			case SourceDirectivity::cardioid:
-				reverbInput = (Real)(1.0 / 1.7);
+				reverbInput.SetConstant((Real)(1.0 / 1.7));
 				break;
 			case SourceDirectivity::supercardioid:
-				reverbInput = (Real)(1.0 / 1.9);
+				reverbInput.SetConstant((Real)(1.0 / 1.9));
 				break;
 			case SourceDirectivity::hypercardioid:
-				reverbInput = (Real)(0.5);
+				reverbInput.SetConstant((Real)(0.5));
 				break;
 			case SourceDirectivity::bidirectional:
-				reverbInput = (Real)(1.0 / 1.7);
+				reverbInput.SetConstant((Real)(1.0 / 1.7));
 				break;
 			case SourceDirectivity::genelec8020c:
 				reverbInput = GENELEC.AverageResponse(frequencyBands);

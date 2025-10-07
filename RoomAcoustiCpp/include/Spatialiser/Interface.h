@@ -191,9 +191,9 @@ namespace RAC
 		*/
 		void RemoveSource(const size_t id);
 
-		int InitMaterial(const Absorption& material);
+		int InitMaterial(const Coefficients<>& material);
 
-		void UpdateMaterial(size_t id, const Absorption& material);
+		void UpdateMaterial(size_t id, const Coefficients<>& material);
 
 		void RemoveMaterial(size_t id);
 

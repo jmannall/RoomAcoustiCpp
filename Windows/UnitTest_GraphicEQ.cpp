@@ -20,8 +20,8 @@ namespace RAC
 
 		TEST_METHOD(Invalid)
 		{
-			const Coefficients gain(std::vector<Real>(5, 0.0));
-			const Coefficients fc({ 250.0, 500.0, 1000.0, 2000.0, 4000.0 });
+			const Coefficients<> gain = Coefficients<>::Constant(5, 0.0);
+			const Coefficients<> fc(std::vector<Real>({ 250.0, 500.0, 1000.0, 2000.0, 4000.0 }));
 			const Real Q = 0.98;
 			const int fs = 48e3;
 
@@ -57,7 +57,8 @@ namespace RAC
 			std::vector<Real> g3(inputData[3]);
 			std::vector<Real> g4(inputData[4]);
 
-			Coefficients fc = Coefficients({ 250.0, 500.0, 1000.0, 2000.0, 4000.0 });
+			const Coefficients<> fc(std::vector<Real>({ 250.0, 500.0, 1000.0, 2000.0, 4000.0 }));
+
 			Real Q = 0.98;
 			int fs = 48e3;
 			int numFrames = 256;
@@ -66,12 +67,11 @@ namespace RAC
 			in[0] = 1.0;
 
 			int numTests = g0.size();
-			std::vector<Coefficients<>> gains = std::vector<Coefficients<>>(numTests, Coefficients(5));
 			for (int i = 1; i < numTests; i++)
 			{
 				Buffer out = Buffer(numFrames);
 
-				Coefficients gain = Coefficients({ g0[i], g1[i], g2[i], g3[i], g4[i] });
+				Coefficients<> gain = Coefficients<>(std::vector<Real>({ g0[i], g1[i], g2[i], g3[i], g4[i] }));
 				GraphicEQ<> eq = GraphicEQ<>(gain, fc, Q, fs);
 				eq.ProcessAudio(in, out, lerpFactor);
 
@@ -89,15 +89,15 @@ namespace RAC
 
 		TEST_METHOD(IsInterpolating)
 		{
-			const Coefficients gain(std::vector<Real>(5, 0.7));
-			const Coefficients fc({ 250.0, 500.0, 1000.0, 2000.0, 4000.0 });
+			const Coefficients<> gain = Coefficients<>::Constant(5, 0.7);
+			const Coefficients<> fc(std::vector<Real>({ 250.0, 500.0, 1000.0, 2000.0, 4000.0 }));
 			const Real Q = 0.98;
 			const int fs = 48e3;
 
 			const Real lerpFactor = 0.5;
 
 
-			GraphicEQ<> eq = GraphicEQ<>(gain, fc, Q, fs);
+			GraphicEQ<> eq(gain, fc, Q, fs);
 
 			Real out = eq.GetOutput(1.0, lerpFactor);
 			Assert::AreEqual((Real)0.7, out, (Real)10e-16, L"Wrong output");
@@ -110,8 +110,8 @@ namespace RAC
 
 		TEST_METHOD(ClearBuffers)
 		{
-			const Coefficients gain({0.3, 0.4, 0.25, 0.21, 0.4});
-			const Coefficients fc({ 250.0, 500.0, 1000.0, 2000.0, 4000.0 });
+			const Coefficients<> gain(std::vector<Real>({0.3, 0.4, 0.25, 0.21, 0.4}));
+			const Coefficients<> fc(std::vector<Real>({ 250.0, 500.0, 1000.0, 2000.0, 4000.0 }));
 			const Real Q = 0.98;
 			const int fs = 48e3;
 
@@ -131,8 +131,8 @@ namespace RAC
 
 		TEST_METHOD(NegativeGain)
 		{
-			const Coefficients gain({ -0.8, -0.4, -0.15, -0.83, -0.75 });
-			const Coefficients fc({ 250.0, 500.0, 1000.0, 2000.0, 4000.0 });
+			const Coefficients<> gain(std::vector({ -0.8, -0.4, -0.15, -0.83, -0.75 }));
+			const Coefficients<> fc(std::vector<Real>({ 250.0, 500.0, 1000.0, 2000.0, 4000.0 }));
 			const Real Q = 0.98;
 			const int fs = 48e3;
 
@@ -155,8 +155,8 @@ namespace RAC
 
 		TEST_METHOD(IsZero)
 		{
-			const Coefficients gain(std::vector<Real>(5, 0.7));
-			const Coefficients fc({ 250.0, 500.0, 1000.0, 2000.0, 4000.0 });
+			const Coefficients<> gain = Coefficients<>::Constant(5, 0.7);
+			const Coefficients<> fc(std::vector<Real>({ 250.0, 500.0, 1000.0, 2000.0, 4000.0 }));
 			const Real Q = 0.98;
 			const int fs = 48e3;
 
@@ -182,8 +182,8 @@ namespace RAC
 		{
 			Real startGain = 0.7;
 			Real endGain = 0.5;
-			const Coefficients gain(std::vector<Real>(1, startGain));
-			const Coefficients fc(1, 500.0);
+			const Coefficients<> gain = Coefficients<>::Constant(1, startGain);
+			const Coefficients<> fc = Coefficients<>::Constant(1, 500.0);
 			const Real Q = 0.98;
 			const int fs = 48e3;
 

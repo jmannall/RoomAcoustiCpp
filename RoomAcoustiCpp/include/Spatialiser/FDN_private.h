@@ -47,16 +47,14 @@ namespace RAC
 			* @param T60 Target decay time
 			* @param config Configuration of the spatialiser
 			*/
-			// template <typename U = T, std::enable_if_t<std::is_same_v<U, Real>, bool> = true>
-			FDNChannel(const int delayLength, const Coefficients<>& T60, const std::shared_ptr<DSPConfig> dspConfig) requires std::is_same_v<T, Real> :
+			FDNChannel(const int delayLength, const Coefficients<>& T60, const std::shared_ptr<DSPConfig>& dspConfig) requires std::is_same_v<T, Real> :
 				mT(static_cast<Real>(delayLength) / dspConfig->GetData().fs), mBuffer(delayLength),
-				absorption(CalculateFilterGains(T60)[0]), mAbsorptionFilter(CalculateFilterGains(T60), dspConfig->GetData().frequencyBands, dspConfig->GetData().Q, dspConfig->GetData().fs),
+				mAbsorptionFilter(CalculateFilterGains(T60), dspConfig->GetData().frequencyBands, dspConfig->GetData().Q, dspConfig->GetData().fs),
 				mReflectionFilter(dspConfig->GetData().frequencyBands, dspConfig->GetData().Q, dspConfig->GetData().fs) {}
 
-			template <typename U = T, std::enable_if_t<std::is_same_v<U, Complex>, bool> = true>
-			FDNChannel(const int delayLength, const Coefficients<>& T60, const std::shared_ptr<DSPConfig> dspConfig) requires std::is_same_v<T, Complex> :
+			FDNChannel(const int delayLength, const Real T60, const std::shared_ptr<DSPConfig>& dspConfig) requires std::is_same_v<T, Complex> :
 				mT(static_cast<Real>(delayLength) / dspConfig->GetData().fs), mBuffer(delayLength),
-				absorption(CalculateFilterGains(T60)[0]), mAbsorptionFilter(CalculateFilterGains(T60), dspConfig->GetData().frequencyBands, dspConfig->GetData().Q, dspConfig->GetData().fs) {}
+				mAbsorptionFilter(CalculateFilterGains(T60)) {}
 
 			/**
 			* @brief Default deconstructor
@@ -69,8 +67,8 @@ namespace RAC
 			* @param T60 The new target decay time
 			*/
 			inline void SetTargetT60(const Coefficients<>& T60)
+			requires std::is_same_v<T, Real>
 			{
-				absorption.store(CalculateFilterGains(T60)[0], std::memory_order_release);
 				mAbsorptionFilter.SetTargetGains(CalculateFilterGains(T60));
 			}
 
@@ -99,7 +97,6 @@ namespace RAC
 			inline void Reset() requires std::is_same_v<T, Complex>
 			{
 				mBuffer.Reset();
-				mAbsorptionFilter.ClearBuffers();
 			}
 
 			/**
@@ -127,19 +124,32 @@ namespace RAC
 		private:
 
 			/**
-			* @brief Calculates the filter gain coefficients required for a give T60
+			* @brief Calculates the filter gain Coefficients<> required for a give T60
 			*
 			* @param T60 The target decay time
 			* @return The required filter gain coefficients
 			*/
-			inline Coefficients<> CalculateFilterGains(const Coefficients<>& T60) const { return (-3.0 * mT / T60).Pow10(); } // 20 * log10(H(f)) = -60 * t / t60(f);
+			inline Coefficients<> CalculateFilterGains(const Coefficients<>& T60) const
+			requires std::is_same_v<T, Real> { return (-3.0 * mT / T60).Pow10(); } // 20 * log10(H(f)) = -60 * t / t60(f);
+
+			/**
+			* @brief Calculates the gain required for a give T60
+			*
+			* @param T60 The target decay time
+			* @return The required gain
+			*/
+			inline Real CalculateFilterGains(const Real T60) const
+			requires std::is_same_v<T, Complex> { return Pow10(-3.0 * mT / T60); } // 20 * log10(H(f)) = -60 * t / t60(f);
+
 
 			const Real mT;		// The current delay in seconds
 			Buffer<T> mBuffer;	// The internal delay line
 			int idx{ 0 };		// Current delay line read index
 
-			std::atomic<Real> absorption;
-			GraphicEQ<T> mAbsorptionFilter;		// The absorption filter to match the target decay time
+			std::conditional_t<std::is_same_v<T, Real>,
+				GraphicEQ<Real>, std::atomic<Real>> mAbsorptionFilter;
+			// std::atomic<Real> absorption;
+			// GraphicEQ<T> mAbsorptionFilter;		// The absorption filter to match the target decay time
 			std::conditional_t<std::is_same_v<T, Real>,
 				GraphicEQ<Real>, std::nullptr_t> mReflectionFilter;		// The reflection filter on the FDN output
 		};
@@ -159,7 +169,8 @@ namespace RAC
 			* @param dimensions Primary room dimensions that determine delay line lengths
 			* @param dspConfig The spatialiser configuration
 			*/
-			FDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<DSPConfig>& dspConfig) : FDN(T60, dimensions, dspConfig, InitMatrix(dspConfig->GetData().fdnSize)) {}
+			FDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<DSPConfig>& dspConfig) requires std::is_same_v<T, Real> :
+				FDN(T60, dimensions, dspConfig, InitMatrix(dspConfig->GetData().fdnSize)) {}
 
 			/**
 			* @brief Initialises an FDN with a target T60 and given delay line lengths
@@ -169,7 +180,8 @@ namespace RAC
 			* @param delayLengths Delay line lengths (in samples)
 			* @param dspConfig The spatialiser configuration
 			*/
-			FDN(const Real T60, const Vec<int>& delayLengths, const std::shared_ptr<DSPConfig>& dspConfig) : FDN(T60, delayLengths, dspConfig, InitMatrix(dspConfig->GetData().fdnSize)) {}
+			FDN(const Real T60, const Vec<int>& delayLengths, const std::shared_ptr<DSPConfig>& dspConfig) requires std::is_same_v<T, Complex> :
+				FDN(T60, delayLengths, dspConfig, InitMatrix(dspConfig->GetData().fdnSize)) {}
 
 			/**
 			* @brief Default deconstructor
@@ -181,7 +193,12 @@ namespace RAC
 			*
 			* @param T60 The new decay time
 			*/
-			void SetTargetT60(const Coefficients<>& T60);
+			inline void SetTargetT60(const Coefficients<>& T60)
+			requires std::is_same_v<T, Real>
+			{
+				for (int i = 0; i < mChannels.size(); i++)
+					mChannels[i]->SetTargetT60(T60);
+			}
 
 			inline void SetTargetResidues(const Coefficients<>& residues)
 			requires std::is_same_v<T, Complex>
@@ -197,7 +214,7 @@ namespace RAC
 			* @param gains The target reflection filter gains for each channel
 			* @return True if all channels have zero target reflection gains, false otherwise
 			*/
-			inline bool SetTargetReflectionFilters(const std::vector<Absorption>& gains)
+			inline bool SetTargetReflectionFilters(const std::vector<Coefficients<>>& gains)
 			requires std::is_same_v<T, Real>
 			{
 				// assert(gains.size() == mChannels.size());
@@ -270,7 +287,31 @@ namespace RAC
 			* @param config The spatialiser configuration
 			* @param matrix The feedback matrix to use for the FDN
 			*/
-			FDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<DSPConfig> dspConfig, const Matrix<>& matrix);
+			FDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<DSPConfig> dspConfig, const Matrix<>& matrix)
+			requires std::is_same_v<T, Real> : x(dspConfig->GetData().fdnSize),
+			y(dspConfig->GetData().fdnSize), feedbackMatrix(matrix), mT60(nullptr), inputData(nullptr)
+			{
+				assert(T60.IsGreaterThan(0.0));
+
+#if MATRIX_LIBRARY == EIGEN_FLAG
+				x.SetConstant(0.0);
+				y.SetConstant(0.0);
+#endif
+
+				// For the purpose of `powerNormalization`, see notes in FDN_private.h
+				powerNormalization = 0.0;
+
+				int fdnSize = dspConfig->GetData().fdnSize;
+				Vec<int> delayLengths = CalculateTimeDelay(dimensions, fdnSize, dspConfig->GetData().fs);
+				mChannels.reserve(fdnSize);
+				for (int i = 0; i < fdnSize; i++)
+				{
+					mChannels.push_back(std::make_unique<FDNChannel<Real>>(delayLengths(i), T60, dspConfig));
+					powerNormalization += static_cast<Real>(delayLengths(i));
+				}
+
+				powerNormalization = std::sqrt(powerNormalization / static_cast<Real>(fdnSize));
+			}
 
 			/**
 			* @brief Initialises an FDN with a target T60 and given delay line lengths
@@ -280,7 +321,30 @@ namespace RAC
 			* @param config The spatialiser configuration
 			* @param matrix The feedback matrix to use for the FDN
 			*/
-			FDN(const Real T60, const Vec<int>& delayLengths, const std::shared_ptr<DSPConfig> dspConfig, const Matrix<>& matrix);
+			FDN(const Real T60, const Vec<int>& delayLengths, const std::shared_ptr<DSPConfig> dspConfig, const Matrix<>& matrix)
+			requires std::is_same_v<T, Complex> : x(dspConfig->GetData().fdnSize),
+			y(dspConfig->GetData().fdnSize), feedbackMatrix(matrix), ravesResidues(dspConfig->GetData().numReverbSources), mT60(T60), inputData(dspConfig->GetData().numFrames), enabled(false)
+			{
+				assert(T60 > 0);
+
+#if MATRIX_LIBRARY == EIGEN_FLAG
+				x.SetConstant(0.0);
+				y.SetConstant(0.0);
+#endif
+
+				// For the purpose of `powerNormalization`, see notes in FDN_private.h
+				powerNormalization = 0.0;
+
+				int fdnSize = dspConfig->GetData().fdnSize;
+				mChannels.reserve(fdnSize);
+				for (int i = 0; i < fdnSize; i++)
+				{
+					mChannels.push_back(std::make_unique<FDNChannel<Complex>>(delayLengths(i), T60, dspConfig));
+					powerNormalization += static_cast<Real>(delayLengths(i));
+				}
+
+				powerNormalization = std::sqrt(powerNormalization / static_cast<Real>(fdnSize));
+			}
 
 			/**
 			* @brief Processes a square feedback matrix
@@ -419,7 +483,7 @@ namespace RAC
 			* @param dspConfig The spatialiser configuration
 			*/
 			HouseHolderFDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<DSPConfig>& dspConfig)
-				: FDN<T>(T60, dimensions, dspConfig, Matrix<>()), houseHolderFactor(2.0 / static_cast<Real>(dspConfig->GetData().fdnSize)) {}
+				requires std::is_same_v<T, Real> : FDN<T>(T60, dimensions, dspConfig, Matrix<>()), houseHolderFactor(2.0 / static_cast<Real>(dspConfig->GetData().fdnSize)) {}
 			
 			/**
 			* @brief Initialises an FDN with a target T60 and given delay line lengths
@@ -430,7 +494,7 @@ namespace RAC
 			* @param dspConfig The spatialiser configuration
 			*/
 			HouseHolderFDN(const Real T60, const Vec<int>& delayLengths, const std::shared_ptr<DSPConfig>& dspConfig)
-				: FDN<T>(T60, delayLengths, dspConfig, Matrix<>()), houseHolderFactor(2.0 / static_cast<Real>(dspConfig->GetData().fdnSize)) {}
+				requires std::is_same_v<T, Complex> : FDN<T>(T60, delayLengths, dspConfig, Matrix<>()), houseHolderFactor(2.0 / static_cast<Real>(dspConfig->GetData().fdnSize)) {}
 
 			/**
 			* @brief Default deconstructor
@@ -465,7 +529,7 @@ namespace RAC
 			* @param dspConfig The spatialiser configuration
 			*/
 			RandomOrthogonalFDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<DSPConfig>& dspConfig)
-				: FDN<T>(T60, dimensions, dspConfig, InitMatrix(dspConfig->GetData().fdnSize)) {}
+				requires std::is_same_v<T, Real> : FDN<T>(T60, dimensions, dspConfig, InitMatrix(dspConfig->GetData().fdnSize)) {}
 
 			/**
 			* @brief Initialises an FDN with a target T60 and given delay line lengths
@@ -476,7 +540,7 @@ namespace RAC
 			* @param dspConfig The spatialiser configuration
 			*/
 			RandomOrthogonalFDN(const Real T60, const Vec<int>& delayLengths, const std::shared_ptr<DSPConfig>& dspConfig)
-				: FDN<T>(T60, delayLengths, dspConfig, InitMatrix(dspConfig->GetData().fdnSize)) {}
+				requires std::is_same_v<T, Complex> : FDN<T>(T60, delayLengths, dspConfig, InitMatrix(dspConfig->GetData().fdnSize)) {}
 
 			/**
 			* @brief Default deconstructor

@@ -75,10 +75,10 @@ namespace RAC
 		TEST_METHOD(Coefficients_Class)
 		{
 			std::vector<Real> start = { 1.0, 4.0, 3.0, 2.0 };
-			Coefficients current = Coefficients(start);
+			Coefficients<> current = Coefficients<>(start);
 
 			std::vector<Real> end = { 0.0, 2.0, 4.0, 2.0 };
-			Coefficients target = Coefficients(end);
+			Coefficients<> target = Coefficients<>(end);
 			Real lerpFactor = 0.2;
 			Lerp(current, target, lerpFactor);
 

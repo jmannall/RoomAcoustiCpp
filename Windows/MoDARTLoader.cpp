@@ -85,9 +85,9 @@ int BestBandMatch(float targetBand, Coefficients<> referenceBands)
     }
 }
 
-Absorption ResizeCoeffs(Coefficients<> targetFreqs, Coefficients<> inputFreqs, Absorption inputCoeffs)
+Coefficients<> ResizeCoeffs(Coefficients<> targetFreqs, Coefficients<> inputFreqs, Coefficients<> inputCoeffs)
 {
-    Absorption resizedCoeffs(targetFreqs.Length());
+    Coefficients<> resizedCoeffs(targetFreqs.Length());
 
     if (inputFreqs.Length() != inputCoeffs.Length() || inputFreqs.Length() < 1)
     {
@@ -103,7 +103,7 @@ Absorption ResizeCoeffs(Coefficients<> targetFreqs, Coefficients<> inputFreqs, A
 
 ////////////////////////////////////////
 
-bool LoadMaterialsFromCsv(const std::string& mtlFilePath, Coefficients<>& outFrequencies, std::unordered_map<std::string, Absorption>& outAbsorption, std::unordered_map<std::string, Coefficients<>>& outScattering)
+bool LoadMaterialsFromCsv(const std::string& mtlFilePath, Coefficients<>& outFrequencies, std::unordered_map<std::string, Coefficients<>>& outAbsorption, std::unordered_map<std::string, Coefficients<>>& outScattering)
 {
     std::ifstream file(mtlFilePath);
     if (!file.is_open())
@@ -358,7 +358,7 @@ bool LoadModesFromCsv(const std::string& modalDataFilePath, int numFreqBands, in
 
 bool SendWallsToRAC(const std::string& modartFolder, const Coefficients<>& targetFreqs, Coefficients<>& frequencies)
 {
-    std::unordered_map<std::string, Absorption> absorption;
+    std::unordered_map<std::string, Coefficients<>> absorption;
     std::unordered_map<std::string, Coefficients<>> scattering;
     std::string mtlFilePath = modartFolder + "/materials.csv";
 
@@ -389,7 +389,7 @@ bool SendWallsToRAC(const std::string& modartFolder, const Coefficients<>& targe
             continue;
         }
 
-        Absorption absResized = ResizeCoeffs(targetFreqs, frequencies, it->second);
+        Coefficients<> absResized = ResizeCoeffs(targetFreqs, frequencies, it->second);
         UpdateMaterial(patchIndex, absResized);
 
         // Convert x, y, z to -x, z, y (RAC uses Unity coordinate system, left hand rule and y is up)

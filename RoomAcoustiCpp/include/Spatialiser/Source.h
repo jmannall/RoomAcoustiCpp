@@ -54,7 +54,7 @@ namespace RAC
 			*/
 			struct DSPParameters
 			{
-				Absorption directivity;	// Frequency dependent directivity
+				Coefficients<> directivity;	// Frequency dependent directivity
 				bool feedsFDN;				// True if direct sound feeds the late reverberation, false otherwise
 
 				DSPParameters(int len, bool feedsFDN) : directivity(len), feedsFDN(feedsFDN) {}

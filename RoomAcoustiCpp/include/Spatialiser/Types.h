@@ -39,7 +39,7 @@ namespace RAC
 
 		typedef std::unordered_map<size_t, Plane> PlaneMap;									// Store planes
 		typedef std::unordered_map<size_t, Wall> WallMap;									// Store walls
-		typedef std::unordered_map<size_t, Absorption> MaterialMap;						// Store materials
+		typedef std::unordered_map<size_t, Coefficients<>> MaterialMap;						// Store materials
 		typedef std::unordered_map<size_t, Edge> EdgeMap;									// Store edges
 		typedef std::unordered_map<size_t, Source> SourceMap;								// Store sources
 		typedef std::unordered_map<std::string, ImageSource> ImageSourceMap;				// Store image sources
@@ -121,7 +121,7 @@ namespace RAC
 			Coefficients<> frequencyBands;				// Frequency band center frequencies
 			int numFrequencyBands{ 0 };					// Number of frequency bands
 
-			DSPData() : frequencyBands(Coefficients<>({ (Real)250.0, (Real)500.0, (Real)1000.0, (Real)2000.0 }))
+			DSPData() : frequencyBands(Coefficients<>(std::vector<Real>({ (Real)250.0, (Real)500.0, (Real)1000.0, (Real)2000.0 })))
 			{}
 
 			DSPData(int sampleRate, int numFrames, int numReverbSources, int fdnSize, Real lerpFactor, Real Q, Coefficients<> frequencyBands) :
@@ -374,7 +374,7 @@ namespace RAC
 				volume = std::max(volume, (Real)0.001);
 
 				if (customT60.Length() != numFrequencyBands) // Invalid number of frequency bands
-					customT60 = Coefficients<>(numFrequencyBands, (Real)1.0); // Default T60
+					customT60 = Coefficients<>::Constant(numFrequencyBands, (Real)1.0); // Default T60
 				for (int i = 0; i < customT60.Length(); i++) // Ensure T60 is positive
 					customT60[i] = std::max(customT60[i], (Real)0.0);
 			}

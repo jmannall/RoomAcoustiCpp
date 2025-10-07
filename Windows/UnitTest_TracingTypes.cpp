@@ -59,7 +59,7 @@ namespace RAC
 			allVertices[41] = Vec3({ 0.0, 1.0, 10.0 });
 
 			Vertices testVertices;
-			Absorption testAbsorption(0.5);
+			Coefficients<> testAbsorption = Coefficients<>::Constant(1, 0.5);
 			int node = 0;
 			for (int i = 0; i < 40; i += 3) {
 				testVertices = Vertices({ allVertices[i], allVertices[i + 1], allVertices[i + 2] });

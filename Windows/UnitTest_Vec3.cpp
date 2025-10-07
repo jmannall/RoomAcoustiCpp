@@ -103,7 +103,7 @@ namespace RAC
 			Assert::AreEqual((Real)9.0, z.z(), L"Error 2 z");
 		}
 
-#if MATRIX_LIBRARY == USE_CUSTOM
+#if MATRIX_LIBRARY == CUSTOM_FLAG
 		TEST_METHOD(Divide)
 		{
 

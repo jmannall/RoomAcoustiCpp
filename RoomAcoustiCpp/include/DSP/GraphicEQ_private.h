@@ -44,7 +44,7 @@ namespace RAC
 			* @param Q The Q factor for the filters
 			* @param sampleRate The sample rate for calculating the filter coefficients
 			*/
-			GraphicEQ(const Coefficients<>& fc, const Real Q, const int sampleRate) : GraphicEQ(Coefficients<>(fc.Length(), 0.0), fc, Q, sampleRate) {}
+			GraphicEQ(const Coefficients<>& fc, const Real Q, const int sampleRate) : GraphicEQ(Coefficients<>::Zero(fc.Length()), fc, Q, sampleRate) {}
 
 			/**
 			* @brief Constructor that initialises the GraphicEQ with given gains, frequency bands, Q factor and sample rate

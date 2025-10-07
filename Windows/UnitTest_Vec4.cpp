@@ -60,7 +60,7 @@ namespace RAC
 			Assert::AreEqual(z, q.z(), L"Error: Init 2 z entry");
 		}
 
-#if MATRIX_LIBRARY == USE_CUSTOM
+#if MATRIX_LIBRARY == CUSTOM_FLAG
 		TEST_METHOD(Divide)
 		{
 			Vec4 q((Real)6.0, (Real)3.0, (Real)4.0, (Real)-3.0);

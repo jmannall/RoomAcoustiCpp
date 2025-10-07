@@ -123,7 +123,7 @@ namespace RAC
 			*
 			* @return True if a valid intersection is found, false otherwise
 			*/
-			bool LinePlaneIntersection(const Vec3& start, const Vec3& end, const Plane& plane, Absorption& absorption, Vec3& intersection) const;
+			bool LinePlaneIntersection(const Vec3& start, const Vec3& end, const Plane& plane, Coefficients<>& absorption, Vec3& intersection) const;
 
 			/**
 			* @brief Locate intersection between a line and a collection of walls
@@ -136,7 +136,7 @@ namespace RAC
 			* 
 			* @return True if a valid intersection is found, false otherwise
 			*/
-			bool LineWallIntersection(const Vec3& start, const Vec3& end, const std::vector<size_t>& wallIDs, Absorption& absorption, Vec3& intersection) const;
+			bool LineWallIntersection(const Vec3& start, const Vec3& end, const std::vector<size_t>& wallIDs, Coefficients<>& absorption, Vec3& intersection) const;
 
 			/**
 			* @brief Check for obstructions along an image source path
@@ -190,7 +190,7 @@ namespace RAC
 			* 
 			* @remarks Directivities taken from: Eargle's the Microphone Book : From Mono to Stereo to Surround - a Guide to Microphone Design and Application
 			*/
-			Absorption CalculateDirectivity(const Source::Data& source, const Vec3& point) const;
+			Coefficients<> CalculateDirectivity(const Source::Data& source, const Vec3& point) const;
 
 			/**
 			* @brief Run the image edge model for the given source
@@ -201,7 +201,7 @@ namespace RAC
 			*/
 			void ReflectPointInRoom(const Source::Data& source, Source::DSPParameters& direct, ImageSourceDataMap& imageSources);
 
-			Absorption Direct(const Source::Data& source, bool lineOfSight);
+			Coefficients<> Direct(const Source::Data& source, bool lineOfSight);
 
 			/**
 			* @brief Find all first order diffractions
@@ -277,7 +277,7 @@ namespace RAC
 			Vec3 mListenerPositionIncoming;			// The listener position (Mutex must be locked to access)
 
 			std::vector<Vec3> reverbDirections;				// The directions of the late reverb sources
-			std::vector<Absorption> reverbAbsorptions;		// The absorption coefficients of the late reverb sources
+			std::vector<Coefficients<>> reverbAbsorptions;		// The absorption Coefficients<> of the late reverb sources
 
 			Coefficients<> frequencyBands;			// Frequency bands for graphic equalisers
 			bool currentCycle{ false };				// Stores the current cycle of the currently processed source

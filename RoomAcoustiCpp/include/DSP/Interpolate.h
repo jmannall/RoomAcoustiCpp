@@ -178,8 +178,8 @@ namespace RAC
 		/**
 		* Checks for equality between two coefficient classes
 		*
-		* @params u Coefficients 1
-		* @params v Coefficients 2
+		* @params u Coefficients<> 1
+		* @params v Coefficients<> 2
 		* @returns True if equal within the threshold EPS, false otherwise
 		*/
 		template<typename T, size_t Size>

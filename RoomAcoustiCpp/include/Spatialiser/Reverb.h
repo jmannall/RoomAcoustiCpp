@@ -183,7 +183,7 @@ namespace RAC
 			* @params absorptions New reflection filter target gains
 			* @params running True if including late reveberation in audio prcoessing, false otherwise
 			*/
-			virtual void SetTargetOutputFilters(const std::vector<Absorption>& gains) { /*Do Nothing*/ }
+			virtual void SetTargetOutputFilters(const std::vector<Coefficients<>>& gains) { /*Do Nothing*/ }
 
 			/**
 			* @brief Update listener residues for RAVES reverb
@@ -274,7 +274,7 @@ namespace RAC
 			*
 			* @params absorptions New reflection filter target gains
 			*/
-			void SetTargetOutputFilters(const std::vector<Absorption>& gains);
+			void SetTargetOutputFilters(const std::vector<Coefficients<>>& gains);
 
 		private:
 			void InitLateReverb(const Coefficients<>& T60, const Vec<>& delayLineLengths, const LateReverbData& data, const std::shared_ptr<DSPConfig>& dspConfig);

@@ -32,7 +32,7 @@ namespace RAC
 		{
 			assert(gain.Length() == fc.Length());
 
-			Coefficients f = CreateFrequencyVector(fc);
+			Coefficients<> f = CreateFrequencyVector(fc);
 			InitMatrix(f, Q, sampleRate);
 			auto targetGains = CalculateGains(gain);
 
@@ -57,12 +57,18 @@ namespace RAC
 		{
 			assert(gains.Length() == peakingFilters.size());
 
-			if (gains == previousInput) // No change in gains
+			if (gains.IsApprox(previousInput)) // No change in gains
 			{
-				if (gainsEqual.load(std::memory_order_acquire) && gains <= 0.0) // Gains currently zero
+				if (gainsEqual.load(std::memory_order_acquire) && gains.IsLessEqThan(0.0)) // Gains currently zero
 					return true;
 				return false;
 			}
+			//if (gains == previousInput) // No change in gains
+			//{
+			//	if (gainsEqual.load(std::memory_order_acquire) && gains <= 0.0) // Gains currently zero
+			//		return true;
+			//	return false;
+			//}
 			previousInput = gains;
 
 			const auto targetGains = CalculateGains(gains);
@@ -85,8 +91,11 @@ namespace RAC
 			// TODO: Should this be coefficients?
 			Rowvec<> inputGains = Rowvec<>::Constant(numFilters, 1.0);
 
-			if (gains <= 0.0)
+			if (gains.IsLessEqThan(0.0))
 				return std::make_pair(inputGains, (Real)0.0);
+
+			/*if (gains <= 0.0)
+				return std::make_pair(inputGains, (Real)0.0);*/
 
 			if (gains.Length() == 1)
 			{
@@ -120,7 +129,7 @@ namespace RAC
 		template<typename T>
 		Coefficients<> GraphicEQ<T>::CreateFrequencyVector(const Coefficients<>& fc) const
 		{
-			Coefficients f(numFilters);
+			Coefficients<> f(numFilters);
 			f[0] = std::max(fc[0] / (Real)2.0, (Real)20.0);
 			for (int i = 1; i < numFilters - 1; i++)
 				f[i] = fc[i - 1];
@@ -134,18 +143,29 @@ namespace RAC
 		void GraphicEQ<T>::InitMatrix(const Coefficients<>& fc, const Real Q, const Real fs)
 		{
 			assert(fc.Length() == numFilters);
-			filterResponseMatrix.Reset();
 
 			Real pdb = 6.0;
 			Real p = pow(10.0, pdb / 20.0);
 
-			Coefficients out(numFilters);
+#if MATRIX_LIBRARY == EIGEN_FLAG
+			const PeakLowShelf tempLowShelf(fc[0] * SQRT_2, p, Q, fs); // Times SQRT_2. See constructor
+			filterResponseMatrix.Row(0) = tempLowShelf.GetFrequencyResponse(fc);
+
+			for (int j = 1; j < numFilters - 1; j++)
+			{
+				const PeakingFilter tempPeakingFilter(fc[j], p, Q, fs);
+				filterResponseMatrix.Row(j) = tempPeakingFilter.GetFrequencyResponse(fc);
+			}
+			const PeakHighShelf tempHighShelf(std::min(fc[numFilters - 2] * SQRT_2, (Real)20000.0), p, Q, fs); // Times SQRT_2. See constructor
+			filterResponseMatrix.Row(numFilters - 1) = tempHighShelf.GetFrequencyResponse(fc);
+#else
+			Coefficients<> out(numFilters);
 
 			const PeakLowShelf tempLowShelf(fc[0] * SQRT_2, p, Q, fs); // Times SQRT_2. See constructor
 			out = tempLowShelf.GetFrequencyResponse(fc);
 
 			for (int i = 0; i < numFilters; i++)
-				filterResponseMatrix(0, i) += out[i];
+				filterResponseMatrix(0, i) = out[i];
 
 			for (int j = 1; j < numFilters - 1; j++)
 			{
@@ -153,15 +173,15 @@ namespace RAC
 				out = tempPeakingFilter.GetFrequencyResponse(fc);
 
 				for (int i = 0; i < out.Length(); i++)
-					filterResponseMatrix(j, i) += out[i];
+					filterResponseMatrix(j, i) = out[i];
 			}
 
 			const PeakHighShelf tempHighShelf(std::min(fc[numFilters - 2] * SQRT_2, (Real)20000.0), p, Q, fs); // Times SQRT_2. See constructor
 			out = tempHighShelf.GetFrequencyResponse(fc);
 
 			for (int i = 0; i < out.Length(); i++)
-				filterResponseMatrix(numFilters - 1, i) += out[i];
-
+				filterResponseMatrix(numFilters - 1, i) = out[i];
+#endif
 			filterResponseMatrix = filterResponseMatrix.InverseMatrix();
 			filterResponseMatrix *= pdb;
 		}

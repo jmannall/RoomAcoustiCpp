@@ -140,7 +140,7 @@ namespace RAC
 			UTD::Parameters UTD::CalculateUTD(const Path& path) const
 			{
 				if (!path.valid || !path.inShadowZone)
-					return 0.0;
+					return Parameters::Zero();
 
 				Real n = path.eData.t / PI_1; // fig. 5b (KP)
 				Real B0 = sin(path.phi); // fig. 5a (KP)
@@ -148,7 +148,8 @@ namespace RAC
 				Real A = sqrt(path.sData.d * path.rData.d * dSR) * n * B0; // eq. 23 and 25 (excluding E) (spherical wave) (KP)
 				Real L = path.sData.d * path.rData.d * B0 * B0 / dSR; // eq. 32 (spherical wave) (KP)
 
-				Parameters g{ 0.0 }, gSB{ 0.0 };
+				Parameters g = Parameters::Zero();
+				Parameters gSB = Parameters::Zero();
 				for (int i = 0; i < 4; i++)
 				{
 					Complex AD = -std::exp(-imUnit * k[i] * dSR) * E[i] / A;
@@ -157,7 +158,7 @@ namespace RAC
 				}
 				Real idx = (path.bA - PI_1) / (path.eData.t - path.sData.t - PI_1);
 				Coefficients<Real, 4> oldGains = (1.0 - idx) * g / gSB + idx * g * dSR;
-				return Pow(g / gSB, 1.0 - idx) * Pow(g * dSR, idx);
+				return (g / gSB).Pow(1.0 - idx) * (g * dSR).Pow(idx);
 			}
 
 			////////////////////////////////////////
@@ -540,16 +541,16 @@ namespace RAC
 				Real dzSSq = dzS * dzS;
 				Real dzRSq = dzR * dzR;
 
-				Real dS = sqrt(dzSSq + constants.rSSq);
-				Real dR = sqrt(dzRSq + constants.rRSq);
+				Real dS = std::sqrt(dzSSq + constants.rSSq);
+				Real dR = std::sqrt(dzRSq + constants.rRSq);
 
 				Real ml = dS * dR;
 				Real y = std::max((Real)1.0, (ml + dzS * dzR) / constants.rr); // limit to 1 -> real(sqrt(y ^ 2 - 1)) returns 0 if y <= 1
-				Real A = y + sqrt(y * y - (Real)1.0);
-				Real Apow = pow(A, constants.v);
+				Real A = y + std::sqrt(y * y - (Real)1.0);
+				Real Apow = std::pow(A, constants.v);
 				Real coshvtheta = (Apow + ((Real)1.0 / Apow)) / (Real)2.0;
 
-				Real Btotal = Sum(constants.sinTheta / (coshvtheta - constants.cosTheta));
+				Real Btotal = (constants.sinTheta / (coshvtheta - constants.cosTheta)).Sum();
 				return Btotal / ml;
 			}
 

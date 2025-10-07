@@ -29,14 +29,8 @@ namespace RAC
 	namespace Common
 	{
 #if MATRIX_LIBRARY == EIGEN_FLAG
-		template<typename T = Real, int len = Eigen::Dynamic>
-		using Coefficients = Eigen::Array<T, len, 1>;
-
-		template<typename T = Real>
-		using Absorption = Eigen::Array<T, Eigen::Dynamic, 1>;
-		/*template<typename T = Real>
-		using Coefficients = Eigen::Array<T, Eigen::Dynamic, 1>;*/
-
+		template<typename T = Real, int Size = Eigen::Dynamic>
+		using Coefficients = Eigen::Array<T, Size, 1>;
 #elif MATRIX_LIBRARY == CUSTOM_FLAG
 		/**
 		* @brief Class that stores abitrary coefficients
@@ -50,6 +44,8 @@ namespace RAC
 				std::array<T, Size>>;
 		public:
 
+			Coefficients() : mCoefficients() {}
+
 			/**
 			* @brief Constructor that initialises the Coefficients with a value
 			*
@@ -58,7 +54,7 @@ namespace RAC
 			*/
 			Coefficients(const Real in) requires (Size != 0) { mCoefficients.fill(in); }
 
-			Coefficients(const Real in) requires (Size == 0) : Coefficients(1, in) {}
+			// Coefficients(const Real in) requires (Size == 0) : Coefficients(1, in) {}
 
 			/**
 			* @brief Constructor that initialises the Coefficients with zeros
@@ -89,12 +85,35 @@ namespace RAC
 			*/
 			~Coefficients() {};
 
+			// Static factory: zeros
+			static Coefficients Zero(const int length) requires (Size == 0) { return Coefficients(length); }
+
+			static Coefficients Zero() requires (Size != 0) { return Coefficients(0.0); }
+
+			// Static factory: constant
+			static Coefficients Constant(const int length, const T value) requires (Size == 0) { return Coefficients(length, value); }
+
+			static Coefficients Constant(const T value) requires (Size != 0) { return Coefficients(value); }
+
 			/**
-			* @brief Updates the coefficients
+			* @brief Sets all coefficient entries to a single value
 			*
-			* @param coefficients The new vector of coefficients
+			* @param x The new value
 			*/
-			inline void Update(const T& coefficients) { mCoefficients = coefficients; }
+			inline void Reset()
+			{
+				std::fill(mCoefficients.begin(), mCoefficients.end(), 0.0);
+			}
+
+			/**
+			* @brief Sets all coefficient entries to a single value
+			*
+			* @param x The new value
+			*/
+			inline void SetConstant(const T value)
+			{
+				std::fill(mCoefficients.begin(), mCoefficients.end(), value);
+			}
 
 			/**
 			* @brief Returns the number of coefficients
@@ -106,31 +125,100 @@ namespace RAC
 			/**
 			* @brief Calculates the natural (base e) logarithm of the coefficients
 			*/
-			inline Coefficients Log()
+			inline Coefficients Log() const
 			{
+				Coefficients<T, Size> result(*this);
 				for (int i = 0; i < mCoefficients.size(); i++)
-					mCoefficients[i] = log(mCoefficients[i]);
-				return *this;
+					result[i] = std::log(mCoefficients[i]);
+				return result;
 			}
 
 			/**
 			* @brief Calculates 10 raised to the power of the coefficients
 			*/
-			inline Coefficients Pow10()
+			inline Coefficients Pow(Real exponent) const
 			{
+				Coefficients<T, Size> result(*this);
 				for (int i = 0; i < mCoefficients.size(); i++)
-					mCoefficients[i] = RAC::Common::Pow10(mCoefficients[i]);
-				return *this;
+					result[i] = std::pow(mCoefficients[i], exponent);
+				return result;
+			}
+
+			/**
+			* @brief Calculates 10 raised to the power of the coefficients
+			*/
+			inline Coefficients Pow10() const
+			{
+				Coefficients<T, Size> result(*this);
+				for (int i = 0; i < mCoefficients.size(); i++)
+					result[i] = RAC::Common::Pow10(mCoefficients[i]);
+				return result;
 			}
 
 			/**
 			* @brief Calculates the square root of the coefficients
 			*/
-			inline Coefficients Sqrt()
+			inline Coefficients Sqrt() const
 			{
+				Coefficients<T, Size> result(*this);
 				for (int i = 0; i < mCoefficients.size(); i++)
-					mCoefficients[i] = sqrt(mCoefficients[i]);
-				return *this;
+					result[i] = std::sqrt(mCoefficients[i]);
+				return result;
+			}
+
+			/**
+			* @brief Calculates the square of the coefficients
+			*/
+			inline Coefficients Square() const
+			{
+				Coefficients<T, Size> result(*this);
+				for (int i = 0; i < mCoefficients.size(); i++)
+					result[i] = mCoefficients[i] * mCoefficients[i];
+				return result;
+			}
+
+			/**
+			* @brief Calculates the absolute value of the coefficients
+			*/
+			inline Coefficients Abs() const
+			{
+				Coefficients<T, Size> result(*this);
+				for (int i = 0; i < mCoefficients.size(); i++)
+					result[i] = std::abs(mCoefficients[i]);
+				return result;
+			}
+
+			/**
+			* @brief Calculates the sin value of the coefficients
+			*/
+			inline Coefficients Sin() const
+			{
+				Coefficients<T, Size> result(*this);
+				for (int i = 0; i < mCoefficients.size(); i++)
+					result[i] = std::sin(mCoefficients[i]);
+				return result;
+			}
+
+			/**
+			* @brief Calculates the cos value of the coefficients
+			*/
+			inline Coefficients Cos() const
+			{
+				Coefficients<T, Size> result(*this);
+				for (int i = 0; i < mCoefficients.size(); i++)
+					result[i] = std::cos(mCoefficients[i]);
+				return result;
+			}
+
+			/**
+			* @brief Calculates the sum of the coefficients
+			*/
+			inline Real Sum()
+			{
+				Real output = 0.0;
+				for (int i = 0; i < mCoefficients.size(); i++)
+					output += mCoefficients[i];
+				return output;
 			}
 
 			/**
@@ -148,18 +236,6 @@ namespace RAC
 			* @return The value of the coefficient at the specified index
 			*/
 			inline Real operator[](const size_t i) const { assert(i < this->mCoefficients.size()); return mCoefficients[i]; };
-
-			/**
-			* @brief Sets all coefficient entries to a single value
-			*
-			* @param x The new value
-			*/
-			inline Coefficients& operator=(Real x)
-			{
-				for (int i = 0; i < mCoefficients.size(); i++)
-					mCoefficients[i] = x;
-				return *this;
-			}
 
 			/**
 			* @brief Inverts the sign of all coefficient entries
@@ -244,12 +320,26 @@ namespace RAC
 			}
 
 			/**
+			* @brief Performs an element-wise comparison
+			* @return True if any element pairs are unequal, false otherwise
+			*/
+			inline bool IsApprox(const Coefficients& a) const
+			{
+				if (mCoefficients.size() != a.Length())
+					return false;
+				for (int i = 0; i < a.Length(); i++)
+					if (mCoefficients[i] != a[i])
+						return false;
+				return true;
+			}
+
+			/**
 			* @brief Determines whether coefficient entries are less than a given value
 			*
 			* @param a The test value
 			* @return True if all entries are less than a, false otherwise
 			*/
-			inline bool operator<(const Real a) const
+			inline bool IsLessThan(const Real a) const
 			{
 				bool valid = true;
 				int i = 0;
@@ -267,7 +357,7 @@ namespace RAC
 			* @param a The test value
 			* @return True if all entries are greater than a, false otherwise
 			*/
-			inline bool operator>(const Real a) const
+			inline bool IsGreaterThan(const Real a) const
 			{
 				bool valid = true;
 				int i = 0;
@@ -285,7 +375,7 @@ namespace RAC
 			* @param a The test value
 			* @return True if all entries are less than or equal to a, false otherwise
 			*/
-			inline bool operator<=(const Real a) const
+			inline bool IsLessEqThan(const Real a) const
 			{
 				bool valid = true;
 				int i = 0;
@@ -303,7 +393,7 @@ namespace RAC
 			* @param a The test value
 			* @return True if all entries are greater than or equal to a, false otherwise
 			*/
-			inline bool operator>=(const Real a) const
+			inline bool IsGreaterEqThan(const Real a) const
 			{
 				bool valid = true;
 				int i = 0;
@@ -326,51 +416,6 @@ namespace RAC
 		protected:
 			Container mCoefficients; // Array or vector of coefficients
 		};
-
-		/**
-		* @brief Calculates the sine of the coefficients
-		*/
-		template <typename T, size_t Size>
-		inline Coefficients<T, Size> Sin(Coefficients<T, Size> v)
-		{
-			for (int i = 0; i < v.Length(); i++)
-				v[i] = sin(v[i]);
-			return v;
-		}
-
-		/**
-		* @brief Calculates the cosine of the coefficients
-		*/
-		template <typename T, size_t Size>
-		inline Coefficients<T, Size> Cos(Coefficients<T, Size> v)
-		{
-			for (int i = 0; i < v.Length(); i++)
-				v[i] = cos(v[i]);
-			return v;
-		}
-
-		/**
-		* @brief Calculates the absolute value of the coefficients
-		*/
-		template <typename T, size_t Size>
-		inline Coefficients<T, Size> Abs(Coefficients<T, Size> v)
-		{
-			for (int i = 0; i < v.Length(); i++)
-				v[i] = abs(v[i]);
-			return v;
-		}
-
-		/**
-		* @brief Calculates the sum of the coefficients
-		*/
-		template <typename T, size_t Size>
-		inline Real Sum(Coefficients<T, Size> v)
-		{
-			Real output = 0.0;
-			for (int i = 0; i < v.Length(); i++)
-				output += v[i];
-			return output;
-		}
 
 		//////////////////// Coefficient operator overloads ////////////////////
 
@@ -416,266 +461,9 @@ namespace RAC
 			os << " ]";
 			return os;
 		}
-
-		/**
-		* @return True if all coefficient entries are equal to a, false otherwise
-		*/
-		template <typename T, size_t Size>
-		inline bool operator==(const Coefficients<T, Size>& v, const Real a)
-		{
-			for (int i = 0; i < v.Length(); i++)
-				if (v[i] != a)
-					return false;
-			return true;
-		}
-
-		/**
-		* @return True if any coefficient entries are not equal to a, false otherwise
-		*/
-		template <typename T, size_t Size>
-		inline bool operator!=(const Coefficients<T, Size>& v, const Real a)
-		{
-			return !(v == a);
-		}
-
-		/**
-		* @brief Performs an element-wise comparison
-		* @return True if all element pairs are equal, false otherwise
-		*/
-		template <typename T, size_t Size>
-		inline bool operator==(const Coefficients<T, Size>& u, const Coefficients<T, Size>& v)
-		{
-			if (u.Length() != v.Length())
-				return false;
-			for (int i = 0; i < u.Length(); i++)
-				if (u[i] != v[i])
-					return false;
-			return true;
-		}
-
-		/**
-		* @brief Performs an element-wise comparison
-		* @return True if any element pairs are unequal, false otherwise
-		*/
-		template <typename T, size_t Size>
-		inline bool operator!=(const Coefficients<T, Size>& u, const Coefficients<T, Size>& v)
-		{
-			return !(u == v);
-		}
-
-		/**
-		* @brief Performs an element-wise comparison
-		* @return True if all element pairs satisfy the condition, false otherwise
-		*/
-		template <typename T, size_t Size>
-		inline bool operator>(const Coefficients<T, Size>& u, const Coefficients<T, Size>& v)
-		{
-			assert(u.Length() == v.Length());
-			for (int i = 0; i < u.Length(); i++)
-				if (u[i] <= v[i])
-					return false;
-			return true;
-		}
-
-		/**
-		* @brief Performs an element-wise comparison
-		* @return True if all element pairs satisfy the condition, false otherwise
-		*/
-		template <typename T, size_t Size>
-		inline bool operator<(const Coefficients<T, Size>& u, const Coefficients<T, Size>& v)
-		{
-			assert(u.Length() == v.Length());
-			for (int i = 0; i < u.Length(); i++)
-				if (u[i] >= v[i])
-					return false;
-			return true;
-		}
-
-		template <typename T, size_t Size>
-		inline Coefficients<T, Size> Pow(Coefficients<T, Size> u, Real x)
-		{
-			for (int i = 0; i < u.Length(); i++)
-				u[i] = pow(u[i], x);
-			return u;
-		}
-
-		//////////////////// -- ////////////////////
-
-		/**
-		* @brief Class that stores absorption coefficients
-		* 
-		* @details Stores reflectance -> sqrt(1 - R). Where R is the absortion property of the material
-		*/
-		class Absorption : public Coefficients<>
-		{
-		public:
-
-			Absorption() : Absorption(1) {}
-
-			/**
-			* Constructor that initialises the Absorption with ones
-			*
-			* @param len The number of coefficients
-			*/
-			Absorption(int len) : Coefficients<>(len, 1.0) {}
-
-			/**
-			* Constructor that initialises the Absorption from a std::vector
-			*
-			* @param R The material absorption
-			*/
-			Absorption(const std::vector<Real>& R) : Coefficients<>(static_cast<int>(R.size()))
-			{
-				for (int i = 0; i < this->mCoefficients.size(); i++)
-				{
-					assert(this->mCoefficients[i] <= 1.0);
-					this->mCoefficients[i] = sqrt(1.0 - R[i]);
-				}
-			}
-
-			/**
-			* @brief Default deconstructor
-			*/
-			~Absorption() {}
-
-			/**
-			* @brief Resets the coefficients to ones
-			*/
-			void Reset() { std::fill(this->mCoefficients.begin(), this->mCoefficients.end(), 1.0); }
-
-			/**
-			* @brief Sets all absorption entries to a single value
-			*
-			* @param x The new value
-			*/
-			inline Absorption& operator=(Real x)
-			{
-				for (int i = 0; i < this->mCoefficients.size(); i++)
-					this->mCoefficients[i] = x;
-				return *this;
-			}
-
-			/**
-			* @brief Inverts the sign of all absorption entries
-			*/
-			inline Absorption& operator-()
-			{
-				for (int i = 0; i < this->mCoefficients.size(); i++)
-					this->mCoefficients[i] = -this->mCoefficients[i];
-				return *this;
-			}
-
-			/**
-			* @brief Adds a set of absorption coefficients to the current absorption. The areas are added together
-			*/
-			inline Absorption& operator+=(const Absorption& v)
-			{
-				assert(this->mCoefficients.size() == v.Length());
-				for (int i = 0; i < this->mCoefficients.size(); i++)
-					this->mCoefficients[i] += v[i];
-				return *this;
-			}
-
-			/**
-			* @brief Subtracts a set of absorption coefficients to the current absorption. The input area is subtracted
-			*/
-			inline Absorption& operator-=(const Absorption& v)
-			{
-				assert(this->mCoefficients.size() == v.Length());
-				for (int i = 0; i < this->mCoefficients.size(); i++)
-					this->mCoefficients[i] -= v[i];
-				return *this;
-			}
-
-			/**
-			* @brief Multiplies absorption entries by a given set of absorption coefficients
-			*/
-			inline Absorption& operator*=(const Absorption& v)
-			{
-				assert(this->mCoefficients.size() == v.Length());
-				for (int i = 0; i < this->mCoefficients.size(); i++)
-					this->mCoefficients[i] *= v[i];
-				return *this;
-			}
-
-			/**
-			* @brief Divides absorption entries by a given set of absorption coefficients
-			*/
-			inline Absorption& operator/=(const Absorption& v)
-			{
-				assert(this->mCoefficients.size() == v.Length());
-				for (int i = 0; i < this->mCoefficients.size(); i++)
-					this->mCoefficients[i] /= v[i];
-				return *this;
-			}
-
-			/**
-			* @brief Adds a single value to all absorption entries
-			*/
-			inline Absorption& operator+=(const Real a)
-			{
-				for (int i = 0; i < this->mCoefficients.size(); i++)
-					this->mCoefficients[i] += a;
-				return *this;
-			}
-
-			/**
-			* @brief Multiplies absorption entries by a given value
-			*/
-			inline Absorption& operator*=(const Real a)
-			{
-				for (int i = 0; i < this->mCoefficients.size(); i++)
-					this->mCoefficients[i] *= a;
-				return *this;
-			}
-
-			/**
-			* @brief Divides absorption entries by a given value
-			*/
-			inline Absorption& operator/=(const Real a)
-			{
-				Real reciprocal = 1.0 / a;
-				for (int i = 0; i < this->mCoefficients.size(); i++)
-					this->mCoefficients[i] *= reciprocal;
-				return *this;
-			}
-
-		private:
-		};
-
-		//////////////////// Absorption operator overloads ////////////////////
-
-		inline Absorption operator+(Absorption u, const Absorption& v) { return u += v; }
-		inline Absorption operator-(Absorption u, const Absorption& v) { return u -= v; }
-		inline Absorption operator*(Absorption u, const Absorption& v) { return u *= v; }
-		inline Absorption operator/(Absorption u, const Absorption& v) { return u /= v; }
-
-		inline Absorption operator+(Absorption v, const Real a) { return v += a; }
-		inline Absorption operator-(Absorption v, const Real a) { return v += (-a); }
-		inline Absorption operator-(const Real a, Absorption v) { return -v += a; }
-		inline Absorption operator*(Absorption v, const Real a) { return v *= a; }
-		inline Absorption operator/(Absorption v, const Real a) { return v *= (1.0 / a); }
-
-		/**
-		* @brief Performs an element-wise comparison
-		* @return True if all element pairs and the areas are equal, false otherwise
-		*/
-		inline bool operator==(const Absorption& u, const Absorption& v)
-		{
-			if (u.Length() != v.Length())
-				return false;
-			for (int i = 0; i < u.Length(); i++)
-				if (u[i] != v[i])
-					return false;
-			return true;
-		}
-
-		/**
-		* @brief Performs an element-wise comparison
-		* @return True if any element pairs or the areas are unequal, false otherwise
-		*/
-		inline bool operator!=(const Absorption& u, const Absorption& v) { return !(u == v); }
 #endif // MATRIX_LIBRARY == CUSTOM_FLAG
+
+		inline Coefficients<> CalculateReflectance(const Coefficients<>& values) { return ((Real)1.0 - values).Sqrt(); }
 	}
 }
 

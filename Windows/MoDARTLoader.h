@@ -32,9 +32,9 @@ bool ParseObjFile(const std::string& objFilePath, std::vector<Vec3>& outVertices
 
 int BestBandMatch(float targetBand, Coefficients<> referenceBands);
 
-Absorption ResizeCoeffs(Coefficients<> targetFreqs, Coefficients<> inputFreqs, Absorption inputCoeffs);
+Coefficients<> ResizeCoeffs(Coefficients<> targetFreqs, Coefficients<> inputFreqs, Coefficients<> inputCoeffs);
 
-bool LoadMaterialsFromCsv(const std::string& mtlFilePath, Coefficients<>& outFrequencies, std::unordered_map<std::string, Absorption>& outAbsorption, std::unordered_map<std::string, Coefficients<>>& outScattering);
+bool LoadMaterialsFromCsv(const std::string& mtlFilePath, Coefficients<>& outFrequencies, std::unordered_map<std::string, Coefficients<>>& outAbsorption, std::unordered_map<std::string, Coefficients<>>& outScattering);
 
 bool LoadIndexingFromCsv(const std::string& indexingFilePath, Matrix<int>& outPathIndexing, int& numPaths);
 

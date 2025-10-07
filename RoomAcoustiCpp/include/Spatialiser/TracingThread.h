@@ -172,7 +172,7 @@ namespace RAC
 
 			SingleFDNTracing(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const LateReverbData& data, const std::shared_ptr<DSPConfig>& dspConfig) :
 				TracingThread(room, sourceManager, reverb, data, dspConfig),
-				reflectionGains(dspConfig->GetData().numReverbSources, Absorption(dspConfig->GetData().numFrequencyBands))
+				reflectionGains(dspConfig->GetData().numReverbSources, Coefficients<>(dspConfig->GetData().numFrequencyBands))
 			{}
 
 			~SingleFDNTracing() {}
@@ -182,7 +182,8 @@ namespace RAC
 		private:
 			void ComputeEnergyContributions(const MaterialMap& materials, int reverbDirectionIdx = -1);
 
-			std::vector<Absorption> reflectionGains;	// This will have size `numReverbDirections`
+			// TODO: Convert to matrix array with Eigen
+			std::vector<Coefficients<>> reflectionGains;	// This will have size `numReverbDirections`
 		};
 	}
 }

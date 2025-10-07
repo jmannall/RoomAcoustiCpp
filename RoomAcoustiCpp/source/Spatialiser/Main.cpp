@@ -150,6 +150,11 @@ extern "C"
 		return coeff;
 	}
 
+	Coefficients<> CreateAbsorptions(const float* data)
+	{
+		return CreateCoefficients(data, NUM_FREQUENCY_BANDS);
+	}
+
 	//////////////////// API ////////////////////
 
 	/**
@@ -566,11 +571,7 @@ extern "C"
 
 	EXPORT int API RACInitMaterial(const float* absorptionData)
 	{
-		std::vector<Real> a(NUM_FREQUENCY_BANDS);
-		for (int i = 0; i < NUM_FREQUENCY_BANDS; i++)
-			a[i] = static_cast<Real>(absorptionData[i]);
-		Absorption absorption = Absorption(a);
-
+		Coefficients<> absorption = CreateAbsorptions(absorptionData);
 		return InitMaterial(absorption);
 	}
 
@@ -585,11 +586,7 @@ extern "C"
 	*/
 	EXPORT void API RACUpdateMaterial(int id, const float* absorptionData)
 	{
-		std::vector<Real> a(NUM_FREQUENCY_BANDS);
-		for (int i = 0; i < NUM_FREQUENCY_BANDS; i++)
-			a[i] = static_cast<Real>(absorptionData[i]);
-		Absorption absorption = Absorption(a);
-
+		Coefficients<> absorption = CreateAbsorptions(absorptionData);
 		UpdateMaterial(static_cast<size_t>(id), absorption);
 	}
 

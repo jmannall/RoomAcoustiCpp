@@ -25,7 +25,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		size_t Room::InitMaterial(const Absorption& material)
+		size_t Room::InitMaterial(const Coefficients<>& material)
 		{
 			size_t id;
 			std::lock_guard<std::mutex> lock(mMaterialMutex);
@@ -45,7 +45,7 @@ namespace RAC
 				it = mMaterials.find(id);
 			}
 
-			mMaterials.insert_or_assign(id, material);
+			mMaterials.insert_or_assign(id, CalculateReflectance(material));
 			RecordChange();
 			return id;
 		}
@@ -688,7 +688,7 @@ namespace RAC
 
 		std::pair<Coefficients<>, Real> Room::CalculateAbsorptionSurfaceArea()
 		{
-			Coefficients absorption = Coefficients<>(numFrequencyBands, 1.0);
+			Coefficients<> absorption = Coefficients<>::Constant(numFrequencyBands, 1.0);
 			Real surfaceArea = 0.0;
 			MaterialMap absorptionFactors;
 
@@ -737,7 +737,7 @@ namespace RAC
 
 		Coefficients<> Room::Sabine(const Coefficients<>& absorption) const
 		{
-			Real factor = 24.0 * log(10.0) / SPEED_OF_SOUND;
+			Real factor = 24.0 * std::log(10.0) / SPEED_OF_SOUND;
 			return factor * roomData.volume / absorption;
 		}
 
@@ -745,7 +745,7 @@ namespace RAC
 
 		Coefficients<> Room::Eyring(const Coefficients<>& absorption, const Real& surfaceArea) const
 		{
-			Real factor = 24.0 * log(10.0) / SPEED_OF_SOUND;
+			Real factor = 24.0 * std::log(10.0) / SPEED_OF_SOUND;
 			return -factor * roomData.volume / ((1 - absorption / surfaceArea).Log() * surfaceArea);
 		}
 	}
