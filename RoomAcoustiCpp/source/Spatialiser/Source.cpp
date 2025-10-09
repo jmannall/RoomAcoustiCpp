@@ -52,7 +52,7 @@ namespace RAC
 			updateFlags.RecordChange();
 
 			if (dspConfig->GetLateReverbModel() == LateReverbModel::raves)
-				UpdateMoDARTParameters(frequencyIndexing, data.numFrames);
+				InitMoDARTParameters(frequencyIndexing, data.numFrames);
 
 			ResetFDNSlots();
 			AllowAccess();
@@ -172,25 +172,26 @@ namespace RAC
 		void Source::UpdateDirectivity(const SourceDirectivity directivity, const Coefficients<>& frequencyBands, const int numLateReverbChannels)
 		{
 			GetAccess();
-			Coefficients<> reverbInput = Coefficients<>(frequencyBands.Length(), (Real)1.0);
+			Coefficients<> reverbInput = Coefficients<>::Constant(frequencyBands.Length(), 1.0);
 			switch (directivity)
 			{
+			default:
 			case SourceDirectivity::omni:
 				break;
 			case SourceDirectivity::subcardioid:
-				reverbInput = (Real)(1.0 / 1.3);	// 1 / Directivity Factor (DF) -> DF = 10 ^ (Directivity Index / 20) 
+				reverbInput.SetConstant((Real)(1.0 / 1.3));	// 1 / Directivity Factor (DF) -> DF = 10 ^ (Directivity Index / 20) 
 				break;
 			case SourceDirectivity::cardioid:
-				reverbInput = (Real)(1.0 / 1.7);
+				reverbInput.SetConstant((Real)(1.0 / 1.7));
 				break;
 			case SourceDirectivity::supercardioid:
-				reverbInput = (Real)(1.0 / 1.9);
+				reverbInput.SetConstant((Real)(1.0 / 1.9));
 				break;
 			case SourceDirectivity::hypercardioid:
-				reverbInput = (Real)(0.5);
+				reverbInput.SetConstant((Real)(0.5));
 				break;
 			case SourceDirectivity::bidirectional:
-				reverbInput = (Real)(1.0 / 1.7);
+				reverbInput.SetConstant((Real)(1.0 / 1.7));
 				break;
 			case SourceDirectivity::genelec8020c:
 				reverbInput = GENELEC.AverageResponse(frequencyBands);
@@ -265,15 +266,17 @@ namespace RAC
 				PROFILE_OctaveBand
 				for (int i = 0; i < numFrames; i++)
 				{
-					const std::vector<Real>& bands = octaveBandFilter.GetOutput(inputBuffer[i], audioData.lerpFactor);
-					for (int j = 0; j < bands.size(); j++)
+					const Buffer<>& bands = octaveBandFilter.GetOutput(inputBuffer[i], audioData.lerpFactor);
+					for (int j = 0; j < bands.Length(); j++)
 						frequencyBands(j, i) = bands[j];
 				}
 			}
 
 			if (!audioData.earlyReverbEnabled)
+			{
+				FreeAccess();
 				return;
-
+			}
 			mAirAbsorption->ProcessAudio(inputBuffer, bStore, audioData.lerpFactor);
 
 			{
@@ -354,9 +357,11 @@ namespace RAC
 			}
 			for (int i = 0; i < reverbInput.Rows(); i++)
 			{
-				auto start = reverbInput.begin() + i * numFrames;
 				for (int j = 0; j < numFrames; j++)
-					start[j] += static_cast<Real>(bOutput.left[j]);
+					reverbInput(i, j) += static_cast<Real>(bOutput.left[j]);
+				/*auto start = reverbInput.begin() + i * numFrames;
+				for (int j = 0; j < numFrames; j++)
+					start[j] += static_cast<Real>(bOutput.left[j]);*/
 			}
 			FreeAccess();
 		}
@@ -374,13 +379,16 @@ namespace RAC
 				FreeAccess();
 				return;
 			}
-			{
-				lock_guard<std::mutex>lock(*dataMutex);
-				currentPosition = position;
-				currentOrientation = orientation;
-			}
-			updateFlags.RecordChange();
 			UpdateTransform(position, orientation);
+			if ((position - currentPosition).Normal() > EPS_POSITION || 2.0 * std::acos(std::abs(orientation.dot(currentOrientation))) > EPS_ORIENTATION)
+			{
+				{
+					lock_guard<std::mutex>lock(*dataMutex);
+					currentPosition = position;
+					currentOrientation = orientation;
+				}
+				updateFlags.RecordChange();
+			}
 			FreeAccess();
 		}
 
@@ -429,8 +437,8 @@ namespace RAC
 
 		void Source::InitBuffers(int numFrames)
 		{
-			bStore = Buffer(numFrames);
-			bStoreReverb = Buffer(numFrames);
+			bStore = Buffer<>::Zero(numFrames);
+			bStoreReverb = Buffer<>::Zero(numFrames);
 			bInput = CMonoBuffer<float>(numFrames);
 			bOutput.left = CMonoBuffer<float>(numFrames);
 			bOutput.right = CMonoBuffer<float>(numFrames);
@@ -447,7 +455,7 @@ namespace RAC
 			bOutput.left.clear();
 			bOutput.right.clear();
 			bMonoOutput.clear();
-			bStore.ResizeBuffer(1);
+			bStore.Resize(1);
 		}
 
 		////////////////////////////////////////
@@ -465,8 +473,8 @@ namespace RAC
 		void Source::UpdateTransform(const Vec3& position, const Vec4& orientation)
 		{
 			std::shared_ptr<CTransform> transformCopy = std::make_shared<CTransform>();
-			transformCopy->SetOrientation(CQuaternion(static_cast<float>(orientation.w), static_cast<float>(orientation.x), static_cast<float>(orientation.y), static_cast<float>(orientation.z)));
-			transformCopy->SetPosition(CVector3(static_cast<float>(position.x), static_cast<float>(position.y), static_cast<float>(position.z)));
+			transformCopy->SetOrientation(CQuaternion(static_cast<float>(orientation.w()), static_cast<float>(orientation.x()), static_cast<float>(orientation.y()), static_cast<float>(orientation.z())));
+			transformCopy->SetPosition(CVector3(static_cast<float>(position.x()), static_cast<float>(position.y()), static_cast<float>(position.z())));
 			transform.store(transformCopy, std::memory_order_release);
 			releasePool.Add(transformCopy);
 		}

@@ -110,7 +110,7 @@ namespace RAC
 
 		void ImageSourceData::SetTransform(const Vec3& position)
 		{
-			transform.SetPosition(CVector3(static_cast<float>(position.x), static_cast<float>(position.y), static_cast<float>(position.z)));
+			transform.SetPosition(CVector3(static_cast<float>(position.x()), static_cast<float>(position.y()), static_cast<float>(position.z())));
 			mPositions.back() = position;
 		}
 
@@ -118,7 +118,7 @@ namespace RAC
 
 		void ImageSourceData::SetTransform(const Vec3& position, const Vec3& rotatedEdgePosition)
 		{
-			transform.SetPosition(CVector3(static_cast<float>(rotatedEdgePosition.x), static_cast<float>(rotatedEdgePosition.y), static_cast<float>(rotatedEdgePosition.z)));
+			transform.SetPosition(CVector3(static_cast<float>(rotatedEdgePosition.x()), static_cast<float>(rotatedEdgePosition.y()), static_cast<float>(rotatedEdgePosition.z())));
 			mPositions.back() = position;
 		}
 
@@ -129,7 +129,7 @@ namespace RAC
 			if (diffraction)
 				distance = mDiffractionPath.rData.d + mDiffractionPath.sData.d;
 			else
-				distance = (listenerPosition - GetPosition()).Length();
+				distance = (listenerPosition - GetPosition()).Normal();
 		}
 
 		////////////////////////////////////////
@@ -340,8 +340,8 @@ namespace RAC
 			bOutput.left = CMonoBuffer<float>(numFrames);
 			bOutput.right = CMonoBuffer<float>(numFrames);
 			bMonoOutput = CMonoBuffer<float>(numFrames);
-			bStore = Buffer(numFrames);
-			bDiffStore = Buffer(numFrames);
+			bStore = Buffer<>(numFrames);
+			bDiffStore = Buffer<>(numFrames);
 		}
 
 		////////////////////////////////////////
@@ -352,8 +352,8 @@ namespace RAC
 			bOutput.left.clear();
 			bOutput.right.clear();
 			bMonoOutput.clear();
-			bStore.ResizeBuffer(1);
-			bDiffStore.ResizeBuffer(1);
+			bStore.Resize(1);
+			bDiffStore.Resize(1);
 		}
 
 		////////////////////////////////////////

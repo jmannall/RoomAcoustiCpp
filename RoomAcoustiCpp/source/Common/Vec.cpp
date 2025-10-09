@@ -12,6 +12,7 @@
 // Common headers
 #include "Common/Vec_private.h"
 
+#if MATRIX_LIBRARY == CUSTOM_FLAG
 namespace RAC
 {
 	namespace Common
@@ -61,7 +62,7 @@ namespace RAC
 
 		void Vec<Real>::Normalise()
 		{
-			Real normal = CalculateNormal();
+			Real normal = Normal();
 			for (int i = 0; i < this->data.rows; i++)
 				this->data(i, 0) = this->data(i, 0) / normal;
 		}
@@ -69,7 +70,7 @@ namespace RAC
 		////////////////////////////////////////
 
 		template<>
-		Real Vec<Real>::CalculateNormal() const
+		Real Vec<Real>::Normal() const
 		{
 			Real magnitude = 0.0;
 			for (int i = 0; i < this->data.rows; i++)
@@ -127,20 +128,20 @@ namespace RAC
 
 		Real Dot(const Vec<>& u, const Vec<>& v)
 		{
-			assert(u.Rows() == v.Rows());
+			assert(u.Length() == v.Length());
 			Real out = 0.0;
-			for (int i = 0; i < u.Rows(); ++i)
-				out += u[i] * v[i];
+			for (int i = 0; i < u.Length(); ++i)
+				out += u(i) * v(i);
 			return out;
 		}
 
 		Real ThreeWayDot(const Vec<>& u, const Vec<>& v, const Vec<>& w)
 		{
-			assert(u.Rows() == v.Rows());
-			assert(u.Rows() == w.Rows());
+			assert(u.Length() == v.Length());
+			assert(u.Length() == w.Length());
 			Real out = 0.0;
-			for (int i = 0; i < u.Rows(); ++i)
-				out += u[i] * v[i] * w[i];
+			for (int i = 0; i < u.Length(); ++i)
+				out += u(i) * v(i) * w(i);
 			return out;
 		}
 
@@ -161,3 +162,4 @@ namespace RAC
 
 	}
 }
+#endif // MATRIX_LIBRARY == CUSTOM_FLAG

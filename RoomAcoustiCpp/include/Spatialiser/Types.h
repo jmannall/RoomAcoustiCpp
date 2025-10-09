@@ -16,6 +16,7 @@
 #include "Common/Complex.h"
 #include "Common/Coefficients.h"
 #include "Common/Vec3.h"
+#include "Common/Matrix.h"
 #include "Common/Vec.h"
 
 namespace RAC
@@ -38,7 +39,7 @@ namespace RAC
 
 		typedef std::unordered_map<size_t, Plane> PlaneMap;									// Store planes
 		typedef std::unordered_map<size_t, Wall> WallMap;									// Store walls
-		typedef std::unordered_map<size_t, Absorption<>> MaterialMap;						// Store materials
+		typedef std::unordered_map<size_t, Coefficients<>> MaterialMap;						// Store materials
 		typedef std::unordered_map<size_t, Edge> EdgeMap;									// Store edges
 		typedef std::unordered_map<size_t, Source> SourceMap;								// Store sources
 		typedef std::unordered_map<std::string, ImageSource> ImageSourceMap;				// Store image sources
@@ -120,7 +121,7 @@ namespace RAC
 			Coefficients<> frequencyBands;				// Frequency band center frequencies
 			int numFrequencyBands{ 0 };					// Number of frequency bands
 
-			DSPData() : frequencyBands(Coefficients<>({ (Real)250.0, (Real)500.0, (Real)1000.0, (Real)2000.0 }))
+			DSPData() : frequencyBands(Coefficients<>(std::vector<Real>({ (Real)250.0, (Real)500.0, (Real)1000.0, (Real)2000.0 })))
 			{}
 
 			DSPData(int sampleRate, int numFrames, int numReverbSources, int fdnSize, Real lerpFactor, Real Q, Coefficients<> frequencyBands) :
@@ -368,12 +369,12 @@ namespace RAC
 
 			inline void Validate(int numFrequencyBands)
 			{
-				if (dimensions.Rows() < 1) // No dimensions provided
-					dimensions = Vec<>({ (Real)2.5, (Real)4.0, (Real)3.4 }); // Default dimensions
+				if (dimensions.Length() < 1) // No dimensions provided
+					dimensions = Vec<>(std::vector<Real>({ (Real)2.5, (Real)4.0, (Real)3.4 })); // Default dimensions
 				volume = std::max(volume, (Real)0.001);
 
 				if (customT60.Length() != numFrequencyBands) // Invalid number of frequency bands
-					customT60 = Coefficients<>(numFrequencyBands, (Real)1.0); // Default T60
+					customT60 = Coefficients<>::Constant(numFrequencyBands, (Real)1.0); // Default T60
 				for (int i = 0; i < customT60.Length(); i++) // Ensure T60 is positive
 					customT60[i] = std::max(customT60[i], (Real)0.0);
 			}
@@ -398,12 +399,12 @@ namespace RAC
 				std::vector<int> frequencyIndexingData;
 				std::vector<Vec<>> leftEigenvectorsData;
 				std::vector<Vec<>> rightEigenvectorsData;
-				for (int i = 0; i < t60s.Rows(); i++)
+				for (int i = 0; i < t60s.Length(); i++)
 				{
-					if (t60s[i] > EPS)
+					if (t60s(i) > EPS)
 					{
-						t60sData.push_back(t60s[i]);
-						frequencyIndexingData.push_back(frequencyIndexing[i]);
+						t60sData.push_back(t60s(i));
+						frequencyIndexingData.push_back(frequencyIndexing(i));
 						this->leftEigenvectors.push_back(leftEigenvectors[i]);
 						this->rightEigenvectors.push_back(rightEigenvectors[i]);
 					}
@@ -411,9 +412,9 @@ namespace RAC
 				this->t60s = Vec<>(t60sData);
 				this->frequencyIndexing = Vec<int>(frequencyIndexingData);
 
-				this->energyDecay = Vec<>(t60s.Rows());
-				for (int i = 0; i < this->t60s.Rows(); i++)
-					this->energyDecay[i] = Pow10(- 6.0 / this->t60s[i]);
+				this->energyDecay = Vec<>(t60s.Length());
+				for (int i = 0; i < this->t60s.Length(); i++)
+					this->energyDecay(i) = Pow10(- 6.0 / this->t60s(i));
 			}
 		};
 

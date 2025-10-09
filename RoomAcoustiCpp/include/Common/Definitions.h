@@ -39,12 +39,6 @@ namespace RAC
 		const constexpr Real EPS = 0.000001;				// Tolerance for some floating point comparisons
 		const constexpr Real MIN_VALUE = 10.0 * DBL_MIN;	// Minimum value for trimming BTM FIR filter
 
-		const constexpr Real EPS_FACING = 1e-7;			// Tolerance for facing test: dot(n,O) + d0 > facing.
-		const constexpr Real EPS_EDGE = 1e-7;			// Tolerance for side predicates (edge-inclusive).
-		const constexpr Real EPS_PARALLEL = 1e-7;		// Tolerance for near-parallel plane denominator.
-		const constexpr Real EPS_SELFHIT = 1e-3;		// Minimum distance between ray origin and valid intersection.
-		const constexpr Real EPS_ZFIGHT = 1e-5;			// Detection range for Z-fighting triangles.
-
 		//////////////////// Mathematical Constants ////////////////////
 
 		const constexpr Real PI_1 = 3.141592653589793238462643383279502884197169399375105820974944;
@@ -65,6 +59,17 @@ namespace RAC
 
 		const constexpr Real PHI = 1.61803398874989484820458683436563811772030917980576286213544862270526046281890; // golden ratio
 		const constexpr Real INV_PHI = 1.0 / PHI;
+
+		//////////////////// Epsilons ////////////////////
+
+		const constexpr Real EPS_FACING = 1e-7;			// Tolerance for facing test: dot(n,O) + d0 > facing.
+		const constexpr Real EPS_EDGE = 1e-7;			// Tolerance for side predicates (edge-inclusive).
+		const constexpr Real EPS_PARALLEL = 1e-7;		// Tolerance for near-parallel plane denominator.
+		const constexpr Real EPS_SELFHIT = 1e-3;		// Minimum distance between ray origin and valid intersection.
+		const constexpr Real EPS_ZFIGHT = 1e-5;			// Detection range for Z-fighting triangles.
+
+		const constexpr Real EPS_POSITION = 0.05;						// Tolerance for position changes (m)
+		const constexpr Real EPS_ORIENTATION = 1.0 * PI_1 / 180.0;		// Tolerance for orientation changes (rad)
 
 		//////////////////// Mathematical Functions ////////////////////
 
@@ -112,12 +117,6 @@ namespace RAC
 		const constexpr Real EPS = 0.000001f;				// Tolerance for some floating point comparisons
 		const constexpr Real MIN_VALUE = 10.0f * FLT_MIN;	// Minimum value for trimming BTM FIR filter
 
-		const constexpr Real EPS_FACING = 1e-7f;		// Tolerance for facing test: dot(n,O) + d0 > facing.
-		const constexpr Real EPS_EDGE = 1e-7f;			// Tolerance for side predicates (edge-inclusive).
-		const constexpr Real EPS_PARALLEL = 1e-7f;		// Tolerance for near-parallel plane denominator.
-		const constexpr Real EPS_SELFHIT = 1e-3f;		// Minimum distance between ray origin and valid intersection.
-		const constexpr Real EPS_ZFIGHT = 1e-5f;		// Detection range for Z-fighting triangles.
-
 		//////////////////// Mathematical Constants ////////////////////
 
 		const constexpr Real PI_1 = 3.141592653589793238462643383279502884197169399375105820974944f;
@@ -137,6 +136,18 @@ namespace RAC
 		const constexpr Real INV_LOG2_10 = 1.0f / LOG2_10;
 
 		const constexpr Real PHI = 1.61803398874989484820458683436563811772030917980576286213544862270526046281890f; // golden ratio
+		const constexpr Real INV_PHI = 1.0f / PHI;
+
+		//////////////////// Epsilons ////////////////////
+
+		const constexpr Real EPS_FACING = 1e-7f;		// Tolerance for facing test: dot(n,O) + d0 > facing.
+		const constexpr Real EPS_EDGE = 1e-7f;			// Tolerance for side predicates (edge-inclusive).
+		const constexpr Real EPS_PARALLEL = 1e-7f;		// Tolerance for near-parallel plane denominator.
+		const constexpr Real EPS_SELFHIT = 1e-3f;		// Minimum distance between ray origin and valid intersection.
+		const constexpr Real EPS_ZFIGHT = 1e-5f;		// Detection range for Z-fighting triangles.
+
+		const constexpr Real EPS_POSITION = 0.05f;						// Tolerance for position changes (m)
+		const constexpr Real EPS_ORIENTATION = 1.0f * PI_1 / 180.0f;	// Tolerance for orientation changes (rad)
 
 		//////////////////// Mathematical Functions ////////////////////
 
@@ -402,35 +413,6 @@ namespace RAC
 		} ;
 
 		/**
-		 * @brief Get a set of prime numbers (returns -1 if the requested range exceeds the known primes)
-		 * 
-		 * @param minIndex Index (within the list of primes) of the first prime to include
-		 * @param length The number of primes to return
-		 * @param stride Step between subsequent primes in the resulting set (1 means adjacent primes)
-		 * @return Vector of primes
-		 */
-		inline std::vector<int> GetSetOfPrimes(int minIndex, int length, int stride)
-		{
-			std::vector<int> result(length, -1);
-
-			// TODO: Throw an exception in either case.
-			if (stride == 0)
-				return result;
-			if (minIndex < 0 || minIndex >= sizeof(PRIMES))
-				return result;
-
-			int i = minIndex;
-			for (int j = 0; j < length; ++j)
-			{
-				result[j] = PRIMES[i];
-				i += stride;
-				if (i < 0 || i >= sizeof(PRIMES))
-					break;
-			}
-			return result;
-		}
-
-		/**
 		 * @brief Safely converts a size into an integer, checking to make sure it's in range (in debug)
 		 *
 		 * @param size The size to convert
@@ -441,10 +423,6 @@ namespace RAC
 			assert(size < std::numeric_limits<int>::max());
 			return static_cast<int>(size);
 		}
-
-
-
-
 	}
 }
 

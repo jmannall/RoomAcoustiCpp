@@ -23,7 +23,7 @@ namespace RAC
 			const int rows = 5;
 			const int cols = 4;
 
-			Matrix m = Matrix(rows, cols);
+			Matrix<> m(rows, cols);
 
 			Real x = 1.0;
 
@@ -42,7 +42,7 @@ namespace RAC
 			const int rows = 5;
 			const int cols = 4;
 
-			Matrix m = Matrix(rows, cols);
+			Matrix<> m(rows, cols);
 
 			Real x = 1.0;
 
@@ -58,7 +58,7 @@ namespace RAC
 				}
 			}
 
-			Matrix mat = Matrix(m);
+			Matrix<> mat(m);
 
 			for (int i = 0; i < rows; i++)
 			{
@@ -85,8 +85,8 @@ namespace RAC
 			const int a = 2;
 			const int b = 3;
 
-			Matrix x = Matrix(a, b);
-			Matrix y = Matrix(b, a);
+			Matrix<> x(a, b);
+			Matrix<> y(b, a);
 
 			for (int i = 0; i < a; i++)
 			{
@@ -103,7 +103,7 @@ namespace RAC
 			y(1, 0) = 4.0;
 			y(0, 1) = 3.0;
 
-			Matrix z = x * y;
+			Matrix<> z = x * y;
 
 			Assert::AreEqual((Real)11.0, z(0, 0), L"Error (0, 0)");
 			Assert::AreEqual((Real)12.0, z(0, 1), L"Error (0, 1)");
@@ -117,7 +117,7 @@ namespace RAC
 			Assert::AreEqual((Real)28.0, z(1, 0), L"Error 2 (1, 0)");
 			Assert::AreEqual((Real)14.0, z(1, 1), L"Error 2 (1, 1)");
 
-			Matrix w = z * 2.0;
+			Matrix<> w = z * 2.0;
 
 			Assert::AreEqual((Real)44.0, w(0, 0), L"Error 3 (0, 0)");
 			Assert::AreEqual((Real)48.0, w(0, 1), L"Error 3 (0, 1)");
@@ -130,8 +130,8 @@ namespace RAC
 			const int a = 2;
 			const int b = 3;
 
-			Matrix x = Matrix(a, b);
-			Matrix y = Matrix(a, b);
+			Matrix<> x(a, b);
+			Matrix<> y(a, b);
 
 			for (int i = 0; i < a; i++)
 			{
@@ -149,7 +149,7 @@ namespace RAC
 			y(0, 1) = 3.0;
 			y(0, 0) = 7.0;
 
-			Matrix z = x + y;
+			auto z = x + y;
 
 			Assert::AreEqual((Real)9.0, z(0, 0), L"Error (0, 0)");
 			Assert::AreEqual((Real)4.0, z(0, 1), L"Error (0, 1)");
@@ -164,7 +164,7 @@ namespace RAC
 			const int a = 2;
 			const int b = 3;
 
-			Matrix x = Matrix(a, b);
+			Matrix<> x(a, b);
 
 			for (int i = 0; i < a; i++)
 			{
@@ -174,7 +174,7 @@ namespace RAC
 				}
 			}
 
-			Matrix y = -x;
+			auto y = -x;
 
 			Assert::AreEqual((Real)-1.0, y(0, 0), L"Error (0, 0)");
 			Assert::AreEqual((Real)-1.0, y(0, 1), L"Error (0, 1)");
@@ -189,8 +189,8 @@ namespace RAC
 			const int a = 2;
 			const int b = 3;
 
-			Matrix x = Matrix(a, b);
-			Matrix y = Matrix(a, b);
+			Matrix<> x(a, b);
+			Matrix<> y(a, b);
 
 			Assert::AreEqual(true, x == y, L"Match");
 
@@ -211,7 +211,7 @@ namespace RAC
 			const int b = 3;
 
 			std::vector<std::vector<Real>> mat = { {1.0, -2.0, 3.0}, {4.0, 5.0, -6.0} };
-			Matrix x = Matrix(a, b);
+			Matrix<> x(a, b);
 
 			for (int i = 0; i < a; i++)
 			{
@@ -236,7 +236,7 @@ namespace RAC
 			const int b = 3;
 
 			std::vector<std::vector<Real>> mat = { {1.0, -2.0, 3.0}, {4.0, 5.0, -6.0} };
-			Matrix x = Matrix(a, b);
+			Matrix<> x(a, b);
 
 			for (int i = 0; i < a; i++)
 			{
@@ -261,7 +261,7 @@ namespace RAC
 			const int b = 3;
 
 			std::vector<std::vector<Real>> mat = { {1.0, -2.0, 3.0}, {4.0, 5.0, -6.0} };
-			Matrix x = Matrix(a, b);
+			Matrix<> x(a, b);
 
 			for (int i = 0; i < a; i++)
 			{
@@ -273,12 +273,12 @@ namespace RAC
 
 			x.Pow10();
 
-			Assert::AreEqual(result[0][0], x(0, 0), 1e-9, L"Sample [0][0] incorrect");
-			Assert::AreEqual(result[0][1], x(0, 1), 1e-9, L"Sample [0][1] incorrect");
-			Assert::AreEqual(result[0][2], x(0, 2), 1e-9, L"Sample [0][2] incorrect");
-			Assert::AreEqual(result[1][0], x(1, 0), 1e-9, L"Sample [1][0] incorrect");
-			Assert::AreEqual(result[1][1], x(1, 1), 1e-9, L"Sample [1][1] incorrect");
-			Assert::AreEqual(result[1][2], x(1, 2), 1e-9, L"Sample [1][2] incorrect");
+			Assert::AreEqual(result[0][0], x(0, 0), (Real)1e-9, L"Sample [0][0] incorrect");
+			Assert::AreEqual(result[0][1], x(0, 1), (Real)1e-9, L"Sample [0][1] incorrect");
+			Assert::AreEqual(result[0][2], x(0, 2), (Real)1e-9, L"Sample [0][2] incorrect");
+			Assert::AreEqual(result[1][0], x(1, 0), (Real)1e-9, L"Sample [1][0] incorrect");
+			Assert::AreEqual(result[1][1], x(1, 1), (Real)1e-9, L"Sample [1][1] incorrect");
+			Assert::AreEqual(result[1][2], x(1, 2), (Real)1e-9, L"Sample [1][2] incorrect");
 		}
 
 		TEST_METHOD(Log10)
@@ -287,7 +287,7 @@ namespace RAC
 			const int b = 3;
 
 			std::vector<std::vector<Real>> mat = { {1.0, 0.5, 3.0}, {4.0, 5.0, 0.1} };
-			Matrix x = Matrix(a, b);
+			Matrix<> x(a, b);
 
 			for (int i = 0; i < a; i++)
 			{
@@ -299,19 +299,19 @@ namespace RAC
 
 			x.Log10();
 
-			Assert::AreEqual(result[0][0], x(0, 0), 1e-10, L"Sample [0][0] incorrect");
-			Assert::AreEqual(result[0][1], x(0, 1), 1e-10, L"Sample [0][1] incorrect");
-			Assert::AreEqual(result[0][2], x(0, 2), 1e-10, L"Sample [0][2] incorrect");
-			Assert::AreEqual(result[1][0], x(1, 0), 1e-10, L"Sample [1][0] incorrect");
-			Assert::AreEqual(result[1][1], x(1, 1), 1e-10, L"Sample [1][1] incorrect");
-			Assert::AreEqual(result[1][2], x(1, 2), 1e-10, L"Sample [1][2] incorrect");
+			Assert::AreEqual(result[0][0], x(0, 0), (Real)(Real)1e-10, L"Sample [0][0] incorrect");
+			Assert::AreEqual(result[0][1], x(0, 1), (Real)1e-10, L"Sample [0][1] incorrect");
+			Assert::AreEqual(result[0][2], x(0, 2), (Real)1e-10, L"Sample [0][2] incorrect");
+			Assert::AreEqual(result[1][0], x(1, 0), (Real)1e-10, L"Sample [1][0] incorrect");
+			Assert::AreEqual(result[1][1], x(1, 1), (Real)1e-10, L"Sample [1][1] incorrect");
+			Assert::AreEqual(result[1][2], x(1, 2), (Real)1e-10, L"Sample [1][2] incorrect");
 		}
 
 		TEST_METHOD(Inverse)
 		{
 			const int size = 5;
 			std::vector<std::vector<Real>> mat = { {1.1, 1.2, -1.0, 0.7, 0.1}, {1.3, 2.1, 2.4, -0.9, -1.0}, {-2.1, 3.1, 1.6, 1.2, 3.5}, {1.2, -3.0, -0.12, 0.5, -0.2}, {1.2, -1.4, 1.2, -0.1, 2.3} };
-			Matrix x = Matrix(size, size);
+			Matrix<> x(size, size);
 
 			for (int i = 0; i < size; i++)
 			{
@@ -325,11 +325,11 @@ namespace RAC
 				{0.24690160608254744694, 0.12410708023695619754, 0.39766724634732041366, 0.8252978992215058399, -0.49015602727939949022},
 				{0.061879592705605533348, -0.15876012136250801363, -0.013383300949583094259, -0.26825870582877869972, 0.36010510066292022744} };
 
-			x.Inverse();
+			Matrix<> inverseX = x.InverseMatrix();
 			for (int i = 0; i < size; i++)
 			{
 				for (int j = 0; j < size; j++)
-					Assert::AreEqual(result[i][j], x(i, j), 1e-15, L"Inverse incorrect");
+					Assert::AreEqual(result[i][j], inverseX(i, j), (Real)1e-15, L"Inverse incorrect");
 			}
 		}
 	};

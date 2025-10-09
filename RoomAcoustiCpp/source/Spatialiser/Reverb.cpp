@@ -119,7 +119,7 @@ namespace RAC
 		{
 			CTransform newTransform;
 			const Vec3 position = listenerPosition + mShift;
-			newTransform.SetPosition(CVector3(static_cast<float>(position.x), static_cast<float>(position.y), static_cast<float>(position.z)));
+			newTransform.SetPosition(CVector3(static_cast<float>(position.x()), static_cast<float>(position.y()), static_cast<float>(position.z())));
 			const shared_ptr<CTransform> newTransformCopy = make_shared<CTransform>(newTransform);
 
 			releasePool.Add(newTransformCopy);
@@ -257,7 +257,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void SingleFDN::SetTargetOutputFilters(const std::vector<Absorption<>>& gains)
+		void SingleFDN::SetTargetOutputFilters(const std::vector<Coefficients<>>& gains)
 		{
 			PROFILE_UpdateAudioData
 			if (!initialised.load(std::memory_order_acquire))
@@ -280,8 +280,7 @@ namespace RAC
 			int numFDNs = dspConfig->GetNumFDNs();
 			int fdnSize = dspConfig->GetData().fdnSize;
 
-			std::vector<int> delayLineLengths(fdnSize, -1);
-
+			Vec<int> delayLineLengths(fdnSize);
 			FDNPtr fdns = std::make_shared<std::vector<std::unique_ptr<FDN<Complex>>>>(numFDNs);
 			for (int i = 0; i < numFDNs; i++)
 			{
@@ -293,13 +292,13 @@ namespace RAC
 				switch (data.feedbackMatrix)
 				{
 				case FDNMatrix::householder:
-					fdns->at(i) = std::make_unique<HouseHolderFDN<Complex>>(data.t60s[i], delayLineLengths, dspConfig);
+					fdns->at(i) = std::make_unique<HouseHolderFDN<Complex>>(data.t60s(i), delayLineLengths, dspConfig);
 					break;
 				case FDNMatrix::randomOrthogonal:
-					fdns->at(i) = std::make_unique<RandomOrthogonalFDN<Complex>>(data.t60s[i], delayLineLengths, dspConfig);
+					fdns->at(i) = std::make_unique<RandomOrthogonalFDN<Complex>>(data.t60s(i), delayLineLengths, dspConfig);
 					break;
 				default:
-					fdns->at(i) = std::make_unique<FDN<Complex>>(data.t60s[i], delayLineLengths, dspConfig);
+					fdns->at(i) = std::make_unique<FDN<Complex>>(data.t60s(i), delayLineLengths, dspConfig);
 					break;
 				}
 				fdns->at(i)->SetMinimumReverbTime(data.minimumT60);
@@ -339,9 +338,13 @@ namespace RAC
 
 			auto fdns = mFDNs.load(); // Parallelise the processing of multiple FDNs
 			for (int i = 0; i < fdns->size(); i++)
-				fdns->at(i)->SubmitAudio(data.GetRowStartPtr(i));
+#if MATRIX_LIBRARY == EIGEN_FLAG
+				fdns->at(i)->SubmitAudio(data.Row(i));
+#else
+				fdns->at(i)->SubmitAudio(data, i);
+#endif
 
-			audioThreadPool->ProcessFDNs(*fdns, outputBuffers, audioData);
+			audioThreadPool->ProcessFDNs(*fdns, outputBuffers, audioData); 
 			/*for (int i = 0; i < fdns->size(); i++)
 				fdns->at(i)->ProcessAudio(outputBuffers, lerpFactor);*/
 		}

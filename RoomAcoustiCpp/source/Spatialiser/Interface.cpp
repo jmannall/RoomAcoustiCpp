@@ -250,7 +250,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		int InitMaterial(const Absorption<>& material)
+		int InitMaterial(const Coefficients<>& material)
 		{
 			auto context = GetContext();
 			if (context)
@@ -261,7 +261,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void UpdateMaterial(const size_t id, const Absorption<>& material)
+		void UpdateMaterial(const size_t id, const Coefficients<>& material)
 		{
 			auto context = GetContext();
 			if (context)
@@ -342,6 +342,15 @@ namespace RAC
 				context->GetOutput(outputBuffer);
 			else
 				outputBuffer.Reset();
+		}
+
+		////////////////////////////////////////
+
+		void RecordImpulseResponse(const Vec3& position, const Vec4& orientation, Buffer<>& outputBuffer)
+		{
+			auto context = GetContext();
+			if (context)
+				context->RecordImpulseResponse(position, orientation, outputBuffer);
 		}
 
 		////////////////////////////////////////

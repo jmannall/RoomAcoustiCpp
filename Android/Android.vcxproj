@@ -1,6 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug_Baseline|ARM">
+      <Configuration>Debug_Baseline</Configuration>
+      <Platform>ARM</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug_Baseline|ARM64">
+      <Configuration>Debug_Baseline</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|ARM">
       <Configuration>Debug</Configuration>
       <Platform>ARM</Platform>
@@ -19,6 +27,22 @@
     </ProjectConfiguration>
     <ProjectConfiguration Include="Release_ProfileDetailed|ARM64">
       <Configuration>Release_ProfileDetailed</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release_ProfileExe_Baseline|ARM">
+      <Configuration>Release_ProfileExe_Baseline</Configuration>
+      <Platform>ARM</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release_ProfileExe_Baseline|ARM64">
+      <Configuration>Release_ProfileExe_Baseline</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release_ProfileExe|ARM">
+      <Configuration>Release_ProfileExe</Configuration>
+      <Platform>ARM</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release_ProfileExe|ARM64">
+      <Configuration>Release_ProfileExe</Configuration>
       <Platform>ARM64</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Release_Profile|ARM">
@@ -57,7 +81,25 @@
     <PlatformToolset>Clang_5_0</PlatformToolset>
     <AndroidAPILevel>android-30</AndroidAPILevel>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_Baseline|ARM64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>Clang_5_0</PlatformToolset>
+    <AndroidAPILevel>android-30</AndroidAPILevel>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>Clang_5_0</PlatformToolset>
+    <AndroidAPILevel>android-28</AndroidAPILevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_ProfileExe|ARM64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>Clang_5_0</PlatformToolset>
+    <AndroidAPILevel>android-28</AndroidAPILevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_ProfileExe_Baseline|ARM64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>Clang_5_0</PlatformToolset>
@@ -86,7 +128,22 @@
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>Clang_5_0</PlatformToolset>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_Baseline|ARM'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>Clang_5_0</PlatformToolset>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>Clang_5_0</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_ProfileExe|ARM'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>Clang_5_0</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_ProfileExe_Baseline|ARM'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>Clang_5_0</PlatformToolset>
@@ -119,7 +176,16 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <TargetName>libRoomAcoustiCpp</TargetName>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_Baseline|ARM64'">
+    <TargetName>libRoomAcoustiCpp</TargetName>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
+    <TargetName>libRoomAcoustiCpp</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_ProfileExe|ARM64'">
+    <TargetName>libRoomAcoustiCpp</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_ProfileExe_Baseline|ARM64'">
     <TargetName>libRoomAcoustiCpp</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_Debug|ARM64'">
@@ -152,7 +218,68 @@
       <AdditionalLibraryDirectories>$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\lib;$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\lib\win;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_Baseline|ARM64'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PreprocessorDefinitions>_ANDROID;_3DTI_AXIS_CONVENTION_UNITY;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <CppLanguageStandard>c++1z</CppLanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)$(PathTo3DTI)3dti_Toolkit;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\cereal\include;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\boost_circular_buffer;$(SolutionDir)RoomAcoustiCpp\include;$(SolutionDir)RoomAcoustiCpp\codegen\lib\myNN\include;$(SolutionDir)RoomAcoustiCpp\include\Spatialiser;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ExceptionHandling>Enabled</ExceptionHandling>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <AdditionalOptions>-fdeclspec %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>netcdf_x64.lib;libsofa_debug_x64.lib</AdditionalDependencies>
+      <AdditionalOptions>-lm -v -fopenmp %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalLibraryDirectories>$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\lib;$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\lib\win;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PreprocessorDefinitions>_ANDROID;_3DTI_AXIS_CONVENTION_UNITY;_OPENMP_LLVM_RUNTIME;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\Documents\GitHub\microsoft\vcpkg\installed\x64-windows\include;$(SysRoot)\usr\inc\c++\v1;$(SysRoot)\usr\inc;$(SysRoot)\usr\inc\$(AndroidHeaderTriple);$(SolutionDir)$(PathTo3DTI)3dti_Toolkit;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\cereal\include;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\boost_circular_buffer;$(SolutionDir)RoomAcoustiCpp\include;$(SolutionDir)RoomAcoustiCpp\codegen\lib\myNN\include;$(SolutionDir)RoomAcoustiCpp\include\Spatialiser;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <CppLanguageStandard>c++1z</CppLanguageStandard>
+      <ExceptionHandling>Enabled</ExceptionHandling>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <AdditionalOptions>-fdeclspec %(AdditionalOptions)</AdditionalOptions>
+      <EnableNeonCodegen>true</EnableNeonCodegen>
+      <Optimization>MaxSpeed</Optimization>
+    </ClCompile>
+    <Link>
+      <AdditionalOptions>-lm -v -lomp %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <LibraryDependencies>%(LibraryDependencies)</LibraryDependencies>
+      <SharedLibrarySearchPath>%(SharedLibrarySearchPath)</SharedLibrarySearchPath>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_ProfileExe|ARM64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PreprocessorDefinitions>_ANDROID;_3DTI_AXIS_CONVENTION_UNITY;_OPENMP_LLVM_RUNTIME;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\Documents\GitHub\microsoft\vcpkg\installed\x64-windows\include;$(SysRoot)\usr\inc\c++\v1;$(SysRoot)\usr\inc;$(SysRoot)\usr\inc\$(AndroidHeaderTriple);$(SolutionDir)$(PathTo3DTI)3dti_Toolkit;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\cereal\include;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\boost_circular_buffer;$(SolutionDir)RoomAcoustiCpp\include;$(SolutionDir)RoomAcoustiCpp\codegen\lib\myNN\include;$(SolutionDir)RoomAcoustiCpp\include\Spatialiser;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <CppLanguageStandard>c++1z</CppLanguageStandard>
+      <ExceptionHandling>Enabled</ExceptionHandling>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <AdditionalOptions>-fdeclspec %(AdditionalOptions)</AdditionalOptions>
+      <EnableNeonCodegen>true</EnableNeonCodegen>
+      <Optimization>MaxSpeed</Optimization>
+    </ClCompile>
+    <Link>
+      <AdditionalOptions>-lm -v -lomp %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <LibraryDependencies>%(LibraryDependencies)</LibraryDependencies>
+      <SharedLibrarySearchPath>%(SharedLibrarySearchPath)</SharedLibrarySearchPath>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_ProfileExe_Baseline|ARM64'">
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -247,7 +374,28 @@
       <AdditionalIncludeDirectories>D:\Joshua Mannall\VisualStudio\RoomAcoustiCpp\RoomAcoustiCpp\codegen\lib\myNN\include;D:\Joshua Mannall\VisualStudio\RoomAcoustiCpp\RoomAcoustiCpp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_Baseline|ARM'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>D:\Joshua Mannall\VisualStudio\RoomAcoustiCpp\RoomAcoustiCpp\codegen\lib\myNN\include;D:\Joshua Mannall\VisualStudio\RoomAcoustiCpp\RoomAcoustiCpp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>D:\Joshua Mannall\VisualStudio\RoomAcoustiCpp\RoomAcoustiCpp\codegen\lib\myNN\include;D:\Joshua Mannall\VisualStudio\RoomAcoustiCpp\RoomAcoustiCpp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_ProfileExe|ARM'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>D:\Joshua Mannall\VisualStudio\RoomAcoustiCpp\RoomAcoustiCpp\codegen\lib\myNN\include;D:\Joshua Mannall\VisualStudio\RoomAcoustiCpp\RoomAcoustiCpp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_ProfileExe_Baseline|ARM'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>

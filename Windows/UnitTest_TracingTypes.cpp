@@ -59,7 +59,7 @@ namespace RAC
 			allVertices[41] = Vec3({ 0.0, 1.0, 10.0 });
 
 			Vertices testVertices;
-			Absorption<> testAbsorption(0.5);
+			Coefficients<> testAbsorption = Coefficients<>::Constant(1, 0.5);
 			int node = 0;
 			for (int i = 0; i < 40; i += 3) {
 				testVertices = Vertices({ allVertices[i], allVertices[i + 1], allVertices[i + 2] });
@@ -285,16 +285,16 @@ namespace RAC
 			RayPencilSoA testRays;
 			testRays.resize(6);
 			for (int i = 0; i < 6; ++i) {
-				testRays.Dx[i] = testDirections[i].x;
-				testRays.Dy[i] = testDirections[i].y;
-				testRays.Dz[i] = testDirections[i].z;
+				testRays.Dx[i] = testDirections[i].x();
+				testRays.Dy[i] = testDirections[i].y();
+				testRays.Dz[i] = testDirections[i].z();
 			}
 
 			Real expected_distance, result_distance, result_cosine;
 			for (int oi = 0; oi < 2; ++oi) {
-				testRays.Ox = testOrigins[oi].x;
-				testRays.Oy = testOrigins[oi].y;
-				testRays.Oz = testOrigins[oi].z;
+				testRays.Ox = testOrigins[oi].x();
+				testRays.Oy = testOrigins[oi].y();
+				testRays.Oz = testOrigins[oi].z();
 
 				// Note that this also computes the moments if needed.
 				testRays.normalize_directions();
@@ -357,18 +357,18 @@ namespace RAC
 			RayPencilSoA testRays;
 			testRays.resize(6);
 			for (int i = 0; i < 6; ++i) {
-				testRays.Dx[i] = testDirections[i].x;
-				testRays.Dy[i] = testDirections[i].y;
-				testRays.Dz[i] = testDirections[i].z;
+				testRays.Dx[i] = testDirections[i].x();
+				testRays.Dy[i] = testDirections[i].y();
+				testRays.Dz[i] = testDirections[i].z();
 			}
 
 			Real expected_distance_front, result_distance_front, result_cosine_front;
 			Real expected_distance_back, result_distance_back, result_cosine_back;
 			int expected_idx_front, result_idx_front, expected_idx_back, result_idx_back;
 			for (int oi = 0; oi < 2; ++oi) {
-				testRays.Ox = testOrigins[oi].x;
-				testRays.Oy = testOrigins[oi].y;
-				testRays.Oz = testOrigins[oi].z;
+				testRays.Ox = testOrigins[oi].x();
+				testRays.Oy = testOrigins[oi].y();
+				testRays.Oz = testOrigins[oi].z();
 
 				// Note that this also computes the moments if needed.
 				testRays.normalize_directions();
@@ -452,12 +452,12 @@ namespace RAC
 			for (int oi = 0; oi < 2; ++oi) {
 				for (int di = 0; di < 6; ++di) {
 					int ri = di + (oi * 6);
-					testRays.Ox[ri] = testOrigins[oi].x;
-					testRays.Oy[ri] = testOrigins[oi].y;
-					testRays.Oz[ri] = testOrigins[oi].z;
-					testRays.Dx[ri] = testDirections[di].x;
-					testRays.Dy[ri] = testDirections[di].y;
-					testRays.Dz[ri] = testDirections[di].z;
+					testRays.Ox[ri] = testOrigins[oi].x();
+					testRays.Oy[ri] = testOrigins[oi].y();
+					testRays.Oz[ri] = testOrigins[oi].z();
+					testRays.Dx[ri] = testDirections[di].x();
+					testRays.Dy[ri] = testDirections[di].y();
+					testRays.Dz[ri] = testDirections[di].z();
 				}
 			}
 
@@ -526,12 +526,12 @@ namespace RAC
 			for (int oi = 0; oi < 2; ++oi) {
 				for (int di = 0; di < 6; ++di) {
 					int ri = di + (oi * 6);
-					testRays.Ox[ri] = testOrigins[oi].x;
-					testRays.Oy[ri] = testOrigins[oi].y;
-					testRays.Oz[ri] = testOrigins[oi].z;
-					testRays.Dx[ri] = testDirections[di].x;
-					testRays.Dy[ri] = testDirections[di].y;
-					testRays.Dz[ri] = testDirections[di].z;
+					testRays.Ox[ri] = testOrigins[oi].x();
+					testRays.Oy[ri] = testOrigins[oi].y();
+					testRays.Oz[ri] = testOrigins[oi].z();
+					testRays.Dx[ri] = testDirections[di].x();
+					testRays.Dy[ri] = testDirections[di].y();
+					testRays.Dz[ri] = testDirections[di].z();
 				}
 			}
 

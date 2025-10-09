@@ -31,7 +31,7 @@ namespace RAC
 		////////////////////////////////////////
 
 		ImageEdge::ImageEdge(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, const EarlyReverbData& data, const std::shared_ptr<DSPConfig>& dspConfig) :
-			mRoom(room), mSourceManager(sourceManager), frequencyBands(dspConfig->GetData().numFrequencyBands), currentCycle(false), configChanged(true), reverbRunning(false),
+			mRoom(room), mSourceManager(sourceManager), frequencyBands(dspConfig->GetData().numFrequencyBands),
 			earlyReverbData(data, dspConfig->GetDiffractionModel()), earlyReverbDataIncoming(data, dspConfig->GetDiffractionModel())
 		{
 			sp = std::vector<std::vector<ImageSourceData>>();
@@ -40,7 +40,7 @@ namespace RAC
 			// TODO: Move to ray tracing thread
 			// shared_ptr<Reverb> sharedReverb = mReverb.lock();
 			// sharedReverb->GetReverbSourceDirections(reverbDirections);
-			// reverbAbsorptions = std::vector<Absorption<>>(static_cast<int>(reverbDirections.size()), Absorption(frequencyBands.Length()));
+			// reverbAbsorptions = std::vector<Coefficients<>>(static_cast<int>(reverbDirections.size()), Coefficients<>(frequencyBands.Length()));
 		}
 
 		////////////////////////////////////////
@@ -53,6 +53,7 @@ namespace RAC
 #ifdef IEM_FLAG
 			Debug::IEMStartFlag();
 #endif
+			iemStartFlag.store(true, std::memory_order_release);
 
 			shared_ptr<Room> sharedRoom = mRoom.lock();
 			if (sharedRoom->HasChanged())
@@ -71,9 +72,10 @@ namespace RAC
 
 			{
 				lock_guard<std::mutex> lock(dataStoreMutex);
-				if (mListenerPosition != mListenerPositionStore)
+				if (listenerMoved)
 				{
-					mListenerPosition = mListenerPositionStore;
+					mListenerPosition = mListenerPositionIncoming;
+					listenerMoved = false;
 					doIEM = true;
 				}
 				if (configChanged)
@@ -88,9 +90,8 @@ namespace RAC
 			if (imageSources.size() != mSources.size())
 			{
 				imageSources.resize(mSources.size());
-				mSourceAudioDatas.resize(mSources.size(), Source::DSPParameters(frequencyBands.Length(), false)); // TODO: Revove late reverb model from here
+				mSourceAudioDatas.resize(mSources.size(), Source::DSPParameters(frequencyBands.Length(), false));
 				mCurrentCycles.resize(mSources.size());
-				// doIEM = true;
 			}
 
 			int i = 0;
@@ -111,6 +112,8 @@ namespace RAC
 #ifdef IEM_FLAG
 			Debug::IEMEndFlag();
 #endif
+			iemEndFlag.store(true, std::memory_order_release);
+			iemStartFlag.store(false, std::memory_order_release);
 		}
 
 		////////////////////////////////////////
@@ -132,7 +135,7 @@ namespace RAC
 		{
 			int bounceIdx = static_cast<int>(intersections.size()) - 1;
 			imageSource.ResetAbsorption();
-			Absorption<>& absorption = imageSource.GetAbsorption();
+			Coefficients<>& absorption = imageSource.GetAbsorption();
 			bool valid = false;
 			if (imageSource.IsReflection(bounceIdx))
 			{
@@ -190,7 +193,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		bool ImageEdge::LinePlaneIntersection(const Vec3& start, const Vec3& end, const Plane& plane, Absorption<>& absorption, Vec3& intersection) const
+		bool ImageEdge::LinePlaneIntersection(const Vec3& start, const Vec3& end, const Plane& plane, Coefficients<>& absorption, Vec3& intersection) const
 		{
 			if (plane.LinePlaneIntersection(start, end))
 			{
@@ -202,7 +205,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		bool ImageEdge::LineWallIntersection(const Vec3& start, const Vec3& end, const std::vector<size_t>& wallIDs, Absorption<>& absorption, Vec3& intersection) const
+		bool ImageEdge::LineWallIntersection(const Vec3& start, const Vec3& end, const std::vector<size_t>& wallIDs, Coefficients<>& absorption, Vec3& intersection) const
 		{
 			for (const size_t wallID : wallIDs)
 			{
@@ -314,90 +317,81 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		Absorption<> ImageEdge::CalculateDirectivity(const Source::Data& source, const Vec3& point) const
+		Coefficients<> ImageEdge::CalculateDirectivity(const Source::Data& source, const Vec3& point) const
 		{
-			Absorption directivity(frequencyBands.Length());
+			Coefficients<> directivity(frequencyBands.Length());
 			Real ret = 0.0;
 			switch (source.directivity)
 			{
+			default:
 			case SourceDirectivity::omni:
-			{ directivity = 1.0; break; }
+			{ directivity.SetConstant(1.0); break; }
 			case SourceDirectivity::subcardioid:
 			{
-				Real angle = acos(Dot(source.forward, UnitVector(point - source.position)));
-				ret = 0.7 + 0.3 * cos(angle);
+				Real angle = std::acos(source.forward.dot((point - source.position).Normalised()));
+				directivity.SetConstant(0.7 + 0.3 * cos(angle));
 				break;
 			}
 			case SourceDirectivity::cardioid:
 			{
-				Real angle = std::acos(Dot(source.forward, UnitVector(point - source.position)));
+				Real angle = std::acos(source.forward.dot((point - source.position).Normalised()));
 				ret = 0.5 * (1 + std::cos(angle));
 				break;
 			}
 			case SourceDirectivity::supercardioid:
 			{
-				Real angle = std::acos(Dot(source.forward, UnitVector(point - source.position)));
-				ret = 0.37 + 0.63 * std::cos(angle);
+				Real angle = std::acos(source.forward.dot((point - source.position).Normalised()));
+				ret = std::abs(0.37 + 0.63 * std::cos(angle));
 				break;
 			}
 			case SourceDirectivity::hypercardioid:
 			{
-				Real angle = std::acos(Dot(source.forward, UnitVector(point - source.position)));
-				ret = 0.25 + 0.75 * std::cos(angle);
+				Real angle = std::acos(source.forward.dot((point - source.position).Normalised()));
+				ret = std::abs(0.25 + 0.75 * std::cos(angle));
 				break;
 			}
 			case SourceDirectivity::bidirectional:
 			{
-				Real angle = std::acos(Dot(source.forward, UnitVector(point - source.position)));
+				Real angle = std::acos(source.forward.dot((point - source.position).Normalised()));
 				ret = std::abs(std::cos(angle));
 				break;
 			}
 			case SourceDirectivity::genelec8020c:
 			{
-				Vec3 direction = UnitVector(point - source.position);
-				Vec3 localDirection = source.orientation.RotateVector(direction);
+				Vec3 direction = (point - source.position).Normalised();
+				Vec3 localDirection = RotateVector(direction, source.orientation);
 
-				Real theta = std::acos(localDirection.z);
-				Real phi = -std::atan2(localDirection.x, localDirection.y); // -phi converts from left-handed coordinate system to right-handed coordinate system
-				// Debug::Log("Theta: " + RealToStr(Rad2Deg(theta)) + ", Phi: " + RealToStr(Rad2Deg(phi < 0.0 ? phi + PI_2: phi)), Colour::Yellow);
-
-				directivity = GENELEC.Response(frequencyBands, theta, phi);
+				directivity = GENELEC.Response(frequencyBands, localDirection);
 				break;
 			}
 			case SourceDirectivity::genelec8020cDTF:
 			{
-				Vec3 direction = UnitVector(point - source.position);
-				Vec3 localDirection = source.orientation.RotateVector(direction);
+				Vec3 direction = (point - source.position).Normalised();
+				Vec3 localDirection = RotateVector(direction, source.orientation);
 
-				Real theta = std::acos(localDirection.z);
-				Real phi = -std::atan2(localDirection.x, localDirection.y); // -phi converts from left-handed coordinate system to right-handed coordinate system
-
-				directivity = GENELEC_DTF.Response(frequencyBands, theta, phi);
+				directivity = GENELEC_DTF.Response(frequencyBands, localDirection);
 				break;
 			}
 			case SourceDirectivity::qscK8:
 			{
-				Vec3 direction = UnitVector(point - source.position);
-				Vec3 localDirection = source.orientation.RotateVector(direction);
+				Vec3 direction = (point - source.position).Normalised();
+				// TODO: Verify that quaternion-vector multiplication is equivalent to RotateVector
+				// Vec3 localDirection = RotateVector(direction, source.orientation);
+				Vec3 localDirection = RotateVector(direction, source.orientation);
 
-				Real theta = std::acos(localDirection.z);
-				Real phi = -std::atan2(localDirection.x, localDirection.y); // -phi converts from left-handed coordinate system to right-handed coordinate system
-
-				directivity = QSC_K8.Response(frequencyBands, theta, phi);
+				directivity = QSC_K8.Response(frequencyBands, localDirection);
 				break;
 			}
-			default:
-				directivity = 1.0;
 			}
 
 			if (ret != 0.0)
-				directivity = ret < EPS ? EPS : ret;
+				directivity.SetConstant(ret < EPS ? EPS : ret);
 			return directivity;
 		}
 
 		////////////////////////////////////////
 
-		Absorption<> ImageEdge::Direct(const Source::Data& source, bool lineOfSight)
+		Coefficients<> ImageEdge::Direct(const Source::Data& source, bool lineOfSight)
 		{
 			PROFILE_Direct
 			
@@ -416,7 +410,7 @@ namespace RAC
 			}
 
 			if (lineOfSight)
-				lineOfSight = (source.position - mListenerPosition).Length() <= earlyReverbData.maxPathLength;
+				lineOfSight = (source.position - mListenerPosition).Normal() <= earlyReverbData.maxPathLength;
 
 			if (lineOfSight)
 			{
@@ -430,7 +424,7 @@ namespace RAC
 #ifdef DEBUG_IEM
 				Debug::remove_path(IntToStr(source.id) + "s");
 #endif
-				return 0.0;
+				return Coefficients<>::Constant(frequencyBands.Length(), 0.0);
 			}
 		}
 
@@ -545,8 +539,8 @@ namespace RAC
 
 				InitImageSource(source, imageSource.GetApex(), imageSource, imageSources, feedsFDN);
 #ifdef DEBUG_IEM
-				Vec3 position;
-				position = imageSource.GetTransform().GetPosition();
+				CVector3 pos = imageSource.GetTransform().GetPosition();
+				Vec3 position(static_cast<Real>(pos.x), static_cast<Real>(pos.y), static_cast<Real>(pos.z));
 				Debug::send_path(imageSource.GetKey(), { imageSource.GetApex() }, position);
 #endif
 			}
@@ -568,12 +562,14 @@ namespace RAC
 				if (!plane.ReflectPointInPlane(position, source.position))
 					continue;
 
-				if ((position - mListenerPosition).Length() > earlyReverbData.maxPathLength)
+				if ((position - mListenerPosition).Normal() > earlyReverbData.maxPathLength)
 					continue;
 
 				ImageSourceData& imageSource = counter < size ? sp[0][counter] : sp[0].emplace_back(frequencyBands.Length());
 
-				imageSource.SetPreviousPlane(Vec4(plane.GetD(), plane.GetNormal()));
+				Vec4 previousPlane(plane.GetD(), plane.GetNormal());
+				// imageSource.SetPreviousPlane(Vec4(plane.GetD(), plane.GetNormal()));
+				imageSource.SetPreviousPlane(previousPlane);
 				if (counter < size)
 					imageSource.Clear();
 				counter++;
@@ -596,8 +592,8 @@ namespace RAC
 
 				InitImageSource(source, intersections[0], imageSource, imageSources, feedsFDN);
 #ifdef DEBUG_IEM
-				Vec3 position;
-				position = imageSource.GetTransform().GetPosition();
+				CVector3 pos = imageSource.GetTransform().GetPosition();
+				Vec3 position(static_cast<Real>(pos.x), static_cast<Real>(pos.y), static_cast<Real>(pos.z));
 				Debug::send_path(imageSource.GetKey(), intersections, position);
 #endif
 			}
@@ -665,20 +661,21 @@ namespace RAC
 									continue;
 
 								Vec4 previousPlaneData = vS.GetPreviousPlane();
-								Vec4 planeData = Vec4(plane.GetD(), plane.GetNormal());
+								Vec4 planeData(plane.GetD(), plane.GetNormal());
 
 								// Can't reflect in parallel plane
-								if (planeData.x == previousPlaneData.x && planeData.y == previousPlaneData.y && planeData.z == previousPlaneData.z)
+								if (planeData.x() == previousPlaneData.x() && planeData.y() == previousPlaneData.y() && planeData.z() == previousPlaneData.z())
 									continue;
 
 								// Can't reflect in coplanar plane
+								// if (planeData.coeffs() == -previousPlaneData.coeffs())
 								if (planeData == -previousPlaneData)
 									continue;
 
 								if (!plane.ReflectPointInPlane(position, vS.GetPosition()))
 									continue;
 
-								if ((position - mListenerPosition).Length() > earlyReverbData.maxPathLength)
+								if ((position - mListenerPosition).Normal() > earlyReverbData.maxPathLength)
 									continue;
 
 								ImageSourceData& imageSource = counter < size ? sp[refIdx][counter] : sp[refIdx].emplace_back(vS);
@@ -709,8 +706,8 @@ namespace RAC
 
 								InitImageSource(source, intersections[0], imageSource, imageSources, feedsFDN);
 #ifdef DEBUG_IEM
-								Vec3 position;
-								position = imageSource.GetTransform().GetPosition();
+								CVector3 pos = imageSource.GetTransform().GetPosition();
+								Vec3 position(static_cast<Real>(pos.x), static_cast<Real>(pos.y), static_cast<Real>(pos.z));
 								Debug::send_path(imageSource.GetKey(), intersections, position);
 #endif
 							}
@@ -719,7 +716,7 @@ namespace RAC
 							{
 								const Edge& edge = vS.GetEdge();
 
-								Vec4 planeData = Vec4(plane.GetD(), plane.GetNormal());
+								Vec4 planeData(plane.GetD(), plane.GetNormal());
 
 								if (vS.IsReflection(prevRefIdx))
 								{
@@ -730,7 +727,7 @@ namespace RAC
 									Vec4 previousPlaneData = vS.GetPreviousPlane();
 
 									// Can't reflect in parallel plane
-									if (planeData.x == previousPlaneData.x && planeData.y == previousPlaneData.y && planeData.z == previousPlaneData.z)
+									if (planeData.x() == previousPlaneData.x() && planeData.y() == previousPlaneData.y() && planeData.z() == previousPlaneData.z())
 										continue;
 
 									// Can't reflect in coplanar plane
@@ -797,8 +794,8 @@ namespace RAC
 
 								InitImageSource(source, intersections[0], imageSource, imageSources, feedsFDN);
 #ifdef DEBUG_IEM
-								Vec3 position;
-								position = imageSource.GetTransform().GetPosition();
+								CVector3 pos = imageSource.GetTransform().GetPosition();
+								Vec3 position(static_cast<Real>(pos.x), static_cast<Real>(pos.y), static_cast<Real>(pos.z));
 								Debug::send_path(imageSource.GetKey(), intersections, position);
 #endif
 							}
@@ -892,8 +889,8 @@ namespace RAC
 
 						InitImageSource(source, intersections[0], imageSource, imageSources, feedsFDN);
 #ifdef DEBUG_IEM
-						Vec3 position;
-						position = imageSource.GetTransform().GetPosition();
+						CVector3 pos = imageSource.GetTransform().GetPosition();
+						Vec3 position(static_cast<Real>(pos.x), static_cast<Real>(pos.y), static_cast<Real>(pos.z));
 						Debug::send_path(imageSource.GetKey(), intersections, position);
 #endif
 					}
@@ -906,7 +903,7 @@ namespace RAC
 
 		void ImageEdge::InitImageSource(const Source::Data& source, const Vec3& intersection, ImageSourceData& imageSource, ImageSourceDataMap& imageSources, bool feedsFDN)
 		{
-			Absorption directivity(frequencyBands.Length());
+			Coefficients<> directivity(frequencyBands.Length());
 			directivity = CalculateDirectivity(source, intersection);
 			imageSource.AddAbsorption(directivity);
 

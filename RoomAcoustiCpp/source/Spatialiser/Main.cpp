@@ -128,7 +128,7 @@ Vec<> CreateVec(const float* data, int length)
 {
 	Vec<> vec = Vec<>(length);
 	for (int i = 0; i < length; i++)
-		vec[i] = static_cast<Real>(data[i]);
+		vec(i) = static_cast<Real>(data[i]);
 	return vec;
 }
 
@@ -136,7 +136,7 @@ Vec<int> CreateIntVec(const int* data, int length)
 {
 	Vec<int> vec = Vec<int>(length);
 	for (int i = 0; i < length; i++)
-		vec[i] = data[i];
+		vec(i) = data[i];
 	return vec;
 }
 
@@ -147,6 +147,11 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 		coeff[i] = static_cast<Real>(data[i]);
 	return coeff;
 }
+
+	Coefficients<> CreateAbsorptions(const float* data)
+	{
+		return CreateCoefficients(data, NUM_FREQUENCY_BANDS);
+	}
 
 	//////////////////// API ////////////////////
 
@@ -168,7 +173,10 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 	*/
 	EXPORT bool API RACInit(int fs, int numFrames, int numReverbSources, int fdnSize, float lerpFactor, float Q, const float* frequencyBandsData, int numFrequencyBands)
 	{
-		buffer.ResizeBuffer(2 * numFrames);
+		buffer.Resize(2 * numFrames);
+#if MATRIX_LIBRARY == CUSTOM_FLAG
+		buffer.Reset();
+#endif
 		NUM_FREQUENCY_BANDS = numFrequencyBands;
 		NUM_FRAMES = numFrames;
 
@@ -268,7 +276,7 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 		Vec<int> frequencyIndexing = CreateIntVec(frequencyIndexingData, numFDNs);
 		Vec<> t60s = CreateVec(t60sData, numFDNs);
 
-		Matrix<int> indexing = Matrix<int>(numNodes, numNodes);
+		Matrix<int> indexing(numNodes, numNodes);
 		for (int i = 0; i < numNodes; i++)
 			for (int j = 0; j < numNodes; j++)
 				indexing(i, j) = indexingData[i * numNodes + j];
@@ -566,11 +574,7 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 
 	EXPORT int API RACInitMaterial(const float* absorptionData)
 	{
-		std::vector<Real> a = std::vector<Real>(NUM_FREQUENCY_BANDS);
-		for (int i = 0; i < NUM_FREQUENCY_BANDS; i++)
-			a[i] = static_cast<Real>(absorptionData[i]);
-		Absorption absorption = Absorption(a);
-
+		Coefficients<> absorption = CreateAbsorptions(absorptionData);
 		return InitMaterial(absorption);
 	}
 
@@ -585,11 +589,7 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 	*/
 	EXPORT void API RACUpdateMaterial(int id, const float* absorptionData)
 	{
-		std::vector<Real> a = std::vector<Real>(NUM_FREQUENCY_BANDS);
-		for (int i = 0; i < NUM_FREQUENCY_BANDS; i++)
-			a[i] = static_cast<Real>(absorptionData[i]);
-		Absorption absorption = Absorption(a);
-
+		Coefficients<> absorption = CreateAbsorptions(absorptionData);
 		UpdateMaterial(static_cast<size_t>(id), absorption);
 	}
 
@@ -684,7 +684,6 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 	*/
 	EXPORT void API RACSubmitAudio(int id, const float* data)
 	{
-		Buffer<> buffer = Buffer<>(NUM_FRAMES);
 		std::transform(data, data + NUM_FRAMES, buffer.begin(),
 			[](float value) { return static_cast<Real>(value); });
 		SubmitAudio(static_cast<size_t>(id), buffer);
@@ -717,6 +716,28 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 	EXPORT void API RACGetOutputBuffer(float* sendBuffer)
 	{
 		for (Real value : buffer)
+			*sendBuffer++ = static_cast<float>(value);
+	}
+
+	/**
+	* @brief Record an impulse response using the current listener position
+	*
+	* Assumes listener position does not change during recording
+	*
+	* @param posX The x-coordinate of the source's position.
+	* @param posY The y-coordinate of the source's position.
+	* @param posZ The z-coordinate of the source's position.
+	* @param oriW The w-component of the source's orientation quaternion.
+	* @param oriX The x-component of the source's orientation quaternion.
+	* @param oriY The y-component of the source's orientation quaternion.
+	* @param oriZ The z-component of the source's orientation quaternion.
+	* @params outputBuffer Buffer to write to.
+	*/
+	EXPORT void API RACRecordImpulseResponse(float posX, float posY, float posZ, float oriW, float oriX, float oriY, float oriZ, float* sendBuffer, int numSamples)
+	{
+		Buffer<> outputBuffer = Buffer<>::Zero(numSamples);
+		RecordImpulseResponse(Vec3(posX, posY, posZ), Vec4(oriW, oriX, oriY, oriZ), outputBuffer);
+		for (Real value : outputBuffer)
 			*sendBuffer++ = static_cast<float>(value);
 	}
 

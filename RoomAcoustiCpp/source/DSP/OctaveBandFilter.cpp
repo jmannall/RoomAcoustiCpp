@@ -54,9 +54,9 @@ namespace RAC
 			 std::vector<Real> uniqueIndices;
 			 int maxIndex = 0;
 			 int minIndex = cutOffFrequencies.Length();
-			 for (int i = 0; i < octaveBandIndices.Rows(); i++)
+			 for (int i = 0; i < octaveBandIndices.Length(); i++)
 			 {
-				 int index = octaveBandIndices[i];
+				 int index = octaveBandIndices(i);
 				 if (index > maxIndex)
 					 maxIndex = index;
 				 if (index < minIndex)
@@ -69,8 +69,13 @@ namespace RAC
 			 numTopBandsToSum = minIndex;
 			 numOutputBands = numFrequencyBands - numTopBandsToSum;
 
-			 bands.resize(numFrequencyBands);
-			 outputs.resize(numOutputBands);
+			 bands.Resize(numFrequencyBands);
+			 outputs.Resize(numOutputBands);
+
+#if MATRIX_LIBRARY == EIGEN_FLAG
+			 bands.Reset();
+			 outputs.Reset();
+#endif
 
 			 // Do not initialise filter if less than 1 frequency band
 			 if (uniqueIndices.size() == 1)
@@ -109,7 +114,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		const std::vector<Real>& OctaveBand::GetOutput(Real input, Real lerpFactor)
+		const Buffer<>& OctaveBand::GetOutput(Real input, Real lerpFactor)
 		{
 			if (!initialised.load(std::memory_order_acquire)) // Do nothing if not initialised
 			{
@@ -138,7 +143,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void OctaveBand::CombineTopBands(const std::vector<Real>& bands)
+		void OctaveBand::CombineTopBands(const Buffer<>& bands)
 		{
 			for (int i = 0; i < numOutputBands; i++)
 				outputs[i] = bands[i + numTopBandsToSum];

@@ -22,8 +22,8 @@ namespace RAC
 			const Real lerpFactor = 1.0;
 
 			// Coefficients<> gains({ 0.3, 0.8, 0.65, 0.9, 0.1, 0.05, 0.4 });
-			Coefficients<> gains({ 0.3, 0.8, 0.55, 0.05 });
-			Coefficients<> frequencies({ 2e3, 4e3, 8e3, 16e3 });
+			Coefficients<> gains(std::vector<Real>({ 0.3, 0.8, 0.55, 0.05 }));
+			Coefficients<> frequencies(std::vector<Real>({ 2e3, 4e3, 8e3, 16e3 }));
 			int numFrequencyBands = frequencies.Length();
 			OctaveBand filter = OctaveBand(frequencies, fs);
 
@@ -31,7 +31,8 @@ namespace RAC
 
 			std::vector<Real> output(target.size(), 0.0); // Initialize output vector with zeros
 			std::vector<std::vector<Real>> outputs(numFrequencyBands, std::vector<Real>(127)); // Initialize output vector with zeros
-			auto bands = filter.GetOutput(1.0, lerpFactor); // Get the output from the filter
+			const Buffer<>& out = filter.GetOutput(1.0, lerpFactor); // Get the output from the filter
+			Buffer<> bands = out;
 			for (int j = 0; j < numFrequencyBands; j++)
 			{
 				bands[j] *= gains[j];
@@ -39,17 +40,18 @@ namespace RAC
 				output[0] += bands[j];
 			}
 
-			Assert::AreEqual(target[0], output[0], 1e-16, L"Wrong output");
+			Assert::AreEqual(target[0], output[0], (Real)1e-16, L"Wrong output");
 			for (int i = 1; i < target.size(); i++)
 			{
-				auto bands = filter.GetOutput(0.0, lerpFactor); // Get the output from the filter
+				const Buffer<>& out = filter.GetOutput(0.0, lerpFactor); // Get the output from the filter
+				Buffer<> bands = out;
 				for (int j = 0; j < numFrequencyBands; j++)
 				{
 					bands[j] *= gains[j];
 					outputs[j][i] = bands[j];
 					output[i] += bands[j];
 				}
-				Assert::AreEqual(target[i], output[i], 1e-16, L"Wrong output");
+				Assert::AreEqual(target[i], output[i], (Real)1e-16, L"Wrong output");
 			}
 		}
 
@@ -58,8 +60,8 @@ namespace RAC
 			const int fs = 48000; // Sampling frequency
 			const Real lerpFactor = 1.0;
 
-			Coefficients<> frequencies({ 1e3, 2e3, 4e3, 8e3, 16e3 });
-			Coefficients<> shorterFrequencies({ 1e3, 2e3, 4e3 });
+			Coefficients<> frequencies(std::vector<Real>({ 1e3, 2e3, 4e3, 8e3, 16e3 }));
+			Coefficients<> shorterFrequencies(std::vector<Real>({ 1e3, 2e3, 4e3 }));
 
 			int numFrequencyBands = frequencies.Length();
 			OctaveBand filter = OctaveBand(frequencies, fs);
@@ -107,17 +109,17 @@ namespace RAC
 			const int fs = 48000; // Sampling frequency
 			const Real lerpFactor = 1.0;
 
-			Coefficients<> frequencies({ 31.25, 62.5, 125.0, 250.0, 500.0, 1e3, 2e3, 4e3, 8e3, 16e3 });
-			Coefficients<> mixedFrequencies({ 8e3, 500.0, 2e3, 16e3, 4e3, 1e3 });
-			Coefficients<> shortFrequencies({ 1e3, 2e3, 4e3 });
+			Coefficients<> frequencies(std::vector<Real>({ 31.25, 62.5, 125.0, 250.0, 500.0, 1e3, 2e3, 4e3, 8e3, 16e3 }));
+			Coefficients<> mixedFrequencies(std::vector<Real>({ 8e3, 500.0, 2e3, 16e3, 4e3, 1e3 }));
+			Coefficients<> shortFrequencies(std::vector<Real>({ 1e3, 2e3, 4e3 }));
 			std::vector<int> freqIndices = { 3, 1, 4, 2, 0 };
 
 			OctaveBand filter = OctaveBand(frequencies, fs);
 			OctaveBand mixedFilter = OctaveBand(mixedFrequencies, fs);
 			OctaveBand shortFilter = OctaveBand(shortFrequencies, fs);
 
-			auto output = filter.GetOutput(1.0, lerpFactor);
-			Assert::AreEqual(frequencies.Length(), (int)output.size(), L"Wrong number of bands");
+			const Buffer<>& output1 = filter.GetOutput(1.0, lerpFactor);
+			Assert::AreEqual((int)frequencies.Length(), (int)output1.Length(), L"Wrong number of bands");
 
 			Assert::AreEqual(9, filter.GetBandIndex(0), L"Wrong 31Hz");
 			Assert::AreEqual(8, filter.GetBandIndex(1), L"Wrong 62kHz");
@@ -130,8 +132,8 @@ namespace RAC
 			Assert::AreEqual(1, filter.GetBandIndex(8), L"Wrong 8kHz");
 			Assert::AreEqual(0, filter.GetBandIndex(9), L"Wrong 16kHz");
 
-			output = mixedFilter.GetOutput(1.0, lerpFactor);
-			Assert::AreEqual(mixedFrequencies.Length(), (int)output.size(), L"Wrong number of bands (mixed)");
+			const Buffer<>& output2 = mixedFilter.GetOutput(1.0, lerpFactor);
+			Assert::AreEqual((int)mixedFrequencies.Length(), (int)output2.Length(), L"Wrong number of bands (mixed)");
 
 			Assert::AreEqual(1, mixedFilter.GetBandIndex(0), L"Wrong 500 Hz (mixed)");
 			Assert::AreEqual(5, mixedFilter.GetBandIndex(1), L"Wrong 1kHz (mixed)");
@@ -140,8 +142,8 @@ namespace RAC
 			Assert::AreEqual(2, mixedFilter.GetBandIndex(4), L"Wrong 8kHz (mixed)");
 			Assert::AreEqual(4, mixedFilter.GetBandIndex(5), L"Wrong 16kHz (mixed)");
 
-			output = shortFilter.GetOutput(1.0, lerpFactor);
-			Assert::AreEqual(shortFrequencies.Length(), (int)output.size(), L"Wrong number of bands (short)");
+			const Buffer<>& output3 = shortFilter.GetOutput(1.0, lerpFactor);
+			Assert::AreEqual((int)shortFrequencies.Length(), (int)output3.Length(), L"Wrong number of bands (short)");
 
 			Assert::AreEqual(2, shortFilter.GetBandIndex(0), L"Wrong 1kHz (short)");
 			Assert::AreEqual(1, shortFilter.GetBandIndex(1), L"Wrong 2kHz (short)");
@@ -153,12 +155,12 @@ namespace RAC
 			const int fs = 48000;
 			const Real lerpFactor = 1.0;
 
-			Coefficients<> frequencies({ 2e3 });
+			Coefficients<> frequencies = Coefficients<>::Constant(1, (Real)2e3);
 			OctaveBand filter = OctaveBand(frequencies, fs);
 
 			Real input = 0.8;
-			auto output = filter.GetOutput(input, lerpFactor);
-			Assert::AreEqual(1, (int)output.size(), L"Wrong number of bands");
+			const Buffer<>& output = filter.GetOutput(input, lerpFactor);
+			Assert::AreEqual(1, (int)output.Length(), L"Wrong number of bands");
 			Assert::AreEqual(input, output[0], L"Wrong output");
 			
 			Assert::AreEqual(0, filter.GetBandIndex(0), L"Wrong band index");

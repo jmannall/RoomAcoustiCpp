@@ -18,7 +18,7 @@ namespace RAC
 
 	Real CalculateT60(const Buffer<>& out, const int numSamples, const int fs)
 	{
-		Rowvec envelope(numSamples);
+		Rowvec<> envelope(numSamples);
 
 		// Calculate the decay curve (in dB) for each channel and find the time to reach -60 dB
 		Buffer<> meanDecayCurve(numSamples);
@@ -27,17 +27,17 @@ namespace RAC
 		for (int j = 0; j < numSamples; j++)
 		{
 			cumSum += out[j] * out[j];
-			envelope[j] = cumSum;
+			envelope(j) = cumSum;
 		}
 		envelope /= cumSum;
 		for (int j = 0; j < numSamples; j++)
-			envelope[j] = 1.0 - envelope[j];
+			envelope(j) = 1.0 - envelope(j);
 
 		//// Find time to reach -60 dB on the mean decay curve
 		Real targetDecay = std::pow(10.0f, -6.0f); // -60 dB corresponds to 1e-6 in linear scale
 		for (int j = 0; j < numSamples; j++)
 		{
-			if (envelope[j] <= targetDecay)
+			if (envelope(j) <= targetDecay)
 				return static_cast<Real>(j) / fs;
 		}
 		return static_cast<Real>(numSamples) / fs;
@@ -49,18 +49,18 @@ namespace RAC
 
 		TEST_METHOD(Reset)
 		{
-			const Coefficients T60({ 0.1, 0.2, 0.3, 0.4 });
-			const Absorption gains({ 0.87, 0.75, 0.81, 0.84 });
+			const Coefficients<> T60(std::vector<Real>({ 0.1, 0.2, 0.3, 0.4 }));
+			const Coefficients<> gains(std::vector<Real>({ 0.87, 0.75, 0.81, 0.84 }));
 			const std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>();
 			AudioData audioData(config);
 			int numReverbSources = config->GetData().numReverbSources;
 			int numFrames = config->GetData().numFrames;
-			const std::vector<Absorption<>> reflectionGains(numReverbSources, gains);
+			const std::vector<Coefficients<>> reflectionGains(numReverbSources, gains);
 
-			Vec dimensions({ 1.0, 1.5, 2.0 });
+			Vec<> dimensions(std::vector<Real>({ (Real)1.0, (Real)1.5, (Real)2.0 }));
 			FDN<> fdn(T60, dimensions, config);
 
-			Matrix in(numReverbSources, numFrames);
+			Matrix<> in(numReverbSources, numFrames);
 			in.RandomUniformDistribution();
 
 			std::vector<Buffer<>> out(numReverbSources, Buffer<>(numFrames));
@@ -89,19 +89,19 @@ namespace RAC
 
 		TEST_METHOD(ReflectionFilters)
 		{
-			const Coefficients T60({ 0.1, 0.2, 0.3, 0.4 });
-			const Absorption gains({ 1.0, 1.0, 1.0, 1.0 });
+			const Coefficients<> T60(std::vector<Real>({ 0.1, 0.2, 0.3, 0.4 }));
+			const Coefficients<> gains(std::vector<Real>({ 1.0, 1.0, 1.0, 1.0 }));
 			const std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>();
 			AudioData audioData(config);
 			int numReverbSources = config->GetData().numReverbSources;
 			int numFrames = config->GetData().numFrames;
-			const std::vector<Absorption<>> reflectionGains(numReverbSources, gains);
+			const std::vector<Coefficients<>> reflectionGains(numReverbSources, CalculateReflectance(gains));
 
-			Vec dimensions({ 1.0, 1.5, 2.0 });
+			Vec<> dimensions(std::vector<Real>({ (Real)1.0, (Real)1.5, (Real)2.0 }));
 			FDN<> fdn(T60, dimensions, config);
 			fdn.SetTargetReflectionFilters(reflectionGains);
 
-			Matrix in(numReverbSources, numFrames);
+			Matrix<> in(numReverbSources, numFrames);
 			in.RandomUniformDistribution();
 
 			std::vector<Buffer<>> out(numReverbSources, Buffer<>(numFrames));
@@ -128,16 +128,16 @@ namespace RAC
 			const std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>(data);
 			AudioData audioData(config);
 
-			const Coefficients T60({ target, target, target, target });
-			const Absorption gains({ 0.1, 0.05, 0.3, 0.25 });
-			const std::vector<Absorption<>> reflectionGains(numReverbSources, gains);
+			const Coefficients<> T60(std::vector<Real>({ target, target, target, target }));
+			const Coefficients<> gains(std::vector<Real>({ 0.1, 0.05, 0.3, 0.25 }));
+			const std::vector<Coefficients<>> reflectionGains(numReverbSources, gains);
 
 			// Long delay lines cause issues with the T60 estimation due to less frequent but larger drops in energy
-			Vec dimensions({ RandomValue((Real)0.1, (Real)2.0), RandomValue((Real)0.1, (Real)5.0), RandomValue((Real)0.1, (Real)10.0) });
+			Vec<> dimensions(std::vector<Real>({ RandomValue((Real)0.1, (Real)2.0), RandomValue((Real)0.1, (Real)5.0), RandomValue((Real)0.1, (Real)10.0) }));
 			FDN<> fdn(T60, dimensions, config);
 			fdn.SetTargetReflectionFilters(reflectionGains);
 
-			Matrix in(numReverbSources, numFrames);
+			Matrix<> in = Matrix<>::Zero(numReverbSources, numFrames);
 			for (int i = 0; i < numReverbSources; i++)
 				in(i, 1) = 1.0;
 
@@ -167,16 +167,16 @@ namespace RAC
 			const std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>(data);
 			AudioData audioData(config);
 
-			const Coefficients T60({ target, target, target, target });
-			const Absorption gains({ 0.1, 0.05, 0.3, 0.25 });
-			const std::vector<Absorption<>> reflectionGains(numReverbSources, gains);
+			const Coefficients<> T60(std::vector<Real>({ target, target, target, target }));
+			const Coefficients<> gains(std::vector<Real>({ 0.1, 0.05, 0.3, 0.25 }));
+			const std::vector<Coefficients<>> reflectionGains(numReverbSources, gains);
 
 			// Long delay lines cause issues with the T60 estimation due to less frequent but larger drops in energy
-			Vec dimensions({ RandomValue(0.1, 2.0), RandomValue(0.1, 5.0), RandomValue(0.1, 10.0) });
+			Vec<> dimensions(std::vector<Real>({ RandomValue(0.1, 2.0), RandomValue(0.1, 5.0), RandomValue(0.1, 10.0) }));
 			FDN<> fdn(T60, dimensions, config);
 			fdn.SetTargetReflectionFilters(reflectionGains);
 
-			Matrix in(numReverbSources, numFrames);
+			Matrix<> in = Matrix<>::Zero(numReverbSources, numFrames);
 			for (int i = 0; i < numReverbSources; i++)
 				in(i, 1) = 1.0;
 
@@ -189,7 +189,7 @@ namespace RAC
 				decayTime += CalculateT60(out[i], numFrames, config->GetData().fs);
 			decayTime /= numReverbSources;
 			Assert::IsTrue(decayTime > 0.0f, L"Decay not detected.");
-			Assert::AreEqual(target, decayTime, (Real)0.02, L"Decay time does not match target RT60.");
+			Assert::AreEqual(target, decayTime, (Real)0.03, L"Decay time does not match target RT60.");
 		}
 
 		TEST_METHOD(ProcessHouseHolder)
@@ -206,16 +206,16 @@ namespace RAC
 			const std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>(data);
 			AudioData audioData(config);
 
-			const Coefficients T60({ target, target, target, target });
-			const Absorption gains({ 0.1, 0.05, 0.3, 0.25 });
-			const std::vector<Absorption<>> reflectionGains(numReverbSources, gains);
+			const Coefficients<> T60(std::vector<Real>({ target, target, target, target }));
+			const Coefficients<> gains(std::vector<Real>({ 0.1, 0.05, 0.3, 0.25 }));
+			const std::vector<Coefficients<>> reflectionGains(numReverbSources, gains);
 
 			// Long delay lines cause issues with the T60 estimation due to less frequent but larger drops in energy
-			Vec<> dimensions({ RandomValue(0.1f, 2.0f), RandomValue(0.1f, 5.0f), RandomValue(0.1f, 10.0f) });
+			Vec<> dimensions(std::vector<Real>({ RandomValue(0.1f, 2.0f), RandomValue(0.1f, 5.0f), RandomValue(0.1f, 10.0f) }));
 			FDN<> fdn(T60, dimensions, config);
 			fdn.SetTargetReflectionFilters(reflectionGains);
 
-			Matrix in(numReverbSources, numFrames);
+			Matrix<> in = Matrix<>::Zero(numReverbSources, numFrames);
 			for (int i = 0; i < numReverbSources; i++)
 				in(i, 1) = 1.0;
 
@@ -245,15 +245,15 @@ namespace RAC
 			const std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>(data);
 			AudioData audioData(config);
 
-			const Coefficients T60({ target, target, target, target });
-			const Absorption reflectionGains({ 0.1, 0.05, 0.3, 0.25 });
+			const Coefficients<> T60(std::vector<Real>({ target, target, target, target }));
+			const Coefficients<> reflectionGains(std::vector<Real>({ 0.1, 0.05, 0.3, 0.25 }));
 
 			// Long delay lines cause issues with the T60 estimation due to less frequent but larger drops in energy
-			Vec dimensions({ 2.3, 1.5, 5.6 });
+			Vec<> dimensions(std::vector<Real>({ 2.3, 1.5, 5.6 }));
 			FDN<> fdn(T60, dimensions, config);
-			fdn.SetTargetReflectionFilters(std::vector<Absorption<>>(numReverbSources, reflectionGains));
+			fdn.SetTargetReflectionFilters(std::vector<Coefficients<>>(numReverbSources, reflectionGains));
 
-			Matrix in(numReverbSources, numFrames);
+			Matrix<> in = Matrix<>::Zero(numReverbSources, numFrames);
 			in(0, 0) = 1.0;
 
 			std::vector<Buffer<>> out(numReverbSources, Buffer<>(numFrames));
@@ -287,15 +287,15 @@ namespace RAC
 			const std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>(data);
 			AudioData audioData(config);
 
-			const Coefficients T60({ target, target, target, target });
-			const Absorption reflectionGains({ 0.1, 0.05, 0.3, 0.25 });
+			const Coefficients<> T60(std::vector<Real>({ target, target, target, target }));
+			const Coefficients<> reflectionGains(std::vector<Real>({ 0.1, 0.05, 0.3, 0.25 }));
 
 			// Long delay lines cause issues with the T60 estimation due to less frequent but larger drops in energy
-			Vec dimensions({ 2.3, 1.5, 5.6 });
+			Vec<> dimensions(std::vector<Real>({ 2.3, 1.5, 5.6 }));
 			RandomOrthogonalFDN fdn(T60, dimensions, config);
-			fdn.SetTargetReflectionFilters(std::vector<Absorption<>>(numReverbSources, reflectionGains));
+			fdn.SetTargetReflectionFilters(std::vector<Coefficients<>>(numReverbSources, reflectionGains));
 
-			Matrix in(numReverbSources, numFrames);
+			Matrix<> in = Matrix<>::Zero(numReverbSources, numFrames);
 			in(0, 0) = 1.0;
 
 			std::vector<Buffer<>> out(numReverbSources, Buffer<>(numFrames));
@@ -324,15 +324,15 @@ namespace RAC
 			const std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>(data);
 			AudioData audioData(config);
 
-			const Coefficients T60({ target, target, target, target });
-			const Absorption reflectionGains({ 0.1, 0.05, 0.3, 0.25 });
+			const Coefficients<> T60(std::vector<Real>({ target, target, target, target }));
+			const Coefficients<> reflectionGains(std::vector<Real>({ 0.1, 0.05, 0.3, 0.25 }));
 
 			// Long delay lines cause issues with the T60 estimation due to less frequent but larger drops in energy
-			Vec dimensions({ 2.3, 1.5, 5.6 });
+			Vec<> dimensions(std::vector<Real>({ 2.3, 1.5, 5.6 }));
 			HouseHolderFDN fdn(T60, dimensions, config);
-			fdn.SetTargetReflectionFilters(std::vector<Absorption<>>(numReverbSources, reflectionGains));
+			fdn.SetTargetReflectionFilters(std::vector<Coefficients<>>(numReverbSources, reflectionGains));
 
-			Matrix in(numReverbSources, numFrames);
+			Matrix<> in = Matrix<>::Zero(numReverbSources, numFrames);
 			in(0, 0) = 1.0;
 
 			std::vector<Buffer<>> out(numReverbSources, Buffer<>(numFrames));

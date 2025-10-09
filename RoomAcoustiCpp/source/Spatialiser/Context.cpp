@@ -158,12 +158,15 @@ namespace RAC
 			Debug::Log("Exit Context", Colour::Red);
 #endif
 			StopRunning();
-			IEMThread.join();
-			rayTracingThread.join();
+			if (IEMThread.joinable())
+				IEMThread.join();
+			if (rayTracingThread.joinable())
+				rayTracingThread.join();
 			if (audioThreadPool)
 				audioThreadPool->Stop();
 
 			mImageEdgeModel.reset();
+			mRayTracing.reset();
 			mSources.reset();
 			mRoom.reset();
 			mReverb.reset();
@@ -291,7 +294,8 @@ namespace RAC
 
 		void Context::InitLateReverb(const LateReverbData& data)
 		{
-			mReverbInput = Matrix<>(dspConfig->GetReverbInputDimensions());
+			auto dimensions = dspConfig->GetReverbInputDimensions();
+			mReverbInput = Matrix<>::Zero(dimensions.first, dimensions.second);
 
 			CreateAudioThreadPool();
 
@@ -334,7 +338,7 @@ namespace RAC
 			while (audioFlag.exchange(true, std::memory_order_acquire))
 				std::this_thread::yield();
 
-			dspConfig->UpdateLateReverbModel(LateReverbModel::raves, data.t60s.Rows());
+			dspConfig->UpdateLateReverbModel(LateReverbModel::raves, data.t60s.Length());
 			mReverb = std::make_shared<RAVES>(&mCore, data, dspConfig);
 			mRayTracing = std::make_shared<MoDARTTracing>(mRoom, mSources, mReverb, data, dspConfig);
 
@@ -356,8 +360,8 @@ namespace RAC
 
 			// Set listener position and orientation
 			CTransform transform;
-			transform.SetOrientation(CQuaternion(static_cast<float>(orientation.w), static_cast<float>(orientation.x), static_cast<float>(orientation.y), static_cast<float>(orientation.z)));
-			transform.SetPosition(CVector3(static_cast<float>(position.x), static_cast<float>(position.y), static_cast<float>(position.z)));
+			transform.SetOrientation(CQuaternion(static_cast<float>(orientation.w()), static_cast<float>(orientation.x()), static_cast<float>(orientation.y()), static_cast<float>(orientation.z())));
+			transform.SetPosition(CVector3(static_cast<float>(position.x()), static_cast<float>(position.y()), static_cast<float>(position.z())));
 			
 			{
 				unique_lock<shared_mutex> lock(tuneInMutex);
@@ -387,7 +391,7 @@ namespace RAC
 
 		void Context::UpdateSource(size_t id, const Vec3& position, const Vec4& orientation)
 		{
-			Real distance = (position - listenerPosition).Length();
+			Real distance = (position - listenerPosition).Normal();
 
 			// Ensure source is outside listener head radius
 			if (distance < headRadius)
@@ -395,10 +399,10 @@ namespace RAC
 				Vec3 newPosition = position;
 				if (distance == 0.0)
 					newPosition = mSources->GetSourcePosition(id);
-				distance = (newPosition - listenerPosition).Length();
+				distance = (newPosition - listenerPosition).Normal();
 				if (distance == 0.0)
 					newPosition = listenerPosition + Vec3(1.0,0.0,0.0);
-				newPosition = listenerPosition + UnitVector(newPosition - listenerPosition) * headRadius;
+				newPosition = listenerPosition + (newPosition - listenerPosition).Normalised() * headRadius;
 
 				// Update source position, orientation and virtual sources
 				mSources->Update(id, newPosition, orientation, headRadius);
@@ -421,7 +425,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Context::UpdateMaterial(size_t id, const Absorption<>& material)
+		void Context::UpdateMaterial(size_t id, const Coefficients<>& material)
 		{
 			mRoom->UpdateMaterial(id, material);
 			if (lateReverbInitialised.load(std::memory_order_acquire))
@@ -472,7 +476,7 @@ namespace RAC
 			if (outputBuffer.Length() != 2 * dspConfig->GetData().numFrames)
 			{
 				Debug::Log("Incorrect buffer size", Colour::Red);
-				outputBuffer.ResizeBuffer(2 * dspConfig->GetData().numFrames);
+				outputBuffer.Resize(2 * dspConfig->GetData().numFrames);
 			}
 
 			// Reset buffers
@@ -494,6 +498,63 @@ namespace RAC
 				headphoneEQ.ProcessAudio(outputBuffer, outputBuffer, audioData);
 
 			audioFlag.store(false, std::memory_order_release);
+		}
+
+		////////////////////////////////////////
+
+		void Context::RecordImpulseResponse(const Vec3& position, const Vec4& orientation, Buffer<>& outputBuffer)
+		{
+			int id = InitSource();
+			if (id < 0)
+				return;
+
+			// TODO: Allow different directivities
+			UpdateSourceDirectivity(id, SourceDirectivity::omni);
+			UpdateSource(id, position, orientation);
+
+			mImageEdgeModel->ResetEndFlag();
+			mRayTracing->ResetEndFlag();
+			UpdateImpulseResponseMode(true);
+			ResetLateReverb();
+
+			int numFrames = dspConfig->GetData().numFrames;
+			Buffer<> input = Buffer<>::Zero(numFrames);
+			Buffer<> output = Buffer<>::Zero(2 * numFrames);
+
+			while (!mImageEdgeModel->HasCompleted())
+				std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+			while (!mRayTracing->HasCompleted())
+				std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+			// Run once with empty input (ensures all interpolation is updated)
+			mSources->SetInputBuffer(id, input);
+			GetOutput(output);
+
+			int irLength = outputBuffer.Length();
+			int outputBufferLength = output.Length();
+			int numBuffers = irLength / outputBufferLength;
+			int remainder = irLength - numBuffers * outputBufferLength;
+
+			// Process buffers
+			int count = 0;
+			input[0] = 1.0;
+			for (int i = 0; i < numBuffers; i++)
+			{
+				mSources->SetInputBuffer(id, input);
+				GetOutput(output);
+				for (int j = 0; j < outputBufferLength; j++)
+					outputBuffer[count++] = output[j];
+				input[0] = 0.0;
+			}
+			// Process remaining samples
+			mSources->SetInputBuffer(id, input);
+			GetOutput(output);
+			for (int i = 0; i < remainder; i++)
+				outputBuffer[count++] = output[i];
+
+			RemoveSource(id);
+			UpdateImpulseResponseMode(false);
 		}
 	}
 }

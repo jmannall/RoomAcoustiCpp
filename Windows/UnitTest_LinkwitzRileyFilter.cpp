@@ -20,7 +20,7 @@ namespace RAC
 
 		TEST_METHOD(Zero)
 		{
-			const std::array<Real, 4> gain({ 0.0, 0.0, 0.0, 0.0 });
+			const Coefficients<Real, 4> gain(std::array<Real, 4>({ 0.0, 0.0, 0.0, 0.0 }));
 			const int fs = 48000;
 			const Real lerpFactor = 0.5;
 
@@ -47,19 +47,22 @@ namespace RAC
 
 		TEST_METHOD(ClearBuffers)
 		{
-			const std::array<Real, 4> gain({ 0.7, 0.8, 0.5, 0.65 });
+			const Coefficients<Real, 4> gain(std::array<Real, 4>({ 0.7, 0.8, 0.5, 0.65 }));
 			const int fs = 48000;
 			const Real lerpFactor = 0.5;
 
 			LinkwitzRiley filter = LinkwitzRiley(gain, fs);
 
 			for (int i = 0; i < 20; i++)
-				filter.GetOutput(RandomValue(), lerpFactor);
+			{
+				Real out = filter.GetOutput(RandomValue(), lerpFactor);
+				Assert::AreNotEqual((Real)0.0, out, L"Output is zero");
+			}
 
 			filter.ClearBuffers();
 
 			Real out = filter.GetOutput(0.0, lerpFactor);
-			Assert::AreEqual((Real)0.0, out, L"Wrong output");
+			Assert::AreEqual((Real)0.0, out, L"Output not zero");
 		}
 	};
 #pragma optimize("", on)

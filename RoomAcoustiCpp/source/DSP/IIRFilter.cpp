@@ -121,7 +121,7 @@ namespace RAC
 		{
 			Real omega;
 			Complex e;
-			Coefficients magnitudes(frequencies.Length(), 0.0);
+			Coefficients<> magnitudes = Coefficients<>::Zero(frequencies.Length());
 			for (int i = 0; i < frequencies.Length(); i++)
 			{
 				omega = PI_2 * frequencies[i] * T;
@@ -172,7 +172,7 @@ namespace RAC
 		{
 			Real omega;
 			Complex e;
-			std::vector<Real> magnitudes(frequencies.Length(), 0.0);
+			Coefficients<> magnitudes = Coefficients<>::Zero(frequencies.Length());
 			for (int i = 0; i < frequencies.Length(); i++)
 			{
 				omega = PI_2 * frequencies[i] * T;

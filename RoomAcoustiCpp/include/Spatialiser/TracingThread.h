@@ -39,10 +39,18 @@ namespace RAC
 			*/
 			TracingThread(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const LateReverbData& data, const std::shared_ptr<DSPConfig>& config);
 
+			virtual ~TracingThread() {};
+
 			/**
 			* @brief Updates the stored listener position.
 			*/
-			inline void SetListenerPosition(const Vec3& position) { lock_guard<std::mutex> lock(dataStoreMutex); mListenerPositionStore = position; }
+			inline void SetListenerPosition(const Vec3& position)
+			{
+				std::lock_guard<std::mutex> lock(dataStoreMutex);
+				if ((position - mListenerPositionIncoming).Normal() < EPS_POSITION)
+					return;
+				mListenerPositionIncoming = position;
+			}
 
 			/**
 			* @brief Change the number of traced rays.
@@ -56,6 +64,15 @@ namespace RAC
 			*/
 			virtual void RunTracing() = 0;
 
+			inline void ResetEndFlag()
+			{
+				while (!tracingStartFlag.load(std::memory_order_acquire))
+					std::this_thread::yield();
+				tracingEndFlag.store(false, std::memory_order_release);
+			}
+
+			inline bool HasCompleted() { return tracingEndFlag.load(std::memory_order_acquire); }
+
 		protected:
 			weak_ptr<Room> mRoom;							// Pointer to the room class
 			weak_ptr<SourceManager> mSourceManager;			// Pointer to the source manager class
@@ -66,8 +83,8 @@ namespace RAC
 			int numReverbDirections;
 			std::vector<Vec3> reverbDirections;
 			// The indexing of ray directions to reverb directions may change because the number of rays may change.
-			std::vector<int> rayClusters;			// This will have size `numRays`. For each ray, the index of the reverb direction that the ray falls into.
-			std::vector<int> clustersSizes;			// This will have size `numReverbDirections`. For each reverb direction, the number of rays that fall into it.
+			Vec<int> rayClusters;			// This will have size `numRays`. For each ray, the index of the reverb direction that the ray falls into.
+			Vec<int> clustersSizes;			// This will have size `numReverbDirections`. For each reverb direction, the number of rays that fall into it.
 
 			// The number of rays may change at runtime.
 			int numRays;
@@ -78,14 +95,17 @@ namespace RAC
 
 			// The listener position may change at runtime.
 			Vec3 mListenerPosition;					// The listener position (can be accessed freely)
-			Vec3 mListenerPositionStore;			// Stores the listener position (Mutex must be locked to access)
+			Vec3 mListenerPositionIncoming;			// The listener position (Mutex must be locked to access)
 			std::mutex dataStoreMutex;				// Protects mListenerPositionStore
+
+			std::atomic<bool> tracingStartFlag{ false };	// True if the ray tracing is running, false otherwise
+			std::atomic<bool> tracingEndFlag{ false };		// True if the ray tracing has finished running, false otherwise
 
 			// These will be used exclusively inside `computeEnergyContributions`. All four will have size `numRays`.
 			Vec<Real> rayDistances;				// This will have size `numRays`
 			Vec<Real> rayCosines;				// This will have size `numRays`
-			std::vector<int> frontIndices;		// This will have size `numRays`
-			std::vector<int> backIndices;		// This will have size `numRays`
+			Vec<int> frontIndices;		// This will have size `numRays`
+			Vec<int> backIndices;		// This will have size `numRays`
 
 			/**
 			* @brief Assigns each ray direction to the nearest reverb direction.
@@ -103,10 +123,12 @@ namespace RAC
 				sourceResidues(dspConfig->GetNumFDNs()),
 				listenerResidues(dspConfig->GetNumFDNs(), Coefficients<>(dspConfig->GetData().numReverbSources)),
 				numFDNs(dspConfig->GetNumFDNs()),
-				numPaths(data.rightEigenvectors[0].Rows())
+				numPaths(data.rightEigenvectors[0].Length())
 			{
 				InitRoom(data.indexing, data.energyDecay);
 			}
+
+			~MoDARTTracing() {};
 
 			/**
 			* @brief Set the propagation path indexing and decay rates of each mode.
@@ -136,10 +158,10 @@ namespace RAC
 			int numFDNs;
 
 			// These will be used as temporary "buffers" in the hot loop; memory is only allocated once.
-			Vec<Real> decayPerSecond;						// This will have size `numFDNs`
-			Vec<Real> energyContributions;					// This will have size `numPaths`
-			Vec<Real> contributionDelays;					// This will have size `numPaths`
-			Vec<Real> contributionDelayScaling;				// This will have size `numPaths`
+			Vec<> decayPerSecond;						// This will have size `numFDNs`
+			Vec<> energyContributions;					// This will have size `numPaths`
+			Vec<> contributionDelays;					// This will have size `numPaths`
+			Vec<> contributionDelayScaling;				// This will have size `numPaths`
 			Coefficients<> sourceResidues;					// This will have size `numFDNs`
 			std::vector<Coefficients<>> listenerResidues;	// This will have size `numFDNs, numReverbDirections`
 		};
@@ -150,15 +172,18 @@ namespace RAC
 
 			SingleFDNTracing(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const LateReverbData& data, const std::shared_ptr<DSPConfig>& dspConfig) :
 				TracingThread(room, sourceManager, reverb, data, dspConfig),
-				reflectionGains(dspConfig->GetData().numReverbSources, Absorption<>(dspConfig->GetData().numFrequencyBands))
+				reflectionGains(dspConfig->GetData().numReverbSources, Coefficients<>(dspConfig->GetData().numFrequencyBands))
 			{}
+
+			~SingleFDNTracing() {}
 
 			void RunTracing() override;
 
 		private:
 			void ComputeEnergyContributions(const MaterialMap& materials, int reverbDirectionIdx = -1);
 
-			std::vector<Absorption<>> reflectionGains;	// This will have size `numReverbDirections`
+			// TODO: Convert to matrix array with Eigen
+			std::vector<Coefficients<>> reflectionGains;	// This will have size `numReverbDirections`
 		};
 	}
 }

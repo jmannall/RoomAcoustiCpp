@@ -34,25 +34,22 @@ namespace RAC
 		void Edge::Update()
 		{
 			midPoint = (mTop + mBase) / 2;
-			mEdgeVector = UnitVector(mTop - mBase);
+			mEdgeVector = (mTop - mBase).Normalised();
 
 			if (mFaceNormals.first == -mFaceNormals.second)
-				mEdgeNormal = Cross(mEdgeVector, mFaceNormals.first);
+				mEdgeNormal = mEdgeVector.cross(mFaceNormals.first);
 			else
-				mEdgeNormal = UnitVector(mFaceNormals.first + mFaceNormals.second);
+				mEdgeNormal = (mFaceNormals.first + mFaceNormals.second).Normalised();
 
-			Real test1 = Dot(mFaceNormals.first, mFaceNormals.second);
-			Real test2 = acos(test1);
-
-			if (Dot(Cross(mFaceNormals.first, mFaceNormals.second), mEdgeVector) >= 0) // case true: angle is reflex
-				t = PI_1 + acos(Dot(mFaceNormals.first, mFaceNormals.second));
+			if (mFaceNormals.first.cross(mFaceNormals.second).dot(mEdgeVector) >= 0) // case true: angle is reflex
+				t = PI_1 + acos(mFaceNormals.first.dot(mFaceNormals.second));
 			else
-				t = PI_1 - acos(Dot(mFaceNormals.first, mFaceNormals.second));
+				t = PI_1 - acos(mFaceNormals.first.dot(mFaceNormals.second));
 
-			zW = (mTop - mBase).Length();
+			zW = (mTop - mBase).Normal();
 
-			mDs.first = Dot(mFaceNormals.first, mBase);
-			mDs.second = Dot(mFaceNormals.second, mBase);
+			mDs.first = mFaceNormals.first.dot(mBase);
+			mDs.second = mFaceNormals.second.dot(mBase);
 		}
 
 		void Edge::ReflectInPlane(const Plane& plane)
@@ -68,8 +65,8 @@ namespace RAC
 
 		EdgeZone Edge::FindEdgeZone(const Vec3& point) const
 		{
-			bool valid1 = Dot(point, mFaceNormals.first) - mDs.first > 0;
-			bool valid2 = Dot(point, mFaceNormals.second) - mDs.second > 0;
+			bool valid1 = point.dot(mFaceNormals.first) - mDs.first > 0;
+			bool valid2 = point.dot(mFaceNormals.second) - mDs.second > 0;
 
 			if (valid1 == valid2)
 				if (valid1)

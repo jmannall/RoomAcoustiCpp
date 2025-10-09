@@ -135,12 +135,12 @@ namespace RAC
 			Real Q = 0.98;
 			int fs = 48000;
 			int numFrames = 256;
-			Buffer out = Buffer(numFrames);
-			Buffer in = Buffer(numFrames);
+			Buffer<> out(numFrames);
+			Buffer<> in = Buffer<>::Zero(numFrames);
 			in[0] = 1.0;
 
 			int numTests = SizeToInt( fc.size() );
-			std::vector<Coefficients<>> gains = std::vector<Coefficients<>>(numTests, Coefficients(5));
+			std::vector<Coefficients<>> gains = std::vector<Coefficients<>>(numTests, Coefficients<>(5));
 			for (int i = 0; i < numTests; i++)
 			{
 				PeakHighShelf highShelfFilter = PeakHighShelf(fc[i], g[i], Q, fs);

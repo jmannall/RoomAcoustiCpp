@@ -54,7 +54,7 @@ namespace RAC
 			*/
 			struct DSPParameters
 			{
-				Absorption<> directivity;	// Frequency dependent directivity
+				Coefficients<> directivity;	// Frequency dependent directivity
 				bool feedsFDN;				// True if direct sound feeds the late reverberation, false otherwise
 
 				DSPParameters(int len, bool feedsFDN) : directivity(len), feedsFDN(feedsFDN) {}
@@ -73,7 +73,7 @@ namespace RAC
 				bool needsUpdate;					// True if source data has changed since last update, false otherwise
 
 				Data(size_t id, const Vec3& position, const Vec4& orientation, const SourceDirectivity& directivity, bool needsUpdate)
-					: id(id), position(position), forward(orientation.Forward()), orientation(orientation), directivity(directivity),
+					: id(id), position(position), forward(Forward(orientation)), orientation(orientation), directivity(directivity),
 					needsUpdate(needsUpdate) {}
 			};
 
@@ -173,13 +173,25 @@ namespace RAC
 			* @params indexing The new frequency band indexing
 			* @params numFrames The number of frames per audio buffer
 			*/
-			void UpdateMoDARTParameters(const Vec<int>& frequencyIndexing, int numFrames)
+			inline void UpdateMoDARTParameters(const Vec<int>& frequencyIndexing, int numFrames)
 			{
 				if (!GetAccess())
 					return;
-				ravesResidues = std::vector<RAVESSourceResidue>(frequencyIndexing.Rows());
-				for (int i = 0; i < frequencyIndexing.Rows(); i++)
-					ravesResidues[i].frequencyIndex = frequencyIndexing[i];
+				InitMoDARTParameters(frequencyIndexing, numFrames);
+				FreeAccess();
+			}
+
+			/**
+			* @brief Updates the size of source residues and frequencyBands
+			*
+			* @params indexing The new frequency band indexing
+			* @params numFrames The number of frames per audio buffer
+			*/
+			inline void InitMoDARTParameters(const Vec<int>& frequencyIndexing, int numFrames)
+			{
+				ravesResidues = std::vector<RAVESSourceResidue>(frequencyIndexing.Length());
+				for (int i = 0; i < frequencyIndexing.Length(); i++)
+					ravesResidues[i].frequencyIndex = frequencyIndexing(i);
 				frequencyBands = Matrix<>(octaveBandFilter.NumBands(), numFrames);
 			}
 
@@ -225,6 +237,7 @@ namespace RAC
 				assert(residues.Length() == ravesResidues.size());
 				for (int i = 0; i < ravesResidues.size(); i++)
 					ravesResidues[i].SetTargetEnergy(residues[i]);
+				FreeAccess();
 			}
 
 			/**

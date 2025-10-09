@@ -56,7 +56,12 @@ namespace RAC
 				*/
 				Filter(const Buffer<>& h, Real midSample, int step) : currentIR(h), step(step), midSample(midSample), midSampleStep(step * (2 * SizeToInt( h.Length() ) - 1)),
 					halfOutputLine(2 * step * (2 * SizeToInt(h.Length()) - 1) + 1), outputLine(4 * step * (2 * SizeToInt( h.Length() ) - 1) + 2),
-					count(4 * step * (2 * SizeToInt(h.Length()) - 1) + 1), irLength(SizeToInt(h.Length())) {}
+					count(4 * step * (2 * SizeToInt(h.Length()) - 1) + 1), irLength(SizeToInt(h.Length()))
+				{
+#if MATRIX_LIBRARY == EIGEN_FLAG
+					outputLine.Reset();
+#endif
+				}
 
 				/**
 				* @brief Returns the output of the Filter given an input
@@ -86,7 +91,8 @@ namespace RAC
 			};
 
 			typedef Coefficients<> Parameters;
-			typedef Coefficients<std::array<Real, 9>> CutOffFrequencies;
+			typedef Coefficients<Real, 9> CutOffFrequencies;
+
 			CutOffFrequencies cutOffFrequencies{ CutOffFrequencies({ 46.875, 93.75, 187.5, 375.0, 750.0, 1.5e3, 3e3, 6e3, 12e3 }) };	// Possible frequencyBands
 
 		public:
@@ -104,7 +110,7 @@ namespace RAC
 			* @param frequencyIndex The index of the frequency in the frequencies parameter given at construction
 			* @return The index of the octave band output that corresponds to the given frequency index
 			*/
-			int GetBandIndex(int frequencyIndex) const { return octaveBandIndices[frequencyIndex] - numTopBandsToSum; }
+			int GetBandIndex(int frequencyIndex) const { return octaveBandIndices(frequencyIndex) - numTopBandsToSum; }
 			
 			/**
 			* @brief Returns the output of the OctaveBand filter given an input
@@ -113,7 +119,7 @@ namespace RAC
 			* @param lerpFactor The lerp factor for interpolation
 			* @return A vector containing the outputs of each frequency band
 			*/
-			const std::vector<Real>& GetOutput(Real input, Real lerpFactor);
+			const Buffer<>& GetOutput(Real input, Real lerpFactor);
 
 
 			/**
@@ -136,7 +142,7 @@ namespace RAC
 			{
 				Vec<int> indices = Vec<int>(frequencies.Length());
 				for (int i = 0; i < frequencies.Length(); i++)
-					indices[i] = GetFrequencyIndex(frequencies[i]);
+					indices(i) = GetFrequencyIndex(frequencies[i]);
 				return indices;
 			}
 
@@ -144,7 +150,7 @@ namespace RAC
 
 			int GetFrequencyIndex(Real f) const;
 
-			void CombineTopBands(const std::vector<Real>& bands);
+			void CombineTopBands(const Buffer<>& bands);
 
 			/**
 			* @param fs The sample rate for calculating the filter coefficients
@@ -176,8 +182,8 @@ namespace RAC
 				return w;
 			}
 
-			std::vector<Real> bands;
-			std::vector<Real> outputs;
+			Buffer<> bands;
+			Buffer<> outputs;
 			const Vec<int> octaveBandIndices;
 
 			int numFrequencyBands;		// Number of frequency bands for the filter

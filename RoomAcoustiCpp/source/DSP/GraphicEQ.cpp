@@ -27,16 +27,16 @@ namespace RAC
 		{
 			assert(gain.Length() == fc.Length());
 
-			Coefficients f = CreateFrequencyVector(fc);
+			Coefficients<> f = CreateFrequencyVector(fc);
 			InitMatrix(f, Q, sampleRate);
 			auto targetGains = CalculateGains(gain);
 
 			// Increasing the low shelf frequency by SQRT_2 creates a smoother response at low frequencies
-			lowShelf = std::make_unique<PeakLowShelf<T>>(f[0] * SQRT_2, targetGains.first[0], Q, sampleRate);
+			lowShelf = std::make_unique<PeakLowShelf<T>>(f[0] * SQRT_2, targetGains.first(0), Q, sampleRate);
 			for (int i = 1; i < numFilters - 1; i++)
-				peakingFilters.emplace_back(std::make_unique<PeakingFilter<T>>(f[i], targetGains.first[i], Q, sampleRate));
+				peakingFilters.emplace_back(std::make_unique<PeakingFilter<T>>(f[i], targetGains.first(i), Q, sampleRate));
 			// (same as fc[numFilters - 1] * 2 / SQRT_2 ) Decreasing the high shelf frequency by SQRT_2 creates a smoother response at high frequencies
-			highShelf = std::make_unique<PeakHighShelf<T>>(std::min(f[numFilters - 2] * SQRT_2, (Real)20000.0), targetGains.first[numFilters - 1], Q, sampleRate);
+			highShelf = std::make_unique<PeakHighShelf<T>>(std::min(f[numFilters - 2] * SQRT_2, (Real)20000.0), targetGains.first(numFilters - 1), Q, sampleRate);
 
 			targetGain.store(targetGains.second, std::memory_order_release);
 			currentGain = targetGains.second;
@@ -52,21 +52,27 @@ namespace RAC
 		{
 			assert(gains.Length() == peakingFilters.size());
 
-			if (gains == previousInput) // No change in gains
+			if (gains.IsApprox(previousInput)) // No change in gains
 			{
-				if (gainsEqual.load(std::memory_order_acquire) && gains <= 0.0) // Gains currently zero
+				if (gainsEqual.load(std::memory_order_acquire) && gains.IsLessEqThan(0.0)) // Gains currently zero
 					return true;
 				return false;
 			}
+			//if (gains == previousInput) // No change in gains
+			//{
+			//	if (gainsEqual.load(std::memory_order_acquire) && gains <= 0.0) // Gains currently zero
+			//		return true;
+			//	return false;
+			//}
 			previousInput = gains;
 
 			const auto targetGains = CalculateGains(gains);
 			targetGain.store(targetGains.second, std::memory_order_release);
 			gainsEqual.store(false, std::memory_order_release);
-			lowShelf->SetTargetGain(targetGains.first[0]);
+			lowShelf->SetTargetGain(targetGains.first(0));
 			for (int i = 1; i < numFilters - 1; i++)
-				peakingFilters[i - 1]->SetTargetGain(targetGains.first[i]);
-			highShelf->SetTargetGain(targetGains.first[numFilters - 1]);
+				peakingFilters[i - 1]->SetTargetGain(targetGains.first(i));
+			highShelf->SetTargetGain(targetGains.first(numFilters - 1));
 			return false;
 		}
 
@@ -77,23 +83,29 @@ namespace RAC
 		{
 			assert(gains.Length() + 2 == numFilters);
 
-			Rowvec inputGains(std::vector<Real>(numFilters, 1.0));
-			if (gains <= 0.0)
+			// TODO: Should this be coefficients?
+			Rowvec<> inputGains = Rowvec<>::Constant(numFilters, 1.0);
+
+			if (gains.IsLessEqThan(0.0))
 				return std::make_pair(inputGains, (Real)0.0);
+
+			/*if (gains <= 0.0)
+				return std::make_pair(inputGains, (Real)0.0);*/
 
 			if (gains.Length() == 1)
 			{
-				inputGains[0] = gains[0];
-				inputGains[1] = gains[0];
-				inputGains[2] = gains[0];
+				inputGains(0) = gains[0];
+				inputGains(1) = gains[0];
+				inputGains(2) = gains[0];
 			}
 			else
 			{
-				inputGains[0] = (gains[0] + gains[1]) / 2.0; // Low shelf gain
+				inputGains(0) = (gains[0] + gains[1]) / 2.0; // Low shelf gain
 				for (int i = 1; i < numFilters - 1; i++)
-					inputGains[i] = gains[i - 1]; // Peaking filter gains
-				inputGains[numFilters - 1] = (gains[numFilters - 4] + gains[numFilters - 3]) / 2.0; // High shelf gain
+					inputGains(i) = gains[i - 1]; // Peaking filter gains
+				inputGains(numFilters - 1) = (gains[numFilters - 4] + gains[numFilters - 3]) / 2.0; // High shelf gain
 			}
+
 			inputGains.Max(EPS); // Prevent log10(0)
 			inputGains.Log10();
 
@@ -112,7 +124,7 @@ namespace RAC
 		template<typename T>
 		Coefficients<> GraphicEQ<T>::CreateFrequencyVector(const Coefficients<>& fc) const
 		{
-			Coefficients f(numFilters);
+			Coefficients<> f(numFilters);
 			f[0] = std::max(fc[0] / (Real)2.0, (Real)20.0);
 			for (int i = 1; i < numFilters - 1; i++)
 				f[i] = fc[i - 1];
@@ -130,13 +142,25 @@ namespace RAC
 			Real pdb = 6.0;
 			Real p = pow(10.0, pdb / 20.0);
 
-			Coefficients out(numFilters);
+#if MATRIX_LIBRARY == EIGEN_FLAG
+			const PeakLowShelf tempLowShelf(fc[0] * SQRT_2, p, Q, fs); // Times SQRT_2. See constructor
+			filterResponseMatrix.Row(0) = tempLowShelf.GetFrequencyResponse(fc);
+
+			for (int j = 1; j < numFilters - 1; j++)
+			{
+				const PeakingFilter tempPeakingFilter(fc[j], p, Q, fs);
+				filterResponseMatrix.Row(j) = tempPeakingFilter.GetFrequencyResponse(fc);
+			}
+			const PeakHighShelf tempHighShelf(std::min(fc[numFilters - 2] * SQRT_2, (Real)20000.0), p, Q, fs); // Times SQRT_2. See constructor
+			filterResponseMatrix.Row(numFilters - 1) = tempHighShelf.GetFrequencyResponse(fc);
+#else
+			Coefficients<> out(numFilters);
 
 			const PeakLowShelf tempLowShelf(fc[0] * SQRT_2, p, Q, static_cast<int>(fs)); // Times SQRT_2. See constructor
 			out = tempLowShelf.GetFrequencyResponse(fc);
 
 			for (int i = 0; i < numFilters; i++)
-				filterResponseMatrix(0, i) += out[i];
+				filterResponseMatrix(0, i) = out[i];
 
 			for (int j = 1; j < numFilters - 1; j++)
 			{
@@ -144,16 +168,16 @@ namespace RAC
 				out = tempPeakingFilter.GetFrequencyResponse(fc);
 
 				for (int i = 0; i < out.Length(); i++)
-					filterResponseMatrix(j, i) += out[i];
+					filterResponseMatrix(j, i) = out[i];
 			}
 
 			const PeakHighShelf tempHighShelf(std::min(fc[numFilters - 2] * SQRT_2, (Real)20000.0), p, Q, static_cast<int>(fs)); // Times SQRT_2. See constructor
 			out = tempHighShelf.GetFrequencyResponse(fc);
 
 			for (int i = 0; i < out.Length(); i++)
-				filterResponseMatrix(numFilters - 1, i) += out[i];
-
-			filterResponseMatrix.Inverse();
+				filterResponseMatrix(numFilters - 1, i) = out[i];
+#endif
+			filterResponseMatrix = filterResponseMatrix.InverseMatrix();
 			filterResponseMatrix *= pdb;
 		}
 

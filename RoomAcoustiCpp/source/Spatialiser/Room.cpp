@@ -25,7 +25,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		size_t Room::InitMaterial(const Absorption<>& material)
+		size_t Room::InitMaterial(const Coefficients<>& material)
 		{
 			size_t id;
 			std::lock_guard<std::mutex> lock(mMaterialMutex);
@@ -45,7 +45,7 @@ namespace RAC
 				it = mMaterials.find(id);
 			}
 
-			mMaterials.insert_or_assign(id, material);
+			mMaterials.insert_or_assign(id, CalculateReflectance(material));
 			RecordChange();
 			return id;
 		}
@@ -126,9 +126,9 @@ namespace RAC
 			for (const auto& [i, wall] : mWalls)
 			{
 				Vertices vertices = wall.GetVertices();
-				Real Ax = vertices[0].x, Ay = vertices[0].y, Az = vertices[0].z;
-				Real Bx = vertices[1].x, By = vertices[1].y, Bz = vertices[1].z;
-				Real Cx = vertices[2].x, Cy = vertices[2].y, Cz = vertices[2].z;
+				Real Ax = vertices[0].x(), Ay = vertices[0].y(), Az = vertices[0].z();
+				Real Bx = vertices[1].x(), By = vertices[1].y(), Bz = vertices[1].z();
+				Real Cx = vertices[2].x(), Cy = vertices[2].y(), Cz = vertices[2].z();
 #if PLUCKER_KERNEL
 #if LEAN_PLUCKER
 				// TODO: Implement Lean Plücker
@@ -188,9 +188,9 @@ namespace RAC
 
 				// ----- Plane parameters: normal n and plane constant d0 -----
 				Vec3 normal = wall.GetNormal();
-				mTriangleMeshSoA.nx[i] = normal.x;
-				mTriangleMeshSoA.ny[i] = normal.y;
-				mTriangleMeshSoA.nz[i] = normal.z;
+				mTriangleMeshSoA.nx[i] = normal.x();
+				mTriangleMeshSoA.ny[i] = normal.y();
+				mTriangleMeshSoA.nz[i] = normal.z();
 
 				mTriangleMeshSoA.patchId[i] = static_cast<int>(wall.GetMaterialID());
 
@@ -473,17 +473,17 @@ namespace RAC
 						{
 							// Cross(a.GetNormal(), b.GetNormal()) gives vector in direction of the edge
 							// verticesA[idxA] - verticesA[i] give vector from base to top of edge
-							Vec3 test1 = UnitVectorRound(Cross(wallA.GetNormal(), wallB.GetNormal()));
-							Vec3 test2 = UnitVectorRound(verticesA[idxA] - verticesA[i]);
+							Vec3 test1 = Round((wallA.GetNormal().cross(wallB.GetNormal())).Normalised());
+							Vec3 test2 = Round((verticesA[idxA] - verticesA[i]).Normalised());
 
 							Vec3 test = test1 - test2; // If opposite sign, will tend to zero
-							if (test.Length() < 0.1)
+							if (test.Normal() < 0.1)
 							{
 
 								edges.emplace_back(verticesA[i], verticesA[idxA], wallA.GetNormal(), wallB.GetNormal(), idA, idB, wallA.GetPlaneID(), wallB.GetPlaneID());
 								return;
 							}
-							else if (test.Length() > 1.9)
+							else if (test.Normal() > 1.9)
 							{
 								edges.emplace_back(verticesA[i], verticesA[idxA], wallB.GetNormal(), wallA.GetNormal(), idB, idA, wallB.GetPlaneID(), wallA.GetPlaneID());
 								return;
@@ -688,7 +688,7 @@ namespace RAC
 
 		std::pair<Coefficients<>, Real> Room::CalculateAbsorptionSurfaceArea()
 		{
-			Coefficients absorption = Coefficients<>(numFrequencyBands, 1.0);
+			Coefficients<> absorption = Coefficients<>::Constant(numFrequencyBands, 1.0);
 			Real surfaceArea = 0.0;
 			MaterialMap absorptionFactors;
 
@@ -737,7 +737,7 @@ namespace RAC
 
 		Coefficients<> Room::Sabine(const Coefficients<>& absorption) const
 		{
-			Real factor = 24.0 * log(10.0) / SPEED_OF_SOUND;
+			Real factor = 24.0 * std::log(10.0) / SPEED_OF_SOUND;
 			return factor * roomData.volume / absorption;
 		}
 
@@ -745,7 +745,7 @@ namespace RAC
 
 		Coefficients<> Room::Eyring(const Coefficients<>& absorption, const Real& surfaceArea) const
 		{
-			Real factor = 24.0 * log(10.0) / SPEED_OF_SOUND;
+			Real factor = 24.0 * std::log(10.0) / SPEED_OF_SOUND;
 			return -factor * roomData.volume / ((1 - absorption / surfaceArea).Log() * surfaceArea);
 		}
 	}

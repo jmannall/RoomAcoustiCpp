@@ -292,9 +292,9 @@ namespace RAC
 			*/
 			void RemoveSource(size_t id);
 
-			inline size_t InitMaterial(const Absorption<>& material) { return mRoom->InitMaterial(material); }
+			inline size_t InitMaterial(const Coefficients<>& material) { return mRoom->InitMaterial(material); }
 
-			void UpdateMaterial(size_t id, const Absorption<>& material);
+			void UpdateMaterial(size_t id, const Coefficients<>& material);
 
 			inline void RemoveMaterial(size_t id) { mRoom->RemoveMaterial(id); }
 
@@ -353,6 +353,8 @@ namespace RAC
 			*/
 			void GetOutput(Buffer<>& sendBuffer);
 
+			void RecordImpulseResponse(const Vec3& position, const Vec4& orientation, Buffer<>& outputBuffer);
+
 			/**
 			* @brief Sets the spatialiser to impulse response mode if mode is true
 			*
@@ -387,7 +389,6 @@ namespace RAC
 			/**
 			* Audio buffers
 			*/
-			Buffer<> mInputBuffer;	// Audio input buffer
 			Matrix<> mReverbInput;	// Audio reverb input matrix
 
 			std::atomic<bool> audioFlag{ false };	// Flag to check if the audio thread is processing

@@ -88,16 +88,16 @@ namespace RAC
 				roomData.customT60 = t60;
 			}
 
-			size_t InitMaterial(const Absorption<>& material);
+			size_t InitMaterial(const Coefficients<>& material);
 
-			inline void UpdateMaterial(size_t id, const Absorption<>& material)
+			inline void UpdateMaterial(size_t id, const Coefficients<>& material)
 			{
 				std::lock_guard<std::mutex> lock(mMaterialMutex);
 				auto it = mMaterials.find(id);
 				if (it == mMaterials.end()) // case: material does not exist
-					mMaterials.insert_or_assign(id, material);
+					mMaterials.insert_or_assign(id, CalculateReflectance(material));
 				else // case: material does exist
-					it->second = material;
+					it->second = CalculateReflectance(material);
 				RecordChange();
 			}
 
@@ -371,9 +371,9 @@ namespace RAC
 			std::vector<TimerPair> mPlaneTimers;		// Plane IDs waiting to be made available
 			size_t nextPlane{ 0 };							// Next plane ID if none are available
 
-			MaterialMap mMaterials;						// Stored materials
+			MaterialMap mMaterials;						// Stored materials (stores reflectance)
 			std::vector<size_t> mEmptyMaterialSlots;	// Available material IDs
-			size_t nextMaterial{ 0 };						// Next material ID if none are available
+			size_t nextMaterial{ 0 };					// Next material ID if none are available
 
 			EdgeMap mEdges;								// Stored edges
 			std::vector<size_t> mEmptyEdgeSlots;		// Available edge IDs

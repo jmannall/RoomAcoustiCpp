@@ -27,7 +27,12 @@ namespace RAC
 			* 
 			* @param length The length of the delay line.
 			*/
-			DelayLine(int length) : buffer(length) {}
+			DelayLine(int length) : buffer(length)
+			{
+#if MATRIX_LIBRARY == EIGEN_FLAG
+				buffer.Reset();
+#endif
+			}
 
 			/**
 			* @brief Adds a sample to the delay line and returns the delayed sample.

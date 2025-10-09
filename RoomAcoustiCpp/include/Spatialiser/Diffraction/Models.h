@@ -23,6 +23,7 @@
 // Common headers
 #include "Common/Types.h"
 #include "Common/Complex.h"
+#include "Common/Coefficients.h"
 
 // Spatialiser headers
 #include "Spatialiser/Diffraction/Path.h"
@@ -200,8 +201,8 @@ namespace RAC
 				static constexpr int numShelvingFilters{ 4 };	// Number of shelving filters used to approximate each UDFA filter
 				static constexpr int numUDFAFilters = model == UDFAModel::SingleTerm ? 2 : 4;	// Number of UDFA filters used in the model
 				
-				using ParametersI = Coefficients<std::array<Real, numShelvingFilters>>;			// Parameters type for the shelving filters
-				using ParametersT = Coefficients<std::array<Real, numShelvingFilters + 1>>;		// Parameters type for the target parameters
+				using ParametersI = Coefficients<Real, numShelvingFilters>;			// Parameters type for the shelving filters
+				using ParametersT = Coefficients<Real, numShelvingFilters + 1>;		// Parameters type for the target parameters
 
 				/**
 				* @brief Struct that stores the target shelving filter parameters for each UDFA filter
@@ -625,7 +626,7 @@ namespace RAC
 				struct Parameters
 				{
 				public:
-					Coefficients<std::array<Real, 5>> data{ 0.0 };	// Output parameters (z1, z2, p1, p2, k)
+					Coefficients<Real, 5> data{ 0.0 };	// Output parameters (z1, z2, p1, p2, k)
 
 					Parameters(float z[2], float p[2], float k)
 					{
@@ -783,7 +784,7 @@ namespace RAC
 			*/
 			class UTD : public Model
 			{
-				using Parameters = Coefficients<std::array<Real, 4>>;	// Parameters type that stores 4 values
+				using Parameters = Coefficients<Real, 4>;	// Parameters type that stores 4 values
 
 				/**
 				* @brief Initialises the constants E used in the UTD calculations
@@ -900,7 +901,7 @@ namespace RAC
 				Complex FresnelIntegral(Real x) const;
 
 				const Parameters k = LinkwitzRiley::DefaultFM() * PI_2 / SPEED_OF_SOUND;	// Wave numbers for calculating UTD gains
-				const std::array<Complex, 4> E = InitE();									// Coefficients for the UTD calculation
+				const std::array<Complex, 4> E = InitE();									// Coefficients<> for the UTD calculation
 
 				LinkwitzRiley lrFilter;		// Linkwitz Riley filterbank
 			};
@@ -916,7 +917,7 @@ namespace RAC
 			*/
 			class BTM : public Model
 			{
-				using Parameters = Coefficients<std::array<Real, 4>>; // Parameters type that stores 4 values
+				using Parameters = Coefficients<Real, 4>; // Parameters type that stores 4 values
 
 				/**
 				* @brief Struct that stores the limits for the integral calculation
@@ -979,10 +980,10 @@ namespace RAC
 						Real minus = path.sData.t - path.rData.t;
 						theta = Parameters({ PI_1 + plus, PI_1 + minus, PI_1 - minus, PI_1 - plus });
 						vTheta = v * theta;
-						thetaSq = theta * theta;
-						absTheta = Abs(vTheta);
-						sinTheta = Sin(vTheta);
-						cosTheta = Cos(vTheta);
+						thetaSq = theta.Square();
+						absTheta = vTheta.Abs();
+						sinTheta = vTheta.Sin();
+						cosTheta = vTheta.Cos();
 
 						int n0 = (int)round(samplesPerMetre * R0);
 						Real x = (n0 + 0.5) / samplesPerMetre;

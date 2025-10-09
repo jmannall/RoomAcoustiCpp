@@ -303,7 +303,7 @@ namespace RAC
 		*/
 		class ZPKFilter : public IIRFilter2<>
 		{
-			using Parameters = Coefficients<std::array<Real, 5>>;
+			using Parameters = Coefficients<Real, 5>;
 		public:
 			/**
 			* @brief Constructor that initialises a default second order IIRFilter with a given sample rate

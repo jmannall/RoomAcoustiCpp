@@ -19,13 +19,13 @@ namespace RAC
 		TEST_METHOD(DecreaseSize)
 		{
 			const Real lerpFactor = 0.5;
+			const Buffer<> longIR(std::vector<Real>({ 1.0, 0.5, -3.0, 0.2, 0.7, -0.13, 0.2, 2.1, -1.2, 0.48, 0.1, -0.35 }));
 
-			const Buffer longIR = Buffer({ 1.0, 0.5, -3.0, 0.2, 0.7, -0.13, 0.2, 2.1, -1.2, 0.48, 0.1, -0.35 });
 			FIRFilter filter = FIRFilter(longIR, 16);
 
 			Assert::AreEqual((Real)1.0, filter.GetOutput(1.0, lerpFactor), L"Init wrong");
 
-			const Buffer shortIR = Buffer({ -0.9, 0.3, 0.33, -0.1, -0.4, 0.6 });
+			const Buffer<> shortIR(std::vector<Real>({ -0.9, 0.3, 0.33, -0.1, -0.4, 0.6 }));
 			filter.SetTargetIR(shortIR);
 
 			for (int i = 0; i < 1000; i++)
@@ -41,13 +41,13 @@ namespace RAC
 		TEST_METHOD(IncreaseSize)
 		{
 			const Real lerpFactor = 0.5;
+			const Buffer<> shortIR(std::vector<Real>({ 0.9, 0.5, 0.0, 0.2 }));
 
-			const Buffer shortIR({ 0.9, 0.5, 0.0, 0.2 });
 			FIRFilter filter(shortIR, 16);
 
 			Assert::AreEqual((Real)1.8, filter.GetOutput(2.0, lerpFactor), L"Init wrong");
 
-			const Buffer longIR({ 1.3, -0.5, 0.15, 0.78, -0.2, -1.0, 0.1, 0.9, 1.3, 2.3 });
+			const Buffer<> longIR(std::vector<Real>({ 1.3, -0.5, 0.15, 0.78, -0.2, -1.0, 0.1, 0.9, 1.3, 2.3 }));
 			filter.SetTargetIR(longIR);
 
 			for (int i = 0; i < 1000; i++)
@@ -63,8 +63,7 @@ namespace RAC
 		TEST_METHOD(ProcessAudio)
 		{
 			const Real lerpFactor = 0.5;
-
-			const Buffer ir({ 1.0, -0.5, 0.0, 0.2, 0.3, 0.0, 0.7, 0.1 });
+			const Buffer<> ir(std::vector<Real>({ 1.0, -0.5, 0.0, 0.2, 0.3, 0.0, 0.7, 0.1 }));
 
 			std::vector<Real> input = { 1.0, 0.0, 0.2, 0.5, 0.0, 0.3, 0.4, 0.2 };
 			std::vector<Real> output = { 1.0, -0.5, 0.2, 0.6, 0.05, 0.34, 1.11, 0.25 };
@@ -78,8 +77,7 @@ namespace RAC
 		TEST_METHOD(ClearInputLine)
 		{
 			const Real lerpFactor = 0.5;
-
-			const Buffer ir({ 1.0, -0.5, 0.0, 0.2, 0.3, 0.0, 0.7, 0.1 });
+			const Buffer<> ir(std::vector<Real>({ 1.0, -0.5, 0.0, 0.2, 0.3, 0.0, 0.7, 0.1 }));
 
 			std::vector<Real> input = { 1.0, 0.0, 0.2, 0.5, 0.0, 0.3, 0.4, 0.2 };
 			std::vector<Real> output = { 1.0, -0.5, 0.2, 0.6, 0.05, 0.34, 1.11, 0.25 };
@@ -97,15 +95,14 @@ namespace RAC
 		TEST_METHOD(IsInterpolating)
 		{
 			const Real lerpFactor = 0.5;
-
-			const Buffer ir({ 1.0, -0.5, 0.0, 0.2, 0.3, 0.0, 0.7, 0.1 });
+			const Buffer<> ir(std::vector<Real>({ 1.0, -0.5, 0.0, 0.2, 0.3, 0.0, 0.7, 0.1 }));
 
 			std::vector<Real> input = { 1.0, 0.0, 0.2, 0.5, 0.0, 0.3, 0.4, 0.2 };
 			std::vector<Real> output = { 1.0, -0.5, 0.2, 0.6, 0.05, 0.34, 1.11, 0.25 };
 
 			FIRFilter filter(ir, 8);
 
-			const Buffer irNew = Buffer({ -1.0, 0.5, 0.0, -0.2, -0.3, 0.0, -0.7, -0.1 });
+			const Buffer<> irNew(std::vector<Real>({ -1.0, 0.5, 0.0, -0.2, -0.3, 0.0, -0.7, -0.1 }));
 			filter.SetTargetIR(irNew);
 
 			for (int i = 0; i < input.size(); i++)
@@ -115,8 +112,7 @@ namespace RAC
 		TEST_METHOD(IrTooLong)
 		{
 			const Real lerpFactor = 0.5;
-
-			const Buffer ir({ 1.0, 0.5, 0.0, 0.2, 0.3, 0.0, 0.7, 0.1, 4.0, 3.2, 5.1 });
+			const Buffer<> ir(std::vector<Real>({ 1.0, 0.5, 0.0, 0.2, 0.3, 0.0, 0.7, 0.1, 4.0, 3.2, 5.1 }));
 
 			std::vector<Real> input = { 1.0, 0.0, 0.2, 0.5, 0.0, 0.3, 0.4, 0.2 };
 

@@ -73,12 +73,28 @@ namespace RAC
 			/**
 			* @brief Updates the stored listener position
 			*/
-			inline void SetListenerPosition(const Vec3& position) { lock_guard<std::mutex> lock(dataStoreMutex); mListenerPositionStore = position; }
+			inline void SetListenerPosition(const Vec3& position)
+			{
+				lock_guard<std::mutex> lock(dataStoreMutex);
+				if ((position - mListenerPositionIncoming).Normal() < EPS_POSITION)
+					return;
+				mListenerPositionIncoming = position;
+				listenerMoved = true;
+			}
 
 			/**
 			* @brief Process the image edge model and update the target image source data
 			*/
 			void RunIEM();
+
+			inline void ResetEndFlag()
+			{
+				while (!iemStartFlag.load(std::memory_order_acquire))
+					std::this_thread::yield();
+				iemEndFlag.store(false, std::memory_order_release);
+			}
+
+			inline bool HasCompleted() { return iemEndFlag.load(std::memory_order_acquire); }
 
 		private:
 			/**
@@ -107,7 +123,7 @@ namespace RAC
 			*
 			* @return True if a valid intersection is found, false otherwise
 			*/
-			bool LinePlaneIntersection(const Vec3& start, const Vec3& end, const Plane& plane, Absorption<>& absorption, Vec3& intersection) const;
+			bool LinePlaneIntersection(const Vec3& start, const Vec3& end, const Plane& plane, Coefficients<>& absorption, Vec3& intersection) const;
 
 			/**
 			* @brief Locate intersection between a line and a collection of walls
@@ -120,7 +136,7 @@ namespace RAC
 			* 
 			* @return True if a valid intersection is found, false otherwise
 			*/
-			bool LineWallIntersection(const Vec3& start, const Vec3& end, const std::vector<size_t>& wallIDs, Absorption<>& absorption, Vec3& intersection) const;
+			bool LineWallIntersection(const Vec3& start, const Vec3& end, const std::vector<size_t>& wallIDs, Coefficients<>& absorption, Vec3& intersection) const;
 
 			/**
 			* @brief Check for obstructions along an image source path
@@ -174,7 +190,7 @@ namespace RAC
 			* 
 			* @remarks Directivities taken from: Eargle's the Microphone Book : From Mono to Stereo to Surround - a Guide to Microphone Design and Application
 			*/
-			Absorption<> CalculateDirectivity(const Source::Data& source, const Vec3& point) const;
+			Coefficients<> CalculateDirectivity(const Source::Data& source, const Vec3& point) const;
 
 			/**
 			* @brief Run the image edge model for the given source
@@ -185,7 +201,7 @@ namespace RAC
 			*/
 			void ReflectPointInRoom(const Source::Data& source, Source::DSPParameters& direct, ImageSourceDataMap& imageSources);
 
-			Absorption<> Direct(const Source::Data& source, bool lineOfSight);
+			Coefficients<> Direct(const Source::Data& source, bool lineOfSight);
 
 			/**
 			* @brief Find all first order diffractions
@@ -258,17 +274,20 @@ namespace RAC
 			int specularDiffractionStore;			// Stores the specular diffraction order (Mutex must be locked to access)
 			bool doSpecularDiffraction;
 			Vec3 mListenerPosition;					// The listener position (can be accessed freely)
-			Vec3 mListenerPositionStore;			// Stores the listener position (Mutex must be locked to access)
+			Vec3 mListenerPositionIncoming;			// The listener position (Mutex must be locked to access)
 
 			std::vector<Vec3> reverbDirections;				// The directions of the late reverb sources
-			std::vector<Absorption<>> reverbAbsorptions;		// The absorption coefficients of the late reverb sources
+			std::vector<Coefficients<>> reverbAbsorptions;		// The absorption Coefficients<> of the late reverb sources
 
-			Coefficients<> frequencyBands;	// Frequency bands for graphic equalisers
-			bool currentCycle;				// Stores the current cycle of the currently processed source
-			bool configChanged;				// True if the image edge model configuration has changed since the last run
-			bool reverbRunning;				// True if the late reverb is running, false otherwise
+			Coefficients<> frequencyBands;			// Frequency bands for graphic equalisers
+			bool currentCycle{ false };				// Stores the current cycle of the currently processed source
+			bool configChanged{ true };				// True if the image edge model configuration has changed since the last run
+			bool listenerMoved{ true };				// True if the listener has moved since the last run
+			bool reverbRunning{ false };				// True if the late reverb is running, false otherwise
 
-			std::mutex dataStoreMutex;				// Protects mListenerPositionStore, mIEMConfigStore
+			std::mutex dataStoreMutex;					// Protects mListenerPositionStore, mIEMConfigStore
+			std::atomic<bool> iemStartFlag{ false };	// True if the image edge model is running, false otherwise
+			std::atomic<bool> iemEndFlag{ false };		// True if the image edge model has finished running, false otherwise
 		};
 	}
 }
