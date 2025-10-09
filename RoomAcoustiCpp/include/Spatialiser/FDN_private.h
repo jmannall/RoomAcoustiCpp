@@ -361,7 +361,7 @@ namespace RAC
 			void ProcessSquare();
 
 			Rowvec<T> x;	// Next input audio buffer
-			Rowvec<T> y;	// Previous output audio buffer
+			Vec<T> y;		// Previous output audio buffer
 
 		private:
 

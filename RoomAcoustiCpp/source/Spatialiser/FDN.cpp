@@ -224,13 +224,17 @@ namespace RAC
 		template<typename T>
 		void FDN<T>::ProcessSquare()
 		{
+#if MATRIX_LIBRARY == EIGEN_FLAG
 			// TODO: Check this when using eigen.
+			x = feedbackMatrix * y;
+#else
 			for (int j = 0; j < feedbackMatrix.Cols(); ++j)
 			{
 				x(j) = 0.0;
 				for (int k = 0; k < feedbackMatrix.Rows(); ++k)
 					x(j) += y(k) * feedbackMatrix(k, j);
 			}
+#endif
 		}
 		
 		////////////////////////////////////////
