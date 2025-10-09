@@ -251,7 +251,7 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 
 		RoomData roomData(static_cast<Real>(volume), t60, SelectReverbFormula(reverbFormulaId), dimensions);
 
-		LateReverbData data(enabled, 0.0, SelectFDNMatrix(matrixId));
+		LateReverbData data(enabled, numRays, SelectFDNMatrix(matrixId));
 		return InitSingleFDN(roomData, data);
 	}
 
