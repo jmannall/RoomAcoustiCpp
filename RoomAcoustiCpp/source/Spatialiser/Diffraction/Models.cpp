@@ -237,9 +237,9 @@ namespace RAC
 				if (!path.valid)
 					return;
 
-				Buffer ir = CalculateBTM(path);
+				Buffer<> ir = CalculateBTM(path);
 				if (ir.Length() > maxIrLength)
-					ir.ResizeBuffer(maxIrLength);
+					ir.Resize(maxIrLength);
 				if (ir.Valid())
 					firFilter.SetTargetIR(ir);
 			}
@@ -381,14 +381,14 @@ namespace RAC
 			Buffer<> BTM::CalculateBTM(const Path& path)
 			{
 				if (!path.valid)
-					return Buffer();
+					return Buffer<>();
 				Constants constants(path, samplesPerMetre);
 
 				int n0 = (int)round(samplesPerMetre * constants.R0);
 				int nir = (int)round(samplesPerMetre * path.GetMaxD());
 				int irLen = nir - n0 + 1;
 
-				Buffer ir(irLen);
+				Buffer<> ir(irLen);
 
 				if (path.sData.z == path.rData.z || path.sData.r == path.rData.r)
 					ir[0] = NonSkewCase(path, constants);

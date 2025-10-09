@@ -70,7 +70,7 @@ namespace RAC
 			assert(length <= maxFilterLength);
 
 			const std::shared_ptr<Buffer<>> irCopy = std::make_shared<Buffer<>>(ir);
-			irCopy->ResizeBuffer(length);
+			irCopy->Resize(length);
 
 			releasePool.Add(irCopy);
 

@@ -31,6 +31,7 @@ namespace RAC
 #define MATRIX_LIBRARY CUSTOM_FLAG
 #endif
 
+#define EIGEN_PLAINOBJECTBASE_PLUGIN "Eigen/PlainObjectBaseAddons.h"
 #define EIGEN_ARRAY_PLUGIN "Eigen/ArrayAddons.h"
 #define EIGEN_ARRAYBASE_PLUGIN "Eigen/ArrayBaseAddons.h"
 #define EIGEN_MATRIX_PLUGIN "Eigen/MatrixAddons.h"

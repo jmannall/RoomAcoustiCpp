@@ -61,6 +61,11 @@ namespace RAC
 			static Vec Constant(const int length, const T value) { return Vec(length, value); }
 
 			/**
+			* @return The length of the vector
+			*/
+			inline int Length() const { return this->data.rows; }
+
+			/**
 			* @brief Randomly fills the vector with values from a normal distribution
 			*/
 			void RandomNormalDistribution();
@@ -198,6 +203,11 @@ namespace RAC
 
 			// Static factory: constant
 			static Rowvec Constant(const int length, const T value) { return Rowvec(length, value); }
+
+			/**
+			* @return The length of the vector
+			*/
+			inline int Length() const { return this->data.cols; }
 
 			T Sum() const;
 

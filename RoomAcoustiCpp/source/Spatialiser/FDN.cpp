@@ -69,9 +69,9 @@ namespace RAC
 		template<typename T>
 		bool FDN<T>::IsSetMutuallyPrime(const Vec<int>& numbers)
 		{
-			for (int i = 0; i < numbers.Rows(); ++i)
+			for (int i = 0; i < numbers.Length(); ++i)
 			{
-				for (int j = i + 1; j < numbers.Rows(); ++j)
+				for (int j = i + 1; j < numbers.Length(); ++j)
 				{
 					if (std::gcd(numbers(i), numbers(j)) != 1)
 						return false;
@@ -85,7 +85,7 @@ namespace RAC
 		template<typename T>
 		bool FDN<T>::IsEntryMutuallyPrime(const Vec<int>& numbers, int idx)
 		{
-			for (int i = 0; i < numbers.Rows(); ++i)
+			for (int i = 0; i < numbers.Length(); ++i)
 			{
 				if (i == idx)
 					continue;
@@ -100,7 +100,7 @@ namespace RAC
 		template<typename T>
 		void FDN<T>::MakeSetMutuallyPrime(Vec<int>& numbers)
 		{
-			for (int i = 0; i < numbers.Rows(); ++i)
+			for (int i = 0; i < numbers.Length(); ++i)
 			{
 				int limit = static_cast<int>(round(0.1 * numbers(i)));
 				for (int adjustment = 0; adjustment <= limit; ++adjustment)
@@ -130,14 +130,14 @@ namespace RAC
 		template<typename T>
 		Vec<int> FDN<T>::CalculateTimeDelay(const Vec<>& dimensions, const int fdnSize, const int fs)
 		{
-			assert(dimensions.Rows() >  0);
+			assert(dimensions.Length() >  0);
 
 			Vec<> t(fdnSize);
 			Vec<int> delays = Vec<int>::Constant(fdnSize, 1);
-			if (dimensions.Rows() > 0)
+			if (dimensions.Length() > 0)
 			{
 
-				assert(dimensions.Rows() <= fdnSize);
+				assert(dimensions.Length() <= fdnSize);
 
 				// gives [-1:1], divide by 10 to get [-0.1:0.1]
 				t.RandomUniformDistribution();
@@ -146,7 +146,7 @@ namespace RAC
 				int k = 0;
 				while (k < fdnSize)
 				{
-					for (int i = 0; i < dimensions.Rows(); ++i)
+					for (int i = 0; i < dimensions.Length(); ++i)
 					{
 						if (k >= fdnSize)
 							break;

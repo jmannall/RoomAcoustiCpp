@@ -135,8 +135,8 @@ namespace RAC
 			Real Q = 0.98;
 			int fs = 48e3;
 			int numFrames = 256;
-			Buffer out = Buffer(numFrames);
-			Buffer in = Buffer(numFrames);
+			Buffer<> out(numFrames);
+			Buffer<> in = Buffer<>::Zero(numFrames);
 			in[0] = 1.0;
 
 			int numTests = fc.size();

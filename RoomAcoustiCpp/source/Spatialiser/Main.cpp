@@ -173,7 +173,10 @@ extern "C"
 	*/
 	EXPORT bool API RACInit(int fs, int numFrames, int numReverbSources, int fdnSize, float lerpFactor, float Q, const float* frequencyBandsData, int numFrequencyBands)
 	{
-		buffer.ResizeBuffer(2 * numFrames);
+		buffer.Resize(2 * numFrames);
+#if MATRIX_LIBRARY == CUSTOM_FLAG
+		buffer.Reset();
+#endif
 		NUM_FREQUENCY_BANDS = numFrequencyBands;
 		NUM_FRAMES = numFrames;
 
@@ -681,7 +684,6 @@ extern "C"
 	*/
 	EXPORT void API RACSubmitAudio(int id, const float* data)
 	{
-		Buffer<> buffer = Buffer<>(NUM_FRAMES);
 		std::transform(data, data + NUM_FRAMES, buffer.begin(),
 			[](float value) { return static_cast<Real>(value); });
 		SubmitAudio(static_cast<size_t>(id), buffer);
@@ -733,7 +735,7 @@ extern "C"
 	*/
 	EXPORT void API RACRecordImpulseResponse(float posX, float posY, float posZ, float oriW, float oriX, float oriY, float oriZ, float* sendBuffer, int numSamples)
 	{
-		Buffer<> outputBuffer(numSamples);
+		Buffer<> outputBuffer = Buffer<>::Zero(numSamples);
 		RecordImpulseResponse(Vec3(posX, posY, posZ), Vec4(oriW, oriX, oriY, oriZ), outputBuffer);
 		for (Real value : outputBuffer)
 			*sendBuffer++ = static_cast<float>(value);

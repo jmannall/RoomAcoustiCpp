@@ -61,7 +61,7 @@ namespace RAC
 		void MoDARTTracing::InitRoom(const Matrix<int>& indexing, const Vec<>& decayRates) {
 			lock_guard<std::mutex> lock(rayPencilMutex);
 
-			assert(decayRates.Rows() == numFDNs);
+			assert(decayRates.Length() == numFDNs);
 			pathIndexing = indexing;
 			decayPerSecond = decayRates;
 			sourceResidues = Coefficients<>(numFDNs);

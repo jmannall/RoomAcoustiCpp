@@ -1077,22 +1077,22 @@ namespace RAC
         // TODO: Can these not just use operator= ?
         void RayBundle::getTotalDistances(Vec<>& distances) const
         {
-            assert(distances.Rows() == numRays);
+            assert(distances.Length() == numRays);
             for (int i = 0; i < numRays; ++i)
                 distances(i) = totalDistance(i);
         }
 
         void RayBundle::getCosines(Vec<>& cosines) const
         {
-            assert(cosines.Rows() == numRays);
+            assert(cosines.Length() == numRays);
             for (int i = 0; i < numRays; ++i)
                 cosines(i) = latestCosine(i);
         }
 
         void RayBundle::getIndices(Vec<int>& current, Vec<int>& previous) const
         {
-            assert(current.Rows() == numRays);
-            assert(previous.Rows() == numRays);
+            assert(current.Length() == numRays);
+            assert(previous.Length() == numRays);
             for (int i = 0; i < numRays; ++i) {
                 current(i) = latestPatchId(i);
                 previous(i) = previousPatchId(i);
@@ -1101,7 +1101,7 @@ namespace RAC
 
         void RayBundle::getRadiance(Vec<>& rad) const
         {
-            assert(rad.Rows() == numRays);
+            assert(rad.Length() == numRays);
             for (int i = 0; i < numRays; ++i)
                 rad(i) = radiance(i);
         }
@@ -1210,9 +1210,9 @@ namespace RAC
             Vec<int>& clusters) const
         {
             if (exposeMirrorCopies)
-                assert(clusters.Rows() == 2 * numRays);
+                assert(clusters.Length() == 2 * numRays);
             else
-                assert(clusters.Rows() == numRays);
+                assert(clusters.Length() == numRays);
 
             // Buffer used while iterating
             std::vector<Real> cosineSimilarity(directions.size());
@@ -1283,9 +1283,9 @@ namespace RAC
         void RayPencil::getDistances(Vec<>& distances) const
         {
             if (exposeMirrorCopies)
-                assert(distances.Rows() == 2 * numRays);
+                assert(distances.Length() == 2 * numRays);
             else
-                assert(distances.Rows() == numRays);
+                assert(distances.Length() == numRays);
 
             for (int i = 0; i < numRays; ++i)
                 distances(i) = frontDistance(i);
@@ -1301,9 +1301,9 @@ namespace RAC
         void RayPencil::getCosines(Vec<>& cosines) const
         {
             if (exposeMirrorCopies)
-                assert(cosines.Rows() == 2 * numRays);
+                assert(cosines.Length() == 2 * numRays);
             else
-                assert(cosines.Rows() == numRays);
+                assert(cosines.Length() == numRays);
 
             for (int i = 0; i < numRays; ++i)
                 cosines(i) = frontCosine(i);
@@ -1320,13 +1320,13 @@ namespace RAC
         {
             if (exposeMirrorCopies)
             {
-                assert(front.Rows() == 2 * numRays);
-                assert(back.Rows() == 2 * numRays);
+                assert(front.Length() == 2 * numRays);
+                assert(back.Length() == 2 * numRays);
             }
             else
             {
-                assert(front.Rows() == numRays);
-                assert(back.Rows() == numRays);
+                assert(front.Length() == numRays);
+                assert(back.Length() == numRays);
             }
 
             for (int i = 0; i < numRays; ++i)

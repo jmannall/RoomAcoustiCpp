@@ -52,10 +52,10 @@ namespace RAC
 		TEST_METHOD(Buffer_Class)
 		{
 			std::vector<Real> start = { 1.0, 4.0, 3.0, 2.0, 0.0, 0.0, 0.0, 0.0 };
-			Buffer current = Buffer(start);
+			Buffer<> current(start);
 
 			std::vector<Real> end = { 0.0, 2.0, 4.0, 2.0, 0.0, 0.0, 0.0, 0.0 };
-			Buffer target = Buffer(end);
+			Buffer<> target(end);
 			Real lerpFactor = 0.2;
 			Lerp(current, target, 4, lerpFactor);
 

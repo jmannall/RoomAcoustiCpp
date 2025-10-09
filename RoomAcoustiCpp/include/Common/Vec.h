@@ -38,8 +38,8 @@ namespace RAC
 
 		inline Real ThreeWayDot(const Vec<>& u, const Vec<>& v, const Vec<>& w)
 		{
-			assert(u.Rows() == v.Rows());
-			assert(u.Rows() == w.Rows());
+			assert(u.Length() == v.Length());
+			assert(u.Length() == w.Length());
 
 			return u.dot(v.cwiseProduct(w));
 		}

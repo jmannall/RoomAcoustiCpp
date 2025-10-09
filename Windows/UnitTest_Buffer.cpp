@@ -26,38 +26,38 @@ namespace RAC
 
 		TEST_METHOD(Default)
 		{
-			const size_t length = 1;
-			const Buffer buffer = Buffer();
-			Assert::AreEqual(length, buffer.Length(), L"Buffer not initialised correctly");
+			const int length = 0;
+			const Buffer<> buffer = Buffer<>();
+			Assert::AreEqual(length, (int)buffer.Length(), L"Buffer not initialised correctly");
 			for (int i = 0; i < buffer.Length(); i++)
 				Assert::AreEqual((Real)0.0, buffer[i], L"Buffer not initialised to zero");
 		}
 
 		TEST_METHOD(InitLength)
 		{
-			const size_t length = 256;
-			const Buffer buffer(length);
-			Assert::AreEqual(buffer.Length(), length, L"Buffer not initialised correctly");
+			const int length = 256;
+			const Buffer<> buffer = Buffer<>::Zero(length);
+			Assert::AreEqual((int)buffer.Length(), length, L"Buffer not initialised correctly");
 			for (int i = 0; i < buffer.Length(); i++)
 				Assert::AreEqual((Real)0.0, buffer[i], L"Buffer not initialised to zero");
 		}
 
 		TEST_METHOD(InitVector)
 		{
-			const size_t length = 256;
+			const int length = 256;
 			const std::vector<Real> vec = CreateRandomVector(length);
 
-			const Buffer buffer(vec);
-			Assert::AreEqual(buffer.Length(), length, L"Buffer not initialised correctly");
+			const Buffer<> buffer(vec);
+			Assert::AreEqual((int)buffer.Length(), length, L"Buffer not initialised correctly");
 			for (int i = 0; i < buffer.Length(); i++)
 				Assert::AreEqual(vec[i], buffer[i], L"Buffer not initialised to correct values");
 		}
 
 		TEST_METHOD(Reset)
 		{
-			const size_t length = 128;
+			const int length = 128;
 			const std::vector<Real> vec = CreateRandomVector(length);
-			Buffer buffer(vec);
+			Buffer<> buffer(vec);
 
 			buffer.Reset();
 			for (int i = 0; i < length; i++)
@@ -66,26 +66,26 @@ namespace RAC
 
 		TEST_METHOD(Resize)
 		{
-			const size_t length = 89;
+			const int length = 89;
 			const std::vector<Real> vec = CreateRandomVector(length);
-			Buffer buffer(vec);
+			Buffer<> buffer(vec);
 			
-			const size_t newLength = 245;
-			buffer.ResizeBuffer(newLength);
-			Assert::AreEqual(buffer.Length(), newLength, L"Buffer not resized correctly");
+			const int newLength = 245;
+			buffer.Resize(newLength);
+			Assert::AreEqual((int)buffer.Length(), newLength, L"Buffer not resized correctly");
 			for (int i = length; i < buffer.Length(); i++)
 				Assert::AreEqual((Real)0.0, buffer[i], L"New values not initialised to zero");
 
-			buffer.ResizeBuffer(length);
-			Assert::AreEqual(buffer.Length(), length, L"Buffer not resized correctly");
+			buffer.Resize(length);
+			Assert::AreEqual((int)buffer.Length(), length, L"Buffer not resized correctly");
 			for (int i = length; i < buffer.Length(); i++)
 				Assert::AreEqual(vec[i], buffer[i], L"Buffer values have changed");
 		}
 
 		TEST_METHOD(Valid)
 		{
-			const size_t length = 512;
-			Buffer buffer(length);
+			const int length = 512;
+			Buffer<> buffer = Buffer<>::Zero(length);
 			Assert::IsTrue(buffer.Valid(), L"Buffer not valid");
 			for (int i = 0; i < length; i++)
 				buffer[i] = rand();
@@ -96,9 +96,9 @@ namespace RAC
 
 		TEST_METHOD(Access)
 		{
-			const size_t length = 512;
+			const int length = 512;
 			const std::vector<Real> vec = CreateRandomVector(length);
-			Buffer buffer(vec);
+			Buffer<> buffer(vec);
 			for (int i = 0; i < length; i++)
 				Assert::AreEqual(vec[i], buffer[i], L"Incorrect buffer access");
 
@@ -111,9 +111,9 @@ namespace RAC
 
 		TEST_METHOD(Assign)
 		{
-			const size_t length = 512;
+			const int length = 512;
 			const std::vector<Real> vec = CreateRandomVector(length);
-			Buffer buffer(length);
+			Buffer<> buffer = Buffer<>::Zero(length);
 			
 			for (int i = 0; i < length; i++)
 				buffer[i] = vec[i];
@@ -124,23 +124,23 @@ namespace RAC
 
 		TEST_METHOD(Equality)
 		{
-			const size_t length = 512;
+			const int length = 512;
 			std::vector<Real> vec = CreateRandomVector(length);
-			Buffer buffer1(vec);
-			Buffer buffer2(vec);
-			Assert::IsTrue(buffer1 == buffer2, L"Buffers not equal");
+			Buffer<> buffer1(vec);
+			Buffer<> buffer2(vec);
+			Assert::IsTrue(buffer1.IsApprox(buffer2), L"Buffers not equal");
 
 			vec[56] = vec[56] / 5.2; // Change one value
-			Buffer buffer3(vec);
-			Assert::IsFalse(buffer1 == buffer3, L"Buffers are equal");
+			Buffer<> buffer3(vec);
+			Assert::IsFalse(buffer1.IsApprox(buffer3), L"Buffers are equal");
 		}
 
 		TEST_METHOD(Iterators)
 		{
-			const size_t length = 512;
+			const int length = 512;
 			const std::vector<Real> vec = CreateRandomVector(length);
-			Buffer buffer(vec);
-			size_t i = 0;
+			Buffer<> buffer(vec);
+			int i = 0;
 			for (const auto& sample : buffer)
 			{
 				Assert::AreEqual(vec[i], sample, L"Incorrect sample in iterator");
@@ -156,9 +156,9 @@ namespace RAC
 
 		TEST_METHOD(Multiply)
 		{
-			const size_t length = 512;
+			const int length = 512;
 			const std::vector<Real> vec = CreateRandomVector(length);
-			Buffer buffer(vec);
+			Buffer<> buffer(vec);
 			const Real scalar = 2.0;
 			buffer *= scalar;
 			for (int i = 0; i < length; i++)
@@ -167,9 +167,9 @@ namespace RAC
 
 		TEST_METHOD(Addition)
 		{
-			const size_t length = 512;
+			const int length = 512;
 			std::vector<Real> vec = CreateRandomVector(length);
-			Buffer buffer(vec);
+			Buffer<> buffer(vec);
 			const Real scalar = 2.0;
 			buffer += scalar;
 			for (int i = 0; i < length; i++)
@@ -178,12 +178,12 @@ namespace RAC
 
 		TEST_METHOD(Combine)
 		{
-			const size_t length = 512;
+			const int length = 512;
 			const std::vector<Real> vec1 = CreateRandomVector(length);
-			Buffer buffer1(vec1);
+			Buffer<> buffer1(vec1);
 
 			const std::vector<Real> vec2 = CreateRandomVector(length);
-			Buffer buffer2(vec2);
+			Buffer<> buffer2(vec2);
 			buffer1 += buffer2;
 			for (int i = 0; i < length; i++)
 				Assert::AreEqual(vec1[i] + vec2[i], buffer1[i], L"Incorrect sample after combine");

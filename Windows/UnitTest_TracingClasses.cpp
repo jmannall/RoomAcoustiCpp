@@ -412,7 +412,7 @@ namespace RAC
 
 			testPencil.clusterDirections(testDirections, rayClusters);
 
-			for (int di = 0; di < rayClusters.Rows(); ++di)
+			for (int di = 0; di < rayClusters.Length(); ++di)
 				Assert::AreEqual(-1, rayClusters(di), L"\nExpected: no direction\n(empty dir).");
 			
 			// Test with multiple rays and one reference direction (basic front-back choice).
@@ -432,7 +432,7 @@ namespace RAC
 
 			testPencil.clusterDirections(testDirections, rayClusters);
 
-			for (int di = 0; di < rayClusters.Rows(); ++di)
+			for (int di = 0; di < rayClusters.Length(); ++di)
 				Assert::AreEqual(0, rayClusters(di), L"\nExpected: first direction\n(single dir).");
 			
 			// Test with multiple rays and multiple reference directions (all following tests).
@@ -459,7 +459,7 @@ namespace RAC
 
 			testPencil.clusterDirections(testDirections, rayClusters);
 
-			for (int di = 0; di < rayClusters.Rows(); ++di)
+			for (int di = 0; di < rayClusters.Length(); ++di)
 				Assert::AreEqual(di, rayClusters(di), L"\nExpected: direction with ray's index (identical).");
 
 			// Wiggle the directions a bit and repeat the test.
@@ -501,7 +501,7 @@ namespace RAC
 
 			testPencil.clusterDirections(testDirections, rayClusters);
 
-			for (int di = 0; di < rayClusters.Rows(); ++di)
+			for (int di = 0; di < rayClusters.Length(); ++di)
 				Assert::AreEqual(di % chunkSize, rayClusters(di), L"\nExpected: direction with ray's index mod chunkSize (more rays than dirs).");
 
 			// TODO: Test with non-normalized directions to ensure the cosine similarity calculation is still meaningful (weighted clustering).

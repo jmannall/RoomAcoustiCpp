@@ -434,7 +434,7 @@ bool LoadMoDARTScene(const std::string& modartPath, const Coefficients<>& target
         std::cerr << "Failed to load modal data from " << modartPath << std::endl;
         return false;
     }
-    int numFDNs = frequencyBandIndexing.Rows();
+    int numFDNs = frequencyBandIndexing.Length();
 
     // Internal parameters `bandIdxs, T60s, leftVecs, rightVecs, numFDNs` match what was read from the files.
     // They need to be truncated/repeated to match the current frequency bands of RAC.

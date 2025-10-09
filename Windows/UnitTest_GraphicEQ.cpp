@@ -30,9 +30,9 @@ namespace RAC
 			const int numFrames = 256;
 			const Real lerpFactor = 0.5;
 
-			Buffer in(numFrames);
+			Buffer<> in = Buffer<>::Zero(numFrames);
 			in[0] = 1.0;
-			Buffer out(numFrames);
+			Buffer<> out(numFrames);
 
 			eq.ProcessAudio(in, out, lerpFactor);
 
@@ -63,13 +63,13 @@ namespace RAC
 			int fs = 48e3;
 			int numFrames = 256;
 			Real lerpFactor = 0.0;
-			Buffer in = Buffer(numFrames);
+			Buffer<> in = Buffer<>::Zero(numFrames);
 			in[0] = 1.0;
 
 			int numTests = g0.size();
 			for (int i = 1; i < numTests; i++)
 			{
-				Buffer out = Buffer(numFrames);
+				Buffer<> out(numFrames);
 
 				Coefficients<> gain = Coefficients<>(std::vector<Real>({ g0[i], g1[i], g2[i], g3[i], g4[i] }));
 				GraphicEQ<> eq = GraphicEQ<>(gain, fc, Q, fs);
@@ -144,8 +144,8 @@ namespace RAC
 			Assert::AreEqual((Real)0.0, out, L"Wrong output");
 
 			const int numFrames = 256;
-			Buffer in(numFrames);
-			Buffer outBuffer(numFrames);
+			Buffer<> in = Buffer<>(numFrames);
+			Buffer<> outBuffer(numFrames);
 			outBuffer[0] = 1.0;
 			in[0] = 1.0;
 			eq.ProcessAudio(in, outBuffer, lerpFactor);

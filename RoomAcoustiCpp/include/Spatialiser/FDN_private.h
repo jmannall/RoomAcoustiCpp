@@ -50,11 +50,21 @@ namespace RAC
 			FDNChannel(const int delayLength, const Coefficients<>& T60, const std::shared_ptr<DSPConfig>& dspConfig) requires std::is_same_v<T, Real> :
 				mT(static_cast<Real>(delayLength) / dspConfig->GetData().fs), mBuffer(delayLength),
 				mAbsorptionFilter(CalculateFilterGains(T60), dspConfig->GetData().frequencyBands, dspConfig->GetData().Q, dspConfig->GetData().fs),
-				mReflectionFilter(dspConfig->GetData().frequencyBands, dspConfig->GetData().Q, dspConfig->GetData().fs) {}
+				mReflectionFilter(dspConfig->GetData().frequencyBands, dspConfig->GetData().Q, dspConfig->GetData().fs)
+			{
+#if MATRIX_LIBRARY == EIGEN_FLAG
+				mBuffer.Reset();
+#endif
+			}
 
 			FDNChannel(const int delayLength, const Real T60, const std::shared_ptr<DSPConfig>& dspConfig) requires std::is_same_v<T, Complex> :
 				mT(static_cast<Real>(delayLength) / dspConfig->GetData().fs), mBuffer(delayLength),
-				mAbsorptionFilter(CalculateFilterGains(T60)) {}
+				mAbsorptionFilter(CalculateFilterGains(T60))
+			{
+#if MATRIX_LIBRARY == EIGEN_FLAG
+				mBuffer.Reset();
+#endif
+			}
 
 			/**
 			* @brief Default deconstructor
@@ -228,7 +238,7 @@ namespace RAC
 			inline void SetPrecedingDelay(Real delay, int offset, int fs)
 			requires std::is_same_v<T, Complex>
 			{
-				precedingDelayBuffer.ResizeBuffer(std::max(0, static_cast<int>(delay * fs) - offset));
+				precedingDelayBuffer.Resize(std::max(0, static_cast<int>(delay * fs) - offset));
 				precedingDelayBuffer.Reset(); // TODO: Do we want to avoid resetting it?
 			}
 
@@ -249,14 +259,14 @@ namespace RAC
 			inline void SubmitAudio(const Vec<Real>& input)
 				requires std::is_same_v<T, Complex>
 			{
-				for (int i = 0, j = 0; i < inputData.Rows(); i++, j += 2)
+				for (int i = 0, j = 0; i < inputData.Length(); i++, j += 2)
 					inputData(i) = Complex(input(j), input(j + 1));
 			}
 #else
 			inline void SubmitAudio(const Matrix<>& input, int row)
 				requires std::is_same_v<T, Complex>
 			{
-				for (int i = 0, j = 0; i < inputData.Rows(); i++, j += 2)
+				for (int i = 0, j = 0; i < inputData.Length(); i++, j += 2)
 					inputData(i) = Complex(input(j, row), input(j + 1, row));
 			}
 #endif
@@ -507,7 +517,7 @@ namespace RAC
 			inline void ProcessMatrix() override
 			{
 				T entry = houseHolderFactor * this->y.Sum();
-				for (int i = 0; i < this->y.Cols(); i++)
+				for (int i = 0; i < this->y.Length(); i++)
 					this->x(i) = entry - this->y(i);
 			}
 

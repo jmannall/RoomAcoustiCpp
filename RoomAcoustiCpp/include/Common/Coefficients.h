@@ -321,7 +321,7 @@ namespace RAC
 
 			/**
 			* @brief Performs an element-wise comparison
-			* @return True if any element pairs are unequal, false otherwise
+			* @return False if any element pairs are unequal, true otherwise
 			*/
 			inline bool IsApprox(const Coefficients& a) const
 			{

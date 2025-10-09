@@ -389,7 +389,6 @@ namespace RAC
 			/**
 			* Audio buffers
 			*/
-			Buffer<> mInputBuffer;	// Audio input buffer
 			Matrix<> mReverbInput;	// Audio reverb input matrix
 
 			std::atomic<bool> audioFlag{ false };	// Flag to check if the audio thread is processing

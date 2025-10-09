@@ -1,5 +1,4 @@
 
-
 EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Matrix(const std::vector<Scalar>& values)
     : Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime>(
         (RowsAtCompileTime == Eigen::Dynamic ? static_cast<Index>(values.size()) : 1),

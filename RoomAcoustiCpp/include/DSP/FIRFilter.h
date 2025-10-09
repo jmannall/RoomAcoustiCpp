@@ -44,6 +44,9 @@ namespace RAC
 				oldIrLength = irLength;
 
 				std::copy(ir.begin(), ir.end(), currentIR.begin());
+#if MATRIX_LIBRARY == EIGEN_FLAG
+				inputLine.Reset();
+#endif
 				irsEqual.store(true, std::memory_order_release);
 				initialised.store(true, std::memory_order_release);
 			};

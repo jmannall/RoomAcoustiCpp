@@ -220,7 +220,7 @@ namespace RAC
 	//		Path path = CreatePath(rS, rR, tS, tR, tW, zS, zR, zW);
 	//		Attenuate attenuate(path);
 
-	//		Buffer<> in(numFrames);
+	//		Buffer<> in = Buffer<>::Zero(numFrames);
 	//		for (int i = 0; i < numFrames; i++)
 	//			in[i] = RandomValue();
 	//		Buffer<> output(numFrames);
@@ -251,7 +251,7 @@ namespace RAC
 	//		Path path = CreatePath(rS, rR, tS, tR, tW, zS, zR, zW);
 	//		Attenuate attenuate(path);
 
-	//		Buffer<> in(numFrames);
+	//		Buffer<> in = Buffer<>::Zero(numFrames);
 	//		for (int i = 0; i < numFrames; i++)
 	//			in[i] = RandomValue();
 	//		Buffer<> output(numFrames);
@@ -288,7 +288,7 @@ namespace RAC
 	//		Path path = CreatePath(rS, rR, tS, tR, tW, zS, zR, zW);
 	//		LPF lpf(path, fs);
 
-	//		Buffer<> in(numFrames);
+	//		Buffer<> in = Buffer<>::Zero(numFrames);
 	//		for (int i = 0; i < numFrames; i++)
 	//			in[i] = RandomValue();
 	//		Buffer<> output(numFrames);
@@ -323,7 +323,7 @@ namespace RAC
 	//		Path path = CreatePath(rS, rR, tS, tR, tW, zS, zR, zW);
 	//		LPF lpf(path, fs);
 
-	//		Buffer<> in(numFrames);
+	//		Buffer<> in = Buffer<>::Zero(numFrames);
 	//		for (int i = 0; i < numFrames; i++)
 	//			in[i] = RandomValue();
 	//		Buffer<> output(numFrames);
@@ -354,7 +354,7 @@ namespace RAC
 	//		const int numTests = target.size();
 	//		Real lerpFactor = 0.1;
 
-	//		Buffer<> in(numFrames);
+	//		Buffer<> in = Buffer<>::Zero(numFrames);
 	//		in[0] = 1.0;
 	//		std::vector<Buffer<>> outputs(numTests, Buffer<>(numFrames));
 
@@ -404,7 +404,7 @@ namespace RAC
 	//		const int numTests = target.size();
 	//		Real lerpFactor = 0.1;
 
-	//		Buffer<> in(numFrames);
+	//		Buffer<> in = Buffer<>::Zero(numFrames);
 	//		in[0] = 1.0;
 	//		std::vector<Buffer<>> outputs(numTests, Buffer<>(numFrames));
 
@@ -454,7 +454,7 @@ namespace RAC
 	//		const int numTests = target.size();
 	//		Real lerpFactor = 0.1;
 
-	//		Buffer<> in(numFrames);
+	//		Buffer<> in = Buffer<>::Zero(numFrames);
 	//		in[0] = 1.0;
 	//		std::vector<Buffer<>> outputs(numTests, Buffer<>(numFrames));
 
@@ -505,7 +505,7 @@ namespace RAC
 	//		const int numTests = target.size();
 	//		Real lerpFactor = 0.1;
 
-	//		Buffer<> in(numFrames);
+	//		Buffer<> in = Buffer<>::Zero(numFrames);
 	//		in[0] = 1.0;
 	//		std::vector<Buffer<>> outputs(numTests, Buffer<>(numFrames));
 
@@ -556,7 +556,7 @@ namespace RAC
 	//		const int numTests = target.size();
 	//		Real lerpFactor = 0.1;
 
-	//		Buffer<> in(numFrames);
+	//		Buffer<> in = Buffer<>::Zero(numFrames);
 	//		in[0] = 1.0;
 	//		std::vector<Buffer<>> outputs(numTests, Buffer<>(numFrames));
 
@@ -607,7 +607,7 @@ namespace RAC
 	//		const int numTests = target.size();
 	//		Real lerpFactor = 0.1;
 
-	//		Buffer<> in(numFrames);
+	//		Buffer<> in = Buffer<>::Zero(numFrames);
 	//		in[0] = 1.0;
 	//		std::vector<Buffer<>> outputs(numTests, Buffer<>(numFrames));
 

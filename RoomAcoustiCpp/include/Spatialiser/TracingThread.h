@@ -123,7 +123,7 @@ namespace RAC
 				sourceResidues(dspConfig->GetNumFDNs()),
 				listenerResidues(dspConfig->GetNumFDNs(), Coefficients<>(dspConfig->GetData().numReverbSources)),
 				numFDNs(dspConfig->GetNumFDNs()),
-				numPaths(data.rightEigenvectors[0].Rows())
+				numPaths(data.rightEigenvectors[0].Length())
 			{
 				InitRoom(data.indexing, data.energyDecay);
 			}

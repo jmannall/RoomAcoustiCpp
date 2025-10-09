@@ -44,8 +44,8 @@ namespace RAC
 			FDNChannel channel(delay, T60, config);
 
 			const int numFrames = 256;
-			Buffer in(numFrames);
-			Buffer out(numFrames);
+			Buffer<> in = Buffer<>::Zero(numFrames);
+			Buffer<> out(numFrames);
 			for (int i = 0; i < numFrames; i++)
 				in[i] = channel.GetOutput(RandomValue(), lerpFactor);
 			channel.Reset();
@@ -68,8 +68,8 @@ namespace RAC
 			channel.SetTargetReflectionFilter(reflectionGains);
 
 			const int numFrames = 256;
-			Buffer in(numFrames);
-			Buffer out(numFrames);
+			Buffer<> in = Buffer<>::Zero(numFrames);
+			Buffer<> out(numFrames);
 			for (int i = 0; i < numFrames; i++)
 				in[i] = channel.GetOutput(RandomValue(), lerpFactor);
 			channel.ProcessOutput(in, out, lerpFactor);
@@ -94,9 +94,9 @@ namespace RAC
 			channel.SetTargetReflectionFilter(reflectionGains);
 
 			const int numFrames = 256;
-			Buffer in(numFrames);
+			Buffer<> in = Buffer<>::Zero(numFrames);
 			in[0] = 1.0;
-			Buffer out(numFrames);
+			Buffer<> out(numFrames);
 
 			channel.ProcessOutput(in, out, lerpFactor);
 			in[0] = 1.0;

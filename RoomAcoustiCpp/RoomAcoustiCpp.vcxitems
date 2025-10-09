@@ -100,6 +100,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Eigen\DenseBaseAddons.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Eigen\MatrixAddons.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Eigen\MatrixBaseAddons.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Eigen\PlainObjectBaseAddons.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Eigen\QuaternionBaseAddons.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\moodycamel\concurrentqueue.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\AirAbsorption.h" />

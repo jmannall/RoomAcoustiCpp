@@ -116,7 +116,7 @@ namespace RAC
 			* @params core The 3DTI processing core
 			* @params dspConfig The spatialiser configuration
 			*/
-			Reverb(Binaural::CCore* core, const std::shared_ptr<DSPConfig> dspConfig) : reverbSourceInputs(dspConfig->GetData().numReverbSources, Buffer(dspConfig->GetData().numFrames))
+			Reverb(Binaural::CCore* core, const std::shared_ptr<DSPConfig> dspConfig) : reverbSourceInputs(dspConfig->GetData().numReverbSources, Buffer<>(dspConfig->GetData().numFrames))
 			{
 				int numReverbSources = dspConfig->GetData().numReverbSources;
 				const std::vector<Vec3> points = CalculateSourcePositions(numReverbSources);

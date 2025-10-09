@@ -1,24 +1,19 @@
 
-EIGEN_DEVICE_FUNC inline Index Length() const { return rows(); }
+EIGEN_DEVICE_FUNC inline void Min(const Scalar& x) { this->min(x); }
+EIGEN_DEVICE_FUNC inline void Max(const Scalar& x) { this->max(x); }
 
-EIGEN_DEVICE_FUNC inline Index Rows() const { return rows(); }
-EIGEN_DEVICE_FUNC inline Index Cols() const { return cols(); }
-
-EIGEN_DEVICE_FUNC inline void Min(const Scalar& x) { min(x); }
-EIGEN_DEVICE_FUNC inline void Max(const Scalar& x) { max(x); }
-
-EIGEN_DEVICE_FUNC inline const Log10ReturnType Log10() const { return log10(); }
-EIGEN_DEVICE_FUNC inline const LogReturnType Log() const { return log(); }
-EIGEN_DEVICE_FUNC inline const SqrtReturnType Sqrt() const { return sqrt(); }
-EIGEN_DEVICE_FUNC inline const AbsReturnType Abs() const { return abs(); }
-EIGEN_DEVICE_FUNC inline const SquareReturnType Square() const { return square(); }
-EIGEN_DEVICE_FUNC inline const CosReturnType Cos() const { return cos(); }
-EIGEN_DEVICE_FUNC inline const SinReturnType Sin() const { return sin(); }
+EIGEN_DEVICE_FUNC inline const Log10ReturnType Log10() const { return this->log10(); }
+EIGEN_DEVICE_FUNC inline const LogReturnType Log() const { return this->log(); }
+EIGEN_DEVICE_FUNC inline const SqrtReturnType Sqrt() const { return this->sqrt(); }
+EIGEN_DEVICE_FUNC inline const AbsReturnType Abs() const { return this->abs(); }
+EIGEN_DEVICE_FUNC inline const SquareReturnType Square() const { return this->square(); }
+EIGEN_DEVICE_FUNC inline const CosReturnType Cos() const { return this->cos(); }
+EIGEN_DEVICE_FUNC inline const SinReturnType Sin() const { return this->sin(); }
 
 template <typename ScalarExponent>
 EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE const UnaryPowReturnType<ScalarExponent> Pow(
     const ScalarExponent& exponent) const {
-    return pow(exponent);
+    return this->pow(exponent);
 }
 
 EIGEN_DEVICE_FUNC inline auto Pow10() const

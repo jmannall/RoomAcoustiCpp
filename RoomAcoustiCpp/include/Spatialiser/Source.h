@@ -189,8 +189,8 @@ namespace RAC
 			*/
 			inline void InitMoDARTParameters(const Vec<int>& frequencyIndexing, int numFrames)
 			{
-				ravesResidues = std::vector<RAVESSourceResidue>(frequencyIndexing.Rows());
-				for (int i = 0; i < frequencyIndexing.Rows(); i++)
+				ravesResidues = std::vector<RAVESSourceResidue>(frequencyIndexing.Length());
+				for (int i = 0; i < frequencyIndexing.Length(); i++)
 					ravesResidues[i].frequencyIndex = frequencyIndexing(i);
 				frequencyBands = Matrix<>(octaveBandFilter.NumBands(), numFrames);
 			}

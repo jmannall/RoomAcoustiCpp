@@ -338,7 +338,7 @@ namespace RAC
 			while (audioFlag.exchange(true, std::memory_order_acquire))
 				std::this_thread::yield();
 
-			dspConfig->UpdateLateReverbModel(LateReverbModel::raves, data.t60s.Rows());
+			dspConfig->UpdateLateReverbModel(LateReverbModel::raves, data.t60s.Length());
 			mReverb = std::make_shared<RAVES>(&mCore, data, dspConfig);
 			mRayTracing = std::make_shared<MoDARTTracing>(mRoom, mSources, mReverb, data, dspConfig);
 
@@ -476,7 +476,7 @@ namespace RAC
 			if (outputBuffer.Length() != 2 * dspConfig->GetData().numFrames)
 			{
 				Debug::Log("Incorrect buffer size", Colour::Red);
-				outputBuffer.ResizeBuffer(2 * dspConfig->GetData().numFrames);
+				outputBuffer.Resize(2 * dspConfig->GetData().numFrames);
 			}
 
 			// Reset buffers
@@ -518,8 +518,8 @@ namespace RAC
 			ResetLateReverb();
 
 			int numFrames = dspConfig->GetData().numFrames;
-			Buffer<> input(numFrames);
-			Buffer<> output(2.0 * numFrames);
+			Buffer<> input = Buffer<>::Zero(numFrames);
+			Buffer<> output = Buffer<>::Zero(2 * numFrames);
 
 			while (!mImageEdgeModel->HasCompleted())
 				std::this_thread::sleep_for(std::chrono::milliseconds(1));

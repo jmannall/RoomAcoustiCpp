@@ -266,8 +266,8 @@ namespace RAC
 				PROFILE_OctaveBand
 				for (int i = 0; i < numFrames; i++)
 				{
-					const std::vector<Real>& bands = octaveBandFilter.GetOutput(inputBuffer[i], audioData.lerpFactor);
-					for (int j = 0; j < bands.size(); j++)
+					const Buffer<>& bands = octaveBandFilter.GetOutput(inputBuffer[i], audioData.lerpFactor);
+					for (int j = 0; j < bands.Length(); j++)
 						frequencyBands(j, i) = bands[j];
 				}
 			}
@@ -437,8 +437,8 @@ namespace RAC
 
 		void Source::InitBuffers(int numFrames)
 		{
-			bStore = Buffer(numFrames);
-			bStoreReverb = Buffer(numFrames);
+			bStore = Buffer<>::Zero(numFrames);
+			bStoreReverb = Buffer<>::Zero(numFrames);
 			bInput = CMonoBuffer<float>(numFrames);
 			bOutput.left = CMonoBuffer<float>(numFrames);
 			bOutput.right = CMonoBuffer<float>(numFrames);
@@ -455,7 +455,7 @@ namespace RAC
 			bOutput.left.clear();
 			bOutput.right.clear();
 			bMonoOutput.clear();
-			bStore.ResizeBuffer(1);
+			bStore.Resize(1);
 		}
 
 		////////////////////////////////////////

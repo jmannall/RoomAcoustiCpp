@@ -55,7 +55,12 @@ namespace RAC
 				*/
 				Filter(const Buffer<>& h, Real midSample, int step) : currentIR(h), step(step), midSample(midSample), midSampleStep(step * (2 * h.Length() - 1)),
 					halfOutputLine(2 * step * (2 * h.Length() - 1) + 1), outputLine(4 * step * (2 * h.Length() - 1) + 2),
-					count(4 * step * (2 * h.Length() - 1) + 1), irLength(h.Length()) {}
+					count(4 * step * (2 * h.Length() - 1) + 1), irLength(h.Length())
+				{
+#if MATRIX_LIBRARY == EIGEN_FLAG
+					outputLine.Reset();
+#endif
+				}
 
 				/**
 				* @brief Returns the output of the Filter given an input
@@ -113,7 +118,7 @@ namespace RAC
 			* @param lerpFactor The lerp factor for interpolation
 			* @return A vector containing the outputs of each frequency band
 			*/
-			const std::vector<Real>& GetOutput(Real input, Real lerpFactor);
+			const Buffer<>& GetOutput(Real input, Real lerpFactor);
 
 
 			/**
@@ -144,7 +149,7 @@ namespace RAC
 
 			int GetFrequencyIndex(Real f) const;
 
-			void CombineTopBands(const std::vector<Real>& bands);
+			void CombineTopBands(const Buffer<>& bands);
 
 			/**
 			* @param fs The sample rate for calculating the filter coefficients
@@ -176,8 +181,8 @@ namespace RAC
 				return w;
 			}
 
-			std::vector<Real> bands;
-			std::vector<Real> outputs;
+			Buffer<> bands;
+			Buffer<> outputs;
 			const Vec<int> octaveBandIndices;
 
 			int numFrequencyBands;		// Number of frequency bands for the filter

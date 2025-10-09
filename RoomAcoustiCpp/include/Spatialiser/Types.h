@@ -369,7 +369,7 @@ namespace RAC
 
 			inline void Validate(int numFrequencyBands)
 			{
-				if (dimensions.Rows() < 1) // No dimensions provided
+				if (dimensions.Length() < 1) // No dimensions provided
 					dimensions = Vec<>(std::vector<Real>({ (Real)2.5, (Real)4.0, (Real)3.4 })); // Default dimensions
 				volume = std::max(volume, (Real)0.001);
 
@@ -399,7 +399,7 @@ namespace RAC
 				std::vector<int> frequencyIndexingData;
 				std::vector<Vec<>> leftEigenvectorsData;
 				std::vector<Vec<>> rightEigenvectorsData;
-				for (int i = 0; i < t60s.Rows(); i++)
+				for (int i = 0; i < t60s.Length(); i++)
 				{
 					if (t60s(i) > EPS)
 					{
@@ -412,8 +412,8 @@ namespace RAC
 				this->t60s = Vec<>(t60sData);
 				this->frequencyIndexing = Vec<int>(frequencyIndexingData);
 
-				this->energyDecay = Vec<>(t60s.Rows());
-				for (int i = 0; i < this->t60s.Rows(); i++)
+				this->energyDecay = Vec<>(t60s.Length());
+				for (int i = 0; i < this->t60s.Length(); i++)
 					this->energyDecay(i) = Pow10(- 6.0 / this->t60s(i));
 			}
 		};
