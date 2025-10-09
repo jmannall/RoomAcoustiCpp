@@ -216,7 +216,7 @@ namespace RAC
 		{
 			auto context = GetContext();
 			if (context)
-				return SizeToInt(context->InitSource());
+				return context->InitSource();
 			else
 				return -1;
 		}

@@ -135,7 +135,7 @@ namespace RAC
 		////////////////////////////////////////
 
 		template<typename T>
-		void GraphicEQ<T>::InitMatrix(const Coefficients<>& fc, const Real Q, const Real fs)
+		void GraphicEQ<T>::InitMatrix(const Coefficients<>& fc, const Real Q, const int fs)
 		{
 			assert(fc.Length() == numFilters);
 

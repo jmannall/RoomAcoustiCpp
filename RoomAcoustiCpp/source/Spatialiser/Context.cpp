@@ -378,7 +378,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		size_t Context::InitSource()
+		int Context::InitSource()
 		{
 #ifdef DEBUG_INIT
 	Debug::Log("Init Source", Colour::Green);
@@ -509,8 +509,8 @@ namespace RAC
 				return;
 
 			// TODO: Allow different directivities
-			UpdateSourceDirectivity(id, SourceDirectivity::omni);
-			UpdateSource(id, position, orientation);
+			UpdateSourceDirectivity(static_cast<size_t>(id), SourceDirectivity::omni);
+			UpdateSource(static_cast<size_t>(id), position, orientation);
 
 			mImageEdgeModel->ResetEndFlag();
 			mRayTracing->ResetEndFlag();
@@ -531,8 +531,8 @@ namespace RAC
 			mSources->SetInputBuffer(id, input);
 			GetOutput(output);
 
-			int irLength = outputBuffer.Length();
-			int outputBufferLength = output.Length();
+			int irLength = SizeToInt(outputBuffer.Length());
+			int outputBufferLength = SizeToInt(output.Length());
 			int numBuffers = irLength / outputBufferLength;
 			int remainder = irLength - numBuffers * outputBufferLength;
 

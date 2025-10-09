@@ -397,8 +397,6 @@ namespace RAC
 			{
 				std::vector<Real> t60sData;
 				std::vector<int> frequencyIndexingData;
-				std::vector<Vec<>> leftEigenvectorsData;
-				std::vector<Vec<>> rightEigenvectorsData;
 				for (int i = 0; i < t60s.Length(); i++)
 				{
 					if (t60s(i) > EPS)

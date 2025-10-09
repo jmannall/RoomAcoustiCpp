@@ -425,7 +425,7 @@ namespace RAC
 			testDirections[5] = -zDir;
 
 			testPencil = RayPencil(testDirections);
-			rayClusters = Vec<int>::Constant(testDirections.size(), -1);
+			rayClusters = Vec<int>::Constant(SizeToInt(testDirections.size()), -1);
 
 			testDirections.resize(1);
 			testDirections[0] = (xDir + yDir + zDir).Normalised();

@@ -71,7 +71,7 @@ void ProfileShoebox()
     int fdnSize{ 12 };							// Size of the FDN (number of delay lines)
     Real lerpFactor = 2.0; 				        // Interpolation factor
     Real Q{ 0.98 };								// Q factor for the GraphicEQ
-    Coefficients<> frequencyBands({ 125.0, 250.0, 500.0, 1e3, 2e3, 4e3, 8e3 });				// Frequency band center frequencies
+    Coefficients<> frequencyBands(std::vector<Real>({ 125.0, 250.0, 500.0, 1e3, 2e3, 4e3, 8e3 }));				// Frequency band center frequencies
 
     DSPData configData = DSPData(fs, numFrames, numReverbSources, fdnSize, lerpFactor, Q, frequencyBands);
     Init(configData);
@@ -101,7 +101,7 @@ void ProfileShoebox()
 
     // Create shoebox
     Vec3 pos(7.0, 3.0, 4.0);
-    Coefficients<> absorption({ 0.03, 0.03, 0.04, 0.06, 0.09, 0.1, 0.12 });
+    Coefficients<> absorption(std::vector<Real>({ 0.03, 0.03, 0.04, 0.06, 0.09, 0.1, 0.12 }));
 	size_t materialId = InitMaterial(absorption);
     auto wallIds = CreateShoeboxRoom(pos, materialId);
 
@@ -109,7 +109,7 @@ void ProfileShoebox()
     FDNMatrix matrix = FDNMatrix::randomOrthogonal;
 
     Real volume = pos.Sum();
-    Coefficients<> t60({ 0.8, 0.7, 0.65, 0.63, 0.6, 0.55, 0.48 });
+    Coefficients<> t60(std::vector<Real>({ 0.8, 0.7, 0.65, 0.63, 0.6, 0.55, 0.48 }));
     ReverbFormula formula = ReverbFormula::Custom;
     Vec<> dimensions{ { pos.x(), pos.y(), pos.z()} };
     RoomData roomData(volume, t60, formula, dimensions);
@@ -148,7 +148,7 @@ void ProfileMoDART()
     int fdnSize{ 12 };							// Size of the FDN (number of delay lines)
     Real lerpFactor = 2.0; 				        // Interpolation factor
     Real Q{ 0.98 };								// Q factor for the GraphicEQ
-    Coefficients<> frequencyBands({ 125.0, 250.0, 500.0, 1e3, 2e3, 4e3, 8e3 });				// Frequency band center frequencies
+    Coefficients<> frequencyBands(std::vector<Real>({ 125.0, 250.0, 500.0, 1e3, 2e3, 4e3, 8e3 }));				// Frequency band center frequencies
 
     DSPData configData = DSPData(fs, numFrames, numReverbSources, fdnSize, lerpFactor, Q, frequencyBands);
     Init(configData);

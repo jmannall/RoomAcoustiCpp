@@ -107,7 +107,7 @@ namespace RAC
 			* @param Q The Q factor for the filters
 			* @param fs The sample rate for calculating the filter coefficients
 			*/
-			void InitMatrix(const Coefficients<>& fc, const Real Q, const Real fs);
+			void InitMatrix(const Coefficients<>& fc, const Real Q, const int fs);
 
 			/**
 			* @brief Calculates the filter gains based on the target filter response

@@ -33,7 +33,7 @@ namespace RAC
 			inputLine[index] = input;
 			inputLine[index + maxFilterLength] = input;
 
-			assert(currentIR.Length() >= irLength);
+			assert(currentIR.Length() >= SizeToInt(irLength));
 			assert(irLength % 8 == 0);
 
 			// Assume length is always a multiple of 8

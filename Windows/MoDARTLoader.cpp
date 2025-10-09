@@ -68,9 +68,9 @@ int BestBandMatch(float targetBand, Coefficients<> referenceBands)
         return referenceBands.Length() - 1;
     else
     {
-        float diff;
+        Real diff;
         int closestIndex = 0;
-        float smallestDiff = std::abs(targetBand - referenceBands[0]);
+        Real smallestDiff = std::abs(targetBand - referenceBands[0]);
 
         for (int j = 1; j < referenceBands.Length(); j++)
         {
@@ -122,7 +122,7 @@ bool LoadMaterialsFromCsv(const std::string& mtlFilePath, Coefficients<>& outFre
     std::vector<Real> freqBands;
     while (std::getline(iss, token, ','))
         freqBands.push_back(std::stof(token));
-    int numFreqBands = freqBands.size();
+    int numFreqBands = SizeToInt(freqBands.size());
 
     if (numFreqBands <= 0)
     {
@@ -345,11 +345,11 @@ bool LoadModesFromCsv(const std::string& modalDataFilePath, int numFreqBands, in
         }
     }
 
-    outFrequencyBandIndexing = Vec<int>(freqBands.size());
-	std::copy(outFrequencyBandIndexing.begin(), outFrequencyBandIndexing.end(), freqBands.data());
+    outFrequencyBandIndexing = Vec<int>(SizeToInt(freqBands.size()));
+	std::copy(freqBands.begin(), freqBands.end(), outFrequencyBandIndexing.begin());
 
-	outT60s = Vec<>(t60s.size());
-	std::copy(outT60s.begin(), outT60s.end(), t60s.data());
+	outT60s = Vec<>(SizeToInt(t60s.size()));
+	std::copy(t60s.begin(), t60s.end(), outT60s.begin());
 
     return true;
 }
@@ -464,11 +464,11 @@ bool LoadMoDARTScene(const std::string& modartPath, const Coefficients<>& target
     }
     // TODO: Currently assuming RAC does not include frequency bands not covered by MoD-ART frequencies.
 
-    Vec<int> newFreqBandIndexing(resizedFreqBandIndexing.size());
-    std::copy(newFreqBandIndexing.begin(), newFreqBandIndexing.end(), resizedFreqBandIndexing.data());
+    Vec<int> newFreqBandIndexing(SizeToInt(resizedFreqBandIndexing.size()));
+    std::copy(resizedFreqBandIndexing.begin(), resizedFreqBandIndexing.end(), newFreqBandIndexing.begin());
 
-    Vec<> newT60s(resizedT60s.size());
-    std::copy(newT60s.begin(), newT60s.end(), resizedT60s.data());
+    Vec<> newT60s(SizeToInt(resizedT60s.size()));
+    std::copy(resizedT60s.begin(), resizedT60s.end(), newT60s.begin());
 
     Real delay = 0.1;
     Real minT60 = 0.2;
