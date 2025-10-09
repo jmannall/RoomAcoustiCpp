@@ -14,22 +14,71 @@
     <ProjectCapability Include="SourceItemsFromImports" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\elementwiseOperationInPlace.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\myBestNN.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\myNN_data.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\myNN_initialize.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\myNN_terminate.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\mySmallNN.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\predict.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\elementwiseOperationInPlace.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release_ProfileDetailed|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release_Profile|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='ReleaseTest|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release_Debug|x64'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\myBestNN.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release_ProfileDetailed|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release_Profile|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='ReleaseTest|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release_Debug|x64'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\myNN_data.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release_ProfileDetailed|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release_Profile|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='ReleaseTest|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release_Debug|x64'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\myNN_initialize.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release_ProfileDetailed|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release_Profile|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='ReleaseTest|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release_Debug|x64'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\myNN_terminate.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release_ProfileDetailed|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release_Profile|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='ReleaseTest|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release_Debug|x64'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\mySmallNN.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release_ProfileDetailed|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release_Profile|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='ReleaseTest|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release_Debug|x64'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\predict.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release_ProfileDetailed|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release_Profile|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='ReleaseTest|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release_Debug|x64'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Common\Matrix.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Common\Vec.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\AudioThreadPool.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\Buffer.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\FIRFilter.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\GraphicEQ.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\IIRFilter.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\LinkwitzRileyFilter.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\OctaveBandFilter.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\AudioThreadPool.cpp"/>
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\Buffer.cpp"/>
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\FIRFilter.cpp"/>
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\GraphicEQ.cpp"/>
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\IIRFilter.cpp"/>
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\LinkwitzRileyFilter.cpp"/>
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\OctaveBandFilter.cpp"/>
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\AirAbsorption.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Context.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Diffraction\Models.cpp" />

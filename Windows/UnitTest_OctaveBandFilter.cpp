@@ -18,7 +18,7 @@ namespace RAC
 
 		TEST_METHOD(ProcessAudio)
 		{
-			const int fs = 48e3; // Sampling frequency
+			const int fs = 48000; // Sampling frequency
 			const Real lerpFactor = 1.0;
 
 			// Coefficients<> gains({ 0.3, 0.8, 0.65, 0.9, 0.1, 0.05, 0.4 });
@@ -57,7 +57,7 @@ namespace RAC
 
 		TEST_METHOD(CombineBands)
 		{
-			const int fs = 48e3; // Sampling frequency
+			const int fs = 48000; // Sampling frequency
 			const Real lerpFactor = 1.0;
 
 			Coefficients<> frequencies(std::vector<Real>({ 1e3, 2e3, 4e3, 8e3, 16e3 }));
@@ -106,7 +106,7 @@ namespace RAC
 
 		TEST_METHOD(FrequencyIndexing)
 		{
-			const int fs = 48e3; // Sampling frequency
+			const int fs = 48000; // Sampling frequency
 			const Real lerpFactor = 1.0;
 
 			Coefficients<> frequencies(std::vector<Real>({ 31.25, 62.5, 125.0, 250.0, 500.0, 1e3, 2e3, 4e3, 8e3, 16e3 }));
@@ -152,7 +152,7 @@ namespace RAC
 
 		TEST_METHOD(SingleBand)
 		{
-			const int fs = 48e3;
+			const int fs = 48000;
 			const Real lerpFactor = 1.0;
 
 			Coefficients<> frequencies = Coefficients<>::Constant(1, (Real)2e3);

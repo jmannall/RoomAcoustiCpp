@@ -46,7 +46,7 @@ namespace RAC
 
 		TEST_METHOD(Default)
 		{
-			const int fs = 48e3;
+			const int fs = 48000;
 			const Real lerpFactor = 0.5;
 
 			const Real fc = 1000.0;
@@ -64,7 +64,7 @@ namespace RAC
 
 		TEST_METHOD(ProcessAudio)
 		{
-			const int fs = 48e3;
+			const int fs = 48000;
 			const Real lerpFactor = 0.5;
 
 			const Real fc = 500.0;
@@ -82,7 +82,7 @@ namespace RAC
 
 		TEST_METHOD(IsInterpolating)
 		{
-			const int fs = 48e3;
+			const int fs = 48000;
 			const Real lerpFactor = 0.5;
 			const Real fc = 500.0;
 			const Real Q = 0.89;
@@ -102,7 +102,7 @@ namespace RAC
 
 		TEST_METHOD(ClearBuffers)
 		{
-			const int fs = 48e3;
+			const int fs = 48000;
 			const Real lerpFactor = 0.5;
 			const Real fc = 1700;
 			const Real Q = 1.3;
@@ -133,13 +133,13 @@ namespace RAC
 			std::vector<Real> g(inputData[1]);
 
 			Real Q = 0.98;
-			int fs = 48e3;
+			int fs = 48000;
 			int numFrames = 256;
 			Buffer<> out(numFrames);
 			Buffer<> in = Buffer<>::Zero(numFrames);
 			in[0] = 1.0;
 
-			int numTests = fc.size();
+			int numTests = SizeToInt( fc.size() );
 			std::vector<Coefficients<>> gains = std::vector<Coefficients<>>(numTests, Coefficients<>(5));
 			for (int i = 0; i < numTests; i++)
 			{

@@ -13,6 +13,7 @@
 #include <mutex>
 
 // Common headers
+#include "Common/Definitions.h"
 #include "Common/Types.h"
 #include "Common/Vec3.h"
 
@@ -178,7 +179,7 @@ namespace RAC
 			/**
 			* @return The walls of the room
 			*/
-			int GetNumberOfWalls() { std::lock_guard<std::mutex> lock(mWallMutex); return mWalls.size(); }
+			int GetNumberOfWalls() { std::lock_guard<std::mutex> lock(mWallMutex); return SizeToInt( mWalls.size() ); }
 
 			/**
 			* @return The edges of the room

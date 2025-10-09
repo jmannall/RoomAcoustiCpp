@@ -93,16 +93,16 @@ namespace RAC
             int count = 0;
             for (size_t i = 0; i < size - 1; ++i)
             {
-                intersectionArray[count++] = intersections[i].x();
-                intersectionArray[count++] = intersections[i].y();
-                intersectionArray[count++] = intersections[i].z();
+                intersectionArray[count++] = static_cast<float>(intersections[i].x());
+                intersectionArray[count++] = static_cast<float>(intersections[i].y());
+                intersectionArray[count++] = static_cast<float>(intersections[i].z());
             }
-            intersectionArray[count++] = position.x();
-            intersectionArray[count++] = position.y();
-            intersectionArray[count++] = position.z();
+            intersectionArray[count++] = static_cast<float>(position.x());
+            intersectionArray[count++] = static_cast<float>(position.y());
+            intersectionArray[count++] = static_cast<float>(position.z());
 
             if (pathCallbackInstance != nullptr)
-                pathCallbackInstance(tmsg, &intersectionArray[0], (int)strlen(tmsg), (int)size);
+                pathCallbackInstance(tmsg, &intersectionArray[0], SizeToInt(strlen(tmsg)), SizeToInt(size) );
 
             delete[] intersectionArray;
         }

@@ -121,7 +121,7 @@ namespace RAC
 		void Room::CreateTriangleMeshSoA()
 		{
 			std::lock_guard<std::mutex> lock(mWallMutex);			
-			mTriangleMeshSoA.resize(mWalls.size());
+			mTriangleMeshSoA.resize(SizeToInt(mWalls.size()));
 
 			for (const auto& [i, wall] : mWalls)
 			{
@@ -701,7 +701,7 @@ namespace RAC
 				std::lock_guard<std::mutex> lock(mWallMutex);
 				for (const auto& [wallID, wall] : mWalls)
 				{
-					int materialID = wall.GetMaterialID();
+					int materialID = SizeToInt(wall.GetMaterialID());
 					auto it = absorptionFactors.find(materialID);
 					if (it == absorptionFactors.end()) continue;
 

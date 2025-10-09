@@ -137,7 +137,7 @@ namespace RAC
 			if (audioData.spatialisationMode != currentSpatialisationMode)
 				SetSpatialisationMode(audioData.spatialisationMode);
 
-			const int numFrames = inputBuffer->Length();
+			const int numFrames = SizeToInt(inputBuffer->Length());
 
 			std::transform(inputBuffer->begin(), inputBuffer->end(), bInput.begin(),
 				[&](auto value) { return static_cast<float>(value); });

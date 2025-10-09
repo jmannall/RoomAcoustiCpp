@@ -130,7 +130,7 @@ namespace RAC
 			logFile = GetLogPath(timestamp);
 			CErrorHandler::Instance().SetErrorLogFile(logFile, true);
 
-#ifdef PROFILE_BACKGROUND_THREAD || PROFILE_AUDIO_THREAD
+#if defined(PROFILE_BACKGROUND_THREAD) || defined(PROFILE_AUDIO_THREAD)
 			profileFile = GetProfilePath(timestamp);
 			Profiler::Instance().SetOutputFile(profileFile, true);
 #endif
@@ -188,7 +188,7 @@ namespace RAC
 					std::remove(logFile.c_str());
 				}
 			}
-#ifdef PROFILE_BACKGROUND_THREAD || PROFILE_AUDIO_THREAD
+#if defined(PROFILE_BACKGROUND_THREAD) || defined(PROFILE_AUDIO_THREAD)
 			Profiler::Instance().SetOutputFile(profileFile, false);
 #endif
 		}

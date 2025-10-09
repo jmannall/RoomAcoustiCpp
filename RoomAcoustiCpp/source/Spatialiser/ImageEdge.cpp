@@ -910,7 +910,7 @@ namespace RAC
 			imageSource.SetDistance(mListenerPosition);
 			imageSource.Visible(feedsFDN);
 			imageSource.UpdateCycle(currentCycle);
-			imageSource.CreateKey(source.id);
+			imageSource.CreateKey(SizeToInt(source.id));
 			imageSources.insert_or_assign(imageSource.GetKey(), std::pair<int, ImageSourceData>(-1, imageSource));
 		}
 

@@ -21,7 +21,7 @@ namespace RAC
 		TEST_METHOD(Zero)
 		{
 			const Coefficients<Real, 4> gain(std::array<Real, 4>({ 0.0, 0.0, 0.0, 0.0 }));
-			const int fs = 48e3;
+			const int fs = 48000;
 			const Real lerpFactor = 0.5;
 
 			LinkwitzRiley filter = LinkwitzRiley(gain, fs);
@@ -48,7 +48,7 @@ namespace RAC
 		TEST_METHOD(ClearBuffers)
 		{
 			const Coefficients<Real, 4> gain(std::array<Real, 4>({ 0.7, 0.8, 0.5, 0.65 }));
-			const int fs = 48e3;
+			const int fs = 48000;
 			const Real lerpFactor = 0.5;
 
 			LinkwitzRiley filter = LinkwitzRiley(gain, fs);

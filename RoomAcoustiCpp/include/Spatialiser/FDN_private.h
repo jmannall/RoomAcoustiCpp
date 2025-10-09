@@ -386,7 +386,8 @@ namespace RAC
 			*/
 			static inline Matrix<> InitMatrix(const size_t numChannels)
 			{
-				Matrix<> matrix = Matrix<>::Zero(numChannels, numChannels);
+				const int numChannelsI = SizeToInt(numChannels);
+				Matrix<> matrix = Matrix<>::Zero(numChannelsI, numChannelsI);
 				for (int i = 0; i < matrix.Rows(); i++)
 					matrix(i, i) = 1.0;		// Initialise diagonal to 1.0
 				return matrix;
@@ -463,6 +464,7 @@ namespace RAC
 				Vec<Complex>, std::nullptr_t> inputData;
 		};
 
+		template <>
 		inline void FDN<Real>::Reset()
 		{
 			x.Reset();
@@ -471,6 +473,7 @@ namespace RAC
 				channel->Reset();
 		}
 
+		template <>
 		inline void FDN<Complex>::Reset()
 		{
 			x.Reset();

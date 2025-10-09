@@ -59,7 +59,7 @@ namespace RAC
 
 		bool FIRFilter::SetTargetIR(const Buffer<>& ir)
 		{
-			int length = ir.Length();
+			int length = SizeToInt( ir.Length() );
 
 			// Pad to multiple of 8
 			if (length % 8 != 0)
@@ -88,9 +88,9 @@ namespace RAC
 			const std::shared_ptr<const Buffer<>> ir = targetIR.load(std::memory_order_acquire);
 			irLength = ir->Length();
 
-			Lerp(currentIR, *ir, oldIrLength, lerpFactor);
+			Lerp(currentIR, *ir, SizeToInt( oldIrLength ), lerpFactor);
 
-			if (Equals(currentIR, *ir, irLength))
+			if (Equals(currentIR, *ir, SizeToInt(irLength)))
 			{
 				std::copy(ir->begin(), ir->end(), currentIR.begin());
 				oldIrLength = irLength;

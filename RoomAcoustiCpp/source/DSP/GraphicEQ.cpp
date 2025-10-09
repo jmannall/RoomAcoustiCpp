@@ -21,11 +21,6 @@ namespace RAC
 	{
 		//////////////////// GraphicEQ ////////////////////
 
-		template class GraphicEQ<Real>;
-		template class GraphicEQ<Complex>;
-
-		////////////////////////////////////////
-
 		template<typename T>
 		GraphicEQ<T>::GraphicEQ(const Coefficients<>& gain, const Coefficients<>& fc, const Real Q, const int sampleRate) :
 			numFilters(gain.Length() + 2), filterResponseMatrix(numFilters, numFilters), previousInput(gain)
@@ -161,7 +156,7 @@ namespace RAC
 #else
 			Coefficients<> out(numFilters);
 
-			const PeakLowShelf tempLowShelf(fc[0] * SQRT_2, p, Q, fs); // Times SQRT_2. See constructor
+			const PeakLowShelf tempLowShelf(fc[0] * SQRT_2, p, Q, static_cast<int>(fs)); // Times SQRT_2. See constructor
 			out = tempLowShelf.GetFrequencyResponse(fc);
 
 			for (int i = 0; i < numFilters; i++)
@@ -169,14 +164,14 @@ namespace RAC
 
 			for (int j = 1; j < numFilters - 1; j++)
 			{
-				const PeakingFilter tempPeakingFilter(fc[j], p, Q, fs);
+				const PeakingFilter tempPeakingFilter(fc[j], p, Q, static_cast<int>(fs));
 				out = tempPeakingFilter.GetFrequencyResponse(fc);
 
 				for (int i = 0; i < out.Length(); i++)
 					filterResponseMatrix(j, i) = out[i];
 			}
 
-			const PeakHighShelf tempHighShelf(std::min(fc[numFilters - 2] * SQRT_2, (Real)20000.0), p, Q, fs); // Times SQRT_2. See constructor
+			const PeakHighShelf tempHighShelf(std::min(fc[numFilters - 2] * SQRT_2, (Real)20000.0), p, Q, static_cast<int>(fs)); // Times SQRT_2. See constructor
 			out = tempHighShelf.GetFrequencyResponse(fc);
 
 			for (int i = 0; i < out.Length(); i++)
@@ -242,5 +237,16 @@ namespace RAC
 			else
 				gainsEqual.store(false, std::memory_order_release);
 		}
+
+		//////////////////// Instantiate ////////////////////
+
+		// we don't implement/use every function, so disable the warning (we can't re-enable it since the warning is generated after the file is parsed)
+		#ifdef _MSC_VER
+		#pragma warning (disable : 4661)
+		#endif
+
+		template class GraphicEQ<Real>;
+		template class GraphicEQ<Complex>;
+
 	}
 }

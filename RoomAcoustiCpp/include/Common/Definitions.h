@@ -10,6 +10,7 @@
 #include <vector>
 #include <atomic>
 #include <memory>
+#include <cassert>
 
 // Common headers
 #include "Common/Types.h"
@@ -410,6 +411,18 @@ namespace RAC
 			9883,	9887,	9901,	9907,	9923,	9929,	9931,	9941,	9949,	9967,
 			9973
 		} ;
+
+		/**
+		 * @brief Safely converts a size into an integer, checking to make sure it's in range (in debug)
+		 *
+		 * @param size The size to convert
+		 * @return The size, as an integer
+		 */
+		inline int SizeToInt(size_t size)
+		{
+			assert(size < std::numeric_limits<int>::max());
+			return static_cast<int>(size);
+		}
 	}
 }
 

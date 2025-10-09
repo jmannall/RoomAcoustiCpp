@@ -102,7 +102,7 @@ namespace RAC
 				delay *= 2;
 			}
 			delay /= 2;
-			delay += std::pow(2.0, numFrequencyBands - 2) - 1;
+			delay += static_cast<int>(std::pow(2.0, numFrequencyBands - 2)) - 1;
 			int offset = 1;
 			for (int i = 0; i < numFrequencyBands - 2; i++)
 			{

@@ -586,7 +586,7 @@ namespace RAC
 			if (audioData.spatialisationMode != currentSpatialisationMode)
 				SetSpatialisationMode(audioData.spatialisationMode);
 
-			const int numFrames = inputBuffer->Length();
+			const int numFrames = SizeToInt(inputBuffer->Length());
 
 			{
 				PROFILE_Reflection
@@ -630,7 +630,7 @@ namespace RAC
 				return;
 
 			PROFILE_ImageSource
-			const int numFrames = inputBuffer->Length();
+			const int numFrames = SizeToInt(inputBuffer->Length());
 
 			int fdnChannel = mFDNChannel.load(std::memory_order_acquire);
 			if (fdnChannel > -1)

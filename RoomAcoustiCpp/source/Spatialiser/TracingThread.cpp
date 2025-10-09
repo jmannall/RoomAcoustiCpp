@@ -260,9 +260,6 @@ namespace RAC
 		}
 
 		void SingleFDNTracing::ComputeEnergyContributions(const MaterialMap& materials, int reverbDirectionIdx) {
-			int pathIdx;
-			Real distance;
-
 			// Reset contributions to 0
 			for (int dir_idx = 0; dir_idx < numReverbDirections; ++dir_idx)
 				reflectionGains[reverbDirectionIdx].Reset();

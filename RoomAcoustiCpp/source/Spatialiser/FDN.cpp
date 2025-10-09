@@ -29,9 +29,6 @@ namespace RAC
 
 		//////////////////// FDN Channel class ////////////////////
 
-		template class FDNChannel<Real>;
-		template class FDNChannel<Complex>;
-
 		////////////////////////////////////////
 
 		template<>
@@ -244,12 +241,13 @@ namespace RAC
 		template<typename T>
 		Matrix<> RandomOrthogonalFDN<T>::InitMatrix(const size_t numChannels)
 		{
-			Matrix<> matrix = Matrix<>::Zero(numChannels, numChannels);
+      const int numChannelsI = SizeToInt(numChannels);
+			Matrix<> matrix = Matrix<>::Zero(numChannelsI, numChannelsI);
 
 #if MATRIX_LIBRARY == EIGEN_FLAG
 			matrix.Col(0).RandomUniformDistribution().Normalise();
 #elif MATRIX_LIBRARY == CUSTOM_FLAG
-			Vec<> vector(numChannels);
+			Vec<> vector(numChannelsI);
 			// [-1:1] uniform distribution
 			 vector.RandomUniformDistribution();
 			 vector.Normalise();
@@ -257,7 +255,7 @@ namespace RAC
 #endif
 
 			Real tol = 0.000001;
-			for (int j = 1; j < numChannels; ++j)
+			for (int j = 1; j < numChannelsI; ++j)
 			{
 				Real norm = 0;
 				while (norm < tol)
@@ -273,9 +271,9 @@ namespace RAC
 					norm = matrix.Col(j).Normal();
 #elif MATRIX_LIBRARY == CUSTOM_FLAG
 					vector.RandomUniformDistribution();
-					Matrix<> section(numChannels, j);
+					Matrix<> section(numChannelsI, j);
 
-					for (int i = 0; i < numChannels; ++i)
+					for (int i = 0; i < numChannelsI; ++i)
 					{
 						for (int k = 0; k < j; k++)
 							section(i, k) = matrix(i, k);
@@ -294,5 +292,17 @@ namespace RAC
 			}
 			return matrix;
 		}
+
+		//////////////////// Instantiate ////////////////////
+
+		// we don't implement/use every function, so disable the warning (we can't re-enable it since the warning is generated after the file is parsed)
+		#ifdef _MSC_VER
+		#pragma warning (disable : 4661)
+		#endif
+
+		template class FDNChannel<Real>;
+		template class FDNChannel<Complex>;
+
+
 	}
 }

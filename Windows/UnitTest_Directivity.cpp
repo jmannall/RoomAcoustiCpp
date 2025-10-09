@@ -32,7 +32,7 @@ namespace RAC
 			std::vector<Real> phi(inputData[1]);
 			std::vector<Real> freq(inputFreq[0]);
 
-			int numTests = theta.size();
+			int numTests = SizeToInt(theta.size());
 			for (int i = 0; i < numTests; i++)
 			{
 				Vec3 direction = Vec3(std::sin(theta[i]) * std::sin(-phi[i]), std::sin(theta[i]) * std::cos(-phi[i]), std::cos(theta[i]));
@@ -58,7 +58,7 @@ namespace RAC
 			std::vector<Real> phi(inputData[1]);
 			std::vector<Real> freq(inputFreq[0]);
 
-			int numTests = theta.size();
+			int numTests = SizeToInt(theta.size());
 			for (int i = 0; i < numTests; i++)
 			{
 				Vec3 direction = Vec3(std::sin(theta[i]) * std::sin(-phi[i]), std::sin(theta[i]) * std::cos(-phi[i]), std::cos(theta[i]));

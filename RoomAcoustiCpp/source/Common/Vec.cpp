@@ -19,10 +19,6 @@ namespace RAC
 	{
 		//////////////////// Vec ////////////////////
 
-		template class Vec<int>;
-		template class Vec<Real>;
-		template class Vec<Complex>;
-
 		static std::default_random_engine generator(100); // Seed the generator
 
 		////////////////////////////////////////
@@ -103,19 +99,13 @@ namespace RAC
 		template<typename T>
 		T Vec<T>::Sum() const
 		{
-			T sum = 0.0;
+			T sum = T(0.0);
 			for (int i = 0; i < this->data.cols; i++)
 				sum += this->data(i, 0);
 			return sum;
 		}
 
 		//////////////////// Rowvec ////////////////////
-
-		template class Rowvec<int>;
-		template class Rowvec<Real>;
-		template class Rowvec<Complex>;
-
-		////////////////////////////////////////
 
 		template<typename T>
 		void Rowvec<T>::Init(const std::vector<T>& vector)
@@ -130,7 +120,7 @@ namespace RAC
 		template<typename T>
 		T Rowvec<T>::Sum() const
 		{
-			T sum = 0.0;
+			T sum = T(0.0);
 			for (int i = 0; i < this->data.cols; i++)
 				sum += this->data(0, i);
 			return sum;
@@ -154,6 +144,22 @@ namespace RAC
 				out += u(i) * v(i) * w(i);
 			return out;
 		}
+
+		//////////////////// Instantiate ////////////////////
+
+		// we don't implement/use every function, so disable the warning (we can't re-enable it since the warning is generated after the file is parsed)
+		#ifdef _MSC_VER
+		#pragma warning (disable : 4661)
+		#endif
+
+		template class Vec<int>;
+		template class Vec<Real>;
+		template class Vec<Complex>;
+
+		template class Rowvec<int>;
+		template class Rowvec<Real>;
+		template class Rowvec<Complex>;
+
 	}
 }
 #endif // MATRIX_LIBRARY == CUSTOM_FLAG

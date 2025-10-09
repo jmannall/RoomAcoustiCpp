@@ -23,7 +23,7 @@ namespace RAC
 			const Coefficients<> gain = Coefficients<>::Constant(5, 0.0);
 			const Coefficients<> fc(std::vector<Real>({ 250.0, 500.0, 1000.0, 2000.0, 4000.0 }));
 			const Real Q = 0.98;
-			const int fs = 48e3;
+			const int fs = 48000;
 
 			GraphicEQ<> eq = GraphicEQ<>(gain, fc, Q, fs);
 
@@ -60,13 +60,13 @@ namespace RAC
 			const Coefficients<> fc(std::vector<Real>({ 250.0, 500.0, 1000.0, 2000.0, 4000.0 }));
 
 			Real Q = 0.98;
-			int fs = 48e3;
+			int fs = 48000;
 			int numFrames = 256;
 			Real lerpFactor = 0.0;
 			Buffer<> in = Buffer<>::Zero(numFrames);
 			in[0] = 1.0;
 
-			int numTests = g0.size();
+			int numTests = SizeToInt(g0.size());
 			for (int i = 1; i < numTests; i++)
 			{
 				Buffer<> out(numFrames);
@@ -92,7 +92,7 @@ namespace RAC
 			const Coefficients<> gain = Coefficients<>::Constant(5, 0.7);
 			const Coefficients<> fc(std::vector<Real>({ 250.0, 500.0, 1000.0, 2000.0, 4000.0 }));
 			const Real Q = 0.98;
-			const int fs = 48e3;
+			const int fs = 48000;
 
 			const Real lerpFactor = 0.5;
 
@@ -113,7 +113,7 @@ namespace RAC
 			const Coefficients<> gain(std::vector<Real>({0.3, 0.4, 0.25, 0.21, 0.4}));
 			const Coefficients<> fc(std::vector<Real>({ 250.0, 500.0, 1000.0, 2000.0, 4000.0 }));
 			const Real Q = 0.98;
-			const int fs = 48e3;
+			const int fs = 48000;
 
 			const Real lerpFactor = 0.5;
 
@@ -134,7 +134,7 @@ namespace RAC
 			const Coefficients<> gain(std::vector({ -0.8, -0.4, -0.15, -0.83, -0.75 }));
 			const Coefficients<> fc(std::vector<Real>({ 250.0, 500.0, 1000.0, 2000.0, 4000.0 }));
 			const Real Q = 0.98;
-			const int fs = 48e3;
+			const int fs = 48000;
 
 			const Real lerpFactor = 0.5;
 
@@ -158,7 +158,7 @@ namespace RAC
 			const Coefficients<> gain = Coefficients<>::Constant(5, 0.7);
 			const Coefficients<> fc(std::vector<Real>({ 250.0, 500.0, 1000.0, 2000.0, 4000.0 }));
 			const Real Q = 0.98;
-			const int fs = 48e3;
+			const int fs = 48000;
 
 			const Real lerpFactor = 0.5;
 
@@ -185,7 +185,7 @@ namespace RAC
 			const Coefficients<> gain = Coefficients<>::Constant(1, startGain);
 			const Coefficients<> fc = Coefficients<>::Constant(1, 500.0);
 			const Real Q = 0.98;
-			const int fs = 48e3;
+			const int fs = 48000;
 
 			const Real lerpFactor = 0.5;
 

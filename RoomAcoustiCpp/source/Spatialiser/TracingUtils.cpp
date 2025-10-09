@@ -41,14 +41,14 @@ namespace RAC
 
 #if PLUCKER_KERNEL
 #if LEAN_PLUCKER
-            // TODO: Implement Lean Plücker
+            // TODO: Implement Lean PlÃ¼cker
 #else // not LEAN_PLUCKER
             // Load ray moments into locals.
             const Real Mx = rays.Mx[rayIndex];
             const Real My = rays.My[rayIndex];
             const Real Mz = rays.Mz[rayIndex];
 
-            // Load "fat Plücker" triangle data into locals.
+            // Load "fat PlÃ¼cker" triangle data into locals.
             const Real edgeABDirectionX = triangles.edgeABDirectionX[triangleIndex];
             const Real edgeABDirectionY = triangles.edgeABDirectionY[triangleIndex];
             const Real edgeABDirectionZ = triangles.edgeABDirectionZ[triangleIndex];
@@ -85,9 +85,9 @@ namespace RAC
             }
 
             // ---------------------------------------------------------------------
-            // 2) Plücker side predicates for the three edges.
-            //    For an edge PQ with direction e = Q - P and wedge W = P × Q,
-            //    side = dot(D, W) + dot(M, e), where M = O × D (precomputed).
+            // 2) PlÃ¼cker side predicates for the three edges.
+            //    For an edge PQ with direction e = Q - P and wedge W = P Ã— Q,
+            //    side = dot(D, W) + dot(M, e), where M = O Ã— D (precomputed).
             //
             //    We inline the dot products (a0*b0 + a1*b1 + a2*b2) to avoid the
             //    overhead of tiny helper calls in this scalar, hot function.
@@ -127,7 +127,7 @@ namespace RAC
 
             // ---------------------------------------------------------------------
             // 3) Compute the line parameter t with the triangle plane.
-            //    No t>0 constraint (this is line–triangle, not ray–triangle).
+            //    No t>0 constraint (this is lineâ€“triangle, not rayâ€“triangle).
             //    If the line is near-parallel to the plane, report no hit (NaN).
             // ---------------------------------------------------------------------
             const Real denom = nx * Dx + ny * Dy + nz * Dz;  // dot(n, D)
@@ -142,7 +142,7 @@ namespace RAC
             return;
 #endif // end LEAN_PLUCKER
 #else // not PLUCKER_KERNEL
-            // Load "Möller–Trumbore" triangle data into locals.
+            // Load "MÃ¶llerâ€“Trumbore" triangle data into locals.
             const Real Ax = triangles.Ax[triangleIndex];
             const Real Ay = triangles.Ay[triangleIndex];
             const Real Az = triangles.Az[triangleIndex];
@@ -167,13 +167,13 @@ namespace RAC
             }
 
             // ---------------------------------------------------------------------
-            // 2) Möller–Trumbore barycentric numerators (unnormalized).
+            // 2) MÃ¶llerâ€“Trumbore barycentric numerators (unnormalized).
             //
-            //    pvec = D × e2
-            //    det  = e1 · pvec  (also equals dot(n, D))
+            //    pvec = D Ã— e2
+            //    det  = e1 Â· pvec  (also equals dot(n, D))
             //    tvec = O - A
             //    u_num = dot(tvec, pvec)
-            //    qvec  = tvec × e1
+            //    qvec  = tvec Ã— e1
             //    v_num = dot(D, qvec)
             //    w_num = det - u_num - v_num   (since u+v+w = 1)
             //
@@ -181,12 +181,12 @@ namespace RAC
             // epsilon, for inclusive-edge behavior (no division by det => no sign flip issues).
             // ---------------------------------------------------------------------
 
-            // pvec = D × e2
+            // pvec = D Ã— e2
             const Real pvec_x = Dy * e2z - Dz * e2y;
             const Real pvec_y = Dz * e2x - Dx * e2z;
             const Real pvec_z = Dx * e2y - Dy * e2x;
 
-            // det = e1 · pvec  (also equals dot(n, D))
+            // det = e1 Â· pvec  (also equals dot(n, D))
             const Real det = e1x * pvec_x + e1y * pvec_y + e1z * pvec_z;
 
             // tvec = O - A
@@ -197,7 +197,7 @@ namespace RAC
             // u_num = dot(tvec, pvec)
             const Real u_num = tvec_x * pvec_x + tvec_y * pvec_y + tvec_z * pvec_z;
 
-            // qvec = tvec × e1
+            // qvec = tvec Ã— e1
             const Real qvec_x = tvec_y * e1z - tvec_z * e1y;
             const Real qvec_y = tvec_z * e1x - tvec_x * e1z;
             const Real qvec_z = tvec_x * e1y - tvec_y * e1x;
@@ -229,14 +229,14 @@ namespace RAC
             // ---------------------------------------------------------------------
             // 3) Parallel test + compute t.
             //    If |det| is tiny, treat as parallel (report no hit).
-            //    Otherwise: t = (e2 · qvec) / det
+            //    Otherwise: t = (e2 Â· qvec) / det
             // ---------------------------------------------------------------------
             if (std::abs(det) <= EPS_PARALLEL) {
                 distance = qNaN;
                 cosine = qNaN;
             }
             else {
-                const Real t_num = e2x * qvec_x + e2y * qvec_y + e2z * qvec_z; // e2 · qvec
+                const Real t_num = e2x * qvec_x + e2y * qvec_y + e2z * qvec_z; // e2 Â· qvec
                 distance = t_num / det;
                 cosine = std::abs(nx * Dx + ny * Dy + nz * Dz);
             }
@@ -271,14 +271,14 @@ namespace RAC
 
 #if PLUCKER_KERNEL
 #if LEAN_PLUCKER
-            // TODO: Implement Lean Plücker
+            // TODO: Implement Lean PlÃ¼cker
 #else // not LEAN_PLUCKER
             // Load ray moments into locals.
             const Real Mx = rays.Mx[rayIndex];
             const Real My = rays.My[rayIndex];
             const Real Mz = rays.Mz[rayIndex];
 
-            // Load "fat Plücker" triangle data into locals.
+            // Load "fat PlÃ¼cker" triangle data into locals.
             const Real edgeABDirectionX = triangles.edgeABDirectionX[triangleIndex];
             const Real edgeABDirectionY = triangles.edgeABDirectionY[triangleIndex];
             const Real edgeABDirectionZ = triangles.edgeABDirectionZ[triangleIndex];
@@ -315,9 +315,9 @@ namespace RAC
             }
 
             // ---------------------------------------------------------------------
-            // 2) Plücker side predicates for the three edges.
-            //    For an edge PQ with direction e = Q - P and wedge W = P × Q,
-            //    side = dot(D, W) + dot(M, e), where M = O × D (precomputed).
+            // 2) PlÃ¼cker side predicates for the three edges.
+            //    For an edge PQ with direction e = Q - P and wedge W = P Ã— Q,
+            //    side = dot(D, W) + dot(M, e), where M = O Ã— D (precomputed).
             //
             //    We inline the dot products (a0*b0 + a1*b1 + a2*b2) to avoid the
             //    overhead of tiny helper calls in this scalar, hot function.
@@ -357,7 +357,7 @@ namespace RAC
 
             // ---------------------------------------------------------------------
             // 3) Compute the line parameter t with the triangle plane.
-            //    No t>0 constraint (this is line–triangle, not ray–triangle).
+            //    No t>0 constraint (this is lineâ€“triangle, not rayâ€“triangle).
             //    If the line is near-parallel to the plane, report no hit (NaN).
             // ---------------------------------------------------------------------
             const Real denom = nx * Dx + ny * Dy + nz * Dz;  // dot(n, D)
@@ -372,7 +372,7 @@ namespace RAC
             return;
 #endif // end LEAN_PLUCKER
 #else // not PLUCKER_KERNEL
-            // Load "Möller–Trumbore" triangle data into locals.
+            // Load "MÃ¶llerâ€“Trumbore" triangle data into locals.
             const Real Ax = triangles.Ax[triangleIndex];
             const Real Ay = triangles.Ay[triangleIndex];
             const Real Az = triangles.Az[triangleIndex];
@@ -397,13 +397,13 @@ namespace RAC
             }
 
             // ---------------------------------------------------------------------
-            // 2) Möller–Trumbore barycentric numerators (unnormalized).
+            // 2) MÃ¶llerâ€“Trumbore barycentric numerators (unnormalized).
             //
-            //    pvec = D × e2
-            //    det  = e1 · pvec  (also equals dot(n, D))
+            //    pvec = D Ã— e2
+            //    det  = e1 Â· pvec  (also equals dot(n, D))
             //    tvec = O - A
             //    u_num = dot(tvec, pvec)
-            //    qvec  = tvec × e1
+            //    qvec  = tvec Ã— e1
             //    v_num = dot(D, qvec)
             //    w_num = det - u_num - v_num   (since u+v+w = 1)
             //
@@ -411,12 +411,12 @@ namespace RAC
             // epsilon, for inclusive-edge behavior (no division by det => no sign flip issues).
             // ---------------------------------------------------------------------
 
-            // pvec = D × e2
+            // pvec = D Ã— e2
             const Real pvec_x = Dy * e2z - Dz * e2y;
             const Real pvec_y = Dz * e2x - Dx * e2z;
             const Real pvec_z = Dx * e2y - Dy * e2x;
 
-            // det = e1 · pvec  (also equals dot(n, D))
+            // det = e1 Â· pvec  (also equals dot(n, D))
             const Real det = e1x * pvec_x + e1y * pvec_y + e1z * pvec_z;
 
             // tvec = O - A
@@ -427,7 +427,7 @@ namespace RAC
             // u_num = dot(tvec, pvec)
             const Real u_num = tvec_x * pvec_x + tvec_y * pvec_y + tvec_z * pvec_z;
 
-            // qvec = tvec × e1
+            // qvec = tvec Ã— e1
             const Real qvec_x = tvec_y * e1z - tvec_z * e1y;
             const Real qvec_y = tvec_z * e1x - tvec_x * e1z;
             const Real qvec_z = tvec_x * e1y - tvec_y * e1x;
@@ -459,10 +459,10 @@ namespace RAC
             // ---------------------------------------------------------------------
             // 3) Parallel test + compute t.
             //    If |det| is tiny, treat as parallel (report no hit).
-            //    Otherwise: t = (e2 · qvec) / det
+            //    Otherwise: t = (e2 Â· qvec) / det
             //
             // NOTE: We postpone the parallel test until here to mirror the control
-            // flow of your Plücker kernel (inside first, then parallel); we never
+            // flow of your PlÃ¼cker kernel (inside first, then parallel); we never
             // divide by det before checking it.
             // ---------------------------------------------------------------------
             if (std::abs(det) <= EPS_PARALLEL) {
@@ -470,7 +470,7 @@ namespace RAC
                 cosine = qNaN;
             }
             else {
-                const Real t_num = e2x * qvec_x + e2y * qvec_y + e2z * qvec_z; // e2 · qvec
+                const Real t_num = e2x * qvec_x + e2y * qvec_y + e2z * qvec_z; // e2 Â· qvec
                 distance = t_num / det;
                 cosine = std::abs(nx * Dx + ny * Dy + nz * Dz);
             }
@@ -505,7 +505,7 @@ namespace RAC
 
 #if PLUCKER_KERNEL
 #if LEAN_PLUCKER
-            // TODO: Implement Lean Plücker
+            // TODO: Implement Lean PlÃ¼cker
 #else // not LEAN_PLUCKER
             // Compute ray moments and load into locals.
             const Vec3 rayMoment = Cross(rayOrigin, rayDirection);
@@ -513,7 +513,7 @@ namespace RAC
             const Real My = rayMoment.y;
             const Real Mz = rayMoment.z;
 
-            // Load "fat Plücker" triangle data into locals.
+            // Load "fat PlÃ¼cker" triangle data into locals.
             const Real edgeABDirectionX = triangles.edgeABDirectionX[triangleIndex];
             const Real edgeABDirectionY = triangles.edgeABDirectionY[triangleIndex];
             const Real edgeABDirectionZ = triangles.edgeABDirectionZ[triangleIndex];
@@ -550,9 +550,9 @@ namespace RAC
             }
 
             // ---------------------------------------------------------------------
-            // 2) Plücker side predicates for the three edges.
-            //    For an edge PQ with direction e = Q - P and wedge W = P × Q,
-            //    side = dot(D, W) + dot(M, e), where M = O × D (precomputed).
+            // 2) PlÃ¼cker side predicates for the three edges.
+            //    For an edge PQ with direction e = Q - P and wedge W = P Ã— Q,
+            //    side = dot(D, W) + dot(M, e), where M = O Ã— D (precomputed).
             //
             //    We inline the dot products (a0*b0 + a1*b1 + a2*b2) to avoid the
             //    overhead of tiny helper calls in this scalar, hot function.
@@ -592,7 +592,7 @@ namespace RAC
 
             // ---------------------------------------------------------------------
             // 3) Compute the line parameter t with the triangle plane.
-            //    No t>0 constraint (this is line–triangle, not ray–triangle).
+            //    No t>0 constraint (this is lineâ€“triangle, not rayâ€“triangle).
             //    If the line is near-parallel to the plane, report no hit (NaN).
             // ---------------------------------------------------------------------
             const Real denom = nx * Dx + ny * Dy + nz * Dz;  // dot(n, D)
@@ -607,7 +607,7 @@ namespace RAC
             return;
 #endif // end LEAN_PLUCKER
 #else // not PLUCKER_KERNEL
-            // Load "Möller–Trumbore" triangle data into locals.
+            // Load "MÃ¶llerâ€“Trumbore" triangle data into locals.
             const Real Ax = triangles.Ax[triangleIndex];
             const Real Ay = triangles.Ay[triangleIndex];
             const Real Az = triangles.Az[triangleIndex];
@@ -632,13 +632,13 @@ namespace RAC
             }
 
             // ---------------------------------------------------------------------
-            // 2) Möller–Trumbore barycentric numerators (unnormalized).
+            // 2) MÃ¶llerâ€“Trumbore barycentric numerators (unnormalized).
             //
-            //    pvec = D × e2
-            //    det  = e1 · pvec  (also equals dot(n, D))
+            //    pvec = D Ã— e2
+            //    det  = e1 Â· pvec  (also equals dot(n, D))
             //    tvec = O - A
             //    u_num = dot(tvec, pvec)
-            //    qvec  = tvec × e1
+            //    qvec  = tvec Ã— e1
             //    v_num = dot(D, qvec)
             //    w_num = det - u_num - v_num   (since u+v+w = 1)
             //
@@ -646,12 +646,12 @@ namespace RAC
             // epsilon, for inclusive-edge behavior (no division by det => no sign flip issues).
             // ---------------------------------------------------------------------
 
-            // pvec = D × e2
+            // pvec = D Ã— e2
             const Real pvec_x = Dy * e2z - Dz * e2y;
             const Real pvec_y = Dz * e2x - Dx * e2z;
             const Real pvec_z = Dx * e2y - Dy * e2x;
 
-            // det = e1 · pvec  (also equals dot(n, D))
+            // det = e1 Â· pvec  (also equals dot(n, D))
             const Real det = e1x * pvec_x + e1y * pvec_y + e1z * pvec_z;
 
             // tvec = O - A
@@ -662,7 +662,7 @@ namespace RAC
             // u_num = dot(tvec, pvec)
             const Real u_num = tvec_x * pvec_x + tvec_y * pvec_y + tvec_z * pvec_z;
 
-            // qvec = tvec × e1
+            // qvec = tvec Ã— e1
             const Real qvec_x = tvec_y * e1z - tvec_z * e1y;
             const Real qvec_y = tvec_z * e1x - tvec_x * e1z;
             const Real qvec_z = tvec_x * e1y - tvec_y * e1x;
@@ -694,10 +694,10 @@ namespace RAC
             // ---------------------------------------------------------------------
             // 3) Parallel test + compute t.
             //    If |det| is tiny, treat as parallel (report no hit).
-            //    Otherwise: t = (e2 · qvec) / det
+            //    Otherwise: t = (e2 Â· qvec) / det
             //
             // NOTE: We postpone the parallel test until here to mirror the control
-            // flow of your Plücker kernel (inside first, then parallel); we never
+            // flow of your PlÃ¼cker kernel (inside first, then parallel); we never
             // divide by det before checking it.
             // ---------------------------------------------------------------------
             if (std::abs(det) <= EPS_PARALLEL) {
@@ -705,7 +705,7 @@ namespace RAC
                 cosine = qNaN;
             }
             else {
-                const Real t_num = e2x * qvec_x + e2y * qvec_y + e2z * qvec_z; // e2 · qvec
+                const Real t_num = e2x * qvec_x + e2y * qvec_y + e2z * qvec_z; // e2 Â· qvec
                 distance = t_num / det;
                 cosine = std::abs(nx * Dx + ny * Dy + nz * Dz);
             }
@@ -970,7 +970,7 @@ namespace RAC
         
         RayBundle::RayBundle(const Vec3& origin, const std::vector<Vec3>& directions)
         {
-            numRays = directions.size();
+            numRays = SizeToInt(directions.size());
             rays.resize(numRays);
 
             for (int i = 0; i < numRays; ++i) {
@@ -994,7 +994,7 @@ namespace RAC
 
         RayBundle::RayBundle(const std::vector<Vec3>& origins, const std::vector<Vec3>& directions)
         {
-            numRays = directions.size();
+            numRays = SizeToInt(directions.size());
             rays.resize(numRays);
 
             for (int i = 0; i < numRays; ++i) {
@@ -1140,7 +1140,7 @@ namespace RAC
 
         RayPencil::RayPencil(const std::vector<Vec3>& directions)
         {
-            numRays = directions.size();
+            numRays = SizeToInt(directions.size());
             rays.resize(numRays);
 
             rays.Ox = 0.0;
@@ -1225,7 +1225,7 @@ namespace RAC
                             rays.Dx[i], rays.Dy[i], rays.Dz[i],
                             directions[j].x(), directions[j].y(), directions[j].z());
                     }
-                    clusters(i) = std::distance(cosineSimilarity.begin(), std::max_element(cosineSimilarity.begin(), cosineSimilarity.end()));
+                    clusters(i) = static_cast<int>( std::distance(cosineSimilarity.begin(), std::max_element(cosineSimilarity.begin(), cosineSimilarity.end())) );
                 }
                 else
                     clusters(i) = -1;
@@ -1247,7 +1247,7 @@ namespace RAC
                                 directions[j].x(), directions[j].y(), directions[j].z());
                         }
                         // N.B.: We look for the MINIMUM this time
-                        clusters(i + numRays) = std::distance(cosineSimilarity.begin(), std::min_element(cosineSimilarity.begin(), cosineSimilarity.end()));
+                        clusters(i + numRays) = static_cast<int>( std::distance(cosineSimilarity.begin(), std::min_element(cosineSimilarity.begin(), cosineSimilarity.end())) );
                     }
                     else
                         clusters(i + numRays) = -1;

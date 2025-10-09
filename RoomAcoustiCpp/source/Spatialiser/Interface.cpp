@@ -216,7 +216,7 @@ namespace RAC
 		{
 			auto context = GetContext();
 			if (context)
-				return context->InitSource();
+				return SizeToInt(context->InitSource());
 			else
 				return -1;
 		}
@@ -254,7 +254,7 @@ namespace RAC
 		{
 			auto context = GetContext();
 			if (context)
-				return context->InitMaterial(material);
+				return SizeToInt(context->InitMaterial(material));
 			else
 				return -1;
 		}
@@ -283,7 +283,7 @@ namespace RAC
 		{
 			auto context = GetContext();
 			if (context)
-				return context->InitWall(vData, materialId);
+				return SizeToInt(context->InitWall(vData, materialId));
 			else
 				return -1;
 		}

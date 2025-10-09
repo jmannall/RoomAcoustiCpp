@@ -35,7 +35,7 @@ namespace RAC
 	public:
 		TEST_METHOD(Process)
 		{
-			const int fs = 48e3;
+			const int fs = 48000;
 			const Real lerpFactor = 0.5;
 
 			const Real distance = 50;
@@ -50,7 +50,7 @@ namespace RAC
 
 		TEST_METHOD(IsInterpolating)
 		{
-			const int fs = 48e3;
+			const int fs = 48000;
 			const Real lerpFactor = 0.5;
 
 			const Real distance = 22;
@@ -68,7 +68,7 @@ namespace RAC
 
 		TEST_METHOD(ClearBuffers)
 		{
-			const int fs = 48e3;
+			const int fs = 48000;
 			const Real lerpFactor = 0.5;
 
 			const Real distance = 7;

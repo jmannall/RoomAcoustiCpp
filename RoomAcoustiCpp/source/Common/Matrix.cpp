@@ -20,10 +20,6 @@ namespace RAC
 	{
 		//////////////////// Matrix ////////////////////
 
-		template class Matrix<int>;
-		template class Matrix<Real>;
-		template class Matrix<Complex>;
-
 		static std::default_random_engine generator(100); // Seed the generator
 
 		////////////////////////////////////////
@@ -199,6 +195,18 @@ namespace RAC
 			for (auto& value : data.matrix)
 				value = distribution(generator);
 		}
+
+		//////////////////// Instantiate ////////////////////
+
+		// we don't implement/use every function, so disable the warning (we can't re-enable it since the warning is generated after the file is parsed)
+		#ifdef _MSC_VER
+		#pragma warning (disable : 4661)
+		#endif
+
+		template class Matrix<int>;
+		template class Matrix<Real>;
+		template class Matrix<Complex>;
+
 	}
 }
 #endif // MATRIX_LIBRARY == CUSTOM_FLAG
