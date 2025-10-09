@@ -267,11 +267,10 @@ namespace RAC
 				requires std::is_same_v<T, Complex>
 			{
 				for (int i = 0, j = 0; i < inputData.Length(); i++, j += 2)
-					inputData(i) = Complex(input(j, row), input(j + 1, row));
+					inputData(i) = Complex(input(row, j), input(row, j + 1));
 			}
 #endif
 			
-
 			/*inline void SubmitAudio(const Real* input)
 			requires std::is_same_v<T, Complex> 
 			{ 
