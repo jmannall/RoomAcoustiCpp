@@ -338,7 +338,7 @@ namespace RAC
 			while (audioFlag.exchange(true, std::memory_order_acquire))
 				std::this_thread::yield();
 
-			dspConfig->UpdateLateReverbModel(LateReverbModel::raves, data.t60s.Length());
+			dspConfig->UpdateLateReverbModel(LateReverbModel::raves, ToInt(data.t60s.Length()));
 			mReverb = std::make_shared<RAVES>(&mCore, data, dspConfig);
 			mRayTracing = std::make_shared<MoDARTTracing>(mRoom, mSources, mReverb, data, dspConfig);
 
@@ -531,8 +531,8 @@ namespace RAC
 			mSources->SetInputBuffer(id, input);
 			GetOutput(output);
 
-			int irLength = SizeToInt(outputBuffer.Length());
-			int outputBufferLength = SizeToInt(output.Length());
+			int irLength = ToInt(outputBuffer.Length());
+			int outputBufferLength = ToInt(output.Length());
 			int numBuffers = irLength / outputBufferLength;
 			int remainder = irLength - numBuffers * outputBufferLength;
 

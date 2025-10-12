@@ -53,7 +53,7 @@ namespace RAC
 		{
 			 std::vector<Real> uniqueIndices;
 			 int maxIndex = 0;
-			 int minIndex = cutOffFrequencies.Length();
+			 int minIndex = ToInt(cutOffFrequencies.Length());
 			 for (int i = 0; i < octaveBandIndices.Length(); i++)
 			 {
 				 int index = octaveBandIndices(i);
@@ -155,7 +155,7 @@ namespace RAC
 
 		int OctaveBand::GetFrequencyIndex(Real f) const
 		{
-			int numEdges = cutOffFrequencies.Length();
+			int numEdges = ToInt(cutOffFrequencies.Length());
 			if (f <= cutOffFrequencies[0])
 				return numEdges;
 

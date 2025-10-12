@@ -115,7 +115,7 @@ namespace RAC
              * @brief Number of rays stored.
              * @return Count of rays.
              */
-            inline int size() const { return SizeToInt( Dx.size() ); }
+            inline int size() const { return ToInt( Dx.size() ); }
 
             /**
              * @brief Resize all internal arrays to hold @p n rays.
@@ -181,7 +181,7 @@ namespace RAC
              * @brief Number of rays stored.
              * @return Count of rays.
              */
-            inline int size() const { return SizeToInt( Dx.size() ); }
+            inline int size() const { return ToInt( Dx.size() ); }
 
             /**
              * @brief Resize all internal arrays to hold @p n rays.
@@ -306,7 +306,7 @@ namespace RAC
              * @brief Number of triangles stored.
              * @return Count of triangles.
              */
-            inline int size() const { return SizeToInt( d0.size() ); }
+            inline int size() const { return ToInt( d0.size() ); }
 
             /**
              * @brief Resize all internal arrays to hold @p n triangles.

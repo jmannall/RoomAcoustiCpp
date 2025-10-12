@@ -385,7 +385,7 @@ namespace RAC
 			*/
 			static inline Matrix<> InitMatrix(const size_t numChannels)
 			{
-				const int numChannelsI = SizeToInt(numChannels);
+				const int numChannelsI = ToInt(numChannels);
 				Matrix<> matrix = Matrix<>::Zero(numChannelsI, numChannelsI);
 				for (int i = 0; i < matrix.Rows(); i++)
 					matrix(i, i) = 1.0;		// Initialise diagonal to 1.0

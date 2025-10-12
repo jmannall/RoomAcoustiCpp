@@ -970,7 +970,7 @@ namespace RAC
         
         RayBundle::RayBundle(const Vec3& origin, const std::vector<Vec3>& directions)
         {
-            numRays = SizeToInt(directions.size());
+            numRays = ToInt(directions.size());
             rays.resize(numRays);
 
             for (int i = 0; i < numRays; ++i) {
@@ -994,7 +994,7 @@ namespace RAC
 
         RayBundle::RayBundle(const std::vector<Vec3>& origins, const std::vector<Vec3>& directions)
         {
-            numRays = SizeToInt(directions.size());
+            numRays = ToInt(directions.size());
             rays.resize(numRays);
 
             for (int i = 0; i < numRays; ++i) {
@@ -1140,7 +1140,7 @@ namespace RAC
 
         RayPencil::RayPencil(const std::vector<Vec3>& directions)
         {
-            numRays = SizeToInt(directions.size());
+            numRays = ToInt(directions.size());
             rays.resize(numRays);
 
             rays.Ox = 0.0;

@@ -245,7 +245,7 @@ namespace RAC
 		template<typename T>
 		Matrix<> RandomOrthogonalFDN<T>::InitMatrix(const size_t numChannels)
 		{
-      const int numChannelsI = SizeToInt(numChannels);
+      const int numChannelsI = ToInt(numChannels);
 			Matrix<> matrix = Matrix<>::Zero(numChannelsI, numChannelsI);
 
 #if MATRIX_LIBRARY == EIGEN_FLAG

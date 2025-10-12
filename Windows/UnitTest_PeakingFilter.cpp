@@ -139,7 +139,7 @@ namespace RAC
 			Buffer<> in = Buffer<>::Zero(numFrames);
 			in[0] = 1.0;
 
-			int numTests = SizeToInt( fc.size() );
+			int numTests = ToInt( fc.size() );
 			std::vector<Coefficients<>> gains = std::vector<Coefficients<>>(numTests, Coefficients<>(5));
 			for (int i = 0; i < numTests; i++)
 			{

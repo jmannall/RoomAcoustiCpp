@@ -105,7 +105,7 @@ void ProfileShoebox()
 	size_t materialId = InitMaterial(absorption);
     auto wallIds = CreateShoeboxRoom(pos, materialId);
 
-    int numRays = 1e3;
+    int numRays = 100;
     FDNMatrix matrix = FDNMatrix::randomOrthogonal;
 
     Real volume = pos.Sum();
@@ -177,7 +177,7 @@ void ProfileMoDART()
     InitEarlyReverb(true, earlyReverbData, diffractionModel);
 
     // Load MoDART scene
-    int numRays = 1e3;
+    int numRays = 100;
     FDNMatrix matrix = FDNMatrix::randomOrthogonal;
     LateReverbData lateReverbData(true, numRays, matrix);
 

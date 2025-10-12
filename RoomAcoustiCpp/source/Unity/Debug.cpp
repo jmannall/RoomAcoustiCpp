@@ -102,7 +102,7 @@ namespace RAC
             intersectionArray[count++] = static_cast<float>(position.z());
 
             if (pathCallbackInstance != nullptr)
-                pathCallbackInstance(tmsg, &intersectionArray[0], SizeToInt(strlen(tmsg)), SizeToInt(size) );
+                pathCallbackInstance(tmsg, &intersectionArray[0], ToInt(strlen(tmsg)), ToInt(size) );
 
             delete[] intersectionArray;
         }

@@ -415,13 +415,37 @@ namespace RAC
 		/**
 		 * @brief Safely converts a size into an integer, checking to make sure it's in range (in debug)
 		 *
-		 * @param size The size to convert
+		 * @param value The size to convert
 		 * @return The size, as an integer
 		 */
-		inline int SizeToInt(size_t size)
+		inline int ToInt(size_t value)
 		{
-			assert(size < std::numeric_limits<int>::max());
-			return static_cast<int>(size);
+			assert(value <= std::numeric_limits<int>::max());
+			return static_cast<int>(value);
+		}
+
+		/**
+		 * @brief Safely converts a ptrdiff_t (used by Eigen::Index) into an integer, checking to make sure it's in range (in debug)
+		 *
+		 * @param value The size to convert
+		 * @return The size, as an integer
+		 */
+		inline int ToInt(ptrdiff_t value)
+		{
+			assert(value >= std::numeric_limits<int>::min() && value <= std::numeric_limits<int>::max());
+			return static_cast<int>(value);
+		}
+
+
+		/**
+		 * @brief Used in case some types have a int
+		 *
+		 * @param int The value to convert
+		 * @return The size, as an integer
+		 */
+		inline int ToInt(int value)
+		{
+			return value;
 		}
 	}
 }
