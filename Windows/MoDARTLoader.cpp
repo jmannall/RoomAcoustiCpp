@@ -450,6 +450,7 @@ bool LoadMoDARTScene(const std::string& modartPath, const Coefficients<>& target
     {
         // Find the best match for this slope's frequency band among the requested bands.
         oldBandIdx = frequencyBandIndexing(localIdx);
+        assert(oldBandIdx < frequencies.size());
         newBandIdx = BestBandMatch(static_cast<float>(frequencies[oldBandIdx]), targetFreqs);
 
         // Only record this slope if its frequency band matches one of the requested bands.
