@@ -24,11 +24,15 @@ namespace RAC
 		*/
 #define EIGEN_FLAG 0
 #define CUSTOM_FLAG 1
-			
-#ifdef USE_EIGEN
+		
+#if defined(USE_EIGEN) && defined(USE_CUSTOM)
+#error You cannot use both Eigen and Custom at the same time.
+#elif defined(USE_EIGEN)
 #define MATRIX_LIBRARY EIGEN_FLAG
-#elif USE_CUSTOM
+#elif defined(USE_CUSTOM)
 #define MATRIX_LIBRARY CUSTOM_FLAG
+#else
+#error Please specify a matrix library via USE_EIGEN or USE_CUSTOM
 #endif
 
 #define EIGEN_PLAINOBJECTBASE_PLUGIN "Eigen/PlainObjectBaseAddons.h"
