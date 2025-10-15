@@ -232,7 +232,8 @@ namespace RAC
 			diffraction = data.IsDiffraction();
 			reflection = data.IsReflection();
 
-			InitDiffractionModel(dspConfig->GetDiffractionModel(), data.GetDiffractionPath(), dspData.fs);
+			if (diffraction)
+				InitDiffractionModel(dspConfig->GetDiffractionModel(), data.GetDiffractionPath(), dspData.fs);
 
 			feedsFDN.store(data.IsFeedingFDN(), std::memory_order_release);
 			mFDNChannel.store(fdnChannel, std::memory_order_release);
@@ -429,17 +430,10 @@ namespace RAC
 
 		void ImageSource::InitDiffractionModel(const DiffractionModel model, const Diffraction::Path& path, const int fs)
 		{
+			assert(diffraction);
+
 			diffractionGain.Reset((Real)1.0);
 			isCrossFading.store(false, std::memory_order_release);
-			
-			if (!diffraction)
-			{
-				activeModel.reset();
-				fadeModel.reset();
-				incomingModel.load(std::memory_order_acquire).reset();
-				nextModel.load(std::memory_order_acquire).reset();
-				return;
-			}
 
 			currentDiffractionModel.store(model, std::memory_order_release);
 			mDiffractionPath = path;
