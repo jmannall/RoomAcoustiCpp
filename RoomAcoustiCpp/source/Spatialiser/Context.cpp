@@ -119,21 +119,21 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		Context::Context(const DSPData& data) : dspConfig(std::make_shared<DSPConfig>(data)), mIsRunning(true), IEMThread(), rayTracingThread(), applyHeadphoneEQ(false), headphoneEQ(2048)
+		Context::Context(const DSPData& data,const std::string& logPrefix) : dspConfig(std::make_shared<DSPConfig>(data)), mIsRunning(true), IEMThread(), rayTracingThread(), applyHeadphoneEQ(false), headphoneEQ(2048)
 		{
 #ifdef DEBUG_INIT
 			Debug::Log("Init Context", Colour::Green);
 #endif
+
+			if (!logPrefix.empty())
+			{
+				CErrorHandler::Instance().SetErrorLogFile(logPrefix + "_log.txt", true);
+#if defined(PROFILE_BACKGROUND_THREAD) || defined(PROFILE_AUDIO_THREAD)
+				Profiler::Instance().SetOutputFile(logPrefix + "_profile.txt", true);
+#endif
+			}
 			CErrorHandler::Instance().SetAssertMode(ASSERT_MODE_CONTINUE);
 			CErrorHandler::Instance().SetVerbosityMode(VERBOSITYMODE_ERRORSANDWARNINGS);
-			std::string timestamp = GetTimestamp();
-			logFile = GetLogPath(timestamp);
-			CErrorHandler::Instance().SetErrorLogFile(logFile, true);
-
-#if defined(PROFILE_BACKGROUND_THREAD) || defined(PROFILE_AUDIO_THREAD)
-			profileFile = GetProfilePath(timestamp);
-			Profiler::Instance().SetOutputFile(profileFile, true);
-#endif
 
 			// Set dsp settings
 			mCore.SetAudioState({ dspConfig->GetData().fs, dspConfig->GetData().numFrames });

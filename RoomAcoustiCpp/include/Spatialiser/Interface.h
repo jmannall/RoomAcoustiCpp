@@ -28,7 +28,7 @@ namespace RAC
 		* @param config The configuration of the spatialiser.
 		* @return True if the initialization was successful, false otherwise.
 		*/
-		bool Init(const DSPData& data);
+		bool Init(const DSPData& data, const std::string& logPrefix = "");
 
 		/**
 		* @brief Exits and cleans up the spatialiser.
