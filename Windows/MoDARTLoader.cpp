@@ -449,7 +449,7 @@ bool LoadMoDARTScene(const std::string& modartPath, const Coefficients<>& target
     for (int localIdx = 0; localIdx < numFDNs; ++localIdx)
     {
         // Find the best match for this slope's frequency band among the requested bands.
-        oldBandIdx = frequencyBandIndexing(localIdx);
+        oldBandIdx = frequencyBandIndexing(localIdx) - 1;           // the data from the file is 1 based
         assert(oldBandIdx < frequencies.size());
         newBandIdx = BestBandMatch(static_cast<float>(frequencies[oldBandIdx]), targetFreqs);
 
