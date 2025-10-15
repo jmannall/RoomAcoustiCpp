@@ -267,7 +267,18 @@ namespace RAC
             inline void SetOutputFile(const std::string& filename, bool logOn)
             {
                 if (logOn)
+                {
+                    if (output.is_open())
+                    {
+                        // don't re-open the same file
+                        if (outputFilename == filename)
+                            return;
+
+                        output.close();
+                    }
                     output.open(filename);
+                    outputFilename = filename;
+                }
                 else
                     Shutdown(filename);
             }
@@ -328,6 +339,7 @@ namespace RAC
             std::atomic<bool> running{ true };
             moodycamel::ConcurrentQueue<ProfileEvent> queue;
             std::thread logThread;
+        	std::string outputFilename;
             std::ofstream output;
             std::mutex fileMutex;
         };

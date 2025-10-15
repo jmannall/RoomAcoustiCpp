@@ -126,7 +126,7 @@ namespace RAC
 
 			DSPData(int sampleRate, int numFrames, int numReverbSources, int fdnSize, Real lerpFactor, Real Q, Coefficients<> frequencyBands) :
 				fs(sampleRate), numFrames(numFrames), numReverbSources(CalculateNumReverbSources(numReverbSources)), fdnSize(CalculateFDNSize(fdnSize, this->numReverbSources)),
-				lerpFactor(CalculateLerpFactor(lerpFactor)), Q(Q), frequencyBands(frequencyBands), numFrequencyBands(frequencyBands.Length())
+				lerpFactor(CalculateLerpFactor(lerpFactor)), Q(Q), frequencyBands(frequencyBands), numFrequencyBands(ToInt(frequencyBands.Length()))
 			{}
 
 			inline Real GetLerpFactor() const { return lerpFactor; }

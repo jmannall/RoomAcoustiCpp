@@ -33,7 +33,7 @@ namespace RAC
 			inputLine[index] = input;
 			inputLine[index + maxFilterLength] = input;
 
-			assert(currentIR.Length() >= SizeToInt(irLength));
+			assert(currentIR.Length() >= ToInt(irLength));
 			assert(irLength % 8 == 0);
 
 			// Assume length is always a multiple of 8
@@ -59,7 +59,7 @@ namespace RAC
 
 		bool FIRFilter::SetTargetIR(const Buffer<>& ir)
 		{
-			int length = SizeToInt( ir.Length() );
+			int length = ToInt( ir.Length() );
 
 			// Pad to multiple of 8
 			if (length % 8 != 0)
@@ -88,9 +88,9 @@ namespace RAC
 			const std::shared_ptr<const Buffer<>> ir = targetIR.load(std::memory_order_acquire);
 			irLength = ir->Length();
 
-			Lerp(currentIR, *ir, SizeToInt( oldIrLength ), lerpFactor);
+			Lerp(currentIR, *ir, ToInt( oldIrLength ), lerpFactor);
 
-			if (Equals(currentIR, *ir, SizeToInt(irLength)))
+			if (Equals(currentIR, *ir, ToInt(irLength)))
 			{
 				std::copy(ir->begin(), ir->end(), currentIR.begin());
 				oldIrLength = irLength;

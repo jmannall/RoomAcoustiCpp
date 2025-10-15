@@ -37,33 +37,6 @@
 #include <filesystem>
 #include <ctime>
 
-inline std::string GetTimestamp() {
-	// Get current time
-	auto now = std::chrono::system_clock::now();
-	std::time_t time_now = std::chrono::system_clock::to_time_t(now);
-
-	std::tm local_time;
-	localtime_s(&local_time, &time_now);
-
-	// Format time into string: YYYY-MM-DD_HH-MM-SS
-	std::stringstream ss;
-	ss << std::put_time(&local_time, "%Y-%m-%d_%H-%M-%S");
-	std::string timestamp = ss.str();
-
-	// Full log file path
-	return timestamp;
-}
-
-inline std::string GetLogPath(std::string timestamp)
-{
-	return timestamp + "_RoomAcoustiCpp_log.txt";
-}
-
-inline std::string GetProfilePath(std::string timestamp)
-{
-	return timestamp + "_RoomAcoustiCpp_profile.txt";
-}
-
 namespace RAC
 {
 	using namespace Common;
@@ -82,8 +55,9 @@ namespace RAC
 			* @brief Constructor that initialises the spatialiser with the given configuration.
 			* 
 			* @param config The configuration for the spatialiser.
+			* @param logPrefix If set, then logs are redirected to a file with the specified prefix
 			*/
-			Context(const DSPData& data);
+			explicit Context(const DSPData& data, const std::string& logPrefix = "");
 
 			/**
 			* @brief Default deconstructor.

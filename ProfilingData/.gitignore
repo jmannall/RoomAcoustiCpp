@@ -1,0 +1,6 @@
+# data directories
+HRTF
+MoDART
+
+# generated log files
+*.txt

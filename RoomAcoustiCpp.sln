@@ -16,6 +16,9 @@ Global
 		Debug_Baseline|ARM = Debug_Baseline|ARM
 		Debug_Baseline|ARM64 = Debug_Baseline|ARM64
 		Debug_Baseline|x64 = Debug_Baseline|x64
+		Debug_ProfileExe|ARM = Debug_ProfileExe|ARM
+		Debug_ProfileExe|ARM64 = Debug_ProfileExe|ARM64
+		Debug_ProfileExe|x64 = Debug_ProfileExe|x64
 		Debug|ARM = Debug|ARM
 		Debug|ARM64 = Debug|ARM64
 		Debug|x64 = Debug|x64
@@ -48,6 +51,12 @@ Global
 		{2F98D92A-D2E5-460B-A1D1-12E9052DEB64}.Debug_Baseline|ARM64.Build.0 = Debug_Baseline|x64
 		{2F98D92A-D2E5-460B-A1D1-12E9052DEB64}.Debug_Baseline|x64.ActiveCfg = Debug_Baseline|x64
 		{2F98D92A-D2E5-460B-A1D1-12E9052DEB64}.Debug_Baseline|x64.Build.0 = Debug_Baseline|x64
+		{2F98D92A-D2E5-460B-A1D1-12E9052DEB64}.Debug_ProfileExe|ARM.ActiveCfg = Debug_ProfileExe|x64
+		{2F98D92A-D2E5-460B-A1D1-12E9052DEB64}.Debug_ProfileExe|ARM.Build.0 = Debug_ProfileExe|x64
+		{2F98D92A-D2E5-460B-A1D1-12E9052DEB64}.Debug_ProfileExe|ARM64.ActiveCfg = Debug_ProfileExe|x64
+		{2F98D92A-D2E5-460B-A1D1-12E9052DEB64}.Debug_ProfileExe|ARM64.Build.0 = Debug_ProfileExe|x64
+		{2F98D92A-D2E5-460B-A1D1-12E9052DEB64}.Debug_ProfileExe|x64.ActiveCfg = Debug_ProfileExe|x64
+		{2F98D92A-D2E5-460B-A1D1-12E9052DEB64}.Debug_ProfileExe|x64.Build.0 = Debug_ProfileExe|x64
 		{2F98D92A-D2E5-460B-A1D1-12E9052DEB64}.Debug|ARM.ActiveCfg = Debug|x64
 		{2F98D92A-D2E5-460B-A1D1-12E9052DEB64}.Debug|ARM64.ActiveCfg = Debug|x64
 		{2F98D92A-D2E5-460B-A1D1-12E9052DEB64}.Debug|x64.ActiveCfg = Debug|x64
@@ -93,6 +102,9 @@ Global
 		{C4FBD30D-63BA-4B40-BAA1-6C5F91065427}.Debug_Baseline|ARM.ActiveCfg = Debug_Baseline|ARM
 		{C4FBD30D-63BA-4B40-BAA1-6C5F91065427}.Debug_Baseline|ARM64.ActiveCfg = Debug_Baseline|ARM64
 		{C4FBD30D-63BA-4B40-BAA1-6C5F91065427}.Debug_Baseline|x64.ActiveCfg = Debug_Baseline|ARM
+		{C4FBD30D-63BA-4B40-BAA1-6C5F91065427}.Debug_ProfileExe|ARM.ActiveCfg = Debug_ProfileExe|ARM
+		{C4FBD30D-63BA-4B40-BAA1-6C5F91065427}.Debug_ProfileExe|ARM64.ActiveCfg = Debug_ProfileExe|ARM64
+		{C4FBD30D-63BA-4B40-BAA1-6C5F91065427}.Debug_ProfileExe|x64.ActiveCfg = Debug_ProfileExe|ARM
 		{C4FBD30D-63BA-4B40-BAA1-6C5F91065427}.Debug|ARM.ActiveCfg = Debug|ARM
 		{C4FBD30D-63BA-4B40-BAA1-6C5F91065427}.Debug|ARM.Build.0 = Debug|ARM
 		{C4FBD30D-63BA-4B40-BAA1-6C5F91065427}.Debug|ARM64.ActiveCfg = Debug|ARM64

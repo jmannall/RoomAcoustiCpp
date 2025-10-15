@@ -111,7 +111,7 @@ namespace RAC
 
 			inline int GetFrequencyIndex(Real f) const
 			{
-				return SizeToInt( std::upper_bound(fm.begin(), fm.end(), f) - fm.begin() );
+				return ToInt( std::upper_bound(fm.begin(), fm.end(), f) - fm.begin() );
 			}
 
 			/**

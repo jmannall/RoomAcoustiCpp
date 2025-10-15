@@ -10,6 +10,10 @@
 
 #define _CRTDBG_MAP_ALLOC
 #include <crtdbg.h>
+#include <filesystem>
+#include <framework.h>
+
+#include "CommandLineParser.h"
 
 using namespace RAC::Spatialiser;
 using namespace RAC::Common;
@@ -62,7 +66,7 @@ std::vector<size_t> CreateShoeboxRoom(Vec3 pos, size_t materialId)
 	return wallIDs;
 }
 
-void ProfileShoebox()
+void ProfileShoebox(const ProfileExecutionContext& testContext)
 {
     std::cout << "Init RAC..." << std::endl;
     int fs{ 48000 };							// Sample rate
@@ -74,7 +78,7 @@ void ProfileShoebox()
     Coefficients<> frequencyBands(std::vector<Real>({ 125.0, 250.0, 500.0, 1e3, 2e3, 4e3, 8e3 }));				// Frequency band center frequencies
 
     DSPData configData = DSPData(fs, numFrames, numReverbSources, fdnSize, lerpFactor, Q, frequencyBands);
-    Init(configData);
+    Init(configData, testContext.logPrefix);
 
     int hrtfSamplingStep = 5;
     std::vector<std::string> hrtfFiles = { "HRTF/Kemar_DTF_ITD_48000_3dti-hrtf.3dti-hrtf", "HRTF/NearFieldCompensation_ILD_48000.3dti-ild", "HRTF/HRTF_ILD_48000.3dti-ild" };
@@ -105,7 +109,7 @@ void ProfileShoebox()
 	size_t materialId = InitMaterial(absorption);
     auto wallIds = CreateShoeboxRoom(pos, materialId);
 
-    int numRays = 1e3;
+    int numRays = 100;
     FDNMatrix matrix = FDNMatrix::randomOrthogonal;
 
     Real volume = pos.Sum();
@@ -139,7 +143,7 @@ void ProfileShoebox()
     Exit();
 }
 
-void ProfileMoDART()
+void ProfileMoDART(const ProfileExecutionContext &testContext)
 {
     std::cout << "Init RAC..." << std::endl;
     int fs{ 48000 };							// Sample rate
@@ -151,7 +155,7 @@ void ProfileMoDART()
     Coefficients<> frequencyBands(std::vector<Real>({ 125.0, 250.0, 500.0, 1e3, 2e3, 4e3, 8e3 }));				// Frequency band center frequencies
 
     DSPData configData = DSPData(fs, numFrames, numReverbSources, fdnSize, lerpFactor, Q, frequencyBands);
-    Init(configData);
+    Init(configData, testContext.logPrefix);
 
     int hrtfSamplingStep = 5;
     std::vector<std::string> hrtfFiles = { "HRTF/Kemar_DTF_ITD_48000_3dti-hrtf.3dti-hrtf", "HRTF/NearFieldCompensation_ILD_48000.3dti-ild", "HRTF/HRTF_ILD_48000.3dti-ild" };
@@ -177,7 +181,7 @@ void ProfileMoDART()
     InitEarlyReverb(true, earlyReverbData, diffractionModel);
 
     // Load MoDART scene
-    int numRays = 1e3;
+    int numRays = 100;
     FDNMatrix matrix = FDNMatrix::randomOrthogonal;
     LateReverbData lateReverbData(true, numRays, matrix);
 
@@ -210,33 +214,126 @@ void ProfileMoDART()
     Exit();
 }
 
-int main() {
-    std::cout << "Start program!" << std::endl;
-    std::cout << "Enter a profile key or press q to exit." << std::endl;
+// Common::CTimeMeasure requires using the whole profile to properly work, so just
+// create a simple class to manage the time that we want
 
-    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-
-    char key;
-    while (true)
+class SimpleTimer
+{
+public:
+    SimpleTimer()
     {
-        std::cin >> key;
-
-        switch (key)
-        {
-        default:
-            std::cout << "No profile exists for this key. Enter a valid key or press q to exit." << std::endl;
-            continue;
-        case '1':
-            ProfileShoebox();
-            break;
-        case '2':
-            for (int i = 0; i < 10; ++i)
-				ProfileMoDART();
-            break;
-        case 'q':
-            std::cout << "Exiting program!" << std::endl;
-            return 0;
-        }
-        std::cout << "Profile run complete!" << std::endl;
+        time = { 0 };
+        QueryPerformanceCounter(&time);
     }
+
+    static double GetMilliseconds(const SimpleTimer &a, const SimpleTimer &b);
+
+private:
+    LARGE_INTEGER time;
+};
+
+double SimpleTimer::GetMilliseconds(const SimpleTimer &a, const SimpleTimer &b)
+{
+    // make sure we have the resolution
+	static bool gotResolution = false;
+	static LARGE_INTEGER performanceFrequency;
+	if (!gotResolution)
+	{
+		if (!QueryPerformanceFrequency(&performanceFrequency))
+			return 0.0;
+		gotResolution = true;
+	}
+
+    // find the difference
+    const auto timeDiff = b.time.QuadPart - a.time.QuadPart;
+    return static_cast<double>(timeDiff) * 1000.0 / static_cast<double>(performanceFrequency.QuadPart);
+}
+
+bool ChangeToProfilingDirectory(const std::string &userPath)
+{
+	namespace fs = std::filesystem;
+
+	if (!userPath.empty() )
+	{
+        if (fs::exists(userPath))
+        {
+            std::cerr << "Profiling data given but doesn't exist (" << userPath << ")" << std::endl;
+            return false;
+        }
+
+        fs::current_path(userPath);
+        return true;
+	}
+    else
+	{
+		fs::path path = fs::current_path();
+		for (;; )
+		{
+			fs::path profileDataCandidate = path / "ProfilingData";
+			if (fs::exists(profileDataCandidate))
+			{
+                fs::current_path(profileDataCandidate);
+                return true;
+			}
+
+			if (!path.has_parent_path() || path == path.root_path())
+			{
+				std::cerr << "Searched up but cannot find ProfilingData" << std::endl;
+				return false;
+			}
+            path = path.parent_path();
+		}
+	}
+
+}
+
+int main(int argc, const char *argv[])
+{
+    CommandLineParser commandLineParser(argc, argv);
+    commandLineParser.RegisterProfileTest("Shoebox", ProfileShoebox);
+    commandLineParser.RegisterProfileTest("MoDART", ProfileMoDART);
+    if (!commandLineParser.Parse())
+        return -1;
+
+    if (commandLineParser.GetDebugFlag())
+    {
+        std::cout << "Enabling debug flag" << std::endl;
+        _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+    }
+
+    if (!ChangeToProfilingDirectory(commandLineParser.GetProfileDataDirectory()))
+        return -1;
+
+    const auto &Plane = commandLineParser.GetPlan();
+    const int iterations = commandLineParser.GetIterations();
+    std::cout << "Running " << Plane.size() << " tests " << iterations << " times." << std::endl;
+
+    std::ofstream runLog(commandLineParser.GetLogPrefix() + "_run.txt");
+    for (int planIndex = 0; planIndex < Plane.size(); ++planIndex)
+    {
+        ProfileExecutionContext executionContext =
+        {
+            Plane[planIndex].name,
+            commandLineParser.GetDetailedLogs() ? commandLineParser.GetLogPrefix() : "",
+            0,
+            iterations
+        };
+
+        std::cout << "Profiling: " << executionContext.name << std::endl;
+        SimpleTimer startTime;
+        for (int iteration = 0; iteration < iterations; ++iteration)
+        {
+            executionContext.currentIteration = iteration;
+            Plane[planIndex].function(executionContext);
+        }
+        SimpleTimer stopTime;
+        const double testTime = SimpleTimer::GetMilliseconds(startTime, stopTime);
+
+        // log it
+        const double perTestTime = testTime / iterations;
+        runLog << executionContext.name << "," << iterations << "," << testTime << "," << perTestTime << std::endl;
+        std::cout << "Total time: " << testTime << "ms (" << perTestTime << "ms/iteration)" << std::endl;
+    }
+
+    std::cout << "Done!" << std::endl;
 }

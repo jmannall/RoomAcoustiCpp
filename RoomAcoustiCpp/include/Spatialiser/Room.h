@@ -179,7 +179,7 @@ namespace RAC
 			/**
 			* @return The walls of the room
 			*/
-			int GetNumberOfWalls() { std::lock_guard<std::mutex> lock(mWallMutex); return SizeToInt( mWalls.size() ); }
+			int GetNumberOfWalls() { std::lock_guard<std::mutex> lock(mWallMutex); return ToInt( mWalls.size() ); }
 
 			/**
 			* @return The edges of the room

@@ -66,7 +66,7 @@ namespace RAC
 			Buffer<> in = Buffer<>::Zero(numFrames);
 			in[0] = 1.0;
 
-			int numTests = SizeToInt(g0.size());
+			int numTests = ToInt(g0.size());
 			for (int i = 1; i < numTests; i++)
 			{
 				Buffer<> out(numFrames);

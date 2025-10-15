@@ -90,7 +90,7 @@ namespace RAC
 			if (imageSources.size() != mSources.size())
 			{
 				imageSources.resize(mSources.size());
-				mSourceAudioDatas.resize(mSources.size(), Source::DSPParameters(frequencyBands.Length(), false));
+				mSourceAudioDatas.resize(mSources.size(), Source::DSPParameters(ToInt(frequencyBands.Length()), false));
 				mCurrentCycles.resize(mSources.size());
 			}
 
@@ -424,7 +424,7 @@ namespace RAC
 #ifdef DEBUG_IEM
 				Debug::remove_path(IntToStr(source.id) + "s");
 #endif
-				return Coefficients<>::Constant(frequencyBands.Length(), 0.0);
+				return Coefficients<>::Constant(ToInt(frequencyBands.Length()), 0.0);
 			}
 		}
 
@@ -459,7 +459,7 @@ namespace RAC
 			{
 				counter = FirstOrderReflections(source, imageSources, counter);
 
-				sp[0].resize(counter, ImageSourceData(frequencyBands.Length()));
+				sp[0].resize(counter, ImageSourceData(ToInt(frequencyBands.Length())));
 
 				if (earlyReverbData.maxOrder < 2)
 				{
@@ -470,7 +470,7 @@ namespace RAC
 				HigherOrderPaths(source, imageSources);
 			}
 			else
-				sp[0].resize(counter, ImageSourceData(frequencyBands.Length()));
+				sp[0].resize(counter, ImageSourceData(ToInt(frequencyBands.Length())));
 
 			EraseOldEntries(imageSources);
 			return;
@@ -500,7 +500,7 @@ namespace RAC
 				if (earlyReverbData.specularDiffOrder < 1 && zone == EdgeZone::NonShadowed)
 					continue;
 
-				ImageSourceData& imageSource = counter < size ? sp[0][counter] : sp[0].emplace_back(frequencyBands.Length());
+				ImageSourceData& imageSource = counter < size ? sp[0][counter] : sp[0].emplace_back(ToInt(frequencyBands.Length()));
 				
 				if (counter < size)
 					imageSource.Clear();
@@ -565,7 +565,7 @@ namespace RAC
 				if ((position - mListenerPosition).Normal() > earlyReverbData.maxPathLength)
 					continue;
 
-				ImageSourceData& imageSource = counter < size ? sp[0][counter] : sp[0].emplace_back(frequencyBands.Length());
+				ImageSourceData& imageSource = counter < size ? sp[0][counter] : sp[0].emplace_back(ToInt(frequencyBands.Length()));
 
 				Vec4 previousPlane(plane.GetD(), plane.GetNormal());
 				// imageSource.SetPreviousPlane(Vec4(plane.GetD(), plane.GetNormal()));
@@ -805,7 +805,7 @@ namespace RAC
 
 				if (earlyReverbData.specularDiffOrder < refOrder && earlyReverbData.shadowDiffOrder < refOrder)
 				{
-					sp[refIdx].resize(counter, ImageSourceData(frequencyBands.Length()));
+					sp[refIdx].resize(counter, ImageSourceData(ToInt(frequencyBands.Length())));
 					continue;
 				}
 #ifdef PROFILE_BACKGROUND_THREAD_DETAILED
@@ -895,7 +895,7 @@ namespace RAC
 #endif
 					}
 				}
-				sp[refIdx].resize(counter, ImageSourceData(frequencyBands.Length()));
+				sp[refIdx].resize(counter, ImageSourceData(ToInt(frequencyBands.Length())));
 			}
 		}
 
@@ -910,7 +910,7 @@ namespace RAC
 			imageSource.SetDistance(mListenerPosition);
 			imageSource.Visible(feedsFDN);
 			imageSource.UpdateCycle(currentCycle);
-			imageSource.CreateKey(SizeToInt(source.id));
+			imageSource.CreateKey(ToInt(source.id));
 			imageSources.insert_or_assign(imageSource.GetKey(), std::pair<int, ImageSourceData>(-1, imageSource));
 		}
 

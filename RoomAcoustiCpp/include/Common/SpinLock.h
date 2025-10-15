@@ -26,7 +26,7 @@ public:
     /**
 	* @brief Constructor that initializes the spin lock with the number of tasks to be processed
     */
-    SpinLock(size_t startCounter) : counter(RAC::SizeToInt(startCounter)) {}
+    SpinLock(size_t startCounter) : counter(RAC::ToInt(startCounter)) {}
 
     /**
     * @brief Lock the current thread until number of tasks is less than 1.

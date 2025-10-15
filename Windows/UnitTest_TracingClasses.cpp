@@ -315,10 +315,10 @@ namespace RAC
 				Assert::AreEqual((Real)1.0, magnitude, (Real)1e-6, werrorchar);
 			}
 
-			Vec<> rayDistances(SizeToInt(testDirections.size()));
-			Vec<> rayCosines(SizeToInt(testDirections.size()));
-			Vec<int> frontIndices(SizeToInt(testDirections.size()));
-			Vec<int> backIndices(SizeToInt(testDirections.size()));
+			Vec<> rayDistances(ToInt(testDirections.size()));
+			Vec<> rayCosines(ToInt(testDirections.size()));
+			Vec<int> frontIndices(ToInt(testDirections.size()));
+			Vec<int> backIndices(ToInt(testDirections.size()));
 			Real expected_distance, result_distance, result_cosine;
 			int expected_idx_front, result_idx_front, expected_idx_back, result_idx_back;
 			for (int oi = 0; oi < 2; ++oi) {
@@ -425,7 +425,7 @@ namespace RAC
 			testDirections[5] = -zDir;
 
 			testPencil = RayPencil(testDirections);
-			rayClusters = Vec<int>::Constant(SizeToInt(testDirections.size()), -1);
+			rayClusters = Vec<int>::Constant(ToInt(testDirections.size()), -1);
 
 			testDirections.resize(1);
 			testDirections[0] = (xDir + yDir + zDir).Normalised();
@@ -476,12 +476,12 @@ namespace RAC
 
 			// Try with more rays than directions.
 			// Note: this code should work without modification even if you change the size of testDirections, defined above.
-			int chunkSize = SizeToInt(testDirections.size());
+			int chunkSize = ToInt(testDirections.size());
 			tempDirections.resize(9 * chunkSize);
 			for (int di = 0; di < chunkSize; ++di)
 				tempDirections[di] = testDirections[di];
 
-			int chunkStart = SizeToInt(testDirections.size());
+			int chunkStart = ToInt(testDirections.size());
 			for (int sx : {-1, 1})
 			{
 				for (int sy : {-1, 1})
@@ -491,7 +491,7 @@ namespace RAC
 						Vec3 offset = Vec3({ sx * 1e-2, sy * 1e-2, sz * 1e-2 });
 						for (int di = 0; di < chunkSize; ++di)
 							tempDirections[di + chunkStart] = (testDirections[di] + offset).Normalised();
-						chunkStart += SizeToInt(testDirections.size());
+						chunkStart += ToInt(testDirections.size());
 					}
 				}
 			}

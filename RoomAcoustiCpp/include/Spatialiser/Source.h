@@ -261,7 +261,7 @@ namespace RAC
 			/**
 			* @return True if the source is ready to be initialised, false otherwise
 			*/
-			bool IsReset() const { return isReset.load(std::memory_order_release); }
+			bool IsReset() const { return isReset.load(std::memory_order_acquire); }
 
 		private:
 			/**

@@ -6,6 +6,9 @@
 // Unity headers
 #include "Unity/Debug.h"
 
+// helpers
+#include <cassert>
+
 #if defined _DEBUG || defined DEBUG_RTM
 #pragma optimize("", off)
 #endif
@@ -194,9 +197,13 @@ namespace RAC
 
 					// Add energy contribution of the ray
 					pathIdx = pathIndexing(frontIndices(ray_idx), backIndices(ray_idx));
-					distance = rayDistances(ray_idx);
-					energyContributions(pathIdx) += 1;
-					contributionDelays(pathIdx) += distance;
+					//assert(pathIdx >= 0);
+					if (pathIdx >= 0)
+					{
+						distance = rayDistances(ray_idx);
+						energyContributions(pathIdx) += 1;
+						contributionDelays(pathIdx) += distance;
+					}
 				}
 			}
 

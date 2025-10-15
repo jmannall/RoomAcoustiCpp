@@ -110,7 +110,7 @@ namespace RAC
 			assert(start.Length() >= end.Length());
 			assert(startLength <= start.Length());
 
-			const int len = SizeToInt(end.Length());
+			const int len = ToInt(end.Length());
 			int i = 0;
 			while(i < len) // Easier for compiler to vectorise ~1.6x faster
 			{
@@ -139,7 +139,7 @@ namespace RAC
 				start[i] += factor * end[i];
 				i++;
 			}
-			for (int i = SizeToInt( end.Length() ); i < startLength; i++) // Interpolating to zero
+			for (int i = ToInt( end.Length() ); i < startLength; i++) // Interpolating to zero
 				start[i] *= (1.0 - factor);
 		}
 

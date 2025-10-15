@@ -25,7 +25,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		bool Init(const DSPData& data)
+		bool Init(const DSPData& data, const std::string& logPrefix)
 		{
 			if (context) // Delete any existing context
 			{
@@ -37,7 +37,7 @@ namespace RAC
 #ifdef DEBUG_INIT
 	Debug::Log("Create New Context", Colour::Green);
 #endif
-			context = std::make_shared<Context>(data);
+			context = std::make_shared<Context>(data, logPrefix);
 			return context->IsRunning();
 		}
 
@@ -254,7 +254,7 @@ namespace RAC
 		{
 			auto context = GetContext();
 			if (context)
-				return SizeToInt(context->InitMaterial(material));
+				return ToInt(context->InitMaterial(material));
 			else
 				return -1;
 		}
@@ -283,7 +283,7 @@ namespace RAC
 		{
 			auto context = GetContext();
 			if (context)
-				return SizeToInt(context->InitWall(vData, materialId));
+				return ToInt(context->InitWall(vData, materialId));
 			else
 				return -1;
 		}

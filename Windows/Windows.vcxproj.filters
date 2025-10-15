@@ -98,6 +98,9 @@
     <ClCompile Include="UnitTest_Vec4.cpp">
       <Filter>UnitTest</Filter>
     </ClCompile>
+    <ClCompile Include="CommandLineParser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\UtilityFunctions.h">
@@ -107,6 +110,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MoDARTLoader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CommandLineParser.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ProfilePlan.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

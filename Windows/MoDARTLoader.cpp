@@ -65,7 +65,7 @@ int BestBandMatch(float targetBand, Coefficients<> referenceBands)
     if (targetBand < referenceBands[0])
         return 0;
     else if (targetBand > referenceBands[referenceBands.Length() - 1])
-        return referenceBands.Length() - 1;
+        return ToInt(referenceBands.Length() - 1);
     else
     {
         Real diff;
@@ -96,7 +96,7 @@ Coefficients<> ResizeCoeffs(Coefficients<> targetFreqs, Coefficients<> inputFreq
     }
 
     for (int i = 0; i < targetFreqs.Length(); i++)
-        resizedCoeffs[i] = inputCoeffs[BestBandMatch(targetFreqs[i], inputFreqs)];
+        resizedCoeffs[i] = inputCoeffs[BestBandMatch(static_cast<float>(targetFreqs[i]), inputFreqs)];
 
     return resizedCoeffs;
 }
@@ -122,7 +122,7 @@ bool LoadMaterialsFromCsv(const std::string& mtlFilePath, Coefficients<>& outFre
     std::vector<Real> freqBands;
     while (std::getline(iss, token, ','))
         freqBands.push_back(std::stof(token));
-    int numFreqBands = SizeToInt(freqBands.size());
+    int numFreqBands = ToInt(freqBands.size());
 
     if (numFreqBands <= 0)
     {
@@ -345,10 +345,10 @@ bool LoadModesFromCsv(const std::string& modalDataFilePath, int numFreqBands, in
         }
     }
 
-    outFrequencyBandIndexing = Vec<int>(SizeToInt(freqBands.size()));
+    outFrequencyBandIndexing = Vec<int>(ToInt(freqBands.size()));
 	std::copy(freqBands.begin(), freqBands.end(), outFrequencyBandIndexing.begin());
 
-	outT60s = Vec<>(SizeToInt(t60s.size()));
+	outT60s = Vec<>(ToInt(t60s.size()));
 	std::copy(t60s.begin(), t60s.end(), outT60s.begin());
 
     return true;
@@ -414,7 +414,7 @@ bool LoadMoDARTScene(const std::string& modartPath, const Coefficients<>& target
         std::cerr << "Failed to load walls from " << modartPath << std::endl;
         return false;
     }
-    int numFreqBands = frequencies.Length();
+    int numFreqBands = ToInt(frequencies.Length());
 
     int numPaths;
     Matrix<int> pathIndexing;
@@ -423,18 +423,18 @@ bool LoadMoDARTScene(const std::string& modartPath, const Coefficients<>& target
         std::cerr << "Failed to load indexing data from " << modartPath << std::endl;
         return false;
     }
-    int numNodes = pathIndexing.Rows();
+    int numNodes = ToInt(pathIndexing.Rows());
 
     Vec<int> frequencyBandIndexing;
     Vec<> t60s;
     std::vector<Vec<>> leftEigenvectors;
     std::vector<Vec<>> rightEigenvectors;
-    if (!LoadModesFromCsv(modartPath + "/MoD-ART.csv", frequencies.Length(), numPaths, frequencyBandIndexing, t60s, leftEigenvectors, rightEigenvectors))
+    if (!LoadModesFromCsv(modartPath + "/MoD-ART.csv", ToInt(frequencies.Length()), numPaths, frequencyBandIndexing, t60s, leftEigenvectors, rightEigenvectors))
     {
         std::cerr << "Failed to load modal data from " << modartPath << std::endl;
         return false;
     }
-    int numFDNs = frequencyBandIndexing.Length();
+    int numFDNs = ToInt(frequencyBandIndexing.Length());
 
     // Internal parameters `bandIdxs, T60s, leftVecs, rightVecs, numFDNs` match what was read from the files.
     // They need to be truncated/repeated to match the current frequency bands of RAC.
@@ -449,8 +449,9 @@ bool LoadMoDARTScene(const std::string& modartPath, const Coefficients<>& target
     for (int localIdx = 0; localIdx < numFDNs; ++localIdx)
     {
         // Find the best match for this slope's frequency band among the requested bands.
-        oldBandIdx = frequencyBandIndexing(localIdx);
-        newBandIdx = BestBandMatch(frequencies[oldBandIdx], targetFreqs);
+        oldBandIdx = frequencyBandIndexing(localIdx) - 1;           // the data from the file is 1 based
+        assert(oldBandIdx < frequencies.size());
+        newBandIdx = BestBandMatch(static_cast<float>(frequencies[oldBandIdx]), targetFreqs);
 
         // Only record this slope if its frequency band matches one of the requested bands.
         // If the user removed any of the octave bands through the GUI, some slopes will not find a match and will be ignored.
@@ -464,10 +465,10 @@ bool LoadMoDARTScene(const std::string& modartPath, const Coefficients<>& target
     }
     // TODO: Currently assuming RAC does not include frequency bands not covered by MoD-ART frequencies.
 
-    Vec<int> newFreqBandIndexing(SizeToInt(resizedFreqBandIndexing.size()));
+    Vec<int> newFreqBandIndexing(ToInt(resizedFreqBandIndexing.size()));
     std::copy(resizedFreqBandIndexing.begin(), resizedFreqBandIndexing.end(), newFreqBandIndexing.begin());
 
-    Vec<> newT60s(SizeToInt(resizedT60s.size()));
+    Vec<> newT60s(ToInt(resizedT60s.size()));
     std::copy(resizedT60s.begin(), resizedT60s.end(), newT60s.begin());
 
     Real delay = 0.1;
