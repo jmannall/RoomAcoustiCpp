@@ -22,7 +22,9 @@ using namespace RAC::DSP;
 #ifdef _DEBUG
 struct MemoryAllocationData
 {
-	LONG Count = 0;
+	LONG AllocCount = 0;  
+	LONG ReallocCount = 0;
+    LONG FreeCount = 0;
 	LONG64 Size = 0;
     LONG TinyCount = 0;      // <= 16 bytes
     LONG SmallCount = 0;     // <= 64 bytes
@@ -64,43 +66,54 @@ int AllocatorHook(
 	const unsigned char *szFileName,
 	int nLine)
 {
-    InterlockedIncrement(&g_MemoryAllocationData.Count);
-    InterlockedAdd64(&g_MemoryAllocationData.Size, nSize);
-    if (nSize <= 16)
-        InterlockedIncrement(&g_MemoryAllocationData.TinyCount);
-	else if (nSize <= 64)
-        InterlockedIncrement(&g_MemoryAllocationData.SmallCount);
-	else if (nSize <= 256)
-        InterlockedIncrement(&g_MemoryAllocationData.MediumCount);
-	else if (nSize <= 1024)
-        InterlockedIncrement(&g_MemoryAllocationData.LargeCount);
-	else if (nSize <= 4096)
-        InterlockedIncrement(&g_MemoryAllocationData.XLargeCount);
-	else if (nSize <= 16384)
-        InterlockedIncrement(&g_MemoryAllocationData.XXLargeCount);
-	else
-        InterlockedIncrement(&g_MemoryAllocationData.XXXLargeCount);
+    if (nAllocType == _HOOK_ALLOC || nAllocType == _HOOK_REALLOC)
+    {
+        if (nAllocType == _HOOK_ALLOC )
+			InterlockedIncrement(&g_MemoryAllocationData.AllocCount);
+        else
+			InterlockedIncrement(&g_MemoryAllocationData.ReallocCount);
+        InterlockedAdd64(&g_MemoryAllocationData.Size, nSize);
+        if (nSize <= 16)
+            InterlockedIncrement(&g_MemoryAllocationData.TinyCount);
+        else if (nSize <= 64)
+            InterlockedIncrement(&g_MemoryAllocationData.SmallCount);
+        else if (nSize <= 256)
+            InterlockedIncrement(&g_MemoryAllocationData.MediumCount);
+        else if (nSize <= 1024)
+            InterlockedIncrement(&g_MemoryAllocationData.LargeCount);
+        else if (nSize <= 4096)
+            InterlockedIncrement(&g_MemoryAllocationData.XLargeCount);
+        else if (nSize <= 16384)
+            InterlockedIncrement(&g_MemoryAllocationData.XXLargeCount);
+        else
+            InterlockedIncrement(&g_MemoryAllocationData.XXXLargeCount);
 
-    // find the thread we are using; this list could theoretically change during
-    // iteration
-    bool found = false;
-    const auto tid = GetCurrentThreadId();
-    for (int index = 0; index < g_MemoryAllocationData.TrackedThreadCount; ++index)
-    {
-        if (g_MemoryAllocationData.TrackedThreads[index] == tid)
-        {
-            found = true;
-            break;
-        }
-        
     }
-    if (!found && g_MemoryAllocationData.TrackedThreadCount < MemoryAllocationData::MaxTrackedThreads)
+    else if (nAllocType == _HOOK_FREE)
     {
-        EnterCriticalSection(&g_MemoryDebugCriticalSection);
-        if (g_MemoryAllocationData.TrackedThreadCount < MemoryAllocationData::MaxTrackedThreads)
-            g_MemoryAllocationData.TrackedThreads[g_MemoryAllocationData.TrackedThreadCount++] = tid;
-        LeaveCriticalSection(&g_MemoryDebugCriticalSection);
+        InterlockedIncrement(&g_MemoryAllocationData.FreeCount);
     }
+
+	// find the thread we are using; this list could theoretically change during
+	// iteration
+	bool found = false;
+	const auto tid = GetCurrentThreadId();
+	for (int index = 0; index < g_MemoryAllocationData.TrackedThreadCount; ++index)
+	{
+		if (g_MemoryAllocationData.TrackedThreads[index] == tid)
+		{
+			found = true;
+			break;
+		}
+
+	}
+	if (!found && g_MemoryAllocationData.TrackedThreadCount < MemoryAllocationData::MaxTrackedThreads)
+	{
+		EnterCriticalSection(&g_MemoryDebugCriticalSection);
+		if (g_MemoryAllocationData.TrackedThreadCount < MemoryAllocationData::MaxTrackedThreads)
+			g_MemoryAllocationData.TrackedThreads[g_MemoryAllocationData.TrackedThreadCount++] = tid;
+		LeaveCriticalSection(&g_MemoryDebugCriticalSection);
+	}
 
 	return TRUE;
 }
@@ -113,6 +126,23 @@ void StartMemoryMonitor()
 void StopMemoryMonitor()
 {
     _CrtSetAllocHook(nullptr);
+}
+
+void DumpMemory()
+{
+	std::cout << std::format("Memory: Alloc={}/Re={}/Free={}; Total: {} bytes (t={}/S={}/M={}/L={}/XL={}/XXL={}/XXXL={}) threads={}",
+		g_MemoryAllocationData.AllocCount,
+        g_MemoryAllocationData.ReallocCount,
+        g_MemoryAllocationData.FreeCount,
+		g_MemoryAllocationData.Size,
+		g_MemoryAllocationData.TinyCount,
+		g_MemoryAllocationData.SmallCount,
+		g_MemoryAllocationData.MediumCount,
+		g_MemoryAllocationData.LargeCount,
+		g_MemoryAllocationData.XLargeCount,
+		g_MemoryAllocationData.XXLargeCount,
+		g_MemoryAllocationData.XXXLargeCount,
+		g_MemoryAllocationData.TrackedThreadCount) << std::endl;
 }
 
 #else
@@ -420,17 +450,7 @@ int main(int argc, const char *argv[])
         }
 
 #if _DEBUG
-        std::cout << std::format("Memory: {} allocations {} bytes (t={}/S={}/M={}/L={}/XL={}/XXL={}/XXXL={}) threads={}",
-            g_MemoryAllocationData.Count,
-            g_MemoryAllocationData.Size,
-            g_MemoryAllocationData.TinyCount,
-            g_MemoryAllocationData.SmallCount,
-            g_MemoryAllocationData.MediumCount,
-            g_MemoryAllocationData.LargeCount,
-            g_MemoryAllocationData.XLargeCount, 
-            g_MemoryAllocationData.XXLargeCount,
-            g_MemoryAllocationData.XXXLargeCount,
-            g_MemoryAllocationData.TrackedThreadCount) << std::endl;
+        DumpMemory();
 #endif
 
         // log it
