@@ -38,6 +38,17 @@ struct MemoryAllocationData
 };
 
 MemoryAllocationData g_MemoryAllocationData;
+CRITICAL_SECTION g_MemoryDebugCriticalSection;
+
+void InitMemoryDebug()
+{
+    InitializeCriticalSection(&g_MemoryDebugCriticalSection);
+}
+
+void ExitMemoryDebug()
+{
+    DeleteCriticalSection(&g_MemoryDebugCriticalSection);
+}
 
 void ResetMemoryAllocationMonitoring()
 {
@@ -70,6 +81,8 @@ int AllocatorHook(
 	else
         InterlockedIncrement(&g_MemoryAllocationData.XXXLargeCount);
 
+    // find the thread we are using; this list could theoretically change during
+    // iteration
     bool found = false;
     const auto tid = GetCurrentThreadId();
     for (int index = 0; index < g_MemoryAllocationData.TrackedThreadCount; ++index)
@@ -81,16 +94,12 @@ int AllocatorHook(
         }
         
     }
-    if (!found)
+    if (!found && g_MemoryAllocationData.TrackedThreadCount < MemoryAllocationData::MaxTrackedThreads)
     {
-        int targetThread = g_MemoryAllocationData.TrackedThreadCount;
-		// try to find the thread we are using (this is not thread safe, but it's probably fine for debugging)
-        // we should also have less than the maximum number of threads in most cases
-        if (targetThread < MemoryAllocationData::MaxTrackedThreads)
-        {
-            g_MemoryAllocationData.TrackedThreads[targetThread] = tid;
-            g_MemoryAllocationData.TrackedThreadCount = targetThread + 1;
-        }
+        EnterCriticalSection(&g_MemoryDebugCriticalSection);
+        if (g_MemoryAllocationData.TrackedThreadCount < MemoryAllocationData::MaxTrackedThreads)
+            g_MemoryAllocationData.TrackedThreads[g_MemoryAllocationData.TrackedThreadCount++] = tid;
+        LeaveCriticalSection(&g_MemoryDebugCriticalSection);
     }
 
 	return TRUE;
@@ -361,6 +370,10 @@ bool ChangeToProfilingDirectory(const std::string &userPath)
 
 int main(int argc, const char *argv[])
 {
+#if _DEBUG
+	InitMemoryDebug();
+#endif
+
     CommandLineParser commandLineParser(argc, argv);
     commandLineParser.RegisterProfileTest("Shoebox", ProfileShoebox);
     commandLineParser.RegisterProfileTest("MoDART", ProfileMoDART);
@@ -455,4 +468,8 @@ int main(int argc, const char *argv[])
     }
 
     std::cout << "Done!" << std::endl;
+
+#if _DEBUG
+    ExitMemoryDebug();
+#endif
 }
