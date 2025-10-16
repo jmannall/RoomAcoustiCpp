@@ -19,6 +19,99 @@ using namespace RAC::Spatialiser;
 using namespace RAC::Common;
 using namespace RAC::DSP;
 
+#ifdef _DEBUG
+struct MemoryAllocationData
+{
+	LONG Count = 0;
+	LONG64 Size = 0;
+    LONG TinyCount = 0;      // <= 16 bytes
+    LONG SmallCount = 0;     // <= 64 bytes
+    LONG MediumCount = 0;    // <= 256 bytes
+    LONG LargeCount = 0;     // <= 1024 bytes
+    LONG XLargeCount = 0;    // <= 4096 bytes
+    LONG XXLargeCount = 0;   // <= 16384 BYTE
+    LONG XXXLargeCount = 0;  // > 16384
+
+    int TrackedThreadCount = 0;
+    static constexpr int MaxTrackedThreads = 16;
+    DWORD TrackedThreads[MaxTrackedThreads];
+};
+
+MemoryAllocationData g_MemoryAllocationData;
+
+void ResetMemoryAllocationMonitoring()
+{
+	g_MemoryAllocationData = MemoryAllocationData();
+}
+
+int AllocatorHook(
+	int nAllocType,
+	void *pUserData,
+	size_t nSize,
+	int nBlockUse,
+	long lRequest,
+	const unsigned char *szFileName,
+	int nLine)
+{
+    InterlockedIncrement(&g_MemoryAllocationData.Count);
+    InterlockedAdd64(&g_MemoryAllocationData.Size, nSize);
+    if (nSize <= 16)
+        InterlockedIncrement(&g_MemoryAllocationData.TinyCount);
+	else if (nSize <= 64)
+        InterlockedIncrement(&g_MemoryAllocationData.SmallCount);
+	else if (nSize <= 256)
+        InterlockedIncrement(&g_MemoryAllocationData.MediumCount);
+	else if (nSize <= 1024)
+        InterlockedIncrement(&g_MemoryAllocationData.LargeCount);
+	else if (nSize <= 4096)
+        InterlockedIncrement(&g_MemoryAllocationData.XLargeCount);
+	else if (nSize <= 16384)
+        InterlockedIncrement(&g_MemoryAllocationData.XXLargeCount);
+	else
+        InterlockedIncrement(&g_MemoryAllocationData.XXXLargeCount);
+
+    bool found = false;
+    const auto tid = GetCurrentThreadId();
+    for (int index = 0; index < g_MemoryAllocationData.TrackedThreadCount; ++index)
+    {
+        if (g_MemoryAllocationData.TrackedThreads[index] == tid)
+        {
+            found = true;
+            break;
+        }
+        
+    }
+    if (!found)
+    {
+        int targetThread = g_MemoryAllocationData.TrackedThreadCount;
+		// try to find the thread we are using (this is not thread safe, but it's probably fine for debugging)
+        // we should also have less than the maximum number of threads in most cases
+        if (targetThread < MemoryAllocationData::MaxTrackedThreads)
+        {
+            g_MemoryAllocationData.TrackedThreads[targetThread] = tid;
+            g_MemoryAllocationData.TrackedThreadCount = targetThread + 1;
+        }
+    }
+
+	return TRUE;
+}
+
+void StartMemoryMonitor()
+{
+	_CrtSetAllocHook(AllocatorHook);
+}
+
+void StopMemoryMonitor()
+{
+    _CrtSetAllocHook(nullptr);
+}
+
+#else
+inline void StartMemoryMonitor() {}
+inline void StopMemoryMonitor() {}
+#endif
+
+
 std::vector<size_t> CreateShoeboxRoom(Vec3 pos, size_t materialId)
 {
     Real posX = pos.x();
@@ -127,6 +220,7 @@ void ProfileShoebox(ProfileExecutionContext& executionContext)
 	Buffer<> output(2 * numBuffers * configData.numFrames);
 
 	executionContext.SetExecutionStage(ProfileExecutionStage::Main);
+    StartMemoryMonitor();
     for (int innerIteration = 0; innerIteration < executionContext.innerIterations; ++innerIteration)
     {
 		Vec3 listenerPos((Real)0.0, (Real)2.0, (Real)0.0);
@@ -138,6 +232,8 @@ void ProfileShoebox(ProfileExecutionContext& executionContext)
 
         RecordImpulseResponse(sourcePos, sourceOri, output);
     }
+	StopMemoryMonitor();
+
 
 	executionContext.SetExecutionStage(ProfileExecutionStage::Exit);
     for (size_t wallID : wallIds)
@@ -201,6 +297,7 @@ void ProfileMoDART(ProfileExecutionContext &executionContext)
 	Buffer<> output(2 * numBuffers * configData.numFrames);
 
 	executionContext.SetExecutionStage(ProfileExecutionStage::Main);
+    StartMemoryMonitor();
     for (int innerIteration = 0; innerIteration < executionContext.innerIterations; ++innerIteration)
     {
         Vec3 listenerPos((Real)2.0, (Real)1.0, (Real)6.8);
@@ -212,6 +309,7 @@ void ProfileMoDART(ProfileExecutionContext &executionContext)
 
         RecordImpulseResponse(sourcePos, sourceOri, output);
     }
+    StopMemoryMonitor();
 
 	executionContext.SetExecutionStage(ProfileExecutionStage::Exit);
     /*for (size_t wallID : wallIds)
@@ -269,11 +367,14 @@ int main(int argc, const char *argv[])
     if (!commandLineParser.Parse())
         return -1;
 
+#if _DEBUG
     if (commandLineParser.GetDebugFlag())
     {
         std::cout << "Enabling debug flag" << std::endl;
+        // this only works in debug
         _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
     }
+#endif
 
     if (!ChangeToProfilingDirectory(commandLineParser.GetProfileDataDirectory()))
         return -1;
@@ -283,7 +384,7 @@ int main(int argc, const char *argv[])
     std::cout << "Running " << plan.size() << " tests " << iterations << " times." << std::endl;
 
     std::ofstream runLog(commandLineParser.GetLogPrefix() + "_run.txt");
-    for (int planIndex = 0; planIndex < plan.size(); ++planIndex)
+    for (size_t planIndex = 0; planIndex < plan.size(); ++planIndex)
     {
         ProfileExecutionContext executionContext =
         {
@@ -294,6 +395,9 @@ int main(int argc, const char *argv[])
         };
 
         std::cout << "Profiling: " << executionContext.name << std::endl;
+#if _DEBUG
+        ResetMemoryAllocationMonitoring();
+#endif
         for (int iteration = 0; iteration < iterations; ++iteration)
         {
             std::cout << "Running iteration " << (iteration + 1) << "/" << iterations << std::endl;
@@ -301,6 +405,20 @@ int main(int argc, const char *argv[])
 			plan[planIndex].function(executionContext);
             executionContext.CompleteExecution();
         }
+
+#if _DEBUG
+        std::cout << std::format("Memory: {} allocations {} bytes (t={}/S={}/M={}/L={}/XL={}/XXL={}/XXXL={}) threads={}",
+            g_MemoryAllocationData.Count,
+            g_MemoryAllocationData.Size,
+            g_MemoryAllocationData.TinyCount,
+            g_MemoryAllocationData.SmallCount,
+            g_MemoryAllocationData.MediumCount,
+            g_MemoryAllocationData.LargeCount,
+            g_MemoryAllocationData.XLargeCount, 
+            g_MemoryAllocationData.XXLargeCount,
+            g_MemoryAllocationData.XXXLargeCount,
+            g_MemoryAllocationData.TrackedThreadCount) << std::endl;
+#endif
 
         // log it
         const int totalInnerIterations = iterations * executionContext.innerIterations;
