@@ -61,6 +61,9 @@
     <ClCompile Include="MoDARTLoader.cpp">
       <ExcludedFromBuild Condition="!$(IsProfileExe)">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="ProfilePlan.cpp">
+      <ExcludedFromBuild Condition="!$(IsProfileExe)">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="ProfileScenes.cpp">
       <ExcludedFromBuild Condition="!$(IsProfileExe)">true</ExcludedFromBuild>
     </ClCompile>

@@ -197,7 +197,6 @@ namespace RAC
 
 					// Add energy contribution of the ray
 					pathIdx = pathIndexing(frontIndices(ray_idx), backIndices(ray_idx));
-					//assert(pathIdx >= 0);
 					if (pathIdx >= 0)
 					{
 						distance = rayDistances(ray_idx);

@@ -5,15 +5,53 @@
 
 #pragma once
 
+#include <framework.h>
+#include <functional>
+#include <string>
+
+class SimpleTimer
+{
+public:
+	SimpleTimer() = default;
+
+	static SimpleTimer GetCurrentTime();
+	static double GetMilliseconds(const SimpleTimer &a, const SimpleTimer &b);
+
+private:
+	SimpleTimer(LARGE_INTEGER theTime) : time(theTime) {}
+
+	LARGE_INTEGER time;
+};
+
+enum class ProfileExecutionStage : int
+{
+	Init,
+	Main,
+	Exit,
+
+	COUNT
+};
+
 struct ProfileExecutionContext
 {
 	std::string name;
 	std::string logPrefix;
-	int currentIteration;
-	int totalIterations;
+	int currentTestIteration;
+	int totalTestIterations;
+	int innerIterations;
+
+	SimpleTimer stageTimers[(int)ProfileExecutionStage::COUNT];
+
+	double TotalTime = 0.0;
+	double InitTime = 0.0;
+	double MainTime = 0.0;
+	double ExitTime = 0.0;
+
+	void SetExecutionStage(ProfileExecutionStage stage);
+	void CompleteExecution();
 };
 
-typedef std::function<void(const ProfileExecutionContext &)> ProfileFunction;
+typedef std::function<void(ProfileExecutionContext &)> ProfileFunction;
 
 struct ProfilePlan
 {

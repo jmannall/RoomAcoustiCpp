@@ -44,15 +44,25 @@ bool CommandLineParser::Parse()
 		{
 			detailedLogs = false;
 		}
-		else if (ParseStandardArgument(argument, "--iterations=", value))
+		else if (ParseStandardArgument(argument, "--test-iterations=", value))
 		{
 			const int newIterations = std::stoi(value);
 			if (newIterations < 0)
 			{
-				std::cerr << "Invalid iterations: " << argument << std::endl;
+				std::cerr << "Invalid test-iterations: " << argument << std::endl;
 				return false;
 			}
-			iterations = newIterations;
+			testIterations = newIterations;
+		}
+		else if (ParseStandardArgument(argument, "--inner-iterations=", value))
+		{
+			const int newIterations = std::stoi(value);
+			if (newIterations < 0)
+			{
+				std::cerr << "Invalid inner-iterations: " << argument << std::endl;
+				return false;
+			}
+			innerIterations = newIterations;
 		}
 		else if (ParseStandardArgument(argument, "--log-prefix=", value))
 		{
@@ -100,14 +110,15 @@ void CommandLineParser::ShowHelp() const
 	std::cout << arguments[0] << R"( [options] test1,test2 ...
 
 Options:
-    --debug             Enables certain memory debugging features
-    --detailed-logs     Enables detailed logs
-    --log-prefix=file   Specifies the log prefix
-	--iterations=##     The number of times to run each test
-    --no-debug          Disables certain memory debugging features
-    --no-detailed-logs  Disabled detailed logs 
-    --profile-data=xx   Sets the profile data directory.
-    --run-log=file      Specifies the log of each run
+    --debug                Enables certain memory debugging features
+    --detailed-logs        Enables detailed logs
+	--inner-iterations=##  The number of times to run the inner loop
+    --log-prefix=file      Specifies the log prefix
+    --no-debug             Disables certain memory debugging features
+    --no-detailed-logs     Disabled detailed logs 
+    --profile-data=xx      Sets the profile data directory.
+    --run-log=file         Specifies the log of each run
+	--test-iterations=##   The number of times to run each test
 
 If the list of tests isn't specified, it will default to running all tests.  If a profile data directory
 isn't specified, then it will search for it.

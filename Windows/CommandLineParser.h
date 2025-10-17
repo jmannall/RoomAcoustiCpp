@@ -20,7 +20,8 @@ public:
 
 	bool GetDebugFlag() const { return debugFlag;  }
 	bool GetDetailedLogs() const { return detailedLogs; }
-	int GetIterations() const { return iterations; }
+	int GetTestIterations() const { return testIterations; }
+	int GetInnerIterations() const { return innerIterations; }
 	const std::string &GetLogPrefix() const { return logPrefix; }
 	const std::string &GetProfileDataDirectory() const { return profileDataDirectory; }
 	const std::vector<ProfilePlan> &GetPlan() const { return plan; }
@@ -39,7 +40,8 @@ private:
 	std::map<std::string, ProfileFunction> registeredTests;
 
 	// resulting values
-	int iterations = 3;
+	int testIterations = 3;
+	int innerIterations = 100;
 	bool debugFlag = false;
 	bool detailedLogs = false;
 	std::string logPrefix;

@@ -19,6 +19,138 @@ using namespace RAC::Spatialiser;
 using namespace RAC::Common;
 using namespace RAC::DSP;
 
+#ifdef _DEBUG
+struct MemoryAllocationData
+{
+	LONG AllocCount = 0;  
+	LONG ReallocCount = 0;
+    LONG FreeCount = 0;
+	LONG64 Size = 0;
+    LONG TinyCount = 0;      // <= 16 bytes
+    LONG SmallCount = 0;     // <= 64 bytes
+    LONG MediumCount = 0;    // <= 256 bytes
+    LONG LargeCount = 0;     // <= 1024 bytes
+    LONG XLargeCount = 0;    // <= 4096 bytes
+    LONG XXLargeCount = 0;   // <= 16384 BYTE
+    LONG XXXLargeCount = 0;  // > 16384
+
+    int TrackedThreadCount = 0;
+    static constexpr int MaxTrackedThreads = 16;
+    DWORD TrackedThreads[MaxTrackedThreads];
+};
+
+MemoryAllocationData g_MemoryAllocationData;
+CRITICAL_SECTION g_MemoryDebugCriticalSection;
+
+void InitMemoryDebug()
+{
+    InitializeCriticalSection(&g_MemoryDebugCriticalSection);
+}
+
+void ExitMemoryDebug()
+{
+    DeleteCriticalSection(&g_MemoryDebugCriticalSection);
+}
+
+void ResetMemoryAllocationMonitoring()
+{
+	g_MemoryAllocationData = MemoryAllocationData();
+}
+
+int AllocatorHook(
+	int nAllocType,
+	void *pUserData,
+	size_t nSize,
+	int nBlockUse,
+	long lRequest,
+	const unsigned char *szFileName,
+	int nLine)
+{
+    if (nAllocType == _HOOK_ALLOC || nAllocType == _HOOK_REALLOC)
+    {
+        if (nAllocType == _HOOK_ALLOC )
+			InterlockedIncrement(&g_MemoryAllocationData.AllocCount);
+        else
+			InterlockedIncrement(&g_MemoryAllocationData.ReallocCount);
+        InterlockedAdd64(&g_MemoryAllocationData.Size, nSize);
+        if (nSize <= 16)
+            InterlockedIncrement(&g_MemoryAllocationData.TinyCount);
+        else if (nSize <= 64)
+            InterlockedIncrement(&g_MemoryAllocationData.SmallCount);
+        else if (nSize <= 256)
+            InterlockedIncrement(&g_MemoryAllocationData.MediumCount);
+        else if (nSize <= 1024)
+            InterlockedIncrement(&g_MemoryAllocationData.LargeCount);
+        else if (nSize <= 4096)
+            InterlockedIncrement(&g_MemoryAllocationData.XLargeCount);
+        else if (nSize <= 16384)
+            InterlockedIncrement(&g_MemoryAllocationData.XXLargeCount);
+        else
+            InterlockedIncrement(&g_MemoryAllocationData.XXXLargeCount);
+
+    }
+    else if (nAllocType == _HOOK_FREE)
+    {
+        InterlockedIncrement(&g_MemoryAllocationData.FreeCount);
+    }
+
+	// find the thread we are using; this list could theoretically change during
+	// iteration
+	bool found = false;
+	const auto tid = GetCurrentThreadId();
+	for (int index = 0; index < g_MemoryAllocationData.TrackedThreadCount; ++index)
+	{
+		if (g_MemoryAllocationData.TrackedThreads[index] == tid)
+		{
+			found = true;
+			break;
+		}
+
+	}
+	if (!found && g_MemoryAllocationData.TrackedThreadCount < MemoryAllocationData::MaxTrackedThreads)
+	{
+		EnterCriticalSection(&g_MemoryDebugCriticalSection);
+		if (g_MemoryAllocationData.TrackedThreadCount < MemoryAllocationData::MaxTrackedThreads)
+			g_MemoryAllocationData.TrackedThreads[g_MemoryAllocationData.TrackedThreadCount++] = tid;
+		LeaveCriticalSection(&g_MemoryDebugCriticalSection);
+	}
+
+	return TRUE;
+}
+
+void StartMemoryMonitor()
+{
+	_CrtSetAllocHook(AllocatorHook);
+}
+
+void StopMemoryMonitor()
+{
+    _CrtSetAllocHook(nullptr);
+}
+
+void DumpMemory()
+{
+	std::cout << std::format("Memory: Alloc={}/Re={}/Free={}; Total: {} bytes (t={}/S={}/M={}/L={}/XL={}/XXL={}/XXXL={}) threads={}",
+		g_MemoryAllocationData.AllocCount,
+        g_MemoryAllocationData.ReallocCount,
+        g_MemoryAllocationData.FreeCount,
+		g_MemoryAllocationData.Size,
+		g_MemoryAllocationData.TinyCount,
+		g_MemoryAllocationData.SmallCount,
+		g_MemoryAllocationData.MediumCount,
+		g_MemoryAllocationData.LargeCount,
+		g_MemoryAllocationData.XLargeCount,
+		g_MemoryAllocationData.XXLargeCount,
+		g_MemoryAllocationData.XXXLargeCount,
+		g_MemoryAllocationData.TrackedThreadCount) << std::endl;
+}
+
+#else
+inline void StartMemoryMonitor() {}
+inline void StopMemoryMonitor() {}
+#endif
+
+
 std::vector<size_t> CreateShoeboxRoom(Vec3 pos, size_t materialId)
 {
     Real posX = pos.x();
@@ -66,9 +198,9 @@ std::vector<size_t> CreateShoeboxRoom(Vec3 pos, size_t materialId)
 	return wallIDs;
 }
 
-void ProfileShoebox(const ProfileExecutionContext& testContext)
+void ProfileShoebox(ProfileExecutionContext& executionContext)
 {
-    std::cout << "Init RAC..." << std::endl;
+	executionContext.SetExecutionStage(ProfileExecutionStage::Init);
     int fs{ 48000 };							// Sample rate
     int numFrames{ 512 };						// Number of frames per audio callback
     int numReverbSources{ 12 };					// Number of output channels for late reverberation
@@ -78,7 +210,7 @@ void ProfileShoebox(const ProfileExecutionContext& testContext)
     Coefficients<> frequencyBands(std::vector<Real>({ 125.0, 250.0, 500.0, 1e3, 2e3, 4e3, 8e3 }));				// Frequency band center frequencies
 
     DSPData configData = DSPData(fs, numFrames, numReverbSources, fdnSize, lerpFactor, Q, frequencyBands);
-    Init(configData, testContext.logPrefix);
+    Init(configData, executionContext.logPrefix);
 
     int hrtfSamplingStep = 5;
     std::vector<std::string> hrtfFiles = { "HRTF/Kemar_DTF_ITD_48000_3dti-hrtf.3dti-hrtf", "HRTF/NearFieldCompensation_ILD_48000.3dti-ild", "HRTF/HRTF_ILD_48000.3dti-ild" };
@@ -122,30 +254,36 @@ void ProfileShoebox(const ProfileExecutionContext& testContext)
 
     InitSingleFDN(roomData, lateReverbData);
 
-    Vec3 listenerPos((Real)0.0, (Real)2.0, (Real)0.0);
-    Vec4 listenerOri((Real)1.0, (Real)0.0, (Real)0.0, (Real)0.0);
-    UpdateListener(listenerPos, listenerOri);
+	// Stereo output buffer
+	int numBuffers = 10;
+	Buffer<> output(2 * numBuffers * configData.numFrames);
 
-    Vec3 sourcePos((Real)1.0, (Real)2.0, (Real)3.0);
-    Vec4 sourceOri((Real)1.0, (Real)0.0, (Real)0.0, (Real)0.0);
+	executionContext.SetExecutionStage(ProfileExecutionStage::Main);
+    StartMemoryMonitor();
+    for (int innerIteration = 0; innerIteration < executionContext.innerIterations; ++innerIteration)
+    {
+		Vec3 listenerPos((Real)0.0, (Real)2.0, (Real)0.0);
+		Vec4 listenerOri((Real)1.0, (Real)0.0, (Real)0.0, (Real)0.0);
+        UpdateListener(listenerPos, listenerOri);
 
-    // Stereo output buffer
-    int numBuffers = 10;
-    Buffer<> output(2 * numBuffers * configData.numFrames);
+        Vec3 sourcePos((Real)(1.0 + 0.01 * innerIteration), (Real)2.0, (Real)3.0);
+        Vec4 sourceOri((Real)1.0, (Real)0.0, (Real)0.0, (Real)0.0);
 
-    std::cout << "Submit audio..." << std::endl;
-    RecordImpulseResponse(sourcePos, sourceOri, output);
+        RecordImpulseResponse(sourcePos, sourceOri, output);
+    }
+	StopMemoryMonitor();
 
-    std::cout << "Exit RAC..." << std::endl;
+
+	executionContext.SetExecutionStage(ProfileExecutionStage::Exit);
     for (size_t wallID : wallIds)
         RemoveWall(wallID);
 	RemoveMaterial(materialId);
     Exit();
 }
 
-void ProfileMoDART(const ProfileExecutionContext &testContext)
+void ProfileMoDART(ProfileExecutionContext &executionContext)
 {
-    std::cout << "Init RAC..." << std::endl;
+	executionContext.SetExecutionStage(ProfileExecutionStage::Init);
     int fs{ 48000 };							// Sample rate
     int numFrames{ 512 };						// Number of frames per audio callback
     int numReverbSources{ 12 };					// Number of output channels for late reverberation
@@ -155,7 +293,7 @@ void ProfileMoDART(const ProfileExecutionContext &testContext)
     Coefficients<> frequencyBands(std::vector<Real>({ 125.0, 250.0, 500.0, 1e3, 2e3, 4e3, 8e3 }));				// Frequency band center frequencies
 
     DSPData configData = DSPData(fs, numFrames, numReverbSources, fdnSize, lerpFactor, Q, frequencyBands);
-    Init(configData, testContext.logPrefix);
+    Init(configData, executionContext.logPrefix);
 
     int hrtfSamplingStep = 5;
     std::vector<std::string> hrtfFiles = { "HRTF/Kemar_DTF_ITD_48000_3dti-hrtf.3dti-hrtf", "HRTF/NearFieldCompensation_ILD_48000.3dti-ild", "HRTF/HRTF_ILD_48000.3dti-ild" };
@@ -193,21 +331,26 @@ void ProfileMoDART(const ProfileExecutionContext &testContext)
         return;
     }
 
-    Vec3 listenerPos((Real)2.0, (Real)1.0, (Real)6.8);
-    Vec4 listenerOri((Real)1.0, (Real)0.0, (Real)0.0, (Real)0.0);
-    UpdateListener(listenerPos, listenerOri);
+	// Stereo output buffer
+	int numBuffers = 10;
+	Buffer<> output(2 * numBuffers * configData.numFrames);
 
-    Vec3 sourcePos((Real)2.0, (Real)1.5, (Real)2.0);
-    Vec4 sourceOri((Real)1.0, (Real)0.0, (Real)0.0, (Real)0.0);
+	executionContext.SetExecutionStage(ProfileExecutionStage::Main);
+    StartMemoryMonitor();
+    for (int innerIteration = 0; innerIteration < executionContext.innerIterations; ++innerIteration)
+    {
+        Vec3 listenerPos((Real)2.0, (Real)1.0, (Real)6.8);
+        Vec4 listenerOri((Real)1.0, (Real)0.0, (Real)0.0, (Real)0.0);
+        UpdateListener(listenerPos, listenerOri);
 
-    // Stereo output buffer
-    int numBuffers = 10;
-    Buffer<> output(2 * numBuffers * configData.numFrames);
+        Vec3 sourcePos((Real)(2.0 + 0.01*innerIteration), (Real)1.5, (Real)2.0);
+        Vec4 sourceOri((Real)1.0, (Real)0.0, (Real)0.0, (Real)0.0);
 
-    std::cout << "Submit audio..." << std::endl;
-    RecordImpulseResponse(sourcePos, sourceOri, output);
+        RecordImpulseResponse(sourcePos, sourceOri, output);
+    }
+    StopMemoryMonitor();
 
-    std::cout << "Exit RAC..." << std::endl;
+	executionContext.SetExecutionStage(ProfileExecutionStage::Exit);
     /*for (size_t wallID : wallIds)
         RemoveWall(wallID);
     RemoveMaterial(materialId);*/
@@ -216,38 +359,6 @@ void ProfileMoDART(const ProfileExecutionContext &testContext)
 
 // Common::CTimeMeasure requires using the whole profile to properly work, so just
 // create a simple class to manage the time that we want
-
-class SimpleTimer
-{
-public:
-    SimpleTimer()
-    {
-        time = { 0 };
-        QueryPerformanceCounter(&time);
-    }
-
-    static double GetMilliseconds(const SimpleTimer &a, const SimpleTimer &b);
-
-private:
-    LARGE_INTEGER time;
-};
-
-double SimpleTimer::GetMilliseconds(const SimpleTimer &a, const SimpleTimer &b)
-{
-    // make sure we have the resolution
-	static bool gotResolution = false;
-	static LARGE_INTEGER performanceFrequency;
-	if (!gotResolution)
-	{
-		if (!QueryPerformanceFrequency(&performanceFrequency))
-			return 0.0;
-		gotResolution = true;
-	}
-
-    // find the difference
-    const auto timeDiff = b.time.QuadPart - a.time.QuadPart;
-    return static_cast<double>(timeDiff) * 1000.0 / static_cast<double>(performanceFrequency.QuadPart);
-}
 
 bool ChangeToProfilingDirectory(const std::string &userPath)
 {
@@ -289,51 +400,96 @@ bool ChangeToProfilingDirectory(const std::string &userPath)
 
 int main(int argc, const char *argv[])
 {
+#if _DEBUG
+	InitMemoryDebug();
+#endif
+
     CommandLineParser commandLineParser(argc, argv);
     commandLineParser.RegisterProfileTest("Shoebox", ProfileShoebox);
     commandLineParser.RegisterProfileTest("MoDART", ProfileMoDART);
     if (!commandLineParser.Parse())
         return -1;
 
+#if _DEBUG
     if (commandLineParser.GetDebugFlag())
     {
         std::cout << "Enabling debug flag" << std::endl;
+        // this only works in debug
         _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
     }
+#endif
 
     if (!ChangeToProfilingDirectory(commandLineParser.GetProfileDataDirectory()))
         return -1;
 
-    const auto &Plane = commandLineParser.GetPlan();
-    const int iterations = commandLineParser.GetIterations();
-    std::cout << "Running " << Plane.size() << " tests " << iterations << " times." << std::endl;
+    const auto &plan = commandLineParser.GetPlan();
+    const int iterations = commandLineParser.GetTestIterations();
+    std::cout << "Running " << plan.size() << " tests " << iterations << " times." << std::endl;
 
     std::ofstream runLog(commandLineParser.GetLogPrefix() + "_run.txt");
-    for (int planIndex = 0; planIndex < Plane.size(); ++planIndex)
+    for (size_t planIndex = 0; planIndex < plan.size(); ++planIndex)
     {
         ProfileExecutionContext executionContext =
         {
-            Plane[planIndex].name,
-            commandLineParser.GetDetailedLogs() ? commandLineParser.GetLogPrefix() : "",
-            0,
-            iterations
+			.name = plan[planIndex].name,
+            .logPrefix = commandLineParser.GetDetailedLogs() ? commandLineParser.GetLogPrefix() : "",
+            .totalTestIterations = iterations,
+            .innerIterations = commandLineParser.GetInnerIterations()
         };
 
         std::cout << "Profiling: " << executionContext.name << std::endl;
-        SimpleTimer startTime;
+#if _DEBUG
+        ResetMemoryAllocationMonitoring();
+#endif
         for (int iteration = 0; iteration < iterations; ++iteration)
         {
-            executionContext.currentIteration = iteration;
-            Plane[planIndex].function(executionContext);
+            std::cout << "Running iteration " << (iteration + 1) << "/" << iterations << std::endl;
+            executionContext.currentTestIteration = iteration;
+			plan[planIndex].function(executionContext);
+            executionContext.CompleteExecution();
         }
-        SimpleTimer stopTime;
-        const double testTime = SimpleTimer::GetMilliseconds(startTime, stopTime);
+
+#if _DEBUG
+        DumpMemory();
+#endif
 
         // log it
-        const double perTestTime = testTime / iterations;
-        runLog << executionContext.name << "," << iterations << "," << testTime << "," << perTestTime << std::endl;
-        std::cout << "Total time: " << testTime << "ms (" << perTestTime << "ms/iteration)" << std::endl;
+        const int totalInnerIterations = iterations * executionContext.innerIterations;
+        runLog << executionContext.name << ","
+            << iterations << ","
+            << executionContext.TotalTime << ","
+            << executionContext.InitTime << ","
+            << executionContext.MainTime << ","
+            << executionContext.ExitTime << ","
+			<< (executionContext.TotalTime / iterations) << ","
+			<< (executionContext.InitTime / iterations) << ","
+			<< (executionContext.MainTime / iterations) << ","
+			<< (executionContext.ExitTime / iterations) << ","
+			<< (executionContext.TotalTime / totalInnerIterations) << ","
+			<< (executionContext.InitTime / totalInnerIterations) << ","
+			<< (executionContext.MainTime / totalInnerIterations) << ","
+			<< (executionContext.ExitTime / totalInnerIterations) <<
+            std::endl;
+
+        std::cout << std::format("Test time: {:.1f}ms ({:.1f}ms/{:.1f}ms/{:.1f}ms); Per-test: {:.1f}ms ({:.1f}ms/{:.1f}ms/{:.1f}ms); Per-iteration: {:.2f}ms ({:.2f}ms/{:.2f}ms/{:.2f}ms)",
+            executionContext.TotalTime,
+            executionContext.InitTime,
+            executionContext.MainTime,
+            executionContext.ExitTime,
+            executionContext.TotalTime / iterations,
+            executionContext.InitTime / iterations,
+            executionContext.MainTime / iterations,
+            executionContext.ExitTime / iterations,
+            executionContext.TotalTime / totalInnerIterations,
+            executionContext.InitTime / totalInnerIterations,
+            executionContext.MainTime / totalInnerIterations,
+            executionContext.ExitTime / totalInnerIterations)
+            << std::endl;
     }
 
     std::cout << "Done!" << std::endl;
+
+#if _DEBUG
+    ExitMemoryDebug();
+#endif
 }
