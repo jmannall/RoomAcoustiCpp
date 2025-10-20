@@ -254,30 +254,48 @@ void ProfileShoebox(ProfileExecutionContext& executionContext)
 
     InitSingleFDN(roomData, lateReverbData);
 
-	// Stereo output buffer
-	int numBuffers = 10;
-	Buffer<> output(2 * numBuffers * configData.numFrames);
+    Buffer<> input = Buffer<>::Zero(numFrames);
+    input[0] = 1.0;
+    // Stereo output buffer
+    Buffer<> output = Buffer<>::Zero(2 * numFrames);
 
-	executionContext.SetExecutionStage(ProfileExecutionStage::Main);
+    Vec3 listenerPos((Real)0.0, (Real)2.0, (Real)0.0);
+    Vec4 listenerOri((Real)1.0, (Real)0.0, (Real)0.0, (Real)0.0);
+    UpdateListener(listenerPos, listenerOri);
+
+    int id = InitSource();
+    if (id < 0)
+    {
+        std::cout << "Error initialising source!" << std::endl;
+        return;
+    }
+    UpdateSourceDirectivity(static_cast<size_t>(id), SourceDirectivity::genelec8020c);
+
+    Vec3 sourcePos((Real)1.0, (Real)2.0, (Real)3.0);
+    Vec4 sourceOri((Real)1.0, (Real)0.0, (Real)0.0, (Real)0.0);
+    UpdateSource(static_cast<size_t>(id), sourcePos, sourceOri);
+
+    // Only run to ensure background processes have run at least once
+    // No point profiling audio before image edge model and late reverb are ready
+    RecordImpulseResponse(sourcePos, sourceOri, output);
+
+    executionContext.SetExecutionStage(ProfileExecutionStage::Main);
     StartMemoryMonitor();
     for (int innerIteration = 0; innerIteration < executionContext.innerIterations; ++innerIteration)
     {
-		Vec3 listenerPos((Real)0.0, (Real)2.0, (Real)0.0);
-		Vec4 listenerOri((Real)1.0, (Real)0.0, (Real)0.0, (Real)0.0);
-        UpdateListener(listenerPos, listenerOri);
+        SubmitAudio(static_cast<size_t>(id), input);
+        GetOutput(output);
 
-        Vec3 sourcePos((Real)(1.0 + 0.01 * innerIteration), (Real)2.0, (Real)3.0);
-        Vec4 sourceOri((Real)1.0, (Real)0.0, (Real)0.0, (Real)0.0);
-
-        RecordImpulseResponse(sourcePos, sourceOri, output);
+        sourcePos.x() += (Real)0.1;
+        UpdateSource(static_cast<size_t>(id), sourcePos, sourceOri);
     }
-	StopMemoryMonitor();
-
+    StopMemoryMonitor();
 
 	executionContext.SetExecutionStage(ProfileExecutionStage::Exit);
     for (size_t wallID : wallIds)
         RemoveWall(wallID);
 	RemoveMaterial(materialId);
+	RemoveSource(static_cast<size_t>(id));
     Exit();
 }
 
@@ -331,22 +349,40 @@ void ProfileMoDART(ProfileExecutionContext &executionContext)
         return;
     }
 
-	// Stereo output buffer
-	int numBuffers = 10;
-	Buffer<> output(2 * numBuffers * configData.numFrames);
+    Buffer<> input = Buffer<>::Zero(numFrames);
+    input[0] = 1.0;
+    // Stereo output buffer
+    Buffer<> output = Buffer<>::Zero(2 * numFrames);
+
+    Vec3 listenerPos((Real)2.0, (Real)1.0, (Real)6.8);
+    Vec4 listenerOri((Real)1.0, (Real)0.0, (Real)0.0, (Real)0.0);
+    UpdateListener(listenerPos, listenerOri);
+
+    int id = InitSource();
+    if (id < 0)
+    {
+        std::cout << "Error initialising source!" << std::endl;
+        return;
+    }
+    UpdateSourceDirectivity(static_cast<size_t>(id), SourceDirectivity::genelec8020c);
+
+    Vec3 sourcePos((Real)2.0, (Real)1.5, (Real)2.0);
+    Vec4 sourceOri((Real)1.0, (Real)0.0, (Real)0.0, (Real)0.0);
+    UpdateSource(static_cast<size_t>(id), sourcePos, sourceOri);
+
+    // Only run to ensure background processes have run at least once
+	// No point profiling audio before image edge model and late reverb are ready
+	RecordImpulseResponse(sourcePos, sourceOri, output);
 
 	executionContext.SetExecutionStage(ProfileExecutionStage::Main);
     StartMemoryMonitor();
     for (int innerIteration = 0; innerIteration < executionContext.innerIterations; ++innerIteration)
     {
-        Vec3 listenerPos((Real)2.0, (Real)1.0, (Real)6.8);
-        Vec4 listenerOri((Real)1.0, (Real)0.0, (Real)0.0, (Real)0.0);
-        UpdateListener(listenerPos, listenerOri);
+        SubmitAudio(static_cast<size_t>(id), input);
+        GetOutput(output);
 
-        Vec3 sourcePos((Real)(2.0 + 0.01*innerIteration), (Real)1.5, (Real)2.0);
-        Vec4 sourceOri((Real)1.0, (Real)0.0, (Real)0.0, (Real)0.0);
-
-        RecordImpulseResponse(sourcePos, sourceOri, output);
+		sourcePos.x() += (Real)0.1;
+        UpdateSource(static_cast<size_t>(id), sourcePos, sourceOri);
     }
     StopMemoryMonitor();
 
@@ -354,6 +390,7 @@ void ProfileMoDART(ProfileExecutionContext &executionContext)
     /*for (size_t wallID : wallIds)
         RemoveWall(wallID);
     RemoveMaterial(materialId);*/
+	RemoveSource(static_cast<size_t>(id));
     Exit();
 }
 
