@@ -162,14 +162,19 @@ namespace RAC
 				IEMThread.join();
 			if (rayTracingThread.joinable())
 				rayTracingThread.join();
-			if (audioThreadPool)
-				audioThreadPool->Stop();
 
 			mImageEdgeModel.reset();
 			mRayTracing.reset();
+
+			while (audioFlag.exchange(true, std::memory_order_acquire))
+				std::this_thread::yield();
+
 			mSources.reset();
 			mRoom.reset();
 			mReverb.reset();
+
+			if (audioThreadPool)
+				audioThreadPool->Stop();
 			audioThreadPool.reset();
 
 			// Terminate NNs

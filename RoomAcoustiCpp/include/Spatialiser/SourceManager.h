@@ -45,7 +45,7 @@ namespace RAC
 			* @params dspConfig The spatialiser configuration
 			*/
 			SourceManager(Binaural::CCore* core, const std::shared_ptr<DSPConfig> dspConfig)
-				: mCore(core), dspConfig(dspConfig), mImageSources(core), frequencyIndexing(1)
+				: mCore(core), dspConfig(dspConfig), mImageSources(core, dspConfig), frequencyIndexing(1)
 			{
 				for (auto& sources : mSources)
 					sources.emplace(core, mImageSources, dspConfig);

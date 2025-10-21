@@ -341,8 +341,6 @@ namespace RAC
 			bOutput.left = CMonoBuffer<float>(numFrames);
 			bOutput.right = CMonoBuffer<float>(numFrames);
 			bMonoOutput = CMonoBuffer<float>(numFrames);
-			bStore = Buffer<>(numFrames);
-			bDiffStore = Buffer<>(numFrames);
 		}
 
 		////////////////////////////////////////
@@ -353,8 +351,6 @@ namespace RAC
 			bOutput.left.clear();
 			bOutput.right.clear();
 			bMonoOutput.clear();
-			bStore.Resize(1);
-			bDiffStore.Resize(1);
 		}
 
 		////////////////////////////////////////

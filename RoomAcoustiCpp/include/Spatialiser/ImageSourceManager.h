@@ -31,11 +31,14 @@ namespace RAC
 		public:
 			/**
 			* @brief Constructor that initialises the image sources
+			* 
+			* @params core The 3DTI processing core
+			* @params dspConfig The spatialiser configuration
 			*/
-			ImageSourceManager(Binaural::CCore* core)
+			ImageSourceManager(Binaural::CCore* core, const std::shared_ptr<DSPConfig> dspConfig)
 			{
 				for (auto& imageSource : mImageSources)
-					imageSource.emplace(core);
+					imageSource.emplace(core, dspConfig);
 			}
 
 			/**

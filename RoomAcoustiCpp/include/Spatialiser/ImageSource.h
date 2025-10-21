@@ -438,8 +438,16 @@ namespace RAC
 			* @brief Default constructor
 			*
 			* @param core The 3DTI processing core
+			* @params dspConfig The spatialiser configuration
 			*/
-			ImageSource(Binaural::CCore* core) : Access(), mCore(core) {}
+			ImageSource(Binaural::CCore* core, const std::shared_ptr<DSPConfig> dspConfig) : Access(), mCore(core),
+				bStore(dspConfig->GetData().numFrames), bDiffStore(dspConfig->GetData().numFrames)
+			{
+#if MATRIX_LIBRARY == EIGEN_FLAG // Init to zeros
+				bStore.Reset();
+				bDiffStore.Reset();
+#endif
+			}
 
 			/**
 			* @brief Default deconstructor. Removes the image source from the 3DTI processing core

@@ -437,8 +437,6 @@ namespace RAC
 
 		void Source::InitBuffers(int numFrames)
 		{
-			bStore = Buffer<>::Zero(numFrames);
-			bStoreReverb = Buffer<>::Zero(numFrames);
 			bInput = CMonoBuffer<float>(numFrames);
 			bOutput.left = CMonoBuffer<float>(numFrames);
 			bOutput.right = CMonoBuffer<float>(numFrames);
@@ -455,7 +453,6 @@ namespace RAC
 			bOutput.left.clear();
 			bOutput.right.clear();
 			bMonoOutput.clear();
-			bStore.Resize(1);
 		}
 
 		////////////////////////////////////////

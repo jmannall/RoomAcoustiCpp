@@ -110,9 +110,15 @@ namespace RAC
 			* @param imageSources Reference to the image source array
 			* @params dspConfig The spatialiser configuration
 			*/
-			Source(Binaural::CCore* core, ImageSourceManager& imageSources, const std::shared_ptr<DSPConfig>& dspConfig) : Access(), mCore(core), imageSources(imageSources), inputBuffer(dspConfig->GetData().numFrames),
+			Source(Binaural::CCore* core, ImageSourceManager& imageSources, const std::shared_ptr<DSPConfig>& dspConfig) : Access(), mCore(core), imageSources(imageSources),
+				inputBuffer(dspConfig->GetData().numFrames), bStore(dspConfig->GetData().numFrames), bStoreReverb(dspConfig->GetData().numFrames),
 				octaveBandFilter(dspConfig->GetData().frequencyBands, dspConfig->GetData().fs)
 			{
+#if MATRIX_LIBRARY == EIGEN_FLAG // Init to zeros
+				inputBuffer.Reset();
+				bStore.Reset();
+				bStoreReverb.Reset();
+#endif
 				dataMutex = std::make_shared<std::mutex>();
 			}
 
