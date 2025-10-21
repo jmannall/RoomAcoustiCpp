@@ -19,6 +19,7 @@ namespace RAC
 		/**
 		* @brief Class that implements a fixed-length delay line
 		*/
+		template<typename T = Real>
 		class DelayLine
 		{
 		public:
@@ -27,7 +28,7 @@ namespace RAC
 			* 
 			* @param length The length of the delay line.
 			*/
-			DelayLine(int length) : buffer(length)
+			DelayLine(int length) : buffer(length), initialised(length > 0)
 			{
 #if MATRIX_LIBRARY == EIGEN_FLAG
 				buffer.Reset();
@@ -40,11 +41,13 @@ namespace RAC
 			* @param input The sample to add to the delay line.
 			* @return The delayed sample.
 			*/
-			Real GetOutput(Real input)
+			T GetOutput(T input)
 			{
+				if (!initialised)
+					return input;
 				if (idx >= buffer.Length())
 					idx = 0;
-				Real out = buffer[idx];
+				T out = buffer[idx];
 				buffer[idx] = input;
 				++idx;
 				return out;
@@ -60,8 +63,9 @@ namespace RAC
 			}
 
 		private:
-			Buffer<> buffer;	// Delay line buffer
+			Buffer<T> buffer;	// Delay line buffer
 			int idx{ 0 };		// Current write index
+			bool initialised{ false };	// True if the delay line has been initialized
 		};
 	}
 }

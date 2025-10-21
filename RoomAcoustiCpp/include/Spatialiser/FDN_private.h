@@ -26,6 +26,7 @@
 // DSP headers
 #include "DSP/Buffer.h"
 #include "DSP/GraphicEQ.h"
+#include "DSP/DelayLine.h"
 
 namespace RAC
 {
@@ -48,23 +49,15 @@ namespace RAC
 			* @param config Configuration of the spatialiser
 			*/
 			FDNChannel(const int delayLength, const Coefficients<>& T60, const std::shared_ptr<DSPConfig>& dspConfig) requires std::is_same_v<T, Real> :
-				mT(static_cast<Real>(delayLength) / dspConfig->GetData().fs), mBuffer(delayLength),
+				mT(static_cast<Real>(delayLength) / dspConfig->GetData().fs), mDelayLine(delayLength),
 				mAbsorptionFilter(CalculateFilterGains(T60), dspConfig->GetData().frequencyBands, dspConfig->GetData().Q, dspConfig->GetData().fs),
 				mReflectionFilter(dspConfig->GetData().frequencyBands, dspConfig->GetData().Q, dspConfig->GetData().fs)
-			{
-#if MATRIX_LIBRARY == EIGEN_FLAG
-				mBuffer.Reset();
-#endif
-			}
+			{}
 
 			FDNChannel(const int delayLength, const Real T60, const std::shared_ptr<DSPConfig>& dspConfig) requires std::is_same_v<T, Complex> :
-				mT(static_cast<Real>(delayLength) / dspConfig->GetData().fs), mBuffer(delayLength),
+				mT(static_cast<Real>(delayLength) / dspConfig->GetData().fs), mDelayLine(delayLength),
 				mAbsorptionFilter(CalculateFilterGains(T60))
-			{
-#if MATRIX_LIBRARY == EIGEN_FLAG
-				mBuffer.Reset();
-#endif
-			}
+			{}
 
 			/**
 			* @brief Default deconstructor
@@ -99,14 +92,14 @@ namespace RAC
 			*/
 			inline void Reset() requires std::is_same_v<T, Real>
 			{
-				mBuffer.Reset();
+				mDelayLine.Reset();
 				mAbsorptionFilter.ClearBuffers();
 				mReflectionFilter.ClearBuffers();
 			}
 
 			inline void Reset() requires std::is_same_v<T, Complex>
 			{
-				mBuffer.Reset();
+				mDelayLine.Reset();
 			}
 
 			/**
@@ -153,8 +146,7 @@ namespace RAC
 
 
 			const Real mT;		// The current delay in seconds
-			Buffer<T> mBuffer;	// The internal delay line
-			int idx{ 0 };		// Current delay line read index
+			DelayLine<T> mDelayLine;	// The internal delay line
 
 			std::conditional_t<std::is_same_v<T, Real>,
 				GraphicEQ<Real>, std::atomic<Real>> mAbsorptionFilter;
@@ -235,11 +227,11 @@ namespace RAC
 				return isZero;
 			}
 
-			inline void SetPrecedingDelay(Real delay, int offset, int fs)
+			inline void SetPrecedingDelay(const int samples)
 			requires std::is_same_v<T, Complex>
 			{
-				precedingDelayBuffer.Resize(std::max(0, static_cast<int>(delay * fs) - offset));
-				precedingDelayBuffer.Reset(); // TODO: Do we want to avoid resetting it?
+				precedingDelay = DelayLine<Complex>(samples);
+				// precedingDelayBuffer.Reset(); // TODO: Do we want to avoid resetting it?
 			}
 
 			inline void SetMinimumReverbTime(Real T60)
@@ -297,8 +289,8 @@ namespace RAC
 			* @param matrix The feedback matrix to use for the FDN
 			*/
 			FDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<DSPConfig> dspConfig, const Matrix<>& matrix)
-			requires std::is_same_v<T, Real> : x(dspConfig->GetData().fdnSize),
-			y(dspConfig->GetData().fdnSize), feedbackMatrix(matrix), mT60(nullptr), inputData(nullptr)
+			requires std::is_same_v<T, Real> : x(dspConfig->GetData().fdnSize), y(dspConfig->GetData().fdnSize),
+				feedbackMatrix(matrix), mT60(nullptr), inputData(nullptr)
 			{
 				assert(T60.IsGreaterThan(0.0));
 
@@ -331,8 +323,9 @@ namespace RAC
 			* @param matrix The feedback matrix to use for the FDN
 			*/
 			FDN(const Real T60, const Vec<int>& delayLengths, const std::shared_ptr<DSPConfig> dspConfig, const Matrix<>& matrix)
-			requires std::is_same_v<T, Complex> : x(dspConfig->GetData().fdnSize),
-			y(dspConfig->GetData().fdnSize), feedbackMatrix(matrix), ravesResidues(dspConfig->GetData().numReverbSources), mT60(T60), inputData(dspConfig->GetData().numFrames), enabled(false)
+			requires std::is_same_v<T, Complex> : x(dspConfig->GetData().fdnSize), y(dspConfig->GetData().fdnSize),
+				feedbackMatrix(matrix), mT60(T60), inputData(dspConfig->GetData().numFrames),
+				ravesResidues(dspConfig->GetData().numReverbSources), precedingDelay(0), enabled(false)
 			{
 				assert(T60 > 0);
 
@@ -448,9 +441,7 @@ namespace RAC
 
 			// Delay which precedes the entire late reverberation block:
 			std::conditional_t<std::is_same_v<T, Complex>,
-				Buffer<Complex>, std::nullptr_t> precedingDelayBuffer;	// Buffer implementing the delay
-			std::conditional_t<std::is_same_v<T, Complex>,
-				int, std::nullptr_t> precedingDelayCursor{ 0 };			// Position of the read/write cursor within the buffer
+				DelayLine<Complex>, std::nullptr_t> precedingDelay;	// Preceeding delay line
 
 			const std::conditional_t<std::is_same_v<T, Complex>,
 				Real, std::nullptr_t> mT60;
@@ -477,7 +468,7 @@ namespace RAC
 		{
 			x.Reset();
 			y.Reset();
-			precedingDelayBuffer.Reset();
+			precedingDelay.Reset();
 			for (auto& channel : mChannels)
 				channel->Reset();
 		}

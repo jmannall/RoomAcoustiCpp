@@ -308,10 +308,11 @@ namespace RAC
 			*/
 			inline void SetPrecedingDelay(const Real delay, int fs) override
 			{
-				precedingDelayLength = delay;
+				int samples = static_cast<int>(std::max(0, static_cast<int>(delay * fs) - delayOffset));
+				precedingDelayLength = samples > 0 ? delay : static_cast<Real>(delayOffset) / fs;
 				auto fdns = mFDNs.load();
 				for (int i = 0; i < fdns->size(); i++)
-					fdns->at(i)->SetPrecedingDelay(delay, delayOffset, fs);
+					fdns->at(i)->SetPrecedingDelay(samples);
 			}
 
 			inline void SetMinimumT60(const Real T60) override

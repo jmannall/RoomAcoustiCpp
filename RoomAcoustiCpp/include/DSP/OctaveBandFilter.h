@@ -105,6 +105,11 @@ namespace RAC
 			OctaveBand(const Coefficients<>& frequencies, int fs);
 
 			/**
+			* @brief Default deconstructor
+			*/
+			~OctaveBand() {}
+
+			/**
 			* @brief Returns the index of the octave band output that corresponds to a given frequency index
 			* 
 			* @param frequencyIndex The index of the frequency in the frequencies parameter given at construction
@@ -191,7 +196,7 @@ namespace RAC
 			int numOutputBands;			// Number of output bands (numFrequencyBands - numTopBandsToSum)
 			const Real fc{ 12e3 };			// First cut-off frequency of the filter
 
-			std::vector<DelayLine> delayLines;				// Filter delay lines, ordered with complementary filter delays first and then followed by the correction delays (highest band to the lowest band)
+			std::vector<DelayLine<>> delayLines;				// Filter delay lines, ordered with complementary filter delays first and then followed by the correction delays (highest band to the lowest band)
 			std::vector<std::unique_ptr<Filter>> filters;	// Low-pass filters for each frequency band
 
 			std::atomic<bool> initialised{ false };		// True if the filter has been initialised, false otherwise

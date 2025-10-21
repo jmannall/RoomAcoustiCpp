@@ -34,12 +34,8 @@ namespace RAC
 		template<>
 		Real FDNChannel<Real>::GetOutput(const Real input, const Real lerpFactor)
 		{
-			if (idx >= mBuffer.Length())
-				idx = 0;
-			Real out = mAbsorptionFilter.GetOutput(mBuffer[idx], lerpFactor);
-			mBuffer[idx] = input;
-			++idx;
-			return out;
+			Real out = mDelayLine.GetOutput(input);
+			return mAbsorptionFilter.GetOutput(out, lerpFactor);
 		}
 
 		////////////////////////////////////////
@@ -47,13 +43,8 @@ namespace RAC
 		template<>
 		Complex FDNChannel<Complex>::GetOutput(const Complex input, const Real lerpFactor)
 		{
-			if (idx >= mBuffer.Length())
-				idx = 0;
-			// TODO: Interpolate absorption if needed? - is this only changed on a full reset?
-			Complex out = mAbsorptionFilter.load(std::memory_order_acquire) * mBuffer[idx];
-			mBuffer[idx] = input;
-			++idx;
-			return out;
+			Complex out = mDelayLine.GetOutput(input);
+			return mAbsorptionFilter.load(std::memory_order_acquire) * out;
 		}
 
 		//////////////////// FDN class ////////////////////
@@ -201,21 +192,19 @@ namespace RAC
 			if (audioData.clearBuffers)
 				Reset();
 
+			// For the purpose of `powerNormalization`, see notes in FDN_private.h
+			inputData *= powerNormalization;
 			// Process feedback loop
 			for (int i = 0; i < outputBuffers[0].Length(); i++)
 			{
-				if (precedingDelayCursor >= precedingDelayBuffer.Length())
-					precedingDelayCursor = 0;
+				Complex output = precedingDelay.GetOutput(inputData(i));
 				for (int j = 0; j < mChannels.size(); j++)
-					y(j) = mChannels[j]->GetOutput(x(j) + precedingDelayBuffer[precedingDelayCursor], audioData.lerpFactor);
+					y(j) = mChannels[j]->GetOutput(x(j) + output, audioData.lerpFactor);
 
 				for (int j = 0; j < outputBuffers.size(); j++)
 					outputBuffers[j][i] += ravesResidues[j].GetOutput(y(j), audioData.lerpFactor);
 
 				ProcessMatrix();
-				// For the purpose of `powerNormalization`, see notes in FDN_private.h
-				precedingDelayBuffer[precedingDelayCursor] = inputData(i) * powerNormalization;
-				++precedingDelayCursor;
 			}
 		}
 
