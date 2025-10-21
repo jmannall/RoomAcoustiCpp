@@ -308,6 +308,24 @@ bool LoadModesFromCsv(const std::string& modalDataFilePath, int numFreqBands, in
         }
         t60s.push_back(std::stof(token));
 
+        // Read right eigenvector line
+        if (!std::getline(file, line))
+        {
+            std::cerr << "Unexpected end of file while reading right eigenvector data." << std::endl;
+            return false;
+        }
+        outRightEigenvectors.emplace_back(numPaths);
+        std::istringstream rEigenIss(line);
+        for (int i = 0; i < numPaths; ++i)
+        {
+            if (!std::getline(rEigenIss, token, ','))
+            {
+                std::cerr << "Insufficient right eigenvector data for fdn " << fdnIdx << "." << std::endl;
+                return false;
+            }
+            outRightEigenvectors[fdnIdx](i) = std::stof(token);
+        }
+
         // Read left eigenvector line
         if (!std::getline(file, line))
         {
@@ -324,24 +342,6 @@ bool LoadModesFromCsv(const std::string& modalDataFilePath, int numFreqBands, in
                 return false;
             }
             outLeftEigenvectors[fdnIdx](i) = std::stof(token);
-        }
-
-        // Read left eigenvector line
-        if (!std::getline(file, line))
-        {
-            std::cerr << "Unexpected end of file while reading left eigenvector data." << std::endl;
-            return false;
-        }
-        outRightEigenvectors.emplace_back(numPaths);
-        std::istringstream rEigenIss(line);
-        for (int i = 0; i < numPaths; ++i)
-        {
-            if (!std::getline(rEigenIss, token, ','))
-            {
-                std::cerr << "Insufficient right eigenvector data for fdn " << fdnIdx << "." << std::endl;
-                return false;
-            }
-            outRightEigenvectors[fdnIdx](i) = std::stof(token);
         }
     }
 
