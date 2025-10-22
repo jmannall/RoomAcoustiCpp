@@ -33,6 +33,16 @@
 #define EXPORT
 #endif
 
+#define BEGIN_TRY \
+    try {
+
+#define END_TRY \
+    } catch (const std::exception& e) { \
+		Debug::Log(std::string("RoomAcoustiC++ exception: ") + e.what(), Colour::Red); \
+    } catch (...) { \
+		Debug::Log(std::string("RoomAcoustiC++ unknown exception"), Colour::Red); \
+    }
+
 //////////////////// Namespaces ////////////////////
 
 using namespace RAC::Spatialiser;
@@ -42,7 +52,8 @@ using namespace RAC::Unity;
 
 //////////////////// Variables ////////////////////
 
-static Buffer<> buffer(1);	// Return buffer
+static Buffer<> outputBuffer(1);	// Return buffer
+static Buffer<> inputBuffer(1);	// Send buffer for reverb processing
 static int NUM_FREQUENCY_BANDS = 0;	// Store number of frequency bands for any reflection filters
 static int NUM_FRAMES = 0;
 
@@ -173,14 +184,20 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 	*/
 	EXPORT bool API RACInit(int fs, int numFrames, int numReverbSources, int fdnSize, float lerpFactor, float Q, const float* frequencyBandsData, int numFrequencyBands)
 	{
-		buffer = Buffer<>::Zero(2 * numFrames);
+		BEGIN_TRY
 
 		NUM_FREQUENCY_BANDS = numFrequencyBands;
 		NUM_FRAMES = numFrames;
 
+		inputBuffer = Buffer<>::Zero(NUM_FRAMES);
+		outputBuffer = Buffer<>::Zero(2 * NUM_FRAMES);
+
 		Coefficients<> frequencyBands = CreateCoefficients(frequencyBandsData, numFrequencyBands);
 
 		return Init(DSPData(fs, numFrames, numReverbSources, fdnSize, static_cast<Real>(lerpFactor), static_cast<Real>(Q), frequencyBands));
+
+		END_TRY
+		return false;
 	}
 
 	/**
@@ -191,7 +208,9 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 	*/
 	EXPORT void API RACExit()
 	{
+		BEGIN_TRY
 		Exit();
+		END_TRY
 	}
 
 	/**
@@ -204,8 +223,11 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 	*/
 	EXPORT bool API RACLoadSpatialisationFiles(int hrtfResamplingStep, const char** paths)
 	{
+		BEGIN_TRY
 		std::vector<std::string> filePaths = { std::string(*(paths)), std::string(*(paths + 1)), std::string(*(paths + 2)) };
 		return LoadSpatialisationFiles(hrtfResamplingStep, filePaths);
+		END_TRY
+		return false;
 	}
 
 	/**
@@ -225,9 +247,12 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 	*/
 	EXPORT bool API RACInitEarlyReverb(bool enabled, int direct, int reflOrder, int shadowDiffOrder, int specularDiffOrder, float minEdgeLength, float maxPathLen, int diffractionId)
 	{
+		BEGIN_TRY
 		DiffractionModel model = SelectDiffractionModel(diffractionId);
 		EarlyReverbData data(SelectDirectMode(direct), reflOrder, shadowDiffOrder, specularDiffOrder, static_cast<Real>(minEdgeLength), static_cast<Real>(maxPathLen));
 		return InitEarlyReverb(enabled, data, model);
+		END_TRY
+		return false;
 	}
 
 	/**
@@ -244,6 +269,7 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 	*/
 	EXPORT bool API RACInitSingleFDN(bool enabled, float volume, const float* t60Data, int reverbFormulaId, const float* dimensionData, int numDimensions, int numRays, int matrixId)
 	{
+		BEGIN_TRY
 		Coefficients<> t60 = CreateCoefficients(t60Data, NUM_FREQUENCY_BANDS);
 		Vec<> dimensions = CreateVec(dimensionData, numDimensions);
 
@@ -251,6 +277,8 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 
 		LateReverbData data(enabled, numRays, SelectFDNMatrix(matrixId));
 		return InitSingleFDN(roomData, data);
+		END_TRY
+		return false;
 	}
 
 	/**
@@ -271,6 +299,7 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 	*/
 	EXPORT bool API RACInitMoDART(bool enabled, int numRays, int matrixId, float delay, float minimumT60, const int* indexingData, const int* frequencyIndexingData, const float* t60sData, const float* leftEigenvectorsData, const float* rightEigenvectorsData, int numFDNs, int numNodes, int numPaths)
 	{
+		BEGIN_TRY
 		Vec<int> frequencyIndexing = CreateIntVec(frequencyIndexingData, numFDNs);
 		Vec<> t60s = CreateVec(t60sData, numFDNs);
 
@@ -288,6 +317,8 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 
 		MoDARTData data(enabled, numRays, SelectFDNMatrix(matrixId), static_cast<Real>(delay), static_cast<Real>(minimumT60), indexing, frequencyIndexing, t60s, leftEigenvectors, rightEigenvectors);
 		return InitMoDART(data);
+		END_TRY
+		return false;
 	}
 
 	/**
@@ -298,13 +329,20 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 	*/
 	EXPORT void API RACSetHeadphoneEQ(const float* leftIR, const float* rightIR, int irLength)
 	{
-		std::vector<Real> left(irLength);
-		std::vector<Real> right(irLength);
+		BEGIN_TRY
+		Buffer<> left(irLength);
+		Buffer<> right(irLength);
 
-		std::transform(leftIR, leftIR + irLength, left.begin(), [](float f) { return static_cast<Real>(f); });
-		std::transform(rightIR, rightIR + irLength, right.begin(), [](float f) { return static_cast<Real>(f); });
+		for (int i = 0; i < irLength; i++)
+		{
+			left[i] = static_cast<Real>(leftIR[i]);
+			right[i] = static_cast<Real>(rightIR[i]);
+		}
+		// std::transform(leftIR, leftIR + irLength, left.begin(), [](float f) { return static_cast<Real>(f); });
+		// std::transform(rightIR, rightIR + irLength, right.begin(), [](float f) { return static_cast<Real>(f); });
 
 		SetHeadphoneEQ(left, right);
+		END_TRY
 	}
 
 	/**
@@ -319,6 +357,7 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 	*/
 	EXPORT void API RACUpdateSpatialisationMode(int id)
 	{
+		BEGIN_TRY
 		switch (id)
 		{
 		default:
@@ -329,6 +368,7 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 		case(2):
 		{ UpdateSpatialisationMode(SpatialisationMode::quality); break; }
 		}
+		END_TRY
 	}
 
 	/**
@@ -338,7 +378,9 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 	*/
 	EXPORT void API RACEnableEarlyReverb(bool enable)
 	{
+		BEGIN_TRY
 		EnableEarlyReverb(enable);
+		END_TRY
 	}
 
 	/**
@@ -357,8 +399,10 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 	*/
 	EXPORT void API RACUpdateEarlyConfig(int direct, int reflOrder, int shadowDiffOrder, int specularDiffOrder, float minEdgeLength, float maxPathLen)
 	{
+		BEGIN_TRY
 		EarlyReverbData data(SelectDirectMode(direct), reflOrder, shadowDiffOrder, specularDiffOrder, static_cast<Real>(minEdgeLength), static_cast<Real>(maxPathLen));
 		UpdateEarlyConfig(data);
+		END_TRY
 	}
 
 	/**
@@ -378,8 +422,10 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 	*/
 	EXPORT void API RACUpdateDiffractionModel(int diffractionId)
 	{
+		BEGIN_TRY
 		DiffractionModel model = SelectDiffractionModel(diffractionId);
 		UpdateDiffractionModel(model);
+		END_TRY
 	}
 
 	/**
@@ -389,7 +435,9 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 	*/
 	EXPORT void API RACEnableLateReverb(bool enable)
 	{
+		BEGIN_TRY
 		EnableLateReverb(enable);
+		END_TRY
 	}
 
 	/**
@@ -399,7 +447,9 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 	*/
 	EXPORT void API RACUpdateLateReverbNumberOfRays(int numRays)
 	{
+		BEGIN_TRY
 		UpdateLateReverbNumberOfRays(numRays);
+		END_TRY
 	}
 
 	/**
@@ -409,7 +459,9 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 	*/
 	EXPORT void API RACUpdateMoDARTDelay(float delay)
 	{
+		BEGIN_TRY
 		UpdateMoDARTDelay(static_cast<Real>(delay));
+		END_TRY
 	}
 
 	/**
@@ -419,7 +471,9 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 	*/
 	EXPORT void API RACUpdateMoDARTMinimumReverbTime(float T60)
 	{
+		BEGIN_TRY
 		UpdateMoDARTMinimumReverbTime(static_cast<Real>(T60));
+		END_TRY
 	}
 
 	/**
@@ -429,9 +483,10 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 	*/
 	EXPORT void API RACUpdateSingleFDNReverbTime(const float* t60Data)
 	{
-		
+		BEGIN_TRY
 		Coefficients<> t60 = CreateCoefficients(t60Data, NUM_FREQUENCY_BANDS);
 		UpdateSingleFDNReverbTime(t60);
+		END_TRY
 	}
 
 	/**
@@ -446,8 +501,10 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 	*/
 	EXPORT void API RACUpdateSingleFDNReverbTimeModel(int formulaId)
 	{
+		BEGIN_TRY
 		ReverbFormula formula = SelectReverbFormula(formulaId);
 		UpdateSingleFDNReverbTime(formula);
+		END_TRY
 	}
 
 	/**
@@ -455,7 +512,9 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 	*/
 	EXPORT void API RACResetLateReverb()
 	{
+		BEGIN_TRY
 		ResetLateReverb();
+		END_TRY
 	}
 
 	/**
@@ -471,7 +530,9 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 	*/
 	EXPORT void API RACUpdateListener(float posX, float posY, float posZ, float oriW, float oriX, float oriY, float oriZ)
 	{
+		BEGIN_TRY
 		UpdateListener(Vec3(posX, posY, posZ), Vec4(oriW, oriX, oriY, oriZ));
+		END_TRY
 	}
 
 	/**
@@ -484,7 +545,10 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 	*/
 	EXPORT int API RACInitSource()
 	{
+		BEGIN_TRY
 		return InitSource();
+		END_TRY
+		return - 1;
 	}
 
 	/**
@@ -501,7 +565,9 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 	*/
 	EXPORT void API RACUpdateSource(int id, float posX, float posY, float posZ, float oriW, float oriX, float oriY, float oriZ)
 	{
+		BEGIN_TRY
 		UpdateSource(static_cast<size_t>(id), Vec3(posX, posY, posZ), Vec4(oriW, oriX, oriY, oriZ));
+		END_TRY
 	}
 
 	/**
@@ -553,8 +619,10 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 	*/
 	EXPORT void API RACUpdateSourceDirectivity(int id, int directivityId)
 	{
+		BEGIN_TRY
 		SourceDirectivity directivity = SelectDirectivity(directivityId);
 		UpdateSourceDirectivity(static_cast<size_t>(id), directivity);
+		END_TRY
 	}
 
 	/**
@@ -567,13 +635,18 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 	*/
 	EXPORT void API RACRemoveSource(int id)
 	{
+		BEGIN_TRY
 		RemoveSource(static_cast<size_t>(id));
+		END_TRY
 	}
 
 	EXPORT int API RACInitMaterial(const float* absorptionData)
 	{
+		BEGIN_TRY
 		Coefficients<> absorption = CreateAbsorptions(absorptionData);
 		return InitMaterial(absorption);
+		END_TRY
+		return -1;
 	}
 
 	/**
@@ -587,13 +660,17 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 	*/
 	EXPORT void API RACUpdateMaterial(int id, const float* absorptionData)
 	{
+		BEGIN_TRY
 		Coefficients<> absorption = CreateAbsorptions(absorptionData);
 		UpdateMaterial(static_cast<size_t>(id), absorption);
+		END_TRY
 	}
 
 	EXPORT void API RACRemoveMaterial(int id)
 	{
+		BEGIN_TRY
 		RemoveMaterial(static_cast<size_t>(id));
+		END_TRY
 	}
 
 	/**
@@ -609,11 +686,14 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 	*/
 	EXPORT int API RACInitWall(const float* verticesData, int materialId)
 	{
+		BEGIN_TRY
 		Vertices vertices = { Vec3(verticesData[0], verticesData[1], verticesData[2]),
 			Vec3(verticesData[3], verticesData[4], verticesData[5]),
 			Vec3(verticesData[6], verticesData[7], verticesData[8]) };
 
 		return InitWall(vertices, materialId);
+		END_TRY
+		return -1;
 	}
 
 	/**
@@ -630,11 +710,13 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 	*/
 	EXPORT void API RACUpdateWall(int id, const float* vData)
 	{
+		BEGIN_TRY
 		Vertices vertices = { Vec3(vData[0], vData[1], vData[2]),
 			Vec3(vData[3], vData[4], vData[5]),
 			Vec3(vData[6], vData[7], vData[8]) };
 
 		UpdateWall(static_cast<size_t>(id), vertices);
+		END_TRY
 	}
 
 	/**
@@ -647,7 +729,9 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 	*/
 	EXPORT void API RACRemoveWall(int id)
 	{
+		BEGIN_TRY
 		RemoveWall(static_cast<size_t>(id));
+		END_TRY
 	}
 
 	/**
@@ -658,7 +742,9 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 	*/
 	EXPORT void API RACUpdatePlanesAndEdges()
 	{
+		BEGIN_TRY
 		UpdatePlanesAndEdges();
+		END_TRY
 	}
 
 	/**
@@ -668,7 +754,9 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 	*/
 	EXPORT void API RACUpdateLateReverbGain(float gain)
 	{
+		BEGIN_TRY
 		UpdateLateReverbGain(static_cast<Real>(gain));
+		END_TRY
 	}
 
 	/**
@@ -682,9 +770,13 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 	*/
 	EXPORT void API RACSubmitAudio(int id, const float* data)
 	{
-		std::transform(data, data + NUM_FRAMES, buffer.begin(),
-			[](float value) { return static_cast<Real>(value); });
-		SubmitAudio(static_cast<size_t>(id), buffer);
+		BEGIN_TRY
+		/*std::transform(data, data + NUM_FRAMES, buffer.begin(),
+			[](float value) { return static_cast<Real>(value); });*/
+		for (int i = 0; i < NUM_FRAMES; i++)
+			inputBuffer[i] = static_cast<Real>(data[i]);
+		SubmitAudio(static_cast<size_t>(id), inputBuffer);
+		END_TRY
 	}
 
 	/**
@@ -697,10 +789,13 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 	*/
 	EXPORT bool API RACProcessOutput()
 	{
-		GetOutput(buffer);	
-		if (!buffer.Valid())
+		BEGIN_TRY
+		GetOutput(outputBuffer);	
+		if (!outputBuffer.Valid())
 			return false;
 		return true;
+		END_TRY
+		return false;
 	}
 
 	/**
@@ -713,8 +808,10 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 	*/
 	EXPORT void API RACGetOutputBuffer(float* sendBuffer)
 	{
-		for (Real value : buffer)
+		BEGIN_TRY
+		for (Real value : outputBuffer)
 			*sendBuffer++ = static_cast<float>(value);
+		END_TRY
 	}
 
 	/**
@@ -733,10 +830,12 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 	*/
 	EXPORT void API RACRecordImpulseResponse(float posX, float posY, float posZ, float oriW, float oriX, float oriY, float oriZ, float* sendBuffer, int numSamples)
 	{
-		Buffer<> outputBuffer = Buffer<>::Zero(numSamples);
-		RecordImpulseResponse(Vec3(posX, posY, posZ), Vec4(oriW, oriX, oriY, oriZ), outputBuffer);
-		for (Real value : outputBuffer)
+		BEGIN_TRY
+		Buffer<> buffer = Buffer<>::Zero(numSamples);
+		RecordImpulseResponse(Vec3(posX, posY, posZ), Vec4(oriW, oriX, oriY, oriZ), buffer);
+		for (Real value : buffer)
 			*sendBuffer++ = static_cast<float>(value);
+		END_TRY
 	}
 
 	/**
@@ -749,6 +848,8 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 	*/
 	EXPORT void API RACUpdateImpulseResponseMode(bool mode)
 	{
+		BEGIN_TRY
 		UpdateImpulseResponseMode(mode);
+		END_TRY
 	}
 }
