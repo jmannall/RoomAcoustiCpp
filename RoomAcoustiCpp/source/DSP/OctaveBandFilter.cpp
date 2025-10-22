@@ -69,13 +69,8 @@ namespace RAC
 			 numTopBandsToSum = minIndex;
 			 numOutputBands = numFrequencyBands - numTopBandsToSum;
 
-			 bands.Resize(numFrequencyBands);
-			 outputs.Resize(numOutputBands);
-
-#if MATRIX_LIBRARY == EIGEN_FLAG
-			 bands.Reset();
-			 outputs.Reset();
-#endif
+			 bands = Buffer<>::Zero(numFrequencyBands);
+			 outputs = Buffer<>::Zero(numOutputBands);
 
 			 // Do not initialise filter if less than 1 frequency band
 			 if (uniqueIndices.size() == 1)

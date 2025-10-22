@@ -173,10 +173,8 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 	*/
 	EXPORT bool API RACInit(int fs, int numFrames, int numReverbSources, int fdnSize, float lerpFactor, float Q, const float* frequencyBandsData, int numFrequencyBands)
 	{
-		buffer.Resize(2 * numFrames);
-#if MATRIX_LIBRARY == CUSTOM_FLAG
-		buffer.Reset();
-#endif
+		buffer = Buffer<>::Zero(2 * numFrames);
+
 		NUM_FREQUENCY_BANDS = numFrequencyBands;
 		NUM_FRAMES = numFrames;
 

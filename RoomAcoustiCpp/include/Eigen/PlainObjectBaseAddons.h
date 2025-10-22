@@ -10,6 +10,8 @@ EIGEN_DEVICE_FUNC inline Index Cols() const { return this->cols(); }
 
 EIGEN_DEVICE_FUNC inline void Resize(Index newSize)
 {
+	static_assert(ColsAtCompileTime == 1 || RowsAtCompileTime == 1,
+		"The Resize(Index newSize) function is only for 1D vectors (<N,1> or <1,N>).");
 	Index oldSize = this->size();
 	this->conservativeResize(newSize);
 	if (newSize > oldSize)
