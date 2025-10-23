@@ -19,7 +19,9 @@ using namespace RAC::Spatialiser;
 using namespace RAC::Common;
 using namespace RAC::DSP;
 
-#ifdef _DEBUG
+#define DEBUG_MEMORY        (0 && !defined(NDEBUG))
+
+#if DEBUG_MEMORY
 struct MemoryAllocationData
 {
 	LONG AllocCount = 0;  
@@ -437,7 +439,7 @@ bool ChangeToProfilingDirectory(const std::string &userPath)
 
 int main(int argc, const char *argv[])
 {
-#if _DEBUG
+#if DEBUG_MEMORY
 	InitMemoryDebug();
 #endif
 
@@ -477,7 +479,7 @@ int main(int argc, const char *argv[])
         };
 
         std::cout << "Profiling: " << executionContext.name << std::endl;
-#if _DEBUG
+#if DEBUG_MEMORY
         ResetMemoryAllocationMonitoring();
 #endif
         for (int iteration = 0; iteration < iterations; ++iteration)
@@ -488,7 +490,7 @@ int main(int argc, const char *argv[])
             executionContext.CompleteExecution();
         }
 
-#if _DEBUG
+#if DEBUG_MEMORY
         DumpMemory();
 #endif
 
@@ -525,7 +527,7 @@ int main(int argc, const char *argv[])
 
     std::cout << "Done!" << std::endl;
 
-#if _DEBUG
+#if DEBUG_MEMORY
     ExitMemoryDebug();
 #endif
 }
