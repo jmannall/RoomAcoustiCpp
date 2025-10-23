@@ -464,6 +464,8 @@ int main(int argc, const char *argv[])
     std::cout << "Running " << plan.size() << " tests " << iterations << " times." << std::endl;
 
     std::ofstream runLog(commandLineParser.GetLogPrefix() + "_run.txt");
+    runLog << "Test,Type,Iterations,TotalInitTime,TotalMainTime,TotalExitTime,IterationInitTime,IterationMainTime,IterationExitTime,InnerLoopTime" << std::endl;
+
     for (size_t planIndex = 0; planIndex < plan.size(); ++planIndex)
     {
         ProfileExecutionContext executionContext =
@@ -493,7 +495,8 @@ int main(int argc, const char *argv[])
         // log it
         const int totalInnerIterations = iterations * executionContext.innerIterations;
         runLog << executionContext.name << ","
-            << iterations << ","
+			<< (MATRIX_LIBRARY == EIGEN_FLAG ? "Eigen," : "Custom,")
+			<< iterations << ","
             << executionContext.TotalTime << ","
             << executionContext.InitTime << ","
             << executionContext.MainTime << ","
@@ -503,12 +506,10 @@ int main(int argc, const char *argv[])
 			<< (executionContext.MainTime / iterations) << ","
 			<< (executionContext.ExitTime / iterations) << ","
 			<< (executionContext.TotalTime / totalInnerIterations) << ","
-			<< (executionContext.InitTime / totalInnerIterations) << ","
-			<< (executionContext.MainTime / totalInnerIterations) << ","
-			<< (executionContext.ExitTime / totalInnerIterations) <<
+			<< (executionContext.MainTime / totalInnerIterations) <<
             std::endl;
 
-        std::cout << std::format("Test time: {:.1f}ms ({:.1f}ms/{:.1f}ms/{:.1f}ms); Per-test: {:.1f}ms ({:.1f}ms/{:.1f}ms/{:.1f}ms); Per-iteration: {:.2f}ms ({:.2f}ms/{:.2f}ms/{:.2f}ms)",
+        std::cout << std::format("Test time: {:.1f}ms ({:.1f}ms/{:.1f}ms/{:.1f}ms); Per-test: {:.1f}ms ({:.1f}ms/{:.1f}ms/{:.1f}ms); Per-iteration: {:.2f}ms)",
             executionContext.TotalTime,
             executionContext.InitTime,
             executionContext.MainTime,
@@ -518,9 +519,7 @@ int main(int argc, const char *argv[])
             executionContext.MainTime / iterations,
             executionContext.ExitTime / iterations,
             executionContext.TotalTime / totalInnerIterations,
-            executionContext.InitTime / totalInnerIterations,
-            executionContext.MainTime / totalInnerIterations,
-            executionContext.ExitTime / totalInnerIterations)
+            executionContext.MainTime / totalInnerIterations)
             << std::endl;
     }
 
