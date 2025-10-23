@@ -9,10 +9,6 @@
 // helpers
 #include <cassert>
 
-#if defined _DEBUG || defined DEBUG_RTM
-#pragma optimize("", off)
-#endif
-
 namespace RAC
 {
 	using namespace Unity;
@@ -304,7 +300,3 @@ namespace RAC
 		}
 	}
 }
-
-#if defined _DEBUG || defined DEBUG_RTM
-#pragma optimize("", on)
-#endif

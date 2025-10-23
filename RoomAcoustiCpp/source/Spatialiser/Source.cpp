@@ -26,7 +26,6 @@ using namespace Common;
 namespace RAC
 {
 	using namespace Common;
-	// using namespace Unity;
 	using namespace DSP;
 	namespace Spatialiser
 	{
@@ -261,6 +260,7 @@ namespace RAC
 
 			if (audioData.lateReverbModel == LateReverbModel::raves && audioData.lateReverbEnabled)
 			{
+				modartSendProcessed = true;
 				if (audioData.clearBuffers)
 					octaveBandFilter.ClearBuffers();
 				PROFILE_OctaveBand
@@ -283,8 +283,11 @@ namespace RAC
 				PROFILE_Reflection
 				directivityFilter->ProcessAudio(bStore, bStore, audioData.lerpFactor);
 			}
-			std::transform(bStore.begin(), bStore.end(), bInput.begin(),
-				[](auto value) { return static_cast<float>(value); });
+
+			for (int i = 0; i < numFrames; i++)
+				bInput[i] = static_cast<float>(bStore(i));
+			/*std::transform(bStore.begin(), bStore.end(), bInput.begin(),
+				[](auto value) { return static_cast<float>(value); });*/
 
 			{
 				PROFILE_Spatialisation
@@ -310,6 +313,12 @@ namespace RAC
 			if (!GetAccess())
 				return;
 
+			if (!modartSendProcessed)
+			{
+				FreeAccess();
+				return;
+			}
+
 			const int numFrames = ToInt(inputBuffer.Length());
 			const int numBands = octaveBandFilter.NumBands();
 
@@ -323,6 +332,7 @@ namespace RAC
 					reverbInput(i, 2 * j + 1) += input.imag();
 				}
 			}
+			modartSendProcessed = false;
 			FreeAccess();
 		}
 
@@ -341,8 +351,10 @@ namespace RAC
 				reverbInputFilter->ProcessAudio(inputBuffer, bStoreReverb, lerpFactor);
 			}
 
-			std::transform(bStoreReverb.begin(), bStoreReverb.end(), bInput.begin(),
-				[](auto value) { return static_cast<float>(value); });
+			for (int i = 0; i < numFrames; i++)
+				bInput[i] = static_cast<float>(bStoreReverb(i));
+			/*std::transform(bStoreReverb.begin(), bStoreReverb.end(), bInput.begin(),
+				[](auto value) { return static_cast<float>(value); });*/
 
 			{
 				shared_lock<shared_mutex> lock(tuneInMutex);
@@ -374,7 +386,7 @@ namespace RAC
 				return;
 			mAirAbsorption->SetTargetDistance(distance);
 			
-			if (position == currentPosition && orientation == currentOrientation)
+			if (position == currentPosition && orientation == currentOrientation && transform.load(std::memory_order_acquire))
 			{
 				FreeAccess();
 				return;

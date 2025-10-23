@@ -343,7 +343,7 @@ namespace RAC
 				: LateReverbData(enabled, numRays, FDNMatrix::householder) {}
 
 			LateReverbData(bool enabled, int numRays, FDNMatrix feedbackMatrix)
-				: enabled(enabled), feedbackMatrix(feedbackMatrix) {}
+				: enabled(enabled), numRays(numRays), feedbackMatrix(feedbackMatrix) {}
 		};
 
 		struct RoomData

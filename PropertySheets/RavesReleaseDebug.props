@@ -5,7 +5,7 @@
   <PropertyGroup />
   <ItemDefinitionGroup>
     <ClCompile>
-      <PreprocessorDefinitions>PROFILE_BACKGROUND_THREAD;PROFILE_AUDIO_THREAD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>DEBUG_INIT;DEBUG_REMOVE;DEBUG_GEOMETRY;DEBUG_RTM;DEBUG_IEM;RTM_FLAG;IEM_FLAG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
     </Link>
