@@ -14,6 +14,10 @@
 // Common headers
 #include "Common/RACProfiler.h"
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 namespace RAC
 {
 	namespace DSP
@@ -30,12 +34,28 @@ namespace RAC
 
             threadReverbOutputs.resize(threadCount, std::vector<Buffer<>>(dspConfig->GetData().numReverbSources, Buffer<>(numFrames)));
 
+#ifdef _WIN32
+            // because we can initialize the audio threads multiple times, we will name each one with a "construction index" so we can identify the threads
+            static int audioThreadConstructionIndex = 0;
+            const int currentAudioThreadConstructionIndex = audioThreadConstructionIndex++;
+#else
+            // not used, but makes the capture syntax easier
+            const int currentAudioThreadConstructionIndex = 0;
+#endif
+
             for (size_t i = 0; i < threadCount; ++i)
             {
                 workers.emplace_back([this, i] {
 #ifdef USE_UNITY_PROFILER
                     int id = RegisterAudioThread();
 #endif
+
+#ifdef _WIN32
+                    WCHAR description[64];
+                    swprintf_s(description, L"Audio thread %d", static_cast<int>(i));
+                    SetThreadDescription(GetCurrentThread(), description); 
+#endif
+
                     //FlushDenormals();
                     std::shared_ptr<AudioTaskBase> task;
                     while (!stop.load(std::memory_order_acquire))
