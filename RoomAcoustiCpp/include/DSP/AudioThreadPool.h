@@ -28,6 +28,20 @@
 // moodycamel headers
 #include "moodycamel/concurrentqueue.h"
 
+#ifdef _WIN32
+	// if set, it uses WaitForSingleObject() to wait for data to actually be available rather than polling. This doesn't seem to have a major impact
+	// on performance on a many-core machines, but it does make profiling easier and it is not busy waiting
+#   define USE_BLOCKING_TASKS       (0)
+#else
+#   define USE_BLOCKING_TASKS       (0)
+#endif
+
+#if USE_BLOCKING_TASKS
+#   define NOMINMAX
+#   define WIN32_LEAN_AND_MEAN
+#   include <Windows.h>
+#endif
+
 namespace RAC
 {
     namespace DSP
@@ -98,7 +112,7 @@ namespace RAC
             /**
 			* @brief Default destructor that stops all threads
             */
-            ~AudioThreadPool() { Stop(); }
+            ~AudioThreadPool();
 
             /**
 			* @brief Adds an audio task to the queue
@@ -114,6 +128,9 @@ namespace RAC
                 static_assert(std::is_same_v<decltype(&T::ProcessAudio), void (T::*)(Buffer<>&, const AudioData&)>, "T::ProcessAudio must be of type void (T::*)(Buffer<>&, const AudioData&)");
                 std::shared_ptr<AudioTaskBase> task = std::make_shared<AudioTask<T>>(source, tasksRemaining, audioData);
                 tasks.try_enqueue(std::move(task));
+#if USE_BLOCKING_TASKS
+                SetEvent(tasksAvailable);
+#endif
             }
 
             /**
@@ -129,6 +146,9 @@ namespace RAC
                 static_assert(std::is_same_v<decltype(&ReverbSource::ProcessAudio), void (ReverbSource::*)(Buffer<>&, const AudioData&)>, "ReverbSource::ProcessAudio must be of type void (ReverbSource::*)(Buffer<>&, const AudioData&)");
                 std::shared_ptr<AudioTaskBase> task = std::make_shared<AudioTask<ReverbSource>>(source, tasksRemaining, audioData);
                 tasks.try_enqueue(std::move(task));
+#if USE_BLOCKING_TASKS
+				SetEvent(tasksAvailable);
+#endif
             }
 
             /**
@@ -143,21 +163,15 @@ namespace RAC
                 //static_assert(std::is_same_v<decltype(&FDN<Complex>::ProcessAudio), void (FDN<Complex>::*)(std::vector<Buffer<>>&, Real)>, "T::ProcessAudio must be of type void (T::*)(Buffer&, Real)");
                 std::shared_ptr<AudioTaskBase> task = std::make_shared<AudioTask<FDN<Complex>>>(fdn, tasksRemaining, audioData);
                 tasks.try_enqueue(std::move(task));
+#if USE_BLOCKING_TASKS
+				SetEvent(tasksAvailable);
+#endif
             }
 
             /**
 			* @brief Stops all threads in the audio thread pool
             */
-            inline void Stop()
-            {
-				if (stop.exchange(true, std::memory_order_acq_rel))
-					return;
-                for (auto& worker : workers)
-                {
-                    if (worker.joinable())
-                        worker.join();
-                }
-            }
+            void Stop();
 
             /**
 			* @brief Processes sources and image sources
@@ -183,6 +197,10 @@ namespace RAC
 
         private:
             moodycamel::ConcurrentQueue<std::shared_ptr<AudioTaskBase>> tasks;  // Lock-free queue
+#if USE_BLOCKING_TASKS
+            HANDLE tasksAvailable;
+            HANDLE stopRequested;
+#endif
 
             std::vector<std::thread> workers;   // Worker threads
             std::atomic<bool> stop;             // Flag to stop the thread pool
