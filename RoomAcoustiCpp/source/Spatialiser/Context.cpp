@@ -119,17 +119,18 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		Context::Context(const DSPData& data,const std::string& logPrefix) : dspConfig(std::make_shared<DSPConfig>(data)), mIsRunning(true), IEMThread(), rayTracingThread(), applyHeadphoneEQ(false), headphoneEQ(2048)
+		Context::Context(const DSPData& data,const ContextOptionalArguments& optionalArguments)
+		: dspConfig(std::make_shared<DSPConfig>(data)), mIsRunning(true), IEMThread(), rayTracingThread(), applyHeadphoneEQ(false), headphoneEQ(2048)
 		{
 #ifdef DEBUG_INIT
 			Debug::Log("Init Context", Colour::Green);
 #endif
 
-			if (!logPrefix.empty())
+			if (!optionalArguments.logPrefix.empty())
 			{
-				CErrorHandler::Instance().SetErrorLogFile(logPrefix + "_log.txt", true);
+				CErrorHandler::Instance().SetErrorLogFile(optionalArguments.logPrefix + "_log.txt", true);
 #if defined(PROFILE_BACKGROUND_THREAD) || defined(PROFILE_AUDIO_THREAD)
-				Profiler::Instance().SetOutputFile(logPrefix + "_profile.txt", true);
+				Profiler::Instance().SetOutputFile(optionalArguments.logPrefix + "_profile.txt", true);
 #endif
 			}
 			CErrorHandler::Instance().SetAssertMode(ASSERT_MODE_CONTINUE);
@@ -142,10 +143,16 @@ namespace RAC
 			mListener = mCore.CreateListener();
 			headRadius = mListener->GetHeadRadius();
 
-			CreateAudioThreadPool();
+			size_t numThreads;
+			if (optionalArguments.desiredAudioThreads.has_value())
+				numThreads = optionalArguments.desiredAudioThreads.value();
+			else
+				numThreads = std::min((unsigned int)8, std::thread::hardware_concurrency());
+			CreateAudioThreadPool(numThreads);
+
 			mSources = std::make_shared<SourceManager>(&mCore, dspConfig);
 			mRoom = std::make_shared<Room>(dspConfig->GetData().numFrequencyBands);
-			
+
 			// Initialize NNs
 			myNN_initialize();
 		}
@@ -271,10 +278,10 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Context::CreateAudioThreadPool()
+		void Context::CreateAudioThreadPool(size_t numDesiredWorkerThreads)
 		{
-			size_t numThreads = std::min((unsigned int)8, std::thread::hardware_concurrency());
-			audioThreadPool = std::make_unique<AudioThreadPool>(numThreads, dspConfig);
+			assert(!audioThreadPool);
+			audioThreadPool = std::make_unique<AudioThreadPool>(numDesiredWorkerThreads, dspConfig);
 		}
 
 		////////////////////////////////////////
@@ -302,7 +309,8 @@ namespace RAC
 			auto dimensions = dspConfig->GetReverbInputDimensions();
 			mReverbInput = Matrix<>::Zero(dimensions.first, dimensions.second);
 
-			CreateAudioThreadPool();
+			// audio thread pool should already be created
+			assert(!!audioThreadPool);
 
 			// Start background thread after all systems are initialized
 			rayTracingThread = std::thread(RayTracerProcessor, this);

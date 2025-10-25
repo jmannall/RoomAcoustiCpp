@@ -94,6 +94,16 @@ bool CommandLineParser::Parse()
 			}
 			innerIterations = newIterations;
 		}
+		else if (ParseStandardArgument(argument, "--audio-threads=", value))
+		{
+			const int newDesiredAudioThreads = std::stoi(value);
+			if (newDesiredAudioThreads <= 0)
+			{
+				std::cerr << "Invalid audio-threads: " << argument << std::endl;
+				return false;
+			}
+			desiredAudioThreads = newDesiredAudioThreads;
+		}
 		else if (ParseStandardArgument(argument, "--log-prefix=", value))
 		{
 			logPrefix = value;
@@ -140,6 +150,7 @@ void CommandLineParser::ShowHelp() const
 	std::cout << arguments[0] << R"( [options] test1,test2 ...
 
 Options:
+    --audio-threads=##	   Overrides the number of audio threads
     --debug                Enables certain memory debugging features
     --detailed-logs        Enables detailed logs
 	--inner-iterations=##  The number of times to run the inner loop
@@ -151,7 +162,7 @@ Options:
     --reflection-order=##  Sets the reflection order
     --run-log=file         Specifies the log of each run
     --shadow-order=##      Sets the shadow order
-	--test-iterations=##   The number of times to run each test
+    --test-iterations=##   The number of times to run each test
 
 If the list of tests isn't specified, it will default to running all tests.  If a profile data directory
 isn't specified, then it will search for it.

@@ -72,13 +72,13 @@
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Common\Matrix.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Common\Vec.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\AudioThreadPool.cpp"/>
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\Buffer.cpp"/>
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\FIRFilter.cpp"/>
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\GraphicEQ.cpp"/>
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\IIRFilter.cpp"/>
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\LinkwitzRileyFilter.cpp"/>
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\OctaveBandFilter.cpp"/>
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\AudioThreadPool.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\Buffer.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\FIRFilter.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\GraphicEQ.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\IIRFilter.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\LinkwitzRileyFilter.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\OctaveBandFilter.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\AirAbsorption.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Context.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Diffraction\Models.cpp" />
@@ -154,6 +154,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\moodycamel\concurrentqueue.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\AirAbsorption.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Context.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\ContextOptionalArguments.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Diffraction\Models.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Diffraction\Path.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Directivity.h" />

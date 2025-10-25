@@ -25,7 +25,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		bool Init(const DSPData& data, const std::string& logPrefix)
+		bool Init(const DSPData& data, const ContextOptionalArguments &optionalArguments)
 		{
 			if (context) // Delete any existing context
 			{
@@ -37,7 +37,8 @@ namespace RAC
 #ifdef DEBUG_INIT
 	Debug::Log("Create New Context", Colour::Green);
 #endif
-			context = std::make_shared<Context>(data, logPrefix);
+
+			context = std::make_shared<Context>(data, optionalArguments);
 			return context->IsRunning();
 		}
 

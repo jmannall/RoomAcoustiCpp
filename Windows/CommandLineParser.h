@@ -6,6 +6,7 @@
 #pragma once
 #include <functional>
 #include <map>
+#include <optional>
 #include <string>
 #include "ProfilePlan.h"
 
@@ -25,6 +26,7 @@ public:
 	int GetNumRays() const { return numRays; }
 	int GetReflectionOrder() const { return reflectionOrder; }
 	int GetShadowOrder() const { return shadowOrder; }
+	std::optional<size_t> GetDesiredAudioThreads() const { return desiredAudioThreads;  }
 
 	const std::string &GetLogPrefix() const { return logPrefix; }
 	const std::string &GetProfileDataDirectory() const { return profileDataDirectory; }
@@ -55,5 +57,6 @@ private:
 	int numRays = 100;
 	int reflectionOrder = 2;
 	int shadowOrder = 2;
+	std::optional<size_t> desiredAudioThreads;
 
 };

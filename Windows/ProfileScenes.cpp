@@ -5,6 +5,7 @@
 #include <iostream>
 
 #include "Spatialiser/Interface.h"
+#include "Spatialiser/ContextOptionalArguments.h"
 
 #include "MoDARTLoader.h"
 
@@ -212,7 +213,12 @@ bool BaseTest::Init()
 	frequencyBands = Coefficients<>(std::vector<Real>({ 125.0, 250.0, 500.0, 1e3, 2e3, 4e3, 8e3 }));				// Frequency band center frequencies
 
 	DSPData configData = DSPData(fs, numFrames, numReverbSources, fdnSize, lerpFactor, Q, frequencyBands);
-	::Init(configData, executionContext.logPrefix);
+	ContextOptionalArguments optionalArguments =
+	{
+		.logPrefix = executionContext.logPrefix,
+		.desiredAudioThreads = executionContext.desiredAudioThreads
+	};
+	::Init(configData, optionalArguments);
 
 	int hrtfSamplingStep = 5;
 	static std::vector<std::string> hrtfFiles = { "HRTF/Kemar_DTF_ITD_48000_3dti-hrtf.3dti-hrtf", "HRTF/NearFieldCompensation_ILD_48000.3dti-ild", "HRTF/HRTF_ILD_48000.3dti-ild" };
@@ -553,7 +559,8 @@ int main(int argc, const char* argv[])
 			.innerIterations = commandLineParser.GetInnerIterations(),
 			.numRays = commandLineParser.GetNumRays(),
 			.reflectionOrder = commandLineParser.GetReflectionOrder(),
-			.shadowOrder = commandLineParser.GetShadowOrder()
+			.shadowOrder = commandLineParser.GetShadowOrder(),
+			.desiredAudioThreads = commandLineParser.GetDesiredAudioThreads()
 		};
 
 		std::cout << "Profiling: " << executionContext.name << std::endl;
