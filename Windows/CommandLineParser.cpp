@@ -54,6 +54,36 @@ bool CommandLineParser::Parse()
 			}
 			testIterations = newIterations;
 		}
+		else if (ParseStandardArgument(argument, "--num-rays=", value))
+		{
+			const int newNumRays = std::stoi(value);
+			if (newNumRays <= 0)
+			{
+				std::cerr << "Invalid num-rays: " << argument << std::endl;
+				return false;
+			}
+			numRays = newNumRays;
+		}
+		else if (ParseStandardArgument(argument, "--reflection-order=", value))
+		{
+			const int newReflectionOrder = std::stoi(value);
+			if (newReflectionOrder <= 0)
+			{
+				std::cerr << "Invalid reflection-order: " << argument << std::endl;
+				return false;
+			}
+			reflectionOrder = newReflectionOrder;
+		}
+		else if (ParseStandardArgument(argument, "--shadow-order=", value))
+		{
+			const int newShadowOrder = std::stoi(value);
+			if (newShadowOrder <= 0)
+			{
+				std::cerr << "Invalid shadoiw-order: " << argument << std::endl;
+				return false;
+			}
+			shadowOrder = newShadowOrder;
+		}
 		else if (ParseStandardArgument(argument, "--inner-iterations=", value))
 		{
 			const int newIterations = std::stoi(value);
@@ -116,8 +146,11 @@ Options:
     --log-prefix=file      Specifies the log prefix
     --no-debug             Disables certain memory debugging features
     --no-detailed-logs     Disabled detailed logs 
+    --num-rays=##          Sets the number of rays
     --profile-data=xx      Sets the profile data directory.
+    --reflection-order=##  Sets the reflection order
     --run-log=file         Specifies the log of each run
+    --shadow-order=##      Sets the shadow order
 	--test-iterations=##   The number of times to run each test
 
 If the list of tests isn't specified, it will default to running all tests.  If a profile data directory

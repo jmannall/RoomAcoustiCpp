@@ -228,8 +228,8 @@ bool BaseTest::Init()
 	}
 
 	DirectSound dir = DirectSound::doCheck;
-	int reflOrder = 2;
-	int shadowOrder = 2;
+	const int reflOrder = executionContext.reflectionOrder;
+	const int shadowOrder = executionContext.shadowOrder;
 	int specularOrder = 1;
 	Real minEdgeLength = (Real)0.0;
 	Real maxPathLength = 1e4; // No limit on path length
@@ -279,7 +279,6 @@ bool ProfileShoeboxTest::Init()
 	materialId = InitMaterial(absorption);
 	wallIds = CreateShoeboxRoom(pos, materialId);
 
-	int numRays = 100;
 	FDNMatrix matrix = FDNMatrix::randomOrthogonal;
 
 	Real volume = pos.Sum();
@@ -288,7 +287,7 @@ bool ProfileShoeboxTest::Init()
 	Vec<> dimensions{ { pos.x(), pos.y(), pos.z()} };
 	RoomData roomData(volume, t60, formula, dimensions);
 
-	LateReverbData lateReverbData(true, numRays, matrix);
+	LateReverbData lateReverbData(true, executionContext.numRays, matrix);
 
 	InitSingleFDN(roomData, lateReverbData);
 
@@ -411,9 +410,8 @@ bool ProfileMoDARTTest::Init()
 		return false;
 
 	// Load MoDART scene
-	int numRays = 100;
 	FDNMatrix matrix = FDNMatrix::randomOrthogonal;
-	LateReverbData lateReverbData(true, numRays, matrix);
+	LateReverbData lateReverbData(true, executionContext.numRays, matrix);
 
 	std::string modartPath = "MoDART";
 	if (!LoadMoDARTScene(modartPath, frequencyBands, lateReverbData))
@@ -514,6 +512,8 @@ bool ChangeToProfilingDirectory(const std::string& userPath)
 
 int main(int argc, const char* argv[])
 {
+	SetThreadDescription(GetCurrentThread(), TEXT("Main"));
+
 #if DEBUG_MEMORY
 	InitMemoryDebug();
 #endif
@@ -550,7 +550,10 @@ int main(int argc, const char* argv[])
 			.name = plan[planIndex].name,
 			.logPrefix = commandLineParser.GetDetailedLogs() ? commandLineParser.GetLogPrefix() : "",
 			.totalTestIterations = iterations,
-			.innerIterations = commandLineParser.GetInnerIterations()
+			.innerIterations = commandLineParser.GetInnerIterations(),
+			.numRays = commandLineParser.GetNumRays(),
+			.reflectionOrder = commandLineParser.GetReflectionOrder(),
+			.shadowOrder = commandLineParser.GetShadowOrder()
 		};
 
 		std::cout << "Profiling: " << executionContext.name << std::endl;
