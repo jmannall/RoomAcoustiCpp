@@ -356,10 +356,11 @@ namespace RAC
 			std::thread IEMThread;			// Background thread to run the image edge model
 			std::thread rayTracingThread;	// Background thread to run the ray tracing model
 
-			Vec3 listenerPosition;		// Stored listener position
-			Real headRadius;			// Stored head radius from 3DTI
-			bool applyHeadphoneEQ;		// Flag to apply headphone EQ
-			HeadphoneEQ headphoneEQ;	// Headphone EQ
+			Vec3 listenerPosition;				// Stored listener position
+			bool listenerInitialised{ false };	// Flag to check if the listener has been initialised
+			Real headRadius;					// Stored head radius from 3DTI
+			bool applyHeadphoneEQ;				// Flag to apply headphone EQ
+			HeadphoneEQ headphoneEQ;			// Headphone EQ
 
 			/**
 			* 3DTI components

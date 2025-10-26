@@ -71,8 +71,8 @@ Global
 		{2F98D92A-D2E5-460B-A1D1-12E9052DEB64}.Release_Profile|ARM.Build.0 = Release_Profile|x64
 		{2F98D92A-D2E5-460B-A1D1-12E9052DEB64}.Release_Profile|ARM64.ActiveCfg = Release_Profile|x64
 		{2F98D92A-D2E5-460B-A1D1-12E9052DEB64}.Release_Profile|ARM64.Build.0 = Release_Profile|x64
-		{2F98D92A-D2E5-460B-A1D1-12E9052DEB64}.Release_Profile|x64.ActiveCfg = Release_Debug|x64
-		{2F98D92A-D2E5-460B-A1D1-12E9052DEB64}.Release_Profile|x64.Build.0 = Release_Debug|x64
+		{2F98D92A-D2E5-460B-A1D1-12E9052DEB64}.Release_Profile|x64.ActiveCfg = Release_Profile|x64
+		{2F98D92A-D2E5-460B-A1D1-12E9052DEB64}.Release_Profile|x64.Build.0 = Release_Profile|x64
 		{2F98D92A-D2E5-460B-A1D1-12E9052DEB64}.Release_ProfileDetailed|ARM.ActiveCfg = Release_ProfileDetailed|x64
 		{2F98D92A-D2E5-460B-A1D1-12E9052DEB64}.Release_ProfileDetailed|ARM.Build.0 = Release_ProfileDetailed|x64
 		{2F98D92A-D2E5-460B-A1D1-12E9052DEB64}.Release_ProfileDetailed|ARM64.ActiveCfg = Release_ProfileDetailed|x64

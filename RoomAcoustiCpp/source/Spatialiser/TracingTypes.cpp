@@ -1,9 +1,5 @@
 ﻿#include "Spatialiser/TracingTypes.h"
 
-#if defined _DEBUG || defined DEBUG_RTM
-#pragma optimize("", off)
-#endif
-
 namespace RAC
 {
     using namespace Common;
@@ -217,7 +213,3 @@ namespace RAC
         }
     }
 }
-
-#if defined _DEBUG || defined DEBUG_RTM
-#pragma optimize("", on)
-#endif

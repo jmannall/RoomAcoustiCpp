@@ -139,8 +139,10 @@ namespace RAC
 
 			const int numFrames = ToInt(inputBuffer->Length());
 
-			std::transform(inputBuffer->begin(), inputBuffer->end(), bInput.begin(),
-				[&](auto value) { return static_cast<float>(value); });
+			for (int i = 0; i < numFrames; i++)
+				bInput[i] = static_cast<float>((*inputBuffer)[i]);
+			/*std::transform(inputBuffer->begin(), inputBuffer->end(), bInput.begin(),
+				[&](auto value) { return static_cast<float>(value); });*/
 
 			{
 				PROFILE_Spatialisation
@@ -226,7 +228,7 @@ namespace RAC
 				return;
 
 #ifdef DEBUG_INIT
-			Debug::Log("Init FDN: [" + CoefficientToStr(T60[0]) + "]", Colour::Green);
+			Debug::Log("Init FDN: [" + CoefficientToStr(T60) + "]", Colour::Green);
 #endif
 
 			mFDN.load(std::memory_order_acquire)->SetTargetT60(T60);

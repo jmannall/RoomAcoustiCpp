@@ -163,7 +163,9 @@ namespace RAC
 			inline void SetInputBuffer(const Buffer<>& data)
 			{
 				assert(data.Length() == inputBuffer.Length());
-				std::transform(data.begin(), data.end(), inputBuffer.begin(), [](Real val) { return val; });
+				for (int i = 0; i < inputBuffer.Length(); i++)
+					inputBuffer(i) = data(i);
+				// std::transform(data.begin(), data.end(), inputBuffer.begin(), [](Real val) { return val; });
 			}
 			
 			/**
@@ -387,6 +389,7 @@ namespace RAC
 			Vec4 currentOrientation;				// Current source orientation
 			UpdateFlags updateFlags;				// Struct of flags to check if the source has changed since last update of each thread
 			std::atomic<bool> isReset{ true };		// Flag to check if the source is ready to be initialised
+			bool modartSendProcessed{ false };		// True if the MoDART reverb send has been processed this frame, false otherwise
 
 			ImageSourceDataMap currentImageSources;		// Current image sources
 			std::vector<int> freeFDNChannels;			// Free FDN channels

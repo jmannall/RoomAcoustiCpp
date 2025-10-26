@@ -384,6 +384,8 @@ namespace RAC
 			}
 			if (earlyReverbInitialised.load(std::memory_order_acquire))
 				mImageEdgeModel->SetListenerPosition(position);
+
+			listenerInitialised = true;
 		}
 
 		////////////////////////////////////////
@@ -401,6 +403,9 @@ namespace RAC
 
 		void Context::UpdateSource(size_t id, const Vec3& position, const Vec4& orientation)
 		{
+			if (!listenerInitialised)
+				return;
+
 			Real distance = (position - listenerPosition).Normal();
 
 			// Ensure source is outside listener head radius
