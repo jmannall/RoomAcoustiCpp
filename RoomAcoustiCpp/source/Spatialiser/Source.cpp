@@ -285,7 +285,7 @@ namespace RAC
 			}
 
 			for (int i = 0; i < numFrames; i++)
-				bInput[i] = static_cast<float>(bStore(i));
+				bInput[i] = static_cast<float>(bStore[i]);
 			/*std::transform(bStore.begin(), bStore.end(), bInput.begin(),
 				[](auto value) { return static_cast<float>(value); });*/
 
@@ -352,7 +352,7 @@ namespace RAC
 			}
 
 			for (int i = 0; i < numFrames; i++)
-				bInput[i] = static_cast<float>(bStoreReverb(i));
+				bInput[i] = static_cast<float>(bStoreReverb[i]);
 			/*std::transform(bStoreReverb.begin(), bStoreReverb.end(), bInput.begin(),
 				[](auto value) { return static_cast<float>(value); });*/
 

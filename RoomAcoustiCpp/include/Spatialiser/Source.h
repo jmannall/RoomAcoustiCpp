@@ -164,7 +164,7 @@ namespace RAC
 			{
 				assert(data.Length() == inputBuffer.Length());
 				for (int i = 0; i < inputBuffer.Length(); i++)
-					inputBuffer(i) = data(i);
+					inputBuffer[i] = data[i];
 				// std::transform(data.begin(), data.end(), inputBuffer.begin(), [](Real val) { return val; });
 			}
 			
