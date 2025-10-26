@@ -339,7 +339,14 @@ namespace RAC
 		private:
 			void InitLateReverb(const LateReverbData& data);
 
-			void CreateAudioThreadPool(size_t numDesiredWorkerThreads);
+			inline void EnsureAudioThreadPoolInitialized()
+			{
+				if (!audioThreadPool)
+					CreateAudioThreadPool();;
+			}
+			void CreateAudioThreadPool();
+
+			size_t numDesiredWorkerThreads;			// The number of desired threads
 
 			/**
 			* Spatialiser

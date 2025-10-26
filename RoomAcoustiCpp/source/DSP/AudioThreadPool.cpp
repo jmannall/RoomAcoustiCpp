@@ -40,7 +40,7 @@ namespace RAC
 #endif
 
 #ifdef _WIN32
-            static int audioThreadConstructionIndex = 1;
+            static int audioThreadConstructionIndex = 0;
             const int currentAudioThreadConstructionIndex = audioThreadConstructionIndex++;
 #else
             const int currentAudioThreadConstructionIndex = 0;
@@ -79,7 +79,7 @@ namespace RAC
                     UnregisterAudioThread(id);
 #endif
                     //NoFlushDenormals();
-                    });
+                });
             }
         }
 
