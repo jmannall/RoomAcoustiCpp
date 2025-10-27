@@ -14,6 +14,10 @@
 // Common headers
 #include "Common/RACProfiler.h"
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 namespace RAC
 {
 	namespace DSP
@@ -30,30 +34,86 @@ namespace RAC
 
             threadReverbOutputs.resize(threadCount, std::vector<Buffer<>>(dspConfig->GetData().numReverbSources, Buffer<>(numFrames)));
 
+#if USE_BLOCKING_TASKS
+            tasksAvailable = CreateEvent(NULL, FALSE, FALSE, NULL);
+            stopRequested = CreateEvent(NULL, TRUE, FALSE, NULL);
+#endif
+
+#ifdef _WIN32
+            static int audioThreadConstructionIndex = 0;
+            const int currentAudioThreadConstructionIndex = audioThreadConstructionIndex++;
+#else
+            const int currentAudioThreadConstructionIndex = 0;
+#endif
+
             for (size_t i = 0; i < threadCount; ++i)
             {
-                workers.emplace_back([this, i] {
+                workers.emplace_back([this, i, currentAudioThreadConstructionIndex] {
 #ifdef USE_UNITY_PROFILER
                     int id = RegisterAudioThread();
 #endif
+
+#ifdef _WIN32
+                    WCHAR description[64];
+                    swprintf_s(description, L"Audio thread %d:%d", currentAudioThreadConstructionIndex, static_cast<int>(i));
+                    SetThreadDescription(GetCurrentThread(), description); 
+#endif
+
                     //FlushDenormals();
                     std::shared_ptr<AudioTaskBase> task;
                     while (!stop.load(std::memory_order_acquire))
                     {
                         while (tasks.try_dequeue(task))
                             task->Run(threadOutputBuffers[i], threadReverbOutputs[i]);
-                        // Once the queue is empty, often a large wait until next used. _mm_pause() or SpinLock cause performance issues here causes 
-                        std::this_thread::yield();
+
+#if USE_BLOCKING_TASKS
+                        // wait for either data to come in or the stop request (which doesn't reset so we will always catch it)
+                        HANDLE handles[] = { tasksAvailable, stopRequested };
+                        WaitForMultipleObjects(2, handles, FALSE, INFINITE);
+#else
+						// Once the queue is empty, often a large wait until next used. _mm_pause() or SpinLock cause performance issues here causes 
+						std::this_thread::yield();
+#endif
                     }
 #ifdef USE_UNITY_PROFILER
                     UnregisterAudioThread(id);
 #endif
                     //NoFlushDenormals();
-                    });
+                });
             }
         }
 
+        AudioThreadPool::~AudioThreadPool()
+        {
+	        Stop();
+
+#if USE_BLOCKING_TASKS
+            // close our event
+            CloseHandle(tasksAvailable);
+            tasksAvailable = NULL;
+            CloseHandle(stopRequested);
+            stopRequested = NULL;
+#endif
+        }
+
         ////////////////////////////////////////
+
+        void AudioThreadPool::Stop()
+        {
+	        if (stop.exchange(true, std::memory_order_acq_rel))
+		        return;
+
+#if USE_BLOCKING_TASKS
+            // release waiting tasks
+            SetEvent(stopRequested);
+#endif
+
+	        for (auto& worker : workers)
+	        {
+		        if (worker.joinable())
+			        worker.join();
+	        }
+        }
 
         void AudioThreadPool::ProcessAllSources(std::array<std::optional<Source>, MAX_SOURCES>& sources, ImageSourceManager& imageSources, Buffer<>& outputBuffer, const AudioData& audioData)
         {

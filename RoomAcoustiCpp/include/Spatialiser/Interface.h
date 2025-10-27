@@ -15,6 +15,7 @@
 
 // Spatialiser headers
 #include "Spatialiser/Types.h"
+#include "Spatialiser/ContextOptionalArguments.h"
 
 namespace RAC
 {
@@ -22,13 +23,16 @@ namespace RAC
 	using namespace DSP;
 	namespace Spatialiser
 	{
+
 		/**
 		* @brief Initializes the spatialiser with the given configuration and file paths.
 		*
-		* @param config The configuration of the spatialiser.
+		* @param data The configuration of the spatialiser.
+		* @param optionalArguments Optional arguments
+		* 
 		* @return True if the initialization was successful, false otherwise.
 		*/
-		bool Init(const DSPData& data, const std::string& logPrefix = "");
+		bool Init(const DSPData& data, const ContextOptionalArguments &optionalArguments = ContextOptionalArguments());
 
 		/**
 		* @brief Exits and cleans up the spatialiser.

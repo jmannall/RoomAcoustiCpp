@@ -20,6 +20,7 @@
 #include "Common/Vec4.h"
 
 // Spatialiser headers
+#include "Spatialiser/ContextOptionalArguments.h"
 #include "Spatialiser/Types.h"
 #include "Spatialiser/SourceManager.h"
 #include "Spatialiser/Reverb.h"
@@ -31,7 +32,6 @@
 // 3DTI Headers
 #include "Common/Transform.h"
 #include "BinauralSpatializer/3DTI_BinauralSpatializer.h"
-
 
 #include <chrono>
 #include <filesystem>
@@ -55,9 +55,9 @@ namespace RAC
 			* @brief Constructor that initialises the spatialiser with the given configuration.
 			* 
 			* @param config The configuration for the spatialiser.
-			* @param logPrefix If set, then logs are redirected to a file with the specified prefix
+			* @param optionalArguments Optional initialization arguments
 			*/
-			explicit Context(const DSPData& data, const std::string& logPrefix = "");
+			explicit Context(const DSPData& data, const ContextOptionalArguments &optionalArguments = ContextOptionalArguments());
 
 			/**
 			* @brief Default deconstructor.
@@ -339,7 +339,14 @@ namespace RAC
 		private:
 			void InitLateReverb(const LateReverbData& data);
 
+			inline void EnsureAudioThreadPoolInitialized()
+			{
+				if (!audioThreadPool)
+					CreateAudioThreadPool();;
+			}
 			void CreateAudioThreadPool();
+
+			size_t numDesiredWorkerThreads;			// The number of desired threads
 
 			/**
 			* Spatialiser

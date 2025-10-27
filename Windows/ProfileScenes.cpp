@@ -5,6 +5,7 @@
 #include <iostream>
 
 #include "Spatialiser/Interface.h"
+#include "Spatialiser/ContextOptionalArguments.h"
 
 #include "MoDARTLoader.h"
 
@@ -19,24 +20,27 @@ using namespace RAC::Spatialiser;
 using namespace RAC::Common;
 using namespace RAC::DSP;
 
-#ifdef _DEBUG
+#define DEBUG_MEMORY        ( 0 && !defined(NDEBUG) )
+#define PROMPT_FOR_SNAPSHOT	( 0 )
+
+#if DEBUG_MEMORY
 struct MemoryAllocationData
 {
-	LONG AllocCount = 0;  
+	LONG AllocCount = 0;
 	LONG ReallocCount = 0;
-    LONG FreeCount = 0;
+	LONG FreeCount = 0;
 	LONG64 Size = 0;
-    LONG TinyCount = 0;      // <= 16 bytes
-    LONG SmallCount = 0;     // <= 64 bytes
-    LONG MediumCount = 0;    // <= 256 bytes
-    LONG LargeCount = 0;     // <= 1024 bytes
-    LONG XLargeCount = 0;    // <= 4096 bytes
-    LONG XXLargeCount = 0;   // <= 16384 BYTE
-    LONG XXXLargeCount = 0;  // > 16384
+	LONG TinyCount = 0;      // <= 16 bytes
+	LONG SmallCount = 0;     // <= 64 bytes
+	LONG MediumCount = 0;    // <= 256 bytes
+	LONG LargeCount = 0;     // <= 1024 bytes
+	LONG XLargeCount = 0;    // <= 4096 bytes
+	LONG XXLargeCount = 0;   // <= 16384 BYTE
+	LONG XXXLargeCount = 0;  // > 16384
 
-    int TrackedThreadCount = 0;
-    static constexpr int MaxTrackedThreads = 16;
-    DWORD TrackedThreads[MaxTrackedThreads];
+	int TrackedThreadCount = 0;
+	static constexpr int MaxTrackedThreads = 16;
+	DWORD TrackedThreads[MaxTrackedThreads];
 };
 
 MemoryAllocationData g_MemoryAllocationData;
@@ -44,12 +48,12 @@ CRITICAL_SECTION g_MemoryDebugCriticalSection;
 
 void InitMemoryDebug()
 {
-    InitializeCriticalSection(&g_MemoryDebugCriticalSection);
+	InitializeCriticalSection(&g_MemoryDebugCriticalSection);
 }
 
 void ExitMemoryDebug()
 {
-    DeleteCriticalSection(&g_MemoryDebugCriticalSection);
+	DeleteCriticalSection(&g_MemoryDebugCriticalSection);
 }
 
 void ResetMemoryAllocationMonitoring()
@@ -59,40 +63,40 @@ void ResetMemoryAllocationMonitoring()
 
 int AllocatorHook(
 	int nAllocType,
-	void *pUserData,
+	void* pUserData,
 	size_t nSize,
 	int nBlockUse,
 	long lRequest,
-	const unsigned char *szFileName,
+	const unsigned char* szFileName,
 	int nLine)
 {
-    if (nAllocType == _HOOK_ALLOC || nAllocType == _HOOK_REALLOC)
-    {
-        if (nAllocType == _HOOK_ALLOC )
+	if (nAllocType == _HOOK_ALLOC || nAllocType == _HOOK_REALLOC)
+	{
+		if (nAllocType == _HOOK_ALLOC)
 			InterlockedIncrement(&g_MemoryAllocationData.AllocCount);
-        else
+		else
 			InterlockedIncrement(&g_MemoryAllocationData.ReallocCount);
-        InterlockedAdd64(&g_MemoryAllocationData.Size, nSize);
-        if (nSize <= 16)
-            InterlockedIncrement(&g_MemoryAllocationData.TinyCount);
-        else if (nSize <= 64)
-            InterlockedIncrement(&g_MemoryAllocationData.SmallCount);
-        else if (nSize <= 256)
-            InterlockedIncrement(&g_MemoryAllocationData.MediumCount);
-        else if (nSize <= 1024)
-            InterlockedIncrement(&g_MemoryAllocationData.LargeCount);
-        else if (nSize <= 4096)
-            InterlockedIncrement(&g_MemoryAllocationData.XLargeCount);
-        else if (nSize <= 16384)
-            InterlockedIncrement(&g_MemoryAllocationData.XXLargeCount);
-        else
-            InterlockedIncrement(&g_MemoryAllocationData.XXXLargeCount);
+		InterlockedAdd64(&g_MemoryAllocationData.Size, nSize);
+		if (nSize <= 16)
+			InterlockedIncrement(&g_MemoryAllocationData.TinyCount);
+		else if (nSize <= 64)
+			InterlockedIncrement(&g_MemoryAllocationData.SmallCount);
+		else if (nSize <= 256)
+			InterlockedIncrement(&g_MemoryAllocationData.MediumCount);
+		else if (nSize <= 1024)
+			InterlockedIncrement(&g_MemoryAllocationData.LargeCount);
+		else if (nSize <= 4096)
+			InterlockedIncrement(&g_MemoryAllocationData.XLargeCount);
+		else if (nSize <= 16384)
+			InterlockedIncrement(&g_MemoryAllocationData.XXLargeCount);
+		else
+			InterlockedIncrement(&g_MemoryAllocationData.XXXLargeCount);
 
-    }
-    else if (nAllocType == _HOOK_FREE)
-    {
-        InterlockedIncrement(&g_MemoryAllocationData.FreeCount);
-    }
+	}
+	else if (nAllocType == _HOOK_FREE)
+	{
+		InterlockedIncrement(&g_MemoryAllocationData.FreeCount);
+	}
 
 	// find the thread we are using; this list could theoretically change during
 	// iteration
@@ -125,15 +129,15 @@ void StartMemoryMonitor()
 
 void StopMemoryMonitor()
 {
-    _CrtSetAllocHook(nullptr);
+	_CrtSetAllocHook(nullptr);
 }
 
 void DumpMemory()
 {
 	std::cout << std::format("Memory: Alloc={}/Re={}/Free={}; Total: {} bytes (t={}/S={}/M={}/L={}/XL={}/XXL={}/XXXL={}) threads={}",
 		g_MemoryAllocationData.AllocCount,
-        g_MemoryAllocationData.ReallocCount,
-        g_MemoryAllocationData.FreeCount,
+		g_MemoryAllocationData.ReallocCount,
+		g_MemoryAllocationData.FreeCount,
 		g_MemoryAllocationData.Size,
 		g_MemoryAllocationData.TinyCount,
 		g_MemoryAllocationData.SmallCount,
@@ -151,268 +155,345 @@ inline void StopMemoryMonitor() {}
 #endif
 
 
-std::vector<size_t> CreateShoeboxRoom(Vec3 pos, size_t materialId)
+class BaseTest
 {
-    Real posX = pos.x();
-    Real posY = pos.y();
-    Real posZ = pos.z();
+public:
+	void Run();
 
-    std::vector<size_t> wallIDs(12);
-    wallIDs[0] = InitWall({ Vec3((Real)0.0, posY, (Real)0.0),
-            Vec3(posX, posY, (Real)0.0),
-            Vec3(posX, posY, posZ) }, materialId);
-    wallIDs[1] = InitWall({ Vec3((Real)0.0, posY, (Real)0.0),
-            Vec3(posX, posY, posZ),
-            Vec3((Real)0.0, posY, posZ) }, materialId);
-    wallIDs[2] = InitWall({ Vec3(posX, (Real)0.0, (Real)0.0),
-            Vec3((Real)0.0, (Real)0.0, (Real)0.0),
-            Vec3((Real)0.0, (Real)0.0, posZ) }, materialId);
-    wallIDs[3] = InitWall({ Vec3(posX, (Real)0.0, (Real)0.0),
-            Vec3((Real)0.0, (Real)0.0, posZ),
-            Vec3(posX, (Real)0.0, posZ) }, materialId);
-    wallIDs[4] = InitWall({ Vec3(posX, (Real)0.0, posZ),
-            Vec3(posX, posY, posZ),
-            Vec3(posX, posY, (Real)0.0) }, materialId);
-    wallIDs[5] = InitWall({ Vec3(posX, (Real)0.0, posZ),
-            Vec3(posX, posY, (Real)0.0),
-            Vec3(posX, (Real)0.0, (Real)0.0) }, materialId);
-    wallIDs[6] = InitWall({ Vec3((Real)0.0, (Real)0.0, (Real)0.0),
-            Vec3((Real)0.0, posY, (Real)0.0),
-            Vec3((Real)0.0, posY, posZ) }, materialId);
-    wallIDs[7] = InitWall({ Vec3((Real)0.0, (Real)0.0, (Real)0.0),
-            Vec3((Real)0.0, posY, posZ),
-            Vec3((Real)0.0, (Real)0.0, posZ) }, materialId);
-    wallIDs[8] = InitWall({ Vec3((Real)0.0, (Real)0.0, (Real)0.0),
-            Vec3(posX, (Real)0.0, (Real)0.0),
-            Vec3(posX, posY, (Real)0.0) }, materialId);
-    wallIDs[9] = InitWall({ Vec3((Real)0.0, (Real)0.0, (Real)0.0),
-            Vec3(posX, posY, (Real)0.0),
-            Vec3((Real)0.0, posY, (Real)0.0) }, materialId);
-    wallIDs[10] = InitWall({ Vec3((Real)0.0, posY, posZ),
-            Vec3(posX, posY, posZ),
-            Vec3(posX, (Real)0.0, posZ) }, materialId);
-    wallIDs[11] = InitWall({ Vec3((Real)0.0, posY, posZ),
-            Vec3(posX, (Real)0.0, posZ),
-            Vec3((Real)0.0, (Real)0.0, posZ) }, materialId);
-    UpdatePlanesAndEdges();
+protected:
+	BaseTest(ProfileExecutionContext& executionContext) : executionContext(executionContext) {}
+
+	ProfileExecutionContext& executionContext;
+	Coefficients<> frequencyBands;
+
+	int numFrames{ 512 };						// Number of frames per audio callback
+	Buffer<> input = Buffer<>::Zero(numFrames);
+	Buffer<> output = Buffer<>::Zero(2 * numFrames);
+
+	virtual bool Init();
+	virtual void Main() = 0;
+	virtual void Exit();
+};
+
+void BaseTest::Run()
+{
+#if PROMPT_FOR_SNAPSHOT
+	int dummy;  std::cout << "Snapshot-About to Init: "; std::cin >> dummy;
+#endif
+	executionContext.SetExecutionStage(ProfileExecutionStage::Init);
+	if (!Init())
+		return;
+
+#if PROMPT_FOR_SNAPSHOT
+	std::cout << "Snapshot-About to Main: "; std::cin >> dummy;
+#endif
+	executionContext.SetExecutionStage(ProfileExecutionStage::Main);
+	StartMemoryMonitor();
+	Main();
+	StopMemoryMonitor();
+
+#if PROMPT_FOR_SNAPSHOT
+	std::cout << "Snapshot-About to Exit: "; std::cin >> dummy;
+#endif
+	executionContext.SetExecutionStage(ProfileExecutionStage::Exit);
+	Exit();
+
+#if PROMPT_FOR_SNAPSHOT
+	std::cout << "Snapshot-Finished: "; std::cin >> dummy;
+#endif
+}
+
+bool BaseTest::Init()
+{
+	int fs{ 48000 };							// Sample rate
+	int numReverbSources{ 12 };					// Number of output channels for late reverberation
+	int fdnSize{ 12 };							// Size of the FDN (number of delay lines)
+	Real lerpFactor = 2.0; 				        // Interpolation factor
+	Real Q{ 0.98 };								// Q factor for the GraphicEQ
+	frequencyBands = Coefficients<>(std::vector<Real>({ 125.0, 250.0, 500.0, 1e3, 2e3, 4e3, 8e3 }));				// Frequency band center frequencies
+
+	DSPData configData = DSPData(fs, numFrames, numReverbSources, fdnSize, lerpFactor, Q, frequencyBands);
+	ContextOptionalArguments optionalArguments =
+	{
+		.logPrefix = executionContext.logPrefix,
+		.desiredAudioThreads = executionContext.desiredAudioThreads
+	};
+	::Init(configData, optionalArguments);
+
+	int hrtfSamplingStep = 5;
+	static std::vector<std::string> hrtfFiles = { "HRTF/Kemar_DTF_ITD_48000_3dti-hrtf.3dti-hrtf", "HRTF/NearFieldCompensation_ILD_48000.3dti-ild", "HRTF/HRTF_ILD_48000.3dti-ild" };
+	bool success = LoadSpatialisationFiles(hrtfSamplingStep, hrtfFiles);
+	if (!success)
+	{
+		std::cout << "Error loading spatialisation files!" << std::endl;
+		UpdateSpatialisationMode(SpatialisationMode::none);
+	}
+	else
+	{
+		UpdateSpatialisationMode(SpatialisationMode::quality);
+	}
+
+	DirectSound dir = DirectSound::doCheck;
+	const int reflOrder = executionContext.reflectionOrder;
+	const int shadowOrder = executionContext.shadowOrder;
+	int specularOrder = 1;
+	Real minEdgeLength = (Real)0.0;
+	Real maxPathLength = 1e4; // No limit on path length
+	EarlyReverbData earlyReverbData(dir, reflOrder, shadowOrder, specularOrder, minEdgeLength, maxPathLength);
+
+	DiffractionModel diffractionModel = DiffractionModel::nnSmall;
+
+	InitEarlyReverb(true, earlyReverbData, diffractionModel);
+	return true;
+}
+
+void BaseTest::Exit()
+{
+	::Exit();
+}
+
+
+class ProfileShoeboxTest : public BaseTest
+{
+public:
+	explicit ProfileShoeboxTest(ProfileExecutionContext& executionContext) : BaseTest(executionContext) {}
+
+protected:
+	virtual bool Init() override;
+	virtual void Main() override;
+	virtual void Exit() override;
+
+	Vec3 sourcePos = Vec3((Real)1.0, (Real)2.0, (Real)3.0);
+	Vec4 sourceOri = Vec4((Real)1.0, (Real)0.0, (Real)0.0, (Real)0.0);
+	size_t materialId;
+	std::vector<size_t> wallIds;
+	int id;
+
+	static std::vector<size_t> CreateShoeboxRoom(Vec3 pos, size_t materialId);
+
+};
+
+
+bool ProfileShoeboxTest::Init()
+{
+	if (!BaseTest::Init())
+		return false;
+
+	// Create shoebox
+	Vec3 pos(7.0, 3.0, 4.0);
+	Coefficients<> absorption(std::vector<Real>({ 0.03, 0.03, 0.04, 0.06, 0.09, 0.1, 0.12 }));
+	materialId = InitMaterial(absorption);
+	wallIds = CreateShoeboxRoom(pos, materialId);
+
+	FDNMatrix matrix = FDNMatrix::randomOrthogonal;
+
+	Real volume = pos.Sum();
+	Coefficients<> t60(std::vector<Real>({ 0.8, 0.7, 0.65, 0.63, 0.6, 0.55, 0.48 }));
+	ReverbFormula formula = ReverbFormula::Custom;
+	Vec<> dimensions{ { pos.x(), pos.y(), pos.z()} };
+	RoomData roomData(volume, t60, formula, dimensions);
+
+	LateReverbData lateReverbData(true, executionContext.numRays, matrix);
+
+	InitSingleFDN(roomData, lateReverbData);
+
+	input[0] = 1.0;
+	// Stereo output buffer
+
+	Vec3 listenerPos((Real)0.0, (Real)2.0, (Real)0.0);
+	Vec4 listenerOri((Real)1.0, (Real)0.0, (Real)0.0, (Real)0.0);
+	UpdateListener(listenerPos, listenerOri);
+
+	id = InitSource();
+	if (id < 0)
+	{
+		std::cout << "Error initialising source!" << std::endl;
+		return false;
+	}
+	UpdateSourceDirectivity(static_cast<size_t>(id), SourceDirectivity::genelec8020c);
+
+	UpdateSource(static_cast<size_t>(id), sourcePos, sourceOri);
+
+	// Only run to ensure background processes have run at least once
+	// No point profiling audio before image edge model and late reverb are ready
+	RecordImpulseResponse(sourcePos, sourceOri, output);
+	return true;
+}
+
+void ProfileShoeboxTest::Main()
+{
+	for (int innerIteration = 0; innerIteration < executionContext.innerIterations; ++innerIteration)
+	{
+		SubmitAudio(static_cast<size_t>(id), input);
+		GetOutput(output);
+
+		sourcePos.x() += (Real)0.1;
+		UpdateSource(static_cast<size_t>(id), sourcePos, sourceOri);
+	}
+}
+
+void ProfileShoeboxTest::Exit()
+{
+	for (size_t wallID : wallIds)
+		RemoveWall(wallID);
+	RemoveMaterial(materialId);
+	RemoveSource(static_cast<size_t>(id));
+	BaseTest::Exit();
+}
+
+
+std::vector<size_t> ProfileShoeboxTest::CreateShoeboxRoom(Vec3 pos, size_t materialId)
+{
+	Real posX = pos.x();
+	Real posY = pos.y();
+	Real posZ = pos.z();
+
+	std::vector<size_t> wallIDs(12);
+	wallIDs[0] = InitWall({ Vec3((Real)0.0, posY, (Real)0.0),
+			Vec3(posX, posY, (Real)0.0),
+			Vec3(posX, posY, posZ) }, materialId);
+	wallIDs[1] = InitWall({ Vec3((Real)0.0, posY, (Real)0.0),
+			Vec3(posX, posY, posZ),
+			Vec3((Real)0.0, posY, posZ) }, materialId);
+	wallIDs[2] = InitWall({ Vec3(posX, (Real)0.0, (Real)0.0),
+			Vec3((Real)0.0, (Real)0.0, (Real)0.0),
+			Vec3((Real)0.0, (Real)0.0, posZ) }, materialId);
+	wallIDs[3] = InitWall({ Vec3(posX, (Real)0.0, (Real)0.0),
+			Vec3((Real)0.0, (Real)0.0, posZ),
+			Vec3(posX, (Real)0.0, posZ) }, materialId);
+	wallIDs[4] = InitWall({ Vec3(posX, (Real)0.0, posZ),
+			Vec3(posX, posY, posZ),
+			Vec3(posX, posY, (Real)0.0) }, materialId);
+	wallIDs[5] = InitWall({ Vec3(posX, (Real)0.0, posZ),
+			Vec3(posX, posY, (Real)0.0),
+			Vec3(posX, (Real)0.0, (Real)0.0) }, materialId);
+	wallIDs[6] = InitWall({ Vec3((Real)0.0, (Real)0.0, (Real)0.0),
+			Vec3((Real)0.0, posY, (Real)0.0),
+			Vec3((Real)0.0, posY, posZ) }, materialId);
+	wallIDs[7] = InitWall({ Vec3((Real)0.0, (Real)0.0, (Real)0.0),
+			Vec3((Real)0.0, posY, posZ),
+			Vec3((Real)0.0, (Real)0.0, posZ) }, materialId);
+	wallIDs[8] = InitWall({ Vec3((Real)0.0, (Real)0.0, (Real)0.0),
+			Vec3(posX, (Real)0.0, (Real)0.0),
+			Vec3(posX, posY, (Real)0.0) }, materialId);
+	wallIDs[9] = InitWall({ Vec3((Real)0.0, (Real)0.0, (Real)0.0),
+			Vec3(posX, posY, (Real)0.0),
+			Vec3((Real)0.0, posY, (Real)0.0) }, materialId);
+	wallIDs[10] = InitWall({ Vec3((Real)0.0, posY, posZ),
+			Vec3(posX, posY, posZ),
+			Vec3(posX, (Real)0.0, posZ) }, materialId);
+	wallIDs[11] = InitWall({ Vec3((Real)0.0, posY, posZ),
+			Vec3(posX, (Real)0.0, posZ),
+			Vec3((Real)0.0, (Real)0.0, posZ) }, materialId);
+	UpdatePlanesAndEdges();
 	return wallIDs;
 }
 
 void ProfileShoebox(ProfileExecutionContext& executionContext)
 {
-	executionContext.SetExecutionStage(ProfileExecutionStage::Init);
-    int fs{ 48000 };							// Sample rate
-    int numFrames{ 512 };						// Number of frames per audio callback
-    int numReverbSources{ 12 };					// Number of output channels for late reverberation
-    int fdnSize{ 12 };							// Size of the FDN (number of delay lines)
-    Real lerpFactor = 2.0; 				        // Interpolation factor
-    Real Q{ 0.98 };								// Q factor for the GraphicEQ
-    Coefficients<> frequencyBands(std::vector<Real>({ 125.0, 250.0, 500.0, 1e3, 2e3, 4e3, 8e3 }));				// Frequency band center frequencies
-
-    DSPData configData = DSPData(fs, numFrames, numReverbSources, fdnSize, lerpFactor, Q, frequencyBands);
-    Init(configData, executionContext.logPrefix);
-
-    int hrtfSamplingStep = 5;
-    std::vector<std::string> hrtfFiles = { "HRTF/Kemar_DTF_ITD_48000_3dti-hrtf.3dti-hrtf", "HRTF/NearFieldCompensation_ILD_48000.3dti-ild", "HRTF/HRTF_ILD_48000.3dti-ild" };
-    bool success = LoadSpatialisationFiles(hrtfSamplingStep, hrtfFiles);
-    if (!success)
-    {
-        std::cout << "Error loading spatialisation files!" << std::endl;
-        UpdateSpatialisationMode(SpatialisationMode::none);
-    }
-    else
-        UpdateSpatialisationMode(SpatialisationMode::quality);
-
-    DirectSound dir = DirectSound::doCheck;
-    int reflOrder = 2;
-    int shadowOrder = 2;
-    int specularOrder = 1;
-    Real minEdgeLength = (Real)0.0;
-    Real maxPathLength = 1e4; // No limit on path length
-    EarlyReverbData earlyReverbData(dir, reflOrder, shadowOrder, specularOrder, minEdgeLength, maxPathLength);
-
-    DiffractionModel diffractionModel = DiffractionModel::nnSmall;
-
-    InitEarlyReverb(true, earlyReverbData, diffractionModel);
-
-    // Create shoebox
-    Vec3 pos(7.0, 3.0, 4.0);
-    Coefficients<> absorption(std::vector<Real>({ 0.03, 0.03, 0.04, 0.06, 0.09, 0.1, 0.12 }));
-	size_t materialId = InitMaterial(absorption);
-    auto wallIds = CreateShoeboxRoom(pos, materialId);
-
-    int numRays = 100;
-    FDNMatrix matrix = FDNMatrix::randomOrthogonal;
-
-    Real volume = pos.Sum();
-    Coefficients<> t60(std::vector<Real>({ 0.8, 0.7, 0.65, 0.63, 0.6, 0.55, 0.48 }));
-    ReverbFormula formula = ReverbFormula::Custom;
-    Vec<> dimensions{ { pos.x(), pos.y(), pos.z()} };
-    RoomData roomData(volume, t60, formula, dimensions);
-
-    LateReverbData lateReverbData(true, numRays, matrix);
-
-    InitSingleFDN(roomData, lateReverbData);
-
-    Buffer<> input = Buffer<>::Zero(numFrames);
-    input[0] = 1.0;
-    // Stereo output buffer
-    Buffer<> output = Buffer<>::Zero(2 * numFrames);
-
-    Vec3 listenerPos((Real)0.0, (Real)2.0, (Real)0.0);
-    Vec4 listenerOri((Real)1.0, (Real)0.0, (Real)0.0, (Real)0.0);
-    UpdateListener(listenerPos, listenerOri);
-
-    int id = InitSource();
-    if (id < 0)
-    {
-        std::cout << "Error initialising source!" << std::endl;
-        return;
-    }
-    UpdateSourceDirectivity(static_cast<size_t>(id), SourceDirectivity::genelec8020c);
-
-    Vec3 sourcePos((Real)1.0, (Real)2.0, (Real)3.0);
-    Vec4 sourceOri((Real)1.0, (Real)0.0, (Real)0.0, (Real)0.0);
-    UpdateSource(static_cast<size_t>(id), sourcePos, sourceOri);
-
-    // Only run to ensure background processes have run at least once
-    // No point profiling audio before image edge model and late reverb are ready
-    RecordImpulseResponse(sourcePos, sourceOri, output);
-
-    executionContext.SetExecutionStage(ProfileExecutionStage::Main);
-    StartMemoryMonitor();
-    for (int innerIteration = 0; innerIteration < executionContext.innerIterations; ++innerIteration)
-    {
-        SubmitAudio(static_cast<size_t>(id), input);
-        GetOutput(output);
-
-        sourcePos.x() += (Real)0.1;
-        UpdateSource(static_cast<size_t>(id), sourcePos, sourceOri);
-    }
-    StopMemoryMonitor();
-
-	executionContext.SetExecutionStage(ProfileExecutionStage::Exit);
-    for (size_t wallID : wallIds)
-        RemoveWall(wallID);
-	RemoveMaterial(materialId);
-	RemoveSource(static_cast<size_t>(id));
-    Exit();
+	ProfileShoeboxTest test(executionContext);
+	test.Run();
 }
 
-void ProfileMoDART(ProfileExecutionContext &executionContext)
+class ProfileMoDARTTest : public BaseTest
 {
-	executionContext.SetExecutionStage(ProfileExecutionStage::Init);
-    int fs{ 48000 };							// Sample rate
-    int numFrames{ 512 };						// Number of frames per audio callback
-    int numReverbSources{ 12 };					// Number of output channels for late reverberation
-    int fdnSize{ 12 };							// Size of the FDN (number of delay lines)
-    Real lerpFactor = 2.0; 				        // Interpolation factor
-    Real Q{ 0.98 };								// Q factor for the GraphicEQ
-    Coefficients<> frequencyBands(std::vector<Real>({ 125.0, 250.0, 500.0, 1e3, 2e3, 4e3, 8e3 }));				// Frequency band center frequencies
+public:
+	ProfileMoDARTTest(ProfileExecutionContext& executionContext) : BaseTest(executionContext) {}
 
-    DSPData configData = DSPData(fs, numFrames, numReverbSources, fdnSize, lerpFactor, Q, frequencyBands);
-    Init(configData, executionContext.logPrefix);
+protected:
+	virtual bool Init() override;
+	virtual void Main() override;
+	virtual void Exit() override;
 
-    int hrtfSamplingStep = 5;
-    std::vector<std::string> hrtfFiles = { "HRTF/Kemar_DTF_ITD_48000_3dti-hrtf.3dti-hrtf", "HRTF/NearFieldCompensation_ILD_48000.3dti-ild", "HRTF/HRTF_ILD_48000.3dti-ild" };
-    bool success = LoadSpatialisationFiles(hrtfSamplingStep, hrtfFiles);
-    if (!success)
-    {
-        std::cout << "Error loading spatialisation files!" << std::endl;
-        UpdateSpatialisationMode(SpatialisationMode::none);
-    }
-    else
-        UpdateSpatialisationMode(SpatialisationMode::quality);
+	Vec3 sourcePos = Vec3((Real)2.0, (Real)1.5, (Real)2.0);
+	Vec4 sourceOri = Vec4((Real)1.0, (Real)0.0, (Real)0.0, (Real)0.0);
+	int id;
+};
 
-    DirectSound dir = DirectSound::doCheck;
-    int reflOrder = 2;
-    int shadowOrder = 2;
-    int specularOrder = 1;
-    Real minEdgeLength = (Real)0.0;
-    Real maxPathLength = 1e4; // No limit on path length
-    EarlyReverbData earlyReverbData(dir, reflOrder, shadowOrder, specularOrder, minEdgeLength, maxPathLength);
+bool ProfileMoDARTTest::Init()
+{
+	if (!BaseTest::Init())
+		return false;
 
-    DiffractionModel diffractionModel = DiffractionModel::nnSmall;
+	// Load MoDART scene
+	FDNMatrix matrix = FDNMatrix::randomOrthogonal;
+	LateReverbData lateReverbData(true, executionContext.numRays, matrix);
 
-    InitEarlyReverb(true, earlyReverbData, diffractionModel);
-
-    // Load MoDART scene
-    int numRays = 100;
-    FDNMatrix matrix = FDNMatrix::randomOrthogonal;
-    LateReverbData lateReverbData(true, numRays, matrix);
-
-    std::string modartPath = "MoDART";
-    if (!LoadMoDARTScene(modartPath, frequencyBands, lateReverbData))
-    {
+	std::string modartPath = "MoDART";
+	if (!LoadMoDARTScene(modartPath, frequencyBands, lateReverbData))
+	{
 		std::cout << "Error loading MoDART scene!" << std::endl;
-        Exit();
-        return;
-    }
+		Exit();
+		return false;
+	}
 
-    Buffer<> input = Buffer<>::Zero(numFrames);
-    input[0] = 1.0;
-    // Stereo output buffer
-    Buffer<> output = Buffer<>::Zero(2 * numFrames);
+	input[0] = 1.0;
+	// Stereo output buffer
 
-    Vec3 listenerPos((Real)2.0, (Real)1.0, (Real)6.8);
-    Vec4 listenerOri((Real)1.0, (Real)0.0, (Real)0.0, (Real)0.0);
-    UpdateListener(listenerPos, listenerOri);
+	Vec3 listenerPos((Real)2.0, (Real)1.0, (Real)6.8);
+	Vec4 listenerOri((Real)1.0, (Real)0.0, (Real)0.0, (Real)0.0);
+	UpdateListener(listenerPos, listenerOri);
 
-    int id = InitSource();
-    if (id < 0)
-    {
-        std::cout << "Error initialising source!" << std::endl;
-        return;
-    }
-    UpdateSourceDirectivity(static_cast<size_t>(id), SourceDirectivity::genelec8020c);
+	id = InitSource();
+	if (id < 0)
+	{
+		std::cout << "Error initialising source!" << std::endl;
+		return false;
+	}
+	UpdateSourceDirectivity(static_cast<size_t>(id), SourceDirectivity::genelec8020c);
 
-    Vec3 sourcePos((Real)2.0, (Real)1.5, (Real)2.0);
-    Vec4 sourceOri((Real)1.0, (Real)0.0, (Real)0.0, (Real)0.0);
-    UpdateSource(static_cast<size_t>(id), sourcePos, sourceOri);
+	UpdateSource(static_cast<size_t>(id), sourcePos, sourceOri);
 
-    // Only run to ensure background processes have run at least once
+	// Only run to ensure background processes have run at least once
 	// No point profiling audio before image edge model and late reverb are ready
 	RecordImpulseResponse(sourcePos, sourceOri, output);
 
-	executionContext.SetExecutionStage(ProfileExecutionStage::Main);
-    StartMemoryMonitor();
-    for (int innerIteration = 0; innerIteration < executionContext.innerIterations; ++innerIteration)
-    {
-        SubmitAudio(static_cast<size_t>(id), input);
-        GetOutput(output);
+	return true;
+}
+
+void ProfileMoDARTTest::Main()
+{
+	for (int innerIteration = 0; innerIteration < executionContext.innerIterations; ++innerIteration)
+	{
+		SubmitAudio(static_cast<size_t>(id), input);
+		GetOutput(output);
 
 		sourcePos.x() += (Real)0.1;
-        UpdateSource(static_cast<size_t>(id), sourcePos, sourceOri);
-    }
-    StopMemoryMonitor();
+		UpdateSource(static_cast<size_t>(id), sourcePos, sourceOri);
+	}
+}
 
-	executionContext.SetExecutionStage(ProfileExecutionStage::Exit);
-    /*for (size_t wallID : wallIds)
-        RemoveWall(wallID);
-    RemoveMaterial(materialId);*/
+void ProfileMoDARTTest::Exit()
+{
 	RemoveSource(static_cast<size_t>(id));
-    Exit();
+	BaseTest::Exit();
+}
+
+void ProfileMoDART(ProfileExecutionContext& executionContext)
+{
+	ProfileMoDARTTest test(executionContext);
+	test.Run();
 }
 
 // Common::CTimeMeasure requires using the whole profile to properly work, so just
 // create a simple class to manage the time that we want
 
-bool ChangeToProfilingDirectory(const std::string &userPath)
+bool ChangeToProfilingDirectory(const std::string& userPath)
 {
 	namespace fs = std::filesystem;
 
-	if (!userPath.empty() )
+	if (!userPath.empty())
 	{
-        if (fs::exists(userPath))
-        {
-            std::cerr << "Profiling data given but doesn't exist (" << userPath << ")" << std::endl;
-            return false;
-        }
+		if (fs::exists(userPath))
+		{
+			std::cerr << "Profiling data given but doesn't exist (" << userPath << ")" << std::endl;
+			return false;
+		}
 
-        fs::current_path(userPath);
-        return true;
+		fs::current_path(userPath);
+		return true;
 	}
-    else
+	else
 	{
 		fs::path path = fs::current_path();
 		for (;; )
@@ -420,8 +501,8 @@ bool ChangeToProfilingDirectory(const std::string &userPath)
 			fs::path profileDataCandidate = path / "ProfilingData";
 			if (fs::exists(profileDataCandidate))
 			{
-                fs::current_path(profileDataCandidate);
-                return true;
+				fs::current_path(profileDataCandidate);
+				return true;
 			}
 
 			if (!path.has_parent_path() || path == path.root_path())
@@ -429,104 +510,109 @@ bool ChangeToProfilingDirectory(const std::string &userPath)
 				std::cerr << "Searched up but cannot find ProfilingData" << std::endl;
 				return false;
 			}
-            path = path.parent_path();
+			path = path.parent_path();
 		}
 	}
 
 }
 
-int main(int argc, const char *argv[])
+int main(int argc, const char* argv[])
 {
-#if _DEBUG
+	SetThreadDescription(GetCurrentThread(), TEXT("Main"));
+
+#if DEBUG_MEMORY
 	InitMemoryDebug();
 #endif
 
-    CommandLineParser commandLineParser(argc, argv);
-    commandLineParser.RegisterProfileTest("Shoebox", ProfileShoebox);
-    commandLineParser.RegisterProfileTest("MoDART", ProfileMoDART);
-    if (!commandLineParser.Parse())
-        return -1;
+	CommandLineParser commandLineParser(argc, argv);
+	commandLineParser.RegisterProfileTest("Shoebox", ProfileShoebox);
+	commandLineParser.RegisterProfileTest("MoDART", ProfileMoDART);
+	if (!commandLineParser.Parse())
+		return -1;
 
 #if _DEBUG
-    if (commandLineParser.GetDebugFlag())
-    {
-        std::cout << "Enabling debug flag" << std::endl;
-        // this only works in debug
-        _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-    }
+	if (commandLineParser.GetDebugFlag())
+	{
+		std::cout << "Enabling debug flag" << std::endl;
+		// this only works in debug
+		_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+	}
 #endif
 
-    if (!ChangeToProfilingDirectory(commandLineParser.GetProfileDataDirectory()))
-        return -1;
+	if (!ChangeToProfilingDirectory(commandLineParser.GetProfileDataDirectory()))
+		return -1;
 
-    const auto &plan = commandLineParser.GetPlan();
-    const int iterations = commandLineParser.GetTestIterations();
-    std::cout << "Running " << plan.size() << " tests " << iterations << " times." << std::endl;
+	const auto& plan = commandLineParser.GetPlan();
+	const int iterations = commandLineParser.GetTestIterations();
+	std::cout << "Running " << plan.size() << " tests " << iterations << " times." << std::endl;
 
-    std::ofstream runLog(commandLineParser.GetLogPrefix() + "_run.txt");
-    for (size_t planIndex = 0; planIndex < plan.size(); ++planIndex)
-    {
-        ProfileExecutionContext executionContext =
-        {
+	std::ofstream runLog(commandLineParser.GetLogPrefix() + "_run.txt");
+	runLog << "Test,Type,Iterations,TotalInitTime,TotalMainTime,TotalExitTime,IterationInitTime,IterationMainTime,IterationExitTime,InnerLoopTime" << std::endl;
+
+	for (size_t planIndex = 0; planIndex < plan.size(); ++planIndex)
+	{
+		ProfileExecutionContext executionContext =
+		{
 			.name = plan[planIndex].name,
-            .logPrefix = commandLineParser.GetDetailedLogs() ? commandLineParser.GetLogPrefix() : "",
-            .totalTestIterations = iterations,
-            .innerIterations = commandLineParser.GetInnerIterations()
-        };
+			.logPrefix = commandLineParser.GetDetailedLogs() ? commandLineParser.GetLogPrefix() : "",
+			.totalTestIterations = iterations,
+			.innerIterations = commandLineParser.GetInnerIterations(),
+			.numRays = commandLineParser.GetNumRays(),
+			.reflectionOrder = commandLineParser.GetReflectionOrder(),
+			.shadowOrder = commandLineParser.GetShadowOrder(),
+			.desiredAudioThreads = commandLineParser.GetDesiredAudioThreads()
+		};
 
-        std::cout << "Profiling: " << executionContext.name << std::endl;
-#if _DEBUG
-        ResetMemoryAllocationMonitoring();
+		std::cout << "Profiling: " << executionContext.name << std::endl;
+#if DEBUG_MEMORY
+		ResetMemoryAllocationMonitoring();
 #endif
-        for (int iteration = 0; iteration < iterations; ++iteration)
-        {
-            std::cout << "Running iteration " << (iteration + 1) << "/" << iterations << std::endl;
-            executionContext.currentTestIteration = iteration;
+		for (int iteration = 0; iteration < iterations; ++iteration)
+		{
+			std::cout << "Running iteration " << (iteration + 1) << "/" << iterations << std::endl;
+			executionContext.currentTestIteration = iteration;
 			plan[planIndex].function(executionContext);
-            executionContext.CompleteExecution();
-        }
+			executionContext.CompleteExecution();
+		}
 
-#if _DEBUG
-        DumpMemory();
+#if DEBUG_MEMORY
+		DumpMemory();
 #endif
 
-        // log it
-        const int totalInnerIterations = iterations * executionContext.innerIterations;
-        runLog << executionContext.name << ","
-            << iterations << ","
-            << executionContext.TotalTime << ","
-            << executionContext.InitTime << ","
-            << executionContext.MainTime << ","
-            << executionContext.ExitTime << ","
+		// log it
+		const int totalInnerIterations = iterations * executionContext.innerIterations;
+		runLog << executionContext.name << ","
+			<< (MATRIX_LIBRARY == EIGEN_FLAG ? "Eigen," : "Custom,")
+			<< iterations << ","
+			<< executionContext.TotalTime << ","
+			<< executionContext.InitTime << ","
+			<< executionContext.MainTime << ","
+			<< executionContext.ExitTime << ","
 			<< (executionContext.TotalTime / iterations) << ","
 			<< (executionContext.InitTime / iterations) << ","
 			<< (executionContext.MainTime / iterations) << ","
 			<< (executionContext.ExitTime / iterations) << ","
 			<< (executionContext.TotalTime / totalInnerIterations) << ","
-			<< (executionContext.InitTime / totalInnerIterations) << ","
-			<< (executionContext.MainTime / totalInnerIterations) << ","
-			<< (executionContext.ExitTime / totalInnerIterations) <<
-            std::endl;
+			<< (executionContext.MainTime / totalInnerIterations) <<
+			std::endl;
 
-        std::cout << std::format("Test time: {:.1f}ms ({:.1f}ms/{:.1f}ms/{:.1f}ms); Per-test: {:.1f}ms ({:.1f}ms/{:.1f}ms/{:.1f}ms); Per-iteration: {:.2f}ms ({:.2f}ms/{:.2f}ms/{:.2f}ms)",
-            executionContext.TotalTime,
-            executionContext.InitTime,
-            executionContext.MainTime,
-            executionContext.ExitTime,
-            executionContext.TotalTime / iterations,
-            executionContext.InitTime / iterations,
-            executionContext.MainTime / iterations,
-            executionContext.ExitTime / iterations,
-            executionContext.TotalTime / totalInnerIterations,
-            executionContext.InitTime / totalInnerIterations,
-            executionContext.MainTime / totalInnerIterations,
-            executionContext.ExitTime / totalInnerIterations)
-            << std::endl;
-    }
+		std::cout << std::format("Test time: {:.1f}ms ({:.1f}ms/{:.1f}ms/{:.1f}ms); Per-test: {:.1f}ms ({:.1f}ms/{:.1f}ms/{:.1f}ms); Per-iteration: {:.2f}ms)",
+			executionContext.TotalTime,
+			executionContext.InitTime,
+			executionContext.MainTime,
+			executionContext.ExitTime,
+			executionContext.TotalTime / iterations,
+			executionContext.InitTime / iterations,
+			executionContext.MainTime / iterations,
+			executionContext.ExitTime / iterations,
+			executionContext.TotalTime / totalInnerIterations,
+			executionContext.MainTime / totalInnerIterations)
+			<< std::endl;
+	}
 
-    std::cout << "Done!" << std::endl;
+	std::cout << "Done!" << std::endl;
 
-#if _DEBUG
-    ExitMemoryDebug();
+#if DEBUG_MEMORY
+	ExitMemoryDebug();
 #endif
 }

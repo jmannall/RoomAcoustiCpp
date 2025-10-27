@@ -7,6 +7,7 @@
 
 #include <framework.h>
 #include <functional>
+#include <optional>
 #include <string>
 
 class SimpleTimer
@@ -39,6 +40,10 @@ struct ProfileExecutionContext
 	int currentTestIteration;
 	int totalTestIterations;
 	int innerIterations;
+	int numRays = 100;
+	int reflectionOrder = 2;
+	int shadowOrder = 2;
+	std::optional<size_t> desiredAudioThreads;
 
 	SimpleTimer stageTimers[(int)ProfileExecutionStage::COUNT];
 

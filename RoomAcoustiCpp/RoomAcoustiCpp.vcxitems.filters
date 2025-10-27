@@ -398,5 +398,8 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Eigen\PlainObjectBaseAddons.h">
       <Filter>Header Files\Eigen</Filter>
     </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\ContextOptionalArguments.h">
+      <Filter>Header Files\Spatialiser</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

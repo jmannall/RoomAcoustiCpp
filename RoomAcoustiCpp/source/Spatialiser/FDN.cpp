@@ -215,8 +215,11 @@ namespace RAC
 		{
 #if MATRIX_LIBRARY == EIGEN_FLAG
 			// TODO: Check this when using eigen.
-			x = feedbackMatrix * y;
+
+			// see https://libeigen.gitlab.io/eigen/docs-nightly/TopicWritingEfficientProductExpression.html for a description of noalias()
+			x.noalias() = feedbackMatrix * y;
 #else
+
 			for (int j = 0; j < feedbackMatrix.Cols(); ++j)
 			{
 				x(j) = 0.0;
@@ -260,7 +263,7 @@ namespace RAC
 
 					Matrix<> section = matrix.leftCols(j);
 
-					matrix.Col(j) -= section * (section.Transposed() * matrix.Col(j));
+					matrix.Col(j).noalias() -= section * (section.Transposed() * matrix.Col(j));
 					norm = matrix.Col(j).Normal();
 #elif MATRIX_LIBRARY == CUSTOM_FLAG
 					vector.RandomUniformDistribution();
