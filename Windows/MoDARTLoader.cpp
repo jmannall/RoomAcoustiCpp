@@ -50,7 +50,7 @@ bool ParseObjFile(const std::string& objFilePath, std::vector<Vec3>& outVertices
             std::smatch match;
             if (std::regex_search(matName, match, std::regex(R"(Patch_(\d+)_Mat_(.+))")))
             {
-                currentPatch = std::stoi(match[1]);
+				currentPatch = std::stoi(match[1]) - 1; // MoDART patches are 1-indexed -> convert to 0-indexed
                 currentMaterialName = match[2];
             }
         }
