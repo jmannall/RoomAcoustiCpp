@@ -593,7 +593,6 @@ int main(int argc, const char* argv[])
 			<< (executionContext.InitTime / iterations) << ","
 			<< (executionContext.MainTime / iterations) << ","
 			<< (executionContext.ExitTime / iterations) << ","
-			<< (executionContext.TotalTime / totalInnerIterations) << ","
 			<< (executionContext.MainTime / totalInnerIterations) <<
 			std::endl;
 
@@ -606,7 +605,6 @@ int main(int argc, const char* argv[])
 			executionContext.InitTime / iterations,
 			executionContext.MainTime / iterations,
 			executionContext.ExitTime / iterations,
-			executionContext.TotalTime / totalInnerIterations,
 			executionContext.MainTime / totalInnerIterations)
 			<< std::endl;
 	}
