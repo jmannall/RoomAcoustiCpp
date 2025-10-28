@@ -8,6 +8,7 @@
 //Common headers
 #include "Common/RACProfiler.h"
 #include "Common/FileReader.h"
+#include "Common/Access.h"
 
 // Spatialiser headers
 #include "Spatialiser/Globals.h"
@@ -171,8 +172,7 @@ namespace RAC
 			mImageEdgeModel.reset();
 			mRayTracing.reset();
 
-			while (audioFlag.exchange(true, std::memory_order_acquire))
-				std::this_thread::yield();
+			AtomicFlagGuard guard(audioFlag);
 
 			mSources.reset();
 			mRoom.reset();
@@ -229,13 +229,10 @@ namespace RAC
 			if (!lateReverbInitialised.load(std::memory_order_acquire))
 				return;
 
-			while (audioFlag.exchange(true, std::memory_order_acquire))
-				std::this_thread::yield();
+			AtomicFlagGuard guard(audioFlag);
 
 			mReverb->SetPrecedingDelay(delay, dspConfig->GetData().fs);
 			ResetLateReverb();
-
-			audioFlag.store(false, std::memory_order_release);
 		}
 
 		////////////////////////////////////////
@@ -321,8 +318,7 @@ namespace RAC
 			if (lateReverbInitialised.load(std::memory_order_acquire))
 				return false;
 
-			while (audioFlag.exchange(true, std::memory_order_acquire))
-				std::this_thread::yield();
+			AtomicFlagGuard guard(audioFlag);
 
 			mRoom->UpdateRoomData(roomData);
 			dspConfig->UpdateLateReverbModel(LateReverbModel::fdn, 1);
@@ -334,7 +330,6 @@ namespace RAC
 			mRoom->CreateTriangleMeshSoA();
 
 			lateReverbInitialised.store(true, std::memory_order_release);
-			audioFlag.store(false, std::memory_order_release);
 			return true;
 		}
 
@@ -345,8 +340,7 @@ namespace RAC
 			if (lateReverbInitialised.load(std::memory_order_acquire))
 				return false;
 
-			while (audioFlag.exchange(true, std::memory_order_acquire))
-				std::this_thread::yield();
+			AtomicFlagGuard guard(audioFlag);
 
 			dspConfig->UpdateLateReverbModel(LateReverbModel::raves, ToInt(data.t60s.Length()));
 			mReverb = std::make_shared<RAVES>(&mCore, data, dspConfig);
@@ -358,7 +352,6 @@ namespace RAC
 			mRoom->CreateTriangleMeshSoA();
 
 			lateReverbInitialised.store(true, std::memory_order_release);
-			audioFlag.store(false, std::memory_order_release);
 			return true;
 		}
 
@@ -484,8 +477,10 @@ namespace RAC
 		void Context::GetOutput(Buffer<>& outputBuffer)
 		{
 			outputBuffer.Reset();
-			if (audioFlag.exchange(true, std::memory_order_acquire))
-				return;
+			AtomicFlagGuard guard(audioFlag, true); // Try once
+
+			if (!guard.Acquired())
+				return; // someone else has the flag, exit early
 
 			PROFILE_AudioThread;
 			if (outputBuffer.Length() != 2 * dspConfig->GetData().numFrames)
@@ -514,8 +509,6 @@ namespace RAC
 
 			if (applyHeadphoneEQ)
 				headphoneEQ.ProcessAudio(outputBuffer, outputBuffer, audioData);
-
-			audioFlag.store(false, std::memory_order_release);
 		}
 
 		////////////////////////////////////////
