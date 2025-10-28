@@ -224,7 +224,10 @@ namespace RAC
 				return;
 			if (!mSource) // TODO: Is this check necessary?
 				return;
-			currentImageSources.clear();
+			{
+				lock_guard<std::mutex>lock(*imageSourcesMutex);
+				currentImageSources.clear();
+			}
 			ClearBuffers();
 			RemoveSource();
 			if (mReverbSendSource)
@@ -503,7 +506,13 @@ namespace RAC
 			{
 				auto it = currentImageSources.find(key);
 				if (it == currentImageSources.end()) // case: add new vSource
+				{
+					lock_guard<std::mutex>lock(*imageSourcesMutex);
+					if (!GetAccess())
+						return;
 					currentImageSources.emplace(key, vSource);
+					FreeAccess();
+				}
 				else // case: update exist vSource
 					it->second.second = vSource.second;
 			}
@@ -520,8 +529,12 @@ namespace RAC
 					keys.push_back(key);
 			}
 
+			lock_guard<std::mutex>lock(*imageSourcesMutex);
+			if (!GetAccess())
+				return;
 			for (const std::string& key : keys)
 				currentImageSources.erase(key);
+			FreeAccess();
 		}
 		
 		////////////////////////////////////////

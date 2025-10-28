@@ -120,6 +120,7 @@ namespace RAC
 				bStoreReverb.Reset();
 #endif
 				dataMutex = std::make_shared<std::mutex>();
+				imageSourcesMutex = std::make_shared<std::mutex>();
 			}
 
 			/**
@@ -277,6 +278,7 @@ namespace RAC
 			*/
 			inline void RemoveImageSources()
 			{
+				lock_guard<std::mutex>lock(*imageSourcesMutex);
 				for (auto& [key, vSource] : currentImageSources)
 					imageSources.at(vSource.first).Remove();
 			}
@@ -403,8 +405,9 @@ namespace RAC
 			CEarPair<CMonoBuffer<float>> bOutput;					// 3DTI stereo output buffer
 			CMonoBuffer<float> bMonoOutput;							// 3DTI mono output buffer
 				
-			shared_ptr<std::mutex> dataMutex;		// Protects currentPosition, currentOrientation
-			
+			shared_ptr<std::mutex> dataMutex;			// Protects currentPosition, currentOrientation
+			shared_ptr<std::mutex> imageSourcesMutex;	// Protects currentImageSources
+
 			bool currentImpulseResponseMode{ false };			// True if the image source is in impulse response mode, false otherwise
 			SpatialisationMode currentSpatialisationMode{ SpatialisationMode::none };	// Current spatialisation mode
 
