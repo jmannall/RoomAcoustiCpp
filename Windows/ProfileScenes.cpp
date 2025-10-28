@@ -21,7 +21,15 @@ using namespace RAC::Common;
 using namespace RAC::DSP;
 
 #define DEBUG_MEMORY        ( 0 && !defined(NDEBUG) )
-#define PROMPT_FOR_SNAPSHOT	( 0 )
+
+// Enable this to use the AMD uProf timing API
+#define USE_AMD_UPROF		( 0 )
+
+#if USE_AMD_UPROF
+#include <AMDProfileController.h>
+#pragma comment(lib, "AMDProfileController")
+#pragma comment(lib, "Shell32")
+#endif
 
 #if DEBUG_MEMORY
 struct MemoryAllocationData
@@ -177,30 +185,23 @@ protected:
 
 void BaseTest::Run()
 {
-#if PROMPT_FOR_SNAPSHOT
-	int dummy;  std::cout << "Snapshot-About to Init: "; std::cin >> dummy;
-#endif
 	executionContext.SetExecutionStage(ProfileExecutionStage::Init);
 	if (!Init())
 		return;
 
-#if PROMPT_FOR_SNAPSHOT
-	std::cout << "Snapshot-About to Main: "; std::cin >> dummy;
+#if USE_AMD_UPROF
+	amdProfileResume();
 #endif
 	executionContext.SetExecutionStage(ProfileExecutionStage::Main);
 	StartMemoryMonitor();
 	Main();
 	StopMemoryMonitor();
-
-#if PROMPT_FOR_SNAPSHOT
-	std::cout << "Snapshot-About to Exit: "; std::cin >> dummy;
+#if USE_AMD_UPROF
+	amdProfilePause();
 #endif
+
 	executionContext.SetExecutionStage(ProfileExecutionStage::Exit);
 	Exit();
-
-#if PROMPT_FOR_SNAPSHOT
-	std::cout << "Snapshot-Finished: "; std::cin >> dummy;
-#endif
 }
 
 bool BaseTest::Init()
