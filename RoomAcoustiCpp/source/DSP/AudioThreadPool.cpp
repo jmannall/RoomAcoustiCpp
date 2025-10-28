@@ -30,9 +30,11 @@ namespace RAC
             : stop(false), threadCount(numThreads), tasks(MAX_IMAGESOURCES + MAX_SOURCES)
         {
 			int numFrames = dspConfig->GetData().numFrames;
-            threadOutputBuffers.resize(threadCount, Buffer<>(2 * numFrames));
 
-            threadReverbOutputs.resize(threadCount, std::vector<Buffer<>>(dspConfig->GetData().numReverbSources, Buffer<>(numFrames)));
+            // we allow 0 thread for debugging, so make sure we always have at least one buffer
+            const auto numOutputBuffers = std::max(threadCount, static_cast<size_t>(1));
+            threadOutputBuffers.resize(numOutputBuffers, Buffer<>(2 * numFrames));
+            threadReverbOutputs.resize(numOutputBuffers, std::vector<Buffer<>>(dspConfig->GetData().numReverbSources, Buffer<>(numFrames)));
 
 #if USE_BLOCKING_TASKS
             tasksAvailable = CreateEvent(NULL, FALSE, FALSE, NULL);

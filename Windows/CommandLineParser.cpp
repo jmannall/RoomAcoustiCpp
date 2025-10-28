@@ -97,7 +97,7 @@ bool CommandLineParser::Parse()
 		else if (ParseStandardArgument(argument, "--audio-threads=", value))
 		{
 			const int newDesiredAudioThreads = std::stoi(value);
-			if (newDesiredAudioThreads <= 0)
+			if (newDesiredAudioThreads < 0)
 			{
 				std::cerr << "Invalid audio-threads: " << argument << std::endl;
 				return false;
