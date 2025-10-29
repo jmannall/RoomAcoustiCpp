@@ -96,7 +96,6 @@ namespace RAC
 			};
 
 		public:
-
 			/**
 			* @brief Constructor that initialises the image source data
 			*
@@ -105,6 +104,34 @@ namespace RAC
 			ImageSourceData(int numFrequencyBands) : valid(false), visible(false), feedsFDN(false), reflection(false), diffraction(false),
 				mAbsorption(numFrequencyBands), distance(0.0), lastUpdatedCycle(false), idKey{ '0' }, sourceKey{ 's' }, reflectionKey{ 'r' }, diffractionKey{ 'd' },
 				mPositions(1, Vec3()), pathParts(1, Part(0, true)), mEdges(1, { Vec3(), Vec3() }) {}
+
+			/**
+			 * @brief Move constructor
+			 *
+			 * @note The compiler does not generate this by default, so force it.
+			 */
+			ImageSourceData(ImageSourceData&& move) = default;
+
+			/**
+			 * @brief Copy constructor
+			 *
+			 * @note This must be declared if you have a move constructor and still want regular copying
+			 */
+			ImageSourceData(const ImageSourceData & copy) = default;
+
+			/**
+			 * @brief Move assignment
+			 *
+			 * @note The compiler does not generate this by default, so force it.
+			 */
+			ImageSourceData& operator=(ImageSourceData&& move) = default;
+
+			/**
+			 * @brief Copy assignment
+			 *
+			 * @note This must be declared if you have a move constructor and still want regular copying
+			 */
+			ImageSourceData& operator=(const ImageSourceData& move) = default;
 
 			/**
 			* @brief Default deconstructor
