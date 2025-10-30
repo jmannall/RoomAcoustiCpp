@@ -222,6 +222,88 @@ namespace RAC
 
 		////////////////////////////////////////
 
+		void Reverb::buildDelaySets(Matrix<int>& delayLineLengths, Real fs,
+			Real minDiffSeconds, Real minLineSeconds, Real maxLineSeconds)
+		{
+			const int numFDNs = delayLineLengths.rows();
+			const int fdnSize = delayLineLengths.cols();
+
+			// Constraints in number of samples.
+			int minDiff = static_cast<int>(minDiffSeconds * fs);
+			int minLine = static_cast<int>(minLineSeconds * fs);
+			int maxLine = static_cast<int>(maxLineSeconds * fs);
+
+			// Number of FDNs which have been assigned values for all of their lines.
+			int numFilledFDNs = 0;
+			// Number of assigned line lengths for each FDN.
+			std::vector<int> numAssigned(numFDNs);
+			// Set of prime factors already present among each FDN's lines.
+			std::vector<std::unordered_set<int>> factorSetPerFDN(numFDNs);
+
+			// Two variables which will be used inside the loop.
+			std::vector<int> factors;
+			std::vector<int> priorityOrder(numFDNs);
+
+			// Consider every acceptable delay line length, in ascending order.
+			for (int candidate = minLine; candidate < maxLine; ++candidate)
+			{
+				// Sort the FDNs based on how many lines have already been assigned to each;
+				// prioritize ones with fewer assigned values.
+				// https://gist.github.com/HViktorTsoi/58eabb4f7c5a303ced400bcfa816f6f5
+				std::iota(priorityOrder.begin(), priorityOrder.end(), 0);
+				std::sort(priorityOrder.begin(), priorityOrder.end(),
+					[&](int a, int b) { return numAssigned[a] < numAssigned[b]; });
+
+				// For each FDN, in order of priority, consider whether the current candidate
+				// delay line length can be assigned to it.
+				for (int fdnIdx : priorityOrder)
+				{
+					// Has the FDN been assigned values for all lines already?
+					if (numAssigned[fdnIdx] >= fdnSize)
+						break; // No need to continue: priority order ensures all following FDNs are also full.
+
+					// Is the candidate at least `minDiff` larger than the latest (i.e., largest) value assigned to this FDN?
+					if (delayLineLengths(fdnIdx, numAssigned[fdnIdx] - 1) > candidate - minDiff)
+						continue;
+
+					// If this point is reached, consider the candidate seriously.
+					// Perform a prime factorization, needed to check if it's co-prime with all existing lines.
+					factors = primeFactorization(candidate);
+
+					// Is the candidate co-prime (i.e., does not share any prime factors) with all existing lines?
+					bool invalid = false;
+					for (int f : factors)
+					{
+						if (factorSetPerFDN[fdnIdx].count(f))
+						{
+							invalid = true;
+							break;
+						}
+					}
+					if (invalid) continue;
+
+					// If this point is reached, assign the candidate to this FDN.
+					delayLineLengths(fdnIdx, numAssigned[fdnIdx]) = candidate;
+					// Add the prime factors of the candidate to the FDN's set.
+					for (int f : factors)
+						factorSetPerFDN[fdnIdx].insert(f);
+					// Update the number of values assigned to this FDN.
+					++numAssigned[fdnIdx];
+					// If it was the last value needed by the FDN, update the tracker.
+					if (numAssigned[fdnIdx] == fdnSize)
+						++numFilledFDNs;
+					// Avoid adding the same length to any other FDNs.
+					break;
+				}
+				// If all FDNs are complete, stop the search.
+				if (numFilledFDNs == numFDNs)
+					break;
+			}
+			// TODO: Detect failure (unassigned lines) and do something about it.
+		}
+
+		////////////////////////////////////////
+
 		void SingleFDN::SetTargetT60(const Coefficients<>& T60)
 		{
 			if (!initialised.load(std::memory_order_acquire))
@@ -282,14 +364,15 @@ namespace RAC
 			int numFDNs = dspConfig->GetNumFDNs();
 			int fdnSize = dspConfig->GetData().fdnSize;
 
-			Vec<int> delayLineLengths(fdnSize);
+			Matrix<int> delayLineLengthSets(numFDNs, fdnSize);
+			buildDelaySets(delayLineLengthSets, dspConfig->GetData().fs);
+			// TODO: Detect failure (unassigned lines) and do something about it.
+			Vec<int> delayLineLengths;
+
 			FDNPtr fdns = std::make_shared<std::vector<std::unique_ptr<FDN<Complex>>>>(numFDNs);
 			for (int i = 0; i < numFDNs; i++)
 			{
-				// TODO: Be smarter about this
-				delayLineLengths = GetSetOfPrimes(100+i, fdnSize, std::max(12, numFDNs));
-
-				// TODO: Check if any of the values are -1 (error in generating the list of primes) and adapt accordingly
+				delayLineLengths = Vec<int>(delayLineLengthSets(i));
 
 				switch (data.feedbackMatrix)
 				{

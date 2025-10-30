@@ -10,6 +10,8 @@
 
 // C++ headers
 #include <mutex>
+#include <numeric>
+#include <unordered_set>
 
 // 3DTI headers
 #include "BinauralSpatializer/SingleSourceDSP.h"
@@ -156,6 +158,22 @@ namespace RAC
 			void ProcessAudio(const Matrix<>& data, Buffer<>& outputBuffer, const AudioData& audioData);
 
 			virtual void ProcessReverberator(const Matrix<>& data, std::vector<Buffer<>>& outputBuffers, const AudioData& audioData) = 0;
+
+			/**
+			 * @brief Assign delay line lengths to a set of FDNs, such that
+			 * - across all FDNs, all lines have different lengths
+			 * - across all FDNs, all lines lengths are within given upper/lower bounds
+			 * - within each FDN, all pairs of line lengths are co-prime
+			 * - within each FDN, all line lengths are at least a minimum difference apart
+			 *
+			 * @param delayLineLengths Integer-valued matrix to fill out (size numFDNs x fdnSize)
+			 * @param fs Audio sample rate
+			 * @param minDiffSeconds Minimum difference between delay line lengths, in seconds
+			 * @param minLineSeconds Minimum delay line length, in seconds
+			 * @param maxLineSeconds Maximum delay line length, in seconds
+			 */
+			void buildDelaySets(Matrix<int>& delayLineLengths, Real fs,
+				Real minDiffSeconds = 2e-4, Real minLineSeconds = 3e-2, Real maxLineSeconds = 3e-1);
 
 			inline void SetEigenvectors (const std::vector<Vec<>>& rightEigenvectors, const std::vector<Vec<>>& leftEigenvectors)
 			{

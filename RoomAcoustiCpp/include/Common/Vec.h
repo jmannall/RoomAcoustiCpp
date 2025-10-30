@@ -53,35 +53,6 @@ namespace RAC
 		extern template class Rowvec<Real>;
 		extern template class Rowvec<Complex>;
 #endif
-
-		/**
-		 * @brief Get a set of prime numbers (returns -1 if the requested range exceeds the known primes)
-		 *
-		 * @param minIndex Index (within the list of primes) of the first prime to include
-		 * @param length The number of primes to return
-		 * @param stride Step between subsequent primes in the resulting set (1 means adjacent primes)
-		 * @return Vector of primes
-		 */
-		inline Vec<int> GetSetOfPrimes(int minIndex, int length, int stride)
-		{
-			Vec<int> result = Vec<int>::Constant(length, -1);
-
-			// TODO: Throw an exception in either case.
-			if (stride == 0)
-				return result;
-			if (minIndex < 0 || minIndex >= sizeof(PRIMES))
-				return result;
-
-			int i = minIndex;
-			for (int j = 0; j < length; ++j)
-			{
-				result(j) = PRIMES[i];
-				i += stride;
-				if (i < 0 || i >= sizeof(PRIMES))
-					break;
-			}
-			return result;
-		}
 	}
 }
 
