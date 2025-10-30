@@ -23,12 +23,17 @@ using namespace RAC::DSP;
 #define DEBUG_MEMORY        ( 0 && !defined(NDEBUG) )
 
 // Enable this to use the AMD uProf timing API
-#define USE_AMD_UPROF		( 0 )
+#define USE_AMD_UPROF			( 0 )
+#define USE_INTEL_VTUNE			( 0 )
 
 #if USE_AMD_UPROF
 #include <AMDProfileController.h>
 #pragma comment(lib, "AMDProfileController")
 #pragma comment(lib, "Shell32")
+#endif
+#if USE_INTEL_VTUNE
+#include <ittnotify.h>
+#pragma comment(lib, "libittnotify")
 #endif
 
 #if DEBUG_MEMORY
@@ -192,10 +197,16 @@ void BaseTest::Run()
 #if USE_AMD_UPROF
 	amdProfileResume();
 #endif
+#if USE_INTEL_VTUNE
+	__itt_resume();
+#endif
 	executionContext.SetExecutionStage(ProfileExecutionStage::Main);
 	StartMemoryMonitor();
 	Main();
 	StopMemoryMonitor();
+#if USE_INTEL_VTUNE
+	__itt_pause();
+#endif
 #if USE_AMD_UPROF
 	amdProfilePause();
 #endif
