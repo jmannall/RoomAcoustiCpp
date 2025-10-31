@@ -7,6 +7,8 @@
 
 #include "Spatialiser/FDN.h"
 
+#include "Spatialiser/Reverb.h"
+
 #include "Common/RACProfiler.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
@@ -344,6 +346,40 @@ namespace RAC
 				for (int j = 0; j < numFrames; j++)
 					sum += out[i][j] * out[i][j];
 				Assert::AreNotEqual((Real)0.0, sum, L"Feedback matrix is not random orthogonal.");
+			}
+		}
+
+		TEST_METHOD(DelayLineLengthAssignment)
+		{
+			const Real fs = 48000.0;
+			const Real minDiffSeconds = 2e-4;
+			const Real minLineSeconds = 3e-2;
+			const Real maxLineSeconds = 3e-1;
+
+			const int minDiff = static_cast<int>(minDiffSeconds * fs);
+			const int minLine = static_cast<int>(minLineSeconds * fs);
+			const int maxLine = static_cast<int>(maxLineSeconds * fs);
+
+			for (int numFDNs = 1; numFDNs < 100; numFDNs *= 2)
+			{
+				for (int fdnSize = 6; fdnSize < 21; fdnSize++)
+				{
+					Matrix<int> delayLineLengthSets(numFDNs, fdnSize);
+					Reverb::buildDelaySets(delayLineLengthSets, fs);
+
+					for (int i = 0; i < numFDNs; i++)
+					{
+						for (int j = 0; j < fdnSize; j++)
+						{
+							Assert::AreNotEqual(0, delayLineLengthSets(i, j), L"Some delay line lengths were not initialized.");
+							Assert::IsTrue(delayLineLengthSets(i, j) >= minLine, L"Some delay line lengths are too short.");
+							Assert::IsTrue(delayLineLengthSets(i, j) <= maxLine, L"Some delay line lengths are too long.");
+							// TODO: Check coprime pairs
+							// TODO: Check pairs minDiff apart
+							// TODO: Check no repeats overall
+						}
+					}
+				}
 			}
 		}
 	};

@@ -263,8 +263,12 @@ namespace RAC
 						break; // No need to continue: priority order ensures all following FDNs are also full.
 
 					// Is the candidate at least `minDiff` larger than the latest (i.e., largest) value assigned to this FDN?
-					if (delayLineLengths(fdnIdx, numAssigned[fdnIdx] - 1) > candidate - minDiff)
-						continue;
+					// N.B. Only checked if at least one value has already been assigned.
+					if (numAssigned[fdnIdx] > 0)
+					{
+						if (delayLineLengths(fdnIdx, numAssigned[fdnIdx] - 1) > candidate - minDiff)
+							continue;
+					}
 
 					// If this point is reached, consider the candidate seriously.
 					// Perform a prime factorization, needed to check if it's co-prime with all existing lines.
@@ -299,7 +303,16 @@ namespace RAC
 				if (numFilledFDNs == numFDNs)
 					break;
 			}
-			// TODO: Detect failure (unassigned lines) and do something about it.
+			// If not all FDNs are complete (unassigned lines), fill any remaining ones with large values.
+			// TODO: Warning? Exception?
+			if (numFilledFDNs != numFDNs)
+			{
+				for (int fdnIdx = 0; fdnIdx < numFDNs; fdnIdx++)
+				{
+					for (int lineIdx = numAssigned[fdnIdx]; lineIdx < fdnSize; lineIdx++)
+						delayLineLengths(fdnIdx, lineIdx) = maxLine + lineIdx;
+				}
+			}
 		}
 
 		////////////////////////////////////////
