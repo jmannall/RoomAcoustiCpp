@@ -28,7 +28,7 @@ bool ParseObjFile(const std::string& objFilePath, std::vector<Vec3>& outVertices
         {
             float x, y, z;
             iss >> x >> y >> z;
-            outVertices.emplace_back(x, y, z);
+            outVertices.emplace_back(x, z, y);
         }
         else if (prefix == "f")
         {
@@ -392,9 +392,9 @@ bool SendWallsToRAC(const std::string& modartFolder, const Coefficients<>& targe
         Coefficients<> absResized = ResizeCoeffs(targetFreqs, frequencies, it->second);
         UpdateMaterial(patchIndex, absResized);
 
-        // Convert x, y, z to -x, z, y (RAC uses Unity coordinate system, left hand rule and y is up)
+        // Convert x, y, z to x, z, y (RAC uses Unity coordinate system, left hand rule and y is up)
         Vertices vertices = {
-            -vData[face.v[0]],
+            vData[face.v[0]],
             vData[face.v[2]],
             vData[face.v[1]]
         };
