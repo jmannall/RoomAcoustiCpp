@@ -191,8 +191,8 @@ namespace RAC
 						if (rayCosines(ray_idx) < SELF_SHADOWING_RADIUS / (2 * rayDistances(ray_idx)))
 							continue;
 
-					// Add energy contribution of the ray
-					pathIdx = pathIndexing(frontIndices(ray_idx), backIndices(ray_idx));
+					// Add energy contribution of the ray (pathIndexing is from A to B; back to front)
+					pathIdx = pathIndexing(backIndices(ray_idx), frontIndices(ray_idx));
 					if (pathIdx >= 0)
 					{
 						distance = rayDistances(ray_idx);
