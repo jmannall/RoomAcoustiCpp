@@ -385,7 +385,7 @@ namespace RAC
 			FDNPtr fdns = std::make_shared<std::vector<std::unique_ptr<FDN<Complex>>>>(numFDNs);
 			for (int i = 0; i < numFDNs; i++)
 			{
-				delayLineLengths = Vec<int>(delayLineLengthSets(i));
+				delayLineLengths = delayLineLengthSets.row(i);
 
 				switch (data.feedbackMatrix)
 				{
