@@ -225,8 +225,8 @@ namespace RAC
 		void Reverb::buildDelaySets(Matrix<int>& delayLineLengths, Real fs,
 			Real minDiffSeconds, Real minLineSeconds, Real maxLineSeconds)
 		{
-			const int numFDNs = delayLineLengths.rows();
-			const int fdnSize = delayLineLengths.cols();
+			const int numFDNs = ToInt(delayLineLengths.rows());
+			const int fdnSize = ToInt(delayLineLengths.cols());
 
 			// Constraints in number of samples.
 			int minDiff = static_cast<int>(minDiffSeconds * fs);
