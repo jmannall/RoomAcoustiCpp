@@ -263,7 +263,7 @@ namespace RAC
 
 					Matrix<> section = matrix.leftCols(j);
 
-					matrix.Col(j).noalias() -= section * (section.Transposed() * matrix.Col(j));
+					matrix.Col(j) -= section * (section.Transposed() * matrix.Col(j));
 					norm = matrix.Col(j).Normal();
 #elif MATRIX_LIBRARY == CUSTOM_FLAG
 					vector.RandomUniformDistribution();
