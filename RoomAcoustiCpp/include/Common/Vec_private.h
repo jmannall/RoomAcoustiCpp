@@ -143,6 +143,14 @@ namespace RAC
 				return *this;
 			}
 
+			/**
+			 * @brief For eigen compatibility
+			 */
+			inline Vec& noalias()
+			{
+				return *this;
+			}
+
 		private:
 			/**
 			* Constructor that initialises a Rowvec with a given value
