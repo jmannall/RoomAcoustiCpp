@@ -164,17 +164,21 @@ namespace RAC
 
 		void ImageSourceData::Update(const ImageSourceData& imageSource)
 		{
+			assert(pathParts.size() >= imageSource.pathParts.size());
 			for (int i = 0; i < imageSource.pathParts.size(); i++)
 			{
 				pathParts[i] = imageSource.pathParts[i];
 				mPositions[i] = imageSource.mPositions[i];
 			}
+
 			reflection = imageSource.reflection;
 			diffraction = imageSource.diffraction;
 			if (diffraction)
 			{
+				assert(mEdges.size() >= imageSource.mEdges.size());
 				for (int i = 0; i < imageSource.mEdges.size(); i++)
 					mEdges[i] = imageSource.mEdges[i];
+
 				diffractionIndex = imageSource.diffractionIndex;
 				mDiffractionPath = imageSource.mDiffractionPath;
 			}
