@@ -126,7 +126,7 @@ namespace RAC
 			/**
 			* @brief Default deconstructor
 			*/
-			~Source()
+			virtual ~Source() override
 			{
 				Remove();
 				if (mSource)

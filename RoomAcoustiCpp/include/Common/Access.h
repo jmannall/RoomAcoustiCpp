@@ -30,7 +30,7 @@ namespace RAC
 			/**
 			* @brief Default deconstructor
 			*/
-			~Access() {}
+			virtual ~Access() {}
 
 			/**
 			* @brief True if accessFlag and inUse are false, false otherwise
