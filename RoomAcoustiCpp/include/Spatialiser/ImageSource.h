@@ -108,37 +108,9 @@ namespace RAC
 				mPositions(1, Vec3()), pathParts(1, Part(0, true)), mEdges(1, { Vec3(), Vec3() }) {}
 
 			/**
-			 * @brief Move constructor
-			 *
-			 * @note The compiler does not generate this by default, so force it.
+			 * @brief Makes a minimal copy of this
 			 */
-			ImageSourceData(ImageSourceData&& move) = default;
-
-			/**
-			 * @brief Copy constructor
-			 *
-			 * @note This must be declared if you have a move constructor and still want regular copying
-			 */
-			ImageSourceData(const ImageSourceData & copy) = default;
-
-			/**
-			 * @brief Move assignment
-			 *
-			 * @note The compiler does not generate this by default, so force it.
-			 */
-			ImageSourceData& operator=(ImageSourceData&& move) = default;
-
-			/**
-			 * @brief Copy assignment
-			 *
-			 * @note This must be declared if you have a move constructor and still want regular copying
-			 */
-			ImageSourceData& operator=(const ImageSourceData& move) = default;
-
-			/**
-			* @brief Default deconstructor
-			*/
-			~ImageSourceData() {};
+			std::shared_ptr<ImageSourceData> CreateShallowCopy() const;
 
 			/**
 			* @brief Adds absorption to the image source
@@ -466,6 +438,9 @@ namespace RAC
 			bool reflection;				// True if the image source path includes any reflections, false otherwise
 			bool diffraction;				// True if the image source path includes any diffractions, false otherwise
 			bool lastUpdatedCycle;			// True if the image source was updated in the current cycle, false otherwise
+
+			// disable assignment as we just want to use shared pointers
+			void operator=(const ImageSourceData&) = delete;
 		};
 
 		/**
@@ -507,7 +482,7 @@ namespace RAC
 			* @param data The image source data to initialise with
 			* @param fdnChannel The FDN channel to feed, -1 if the image source does not feed the FDN
 			*/
-			void Init(const Buffer<>* inputBuffer, const std::shared_ptr<DSPConfig>& config, const ImageSourceData& data, int fdnChannel);
+			void Init(const Buffer<>* inputBuffer, const std::shared_ptr<DSPConfig>& config, const std::shared_ptr<ImageSourceData>& data, int fdnChannel);
 
 			/**
 			* @brief Update the image source and remove if no longer visible

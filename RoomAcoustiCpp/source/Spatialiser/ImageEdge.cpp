@@ -34,8 +34,8 @@ namespace RAC
 			mRoom(room), mSourceManager(sourceManager), frequencyBands(dspConfig->GetData().numFrequencyBands),
 			earlyReverbData(data, dspConfig->GetDiffractionModel()), earlyReverbDataIncoming(data, dspConfig->GetDiffractionModel())
 		{
-			sp = std::vector<std::vector<ImageSourceData>>();
-			sp.push_back(std::vector<ImageSourceData>());
+			sp = std::vector<std::vector<std::shared_ptr<ImageSourceData>>>();
+			sp.push_back(std::vector<std::shared_ptr<ImageSourceData>>());
 
 			// TODO: Move to ray tracing thread
 			// shared_ptr<Reverb> sharedReverb = mReverb.lock();
@@ -448,7 +448,7 @@ namespace RAC
 				direct.feedsFDN = false;
 
 			if (sp.size() != earlyReverbData.maxOrder)
-				sp.resize(earlyReverbData.maxOrder, std::vector<ImageSourceData>());
+				sp.resize(earlyReverbData.maxOrder, std::vector<std::shared_ptr<ImageSourceData>>());
 
 			size_t counter = 0;
 
@@ -459,7 +459,10 @@ namespace RAC
 			{
 				counter = FirstOrderReflections(source, imageSources, counter);
 
-				sp[0].resize(counter, ImageSourceData(ToInt(frequencyBands.Length())));
+				const size_t currentSize = sp[0].size();
+				sp[0].resize(counter);
+				for (size_t initializeIndex = currentSize; initializeIndex < counter; ++initializeIndex)
+					sp[0][initializeIndex] = CreateEmptyImageSource();
 
 				if (earlyReverbData.maxOrder < 2)
 				{
@@ -470,7 +473,12 @@ namespace RAC
 				HigherOrderPaths(source, imageSources);
 			}
 			else
-				sp[0].resize(counter, ImageSourceData(ToInt(frequencyBands.Length())));
+			{
+				const size_t currentSize = sp[0].size();
+				sp[0].resize(counter);
+				for (size_t initializeIndex = currentSize; initializeIndex < counter; ++initializeIndex)
+					sp[0][initializeIndex] = CreateEmptyImageSource();
+			}
 
 			EraseOldEntries(imageSources);
 			return;
@@ -500,18 +508,18 @@ namespace RAC
 				if (earlyReverbData.specularDiffOrder < 1 && zone == EdgeZone::NonShadowed)
 					continue;
 
-				ImageSourceData& imageSource = counter < size ? sp[0][counter] : sp[0].emplace_back(ToInt(frequencyBands.Length()));
+				const std::shared_ptr<ImageSourceData>& imageSource = counter < size ? sp[0][counter] : sp[0].emplace_back(CreateEmptyImageSource());
 				
 				if (counter < size)
-					imageSource.Clear();
+					imageSource->Clear();
 				counter++;
 
-				imageSource.UpdateDiffractionPath(source.position, mListenerPosition, edge);
-				if (imageSource.GetDistance() > earlyReverbData.maxPathLength)
+				imageSource->UpdateDiffractionPath(source.position, mListenerPosition, edge);
+				if (imageSource->GetDistance() > earlyReverbData.maxPathLength)
 					continue;
 
-				imageSource.Valid();
-				imageSource.AddEdgeID(edgeID);
+				imageSource->Valid();
+				imageSource->AddEdgeID(edgeID);
 
 				/*if (mIEMConfig.diffraction == DiffractionSound::none)
 					continue;*/
@@ -523,10 +531,10 @@ namespace RAC
 				if (earlyReverbData.specularDiffOrder < 1 && edge.GetReceiverZone() == EdgeZone::NonShadowed)
 					continue;
 
-				if (!imageSource.GetDiffractionPath().valid)
+				if (!imageSource->GetDiffractionPath().valid)
 					continue;
 
-				if (imageSource.GetDiffractionPath().inShadowZone)
+				if (imageSource->GetDiffractionPath().inShadowZone)
 					order = earlyReverbData.shadowDiffOrder;
 				else
 					order = earlyReverbData.specularDiffOrder;
@@ -534,14 +542,14 @@ namespace RAC
 				if (order < 1)
 					continue;
 
-				if (CheckObstructions(source.position, imageSource, { imageSource.GetApex() }))
+				if (CheckObstructions(source.position, *imageSource, { imageSource->GetApex() }))
 					continue;
 
-				InitImageSource(source, imageSource.GetApex(), imageSource, imageSources, feedsFDN);
+				InitImageSource(source, imageSource->GetApex(), imageSource, imageSources, feedsFDN);
 #ifdef DEBUG_IEM
-				CVector3 pos = imageSource.GetTransform().GetPosition();
+				CVector3 pos = imageSource->GetTransform().GetPosition();
 				Vec3 position(static_cast<Real>(pos.x), static_cast<Real>(pos.y), static_cast<Real>(pos.z));
-				Debug::send_path(imageSource.GetKey(), { imageSource.GetApex() }, position);
+				Debug::send_path(imageSource->GetKey(), { imageSource->GetApex() }, position);
 #endif
 			}
 			return counter;
@@ -565,18 +573,18 @@ namespace RAC
 				if ((position - mListenerPosition).Normal() > earlyReverbData.maxPathLength)
 					continue;
 
-				ImageSourceData& imageSource = counter < size ? sp[0][counter] : sp[0].emplace_back(ToInt(frequencyBands.Length()));
+				const std::shared_ptr<ImageSourceData>& imageSource = counter < size ? sp[0][counter] : sp[0].emplace_back(CreateEmptyImageSource());
 
 				Vec4 previousPlane(plane.GetD(), plane.GetNormal());
 				// imageSource.SetPreviousPlane(Vec4(plane.GetD(), plane.GetNormal()));
-				imageSource.SetPreviousPlane(previousPlane);
+				imageSource->SetPreviousPlane(previousPlane);
 				if (counter < size)
-					imageSource.Clear();
+					imageSource->Clear();
 				counter++;
 
-				imageSource.Valid();
-				imageSource.AddPlaneID(planeID);
-				imageSource.SetTransform(position);
+				imageSource->Valid();
+				imageSource->AddPlaneID(planeID);
+				imageSource->SetTransform(position);
 
 				if (earlyReverbData.reflOrder < 1)
 					continue;
@@ -584,10 +592,10 @@ namespace RAC
 				if (!plane.GetReceiverValid())
 					continue;
 
-				if (!FindIntersections(imageSource, intersections))
+				if (!FindIntersections(*imageSource, intersections))
 					continue;
 
-				if (CheckObstructions(source.position, imageSource, intersections))
+				if (CheckObstructions(source.position, *imageSource, intersections))
 					continue;
 
 				InitImageSource(source, intersections[0], imageSource, imageSources, feedsFDN);
@@ -645,8 +653,10 @@ namespace RAC
 					for (const auto& [planeID, plane] : mPlanes)
 					{
 						bool rValid = plane.GetReceiverValid();
-						for (const ImageSourceData& vS : sp[prevRefIdx])
+						for (const std::shared_ptr<ImageSourceData>& vSPtr : sp[prevRefIdx])
 						{
+							ImageSourceData& vS = *vSPtr;
+
 							if (!vS.IsValid())
 								continue;
 
@@ -678,19 +688,19 @@ namespace RAC
 								if ((position - mListenerPosition).Normal() > earlyReverbData.maxPathLength)
 									continue;
 
-								ImageSourceData& imageSource = counter < size ? sp[refIdx][counter] : sp[refIdx].emplace_back(vS);
+								const std::shared_ptr<ImageSourceData>& imageSource = counter < size ? sp[refIdx][counter] : sp[refIdx].emplace_back(vS.CreateShallowCopy());
 
-								imageSource.SetPreviousPlane(planeData);
+								imageSource->SetPreviousPlane(planeData);
 								if (counter < size)
-									imageSource.Update(vS);
+									imageSource->Update(vS);
 								else
-									imageSource.IncreaseImageSourceOrder();
+									imageSource->IncreaseImageSourceOrder();
 								counter++;
 
-								imageSource.Reset();
-								imageSource.Valid();
-								imageSource.AddPlaneID(planeID);
-								imageSource.SetTransform(position);
+								imageSource->Reset();
+								imageSource->Valid();
+								imageSource->AddPlaneID(planeID);
+								imageSource->SetTransform(position);
 
 								if (earlyReverbData.reflOrder < refOrder)
 									continue;
@@ -698,10 +708,10 @@ namespace RAC
 								if (!rValid)
 									continue;
 
-								if (!FindIntersections(imageSource, intersections))
+								if (!FindIntersections(*imageSource, intersections))
 									continue;
 
-								if (CheckObstructions(source.position, imageSource, intersections))
+								if (CheckObstructions(source.position, *imageSource, intersections))
 									continue;
 
 								InitImageSource(source, intersections[0], imageSource, imageSources, feedsFDN);
@@ -745,31 +755,31 @@ namespace RAC
 								if (!plane.EdgePlanePosition(edge))
 									continue;
 
-								ImageSourceData& imageSource = counter < size ? sp[refIdx][counter] : sp[refIdx].emplace_back(vS);
+								const std::shared_ptr<ImageSourceData>& imageSource = counter < size ? sp[refIdx][counter] : sp[refIdx].emplace_back(vS.CreateShallowCopy());
 
-								imageSource.SetPreviousPlane(planeData);
+								imageSource->SetPreviousPlane(planeData);
 								if (counter < size)
-									imageSource.Update(vS);
+									imageSource->Update(vS);
 								else
-									imageSource.IncreaseImageSourceOrder();
+									imageSource->IncreaseImageSourceOrder();
 								counter++;
 
-								imageSource.Reset();
+								imageSource->Reset();
 
-								// position = imageSource.GetPosition(prevRefIdx);
-								position = imageSource.GetDiffractionPath().sData.point;
+								// position = imageSource->GetPosition(prevRefIdx);
+								position = imageSource->GetDiffractionPath().sData.point;
 								plane.ReflectPointInPlaneNoCheck(position);
-								imageSource.UpdateDiffractionPath(position, mListenerPosition, plane);
-								if (imageSource.GetDistance() > earlyReverbData.maxPathLength)
+								imageSource->UpdateDiffractionPath(position, mListenerPosition, plane);
+								if (imageSource->GetDistance() > earlyReverbData.maxPathLength)
 									continue;
 
-								imageSource.Valid();
-								imageSource.AddPlaneID(planeID);
+								imageSource->Valid();
+								imageSource->AddPlaneID(planeID);
 
 								if (!rValid)
 									continue;
 
-								EdgeZone zone = imageSource.GetEdge().FindEdgeZone(mListenerPosition);
+								EdgeZone zone = imageSource->GetEdge().FindEdgeZone(mListenerPosition);
 
 								// Receiver checks
 								if (zone == EdgeZone::Invalid)
@@ -778,25 +788,25 @@ namespace RAC
 								if (earlyReverbData.specularDiffOrder < refOrder && zone == EdgeZone::NonShadowed)
 									continue;
 
-								if (!imageSource.GetDiffractionPath().valid)
+								if (!imageSource->GetDiffractionPath().valid)
 									continue;
 
-								order = imageSource.GetDiffractionPath().inShadowZone ? earlyReverbData.shadowDiffOrder : earlyReverbData.specularDiffOrder;
+								order = imageSource->GetDiffractionPath().inShadowZone ? earlyReverbData.shadowDiffOrder : earlyReverbData.specularDiffOrder;
 
 								if (order < refOrder)
 									continue;
 
-								if (!FindIntersections(imageSource, intersections))
+								if (!FindIntersections(*imageSource, intersections))
 									continue;
 
-								if (CheckObstructions(source.position, imageSource, intersections))
+								if (CheckObstructions(source.position, *imageSource, intersections))
 									continue;
 
 								InitImageSource(source, intersections[0], imageSource, imageSources, feedsFDN);
 #ifdef DEBUG_IEM
-								CVector3 pos = imageSource.GetTransform().GetPosition();
+								CVector3 pos = imageSource->GetTransform().GetPosition();
 								Vec3 position(static_cast<Real>(pos.x), static_cast<Real>(pos.y), static_cast<Real>(pos.z));
-								Debug::send_path(imageSource.GetKey(), intersections, position);
+								Debug::send_path(imageSource->GetKey(), intersections, position);
 #endif
 							}
 						}
@@ -805,7 +815,10 @@ namespace RAC
 
 				if (earlyReverbData.specularDiffOrder < refOrder && earlyReverbData.shadowDiffOrder < refOrder)
 				{
-					sp[refIdx].resize(counter, ImageSourceData(ToInt(frequencyBands.Length())));
+					const size_t currentIndex = sp[refIdx].size();
+					sp[refIdx].resize(counter);
+					for (size_t initializeIndex = currentIndex; initializeIndex < sp[refIdx].size(); ++initializeIndex)
+						sp[refIdx][initializeIndex] = CreateEmptyImageSource();
 					continue;
 				}
 #ifdef PROFILE_BACKGROUND_THREAD_DETAILED
@@ -829,8 +842,10 @@ namespace RAC
 						continue;
 
 					EdgeZone rZone = edge.GetReceiverZone();
-					for (const ImageSourceData& vS : sp[prevRefIdx])
+					for (const std::shared_ptr<ImageSourceData>& vSPtr : sp[prevRefIdx])
 					{
+						ImageSourceData& vS = *vSPtr;
+
 						if (!vS.IsValid())
 							continue;
 
@@ -850,21 +865,21 @@ namespace RAC
 						if (earlyReverbData.specularDiffOrder < refOrder && zone == EdgeZone::NonShadowed)
 							continue;
 
-						ImageSourceData& imageSource = counter < size ? sp[refIdx][counter] : sp[refIdx].emplace_back(vS);
+						const std::shared_ptr<ImageSourceData>& imageSource = counter < size ? sp[refIdx][counter] : sp[refIdx].emplace_back(vS.CreateShallowCopy());
 
 						if (counter < size)
-							imageSource.Update(vS);
+							imageSource->Update(vS);
 						else
-							imageSource.IncreaseImageSourceOrder();
+							imageSource->IncreaseImageSourceOrder();
 						counter++;
 
-						imageSource.Reset();
-						imageSource.UpdateDiffractionPath(imageSource.GetPosition(prevRefIdx), mListenerPosition, edge);
-						if (imageSource.GetDistance() > earlyReverbData.maxPathLength)
+						imageSource->Reset();
+						imageSource->UpdateDiffractionPath(imageSource->GetPosition(prevRefIdx), mListenerPosition, edge);
+						if (imageSource->GetDistance() > earlyReverbData.maxPathLength)
 							continue;
 
-						imageSource.Valid();
-						imageSource.AddEdgeID(edgeID);
+						imageSource->Valid();
+						imageSource->AddEdgeID(edgeID);
 
 						// Receiver checks
 						if (rZone == EdgeZone::Invalid)
@@ -873,45 +888,48 @@ namespace RAC
 						if (earlyReverbData.specularDiffOrder < refOrder && edge.GetReceiverZone() == EdgeZone::NonShadowed)
 							continue;
 
-						if (!imageSource.GetDiffractionPath().valid)
+						if (!imageSource->GetDiffractionPath().valid)
 							continue;
 
-						order = imageSource.GetDiffractionPath().inShadowZone ? earlyReverbData.shadowDiffOrder : earlyReverbData.specularDiffOrder;
+						order = imageSource->GetDiffractionPath().inShadowZone ? earlyReverbData.shadowDiffOrder : earlyReverbData.specularDiffOrder;
 
 						if (order < refOrder)
 							continue;
 
-						if (!FindIntersections(imageSource, intersections))
+						if (!FindIntersections(*imageSource, intersections))
 							continue;
 
-						if (CheckObstructions(source.position, imageSource, intersections))
+						if (CheckObstructions(source.position, *imageSource, intersections))
 							continue;
 
 						InitImageSource(source, intersections[0], imageSource, imageSources, feedsFDN);
 #ifdef DEBUG_IEM
-						CVector3 pos = imageSource.GetTransform().GetPosition();
+						CVector3 pos = imageSource->GetTransform().GetPosition();
 						Vec3 position(static_cast<Real>(pos.x), static_cast<Real>(pos.y), static_cast<Real>(pos.z));
-						Debug::send_path(imageSource.GetKey(), intersections, position);
+						Debug::send_path(imageSource->GetKey(), intersections, position);
 #endif
 					}
 				}
-				sp[refIdx].resize(counter, ImageSourceData(ToInt(frequencyBands.Length())));
+				const size_t currentSize = sp[refIdx].size();
+				sp[refIdx].resize(counter);
+				for (size_t initializeIndex = currentSize; initializeIndex < sp[refIdx].size(); ++initializeIndex)
+					sp[refIdx][initializeIndex] = CreateEmptyImageSource();
 			}
 		}
 
 		////////////////////////////////////////
 
-		void ImageEdge::InitImageSource(const Source::Data& source, const Vec3& intersection, ImageSourceData& imageSource, ImageSourceDataMap& imageSources, bool feedsFDN)
+		void ImageEdge::InitImageSource(const Source::Data& source, const Vec3& intersection, const std::shared_ptr<ImageSourceData> &imageSource, ImageSourceDataMap& imageSources, bool feedsFDN)
 		{
 			Coefficients<> directivity(frequencyBands.Length());
 			directivity = CalculateDirectivity(source, intersection);
-			imageSource.AddAbsorption(directivity);
+			imageSource->AddAbsorption(directivity);
 
-			imageSource.SetDistance(mListenerPosition);
-			imageSource.Visible(feedsFDN);
-			imageSource.UpdateCycle(currentCycle);
-			imageSource.CreateKey(ToInt(source.id));
-			imageSources.insert_or_assign(imageSource.GetKey(), std::pair<int, ImageSourceData>(-1, imageSource));
+			imageSource->SetDistance(mListenerPosition);
+			imageSource->Visible(feedsFDN);
+			imageSource->UpdateCycle(currentCycle);
+			imageSource->CreateKey(ToInt(source.id));
+			imageSources.insert_or_assign(imageSource->GetKey(), std::pair<int, std::shared_ptr<ImageSourceData>>(-1, imageSource));
 		}
 
 		////////////////////////////////////////
@@ -990,7 +1008,7 @@ namespace RAC
 		{
 			for (auto it = imageSources.begin(); it != imageSources.end();)
 			{
-				if (it->second.second.UpdatedThisCycle(currentCycle))
+				if (it->second.second->UpdatedThisCycle(currentCycle))
 					++it;
 				else
 				{
@@ -1000,6 +1018,11 @@ namespace RAC
 					it = imageSources.erase(it);
 				}
 			}
+		}
+
+		std::shared_ptr<ImageSourceData> ImageEdge::CreateEmptyImageSource() const
+		{
+			return std::make_shared<ImageSourceData>(ToInt(frequencyBands.Length()));
 		}
 	}
 }
