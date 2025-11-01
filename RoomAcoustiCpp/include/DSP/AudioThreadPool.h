@@ -31,7 +31,7 @@
 #ifdef _WIN32
 	// if set, it uses WaitForSingleObject() to wait for data to actually be available rather than polling. This doesn't seem to have a major impact
 	// on performance on a many-core machines, but it does make profiling easier and it is not busy waiting
-#   define USE_BLOCKING_TASKS       (1)
+#   define USE_BLOCKING_TASKS       (0)
 #else
 #   define USE_BLOCKING_TASKS       (0)
 #endif
