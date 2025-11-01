@@ -49,7 +49,7 @@ namespace RAC
 
 		void ImageSourceData::AddEdgeID(size_t id)
 		{
-			pathParts.back().id = id;
+			pathParts.back().id = static_cast<partid_t>(id);
 			pathParts.back().isReflection = false;
 			diffraction = true;
 			diffractionIndex = static_cast<int>(pathParts.size()) - 1;
@@ -130,22 +130,6 @@ namespace RAC
 				distance = mDiffractionPath.rData.d + mDiffractionPath.sData.d;
 			else
 				distance = (listenerPosition - GetPosition()).Normal();
-		}
-
-		////////////////////////////////////////
-
-		Vec3 ImageSourceData::GetPosition(int i) const
-		{
-			if (diffraction)
-			{
-				if (i >= diffractionIndex)
-				{
-					assert(i < mEdges.size());
-					return mEdges[i].GetEdgeCoordinate(mDiffractionPath.GetApexZ());
-				}
-			}
-			assert(i < mPositions.size());
-			return mPositions[i];
 		}
 
 		////////////////////////////////////////
