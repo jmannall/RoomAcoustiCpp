@@ -28,6 +28,12 @@
 std::shared_mutex RAC::DSP::tuneInMutex;
 std::unique_ptr<RAC::DSP::AudioThreadPool> RAC::DSP::audioThreadPool;
 
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#include <windows.h>
+#endif
+
 namespace RAC
 {
 	using namespace Unity;
