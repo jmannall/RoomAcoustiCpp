@@ -51,9 +51,10 @@ namespace RAC
 				UpdateResidue(currentEnergy);
 			}
 
-			virtual void UpdateResidue(Complex energy) = 0;
+			virtual void UpdateResidue(Real energy) = 0;
 
-			Complex residue;		// Residue for the RAVES algorithm
+			// NOTE: residue is always real, even through it's later multiplied by a complex value
+			Real residue;		// Residue for the RAVES algorithm
 
 		private:
 
@@ -79,7 +80,10 @@ namespace RAC
 				return input * residue;
 			}
 
-			inline void UpdateResidue(Complex energy) override { residue = std::conj(std::sqrt(energy)); }
+			virtual void UpdateResidue(Real energy) override
+			{
+				residue = std::sqrt(energy);
+			}
 
 			int frequencyIndex;
 		};
@@ -99,7 +103,7 @@ namespace RAC
 				return (input * residue).real();
 			}
 
-			inline void UpdateResidue(Complex energy) override { residue = std::sqrt(energy); }
+			virtual void UpdateResidue(Real energy) override { residue = std::sqrt(energy); }
 		};
 	}
 }
