@@ -80,10 +80,7 @@ namespace RAC
 				return input * residue;
 			}
 
-			virtual void UpdateResidue(Real energy) override
-			{
-				residue = std::sqrt(energy);
-			}
+			virtual void UpdateResidue(Real energy) override { residue = std::sqrt(energy); }
 
 			int frequencyIndex;
 		};
