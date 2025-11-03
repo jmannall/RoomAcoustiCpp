@@ -53,7 +53,6 @@ namespace RAC
 
 			virtual void UpdateResidue(Real energy) = 0;
 
-			// NOTE: residue is always real, even through it's later multiplied by a complex value
 			Complex residue;		// Residue for the RAVES algorithm
 
 		private:
@@ -83,7 +82,7 @@ namespace RAC
 			virtual void UpdateResidue(Real energy) override
 			{
 				if (energy < 0)
-					residue = Complex(0.0, std::sqrt(-energy));
+					residue = Complex(0.0, -std::sqrt(-energy));
 				else
 					residue = std::sqrt(energy);
 			}
@@ -109,7 +108,7 @@ namespace RAC
 			virtual void UpdateResidue(Real energy) override
 			{
 				if (energy < 0)
-					residue = Complex(0.0, -std::sqrt(-energy));
+					residue = Complex(0.0, std::sqrt(-energy));
 				else
 					residue = std::sqrt(energy);
 			}
