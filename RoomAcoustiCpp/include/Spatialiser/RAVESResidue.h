@@ -83,7 +83,7 @@ namespace RAC
 			virtual void UpdateResidue(Real energy) override
 			{
 				if (energy < 0)
-					residue = Complex(0.0, -std::sqrt(-energy));
+					residue = Complex(0.0, std::sqrt(-energy));
 				else
 					residue = std::sqrt(energy);
 			}
@@ -109,7 +109,7 @@ namespace RAC
 			virtual void UpdateResidue(Real energy) override
 			{
 				if (energy < 0)
-					residue = Complex(0.0, std::sqrt(-energy));
+					residue = Complex(0.0, -std::sqrt(-energy));
 				else
 					residue = std::sqrt(energy);
 			}
