@@ -202,6 +202,11 @@ namespace RAC
 				return *this;
 			}
 
+			/**
+			 * @brief For eigen compatibility
+			 */
+			inline Vec3& noalias() { return *this; }
+
 		private:
 			Real mX;		// X coordinate
 			Real mY;		// Y coordinate

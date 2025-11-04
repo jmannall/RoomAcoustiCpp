@@ -499,7 +499,7 @@ namespace RAC
 			{
 				auto it = imageSourceData.find(key);
 				if (it == imageSourceData.end()) // case: old vSource
-					vSource.second.Invisible();
+					vSource.second->Invisible();
 			}
 
 			for (auto& [key, vSource] : imageSourceData)
@@ -539,12 +539,12 @@ namespace RAC
 		
 		////////////////////////////////////////
 
-		bool Source::UpdateImageSource(int& id, ImageSourceData& data, const std::shared_ptr<DSPConfig>& dspConfig)
+		bool Source::UpdateImageSource(int& id, const std::shared_ptr<ImageSourceData>& data, const std::shared_ptr<DSPConfig>& dspConfig)
 		{
 			if (id < 0)		// case: virtual source does not exist
 			{
 				int fdnChannel = -1;
-				if (data.IsFeedingFDN())
+				if (data->IsFeedingFDN())
 					fdnChannel = AssignFDNChannel(dspConfig->GetData().fdnSize);
 
 				id = imageSources.NextID();
@@ -556,12 +556,12 @@ namespace RAC
 			else
 			{
 				int fdnChannel = -1;
-				if (data.IsFeedingFDN() && imageSources.at(id).GetFDNChannel() < 0)
+				if (data->IsFeedingFDN() && imageSources.at(id).GetFDNChannel() < 0)
 					fdnChannel = AssignFDNChannel(dspConfig->GetData().fdnSize);
 
-				bool remove = imageSources.at(id).Update(data, fdnChannel);
+				bool remove = imageSources.at(id).Update(*data, fdnChannel);
 
-				assert(!(data.IsFeedingFDN() && imageSources.at(id).GetFDNChannel() == -1));
+				assert(!(data->IsFeedingFDN() && imageSources.at(id).GetFDNChannel() == -1));
 
 				if (fdnChannel >= 0) // Add vSource old fdnChannel to freeFDNChannels (Also prevents leaking FDN channels if !data.visible and the channel is not assigned to vSource)
 					freeFDNChannels.push_back(fdnChannel);

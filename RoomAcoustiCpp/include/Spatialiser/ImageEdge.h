@@ -241,7 +241,7 @@ namespace RAC
 			* @param imageSources The image source data to write to
 			* @param feedsFDN True if the image source should feed the FDN, false otherwise
 			*/
-			void InitImageSource(const Source::Data& source, const Vec3& intersection, ImageSourceData& imageSource, ImageSourceDataMap& imageSources, bool feedsFDN);
+			void InitImageSource(const Source::Data& source, const Vec3& intersection, const std::shared_ptr<ImageSourceData>& imageSource, ImageSourceDataMap& imageSources, bool feedsFDN);
 
 			/**
 			* @brief Run simple ray tracing and update the late reverberation reflection filters
@@ -254,6 +254,11 @@ namespace RAC
 			* @param imageSources The image source data map to erase old entries from
 			*/
 			void EraseOldEntries(ImageSourceDataMap& imageSources);
+
+			/**
+			 * @brief Creates an empty image source
+			 */
+			std::shared_ptr<ImageSourceData> CreateEmptyImageSource() const;
 
 			weak_ptr<Room> mRoom;							// Pointer to the room class
 			weak_ptr<SourceManager> mSourceManager;			// Pointer to the source manager class

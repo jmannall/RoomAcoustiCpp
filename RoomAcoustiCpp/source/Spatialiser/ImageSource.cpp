@@ -33,6 +33,15 @@ namespace RAC
 
 		////////////////////////////////////////
 
+		std::shared_ptr<ImageSourceData> ImageSourceData::CreateShallowCopy() const
+		{
+			// TODO: only copy data we need
+			return std::make_shared<ImageSourceData>(*this);
+		}
+
+		////////////////////////////////////////
+
+
 		void ImageSourceData::CreateKey(int sourceID)
 		{
 			AddSourceIDToKey(sourceID);
@@ -49,7 +58,7 @@ namespace RAC
 
 		void ImageSourceData::AddEdgeID(size_t id)
 		{
-			pathParts.back().id = id;
+			pathParts.back().id = static_cast<partid_t>(id);
 			pathParts.back().isReflection = false;
 			diffraction = true;
 			diffractionIndex = static_cast<int>(pathParts.size()) - 1;
@@ -134,22 +143,6 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		Vec3 ImageSourceData::GetPosition(int i) const
-		{
-			if (diffraction)
-			{
-				if (i >= diffractionIndex)
-				{
-					assert(i < mEdges.size());
-					return mEdges[i].GetEdgeCoordinate(mDiffractionPath.GetApexZ());
-				}
-			}
-			assert(i < mPositions.size());
-			return mPositions[i];
-		}
-
-		////////////////////////////////////////
-
 		void ImageSourceData::Clear()
 		{
 			Reset();
@@ -171,17 +164,21 @@ namespace RAC
 
 		void ImageSourceData::Update(const ImageSourceData& imageSource)
 		{
+			assert(pathParts.size() >= imageSource.pathParts.size());
 			for (int i = 0; i < imageSource.pathParts.size(); i++)
 			{
 				pathParts[i] = imageSource.pathParts[i];
 				mPositions[i] = imageSource.mPositions[i];
 			}
+
 			reflection = imageSource.reflection;
 			diffraction = imageSource.diffraction;
 			if (diffraction)
 			{
+				assert(mEdges.size() >= imageSource.mEdges.size());
 				for (int i = 0; i < imageSource.mEdges.size(); i++)
 					mEdges[i] = imageSource.mEdges[i];
+
 				diffractionIndex = imageSource.diffractionIndex;
 				mDiffractionPath = imageSource.mDiffractionPath;
 			}
@@ -219,28 +216,28 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void ImageSource::Init(const Buffer<>* sourceBuffer, const std::shared_ptr<DSPConfig>& dspConfig, const ImageSourceData& data, int fdnChannel)
+		void ImageSource::Init(const Buffer<>* sourceBuffer, const std::shared_ptr<DSPConfig>& dspConfig, const std::shared_ptr<ImageSourceData>& data, int fdnChannel)
 		{
 			InitSource(dspConfig);
 			const DSPData& dspData = dspConfig->GetData();
 			InitBuffers(dspData.numFrames);
 
 			inputBuffer = sourceBuffer;
-			mFilter = make_unique<GraphicEQ<>>(data.GetAbsorption(), dspData.frequencyBands, dspData.Q, dspData.fs);
-			mAirAbsorption = make_unique<AirAbsorption>(data.GetDistance(), dspConfig->GetData().fs);
+			mFilter = make_unique<GraphicEQ<>>(data->GetAbsorption(), dspData.frequencyBands, dspData.Q, dspData.fs);
+			mAirAbsorption = make_unique<AirAbsorption>(data->GetDistance(), dspConfig->GetData().fs);
 
-			diffraction = data.IsDiffraction();
-			reflection = data.IsReflection();
+			diffraction = data->IsDiffraction();
+			reflection = data->IsReflection();
 
 			if (diffraction)
-				InitDiffractionModel(dspConfig->GetDiffractionModel(), data.GetDiffractionPath(), dspData.fs);
+				InitDiffractionModel(dspConfig->GetDiffractionModel(), data->GetDiffractionPath(), dspData.fs);
 
-			feedsFDN.store(data.IsFeedingFDN(), std::memory_order_release);
+			feedsFDN.store(data->IsFeedingFDN(), std::memory_order_release);
 			mFDNChannel.store(fdnChannel, std::memory_order_release);
 
-			UpdateTransform(data.GetTransform());
+			UpdateTransform(data->GetTransform());
 
-			if (data.IsVisible())
+			if (data->IsVisible())
 				gain.SetTarget((Real)1.0);
 
 			AllowAccess();

@@ -308,6 +308,14 @@ namespace RAC
 			*/
 			inline Matrix operator-=(const T a) { return *this += (-a); }
 
+			/**
+			 * @brief For eigen compatibility
+			 */
+			inline Matrix& noalias()
+			{
+				return *this;
+			}
+
 		protected:
 
 			ContiguousData data;		// Store matrix data in a contiguous vector

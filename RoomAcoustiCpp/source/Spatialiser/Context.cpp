@@ -28,6 +28,12 @@
 std::shared_mutex RAC::DSP::tuneInMutex;
 std::unique_ptr<RAC::DSP::AudioThreadPool> RAC::DSP::audioThreadPool;
 
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#include <windows.h>
+#endif
+
 namespace RAC
 {
 	using namespace Unity;
@@ -55,6 +61,10 @@ namespace RAC
 #ifdef USE_UNITY_PROFILER
 			RegisterIEMThread();
 #endif
+#ifdef _WIN32
+			SetThreadDescription(GetCurrentThread(), L"IEMProcessor");
+#endif
+
 			std::shared_ptr<ImageEdge> imageEdgeModel = context->GetImageEdgeModel();
 
 			const int loopInterval_ms = 10;

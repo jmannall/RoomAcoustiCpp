@@ -47,6 +47,8 @@ namespace RAC
 	using namespace Common;
 	namespace Spatialiser
 	{
+		typedef uint32_t partid_t;
+
 		/**
 		* @brief Stores data used to create an image source
 		*/
@@ -57,8 +59,8 @@ namespace RAC
 			*/
 			struct Part
 			{
-				bool isReflection;		// True if the part is a reflection, false if it is a diffraction
-				size_t id;				// ID of the reflecting plane or diffracting edge
+				bool	 isReflection;
+				partid_t id;										// ID of the reflecting plane or diffracting edge
 
 				/**
 				* @brief Constructor that initialises the part
@@ -66,7 +68,7 @@ namespace RAC
 				* @param id The ID of the reflecting plane or diffracting edge
 				* @param isReflection True if the part is a reflection, false if it is a diffraction
 				*/
-				Part(const size_t id, const bool isReflection) : id(id), isReflection(isReflection) {};
+				Part(const size_t id, const bool isReflection) : isReflection(isReflection), id(static_cast<partid_t>(id)) {};
 			};
 
 			/**
@@ -96,7 +98,6 @@ namespace RAC
 			};
 
 		public:
-
 			/**
 			* @brief Constructor that initialises the image source data
 			*
@@ -107,9 +108,9 @@ namespace RAC
 				mPositions(1, Vec3()), pathParts(1, Part(0, true)), mEdges(1, { Vec3(), Vec3() }) {}
 
 			/**
-			* @brief Default deconstructor
-			*/
-			~ImageSourceData() {};
+			 * @brief Makes a minimal copy of this
+			 */
+			std::shared_ptr<ImageSourceData> CreateShallowCopy() const;
 
 			/**
 			* @brief Adds absorption to the image source
@@ -145,7 +146,7 @@ namespace RAC
 			*/
 			inline void AddPlaneID(const size_t id)
 			{
-				pathParts.back().id = id;
+				pathParts.back().id = static_cast<partid_t>(id);
 				pathParts.back().isReflection = true;
 				reflection = true;
 			}
@@ -221,7 +222,19 @@ namespace RAC
 			* @param i The index of the position to return
 			* @return The position of the image source or image edge apex point at the given index
 			*/
-			Vec3 GetPosition(int i) const;
+			inline Vec3 GetPosition(int i) const
+			{
+				if (diffraction)
+				{
+					if (i >= diffractionIndex)
+					{
+						assert(i < mEdges.size());
+						return mEdges[i].GetEdgeCoordinate(mDiffractionPath.GetApexZ());
+					}
+				}
+				assert(i < mPositions.size());
+				return mPositions[i];
+			}
 
 			/**
 			* @brief Updates the diffraction path of the image source
@@ -425,6 +438,9 @@ namespace RAC
 			bool reflection;				// True if the image source path includes any reflections, false otherwise
 			bool diffraction;				// True if the image source path includes any diffractions, false otherwise
 			bool lastUpdatedCycle;			// True if the image source was updated in the current cycle, false otherwise
+
+			// disable assignment as we just want to use shared pointers
+			void operator=(const ImageSourceData&) = delete;
 		};
 
 		/**
@@ -466,7 +482,7 @@ namespace RAC
 			* @param data The image source data to initialise with
 			* @param fdnChannel The FDN channel to feed, -1 if the image source does not feed the FDN
 			*/
-			void Init(const Buffer<>* inputBuffer, const std::shared_ptr<DSPConfig>& config, const ImageSourceData& data, int fdnChannel);
+			void Init(const Buffer<>* inputBuffer, const std::shared_ptr<DSPConfig>& config, const std::shared_ptr<ImageSourceData>& data, int fdnChannel);
 
 			/**
 			* @brief Update the image source and remove if no longer visible

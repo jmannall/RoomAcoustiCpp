@@ -97,7 +97,7 @@ bool CommandLineParser::Parse()
 		else if (ParseStandardArgument(argument, "--audio-threads=", value))
 		{
 			const int newDesiredAudioThreads = std::stoi(value);
-			if (newDesiredAudioThreads <= 0)
+			if (newDesiredAudioThreads < 0)
 			{
 				std::cerr << "Invalid audio-threads: " << argument << std::endl;
 				return false;
@@ -153,7 +153,7 @@ Options:
     --audio-threads=##	   Overrides the number of audio threads
     --debug                Enables certain memory debugging features
     --detailed-logs        Enables detailed logs
-	--inner-iterations=##  The number of times to run the inner loop
+    --inner-iterations=##  The number of times to run the inner loop
     --log-prefix=file      Specifies the log prefix
     --no-debug             Disables certain memory debugging features
     --no-detailed-logs     Disabled detailed logs 

@@ -225,8 +225,8 @@ namespace RAC
 		void Reverb::buildDelaySets(Matrix<int>& delayLineLengths, Real fs,
 			Real minDiffSeconds, Real minLineSeconds, Real maxLineSeconds)
 		{
-			const int numFDNs = delayLineLengths.rows();
-			const int fdnSize = delayLineLengths.cols();
+			const int numFDNs = ToInt(delayLineLengths.Rows());
+			const int fdnSize = ToInt(delayLineLengths.Cols());
 
 			// Constraints in number of samples.
 			int minDiff = static_cast<int>(minDiffSeconds * fs);
@@ -385,8 +385,8 @@ namespace RAC
 			FDNPtr fdns = std::make_shared<std::vector<std::unique_ptr<FDN<Complex>>>>(numFDNs);
 			for (int i = 0; i < numFDNs; i++)
 			{
-				delayLineLengths = Vec<int>(delayLineLengthSets(i));
-
+				delayLineLengths = delayLineLengthSets.Row(i);
+				
 				switch (data.feedbackMatrix)
 				{
 				case FDNMatrix::householder:

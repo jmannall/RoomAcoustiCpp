@@ -126,7 +126,7 @@ namespace RAC
 			/**
 			* @brief Default deconstructor
 			*/
-			~Source()
+			virtual ~Source() override
 			{
 				Remove();
 				if (mSource)
@@ -359,7 +359,7 @@ namespace RAC
 			* @params data The new image source data
 			* @return True if the image was destroyed successfully, false otherwise
 			*/
-			bool UpdateImageSource(int& id, ImageSourceData& data, const std::shared_ptr<DSPConfig>& config);
+			bool UpdateImageSource(int& id, const std::shared_ptr<ImageSourceData>& data, const std::shared_ptr<DSPConfig>& config);
 
 			/**
 			* @return The next free FDN channel

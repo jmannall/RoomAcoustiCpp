@@ -126,11 +126,21 @@ namespace RAC
             {
                 static_assert(std::is_member_function_pointer_v<decltype(&T::ProcessAudio)>, "T must have a ProcessAudio member function");
                 static_assert(std::is_same_v<decltype(&T::ProcessAudio), void (T::*)(Buffer<>&, const AudioData&)>, "T::ProcessAudio must be of type void (T::*)(Buffer<>&, const AudioData&)");
-                std::shared_ptr<AudioTaskBase> task = std::make_shared<AudioTask<T>>(source, tasksRemaining, audioData);
-                tasks.try_enqueue(std::move(task));
+
+				std::shared_ptr<AudioTaskBase> task = std::make_shared<AudioTask<T>>(source, tasksRemaining, audioData);
+
+                if (workers.empty()) [[unlikely]]
+                {
+					// if we requested 0 worker threads, run it inline
+					task->Run(threadOutputBuffers[0], threadReverbOutputs[0]);
+                }
+                else 
+                {
+                    tasks.try_enqueue(std::move(task));
 #if USE_BLOCKING_TASKS
-                SetEvent(tasksAvailable);
+                    SetEvent(tasksAvailable);
 #endif
+                }
             }
 
             /**
@@ -145,27 +155,46 @@ namespace RAC
                 static_assert(std::is_member_function_pointer_v<decltype(&ReverbSource::ProcessAudio)>, "T must have a ProcessAudio member function");
                 static_assert(std::is_same_v<decltype(&ReverbSource::ProcessAudio), void (ReverbSource::*)(Buffer<>&, const AudioData&)>, "ReverbSource::ProcessAudio must be of type void (ReverbSource::*)(Buffer<>&, const AudioData&)");
                 std::shared_ptr<AudioTaskBase> task = std::make_shared<AudioTask<ReverbSource>>(source, tasksRemaining, audioData);
-                tasks.try_enqueue(std::move(task));
+
+                if (workers.empty()) [[unlikely]]
+                {
+					// if we requested 0 worker threads, run it inline
+                    task->Run(threadOutputBuffers[0], threadReverbOutputs[0]);
+                }
+                else 
+                {
+                    tasks.try_enqueue(std::move(task));
 #if USE_BLOCKING_TASKS
-				SetEvent(tasksAvailable);
+                    SetEvent(tasksAvailable);
 #endif
+                }
             }
 
             /**
             * @brief Adds an audio task to the queue (specialized for ReverbSource)
             *
-            * @param source Pointer to the ReverbSource object
+            * @param fdn The FDN to computer
             * @param tasksRemaining Pointer to the spin lock for tracking remaining tasks
+			* @param audioData Data relevant to audio processing
             */
             void Enqueue(FDN<Complex>* fdn, SpinLock* tasksRemaining, const AudioData& audioData)
             {
                 //static_assert(std::is_member_function_pointer_v<decltype(&FDN<Complex>::ProcessAudio)>, "T must have a ProcessAudio member function");
                 //static_assert(std::is_same_v<decltype(&FDN<Complex>::ProcessAudio), void (FDN<Complex>::*)(std::vector<Buffer<>>&, Real)>, "T::ProcessAudio must be of type void (T::*)(Buffer&, Real)");
                 std::shared_ptr<AudioTaskBase> task = std::make_shared<AudioTask<FDN<Complex>>>(fdn, tasksRemaining, audioData);
-                tasks.try_enqueue(std::move(task));
+
+                if (workers.empty()) [[unlikely]]
+                {
+					// if we requested 0 worker threads, run it inline
+					task->Run(threadOutputBuffers[0], threadReverbOutputs[0]);
+                }
+                else 
+                {
+                    tasks.try_enqueue(std::move(task));
 #if USE_BLOCKING_TASKS
-				SetEvent(tasksAvailable);
+                    SetEvent(tasksAvailable);
 #endif
+                }
             }
 
             /**
