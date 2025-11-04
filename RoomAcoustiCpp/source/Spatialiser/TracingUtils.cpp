@@ -15,6 +15,10 @@ namespace RAC
             const RayBundleSoA& rays, int rayIndex,
             Real& distance, Real& cosine)
         {
+            // Users should test the return result, but default the results to qNaN just in case
+            distance = qNaN;
+            cosine = qNaN;
+
             // Sanity check: the requested triangle must exist.
             assert(triangleIndex < triangles.size());
             // Sanity check: the requested ray must exist.
@@ -188,6 +192,10 @@ namespace RAC
             const RayPencilSoA& rays, int rayIndex,
             Real& distance, Real& cosine)
         {
+			// Users should test the return result, but default the results to qNaN just in case
+			distance = qNaN;
+			cosine = qNaN;
+
             // Sanity check: the requested triangle must exist.
             assert(triangleIndex < triangles.size());
             // Sanity check: the requested ray must exist.
@@ -366,6 +374,10 @@ namespace RAC
             const Vec3& rayOrigin, const Vec3& rayDirection,
             Real& distance, Real& cosine)
         {
+			// Users should test the return result, but default the results to qNaN just in case
+			distance = qNaN;
+			cosine = qNaN;
+
             // Sanity check: the requested triangle must exist.
             assert(triangleIndex < triangles.size());
             // Sanity check: the requested ray must exist.
