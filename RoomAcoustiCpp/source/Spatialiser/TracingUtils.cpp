@@ -301,12 +301,12 @@ namespace RAC
 			cosineFront = qNaN;
 			cosineBack = qNaN;
 
-			// Buffers to retrieve individual check results.
-			Real currentDist, currentCos;
-
 			for (int i = 0; i < triangles.size(); ++i) {
 				if (i == ignoredTriangleIndex) // Ignore this triangle
 					continue;
+
+				// Buffers to retrieve individual check results.
+				Real currentDist, currentCos;
 
 				if (!intersection_test(triangles, i, rays, rayIndex, currentDist, currentCos))
 					continue;
