@@ -36,7 +36,7 @@ namespace RAC
 		*
 		* @return The rotated vector
 		*/
-		inline Vec3 RotateVector(const Vec3& v, const Vec4& orientation) { return orientation.Conjugate() * v; }
+		inline Vec3 RotateVector(const Vec3& v, const Vec4& orientation) { return orientation.Conjugate() * MakeCompatible(v); }
 
 #elif MATRIX_LIBRARY == CUSTOM_FLAG
 
@@ -219,38 +219,26 @@ namespace RAC
 				z = q.z;
 				return *this;
 			}
-
-			Real mW;		// W component of the quaternion
-			Vec3 mVec;		// Vector component of the quaternion
-		private:
-		};
-
-		//////////////////// Vec4 operator overloads ////////////////////
-
+			
 		/**
 		* @brief Performs an element-wise comparison
 		* @return True if all element pairs are equal, false otherwise
 		*/
-		inline bool operator==(const Vec4& u, const Vec4& v)
-		{
-			if (u.w() == v.w())
-			{
-				if (u.vec() == v.vec())
-					return true;
-			}
-			return false;
-		}
+		friend inline bool operator==(const Vec4& u, const Vec4& v) { return u.mW == v.mW && u.mVec == v.mVec; }
 
 		/**
 		* @brief Performs an element-wise comparison
 		* @return True if any element pairs are unequal, false otherwise
 		*/
-		inline bool operator!=(const Vec4& u, const Vec4& v)
-		{
-			if (u == v)
-				return false;
-			return true;
-		}
+		friend inline bool operator!=(const Vec4& u, const Vec4& v) { return !(u==v); }
+			
+
+		private:
+			Real mW;		// W component of the quaternion
+			Vec3 mVec;		// Vector component of the quaternion
+		};
+
+		//////////////////// Vec4 operator overloads ////////////////////
 
 		/**
 		* @brief Rotates a vector by the quaternion

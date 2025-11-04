@@ -154,8 +154,7 @@ namespace RAC
 				for (int di = 0; di < 6; ++di) {
 					for (int ti = 0; ti < 14; ++ti) {
 						expected_distance = EXPECTED_DIST[oi][di][ti];
-
-						intersection_test(
+						const bool success = intersection_test(
 							testRoom.GetTriangleMeshSoA(), ti,
 							testOrigins[oi], testDirections[di],
 							result_distance, result_cosine);
@@ -169,6 +168,10 @@ namespace RAC
 						error += "\nresult cosine " + ToStr(result_cosine);
 						std::wstring werror = std::wstring(error.begin(), error.end());
 						const wchar_t* werrorchar = werror.c_str();
+
+						// If we succeed, then the values should not be NaN
+						Assert::IsTrue(!success || (!std::isnan(result_cosine) && !std::isnan(result_distance)), werrorchar);
+						Assert::IsTrue(success || (std::isnan(result_cosine) && std::isnan(result_distance)), werrorchar);
 
 						// Either both or neither distance should be NaN.
 						Assert::AreEqual(std::isnan(expected_distance), std::isnan(result_distance), werrorchar);
@@ -285,16 +288,12 @@ namespace RAC
 			RayPencilSoA testRays;
 			testRays.resize(6);
 			for (int i = 0; i < 6; ++i) {
-				testRays.Dx[i] = testDirections[i].x();
-				testRays.Dy[i] = testDirections[i].y();
-				testRays.Dz[i] = testDirections[i].z();
+				testRays.D[i] = testDirections[i];
 			}
 
 			Real expected_distance, result_distance, result_cosine;
 			for (int oi = 0; oi < 2; ++oi) {
-				testRays.Ox = testOrigins[oi].x();
-				testRays.Oy = testOrigins[oi].y();
-				testRays.Oz = testOrigins[oi].z();
+				testRays.O= testOrigins[oi];
 
 				// Note that this also computes the moments if needed.
 				testRays.normalize_directions();
@@ -302,8 +301,7 @@ namespace RAC
 				for (int di = 0; di < 6; ++di) {
 					for (int ti = 0; ti < 14; ++ti) {
 						expected_distance = EXPECTED_DIST[oi][di][ti];
-
-						intersection_test(
+						const bool success = intersection_test(
 							testRoom.GetTriangleMeshSoA(), ti,
 							testRays, di,
 							result_distance, result_cosine);
@@ -317,6 +315,10 @@ namespace RAC
 						error += "\nresult cosine " + ToStr(result_cosine);
 						std::wstring werror = std::wstring(error.begin(), error.end());
 						const wchar_t* werrorchar = werror.c_str();
+
+						// If we succeed, then the values should not be NaN
+						Assert::IsTrue(!success || (!std::isnan(result_cosine) && !std::isnan(result_distance)), werrorchar);
+						Assert::IsTrue(success || (std::isnan(result_cosine) && std::isnan(result_distance)), werrorchar);
 
 						// Either both or neither distance should be NaN.
 						Assert::AreEqual(std::isnan(expected_distance), std::isnan(result_distance), werrorchar);
@@ -357,18 +359,14 @@ namespace RAC
 			RayPencilSoA testRays;
 			testRays.resize(6);
 			for (int i = 0; i < 6; ++i) {
-				testRays.Dx[i] = testDirections[i].x();
-				testRays.Dy[i] = testDirections[i].y();
-				testRays.Dz[i] = testDirections[i].z();
+				testRays.D[i] = testDirections[i];
 			}
 
 			Real expected_distance_front, result_distance_front, result_cosine_front;
 			Real expected_distance_back, result_distance_back, result_cosine_back;
 			int expected_idx_front, result_idx_front, expected_idx_back, result_idx_back;
 			for (int oi = 0; oi < 2; ++oi) {
-				testRays.Ox = testOrigins[oi].x();
-				testRays.Oy = testOrigins[oi].y();
-				testRays.Oz = testOrigins[oi].z();
+				testRays.O = testOrigins[oi];
 
 				// Note that this also computes the moments if needed.
 				testRays.normalize_directions();
@@ -452,12 +450,8 @@ namespace RAC
 			for (int oi = 0; oi < 2; ++oi) {
 				for (int di = 0; di < 6; ++di) {
 					int ri = di + (oi * 6);
-					testRays.Ox[ri] = testOrigins[oi].x();
-					testRays.Oy[ri] = testOrigins[oi].y();
-					testRays.Oz[ri] = testOrigins[oi].z();
-					testRays.Dx[ri] = testDirections[di].x();
-					testRays.Dy[ri] = testDirections[di].y();
-					testRays.Dz[ri] = testDirections[di].z();
+					testRays.O[ri] = testOrigins[oi];
+					testRays.D[ri] = testDirections[di];
 				}
 			}
 
@@ -469,8 +463,7 @@ namespace RAC
 				for (int di = 0; di < 6; ++di) {
 					for (int ti = 0; ti < 14; ++ti) {
 						expected_distance = EXPECTED_DIST[oi][di][ti];
-
-						intersection_test(
+						const bool success = intersection_test(
 							testRoom.GetTriangleMeshSoA(), ti,
 							testRays, di + (oi * 6),
 							result_distance, result_cosine);
@@ -484,6 +477,10 @@ namespace RAC
 						error += "\nresult cosine " + ToStr(result_cosine);
 						std::wstring werror = std::wstring(error.begin(), error.end());
 						const wchar_t* werrorchar = werror.c_str();
+
+						// If we succeed, then the values should not be NaN
+						Assert::IsTrue(!success || (!std::isnan(result_cosine) && !std::isnan(result_distance)), werrorchar);
+						Assert::IsTrue(success || (std::isnan(result_cosine) && std::isnan(result_distance)), werrorchar);
 
 						// Either both or neither distance should be NaN.
 						Assert::AreEqual(std::isnan(expected_distance), std::isnan(result_distance), werrorchar);
@@ -526,12 +523,8 @@ namespace RAC
 			for (int oi = 0; oi < 2; ++oi) {
 				for (int di = 0; di < 6; ++di) {
 					int ri = di + (oi * 6);
-					testRays.Ox[ri] = testOrigins[oi].x();
-					testRays.Oy[ri] = testOrigins[oi].y();
-					testRays.Oz[ri] = testOrigins[oi].z();
-					testRays.Dx[ri] = testDirections[di].x();
-					testRays.Dy[ri] = testDirections[di].y();
-					testRays.Dz[ri] = testDirections[di].z();
+					testRays.O[ri] = testOrigins[oi];
+					testRays.D[ri] = testDirections[di];
 				}
 			}
 

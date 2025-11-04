@@ -10,29 +10,26 @@ namespace RAC
 	{
         // ------------------------ Intersection kernels ------------------------
         
-        void intersection_test(
+        bool intersection_test(
             const TriangleMeshSoA& triangles, int triangleIndex,
             const RayBundleSoA& rays, int rayIndex,
             Real& distance, Real& cosine)
         {
+            // Users should test the return result, but default the results to qNaN just in case
+            distance = qNaN;
+            cosine = qNaN;
+
             // Sanity check: the requested triangle must exist.
             assert(triangleIndex < triangles.size());
             // Sanity check: the requested ray must exist.
             assert(rayIndex < rays.size());
 
             // Load ray data into locals.
-            const Real Ox = rays.Ox[rayIndex];
-            const Real Oy = rays.Oy[rayIndex];
-            const Real Oz = rays.Oz[rayIndex];
-
-            const Real Dx = rays.Dx[rayIndex];
-            const Real Dy = rays.Dy[rayIndex];
-            const Real Dz = rays.Dz[rayIndex];
+            const Vec3& O = rays.O[rayIndex];
+            const Vec3& D = rays.D[rayIndex];
 
             // Load plane data into locals.
-            const Real nx = triangles.nx[triangleIndex];
-            const Real ny = triangles.ny[triangleIndex];
-            const Real nz = triangles.nz[triangleIndex];
+            const Vec3& n = triangles.n[triangleIndex];
             const Real d0 = triangles.d0[triangleIndex];
 
 #if PLUCKER_KERNEL
@@ -40,44 +37,23 @@ namespace RAC
             // TODO: Implement Lean Plücker
 #else // not LEAN_PLUCKER
             // Load ray moments into locals.
-            const Real Mx = rays.Mx[rayIndex];
-            const Real My = rays.My[rayIndex];
-            const Real Mz = rays.Mz[rayIndex];
+            const Vec3& M = rays.M[rayIndex];
 
             // Load "fat Plücker" triangle data into locals.
-            const Real edgeABDirectionX = triangles.edgeABDirectionX[triangleIndex];
-            const Real edgeABDirectionY = triangles.edgeABDirectionY[triangleIndex];
-            const Real edgeABDirectionZ = triangles.edgeABDirectionZ[triangleIndex];
-
-            const Real edgeBCDirectionX = triangles.edgeBCDirectionX[triangleIndex];
-            const Real edgeBCDirectionY = triangles.edgeBCDirectionY[triangleIndex];
-            const Real edgeBCDirectionZ = triangles.edgeBCDirectionZ[triangleIndex];
-
-            const Real edgeCADirectionX = triangles.edgeCADirectionX[triangleIndex];
-            const Real edgeCADirectionY = triangles.edgeCADirectionY[triangleIndex];
-            const Real edgeCADirectionZ = triangles.edgeCADirectionZ[triangleIndex];
-
-            const Real edgeABWedge_AcrossB_X = triangles.edgeABWedge_AcrossB_X[triangleIndex];
-            const Real edgeABWedge_AcrossB_Y = triangles.edgeABWedge_AcrossB_Y[triangleIndex];
-            const Real edgeABWedge_AcrossB_Z = triangles.edgeABWedge_AcrossB_Z[triangleIndex];
-
-            const Real edgeBCWedge_BcrossC_X = triangles.edgeBCWedge_BcrossC_X[triangleIndex];
-            const Real edgeBCWedge_BcrossC_Y = triangles.edgeBCWedge_BcrossC_Y[triangleIndex];
-            const Real edgeBCWedge_BcrossC_Z = triangles.edgeBCWedge_BcrossC_Z[triangleIndex];
-
-            const Real edgeCAWedge_CcrossA_X = triangles.edgeCAWedge_CcrossA_X[triangleIndex];
-            const Real edgeCAWedge_CcrossA_Y = triangles.edgeCAWedge_CcrossA_Y[triangleIndex];
-            const Real edgeCAWedge_CcrossA_Z = triangles.edgeCAWedge_CcrossA_Z[triangleIndex];
+            const Vec3& edgeABDirection = triangles.edgeABDirection[triangleIndex];
+            const Vec3& edgeBCDirection = triangles.edgeBCDirection[triangleIndex];
+            const Vec3& edgeCADirection = triangles.edgeCADirection[triangleIndex];
+            const Vec3& edgeABWedge_AcrossB = triangles.edgeABWedge_AcrossB[triangleIndex];
+            const Vec3& edgeBCWedge_BcrossC = triangles.edgeBCWedge_BcrossC[triangleIndex];
+            const Vec3& edgeCAWedge_CcrossA = triangles.edgeCAWedge_CcrossA[triangleIndex];
 
             // ---------------------------------------------------------------------
             // 1) Facing test: ensure the triangle faces the ray origin.
             //    faceNum = dot(n, O) - d0; require faceNum > eps_face
             // ---------------------------------------------------------------------
-            const Real faceNum = nx * Ox + ny * Oy + nz * Oz - d0;
+            const Real faceNum = n.dot(O) - d0;
             if (faceNum < EPS_FACING) {
-                distance = qNaN;
-                cosine = qNaN;
-                return;
+                return false;
             }
 
             // ---------------------------------------------------------------------
@@ -88,13 +64,11 @@ namespace RAC
             //    We inline the dot products (a0*b0 + a1*b1 + a2*b2) to avoid the
             //    overhead of tiny helper calls in this scalar, hot function.
             // ---------------------------------------------------------------------
-            const Real sAB =
-                (Dx * edgeABWedge_AcrossB_X + Dy * edgeABWedge_AcrossB_Y + Dz * edgeABWedge_AcrossB_Z) +
-                (Mx * edgeABDirectionX + My * edgeABDirectionY + Mz * edgeABDirectionZ);
+            const Real sAB = D.dot(edgeABWedge_AcrossB) +
+						  	 M.dot(edgeABDirection);
 
-            const Real sBC =
-                (Dx * edgeBCWedge_BcrossC_X + Dy * edgeBCWedge_BcrossC_Y + Dz * edgeBCWedge_BcrossC_Z) +
-                (Mx * edgeBCDirectionX + My * edgeBCDirectionY + Mz * edgeBCDirectionZ);
+            const Real sBC = D.dot(edgeBCWedge_BcrossC) +
+			                 M.dot(edgeBCDirection);
 
             // ---------------------------------------------------------------------
             // Early-out on mismatched signs for the first two edges.
@@ -104,21 +78,16 @@ namespace RAC
                 const bool bothNonNeg = (sAB >= -EPS_EDGE) && (sBC >= -EPS_EDGE);
                 const bool bothNonPos = (sAB <= EPS_EDGE) && (sBC <= EPS_EDGE);
                 if (!(bothNonNeg || bothNonPos)) {
-                    distance = qNaN;
-                    cosine = qNaN;
-                    return;
+					return false;
                 }
             }
 
-            const Real sCA =
-                (Dx * edgeCAWedge_CcrossA_X + Dy * edgeCAWedge_CcrossA_Y + Dz * edgeCAWedge_CcrossA_Z) +
-                (Mx * edgeCADirectionX + My * edgeCADirectionY + Mz * edgeCADirectionZ);
+            const Real sCA = D.dot(edgeCAWedge_CcrossA) +
+				                M.dot(edgeCADirection);
 
             // Keep the exact inclusion rule (edges included) via the provided helper.
             if (!same_sign_with_zero_included(sAB, sBC, sCA, EPS_EDGE)) {
-                distance = qNaN;
-                cosine = qNaN;
-                return;
+				return false;
             }
 
             // ---------------------------------------------------------------------
@@ -126,40 +95,29 @@ namespace RAC
             //    No t>0 constraint (this is line–triangle, not ray–triangle).
             //    If the line is near-parallel to the plane, report no hit (NaN).
             // ---------------------------------------------------------------------
-            const Real denom = nx * Dx + ny * Dy + nz * Dz;  // dot(n, D)
+            const Real denom = n.dot(D);  // dot(n, D)
             if (std::abs(denom) <= EPS_PARALLEL) {
-                distance = qNaN;
-                cosine = qNaN;
+				return false;
             }
             else {
                 distance = -faceNum / denom;
                 cosine = std::abs(denom);
             }
-            return;
+            return true;
 #endif // end LEAN_PLUCKER
 #else // not PLUCKER_KERNEL
             // Load "Möller–Trumbore" triangle data into locals.
-            const Real Ax = triangles.Ax[triangleIndex];
-            const Real Ay = triangles.Ay[triangleIndex];
-            const Real Az = triangles.Az[triangleIndex];
-
-            const Real e1x = triangles.edge1X[triangleIndex];
-            const Real e1y = triangles.edge1Y[triangleIndex];
-            const Real e1z = triangles.edge1Z[triangleIndex];
-
-            const Real e2x = triangles.edge2X[triangleIndex];
-            const Real e2y = triangles.edge2Y[triangleIndex];
-            const Real e2z = triangles.edge2Z[triangleIndex];
+            const Vec3& A = triangles.A[triangleIndex];
+			const Vec3& e1 = triangles.edge1[triangleIndex];
+			const Vec3& e2 = triangles.edge2[triangleIndex];
 
             // ---------------------------------------------------------------------
             // 1) Facing test.
             //    faceNum = dot(n, O) - d0 > eps_face
             // ---------------------------------------------------------------------
-            const Real faceNum = nx * Ox + ny * Oy + nz * Oz - d0;
+            const Real faceNum = n.dot(O) - d0;
             if (faceNum < EPS_FACING) {
-                distance = qNaN;
-                cosine = qNaN;
-                return;
+                return false;
             }
 
             // ---------------------------------------------------------------------
@@ -178,37 +136,29 @@ namespace RAC
             // ---------------------------------------------------------------------
 
             // pvec = D × e2
-            const Real pvec_x = Dy * e2z - Dz * e2y;
-            const Real pvec_y = Dz * e2x - Dx * e2z;
-            const Real pvec_z = Dx * e2y - Dy * e2x;
+            const Vec3 pvec = D.cross(e2);
 
             // det = e1 · pvec  (also equals dot(n, D))
-            const Real det = e1x * pvec_x + e1y * pvec_y + e1z * pvec_z;
+            const Real det = e1.dot(pvec);
 
             // tvec = O - A
-            const Real tvec_x = Ox - Ax;
-            const Real tvec_y = Oy - Ay;
-            const Real tvec_z = Oz - Az;
+            const Vec3 tvec = O - A;
 
             // u_num = dot(tvec, pvec)
-            const Real u_num = tvec_x * pvec_x + tvec_y * pvec_y + tvec_z * pvec_z;
+            const Real u_num = tvec.dot(pvec);
 
             // qvec = tvec × e1
-            const Real qvec_x = tvec_y * e1z - tvec_z * e1y;
-            const Real qvec_y = tvec_z * e1x - tvec_x * e1z;
-            const Real qvec_z = tvec_x * e1y - tvec_y * e1x;
+            const Vec3 qvec = tvec.cross(e1);
 
             // v_num = dot(D, qvec)
-            const Real v_num = Dx * qvec_x + Dy * qvec_y + Dz * qvec_z;
+            const Real v_num = D.dot(qvec);
 
             // Early-out on u & v having opposite signs (edges included via epsilon).
             {
                 const bool bothNonNeg = (u_num >= -EPS_EDGE) && (v_num >= -EPS_EDGE);
                 const bool bothNonPos = (u_num <= EPS_EDGE) && (v_num <= EPS_EDGE);
                 if (!(bothNonNeg || bothNonPos)) {
-                    distance = qNaN;
-                    cosine = qNaN;
-                    return;
+					return false;
                 }
             }
 
@@ -217,9 +167,7 @@ namespace RAC
 
             // All three barycentric numerators must share the same sign (edges included).
             if (!same_sign_with_zero_included(u_num, v_num, w_num, EPS_EDGE)) {
-                distance = qNaN;
-                cosine = qNaN;
-                return;
+				return false;
             }
 
             // ---------------------------------------------------------------------
@@ -228,41 +176,38 @@ namespace RAC
             //    Otherwise: t = (e2 · qvec) / det
             // ---------------------------------------------------------------------
             if (std::abs(det) <= EPS_PARALLEL) {
-                distance = qNaN;
-                cosine = qNaN;
+				return false;
             }
             else {
-                const Real t_num = e2x * qvec_x + e2y * qvec_y + e2z * qvec_z; // e2 · qvec
+                const Real t_num = e2.dot(qvec);
                 distance = t_num / det;
-                cosine = std::abs(nx * Dx + ny * Dy + nz * Dz);
+                cosine = std::abs(n.dot(D));
             }
-            return;
+            return true;
 #endif // end PLUCKER_KERNEL
         }
 
-        void intersection_test(
+        bool intersection_test(
             const TriangleMeshSoA& triangles, int triangleIndex,
             const RayPencilSoA& rays, int rayIndex,
             Real& distance, Real& cosine)
         {
+			// Users should test the return result, but default the results to qNaN just in case
+			distance = qNaN;
+			cosine = qNaN;
+
             // Sanity check: the requested triangle must exist.
             assert(triangleIndex < triangles.size());
             // Sanity check: the requested ray must exist.
             assert(rayIndex < rays.size());
 
             // Load ray data into locals.
-            const Real Ox = rays.Ox;
-            const Real Oy = rays.Oy;
-            const Real Oz = rays.Oz;
+            const Vec3& O = rays.O;
 
-            const Real Dx = rays.Dx[rayIndex];
-            const Real Dy = rays.Dy[rayIndex];
-            const Real Dz = rays.Dz[rayIndex];
+        	const Vec3& D = rays.D[rayIndex];
 
             // Load plane data into locals.
-            const Real nx = triangles.nx[triangleIndex];
-            const Real ny = triangles.ny[triangleIndex];
-            const Real nz = triangles.nz[triangleIndex];
+            const Vec3& n = triangles.n[triangleIndex];
             const Real d0 = triangles.d0[triangleIndex];
 
 #if PLUCKER_KERNEL
@@ -270,44 +215,23 @@ namespace RAC
             // TODO: Implement Lean Plücker
 #else // not LEAN_PLUCKER
             // Load ray moments into locals.
-            const Real Mx = rays.Mx[rayIndex];
-            const Real My = rays.My[rayIndex];
-            const Real Mz = rays.Mz[rayIndex];
+            const Vec3 &M = rays.M[rayIndex];
 
             // Load "fat Plücker" triangle data into locals.
-            const Real edgeABDirectionX = triangles.edgeABDirectionX[triangleIndex];
-            const Real edgeABDirectionY = triangles.edgeABDirectionY[triangleIndex];
-            const Real edgeABDirectionZ = triangles.edgeABDirectionZ[triangleIndex];
-
-            const Real edgeBCDirectionX = triangles.edgeBCDirectionX[triangleIndex];
-            const Real edgeBCDirectionY = triangles.edgeBCDirectionY[triangleIndex];
-            const Real edgeBCDirectionZ = triangles.edgeBCDirectionZ[triangleIndex];
-
-            const Real edgeCADirectionX = triangles.edgeCADirectionX[triangleIndex];
-            const Real edgeCADirectionY = triangles.edgeCADirectionY[triangleIndex];
-            const Real edgeCADirectionZ = triangles.edgeCADirectionZ[triangleIndex];
-
-            const Real edgeABWedge_AcrossB_X = triangles.edgeABWedge_AcrossB_X[triangleIndex];
-            const Real edgeABWedge_AcrossB_Y = triangles.edgeABWedge_AcrossB_Y[triangleIndex];
-            const Real edgeABWedge_AcrossB_Z = triangles.edgeABWedge_AcrossB_Z[triangleIndex];
-
-            const Real edgeBCWedge_BcrossC_X = triangles.edgeBCWedge_BcrossC_X[triangleIndex];
-            const Real edgeBCWedge_BcrossC_Y = triangles.edgeBCWedge_BcrossC_Y[triangleIndex];
-            const Real edgeBCWedge_BcrossC_Z = triangles.edgeBCWedge_BcrossC_Z[triangleIndex];
-
-            const Real edgeCAWedge_CcrossA_X = triangles.edgeCAWedge_CcrossA_X[triangleIndex];
-            const Real edgeCAWedge_CcrossA_Y = triangles.edgeCAWedge_CcrossA_Y[triangleIndex];
-            const Real edgeCAWedge_CcrossA_Z = triangles.edgeCAWedge_CcrossA_Z[triangleIndex];
+            const Vec3& edgeABDirection = triangles.edgeABDirection[triangleIndex];
+            const Vec3& edgeBCDirection = triangles.edgeBCDirection[triangleIndex];
+            const Vec3& edgeCADirection = triangles.edgeCADirection[triangleIndex];
+            const Vec3& edgeABWedge_AcrossB = triangles.edgeABWedge_AcrossB[triangleIndex];
+            const Vec3& edgeBCWedge_BcrossC = triangles.edgeBCWedge_BcrossC[triangleIndex];
+            const Vec3& edgeCAWedge_CcrossA = triangles.edgeCAWedge_CcrossA[triangleIndex];
 
             // ---------------------------------------------------------------------
             // 1) Facing test: ensure the triangle faces the ray origin.
             //    faceNum = dot(n, O) - d0; require faceNum > eps_face
             // ---------------------------------------------------------------------
-            const Real faceNum = nx * Ox + ny * Oy + nz * Oz - d0;
+            const Real faceNum = n.dot(O) - d0;
             if (faceNum < EPS_FACING) {
-                distance = qNaN;
-                cosine = qNaN;
-                return;
+                return false;
             }
 
             // ---------------------------------------------------------------------
@@ -318,13 +242,11 @@ namespace RAC
             //    We inline the dot products (a0*b0 + a1*b1 + a2*b2) to avoid the
             //    overhead of tiny helper calls in this scalar, hot function.
             // ---------------------------------------------------------------------
-            const Real sAB =
-                (Dx * edgeABWedge_AcrossB_X + Dy * edgeABWedge_AcrossB_Y + Dz * edgeABWedge_AcrossB_Z) +
-                (Mx * edgeABDirectionX + My * edgeABDirectionY + Mz * edgeABDirectionZ);
+            const Real sAB = D.dot(edgeABWedge_AcrossB) +
+			                 M.dot(edgeABDirection);
 
-            const Real sBC =
-                (Dx * edgeBCWedge_BcrossC_X + Dy * edgeBCWedge_BcrossC_Y + Dz * edgeBCWedge_BcrossC_Z) +
-                (Mx * edgeBCDirectionX + My * edgeBCDirectionY + Mz * edgeBCDirectionZ);
+            const Real sBC = D.dot(edgeBCWedge_BcrossC) +
+			                 M.dot(edgeBCDirection);
 
             // ---------------------------------------------------------------------
             // Early-out on mismatched signs for the first two edges.
@@ -334,21 +256,16 @@ namespace RAC
                 const bool bothNonNeg = (sAB >= -EPS_EDGE) && (sBC >= -EPS_EDGE);
                 const bool bothNonPos = (sAB <= EPS_EDGE) && (sBC <= EPS_EDGE);
                 if (!(bothNonNeg || bothNonPos)) {
-                    distance = qNaN;
-                    cosine = qNaN;
-                    return;
+					return false;
                 }
             }
 
-            const Real sCA =
-                (Dx * edgeCAWedge_CcrossA_X + Dy * edgeCAWedge_CcrossA_Y + Dz * edgeCAWedge_CcrossA_Z) +
-                (Mx * edgeCADirectionX + My * edgeCADirectionY + Mz * edgeCADirectionZ);
+            const Real sCA = D.dot(edgeCAWedge_CcrossA) +
+							 M.dot(edgeCADirection);
 
             // Keep the exact inclusion rule (edges included) via the provided helper.
             if (!same_sign_with_zero_included(sAB, sBC, sCA, EPS_EDGE)) {
-                distance = qNaN;
-                cosine = qNaN;
-                return;
+				return false;
             }
 
             // ---------------------------------------------------------------------
@@ -356,40 +273,29 @@ namespace RAC
             //    No t>0 constraint (this is line–triangle, not ray–triangle).
             //    If the line is near-parallel to the plane, report no hit (NaN).
             // ---------------------------------------------------------------------
-            const Real denom = nx * Dx + ny * Dy + nz * Dz;  // dot(n, D)
+            const Real denom = n.dot(D); // dot(n, D)
             if (std::abs(denom) <= EPS_PARALLEL) {
-                distance = qNaN;
-                cosine = qNaN;
+				return false;
             }
             else {
                 distance = -faceNum / denom;
                 cosine = std::abs(denom);
             }
-            return;
+            return true;
 #endif // end LEAN_PLUCKER
 #else // not PLUCKER_KERNEL
             // Load "Möller–Trumbore" triangle data into locals.
-            const Real Ax = triangles.Ax[triangleIndex];
-            const Real Ay = triangles.Ay[triangleIndex];
-            const Real Az = triangles.Az[triangleIndex];
-
-            const Real e1x = triangles.edge1X[triangleIndex];
-            const Real e1y = triangles.edge1Y[triangleIndex];
-            const Real e1z = triangles.edge1Z[triangleIndex];
-
-            const Real e2x = triangles.edge2X[triangleIndex];
-            const Real e2y = triangles.edge2Y[triangleIndex];
-            const Real e2z = triangles.edge2Z[triangleIndex];
+            const Vec3& A = triangles.A[triangleIndex];
+            const Vec3& e1 = triangles.edge1[triangleIndex];
+            const Vec3& e2 = triangles.edge2[triangleIndex];
 
             // ---------------------------------------------------------------------
             // 1) Facing test.
             //    faceNum = dot(n, O) - d0 > eps_face
             // ---------------------------------------------------------------------
-            const Real faceNum = nx * Ox + ny * Oy + nz * Oz - d0;
+            const Real faceNum = n.dot(O) - d0;
             if (faceNum < EPS_FACING) {
-                distance = qNaN;
-                cosine = qNaN;
-                return;
+				return false;
             }
 
             // ---------------------------------------------------------------------
@@ -408,37 +314,29 @@ namespace RAC
             // ---------------------------------------------------------------------
 
             // pvec = D × e2
-            const Real pvec_x = Dy * e2z - Dz * e2y;
-            const Real pvec_y = Dz * e2x - Dx * e2z;
-            const Real pvec_z = Dx * e2y - Dy * e2x;
+            const Vec3 pvec = D.cross(e2);
 
             // det = e1 · pvec  (also equals dot(n, D))
-            const Real det = e1x * pvec_x + e1y * pvec_y + e1z * pvec_z;
+            const Real det = e1.dot(pvec);
 
             // tvec = O - A
-            const Real tvec_x = Ox - Ax;
-            const Real tvec_y = Oy - Ay;
-            const Real tvec_z = Oz - Az;
+            const Vec3 tvec = O - A;
 
             // u_num = dot(tvec, pvec)
-            const Real u_num = tvec_x * pvec_x + tvec_y * pvec_y + tvec_z * pvec_z;
+            const Real u_num = tvec.dot(pvec);
 
             // qvec = tvec × e1
-            const Real qvec_x = tvec_y * e1z - tvec_z * e1y;
-            const Real qvec_y = tvec_z * e1x - tvec_x * e1z;
-            const Real qvec_z = tvec_x * e1y - tvec_y * e1x;
+            const Vec3 qvec = tvec.cross(e1);
 
             // v_num = dot(D, qvec)
-            const Real v_num = Dx * qvec_x + Dy * qvec_y + Dz * qvec_z;
+            const Real v_num = D.dot(qvec);
 
             // Early-out on u & v having opposite signs (edges included via epsilon).
             {
                 const bool bothNonNeg = (u_num >= -EPS_EDGE) && (v_num >= -EPS_EDGE);
                 const bool bothNonPos = (u_num <= EPS_EDGE) && (v_num <= EPS_EDGE);
                 if (!(bothNonNeg || bothNonPos)) {
-                    distance = qNaN;
-                    cosine = qNaN;
-                    return;
+					return false;
                 }
             }
 
@@ -447,9 +345,7 @@ namespace RAC
 
             // All three barycentric numerators must share the same sign (edges included).
             if (!same_sign_with_zero_included(u_num, v_num, w_num, EPS_EDGE)) {
-                distance = qNaN;
-                cosine = qNaN;
-                return;
+				return false;
             }
 
             // ---------------------------------------------------------------------
@@ -462,41 +358,37 @@ namespace RAC
             // divide by det before checking it.
             // ---------------------------------------------------------------------
             if (std::abs(det) <= EPS_PARALLEL) {
-                distance = qNaN;
-                cosine = qNaN;
+				return false;
             }
             else {
-                const Real t_num = e2x * qvec_x + e2y * qvec_y + e2z * qvec_z; // e2 · qvec
+                const Real t_num = e2.dot(qvec);
                 distance = t_num / det;
-                cosine = std::abs(nx * Dx + ny * Dy + nz * Dz);
+                cosine = std::abs(n.dot(D));
             }
-            return;
+            return true;
 #endif // end PLUCKER_KERNEL
         }
 
-        void intersection_test(
+        bool intersection_test(
             const TriangleMeshSoA& triangles, int triangleIndex,
             const Vec3& rayOrigin, const Vec3& rayDirection,
             Real& distance, Real& cosine)
         {
+			// Users should test the return result, but default the results to qNaN just in case
+			distance = qNaN;
+			cosine = qNaN;
+
             // Sanity check: the requested triangle must exist.
             assert(triangleIndex < triangles.size());
             // Sanity check: the requested ray must exist.
             // assert(rayIndex < rays.size());
 
             // Load ray data into locals.
-            const Real Ox = rayOrigin.x();
-            const Real Oy = rayOrigin.y();
-            const Real Oz = rayOrigin.z();
-
-            const Real Dx = rayDirection.x();
-            const Real Dy = rayDirection.y();
-            const Real Dz = rayDirection.z();
+            const Vec3& O = rayOrigin;
+            const Vec3& D = rayDirection;
 
             // Load plane data into locals.
-            const Real nx = triangles.nx[triangleIndex];
-            const Real ny = triangles.ny[triangleIndex];
-            const Real nz = triangles.nz[triangleIndex];
+            const Vec3 n = triangles.n[triangleIndex];
             const Real d0 = triangles.d0[triangleIndex];
 
 #if PLUCKER_KERNEL
@@ -504,45 +396,23 @@ namespace RAC
             // TODO: Implement Lean Plücker
 #else // not LEAN_PLUCKER
             // Compute ray moments and load into locals.
-            const Vec3 rayMoment = Cross(rayOrigin, rayDirection);
-            const Real Mx = rayMoment.x;
-            const Real My = rayMoment.y;
-            const Real Mz = rayMoment.z;
+            const Vec3 rayMoment = rayOrigin.cross(rayDirection);
+            const Vec3& M = rayMoment;
 
             // Load "fat Plücker" triangle data into locals.
-            const Real edgeABDirectionX = triangles.edgeABDirectionX[triangleIndex];
-            const Real edgeABDirectionY = triangles.edgeABDirectionY[triangleIndex];
-            const Real edgeABDirectionZ = triangles.edgeABDirectionZ[triangleIndex];
-
-            const Real edgeBCDirectionX = triangles.edgeBCDirectionX[triangleIndex];
-            const Real edgeBCDirectionY = triangles.edgeBCDirectionY[triangleIndex];
-            const Real edgeBCDirectionZ = triangles.edgeBCDirectionZ[triangleIndex];
-
-            const Real edgeCADirectionX = triangles.edgeCADirectionX[triangleIndex];
-            const Real edgeCADirectionY = triangles.edgeCADirectionY[triangleIndex];
-            const Real edgeCADirectionZ = triangles.edgeCADirectionZ[triangleIndex];
-
-            const Real edgeABWedge_AcrossB_X = triangles.edgeABWedge_AcrossB_X[triangleIndex];
-            const Real edgeABWedge_AcrossB_Y = triangles.edgeABWedge_AcrossB_Y[triangleIndex];
-            const Real edgeABWedge_AcrossB_Z = triangles.edgeABWedge_AcrossB_Z[triangleIndex];
-
-            const Real edgeBCWedge_BcrossC_X = triangles.edgeBCWedge_BcrossC_X[triangleIndex];
-            const Real edgeBCWedge_BcrossC_Y = triangles.edgeBCWedge_BcrossC_Y[triangleIndex];
-            const Real edgeBCWedge_BcrossC_Z = triangles.edgeBCWedge_BcrossC_Z[triangleIndex];
-
-            const Real edgeCAWedge_CcrossA_X = triangles.edgeCAWedge_CcrossA_X[triangleIndex];
-            const Real edgeCAWedge_CcrossA_Y = triangles.edgeCAWedge_CcrossA_Y[triangleIndex];
-            const Real edgeCAWedge_CcrossA_Z = triangles.edgeCAWedge_CcrossA_Z[triangleIndex];
-
+            const Vec3& edgeABDirection = triangles.edgeABDirection[triangleIndex];
+            const Vec3& edgeBCDirection = triangles.edgeBCDirection[triangleIndex];
+            const Vec3& edgeCADirection = triangles.edgeCADirection[triangleIndex];
+            const Vec3& edgeABWedge_AcrossB = triangles.edgeABWedge_AcrossB[triangleIndex];
+            const Vec3& edgeBCWedge_BcrossC = triangles.edgeBCWedge_BcrossC[triangleIndex];
+            const Vec3& edgeCAWedge_CcrossA = triangles.edgeCAWedge_CcrossA[triangleIndex];
             // ---------------------------------------------------------------------
             // 1) Facing test: ensure the triangle faces the ray origin.
             //    faceNum = dot(n, O) - d0; require faceNum > eps_face
             // ---------------------------------------------------------------------
-            const Real faceNum = nx * Ox + ny * Oy + nz * Oz - d0;
+            const Real faceNum = n.dot(O) - d0;
             if (faceNum < EPS_FACING) {
-                distance = qNaN;
-                cosine = qNaN;
-                return;
+				return false;
             }
 
             // ---------------------------------------------------------------------
@@ -553,13 +423,11 @@ namespace RAC
             //    We inline the dot products (a0*b0 + a1*b1 + a2*b2) to avoid the
             //    overhead of tiny helper calls in this scalar, hot function.
             // ---------------------------------------------------------------------
-            const Real sAB =
-                (Dx * edgeABWedge_AcrossB_X + Dy * edgeABWedge_AcrossB_Y + Dz * edgeABWedge_AcrossB_Z) +
-                (Mx * edgeABDirectionX + My * edgeABDirectionY + Mz * edgeABDirectionZ);
+            const Real sAB = D.dot(edgeABWedge_AcrossB) +
+								M.dot(edgeABDirection);
 
-            const Real sBC =
-                (Dx * edgeBCWedge_BcrossC_X + Dy * edgeBCWedge_BcrossC_Y + Dz * edgeBCWedge_BcrossC_Z) +
-                (Mx * edgeBCDirectionX + My * edgeBCDirectionY + Mz * edgeBCDirectionZ);
+            const Real sBC = D.dot(edgeBCWedge_BcrossC) +
+				                M.dot(edgeBCDirection);
 
             // ---------------------------------------------------------------------
             // Early-out on mismatched signs for the first two edges.
@@ -569,21 +437,17 @@ namespace RAC
                 const bool bothNonNeg = (sAB >= -EPS_EDGE) && (sBC >= -EPS_EDGE);
                 const bool bothNonPos = (sAB <= EPS_EDGE) && (sBC <= EPS_EDGE);
                 if (!(bothNonNeg || bothNonPos)) {
-                    distance = qNaN;
-                    cosine = qNaN;
-                    return;
+					return false;
                 }
             }
 
             const Real sCA =
-                (Dx * edgeCAWedge_CcrossA_X + Dy * edgeCAWedge_CcrossA_Y + Dz * edgeCAWedge_CcrossA_Z) +
-                (Mx * edgeCADirectionX + My * edgeCADirectionY + Mz * edgeCADirectionZ);
+			                D.dot(edgeCAWedge_CcrossA) +
+			                M.dot(edgeCADirection);
 
             // Keep the exact inclusion rule (edges included) via the provided helper.
             if (!same_sign_with_zero_included(sAB, sBC, sCA, EPS_EDGE)) {
-                distance = qNaN;
-                cosine = qNaN;
-                return;
+				return false;
             }
 
             // ---------------------------------------------------------------------
@@ -591,40 +455,29 @@ namespace RAC
             //    No t>0 constraint (this is line–triangle, not ray–triangle).
             //    If the line is near-parallel to the plane, report no hit (NaN).
             // ---------------------------------------------------------------------
-            const Real denom = nx * Dx + ny * Dy + nz * Dz;  // dot(n, D)
+            const Real denom = n.dot(D);        // dot(n, D)
             if (std::abs(denom) <= EPS_PARALLEL) {
-                distance = qNaN;
-                cosine = qNaN;
+                return false;
             }
             else {
                 distance = -faceNum / denom;
                 cosine = std::abs(denom);
             }
-            return;
+            return true;
 #endif // end LEAN_PLUCKER
 #else // not PLUCKER_KERNEL
             // Load "Möller–Trumbore" triangle data into locals.
-            const Real Ax = triangles.Ax[triangleIndex];
-            const Real Ay = triangles.Ay[triangleIndex];
-            const Real Az = triangles.Az[triangleIndex];
-
-            const Real e1x = triangles.edge1X[triangleIndex];
-            const Real e1y = triangles.edge1Y[triangleIndex];
-            const Real e1z = triangles.edge1Z[triangleIndex];
-
-            const Real e2x = triangles.edge2X[triangleIndex];
-            const Real e2y = triangles.edge2Y[triangleIndex];
-            const Real e2z = triangles.edge2Z[triangleIndex];
+            const Vec3& A = triangles.A[triangleIndex];
+            const Vec3& e1 = triangles.edge1[triangleIndex];
+            const Vec3& e2 = triangles.edge2[triangleIndex];
 
             // ---------------------------------------------------------------------
             // 1) Facing test.
             //    faceNum = dot(n, O) - d0 > eps_face
             // ---------------------------------------------------------------------
-            const Real faceNum = nx * Ox + ny * Oy + nz * Oz - d0;
+            const Real faceNum = n.dot(O) - d0;
             if (faceNum < EPS_FACING) {
-                distance = qNaN;
-                cosine = qNaN;
-                return;
+				return false;
             }
 
             // ---------------------------------------------------------------------
@@ -643,37 +496,29 @@ namespace RAC
             // ---------------------------------------------------------------------
 
             // pvec = D × e2
-            const Real pvec_x = Dy * e2z - Dz * e2y;
-            const Real pvec_y = Dz * e2x - Dx * e2z;
-            const Real pvec_z = Dx * e2y - Dy * e2x;
+            const Vec3 pvec = D.cross(e2);
 
             // det = e1 · pvec  (also equals dot(n, D))
-            const Real det = e1x * pvec_x + e1y * pvec_y + e1z * pvec_z;
+            const Real det = e1.dot(pvec);
 
             // tvec = O - A
-            const Real tvec_x = Ox - Ax;
-            const Real tvec_y = Oy - Ay;
-            const Real tvec_z = Oz - Az;
+            const Vec3 tvec = O - A;
 
             // u_num = dot(tvec, pvec)
-            const Real u_num = tvec_x * pvec_x + tvec_y * pvec_y + tvec_z * pvec_z;
+            const Real u_num = tvec.dot(pvec);
 
             // qvec = tvec × e1
-            const Real qvec_x = tvec_y * e1z - tvec_z * e1y;
-            const Real qvec_y = tvec_z * e1x - tvec_x * e1z;
-            const Real qvec_z = tvec_x * e1y - tvec_y * e1x;
+            const Vec3 qvec = tvec.cross(e1);
 
             // v_num = dot(D, qvec)
-            const Real v_num = Dx * qvec_x + Dy * qvec_y + Dz * qvec_z;
+            const Real v_num = D.dot(qvec);
 
             // Early-out on u & v having opposite signs (edges included via epsilon).
             {
                 const bool bothNonNeg = (u_num >= -EPS_EDGE) && (v_num >= -EPS_EDGE);
                 const bool bothNonPos = (u_num <= EPS_EDGE) && (v_num <= EPS_EDGE);
                 if (!(bothNonNeg || bothNonPos)) {
-                    distance = qNaN;
-                    cosine = qNaN;
-                    return;
+					return false;
                 }
             }
 
@@ -682,9 +527,7 @@ namespace RAC
 
             // All three barycentric numerators must share the same sign (edges included).
             if (!same_sign_with_zero_included(u_num, v_num, w_num, EPS_EDGE)) {
-                distance = qNaN;
-                cosine = qNaN;
-                return;
+				return false;
             }
 
             // ---------------------------------------------------------------------
@@ -697,15 +540,14 @@ namespace RAC
             // divide by det before checking it.
             // ---------------------------------------------------------------------
             if (std::abs(det) <= EPS_PARALLEL) {
-                distance = qNaN;
-                cosine = qNaN;
+				return false;
             }
             else {
-                const Real t_num = e2x * qvec_x + e2y * qvec_y + e2z * qvec_z; // e2 · qvec
+                const Real t_num = e2.dot(qvec);; // e2 · qvec
                 distance = t_num / det;
-                cosine = std::abs(nx * Dx + ny * Dy + nz * Dz);
+                cosine = std::abs(n.dot(D));
             }
-            return;
+            return true;
 #endif // end PLUCKER_KERNEL
         }
 
@@ -733,10 +575,9 @@ namespace RAC
                 if (i == ignoredTriangleIndex) // Ignore this triangle
                     continue;
 
-                intersection_test(triangles, i, rays, rayIndex, currentDist, currentCos);
+                if (!intersection_test(triangles, i, rays, rayIndex, currentDist, currentCos))
+                    continue;
 
-                if (std::isnan(currentDist))
-                    continue; // Invalid hit
                 if ((currentDist + EPS_ZFIGHT < distanceBack) || (currentDist - EPS_ZFIGHT > distanceFront))
                     continue; // Outside of current best range
                 if (std::abs(currentDist) < EPS_SELFHIT)
@@ -812,9 +653,7 @@ namespace RAC
                 if (i == ignoredTriangleIndex) // Ignore this triangle
                     continue;
 
-                intersection_test(triangles, i, rays, rayIndex, currentDist, currentCos);
-
-                if (std::isnan(currentDist))
+                if (!intersection_test(triangles, i, rays, rayIndex, currentDist, currentCos))
                     continue; // Invalid hit
                 if ((currentDist + EPS_ZFIGHT < distanceBack) || (currentDist - EPS_ZFIGHT > distanceFront))
                     continue; // Outside of current best range
@@ -891,9 +730,7 @@ namespace RAC
                 if (i == ignoredTriangleIndex) // Ignore this triangle
                     continue;
 
-                intersection_test(triangles, i, rayOrigin, rayDirection, currentDist, currentCos);
-
-                if (std::isnan(currentDist))
+                if (!intersection_test(triangles, i, rayOrigin, rayDirection, currentDist, currentCos))
                     continue; // Invalid hit
                 if ((currentDist + EPS_ZFIGHT < distanceBack) || (currentDist - EPS_ZFIGHT > distanceFront))
                     continue; // Outside of current best range
@@ -970,12 +807,8 @@ namespace RAC
             rays.resize(numRays);
 
             for (int i = 0; i < numRays; ++i) {
-                rays.Ox[i] = origin.x();
-                rays.Oy[i] = origin.y();
-                rays.Oz[i] = origin.z();
-                rays.Dx[i] = directions[i].x();
-                rays.Dy[i] = directions[i].y();
-                rays.Dz[i] = directions[i].z();
+                rays.O[i] = origin;
+                rays.D[i] = directions[i];
             }
             // Note that this also computes the moments if needed.
             rays.normalize_directions();
@@ -994,12 +827,8 @@ namespace RAC
             rays.resize(numRays);
 
             for (int i = 0; i < numRays; ++i) {
-                rays.Ox[i] = origins[i].x();
-                rays.Oy[i] = origins[i].y();
-                rays.Oz[i] = origins[i].z();
-                rays.Dx[i] = directions[i].x();
-                rays.Dy[i] = directions[i].y();
-                rays.Dz[i] = directions[i].z();
+                rays.O[i] = origins[i];
+                rays.D[i] = directions[i];
             }
             // Note that this also computes the moments if needed.
             rays.normalize_directions();
@@ -1050,9 +879,7 @@ namespace RAC
         {
             assert(origins.size() == numRays);
             for (int i = 0; i < numRays; ++i) {
-                origins[i].x() = rays.Ox[i];
-                origins[i].y() = rays.Oy[i];
-                origins[i].z() = rays.Oz[i];
+                origins[i] = rays.O[i];
             }
         }
 
@@ -1060,9 +887,7 @@ namespace RAC
         {
             assert(directions.size() == numRays);
             for (int i = 0; i < numRays; ++i) {
-                directions[i].x() = rays.Dx[i];
-                directions[i].y() = rays.Dy[i];
-                directions[i].z() = rays.Dz[i];
+                directions[i] = rays.D[i];
             }
         }
 
@@ -1120,9 +945,7 @@ namespace RAC
 
             exposeMirrorCopies = hemisphereOnly;
 
-            rays.Ox = 0.0;
-            rays.Oy = 0.0;
-            rays.Oz = 0.0;
+            rays.O = Vec3(0.0, 0.0, 0.0);
             // Note that this automatically normalizes the directions and computes the moments if needed.
             rays.fill_uniform_sphere(hemisphereOnly);
 
@@ -1139,13 +962,9 @@ namespace RAC
             numRays = ToInt(directions.size());
             rays.resize(numRays);
 
-            rays.Ox = 0.0;
-            rays.Oy = 0.0;
-            rays.Oz = 0.0;
+            rays.O = Vec3(0.0, 0.0, 0.0);
             for (int i = 0; i < numRays; ++i) {
-                rays.Dx[i] = directions[i].x();
-                rays.Dy[i] = directions[i].y();
-                rays.Dz[i] = directions[i].z();
+                rays.D[i] = directions[i];
             }
             // Note that this also computes the moments if needed.
             rays.normalize_directions();
@@ -1160,9 +979,7 @@ namespace RAC
 
         void RayPencil::moveOrigin(const Vec3& origin)
         {
-            rays.Ox = origin.x();
-            rays.Oy = origin.y();
-            rays.Oz = origin.z();
+            rays.O.noalias() += origin;
 
 #if PLUCKER_KERNEL
             rays.compute_moments();
@@ -1217,9 +1034,7 @@ namespace RAC
                     {
                         // N.B.: Ray directions are guaranteed to have unit norm, cluster directions are ASSUMED to have unit norm.
                         // If cluster directions have non-unit norms, it will result in "weighted" clustering.
-                        cosineSimilarity[j] = dot3(
-                            rays.Dx[i], rays.Dy[i], rays.Dz[i],
-                            directions[j].x(), directions[j].y(), directions[j].z());
+                        cosineSimilarity[j] = rays.D[i].dot(directions[j]);
                     }
                     clusters(i) = static_cast<int>( std::distance(cosineSimilarity.begin(), std::max_element(cosineSimilarity.begin(), cosineSimilarity.end())) );
                 }
@@ -1238,9 +1053,7 @@ namespace RAC
                         {
                             // N.B.: Ray directions are guaranteed to have unit norm, cluster directions are ASSUMED to have unit norm.
                             // If cluster directions have non-unit norms, it will result in "weighted" clustering.
-                            cosineSimilarity[j] = dot3(
-                                rays.Dx[i], rays.Dy[i], rays.Dz[i],
-                                directions[j].x(), directions[j].y(), directions[j].z());
+                            cosineSimilarity[j] = rays.D[i].dot(directions[j]);
                         }
                         // N.B.: We look for the MINIMUM this time
                         clusters(i + numRays) = static_cast<int>( std::distance(cosineSimilarity.begin(), std::min_element(cosineSimilarity.begin(), cosineSimilarity.end())) );
@@ -1259,9 +1072,7 @@ namespace RAC
                 assert(directions.size() == numRays);
 
             for (int i = 0; i < numRays; ++i) {
-                directions[i].x() = rays.Dx[i];
-                directions[i].y() = rays.Dy[i];
-                directions[i].z() = rays.Dz[i];
+                directions[i] = rays.D[i];
             }
 
             if (exposeMirrorCopies)

@@ -306,7 +306,7 @@ namespace RAC
 			std::vector<Vec3> actualDirections(testDirections.size());
 			testPencil.getDirections(actualDirections);
 			for (int di = 0; di < actualDirections.size(); ++di) {
-				Real magnitude = norm3(actualDirections[di].x(), actualDirections[di].y(), actualDirections[di].z());
+				Real magnitude = actualDirections[di].Normal();
 
 				std::string error = "\nDirection vector " + ToStr(di) + " is not normalized.";
 				std::wstring werror = std::wstring(error.begin(), error.end());
