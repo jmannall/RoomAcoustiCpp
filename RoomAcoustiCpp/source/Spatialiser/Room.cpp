@@ -72,7 +72,7 @@ namespace RAC
 		{
 			size_t id;
 			std::lock_guard<std::mutex> lock(mWallMutex);
-			if (mWalls.size() == 0) // TODO: Is this check obselete now we have polygonID?
+			if (mWalls.size() == 0) // TODO: Is this check obsolete now we have polygonID?
 			{
 				mEmptyWallSlots.clear();
 				mWallTimers.clear();
@@ -126,9 +126,9 @@ namespace RAC
 			for (const auto& [i, wall] : mWalls)
 			{
 				Vertices vertices = wall.GetVertices();
-				Real Ax = vertices[0].x(), Ay = vertices[0].y(), Az = vertices[0].z();
-				Real Bx = vertices[1].x(), By = vertices[1].y(), Bz = vertices[1].z();
-				Real Cx = vertices[2].x(), Cy = vertices[2].y(), Cz = vertices[2].z();
+				const Vec3 &A = vertices[0];
+				const Vec3 &B = vertices[1];
+				const Vec3 &C = vertices[2];
 #if PLUCKER_KERNEL
 #if LEAN_PLUCKER
 				// TODO: Implement Lean Plücker
@@ -136,62 +136,40 @@ namespace RAC
 
 				// ----- Edge direction vectors -----
 				// Edge AB = B - A
-				mTriangleMeshSoA.edgeABDirectionX[i] = Bx - Ax;
-				mTriangleMeshSoA.edgeABDirectionY[i] = By - Ay;
-				mTriangleMeshSoA.edgeABDirectionZ[i] = Bz - Az;
+				mTriangleMeshSoA.edgeABDirection[i] = B - A;
 
 				// Edge BC = C - B
-				mTriangleMeshSoA.edgeBCDirectionX[i] = Cx - Bx;
-				mTriangleMeshSoA.edgeBCDirectionY[i] = Cy - By;
-				mTriangleMeshSoA.edgeBCDirectionZ[i] = Cz - Bz;
+				mTriangleMeshSoA.edgeBCDirection[i] = C - B;
 
 				// Edge CA = A - C
-				mTriangleMeshSoA.edgeCADirectionX[i] = Ax - Cx;
-				mTriangleMeshSoA.edgeCADirectionY[i] = Ay - Cy;
-				mTriangleMeshSoA.edgeCADirectionZ[i] = Az - Cz;
+				mTriangleMeshSoA.edgeCADirection[i] = A - C;
 
 				// ----- Wedge terms (endpoint cross products) -----
 				// These are used by Plücker side predicates: s = dot(D, (PxQ)) + dot(M, (Q-P)).
 
 				// A x B
-				Vec3 wedge = Cross(vertices[0], vertices[1]);
-				mTriangleMeshSoA.edgeABWedge_AcrossB_X[i] = wedge.x;
-				mTriangleMeshSoA.edgeABWedge_AcrossB_Y[i] = wedge.y;
-				mTriangleMeshSoA.edgeABWedge_AcrossB_Z[i] = wedge.z;
+				Vec3 wedge = vertices[0].cross(vertices[1]);
+				mTriangleMeshSoA.edgeABWedge_AcrossB[i] = wedge;
 
 				// B x C
-				wedge = Cross(vertices[1], vertices[2]);
-				mTriangleMeshSoA.edgeBCWedge_BcrossC_X[i] = wedge.x;
-				mTriangleMeshSoA.edgeBCWedge_BcrossC_Y[i] = wedge.y;
-				mTriangleMeshSoA.edgeBCWedge_BcrossC_Z[i] = wedge.z;
+				wedge = vertices[1].cross(vertices[2]);
+				mTriangleMeshSoA.edgeBCWedge_BcrossC[i] = wedge;
 
 				// C x A
-				wedge = Cross(vertices[2], vertices[0]);
-				mTriangleMeshSoA.edgeCAWedge_CcrossA_X[i] = wedge.x;
-				mTriangleMeshSoA.edgeCAWedge_CcrossA_Y[i] = wedge.y;
-				mTriangleMeshSoA.edgeCAWedge_CcrossA_Z[i] = wedge.z;
+				wedge = vertices[2].cross(vertices[0]);
+				mTriangleMeshSoA.edgeCAWedge_CcrossA[i] = wedge;
 #endif // end LEAN_PLUCKER
 #else // not PLUCKER_KERNEL
 				// ----- Anchor vertex A -----
-				mTriangleMeshSoA.Ax[i] = Ax;
-				mTriangleMeshSoA.Ay[i] = Ay;
-				mTriangleMeshSoA.Az[i] = Az;
+				mTriangleMeshSoA.A[i] = A;
 
 				// ----- Edges from A -----
-				mTriangleMeshSoA.edge1X[i] = Bx - Ax;
-				mTriangleMeshSoA.edge1Y[i] = By - Ay;
-				mTriangleMeshSoA.edge1Z[i] = Bz - Az;
-				mTriangleMeshSoA.edge2X[i] = Cx - Ax;
-				mTriangleMeshSoA.edge2Y[i] = Cy - Ay;
-				mTriangleMeshSoA.edge2Z[i] = Cz - Az;
+				mTriangleMeshSoA.edge1[i] = B - A;
+				mTriangleMeshSoA.edge2[i] = C - A;
 #endif // end PLUCKER_KERNEL
 
 				// ----- Plane parameters: normal n and plane constant d0 -----
-				Vec3 normal = wall.GetNormal();
-				mTriangleMeshSoA.nx[i] = normal.x();
-				mTriangleMeshSoA.ny[i] = normal.y();
-				mTriangleMeshSoA.nz[i] = normal.z();
-
+				mTriangleMeshSoA.n[i] = wall.GetNormal();
 				mTriangleMeshSoA.patchId[i] = static_cast<int>(wall.GetMaterialID());
 
 				mTriangleMeshSoA.d0[i] = wall.GetD();

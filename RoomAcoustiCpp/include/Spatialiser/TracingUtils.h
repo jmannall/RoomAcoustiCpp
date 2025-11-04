@@ -32,17 +32,17 @@ namespace RAC
          * @param distance Pointer to an output buffer for the line parameter t. Returns NaN for invalid hits.
          * @param cosine Pointer to an output buffer for the incidence cosine, i.e., dot(n,D). Returns NaN for invalid hits.
          */
-        void intersection_test(
+        bool intersection_test(
             const TriangleMeshSoA& triangles, int triangleIndex,
             const RayBundleSoA& rays, int rayIndex,
             Real& distance, Real& cosine);
         // Overloaded for ray pencil
-        void intersection_test(
+        bool intersection_test(
             const TriangleMeshSoA& triangles, int triangleIndex,
             const RayPencilSoA& rays, int rayIndex,
             Real& distance, Real& cosine);
         // Overloaded for single ray
-        void intersection_test(
+        bool intersection_test(
             const TriangleMeshSoA& triangles, int triangleIndex,
             const Vec3& rayOrigin, const Vec3& rayDirection,
             Real& distance, Real& cosine);
