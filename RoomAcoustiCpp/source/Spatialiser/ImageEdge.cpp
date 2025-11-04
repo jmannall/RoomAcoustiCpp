@@ -600,9 +600,9 @@ namespace RAC
 
 				InitImageSource(source, intersections[0], imageSource, imageSources, feedsFDN);
 #ifdef DEBUG_IEM
-				CVector3 pos = imageSource.GetTransform().GetPosition();
+				CVector3 pos = imageSource->GetTransform().GetPosition();
 				Vec3 position(static_cast<Real>(pos.x), static_cast<Real>(pos.y), static_cast<Real>(pos.z));
-				Debug::send_path(imageSource.GetKey(), intersections, position);
+				Debug::send_path(imageSource->GetKey(), intersections, position);
 #endif
 			}
 			return counter;
@@ -716,9 +716,9 @@ namespace RAC
 
 								InitImageSource(source, intersections[0], imageSource, imageSources, feedsFDN);
 #ifdef DEBUG_IEM
-								CVector3 pos = imageSource.GetTransform().GetPosition();
+								CVector3 pos = imageSource->GetTransform().GetPosition();
 								Vec3 position(static_cast<Real>(pos.x), static_cast<Real>(pos.y), static_cast<Real>(pos.z));
-								Debug::send_path(imageSource.GetKey(), intersections, position);
+								Debug::send_path(imageSource->GetKey(), intersections, position);
 #endif
 							}
 							// HOD reflections (post diffraction)
