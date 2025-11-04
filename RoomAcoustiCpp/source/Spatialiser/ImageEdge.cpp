@@ -575,7 +575,7 @@ namespace RAC
 
 				const std::shared_ptr<ImageSourceData>& imageSource = counter < size ? sp[0][counter] : sp[0].emplace_back(CreateEmptyImageSource());
 
-				Vec4 previousPlane(plane.GetD(), plane.GetNormal());
+				Vec4 previousPlane(plane.GetD(), MakeCompatible(plane.GetNormal()));
 				// imageSource.SetPreviousPlane(Vec4(plane.GetD(), plane.GetNormal()));
 				imageSource->SetPreviousPlane(previousPlane);
 				if (counter < size)
@@ -671,7 +671,7 @@ namespace RAC
 									continue;
 
 								Vec4 previousPlaneData = vS.GetPreviousPlane();
-								Vec4 planeData(plane.GetD(), plane.GetNormal());
+								Vec4 planeData(plane.GetD(), MakeCompatible(plane.GetNormal()));
 
 								// Can't reflect in parallel plane
 								if (planeData.x() == previousPlaneData.x() && planeData.y() == previousPlaneData.y() && planeData.z() == previousPlaneData.z())
@@ -726,7 +726,7 @@ namespace RAC
 							{
 								const Edge& edge = vS.GetEdge();
 
-								Vec4 planeData(plane.GetD(), plane.GetNormal());
+								Vec4 planeData(plane.GetD(), MakeCompatible(plane.GetNormal()));
 
 								if (vS.IsReflection(prevRefIdx))
 								{

@@ -52,7 +52,7 @@ namespace RAC
 
 			w = (Real)0.8;
 			Vec3 vec(1.2, 3.4, -1.0);
-			Vec4 q2(w, vec);
+			Vec4 q2(w, MakeCompatible(vec));
 
 			Assert::AreEqual(w, q.x(), L"Error: Init 2 w entry");
 			Assert::AreEqual(x, q.x(), L"Error: Init 2 x entry");
