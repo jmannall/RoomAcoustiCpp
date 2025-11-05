@@ -26,6 +26,7 @@ public:
 	int GetNumRays() const { return numRays; }
 	int GetReflectionOrder() const { return reflectionOrder; }
 	int GetShadowOrder() const { return shadowOrder; }
+	bool GetStaticSceneFlag() const { return staticScene; }
 	std::optional<size_t> GetDesiredAudioThreads() const { return desiredAudioThreads;  }
 
 	const std::string &GetLogPrefix() const { return logPrefix; }
@@ -57,6 +58,7 @@ private:
 	int numRays = 100;
 	int reflectionOrder = 2;
 	int shadowOrder = 2;
+	bool staticScene = true;
 	std::optional<size_t> desiredAudioThreads;
 
 };

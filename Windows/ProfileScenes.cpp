@@ -14,6 +14,8 @@
 #include <filesystem>
 #include <framework.h>
 
+#include <random>
+
 #include "CommandLineParser.h"
 
 using namespace RAC::Spatialiser;
@@ -186,6 +188,10 @@ protected:
 	virtual bool Init();
 	virtual void Main() = 0;
 	virtual void Exit();
+
+	std::default_random_engine generator{ 1764 }; // Seed the generator
+	std::uniform_real_distribution<float> distribution{ -0.5, 0.5 };
+	inline float RandomValue() { return distribution(generator); }
 };
 
 void BaseTest::Run()
@@ -275,6 +281,9 @@ protected:
 	virtual void Main() override;
 	virtual void Exit() override;
 
+	Vec3 listenerPos = Vec3((Real)0.0, (Real)2.0, (Real)0.0);
+	Vec4 listenerOri = Vec4((Real)1.0, (Real)0.0, (Real)0.0, (Real)0.0);
+
 	Vec3 sourcePos = Vec3((Real)1.0, (Real)2.0, (Real)3.0);
 	Vec4 sourceOri = Vec4((Real)1.0, (Real)0.0, (Real)0.0, (Real)0.0);
 	size_t materialId;
@@ -312,8 +321,6 @@ bool ProfileShoeboxTest::Init()
 	input[0] = 1.0;
 	// Stereo output buffer
 
-	Vec3 listenerPos((Real)0.0, (Real)2.0, (Real)0.0);
-	Vec4 listenerOri((Real)1.0, (Real)0.0, (Real)0.0, (Real)0.0);
 	UpdateListener(listenerPos, listenerOri);
 
 	id = InitSource();
@@ -339,8 +346,18 @@ void ProfileShoeboxTest::Main()
 		SubmitAudio(static_cast<size_t>(id), input);
 		GetOutput(output);
 
-		sourcePos.x() += (Real)0.1;
-		UpdateSource(static_cast<size_t>(id), sourcePos, sourceOri);
+		if (executionContext.staticScene)
+			continue;
+
+		Vec3 position = listenerPos;
+		position.x() += RandomValue();
+		position.z() += RandomValue();
+		UpdateListener(position, listenerOri);
+
+		position = sourcePos;
+		position.x() += RandomValue();
+		position.z() += RandomValue();
+		UpdateSource(static_cast<size_t>(id), position, sourceOri);
 	}
 }
 
@@ -417,6 +434,9 @@ protected:
 	virtual void Main() override;
 	virtual void Exit() override;
 
+	Vec3 listenerPos = Vec3((Real)2.0, (Real)1.0, (Real)6.8);
+	Vec4 listenerOri = Vec4((Real)1.0, (Real)0.0, (Real)0.0, (Real)0.0);
+
 	Vec3 sourcePos = Vec3((Real)2.0, (Real)1.5, (Real)2.0);
 	Vec4 sourceOri = Vec4((Real)1.0, (Real)0.0, (Real)0.0, (Real)0.0);
 	int id;
@@ -442,8 +462,6 @@ bool ProfileMoDARTTest::Init()
 	input[0] = 1.0;
 	// Stereo output buffer
 
-	Vec3 listenerPos((Real)2.0, (Real)1.0, (Real)6.8);
-	Vec4 listenerOri((Real)1.0, (Real)0.0, (Real)0.0, (Real)0.0);
 	UpdateListener(listenerPos, listenerOri);
 
 	id = InitSource();
@@ -470,8 +488,18 @@ void ProfileMoDARTTest::Main()
 		SubmitAudio(static_cast<size_t>(id), input);
 		GetOutput(output);
 
-		sourcePos.x() += (Real)0.1;
-		UpdateSource(static_cast<size_t>(id), sourcePos, sourceOri);
+		if (executionContext.staticScene)
+			continue;
+
+		Vec3 position = listenerPos;
+		position.x() += RandomValue();
+		position.z() += RandomValue();
+		UpdateListener(position, listenerOri);
+
+		position = sourcePos;
+		position.x() += RandomValue();
+		position.z() += RandomValue();
+		UpdateSource(static_cast<size_t>(id), position, sourceOri);
 	}
 }
 
@@ -484,6 +512,111 @@ void ProfileMoDARTTest::Exit()
 void ProfileMoDART(ProfileExecutionContext& executionContext)
 {
 	ProfileMoDARTTest test(executionContext);
+	test.Run();
+}
+
+class ProfileMoDARTManySourcesTest : public BaseTest
+{
+public:
+	ProfileMoDARTManySourcesTest(ProfileExecutionContext& executionContext) : BaseTest(executionContext) {}
+
+protected:
+	virtual bool Init() override;
+	virtual void Main() override;
+	virtual void Exit() override;
+
+	Vec3 listenerPos = Vec3((Real)3.2, (Real)1.5, (Real)3.76);
+	Vec4 listenerOri = Vec4((Real)1.0, (Real)0.0, (Real)0.0, (Real)0.0);
+
+	std::vector<Vec3> sourcePos = { Vec3((Real)3.08, (Real)1.0, (Real)1.078),
+		Vec3((Real)1.35, (Real)1.5, (Real)1.07),
+		Vec3((Real)2.22, (Real)1.5, (Real)1.988),
+		Vec3((Real)8.54, (Real)2.5, (Real)2.568),
+		Vec3((Real)1.401, (Real)1.5, (Real)7.215),
+		Vec3((Real)7.01, (Real)1.75, (Real)8.56),
+		Vec3((Real)4.35, (Real)1.75, (Real)4.701), };
+	Vec4 sourceOri = Vec4((Real)1.0, (Real)0.0, (Real)0.0, (Real)0.0);
+	std::vector<int> ids = { -1, -1, -1, -1, -1, -1, -1 };
+	int numSources = 7;
+
+};
+
+bool ProfileMoDARTManySourcesTest::Init()
+{
+	if (!BaseTest::Init())
+		return false;
+
+	// Load MoDART scene
+	FDNMatrix matrix = FDNMatrix::householder;
+	LateReverbData lateReverbData(true, executionContext.numRays, matrix);
+
+	std::string modartPath = "MoDART";
+	if (!LoadMoDARTScene(modartPath, frequencyBands, lateReverbData))
+	{
+		std::cout << "Error loading MoDART scene!" << std::endl;
+		Exit();
+		return false;
+	}
+
+	input[0] = 1.0;
+	// Stereo output buffer
+	UpdateListener(listenerPos, listenerOri);
+
+	for (int i = 0; i < numSources; ++i)
+	{
+		ids[i] = InitSource();
+		if (ids[i] < 0)
+		{
+			std::cout << "Error initialising source!" << std::endl;
+			return false;
+		}
+		UpdateSourceDirectivity(static_cast<size_t>(ids[i]), SourceDirectivity::genelec8020c);
+
+		UpdateSource(static_cast<size_t>(ids[i]), sourcePos[i], sourceOri);
+	}
+
+	// Only run to ensure background processes have run at least once
+	// No point profiling audio before image edge model and late reverb are ready
+	RecordImpulseResponse(sourcePos[0], sourceOri, output);
+
+	return true;
+}
+
+void ProfileMoDARTManySourcesTest::Main()
+{
+	for (int innerIteration = 0; innerIteration < executionContext.innerIterations; ++innerIteration)
+	{
+		for (auto id : ids)
+			SubmitAudio(static_cast<size_t>(id), input);
+		GetOutput(output);
+
+		if (executionContext.staticScene)
+			continue;
+
+		Vec3 position = listenerPos;
+		position.x() += RandomValue();
+		position.z() += RandomValue();
+		UpdateListener(position, listenerOri);
+		for (int i = 0; i < numSources; ++i)
+		{
+			position = sourcePos[i];
+			position.x() += RandomValue();
+			position.z() += RandomValue();
+			UpdateSource(static_cast<size_t>(ids[i]), position, sourceOri);
+		}
+	}
+}
+
+void ProfileMoDARTManySourcesTest::Exit()
+{
+	for (auto id : ids)
+		RemoveSource(static_cast<size_t>(id));
+	BaseTest::Exit();
+}
+
+void ProfileMoDARTManySources(ProfileExecutionContext& executionContext)
+{
+	ProfileMoDARTManySourcesTest test(executionContext);
 	test.Run();
 }
 
@@ -539,6 +672,7 @@ int main(int argc, const char* argv[])
 	CommandLineParser commandLineParser(argc, argv);
 	commandLineParser.RegisterProfileTest("Shoebox", ProfileShoebox);
 	commandLineParser.RegisterProfileTest("MoDART", ProfileMoDART);
+	commandLineParser.RegisterProfileTest("MoDARTManySources", ProfileMoDARTManySources);
 	if (!commandLineParser.Parse())
 		return -1;
 
@@ -572,6 +706,7 @@ int main(int argc, const char* argv[])
 			.numRays = commandLineParser.GetNumRays(),
 			.reflectionOrder = commandLineParser.GetReflectionOrder(),
 			.shadowOrder = commandLineParser.GetShadowOrder(),
+			.staticScene = commandLineParser.GetStaticSceneFlag(),
 			.desiredAudioThreads = commandLineParser.GetDesiredAudioThreads()
 		};
 
