@@ -219,7 +219,7 @@ namespace RAC
 			* @params source The source audio DSP parameters
 			* @params vSources The current image sources
 			*/
-			void UpdateData(const Source::DSPParameters source, const ImageSourceDataMap& imageSourceData, const std::shared_ptr<DSPConfig>& config);
+			void UpdateData(const Source::DSPParameters source, ImageSourceDataMap& imageSourceData, const std::shared_ptr<DSPConfig>& config);
 
 			std::optional<Data> GetData(ThreadID id);
 
@@ -346,7 +346,7 @@ namespace RAC
 			/**
 			* @brief Updates the current image sources from the target image sources
 			*/
-			void UpdateImageSourceDataMap(const ImageSourceDataMap& imageSourceData);
+			void UpdateImageSourceDataMap(ImageSourceDataMap& imageSourceData);
 
 			/**
 			* @brief Updates the audio thread image sources from the current image sources
@@ -359,7 +359,7 @@ namespace RAC
 			* @params data The new image source data
 			* @return True if the image was destroyed successfully, false otherwise
 			*/
-			bool UpdateImageSource(int& id, const std::shared_ptr<ImageSourceData>& data, const std::shared_ptr<DSPConfig>& config);
+			bool UpdateImageSource(int& id, std::shared_ptr<ImageSourceData>& data, const std::shared_ptr<DSPConfig>& config);
 
 			/**
 			* @return The next free FDN channel
@@ -393,8 +393,8 @@ namespace RAC
 			std::atomic<bool> isReset{ true };		// Flag to check if the source is ready to be initialised
 			bool modartSendProcessed{ false };		// True if the MoDART reverb send has been processed this frame, false otherwise
 
-			ImageSourceDataMap currentImageSources;		// Current image sources
-			std::vector<int> freeFDNChannels;			// Free FDN channels
+			ImageSourceDataAudioMap currentImageSources;	// Current image sources
+			std::vector<int> freeFDNChannels;				// Free FDN channels
 
 			Binaural::CCore* mCore;										// 3DTI core
 			shared_ptr<Binaural::CSingleSourceDSP> mSource;				// 3DTI source

@@ -241,19 +241,9 @@ namespace RAC
 			* @param imageSources The image source data to write to
 			* @param feedsFDN True if the image source should feed the FDN, false otherwise
 			*/
-			void InitImageSource(const Source::Data& source, const Vec3& intersection, const std::shared_ptr<ImageSourceData>& imageSource, ImageSourceDataMap& imageSources, bool feedsFDN);
+			void InitImageSource(const Source::Data& source, const Vec3& intersection, std::shared_ptr<ImageSourceData>& imageSource, ImageSourceDataMap& imageSources, bool feedsFDN);
 
-			/**
-			* @brief Run simple ray tracing and update the late reverberation reflection filters
-			*/
-			bool UpdateLateReverbFilters(bool updateFilters);
-
-			/**
-			* @brief Erase old entries from the image source data map
-			* 
-			* @param imageSources The image source data map to erase old entries from
-			*/
-			void EraseOldEntries(ImageSourceDataMap& imageSources);
+			void ResetImageSources();
 
 			/**
 			 * @brief Creates an empty image source
@@ -263,15 +253,16 @@ namespace RAC
 			weak_ptr<Room> mRoom;							// Pointer to the room class
 			weak_ptr<SourceManager> mSourceManager;			// Pointer to the source manager class
 
+			Coefficients<> frequencyBands;			// Frequency bands for graphic equalisers
+
 			PlaneMap mPlanes;									// Store planes
 			WallMap mWalls;										// Store walls
 			MaterialMap mMaterials;								// Store materials
 			EdgeMap mEdges;										// Store edges
 			std::vector<Source::Data> mSources;					// Store sources
-			std::vector<ImageSourceDataMap> imageSources;		// Store image sources
-			std::vector<Source::DSPParameters> mSourceAudioDatas;		// Store source audio data
+			ImageSourceDataMap imageSources;					// Store image sources
+			Source::DSPParameters sourceAudioData;				// Store source audio data
 			ImageSourceDataStore sp;							// Store valid image sources while the image edge model is being run
-			std::vector<bool> mCurrentCycles;					// Oscillates true and false each time the image edge model is run
 
 			EarlyReverbData earlyReverbData;					// The user defined IEM configuration data (can be accessed freely)
 			EarlyReverbData earlyReverbDataIncoming;			// The user defined IEM configuration data (Mutex must be locked to access)
@@ -284,8 +275,6 @@ namespace RAC
 			std::vector<Vec3> reverbDirections;				// The directions of the late reverb sources
 			std::vector<Coefficients<>> reverbAbsorptions;		// The absorption Coefficients<> of the late reverb sources
 
-			Coefficients<> frequencyBands;			// Frequency bands for graphic equalisers
-			bool currentCycle{ false };				// Stores the current cycle of the currently processed source
 			bool configChanged{ true };				// True if the image edge model configuration has changed since the last run
 			bool listenerMoved{ true };				// True if the listener has moved since the last run
 			bool reverbRunning{ false };				// True if the late reverb is running, false otherwise

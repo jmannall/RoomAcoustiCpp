@@ -214,12 +214,9 @@ namespace RAC
 		void FDN<T>::ProcessSquare()
 		{
 #if MATRIX_LIBRARY == EIGEN_FLAG
-			// TODO: Check this when using eigen.
-
 			// see https://libeigen.gitlab.io/eigen/docs-nightly/TopicWritingEfficientProductExpression.html for a description of noalias()
 			x.noalias() = feedbackMatrix * y;
 #else
-
 			for (int j = 0; j < feedbackMatrix.Cols(); ++j)
 			{
 				x(j) = 0.0;
