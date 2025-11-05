@@ -169,8 +169,12 @@ namespace RAC
 			int pathIdx;
 			Real distance;
 
-			hemispherePencil.getDistances(rayDistances);
-			hemispherePencil.getIndices(frontIndices, backIndices);
+			// Assumes listener processes reverbDirectionIdx in order 0 to numReverbDirections-1
+			if (reverbDirectionIdx < 1)
+			{
+				hemispherePencil.getDistances(rayDistances);
+				hemispherePencil.getIndices(frontIndices, backIndices);
+			}
 			// If self-shadowing is enabled, get the incidence cosines as well.
 			if (SELF_SHADOWING_RADIUS > 0.0)
 				hemispherePencil.getCosines(rayCosines);
