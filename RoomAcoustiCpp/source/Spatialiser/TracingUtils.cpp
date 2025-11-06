@@ -13,7 +13,7 @@
 #define USE_OMP_RAYTRACE_ALL               ( 1 )
 
 // Dumps some stats about the trace function time
-#define PROFILE_TRACE_ALL                  ( 1 )
+#define PROFILE_TRACE_ALL                  ( 0 )
 
 namespace RAC
 {
