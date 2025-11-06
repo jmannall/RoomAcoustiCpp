@@ -174,7 +174,7 @@ namespace RAC
             bool exposeMirrorCopies = false;
 
             Vec<Real> frontDistance, backDistance, frontCosine, backCosine;
-            Vec<int> frontpatchId, backpatchId;
+            Vec<int> frontpatchId, backPatchId;
 
         public:
             /* @brief Default constructor (0 rays)

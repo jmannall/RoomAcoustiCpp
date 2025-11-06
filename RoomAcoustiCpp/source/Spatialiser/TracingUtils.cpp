@@ -1,6 +1,19 @@
 
 #include <cassert>
+#include <omp.h>
 #include "Spatialiser/TracingUtils.h"
+
+#include <chrono>
+
+// Enable OMP at the triangle level. Using up to 4 threads can result in an improvement, but it is nowhere near as much as USE_OMP_RAYTRACE_ALL
+#define USE_OMP_RAYTRACE_SINGLE            ( 0 )
+
+// Enable OMP at the traceAll() level. This has a significant improvement, even up to 8 or more threads. Note: it only optimizes one version of the traceAll() for now
+// since the other has data dependencies.
+#define USE_OMP_RAYTRACE_ALL               ( 1 )
+
+// Dumps some stats about the trace function time
+#define PROFILE_TRACE_ALL                  ( 1 )
 
 namespace RAC
 {
@@ -301,54 +314,114 @@ namespace RAC
 			cosineFront = qNaN;
 			cosineBack = qNaN;
 
-			for (int i = 0; i < triangles.size(); ++i) {
-				if (i == ignoredTriangleIndex) // Ignore this triangle
-					continue;
+#if USE_OMP_RAYTRACE_SINGLE
+            constexpr int WorkerBlocks = 4;
+            const int BlockSize = (triangles.size() + WorkerBlocks - 1) / WorkerBlocks;
 
-				// Buffers to retrieve individual check results.
-				Real currentDist, currentCos;
+            struct Instance {
+                int patchIdFront = -1;
+                int patchIdBack = -1;
+                Real distanceFront = INFINITY;
+                Real distanceBack = -INFINITY;
+                Real cosineFront = qNaN;
+                Real cosineBack = qNaN;
+            };
+            Instance instances[WorkerBlocks];
 
-				if (!intersection_test(triangles, i, rays, rayIndex, currentDist, currentCos))
-					continue;
+			#pragma omp parallel for num_threads(WorkerBlocks) shared(instances)
+            for (int workerIndex = 0; workerIndex < WorkerBlocks; ++workerIndex) {
+                Instance& instance = instances[workerIndex];
 
-				if ((currentDist + EPS_ZFIGHT < distanceBack) || (currentDist - EPS_ZFIGHT > distanceFront))
-					continue; // Outside of current best range
-				if (std::abs(currentDist) < EPS_SELFHIT)
-					continue; // Too close to origin
+				const int start = workerIndex * BlockSize;
+				const int end = std::min(start + BlockSize, triangles.size());
 
-				// Valid hit
-				if (currentDist > 0.0) {
-					if (std::abs(currentDist - distanceFront) < EPS_ZFIGHT) {
-						// Z-fighting, lower triangle index wins.
-						if (i < patchIdFront) {
-							patchIdFront = triangles.patchId[i];
-							distanceFront = currentDist;
-							cosineFront = currentCos;
-						} // else {keep the previous best}
-					}
-					else {
-						patchIdFront = triangles.patchId[i];
-						distanceFront = currentDist;
-						cosineFront = currentCos;
-					}
-				}
-				else {
-					if (std::abs(currentDist - distanceBack) < EPS_ZFIGHT) {
-						// Z-fighting, lower triangle index wins
-						if (i < patchIdFront) {
-							patchIdBack = triangles.patchId[i];
-							distanceBack = currentDist;
-							cosineBack = currentCos;
-						} // else {keep the previous best}
-					}
-					else {
-						patchIdBack = triangles.patchId[i];
-						distanceBack = currentDist;
-						cosineBack = currentCos;
-					}
-				}
+#define TRACE_INSTANCE(n)       instance.n
+
+#else
+			{
+
+                constexpr int start = 00;
+                const int end = triangles.size();
+#define TRACE_INSTANCE(n)       n
+
+#endif
+
+                for (int i = start; i < end; ++i) {
+                    if (i == ignoredTriangleIndex) // Ignore this triangle
+                        continue;
+
+                    // Buffers to retrieve individual check results.
+                    Real currentDist, currentCos;
+
+                    if (!intersection_test(triangles, i, rays, rayIndex, currentDist, currentCos))
+                        continue;
+
+                    if ((currentDist + EPS_ZFIGHT < TRACE_INSTANCE(distanceBack)) || (currentDist - EPS_ZFIGHT > TRACE_INSTANCE(distanceFront)))
+                        continue; // Outside of current best range
+                    if (std::abs(currentDist) < EPS_SELFHIT)
+                        continue; // Too close to origin
+
+                    // Valid hit
+                    if (currentDist > 0.0) {
+                        if (std::abs(currentDist - TRACE_INSTANCE(distanceFront)) < EPS_ZFIGHT) {
+                            // Z-fighting, lower triangle index wins.
+                            if (i < TRACE_INSTANCE(patchIdFront)) {
+                                TRACE_INSTANCE(patchIdFront) = triangles.patchId[i];
+                                TRACE_INSTANCE(distanceFront) = currentDist;
+                                TRACE_INSTANCE(cosineFront) = currentCos;
+                            } // else {keep the previous best}
+                        }
+                        else {
+                            TRACE_INSTANCE(patchIdFront) = triangles.patchId[i];
+                            TRACE_INSTANCE(distanceFront) = currentDist;
+                            TRACE_INSTANCE(cosineFront) = currentCos;
+                        }
+                    }
+                    else {
+                        if (std::abs(currentDist - TRACE_INSTANCE(distanceBack)) < EPS_ZFIGHT) {
+                            // Z-fighting, lower triangle index wins
+                            if (i < TRACE_INSTANCE(patchIdFront)) {
+                                TRACE_INSTANCE(patchIdBack) = triangles.patchId[i];
+                                TRACE_INSTANCE(distanceBack) = currentDist;
+                                TRACE_INSTANCE(cosineBack) = currentCos;
+                            } // else {keep the previous best}
+                        }
+                        else {
+                            TRACE_INSTANCE(patchIdBack) = triangles.patchId[i];
+                            TRACE_INSTANCE(distanceBack) = currentDist;
+                            TRACE_INSTANCE(cosineBack) = currentCos;
+                        }
+                    }
+                }
 			}
 
+#if USE_OMP_RAYTRACE_SINGLE
+			// find the best candidate
+		   for (int workerIndex = 0; workerIndex < WorkerBlocks; ++workerIndex)
+            {
+				const Instance& instance = instances[workerIndex];
+                if (!std::isinf(instance.distanceFront)) 
+                {
+                    if (std::isinf(distanceFront) || distanceFront > instance.distanceFront)
+                    {
+                        distanceFront = instance.distanceFront;
+                        cosineFront = instance.cosineFront;
+                        patchIdFront = instance.patchIdFront;
+                    }
+                }
+				if (!std::isinf(instance.distanceBack)) 
+                {
+                    const Real absDistance = -instance.distanceBack;
+					if (std::isinf(distanceBack) || distanceBack > absDistance)
+					{
+						distanceBack = absDistance;
+						cosineBack = instance.cosineBack;
+						patchIdBack = instance.patchIdBack;
+					}
+				}
+
+            }
+#else
 			if (std::isinf(distanceFront)) {
 				// If it's still the initial INFINITY value, there was no valid hit at all.
 				patchIdFront = -1;
@@ -363,6 +436,7 @@ namespace RAC
 			}
 			else // If the distanceBack is valid, return its absolute value.
 				distanceBack = -distanceBack;
+#endif
         }
 
 
@@ -543,7 +617,7 @@ namespace RAC
             frontCosine = Vec<>::Zero(numRays);
             backCosine = Vec<>::Zero(numRays);
             frontpatchId = Vec<int>::Constant(numRays, -1);
-            backpatchId = Vec<int>::Constant(numRays, -1);
+            backPatchId = Vec<int>::Constant(numRays, -1);
         }
 
         RayPencil::RayPencil(int numDirections, bool hemisphereOnly)
@@ -562,7 +636,7 @@ namespace RAC
             frontCosine = Vec<>::Zero(numRays);
             backCosine = Vec<>::Zero(numRays);
             frontpatchId = Vec<int>::Constant(numRays, -1);
-            backpatchId = Vec<int>::Constant(numRays, -1);
+            backPatchId = Vec<int>::Constant(numRays, -1);
         }
 
         RayPencil::RayPencil(const std::vector<Vec3>& directions)
@@ -582,7 +656,7 @@ namespace RAC
             frontCosine = Vec<>::Zero(numRays);
             backCosine = Vec<>::Zero(numRays);
             frontpatchId = Vec<int>::Constant(numRays, -1);
-            backpatchId = Vec<int>::Constant(numRays, -1);
+            backPatchId = Vec<int>::Constant(numRays, -1);
         }
 
         void RayPencil::moveOrigin(const Vec3& origin)
@@ -598,16 +672,27 @@ namespace RAC
             frontCosine = Vec<>::Zero(numRays);
             backCosine = Vec<>::Zero(numRays);
             frontpatchId = Vec<int>::Constant(numRays, -1);
-            backpatchId = Vec<int>::Constant(numRays, -1);
+            backPatchId = Vec<int>::Constant(numRays, -1);
         }
 
         void RayPencil::traceAll(const TriangleMeshSoA& triangles)
         {
-            // Buffers for ray processing
-            int temp_frontpatchId, temp_backpatchId;
-            Real temp_frontDistance, temp_backDistance, temp_frontCosine, temp_backCosine;
+#if PROFILE_TRACE_ALL
+			const auto startTime = std::chrono::high_resolution_clock::now();
+#endif
+            
+            static double total = 0.0;
+            static int count = 0;
 
+#if USE_OMP_RAYTRACE_ALL
+            constexpr int WorkerThreads = 8;
+			#pragma omp parallel for num_threads(WorkerThreads)
+#endif
             for (int i = 0; i < numRays; ++i) {
+				// Buffers for ray processing
+				int temp_frontpatchId, temp_backpatchId;
+				Real temp_frontDistance, temp_backDistance, temp_frontCosine, temp_backCosine;
+
                 trace_ray(
                     triangles, rays, i,
                     temp_frontpatchId, temp_frontDistance, temp_frontCosine,
@@ -616,10 +701,18 @@ namespace RAC
                 frontpatchId(i) = temp_frontpatchId;
                 frontDistance(i) = temp_frontDistance;
                 frontCosine(i) = temp_frontCosine;
-                backpatchId(i) = temp_backpatchId;
+                backPatchId(i) = temp_backpatchId;
                 backDistance(i) = temp_backDistance;
                 backCosine(i) = temp_backCosine;
             }
+
+#if PROFILE_TRACE_ALL
+			const auto endTime = std::chrono::high_resolution_clock::now();
+            const int uS = (int)std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime).count();
+            total += uS;
+            ++count;
+            std::cout << std::format("traceAll: {}uS, average: {:.0f}\n", uS, total / count);
+#endif
         }
         
         void RayPencil::clusterDirections(
@@ -743,7 +836,7 @@ namespace RAC
             for (int i = 0; i < numRays; ++i)
             {
                 front(i) = frontpatchId(i);
-                back(i) = backpatchId(i);
+                back(i) = backPatchId(i);
             }
 
             if (exposeMirrorCopies)
@@ -751,7 +844,7 @@ namespace RAC
                 // Append direct opposites
                 for (int i = 0; i < numRays; ++i)
                 {
-                    front(i + numRays) = backpatchId(i);
+                    front(i + numRays) = backPatchId(i);
                     back(i + numRays) = frontpatchId(i);
                 }
             }
