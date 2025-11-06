@@ -525,14 +525,25 @@ namespace RAC
 
         void RayBundle::traceAll(const TriangleMeshSoA& triangles)
         {
-            // Buffers for ray processing
-            int patchIdFront, patchIdBack;
-            Real distanceFront, distanceBack, cosineFront, cosineBack;
+#if PROFILE_TRACE_ALL
+			const auto startTime = std::chrono::high_resolution_clock::now();
 
+			static double total = 0.0;
+			static int count = 0;
+#endif
+
+#if USE_OMP_RAYTRACE_ALL
+			constexpr int WorkerThreads = 8;
+			#pragma omp parallel for num_threads(WorkerThreads)
+#endif
             for (int i = 0; i < numRays; ++i) {
                 // Skip rays that are already invalid.
                 if (std::isnan(radiance(i)))
                     continue;
+
+				// Buffers for ray processing
+				int patchIdFront, patchIdBack;
+				Real distanceFront, distanceBack, cosineFront, cosineBack;
 
                 trace_ray(
                     triangles, rays, i,
@@ -547,6 +558,14 @@ namespace RAC
                 latestDistance(i) = distanceFront;
                 latestCosine(i) = cosineFront;
             }
+
+#if PROFILE_TRACE_ALL
+			const auto endTime = std::chrono::high_resolution_clock::now();
+			const int uS = (int)std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime).count();
+			total += uS;
+			++count;
+			std::cout << std::format("RayBundle::traceAll: {}uS, average: {:.0f}\n", uS, total / count);
+#endif
         }
 
         void RayBundle::advanceAndReflect(const TriangleMeshSoA& triangles)
@@ -679,11 +698,11 @@ namespace RAC
         {
 #if PROFILE_TRACE_ALL
 			const auto startTime = std::chrono::high_resolution_clock::now();
+
+			static double total = 0.0;
+			static int count = 0;
 #endif
             
-            static double total = 0.0;
-            static int count = 0;
-
 #if USE_OMP_RAYTRACE_ALL
             constexpr int WorkerThreads = 8;
 			#pragma omp parallel for num_threads(WorkerThreads)
@@ -711,7 +730,7 @@ namespace RAC
             const int uS = (int)std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime).count();
             total += uS;
             ++count;
-            std::cout << std::format("traceAll: {}uS, average: {:.0f}\n", uS, total / count);
+            std::cout << std::format("RayPencil::traceAll: {}uS, average: {:.0f}\n", uS, total / count);
 #endif
         }
         
