@@ -37,13 +37,14 @@ namespace RAC
 		class ImageSource;
 		class ImageSourceData;
 
-		typedef std::unordered_map<size_t, Plane> PlaneMap;																// Store planes
-		typedef std::unordered_map<size_t, Wall> WallMap;																// Store walls
-		typedef std::unordered_map<size_t, Coefficients<>> MaterialMap;													// Store materials
-		typedef std::unordered_map<size_t, Edge> EdgeMap;																// Store edges
-		typedef std::unordered_map<size_t, Source> SourceMap;															// Store sources
-		typedef std::unordered_map<std::string, ImageSource> ImageSourceMap;											// Store image sources
-		typedef std::unordered_map<std::string, std::pair<int, std::shared_ptr<ImageSourceData>>> ImageSourceDataMap;	// Store image source data
+		typedef std::unordered_map<size_t, Plane> PlaneMap;																	// Store planes
+		typedef std::unordered_map<size_t, Wall> WallMap;																	// Store walls
+		typedef std::unordered_map<size_t, Coefficients<>> MaterialMap;														// Store materials
+		typedef std::unordered_map<size_t, Edge> EdgeMap;																	// Store edges
+		typedef std::unordered_map<size_t, Source> SourceMap;																// Store sources
+		typedef std::unordered_map<std::string, ImageSource> ImageSourceMap;												// Store image sources
+		typedef std::unordered_map<std::string, std::shared_ptr<ImageSourceData>> ImageSourceDataMap;						// Store image source data
+		typedef std::unordered_map<std::string, std::pair<int, std::shared_ptr<ImageSourceData>>> ImageSourceDataAudioMap;	// Store image source data
 
 		typedef std::vector<std::vector<std::shared_ptr<ImageSourceData>>> ImageSourceDataStore;						// Store image source data
 

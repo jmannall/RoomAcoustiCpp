@@ -103,8 +103,7 @@ namespace RAC
 			*
 			* @param numFrequencyBands The number of frequency bands for applying wall absorption
 			*/
-			ImageSourceData(int numFrequencyBands) : valid(false), visible(false), feedsFDN(false), reflection(false), diffraction(false),
-				mAbsorption(numFrequencyBands), distance(0.0), lastUpdatedCycle(false), idKey{ '0' }, sourceKey{ 's' }, reflectionKey{ 'r' }, diffractionKey{ 'd' },
+			ImageSourceData(int numFrequencyBands) : mAbsorption(numFrequencyBands),
 				mPositions(1, Vec3()), pathParts(1, Part(0, true)), mEdges(1, { Vec3(), Vec3() }) {}
 
 			/**
@@ -382,16 +381,6 @@ namespace RAC
 			*/
 			inline Diffraction::Path GetDiffractionPath() const { assert(diffraction); return mDiffractionPath; }
 
-			/**
-			* @brief Updates the cycle the image source was last updated in
-			*/
-			inline void UpdateCycle(const bool thisCycle) { lastUpdatedCycle = thisCycle; }
-
-			/**
-			* @return True if the image source was updated in the current cycle, false otherwise
-			*/
-			inline bool UpdatedThisCycle(const bool thisCycle) const { return lastUpdatedCycle == thisCycle; }
-
 		private:
 
 			/**
@@ -415,11 +404,11 @@ namespace RAC
 
 			int arrayID{ -1 };
 
-			std::string key;							// String key that defines the image source path
-			std::array<char, 21> idKey;					// Char that stores the ID of a plane, edge or source
-			std::array<char, 1> sourceKey;				// Char that stores the source key
-			std::array<char, 1> reflectionKey;			// Char that stores the reflection key
-			std::array<char, 1> diffractionKey;			// Char that stores the diffraction key
+			std::string key;								// String key that defines the image source path
+			std::array<char, 21> idKey{ '0' };				// Char that stores the ID of a plane, edge or source
+			std::array<char, 1> sourceKey{ 's' };			// Char that stores the source key
+			std::array<char, 1> reflectionKey{ 'r' };		// Char that stores the reflection key
+			std::array<char, 1> diffractionKey{ 'd' };		// Char that stores the diffraction key
 
 			std::vector<Part> pathParts;			// Reflection and diffraction parts of the image source path
 			std::vector<Vec3> mPositions;			// Positions of the image source along the path
@@ -429,15 +418,14 @@ namespace RAC
 
 			Diffraction::Path mDiffractionPath;			// Diffraction path of the image source
 			Coefficients<> mAbsorption;					// Wall absorption of the image source
-			Real distance;								// Distance of the image source from the listener
+			Real distance{ 0.0 };						// Distance of the image source from the listener
 			CTransform transform;						// 3DTI transform of the image source
 
-			bool valid;						// True if the image source is valid, false otherwise
-			bool visible;					// True if the image source is visible, false otherwise
-			bool feedsFDN;					// True if the image source should feed the FDN, false otherwise
-			bool reflection;				// True if the image source path includes any reflections, false otherwise
-			bool diffraction;				// True if the image source path includes any diffractions, false otherwise
-			bool lastUpdatedCycle;			// True if the image source was updated in the current cycle, false otherwise
+			bool valid{ false };					// True if the image source is valid, false otherwise
+			bool visible{ false };					// True if the image source is visible, false otherwise
+			bool feedsFDN{ false };					// True if the image source should feed the FDN, false otherwise
+			bool reflection{ false };				// True if the image source path includes any reflections, false otherwise
+			bool diffraction{ false };				// True if the image source path includes any diffractions, false otherwise
 
 			// disable assignment as we just want to use shared pointers
 			void operator=(const ImageSourceData&) = delete;

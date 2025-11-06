@@ -148,7 +148,7 @@ namespace RAC
 			* @params source The source audio DSP parameters
 			* @params vSources The new image sources
 			*/
-			inline void UpdateSourceData(const size_t id, const Source::DSPParameters source, const ImageSourceDataMap& vSources)
+			inline void UpdateSourceData(const size_t id, const Source::DSPParameters source, ImageSourceDataMap& vSources)
 			{
 				PROFILE_UpdateAudioData
 				mSources[id]->UpdateData(source, vSources, dspConfig);

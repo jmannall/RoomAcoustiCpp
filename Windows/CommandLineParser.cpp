@@ -84,6 +84,10 @@ bool CommandLineParser::Parse()
 			}
 			shadowOrder = newShadowOrder;
 		}
+		else if (argument == "--dynamic-scene")
+		{
+			staticScene = false;
+		}
 		else if (ParseStandardArgument(argument, "--inner-iterations=", value))
 		{
 			const int newIterations = std::stoi(value);

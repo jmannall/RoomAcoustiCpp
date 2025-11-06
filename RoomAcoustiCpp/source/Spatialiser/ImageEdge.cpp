@@ -32,7 +32,8 @@ namespace RAC
 
 		ImageEdge::ImageEdge(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, const EarlyReverbData& data, const std::shared_ptr<DSPConfig>& dspConfig) :
 			mRoom(room), mSourceManager(sourceManager), frequencyBands(dspConfig->GetData().numFrequencyBands),
-			earlyReverbData(data, dspConfig->GetDiffractionModel()), earlyReverbDataIncoming(data, dspConfig->GetDiffractionModel())
+			earlyReverbData(data, dspConfig->GetDiffractionModel()), earlyReverbDataIncoming(data, dspConfig->GetDiffractionModel()),
+			sourceAudioData(ToInt(frequencyBands.Length()), false)
 		{
 			sp = std::vector<std::vector<std::shared_ptr<ImageSourceData>>>();
 			sp.push_back(std::vector<std::shared_ptr<ImageSourceData>>());
@@ -87,26 +88,13 @@ namespace RAC
 				UpdateRValid();
 			}
 
-			if (imageSources.size() != mSources.size())
-			{
-				imageSources.resize(mSources.size());
-				mSourceAudioDatas.resize(mSources.size(), Source::DSPParameters(ToInt(frequencyBands.Length()), false));
-				mCurrentCycles.resize(mSources.size());
-			}
-
-			int i = 0;
 			for (Source::Data& source : mSources)
 			{
 				if (doIEM || source.needsUpdate)
 				{
-					mCurrentCycles[i] = !mCurrentCycles[i];
-					currentCycle = mCurrentCycles[i];
-					ReflectPointInRoom(source, mSourceAudioDatas[i], imageSources[i]);
+					ReflectPointInRoom(source, sourceAudioData, imageSources);
+					sharedSource->UpdateSourceData(source.id, sourceAudioData, imageSources);
 				}
-
-				sharedSource->UpdateSourceData(source.id, mSourceAudioDatas[i], imageSources[i]);
-
-				++i;
 			}
 
 #ifdef IEM_FLAG
@@ -114,6 +102,22 @@ namespace RAC
 #endif
 			iemEndFlag.store(true, std::memory_order_release);
 			iemStartFlag.store(false, std::memory_order_release);
+		}
+
+		void ImageEdge::ResetImageSources()
+		{
+			for (auto& reflOrder : sp)
+			{
+				for (auto& vS : reflOrder)
+				{
+					if (vS.use_count() > 1)
+					{
+						auto it = imageSources.find(vS->GetKey());
+						vS.swap(it->second);
+					}
+				}
+			}
+			imageSources.clear();
 		}
 
 		////////////////////////////////////////
@@ -431,6 +435,8 @@ namespace RAC
 		void ImageEdge::ReflectPointInRoom(const Source::Data& source, Source::DSPParameters& direct, ImageSourceDataMap& imageSources)
 		{
 			PROFILE_ImageEdgeModel
+			ResetImageSources();
+
 			bool lineOfSight = !LineRoomObstruction(mListenerPosition, source.position);
 			direct.directivity = Direct(source, lineOfSight);
 
@@ -438,7 +444,6 @@ namespace RAC
 			{
 				direct.feedsFDN = true;
 				sp.clear();
-				EraseOldEntries(imageSources);
 				return;
 			}
 
@@ -465,10 +470,7 @@ namespace RAC
 					sp[0][initializeIndex] = CreateEmptyImageSource();
 
 				if (earlyReverbData.maxOrder < 2)
-				{
-					EraseOldEntries(imageSources);
 					return;
-				}
 
 				HigherOrderPaths(source, imageSources);
 			}
@@ -480,7 +482,7 @@ namespace RAC
 					sp[0][initializeIndex] = CreateEmptyImageSource();
 			}
 
-			EraseOldEntries(imageSources);
+			// TODO: Update how old image sources are erased in debug mode
 			return;
 		}
 
@@ -508,7 +510,7 @@ namespace RAC
 				if (earlyReverbData.specularDiffOrder < 1 && zone == EdgeZone::NonShadowed)
 					continue;
 
-				const std::shared_ptr<ImageSourceData>& imageSource = counter < size ? sp[0][counter] : sp[0].emplace_back(CreateEmptyImageSource());
+				std::shared_ptr<ImageSourceData>& imageSource = counter < size ? sp[0][counter] : sp[0].emplace_back(CreateEmptyImageSource());
 				
 				if (counter < size)
 					imageSource->Clear();
@@ -573,7 +575,7 @@ namespace RAC
 				if ((position - mListenerPosition).Normal() > earlyReverbData.maxPathLength)
 					continue;
 
-				const std::shared_ptr<ImageSourceData>& imageSource = counter < size ? sp[0][counter] : sp[0].emplace_back(CreateEmptyImageSource());
+				std::shared_ptr<ImageSourceData>& imageSource = counter < size ? sp[0][counter] : sp[0].emplace_back(CreateEmptyImageSource());
 
 				Vec4 previousPlane(plane.GetD(), MakeCompatible(plane.GetNormal()));
 				// imageSource.SetPreviousPlane(Vec4(plane.GetD(), plane.GetNormal()));
@@ -600,9 +602,9 @@ namespace RAC
 
 				InitImageSource(source, intersections[0], imageSource, imageSources, feedsFDN);
 #ifdef DEBUG_IEM
-				CVector3 pos = imageSource.GetTransform().GetPosition();
+				CVector3 pos = imageSource->GetTransform().GetPosition();
 				Vec3 position(static_cast<Real>(pos.x), static_cast<Real>(pos.y), static_cast<Real>(pos.z));
-				Debug::send_path(imageSource.GetKey(), intersections, position);
+				Debug::send_path(imageSource->GetKey(), intersections, position);
 #endif
 			}
 			return counter;
@@ -653,7 +655,7 @@ namespace RAC
 					for (const auto& [planeID, plane] : mPlanes)
 					{
 						bool rValid = plane.GetReceiverValid();
-						for (const std::shared_ptr<ImageSourceData>& vSPtr : sp[prevRefIdx])
+						for (std::shared_ptr<ImageSourceData>& vSPtr : sp[prevRefIdx])
 						{
 							ImageSourceData& vS = *vSPtr;
 
@@ -688,7 +690,7 @@ namespace RAC
 								if ((position - mListenerPosition).Normal() > earlyReverbData.maxPathLength)
 									continue;
 
-								const std::shared_ptr<ImageSourceData>& imageSource = counter < size ? sp[refIdx][counter] : sp[refIdx].emplace_back(vS.CreateShallowCopy());
+								std::shared_ptr<ImageSourceData>& imageSource = counter < size ? sp[refIdx][counter] : sp[refIdx].emplace_back(vS.CreateShallowCopy());
 
 								imageSource->SetPreviousPlane(planeData);
 								if (counter < size)
@@ -716,9 +718,9 @@ namespace RAC
 
 								InitImageSource(source, intersections[0], imageSource, imageSources, feedsFDN);
 #ifdef DEBUG_IEM
-								CVector3 pos = imageSource.GetTransform().GetPosition();
+								CVector3 pos = imageSource->GetTransform().GetPosition();
 								Vec3 position(static_cast<Real>(pos.x), static_cast<Real>(pos.y), static_cast<Real>(pos.z));
-								Debug::send_path(imageSource.GetKey(), intersections, position);
+								Debug::send_path(imageSource->GetKey(), intersections, position);
 #endif
 							}
 							// HOD reflections (post diffraction)
@@ -755,7 +757,7 @@ namespace RAC
 								if (!plane.EdgePlanePosition(edge))
 									continue;
 
-								const std::shared_ptr<ImageSourceData>& imageSource = counter < size ? sp[refIdx][counter] : sp[refIdx].emplace_back(vS.CreateShallowCopy());
+								std::shared_ptr<ImageSourceData>& imageSource = counter < size ? sp[refIdx][counter] : sp[refIdx].emplace_back(vS.CreateShallowCopy());
 
 								imageSource->SetPreviousPlane(planeData);
 								if (counter < size)
@@ -842,7 +844,7 @@ namespace RAC
 						continue;
 
 					EdgeZone rZone = edge.GetReceiverZone();
-					for (const std::shared_ptr<ImageSourceData>& vSPtr : sp[prevRefIdx])
+					for (std::shared_ptr<ImageSourceData>& vSPtr : sp[prevRefIdx])
 					{
 						ImageSourceData& vS = *vSPtr;
 
@@ -865,7 +867,7 @@ namespace RAC
 						if (earlyReverbData.specularDiffOrder < refOrder && zone == EdgeZone::NonShadowed)
 							continue;
 
-						const std::shared_ptr<ImageSourceData>& imageSource = counter < size ? sp[refIdx][counter] : sp[refIdx].emplace_back(vS.CreateShallowCopy());
+						std::shared_ptr<ImageSourceData>& imageSource = counter < size ? sp[refIdx][counter] : sp[refIdx].emplace_back(vS.CreateShallowCopy());
 
 						if (counter < size)
 							imageSource->Update(vS);
@@ -919,7 +921,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void ImageEdge::InitImageSource(const Source::Data& source, const Vec3& intersection, const std::shared_ptr<ImageSourceData> &imageSource, ImageSourceDataMap& imageSources, bool feedsFDN)
+		void ImageEdge::InitImageSource(const Source::Data& source, const Vec3& intersection, std::shared_ptr<ImageSourceData>& imageSource, ImageSourceDataMap& imageSources, bool feedsFDN)
 		{
 			Coefficients<> directivity(frequencyBands.Length());
 			directivity = CalculateDirectivity(source, intersection);
@@ -927,98 +929,11 @@ namespace RAC
 
 			imageSource->SetDistance(mListenerPosition);
 			imageSource->Visible(feedsFDN);
-			imageSource->UpdateCycle(currentCycle);
 			imageSource->CreateKey(ToInt(source.id));
-			imageSources.insert_or_assign(imageSource->GetKey(), std::pair<int, std::shared_ptr<ImageSourceData>>(-1, imageSource));
+			imageSources.insert_or_assign(imageSource->GetKey(), imageSource);
 		}
 
 		////////////////////////////////////////
-
-		typedef std::pair<Real, size_t> PlaneDistanceID;
-		bool comparator(const PlaneDistanceID& l, const PlaneDistanceID& r) { return l.first < r.first; }
-
-		bool ImageEdge::UpdateLateReverbFilters(bool updateFilters)
-		{
-			// TODO: Move to ray tracing
-			PROFILE_ReverbRayTracing
-//			if (mIEMConfig.GetLateReverbModel(false) != LateReverbModel::fdn)
-//				return reverbRunning;
-//
-//			if (!mIEMConfig.GetData().lateReverb)
-//			{
-//				for (int j = 0; j < reverbDirections.size(); j++)
-//					reverbAbsorptions[j] = 0.0;
-//				std::shared_ptr<Reverb> sharedReverb = mReverb.lock();
-//				sharedReverb->SetTargetOutputFilters(reverbAbsorptions);
-//#ifdef DEBUG_IEM
-//				if (!mIEMConfig.GetData().lateReverb)
-//				{
-//					for (int j = 0; j < reverbDirections.size(); j++)
-//						Debug::remove_path(IntToStr(j) + "l");
-//				}
-//#endif
-//				return reverbRunning;
-//			}
-//
-//			Real k;
-//			Vec3 point, intersection;
-//			for (int j = 0; j < reverbDirections.size(); j++)
-//			{
-//#ifdef DEBUG_IEM
-//				Debug::send_path(IntToStr(j) + "l", { mListenerPosition }, reverbDirections[j]);
-//#endif
-//				std::vector<PlaneDistanceID> ks = std::vector(mPlanes.size(), PlaneDistanceID(0.0, -1));
-//				point = mListenerPosition + reverbDirections[j];
-//				int i = 0;
-//				for (const auto& [planeID, plane] : mPlanes)
-//				{
-//					k = plane.PointPlanePosition(point);
-//					if (plane.GetReceiverValid() && k < 0) // receiver in front of wall and point behind wall
-//						ks[i] = PlaneDistanceID(k, planeID); // A more negative k means the plane is closer to the receiver
-//					i++;
-//				}
-//				std::sort(ks.begin(), ks.end());
-//				bool valid = false;
-//				i = 0;
-//				while (!valid && i < ks.size())
-//				{
-//					if (ks[i].first < 0.0)
-//					{
-//						auto itP = mPlanes.find(ks[i].second);
-//						if (itP != mPlanes.end()) // case: plane exists
-//						{
-//							reverbAbsorptions[j] = 1.0;
-//							valid = LinePlaneIntersection(mListenerPosition, point, itP->second, reverbAbsorptions[j], intersection);
-//						}
-//					}
-//					i++;
-//				}
-//				if (!valid)
-//					reverbAbsorptions[j] = 0.0;
-//			}
-//			std::shared_ptr<Reverb> sharedReverb = mReverb.lock();
-//			sharedReverb->SetTargetOutputFilters(reverbAbsorptions);
-//
-			return true;
-		}
-
-		////////////////////////////////////////
-
-		void ImageEdge::EraseOldEntries(ImageSourceDataMap& imageSources)
-		{
-			for (auto it = imageSources.begin(); it != imageSources.end();)
-			{
-				if (it->second.second->UpdatedThisCycle(currentCycle))
-					++it;
-				else
-				{
-#ifdef DEBUG_IEM
-					Debug::remove_path(it->first);
-#endif
-					it = imageSources.erase(it);
-				}
-			}
-		}
 
 		std::shared_ptr<ImageSourceData> ImageEdge::CreateEmptyImageSource() const
 		{

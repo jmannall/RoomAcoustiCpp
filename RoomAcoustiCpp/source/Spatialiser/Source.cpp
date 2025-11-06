@@ -409,7 +409,7 @@ namespace RAC
 
 		////////////////////////////////////////
 		
-		void Source::UpdateData(const Source::DSPParameters source, const ImageSourceDataMap& imageSourceData, const std::shared_ptr<DSPConfig>& dspConfig)
+		void Source::UpdateData(const Source::DSPParameters source, ImageSourceDataMap& imageSourceData, const std::shared_ptr<DSPConfig>& dspConfig)
 		{
 			if (!GetAccess())
 				return;
@@ -493,7 +493,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Source::UpdateImageSourceDataMap(const ImageSourceDataMap& imageSourceData)
+		void Source::UpdateImageSourceDataMap(ImageSourceDataMap& imageSourceData)
 		{
 			for (auto& [key, vSource] : currentImageSources)
 			{
@@ -510,11 +510,11 @@ namespace RAC
 					lock_guard<std::mutex>lock(*imageSourcesMutex);
 					if (!GetAccess())
 						return;
-					currentImageSources.emplace(key, vSource);
+					currentImageSources.emplace(key, std::pair<int, std::shared_ptr<ImageSourceData>>(-1, std::make_shared<ImageSourceData>(*vSource)));
 					FreeAccess();
 				}
 				else // case: update exist vSource
-					it->second.second = vSource.second;
+					it->second.second.swap(vSource);
 			}
 		}
 
@@ -539,7 +539,7 @@ namespace RAC
 		
 		////////////////////////////////////////
 
-		bool Source::UpdateImageSource(int& id, const std::shared_ptr<ImageSourceData>& data, const std::shared_ptr<DSPConfig>& dspConfig)
+		bool Source::UpdateImageSource(int& id, std::shared_ptr<ImageSourceData>& data, const std::shared_ptr<DSPConfig>& dspConfig)
 		{
 			if (id < 0)		// case: virtual source does not exist
 			{
@@ -563,7 +563,7 @@ namespace RAC
 
 				assert(!(data->IsFeedingFDN() && imageSources.at(id).GetFDNChannel() == -1));
 
-				if (fdnChannel >= 0) // Add vSource old fdnChannel to freeFDNChannels (Also prevents leaking FDN channels if !data.visible and the channel is not assigned to vSource)
+				if (fdnChannel >= 0) // Add vSource old fdnChannel to freeFDNChannels (Also prevents leaking FDN channels if !data->visible and the channel is not assigned to vSource)
 					freeFDNChannels.push_back(fdnChannel);
 				if (remove)
 				{

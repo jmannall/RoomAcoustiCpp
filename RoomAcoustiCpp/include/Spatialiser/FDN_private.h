@@ -510,8 +510,12 @@ namespace RAC
 			inline void ProcessMatrix() override
 			{
 				T entry = houseHolderFactor * this->y.Sum();
+#if MATRIX_LIBRARY == EIGEN_FLAG
+				this->x = (entry - this->y.array()).matrix();
+#else
 				for (int i = 0; i < this->y.Length(); i++)
 					this->x(i) = entry - this->y(i);
+#endif
 			}
 
 		private:

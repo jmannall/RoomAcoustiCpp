@@ -680,7 +680,7 @@ namespace RAC
 
         void RayPencil::moveOrigin(const Vec3& origin)
         {
-            rays.O.noalias() += origin;
+            rays.O = origin;
 
 #if PLUCKER_KERNEL
             rays.compute_moments();
