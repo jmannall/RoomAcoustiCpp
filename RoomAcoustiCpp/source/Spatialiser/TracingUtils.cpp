@@ -1,26 +1,205 @@
 
 #include <cassert>
-
+#include <omp.h>
 #include "Spatialiser/TracingUtils.h"
+
+#include <chrono>
+
+// Enable OMP at the triangle level. Using up to 4 threads can result in an improvement, but it is nowhere near as much as USE_OMP_RAYTRACE_ALL
+#define USE_OMP_RAYTRACE_SINGLE            ( 0 )
+
+// Enable OMP at the traceAll() level. This has a significant improvement, even up to 8 or more threads. Note: it only optimizes one version of the traceAll() for now
+// since the other has data dependencies.
+#define USE_OMP_RAYTRACE_ALL               ( 1 )
+
+// Dumps some stats about the trace function time
+#define PROFILE_TRACE_ALL                  ( 0 )
 
 namespace RAC
 {
     using namespace Common;
-	namespace Spatialiser
-	{
+    namespace Spatialiser
+    {
         // ------------------------ Intersection kernels ------------------------
-        
+
+        bool intersection_test_internal(
+            const TriangleMeshSoA& triangles, int triangleIndex,
+            const Vec3& O, const Vec3& D, const Vec3& M,
+            Real& distance, Real& cosine)
+        {
+			// Users should test the return result, but default the results to qNaN just in case
+			distance = qNaN;
+			cosine = qNaN;
+
+			// Sanity check: the requested triangle must exist.
+			assert(triangleIndex < triangles.size());
+
+			// Load plane data into locals.
+			const Vec3 n = triangles.n[triangleIndex];
+			const Real d0 = triangles.d0[triangleIndex];
+
+#if PLUCKER_KERNEL
+#if LEAN_PLUCKER
+			// TODO: Implement Lean Plücker
+#else // not LEAN_PLUCKER
+			// Load "fat Plücker" triangle data into locals.
+			const Vec3& edgeABDirection = triangles.edgeABDirection[triangleIndex];
+			const Vec3& edgeBCDirection = triangles.edgeBCDirection[triangleIndex];
+			const Vec3& edgeCADirection = triangles.edgeCADirection[triangleIndex];
+			const Vec3& edgeABWedge_AcrossB = triangles.edgeABWedge_AcrossB[triangleIndex];
+			const Vec3& edgeBCWedge_BcrossC = triangles.edgeBCWedge_BcrossC[triangleIndex];
+			const Vec3& edgeCAWedge_CcrossA = triangles.edgeCAWedge_CcrossA[triangleIndex];
+			// ---------------------------------------------------------------------
+			// 1) Facing test: ensure the triangle faces the ray origin.
+			//    faceNum = dot(n, O) - d0; require faceNum > eps_face
+			// ---------------------------------------------------------------------
+			const Real faceNum = n.dot(O) - d0;
+			if (faceNum < EPS_FACING) {
+				return false;
+			}
+
+			// ---------------------------------------------------------------------
+			// 2) Plücker side predicates for the three edges.
+			//    For an edge PQ with direction e = Q - P and wedge W = P × Q,
+			//    side = dot(D, W) + dot(M, e), where M = O × D (precomputed).
+			//
+			//    We inline the dot products (a0*b0 + a1*b1 + a2*b2) to avoid the
+			//    overhead of tiny helper calls in this scalar, hot function.
+			// ---------------------------------------------------------------------
+			const Real sAB = D.dot(edgeABWedge_AcrossB) +
+				M.dot(edgeABDirection);
+
+			const Real sBC = D.dot(edgeBCWedge_BcrossC) +
+				M.dot(edgeBCDirection);
+
+			// ---------------------------------------------------------------------
+			// Early-out on mismatched signs for the first two edges.
+			// This matches the original logic exactly (edges included via epsilon).
+			// ---------------------------------------------------------------------
+			{
+				const bool bothNonNeg = (sAB >= -EPS_EDGE) && (sBC >= -EPS_EDGE);
+				const bool bothNonPos = (sAB <= EPS_EDGE) && (sBC <= EPS_EDGE);
+				if (!(bothNonNeg || bothNonPos)) {
+					return false;
+				}
+			}
+
+			const Real sCA =
+				D.dot(edgeCAWedge_CcrossA) +
+				M.dot(edgeCADirection);
+
+			// Keep the exact inclusion rule (edges included) via the provided helper.
+			if (!same_sign_with_zero_included(sAB, sBC, sCA, EPS_EDGE)) {
+				return false;
+			}
+
+			// ---------------------------------------------------------------------
+			// 3) Compute the line parameter t with the triangle plane.
+			//    No t>0 constraint (this is line–triangle, not ray–triangle).
+			//    If the line is near-parallel to the plane, report no hit (NaN).
+			// ---------------------------------------------------------------------
+			const Real denom = n.dot(D);        // dot(n, D)
+			if (std::abs(denom) <= EPS_PARALLEL) {
+				return false;
+			}
+			else {
+				distance = -faceNum / denom;
+				cosine = std::abs(denom);
+			}
+			return true;
+#endif // end LEAN_PLUCKER
+#else // not PLUCKER_KERNEL
+			// Load "Möller–Trumbore" triangle data into locals.
+			const Vec3& A = triangles.A[triangleIndex];
+			const Vec3& e1 = triangles.edge1[triangleIndex];
+			const Vec3& e2 = triangles.edge2[triangleIndex];
+
+			// ---------------------------------------------------------------------
+			// 1) Facing test.
+			//    faceNum = dot(n, O) - d0 > eps_face
+			// ---------------------------------------------------------------------
+			const Real faceNum = n.dot(O) - d0;
+			if (faceNum < EPS_FACING) {
+				return false;
+			}
+
+			// ---------------------------------------------------------------------
+			// 2) Möller–Trumbore barycentric numerators (unnormalized).
+			//
+			//    pvec = D × e2
+			//    det  = e1 · pvec  (also equals dot(n, D))
+			//    tvec = O - A
+			//    u_num = dot(tvec, pvec)
+			//    qvec  = tvec × e1
+			//    v_num = dot(D, qvec)
+			//    w_num = det - u_num - v_num   (since u+v+w = 1)
+			//
+			// We perform *sign* checks on (u_num, v_num, w_num) with an absolute
+			// epsilon, for inclusive-edge behavior (no division by det => no sign flip issues).
+			// ---------------------------------------------------------------------
+
+			// pvec = D × e2
+			const Vec3 pvec = D.cross(e2);
+
+			// det = e1 · pvec  (also equals dot(n, D))
+			const Real det = e1.dot(pvec);
+
+			// tvec = O - A
+			const Vec3 tvec = O - A;
+
+			// u_num = dot(tvec, pvec)
+			const Real u_num = tvec.dot(pvec);
+
+			// qvec = tvec × e1
+			const Vec3 qvec = tvec.cross(e1);
+
+			// v_num = dot(D, qvec)
+			const Real v_num = D.dot(qvec);
+
+			// Early-out on u & v having opposite signs (edges included via epsilon).
+			{
+				const bool bothNonNeg = (u_num >= -EPS_EDGE) && (v_num >= -EPS_EDGE);
+				const bool bothNonPos = (u_num <= EPS_EDGE) && (v_num <= EPS_EDGE);
+				if (!(bothNonNeg || bothNonPos)) {
+					return false;
+				}
+			}
+
+			// w_num = det - u_num - v_num
+			const Real w_num = det - (u_num + v_num);
+
+			// All three barycentric numerators must share the same sign (edges included).
+			if (!same_sign_with_zero_included(u_num, v_num, w_num, EPS_EDGE)) {
+				return false;
+			}
+
+			// ---------------------------------------------------------------------
+			// 3) Parallel test + compute t.
+			//    If |det| is tiny, treat as parallel (report no hit).
+			//    Otherwise: t = (e2 · qvec) / det
+			//
+			// NOTE: We postpone the parallel test until here to mirror the control
+			// flow of your Plücker kernel (inside first, then parallel); we never
+			// divide by det before checking it.
+			// ---------------------------------------------------------------------
+			if (std::abs(det) <= EPS_PARALLEL) {
+				return false;
+			}
+			else {
+				const Real t_num = e2.dot(qvec);; // e2 · qvec
+				distance = t_num / det;
+				cosine = std::abs(n.dot(D));
+			}
+			return true;
+#endif // end PLUCKER_KERNEL
+        }
+
+
         bool intersection_test(
             const TriangleMeshSoA& triangles, int triangleIndex,
             const RayBundleSoA& rays, int rayIndex,
             Real& distance, Real& cosine)
         {
-            // Users should test the return result, but default the results to qNaN just in case
-            distance = qNaN;
-            cosine = qNaN;
-
-            // Sanity check: the requested triangle must exist.
-            assert(triangleIndex < triangles.size());
             // Sanity check: the requested ray must exist.
             assert(rayIndex < rays.size());
 
@@ -28,163 +207,13 @@ namespace RAC
             const Vec3& O = rays.O[rayIndex];
             const Vec3& D = rays.D[rayIndex];
 
-            // Load plane data into locals.
-            const Vec3& n = triangles.n[triangleIndex];
-            const Real d0 = triangles.d0[triangleIndex];
-
 #if PLUCKER_KERNEL
-#if LEAN_PLUCKER
-            // TODO: Implement Lean Plücker
-#else // not LEAN_PLUCKER
-            // Load ray moments into locals.
-            const Vec3& M = rays.M[rayIndex];
+			const Vec3& M = rays.M[rayIndex];
+#else
+            static Vec3 M(0.0, 0.0, 0.0);
+#endif
 
-            // Load "fat Plücker" triangle data into locals.
-            const Vec3& edgeABDirection = triangles.edgeABDirection[triangleIndex];
-            const Vec3& edgeBCDirection = triangles.edgeBCDirection[triangleIndex];
-            const Vec3& edgeCADirection = triangles.edgeCADirection[triangleIndex];
-            const Vec3& edgeABWedge_AcrossB = triangles.edgeABWedge_AcrossB[triangleIndex];
-            const Vec3& edgeBCWedge_BcrossC = triangles.edgeBCWedge_BcrossC[triangleIndex];
-            const Vec3& edgeCAWedge_CcrossA = triangles.edgeCAWedge_CcrossA[triangleIndex];
-
-            // ---------------------------------------------------------------------
-            // 1) Facing test: ensure the triangle faces the ray origin.
-            //    faceNum = dot(n, O) - d0; require faceNum > eps_face
-            // ---------------------------------------------------------------------
-            const Real faceNum = n.dot(O) - d0;
-            if (faceNum < EPS_FACING) {
-                return false;
-            }
-
-            // ---------------------------------------------------------------------
-            // 2) Plücker side predicates for the three edges.
-            //    For an edge PQ with direction e = Q - P and wedge W = P × Q,
-            //    side = dot(D, W) + dot(M, e), where M = O × D (precomputed).
-            //
-            //    We inline the dot products (a0*b0 + a1*b1 + a2*b2) to avoid the
-            //    overhead of tiny helper calls in this scalar, hot function.
-            // ---------------------------------------------------------------------
-            const Real sAB = D.dot(edgeABWedge_AcrossB) +
-						  	 M.dot(edgeABDirection);
-
-            const Real sBC = D.dot(edgeBCWedge_BcrossC) +
-			                 M.dot(edgeBCDirection);
-
-            // ---------------------------------------------------------------------
-            // Early-out on mismatched signs for the first two edges.
-            // This matches the original logic exactly (edges included via epsilon).
-            // ---------------------------------------------------------------------
-            {
-                const bool bothNonNeg = (sAB >= -EPS_EDGE) && (sBC >= -EPS_EDGE);
-                const bool bothNonPos = (sAB <= EPS_EDGE) && (sBC <= EPS_EDGE);
-                if (!(bothNonNeg || bothNonPos)) {
-					return false;
-                }
-            }
-
-            const Real sCA = D.dot(edgeCAWedge_CcrossA) +
-				                M.dot(edgeCADirection);
-
-            // Keep the exact inclusion rule (edges included) via the provided helper.
-            if (!same_sign_with_zero_included(sAB, sBC, sCA, EPS_EDGE)) {
-				return false;
-            }
-
-            // ---------------------------------------------------------------------
-            // 3) Compute the line parameter t with the triangle plane.
-            //    No t>0 constraint (this is line–triangle, not ray–triangle).
-            //    If the line is near-parallel to the plane, report no hit (NaN).
-            // ---------------------------------------------------------------------
-            const Real denom = n.dot(D);  // dot(n, D)
-            if (std::abs(denom) <= EPS_PARALLEL) {
-				return false;
-            }
-            else {
-                distance = -faceNum / denom;
-                cosine = std::abs(denom);
-            }
-            return true;
-#endif // end LEAN_PLUCKER
-#else // not PLUCKER_KERNEL
-            // Load "Möller–Trumbore" triangle data into locals.
-            const Vec3& A = triangles.A[triangleIndex];
-			const Vec3& e1 = triangles.edge1[triangleIndex];
-			const Vec3& e2 = triangles.edge2[triangleIndex];
-
-            // ---------------------------------------------------------------------
-            // 1) Facing test.
-            //    faceNum = dot(n, O) - d0 > eps_face
-            // ---------------------------------------------------------------------
-            const Real faceNum = n.dot(O) - d0;
-            if (faceNum < EPS_FACING) {
-                return false;
-            }
-
-            // ---------------------------------------------------------------------
-            // 2) Möller–Trumbore barycentric numerators (unnormalized).
-            //
-            //    pvec = D × e2
-            //    det  = e1 · pvec  (also equals dot(n, D))
-            //    tvec = O - A
-            //    u_num = dot(tvec, pvec)
-            //    qvec  = tvec × e1
-            //    v_num = dot(D, qvec)
-            //    w_num = det - u_num - v_num   (since u+v+w = 1)
-            //
-            // We perform *sign* checks on (u_num, v_num, w_num) with an absolute
-            // epsilon, for inclusive-edge behavior (no division by det => no sign flip issues).
-            // ---------------------------------------------------------------------
-
-            // pvec = D × e2
-            const Vec3 pvec = D.cross(e2);
-
-            // det = e1 · pvec  (also equals dot(n, D))
-            const Real det = e1.dot(pvec);
-
-            // tvec = O - A
-            const Vec3 tvec = O - A;
-
-            // u_num = dot(tvec, pvec)
-            const Real u_num = tvec.dot(pvec);
-
-            // qvec = tvec × e1
-            const Vec3 qvec = tvec.cross(e1);
-
-            // v_num = dot(D, qvec)
-            const Real v_num = D.dot(qvec);
-
-            // Early-out on u & v having opposite signs (edges included via epsilon).
-            {
-                const bool bothNonNeg = (u_num >= -EPS_EDGE) && (v_num >= -EPS_EDGE);
-                const bool bothNonPos = (u_num <= EPS_EDGE) && (v_num <= EPS_EDGE);
-                if (!(bothNonNeg || bothNonPos)) {
-					return false;
-                }
-            }
-
-            // w_num = det - u_num - v_num
-            const Real w_num = det - (u_num + v_num);
-
-            // All three barycentric numerators must share the same sign (edges included).
-            if (!same_sign_with_zero_included(u_num, v_num, w_num, EPS_EDGE)) {
-				return false;
-            }
-
-            // ---------------------------------------------------------------------
-            // 3) Parallel test + compute t.
-            //    If |det| is tiny, treat as parallel (report no hit).
-            //    Otherwise: t = (e2 · qvec) / det
-            // ---------------------------------------------------------------------
-            if (std::abs(det) <= EPS_PARALLEL) {
-				return false;
-            }
-            else {
-                const Real t_num = e2.dot(qvec);
-                distance = t_num / det;
-                cosine = std::abs(n.dot(D));
-            }
-            return true;
-#endif // end PLUCKER_KERNEL
+            return intersection_test_internal(triangles, triangleIndex, O, D, M, distance, cosine);
         }
 
         bool intersection_test(
@@ -192,23 +221,12 @@ namespace RAC
             const RayPencilSoA& rays, int rayIndex,
             Real& distance, Real& cosine)
         {
-			// Users should test the return result, but default the results to qNaN just in case
-			distance = qNaN;
-			cosine = qNaN;
-
-            // Sanity check: the requested triangle must exist.
-            assert(triangleIndex < triangles.size());
             // Sanity check: the requested ray must exist.
             assert(rayIndex < rays.size());
 
             // Load ray data into locals.
             const Vec3& O = rays.O;
-
         	const Vec3& D = rays.D[rayIndex];
-
-            // Load plane data into locals.
-            const Vec3& n = triangles.n[triangleIndex];
-            const Real d0 = triangles.d0[triangleIndex];
 
 #if PLUCKER_KERNEL
 #if LEAN_PLUCKER
@@ -217,179 +235,53 @@ namespace RAC
             // Load ray moments into locals.
             const Vec3 &M = rays.M[rayIndex];
 
-            // Load "fat Plücker" triangle data into locals.
-            const Vec3& edgeABDirection = triangles.edgeABDirection[triangleIndex];
-            const Vec3& edgeBCDirection = triangles.edgeBCDirection[triangleIndex];
-            const Vec3& edgeCADirection = triangles.edgeCADirection[triangleIndex];
-            const Vec3& edgeABWedge_AcrossB = triangles.edgeABWedge_AcrossB[triangleIndex];
-            const Vec3& edgeBCWedge_BcrossC = triangles.edgeBCWedge_BcrossC[triangleIndex];
-            const Vec3& edgeCAWedge_CcrossA = triangles.edgeCAWedge_CcrossA[triangleIndex];
-
-            // ---------------------------------------------------------------------
-            // 1) Facing test: ensure the triangle faces the ray origin.
-            //    faceNum = dot(n, O) - d0; require faceNum > eps_face
-            // ---------------------------------------------------------------------
-            const Real faceNum = n.dot(O) - d0;
-            if (faceNum < EPS_FACING) {
-                return false;
-            }
-
-            // ---------------------------------------------------------------------
-            // 2) Plücker side predicates for the three edges.
-            //    For an edge PQ with direction e = Q - P and wedge W = P × Q,
-            //    side = dot(D, W) + dot(M, e), where M = O × D (precomputed).
-            //
-            //    We inline the dot products (a0*b0 + a1*b1 + a2*b2) to avoid the
-            //    overhead of tiny helper calls in this scalar, hot function.
-            // ---------------------------------------------------------------------
-            const Real sAB = D.dot(edgeABWedge_AcrossB) +
-			                 M.dot(edgeABDirection);
-
-            const Real sBC = D.dot(edgeBCWedge_BcrossC) +
-			                 M.dot(edgeBCDirection);
-
-            // ---------------------------------------------------------------------
-            // Early-out on mismatched signs for the first two edges.
-            // This matches the original logic exactly (edges included via epsilon).
-            // ---------------------------------------------------------------------
-            {
-                const bool bothNonNeg = (sAB >= -EPS_EDGE) && (sBC >= -EPS_EDGE);
-                const bool bothNonPos = (sAB <= EPS_EDGE) && (sBC <= EPS_EDGE);
-                if (!(bothNonNeg || bothNonPos)) {
-					return false;
-                }
-            }
-
-            const Real sCA = D.dot(edgeCAWedge_CcrossA) +
-							 M.dot(edgeCADirection);
-
-            // Keep the exact inclusion rule (edges included) via the provided helper.
-            if (!same_sign_with_zero_included(sAB, sBC, sCA, EPS_EDGE)) {
-				return false;
-            }
-
-            // ---------------------------------------------------------------------
-            // 3) Compute the line parameter t with the triangle plane.
-            //    No t>0 constraint (this is line–triangle, not ray–triangle).
-            //    If the line is near-parallel to the plane, report no hit (NaN).
-            // ---------------------------------------------------------------------
-            const Real denom = n.dot(D); // dot(n, D)
-            if (std::abs(denom) <= EPS_PARALLEL) {
-				return false;
-            }
-            else {
-                distance = -faceNum / denom;
-                cosine = std::abs(denom);
-            }
-            return true;
 #endif // end LEAN_PLUCKER
 #else // not PLUCKER_KERNEL
-            // Load "Möller–Trumbore" triangle data into locals.
-            const Vec3& A = triangles.A[triangleIndex];
-            const Vec3& e1 = triangles.edge1[triangleIndex];
-            const Vec3& e2 = triangles.edge2[triangleIndex];
+            static const Vec3 M(0.0, 0.0, 0.0);
+#endif
 
-            // ---------------------------------------------------------------------
-            // 1) Facing test.
-            //    faceNum = dot(n, O) - d0 > eps_face
-            // ---------------------------------------------------------------------
-            const Real faceNum = n.dot(O) - d0;
-            if (faceNum < EPS_FACING) {
-				return false;
-            }
-
-            // ---------------------------------------------------------------------
-            // 2) Möller–Trumbore barycentric numerators (unnormalized).
-            //
-            //    pvec = D × e2
-            //    det  = e1 · pvec  (also equals dot(n, D))
-            //    tvec = O - A
-            //    u_num = dot(tvec, pvec)
-            //    qvec  = tvec × e1
-            //    v_num = dot(D, qvec)
-            //    w_num = det - u_num - v_num   (since u+v+w = 1)
-            //
-            // We perform *sign* checks on (u_num, v_num, w_num) with an absolute
-            // epsilon, for inclusive-edge behavior (no division by det => no sign flip issues).
-            // ---------------------------------------------------------------------
-
-            // pvec = D × e2
-            const Vec3 pvec = D.cross(e2);
-
-            // det = e1 · pvec  (also equals dot(n, D))
-            const Real det = e1.dot(pvec);
-
-            // tvec = O - A
-            const Vec3 tvec = O - A;
-
-            // u_num = dot(tvec, pvec)
-            const Real u_num = tvec.dot(pvec);
-
-            // qvec = tvec × e1
-            const Vec3 qvec = tvec.cross(e1);
-
-            // v_num = dot(D, qvec)
-            const Real v_num = D.dot(qvec);
-
-            // Early-out on u & v having opposite signs (edges included via epsilon).
-            {
-                const bool bothNonNeg = (u_num >= -EPS_EDGE) && (v_num >= -EPS_EDGE);
-                const bool bothNonPos = (u_num <= EPS_EDGE) && (v_num <= EPS_EDGE);
-                if (!(bothNonNeg || bothNonPos)) {
-					return false;
-                }
-            }
-
-            // w_num = det - u_num - v_num
-            const Real w_num = det - (u_num + v_num);
-
-            // All three barycentric numerators must share the same sign (edges included).
-            if (!same_sign_with_zero_included(u_num, v_num, w_num, EPS_EDGE)) {
-				return false;
-            }
-
-            // ---------------------------------------------------------------------
-            // 3) Parallel test + compute t.
-            //    If |det| is tiny, treat as parallel (report no hit).
-            //    Otherwise: t = (e2 · qvec) / det
-            //
-            // NOTE: We postpone the parallel test until here to mirror the control
-            // flow of your Plücker kernel (inside first, then parallel); we never
-            // divide by det before checking it.
-            // ---------------------------------------------------------------------
-            if (std::abs(det) <= EPS_PARALLEL) {
-				return false;
-            }
-            else {
-                const Real t_num = e2.dot(qvec);
-                distance = t_num / det;
-                cosine = std::abs(n.dot(D));
-            }
-            return true;
-#endif // end PLUCKER_KERNEL
+			return intersection_test_internal(triangles, triangleIndex, O, D, M, distance, cosine);
         }
+
+		struct SingleRay
+		{
+			Vec3 rayOrigin;
+			Vec3 rayDirection;
+		};
+
+        // This is a "fake" intersection_test that has the same signature as the others to reduce the code
+		static bool intersection_test(
+			const TriangleMeshSoA& triangles, int triangleIndex,
+			const SingleRay &ray, int rayIndexNotUsed,
+			Real& distance, Real& cosine)
+		{
+			// Load ray data into locals.
+			const Vec3& O = ray.rayOrigin;
+			const Vec3& D = ray.rayDirection;
+
+#if PLUCKER_KERNEL
+#if LEAN_PLUCKER
+			// TODO: Implement Lean Plücker
+#else // not LEAN_PLUCKER
+			// Compute ray moments and load into locals.
+			const Vec3 rayMoment = rayOrigin.cross(rayDirection);
+			const Vec3& M = rayMoment;
+#endif // end LEAN_PLUCKER
+#else // not PLUCKER_KERNE
+			static const Vec3 M(0.0, 0.0, 0.0);
+#endif // end PLUCKER_KERNEL
+
+			return intersection_test_internal(triangles, triangleIndex, O, D, M, distance, cosine);
+		}
 
         bool intersection_test(
             const TriangleMeshSoA& triangles, int triangleIndex,
             const Vec3& rayOrigin, const Vec3& rayDirection,
             Real& distance, Real& cosine)
         {
-			// Users should test the return result, but default the results to qNaN just in case
-			distance = qNaN;
-			cosine = qNaN;
-
-            // Sanity check: the requested triangle must exist.
-            assert(triangleIndex < triangles.size());
-            // Sanity check: the requested ray must exist.
-            // assert(rayIndex < rays.size());
-
             // Load ray data into locals.
             const Vec3& O = rayOrigin;
             const Vec3& D = rayDirection;
-
-            // Load plane data into locals.
-            const Vec3 n = triangles.n[triangleIndex];
-            const Real d0 = triangles.d0[triangleIndex];
 
 #if PLUCKER_KERNEL
 #if LEAN_PLUCKER
@@ -398,160 +290,155 @@ namespace RAC
             // Compute ray moments and load into locals.
             const Vec3 rayMoment = rayOrigin.cross(rayDirection);
             const Vec3& M = rayMoment;
-
-            // Load "fat Plücker" triangle data into locals.
-            const Vec3& edgeABDirection = triangles.edgeABDirection[triangleIndex];
-            const Vec3& edgeBCDirection = triangles.edgeBCDirection[triangleIndex];
-            const Vec3& edgeCADirection = triangles.edgeCADirection[triangleIndex];
-            const Vec3& edgeABWedge_AcrossB = triangles.edgeABWedge_AcrossB[triangleIndex];
-            const Vec3& edgeBCWedge_BcrossC = triangles.edgeBCWedge_BcrossC[triangleIndex];
-            const Vec3& edgeCAWedge_CcrossA = triangles.edgeCAWedge_CcrossA[triangleIndex];
-            // ---------------------------------------------------------------------
-            // 1) Facing test: ensure the triangle faces the ray origin.
-            //    faceNum = dot(n, O) - d0; require faceNum > eps_face
-            // ---------------------------------------------------------------------
-            const Real faceNum = n.dot(O) - d0;
-            if (faceNum < EPS_FACING) {
-				return false;
-            }
-
-            // ---------------------------------------------------------------------
-            // 2) Plücker side predicates for the three edges.
-            //    For an edge PQ with direction e = Q - P and wedge W = P × Q,
-            //    side = dot(D, W) + dot(M, e), where M = O × D (precomputed).
-            //
-            //    We inline the dot products (a0*b0 + a1*b1 + a2*b2) to avoid the
-            //    overhead of tiny helper calls in this scalar, hot function.
-            // ---------------------------------------------------------------------
-            const Real sAB = D.dot(edgeABWedge_AcrossB) +
-								M.dot(edgeABDirection);
-
-            const Real sBC = D.dot(edgeBCWedge_BcrossC) +
-				                M.dot(edgeBCDirection);
-
-            // ---------------------------------------------------------------------
-            // Early-out on mismatched signs for the first two edges.
-            // This matches the original logic exactly (edges included via epsilon).
-            // ---------------------------------------------------------------------
-            {
-                const bool bothNonNeg = (sAB >= -EPS_EDGE) && (sBC >= -EPS_EDGE);
-                const bool bothNonPos = (sAB <= EPS_EDGE) && (sBC <= EPS_EDGE);
-                if (!(bothNonNeg || bothNonPos)) {
-					return false;
-                }
-            }
-
-            const Real sCA =
-			                D.dot(edgeCAWedge_CcrossA) +
-			                M.dot(edgeCADirection);
-
-            // Keep the exact inclusion rule (edges included) via the provided helper.
-            if (!same_sign_with_zero_included(sAB, sBC, sCA, EPS_EDGE)) {
-				return false;
-            }
-
-            // ---------------------------------------------------------------------
-            // 3) Compute the line parameter t with the triangle plane.
-            //    No t>0 constraint (this is line–triangle, not ray–triangle).
-            //    If the line is near-parallel to the plane, report no hit (NaN).
-            // ---------------------------------------------------------------------
-            const Real denom = n.dot(D);        // dot(n, D)
-            if (std::abs(denom) <= EPS_PARALLEL) {
-                return false;
-            }
-            else {
-                distance = -faceNum / denom;
-                cosine = std::abs(denom);
-            }
-            return true;
 #endif // end LEAN_PLUCKER
-#else // not PLUCKER_KERNEL
-            // Load "Möller–Trumbore" triangle data into locals.
-            const Vec3& A = triangles.A[triangleIndex];
-            const Vec3& e1 = triangles.edge1[triangleIndex];
-            const Vec3& e2 = triangles.edge2[triangleIndex];
-
-            // ---------------------------------------------------------------------
-            // 1) Facing test.
-            //    faceNum = dot(n, O) - d0 > eps_face
-            // ---------------------------------------------------------------------
-            const Real faceNum = n.dot(O) - d0;
-            if (faceNum < EPS_FACING) {
-				return false;
-            }
-
-            // ---------------------------------------------------------------------
-            // 2) Möller–Trumbore barycentric numerators (unnormalized).
-            //
-            //    pvec = D × e2
-            //    det  = e1 · pvec  (also equals dot(n, D))
-            //    tvec = O - A
-            //    u_num = dot(tvec, pvec)
-            //    qvec  = tvec × e1
-            //    v_num = dot(D, qvec)
-            //    w_num = det - u_num - v_num   (since u+v+w = 1)
-            //
-            // We perform *sign* checks on (u_num, v_num, w_num) with an absolute
-            // epsilon, for inclusive-edge behavior (no division by det => no sign flip issues).
-            // ---------------------------------------------------------------------
-
-            // pvec = D × e2
-            const Vec3 pvec = D.cross(e2);
-
-            // det = e1 · pvec  (also equals dot(n, D))
-            const Real det = e1.dot(pvec);
-
-            // tvec = O - A
-            const Vec3 tvec = O - A;
-
-            // u_num = dot(tvec, pvec)
-            const Real u_num = tvec.dot(pvec);
-
-            // qvec = tvec × e1
-            const Vec3 qvec = tvec.cross(e1);
-
-            // v_num = dot(D, qvec)
-            const Real v_num = D.dot(qvec);
-
-            // Early-out on u & v having opposite signs (edges included via epsilon).
-            {
-                const bool bothNonNeg = (u_num >= -EPS_EDGE) && (v_num >= -EPS_EDGE);
-                const bool bothNonPos = (u_num <= EPS_EDGE) && (v_num <= EPS_EDGE);
-                if (!(bothNonNeg || bothNonPos)) {
-					return false;
-                }
-            }
-
-            // w_num = det - u_num - v_num
-            const Real w_num = det - (u_num + v_num);
-
-            // All three barycentric numerators must share the same sign (edges included).
-            if (!same_sign_with_zero_included(u_num, v_num, w_num, EPS_EDGE)) {
-				return false;
-            }
-
-            // ---------------------------------------------------------------------
-            // 3) Parallel test + compute t.
-            //    If |det| is tiny, treat as parallel (report no hit).
-            //    Otherwise: t = (e2 · qvec) / det
-            //
-            // NOTE: We postpone the parallel test until here to mirror the control
-            // flow of your Plücker kernel (inside first, then parallel); we never
-            // divide by det before checking it.
-            // ---------------------------------------------------------------------
-            if (std::abs(det) <= EPS_PARALLEL) {
-				return false;
-            }
-            else {
-                const Real t_num = e2.dot(qvec);; // e2 · qvec
-                distance = t_num / det;
-                cosine = std::abs(n.dot(D));
-            }
-            return true;
+#else // not PLUCKER_KERNE
+            static const Vec3 M(0.0, 0.0, 0.0);
 #endif // end PLUCKER_KERNEL
+
+			return intersection_test_internal(triangles, triangleIndex, O, D, M, distance, cosine);
         }
 
         // ------------------------ Tracing loop kernels ------------------------
+
+        template <class TRayType>
+        void trace_ray_internal(const TriangleMeshSoA& triangles, const TRayType& rays, int rayIndex,
+            int& patchIdFront, Real& distanceFront, Real& cosineFront,
+            int& patchIdBack, Real& distanceBack, Real& cosineBack,
+            int ignoredTriangleIndex)
+        {
+			// Initialize per-ray front/back bests.
+			patchIdFront = -1;
+			patchIdBack = -1;
+			distanceFront = INFINITY;
+			distanceBack = -INFINITY;
+			cosineFront = qNaN;
+			cosineBack = qNaN;
+
+#if USE_OMP_RAYTRACE_SINGLE
+            constexpr int WorkerBlocks = 4;
+            const int BlockSize = (triangles.size() + WorkerBlocks - 1) / WorkerBlocks;
+
+            struct Instance {
+                int patchIdFront = -1;
+                int patchIdBack = -1;
+                Real distanceFront = INFINITY;
+                Real distanceBack = -INFINITY;
+                Real cosineFront = qNaN;
+                Real cosineBack = qNaN;
+            };
+            Instance instances[WorkerBlocks];
+
+			#pragma omp parallel for num_threads(WorkerBlocks) shared(instances)
+            for (int workerIndex = 0; workerIndex < WorkerBlocks; ++workerIndex) {
+                Instance& instance = instances[workerIndex];
+
+				const int start = workerIndex * BlockSize;
+				const int end = std::min(start + BlockSize, triangles.size());
+
+#define TRACE_INSTANCE(n)       instance.n
+
+#else
+			{
+
+                constexpr int start = 00;
+                const int end = triangles.size();
+#define TRACE_INSTANCE(n)       n
+
+#endif
+
+                for (int i = start; i < end; ++i) {
+                    if (i == ignoredTriangleIndex) // Ignore this triangle
+                        continue;
+
+                    // Buffers to retrieve individual check results.
+                    Real currentDist, currentCos;
+
+                    if (!intersection_test(triangles, i, rays, rayIndex, currentDist, currentCos))
+                        continue;
+
+                    if ((currentDist + EPS_ZFIGHT < TRACE_INSTANCE(distanceBack)) || (currentDist - EPS_ZFIGHT > TRACE_INSTANCE(distanceFront)))
+                        continue; // Outside of current best range
+                    if (std::abs(currentDist) < EPS_SELFHIT)
+                        continue; // Too close to origin
+
+                    // Valid hit
+                    if (currentDist > 0.0) {
+                        if (std::abs(currentDist - TRACE_INSTANCE(distanceFront)) < EPS_ZFIGHT) {
+                            // Z-fighting, lower triangle index wins.
+                            if (i < TRACE_INSTANCE(patchIdFront)) {
+                                TRACE_INSTANCE(patchIdFront) = triangles.patchId[i];
+                                TRACE_INSTANCE(distanceFront) = currentDist;
+                                TRACE_INSTANCE(cosineFront) = currentCos;
+                            } // else {keep the previous best}
+                        }
+                        else {
+                            TRACE_INSTANCE(patchIdFront) = triangles.patchId[i];
+                            TRACE_INSTANCE(distanceFront) = currentDist;
+                            TRACE_INSTANCE(cosineFront) = currentCos;
+                        }
+                    }
+                    else {
+                        if (std::abs(currentDist - TRACE_INSTANCE(distanceBack)) < EPS_ZFIGHT) {
+                            // Z-fighting, lower triangle index wins
+                            if (i < TRACE_INSTANCE(patchIdFront)) {
+                                TRACE_INSTANCE(patchIdBack) = triangles.patchId[i];
+                                TRACE_INSTANCE(distanceBack) = currentDist;
+                                TRACE_INSTANCE(cosineBack) = currentCos;
+                            } // else {keep the previous best}
+                        }
+                        else {
+                            TRACE_INSTANCE(patchIdBack) = triangles.patchId[i];
+                            TRACE_INSTANCE(distanceBack) = currentDist;
+                            TRACE_INSTANCE(cosineBack) = currentCos;
+                        }
+                    }
+                }
+			}
+
+#if USE_OMP_RAYTRACE_SINGLE
+			// find the best candidate
+		   for (int workerIndex = 0; workerIndex < WorkerBlocks; ++workerIndex)
+            {
+				const Instance& instance = instances[workerIndex];
+                if (!std::isinf(instance.distanceFront)) 
+                {
+                    if (std::isinf(distanceFront) || distanceFront > instance.distanceFront)
+                    {
+                        distanceFront = instance.distanceFront;
+                        cosineFront = instance.cosineFront;
+                        patchIdFront = instance.patchIdFront;
+                    }
+                }
+				if (!std::isinf(instance.distanceBack)) 
+                {
+                    const Real absDistance = -instance.distanceBack;
+					if (std::isinf(distanceBack) || distanceBack > absDistance)
+					{
+						distanceBack = absDistance;
+						cosineBack = instance.cosineBack;
+						patchIdBack = instance.patchIdBack;
+					}
+				}
+
+            }
+#else
+			if (std::isinf(distanceFront)) {
+				// If it's still the initial INFINITY value, there was no valid hit at all.
+				patchIdFront = -1;
+				distanceFront = qNaN;
+				cosineFront = qNaN;
+			}
+			if (std::isinf(distanceBack)) {
+				// If it's still the initial -INFINITY value, there was no valid hit at all.
+				patchIdBack = -1;
+				distanceBack = qNaN;
+				cosineBack = qNaN;
+			}
+			else // If the distanceBack is valid, return its absolute value.
+				distanceBack = -distanceBack;
+#endif
+        }
+
 
         // TODO: The three definitions of this overloaded function are identical except for one line. I'm sure there's a more elegant way to do that.
         void trace_ray(
@@ -560,76 +447,7 @@ namespace RAC
             int& patchIdBack, Real& distanceBack, Real& cosineBack,
             int ignoredTriangleIndex)
         {
-            // Initialize per-ray front/back bests.
-            patchIdFront = -1;
-            patchIdBack = -1;
-            distanceFront = INFINITY;
-            distanceBack = -INFINITY;
-            cosineFront = qNaN;
-            cosineBack = qNaN;
-
-            // Buffers to retrieve individual check results.
-            Real currentDist, currentCos;
-
-            for (int i = 0; i < triangles.size(); ++i) {
-                if (i == ignoredTriangleIndex) // Ignore this triangle
-                    continue;
-
-                if (!intersection_test(triangles, i, rays, rayIndex, currentDist, currentCos))
-                    continue;
-
-                if ((currentDist + EPS_ZFIGHT < distanceBack) || (currentDist - EPS_ZFIGHT > distanceFront))
-                    continue; // Outside of current best range
-                if (std::abs(currentDist) < EPS_SELFHIT)
-                    continue; // Too close to origin
-
-                // Valid hit
-                if (currentDist > 0.0) {
-                    if (std::abs(currentDist - distanceFront) < EPS_ZFIGHT) {
-                        // Z-fighting, lower triangle index wins.
-                        if (i < patchIdFront) {
-                            patchIdFront = triangles.patchId[i];
-                            distanceFront = currentDist;
-                            cosineFront = currentCos;
-                        } // else {keep the previous best}
-                    }
-                    else {
-                        patchIdFront = triangles.patchId[i];
-                        distanceFront = currentDist;
-                        cosineFront = currentCos;
-                    }
-                }
-                else {
-                    if (std::abs(currentDist - distanceBack) < EPS_ZFIGHT) {
-                        // Z-fighting, lower triangle index wins
-                        if (i < patchIdFront) {
-                            patchIdBack = triangles.patchId[i];
-                            distanceBack = currentDist;
-                            cosineBack = currentCos;
-                        } // else {keep the previous best}
-                    }
-                    else {
-                        patchIdBack = triangles.patchId[i];
-                        distanceBack = currentDist;
-                        cosineBack = currentCos;
-                    }
-                }
-            }
-
-            if (std::isinf(distanceFront)) {
-                // If it's still the initial INFINITY value, there was no valid hit at all.
-                patchIdFront = -1;
-                distanceFront = qNaN;
-                cosineFront = qNaN;
-            }
-            if (std::isinf(distanceBack)) {
-                // If it's still the initial -INFINITY value, there was no valid hit at all.
-                patchIdBack = -1;
-                distanceBack = qNaN;
-                cosineBack = qNaN;
-            }
-            else // If the distanceBack is valid, return its absolute value.
-                distanceBack = -distanceBack;
+            trace_ray_internal(triangles, rays, rayIndex, patchIdFront, distanceFront, cosineFront, patchIdBack, distanceBack, cosineBack, ignoredTriangleIndex);
         }
 
         void trace_ray(
@@ -638,75 +456,7 @@ namespace RAC
             int& patchIdBack, Real& distanceBack, Real& cosineBack,
             int ignoredTriangleIndex)
         {
-            // Initialize per-ray front/back bests.
-            patchIdFront = -1;
-            patchIdBack = -1;
-            distanceFront = INFINITY;
-            distanceBack = -INFINITY;
-            cosineFront = qNaN;
-            cosineBack = qNaN;
-
-            // Buffers to retrieve individual check results.
-            Real currentDist, currentCos;
-
-            for (int i = 0; i < triangles.size(); ++i) {
-                if (i == ignoredTriangleIndex) // Ignore this triangle
-                    continue;
-
-                if (!intersection_test(triangles, i, rays, rayIndex, currentDist, currentCos))
-                    continue; // Invalid hit
-                if ((currentDist + EPS_ZFIGHT < distanceBack) || (currentDist - EPS_ZFIGHT > distanceFront))
-                    continue; // Outside of current best range
-                if (std::abs(currentDist) < EPS_SELFHIT)
-                    continue; // Too close to origin
-
-                // Valid hit
-                if (currentDist > 0.0) {
-                    if (std::abs(currentDist - distanceFront) < EPS_ZFIGHT) {
-                        // Z-fighting, lower triangle index wins.
-                        if (i < patchIdFront) {
-                            patchIdFront = triangles.patchId[i];
-                            distanceFront = currentDist;
-                            cosineFront = currentCos;
-                        } // else {keep the previous best}
-                    }
-                    else {
-                        patchIdFront = triangles.patchId[i];
-                        distanceFront = currentDist;
-                        cosineFront = currentCos;
-                    }
-                }
-                else {
-                    if (std::abs(currentDist - distanceBack) < EPS_ZFIGHT) {
-                        // Z-fighting, lower triangle index wins
-                        if (i < patchIdFront) {
-                            patchIdBack = triangles.patchId[i];
-                            distanceBack = currentDist;
-                            cosineBack = currentCos;
-                        } // else {keep the previous best}
-                    }
-                    else {
-                        patchIdBack = triangles.patchId[i];
-                        distanceBack = currentDist;
-                        cosineBack = currentCos;
-                    }
-                }
-            }
-
-            if (std::isinf(distanceFront)) {
-                // If it's still the initial INFINITY value, there was no valid hit at all.
-                patchIdFront = -1;
-                distanceFront = qNaN;
-                cosineFront = qNaN;
-            }
-            if (std::isinf(distanceBack)) {
-                // If it's still the initial -INFINITY value, there was no valid hit at all.
-                patchIdBack = -1;
-                distanceBack = qNaN;
-                cosineBack = qNaN;
-            }
-            else // If the distanceBack is valid, return its absolute value.
-                distanceBack = -distanceBack;
+			trace_ray_internal(triangles, rays, rayIndex, patchIdFront, distanceFront, cosineFront, patchIdBack, distanceBack, cosineBack, ignoredTriangleIndex);
         }
 
         void trace_ray(
@@ -715,75 +465,7 @@ namespace RAC
             int& patchIdBack, Real& distanceBack, Real& cosineBack,
             int ignoredTriangleIndex)
         {
-            // Initialize per-ray front/back bests.
-            patchIdFront = -1;
-            patchIdBack = -1;
-            distanceFront = INFINITY;
-            distanceBack = -INFINITY;
-            cosineFront = qNaN;
-            cosineBack = qNaN;
-
-            // Buffers to retrieve individual check results.
-            Real currentDist, currentCos;
-
-            for (int i = 0; i < triangles.size(); ++i) {
-                if (i == ignoredTriangleIndex) // Ignore this triangle
-                    continue;
-
-                if (!intersection_test(triangles, i, rayOrigin, rayDirection, currentDist, currentCos))
-                    continue; // Invalid hit
-                if ((currentDist + EPS_ZFIGHT < distanceBack) || (currentDist - EPS_ZFIGHT > distanceFront))
-                    continue; // Outside of current best range
-                if (std::abs(currentDist) < EPS_SELFHIT)
-                    continue; // Too close to origin
-
-                // Valid hit
-                if (currentDist > 0.0) {
-                    if (std::abs(currentDist - distanceFront) < EPS_ZFIGHT) {
-                        // Z-fighting, lower triangle index wins.
-                        if (i < patchIdFront) {
-                            patchIdFront = triangles.patchId[i];
-                            distanceFront = currentDist;
-                            cosineFront = currentCos;
-                        } // else {keep the previous best}
-                    }
-                    else {
-                        patchIdFront = triangles.patchId[i];
-                        distanceFront = currentDist;
-                        cosineFront = currentCos;
-                    }
-                }
-                else {
-                    if (std::abs(currentDist - distanceBack) < EPS_ZFIGHT) {
-                        // Z-fighting, lower triangle index wins
-                        if (i < patchIdFront) {
-                            patchIdBack = triangles.patchId[i];
-                            distanceBack = currentDist;
-                            cosineBack = currentCos;
-                        } // else {keep the previous best}
-                    }
-                    else {
-                        patchIdBack = triangles.patchId[i];
-                        distanceBack = currentDist;
-                        cosineBack = currentCos;
-                    }
-                }
-            }
-
-            if (std::isinf(distanceFront)) {
-                // If it's still the initial INFINITY value, there was no valid hit at all.
-                patchIdFront = -1;
-                distanceFront = qNaN;
-                cosineFront = qNaN;
-            }
-            if (std::isinf(distanceBack)) {
-                // If it's still the initial -INFINITY value, there was no valid hit at all.
-                patchIdBack = -1;
-                distanceBack = qNaN;
-                cosineBack = qNaN;
-            }
-            else // If the distanceBack is valid, return its absolute value.
-                distanceBack = -distanceBack;
+            trace_ray_internal(triangles, SingleRay{ rayOrigin, rayDirection }, 0, patchIdFront, distanceFront, cosineFront, patchIdBack, distanceBack, cosineBack, ignoredTriangleIndex);
         }
 
         // ------------------------ RayBundle methods ------------------------
@@ -843,14 +525,25 @@ namespace RAC
 
         void RayBundle::traceAll(const TriangleMeshSoA& triangles)
         {
-            // Buffers for ray processing
-            int patchIdFront, patchIdBack;
-            Real distanceFront, distanceBack, cosineFront, cosineBack;
+#if PROFILE_TRACE_ALL
+			const auto startTime = std::chrono::high_resolution_clock::now();
 
+			static double total = 0.0;
+			static int count = 0;
+#endif
+
+#if USE_OMP_RAYTRACE_ALL
+			constexpr int WorkerThreads = 8;
+			#pragma omp parallel for num_threads(WorkerThreads)
+#endif
             for (int i = 0; i < numRays; ++i) {
                 // Skip rays that are already invalid.
                 if (std::isnan(radiance(i)))
                     continue;
+
+				// Buffers for ray processing
+				int patchIdFront, patchIdBack;
+				Real distanceFront, distanceBack, cosineFront, cosineBack;
 
                 trace_ray(
                     triangles, rays, i,
@@ -865,6 +558,14 @@ namespace RAC
                 latestDistance(i) = distanceFront;
                 latestCosine(i) = cosineFront;
             }
+
+#if PROFILE_TRACE_ALL
+			const auto endTime = std::chrono::high_resolution_clock::now();
+			const int uS = (int)std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime).count();
+			total += uS;
+			++count;
+			std::cout << std::format("RayBundle::traceAll: {}uS, average: {:.0f}\n", uS, total / count);
+#endif
         }
 
         void RayBundle::advanceAndReflect(const TriangleMeshSoA& triangles)
@@ -935,7 +636,7 @@ namespace RAC
             frontCosine = Vec<>::Zero(numRays);
             backCosine = Vec<>::Zero(numRays);
             frontpatchId = Vec<int>::Constant(numRays, -1);
-            backpatchId = Vec<int>::Constant(numRays, -1);
+            backPatchId = Vec<int>::Constant(numRays, -1);
         }
 
         RayPencil::RayPencil(int numDirections, bool hemisphereOnly)
@@ -954,7 +655,7 @@ namespace RAC
             frontCosine = Vec<>::Zero(numRays);
             backCosine = Vec<>::Zero(numRays);
             frontpatchId = Vec<int>::Constant(numRays, -1);
-            backpatchId = Vec<int>::Constant(numRays, -1);
+            backPatchId = Vec<int>::Constant(numRays, -1);
         }
 
         RayPencil::RayPencil(const std::vector<Vec3>& directions)
@@ -974,7 +675,7 @@ namespace RAC
             frontCosine = Vec<>::Zero(numRays);
             backCosine = Vec<>::Zero(numRays);
             frontpatchId = Vec<int>::Constant(numRays, -1);
-            backpatchId = Vec<int>::Constant(numRays, -1);
+            backPatchId = Vec<int>::Constant(numRays, -1);
         }
 
         void RayPencil::moveOrigin(const Vec3& origin)
@@ -990,16 +691,27 @@ namespace RAC
             frontCosine = Vec<>::Zero(numRays);
             backCosine = Vec<>::Zero(numRays);
             frontpatchId = Vec<int>::Constant(numRays, -1);
-            backpatchId = Vec<int>::Constant(numRays, -1);
+            backPatchId = Vec<int>::Constant(numRays, -1);
         }
 
         void RayPencil::traceAll(const TriangleMeshSoA& triangles)
         {
-            // Buffers for ray processing
-            int temp_frontpatchId, temp_backpatchId;
-            Real temp_frontDistance, temp_backDistance, temp_frontCosine, temp_backCosine;
+#if PROFILE_TRACE_ALL
+			const auto startTime = std::chrono::high_resolution_clock::now();
 
+			static double total = 0.0;
+			static int count = 0;
+#endif
+            
+#if USE_OMP_RAYTRACE_ALL
+            constexpr int WorkerThreads = 8;
+			#pragma omp parallel for num_threads(WorkerThreads)
+#endif
             for (int i = 0; i < numRays; ++i) {
+				// Buffers for ray processing
+				int temp_frontpatchId, temp_backpatchId;
+				Real temp_frontDistance, temp_backDistance, temp_frontCosine, temp_backCosine;
+
                 trace_ray(
                     triangles, rays, i,
                     temp_frontpatchId, temp_frontDistance, temp_frontCosine,
@@ -1008,10 +720,18 @@ namespace RAC
                 frontpatchId(i) = temp_frontpatchId;
                 frontDistance(i) = temp_frontDistance;
                 frontCosine(i) = temp_frontCosine;
-                backpatchId(i) = temp_backpatchId;
+                backPatchId(i) = temp_backpatchId;
                 backDistance(i) = temp_backDistance;
                 backCosine(i) = temp_backCosine;
             }
+
+#if PROFILE_TRACE_ALL
+			const auto endTime = std::chrono::high_resolution_clock::now();
+            const int uS = (int)std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime).count();
+            total += uS;
+            ++count;
+            std::cout << std::format("RayPencil::traceAll: {}uS, average: {:.0f}\n", uS, total / count);
+#endif
         }
         
         void RayPencil::clusterDirections(
@@ -1135,7 +855,7 @@ namespace RAC
             for (int i = 0; i < numRays; ++i)
             {
                 front(i) = frontpatchId(i);
-                back(i) = backpatchId(i);
+                back(i) = backPatchId(i);
             }
 
             if (exposeMirrorCopies)
@@ -1143,7 +863,7 @@ namespace RAC
                 // Append direct opposites
                 for (int i = 0; i < numRays; ++i)
                 {
-                    front(i + numRays) = backpatchId(i);
+                    front(i + numRays) = backPatchId(i);
                     back(i + numRays) = frontpatchId(i);
                 }
             }
