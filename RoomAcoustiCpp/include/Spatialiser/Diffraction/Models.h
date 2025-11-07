@@ -216,7 +216,7 @@ namespace RAC
 					/**
 					* @brief Default constructor with a flat frequency response and zero gain.
 					*/
-					FilterParameters() : gain(0.0), fc({ 45.0, 350.0, 2800.0, 21700.0 }), g({ 1.0, 1.0, 1.0, 1.0 }) {}
+					FilterParameters() : gain(0.0), fc(std::array<Real, 4>({ 45.0, 350.0, 2800.0, 21700.0 })), g(std::array<Real, 4>({ 1.0, 1.0, 1.0, 1.0 })) {}
 				};
 
 				/**
@@ -978,7 +978,7 @@ namespace RAC
 
 						Real plus = path.sData.t + path.rData.t;
 						Real minus = path.sData.t - path.rData.t;
-						theta = Parameters({ PI_1 + plus, PI_1 + minus, PI_1 - minus, PI_1 - plus });
+						theta = Parameters(std::array<Real, 4>({ PI_1 + plus, PI_1 + minus, PI_1 - minus, PI_1 - plus }));
 						vTheta = v * theta;
 						thetaSq = theta.Square();
 						absTheta = vTheta.Abs();

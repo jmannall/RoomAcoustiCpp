@@ -243,11 +243,19 @@ namespace RAC
 			if (!GetAccess())
 				return;
 
+#ifdef __ANDROID__
+			if (!std::atomic_load(&transform)) // Check if the source position has been updated before using
+			{
+				FreeAccess();
+				return;
+			}
+#else
 			if (!transform.load(std::memory_order_acquire)) // Check if the source position has been updated before using
 			{
 				FreeAccess();
 				return;
 			}
+#endif
 
 			PROFILE_Source
 			const int numFrames = ToInt(inputBuffer.Length());
@@ -295,7 +303,11 @@ namespace RAC
 			{
 				PROFILE_Spatialisation
 				shared_lock<shared_mutex> lock(tuneInMutex);
+#ifdef __ANDROID__
+				mSource->SetSourceTransform(*std::atomic_load(&transform));
+#else
 				mSource->SetSourceTransform(*transform.load(std::memory_order_acquire));
+#endif
 				mSource->SetBuffer(bInput);
 				mSource->ProcessAnechoic(bOutput.left, bOutput.right);
 			}
@@ -366,7 +378,11 @@ namespace RAC
 					FreeAccess();
 					return;
 				}
+#ifdef __ANDROID__
+				mReverbSendSource->SetSourceTransform(*std::atomic_load(&transform));
+#else
 				mReverbSendSource->SetSourceTransform(*transform.load(std::memory_order_acquire));
+#endif
 				mReverbSendSource->SetBuffer(bInput);
 				mReverbSendSource->ProcessAnechoic(bOutput.left, bOutput.right);
 			}
@@ -389,11 +405,19 @@ namespace RAC
 				return;
 			mAirAbsorption->SetTargetDistance(distance);
 			
+#ifdef __ANDROID__
+			if (position == currentPosition && orientation == currentOrientation && std::atomic_load(&transform))
+			{
+				FreeAccess();
+				return;
+			}
+#else
 			if (position == currentPosition && orientation == currentOrientation && transform.load(std::memory_order_acquire))
 			{
 				FreeAccess();
 				return;
 			}
+#endif
 			UpdateTransform(position, orientation);
 			if ((position - currentPosition).Normal() > EPS_POSITION || 2.0 * std::acos(std::abs(orientation.dot(currentOrientation))) > EPS_ORIENTATION)
 			{
@@ -437,11 +461,19 @@ namespace RAC
 		{
 			if (!GetAccess())
 				return std::nullopt;
+#ifdef __ANDROID__
+			if (!std::atomic_load(&transform)) // Check if the source position has been updated before using
+			{
+				FreeAccess();
+				return std::nullopt;
+			}
+#else
 			if (!transform.load(std::memory_order_acquire)) // Check if the source position has been updated before using
 			{
 				FreeAccess();
 				return std::nullopt;
 			}
+#endif
 			lock_guard<std::mutex>lock(*dataMutex);
 			Data data(-1, currentPosition, currentOrientation, mDirectivity.load(std::memory_order_acquire), updateFlags.HasChanged(id));
 			FreeAccess();
@@ -477,7 +509,11 @@ namespace RAC
 			directivityFilter.reset();
 			reverbInputFilter.reset();
 			mAirAbsorption.reset();
+#ifdef __ANDROID__
+			std::atomic_load(&transform).reset();
+#else
 			transform.load(std::memory_order_acquire).reset();
+#endif
 		}
 
 		////////////////////////////////////////
@@ -487,7 +523,11 @@ namespace RAC
 			std::shared_ptr<CTransform> transformCopy = std::make_shared<CTransform>();
 			transformCopy->SetOrientation(CQuaternion(static_cast<float>(orientation.w()), static_cast<float>(orientation.x()), static_cast<float>(orientation.y()), static_cast<float>(orientation.z())));
 			transformCopy->SetPosition(CVector3(static_cast<float>(position.x()), static_cast<float>(position.y()), static_cast<float>(position.z())));
+#ifdef __ANDROID__
+			std::atomic_store(&transform, transformCopy);
+#else
 			transform.store(transformCopy, std::memory_order_release);
+#endif
 			releasePool.Add(transformCopy);
 		}
 

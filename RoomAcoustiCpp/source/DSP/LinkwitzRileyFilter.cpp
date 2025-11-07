@@ -86,8 +86,11 @@ namespace RAC
 		void LinkwitzRiley::InterpolateGains(const Real lerpFactor)
 		{
 			gainsEqual.store(true, std::memory_order_release); // Prevents issues in case targetGains updated during this function call
+#ifdef __ANDROID__
+			const std::shared_ptr<const Parameters> gain = std::atomic_load(&targetGains);
+#else
 			const std::shared_ptr<const Parameters> gain = targetGains.load(std::memory_order_acquire);
-
+#endif
 			Lerp(currentGains, *gain, lerpFactor);
 			if (Equals(currentGains, *gain))
 			{

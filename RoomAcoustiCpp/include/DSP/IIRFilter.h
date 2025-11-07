@@ -310,7 +310,7 @@ namespace RAC
 			*
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
-			ZPKFilter(const int sampleRate) : ZPKFilter(Parameters({ 0.25, -0.99, 0.99, -0.25, 0.0 }), sampleRate) {};
+			ZPKFilter(const int sampleRate) : ZPKFilter(Parameters(std::array<Real, 5>({ 0.25, -0.99, 0.99, -0.25, 0.0 })), sampleRate) {};
 			
 			/**
 			* @brief Constructor that initialises a second order IIRFilter with a given sample rate
@@ -353,7 +353,11 @@ namespace RAC
 			*/
 			void UpdateCoefficients(const Parameters& zpk);
 
-			std::atomic<std::shared_ptr<Parameters>> targetZPK;	// Target ZPK parameters
+#ifdef __ANDROID__
+			std::shared_ptr<Parameters> targetZPK;		// Target ZPK parameters
+#else
+			std::atomic<std::shared_ptr<Parameters>> targetZPK;		// Target ZPK parameters
+#endif
 			Parameters currentZPK;								// Current ZPK parameters
 
 			static ReleasePool releasePool;		// ReleasePool for managing memory of shared pointers

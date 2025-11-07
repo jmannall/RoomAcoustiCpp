@@ -95,7 +95,11 @@ namespace RAC
 
 			Binaural::CCore* mCore;									// 3DTI core
 			shared_ptr<Binaural::CSingleSourceDSP> mSource;			// 3DTI source
-			std::atomic<shared_ptr<const CTransform>> transform;	// 3DTI source transform
+#ifdef __ANDROID__
+			std::shared_ptr<CTransform> transform;	// 3DTI source transform
+#else
+			std::atomic<std::shared_ptr<const CTransform>> transform;	// 3DTI source transform
+#endif
 			CMonoBuffer<float> bInput;								// 3DTI Input buffer	
 			CEarPair<CMonoBuffer<float>> bOutput;					// 3DTI Output buffer
 
@@ -284,7 +288,11 @@ namespace RAC
 						outputBuffer.Reset();
 					return;
 				}
+#ifdef __ANDROID__
+				std::atomic_load(&mFDN)->ProcessAudio(data, outputBuffers, audioData);
+#else
 				mFDN.load()->ProcessAudio(data, outputBuffers, audioData);
+#endif
 			}
 
 			/**
@@ -297,8 +305,11 @@ namespace RAC
 		private:
 			void InitLateReverb(const Coefficients<>& T60, const Vec<>& delayLineLengths, const LateReverbData& data, const std::shared_ptr<DSPConfig>& dspConfig);
 
-			std::atomic<std::shared_ptr<FDN<>>> mFDN;		// FDN for late reverberation processing
-
+#ifdef __ANDROID__
+			std::shared_ptr<FDN<>> mFDN;		// FDN for late reverberation processing
+#else
+			std::atomic<std::shared_ptr<FDN<>>> mFDN;	// FDN for late reverberation processing
+#endif
 		};
 
 		class RAVES : public Reverb
@@ -328,14 +339,22 @@ namespace RAC
 			{
 				int samples = static_cast<int>(std::max(0, static_cast<int>(delay * fs) - delayOffset));
 				precedingDelayLength = samples > 0 ? delay : static_cast<Real>(delayOffset) / fs;
+#ifdef __ANDROID__
+				auto fdns = std::atomic_load(&mFDNs);
+#else
 				auto fdns = mFDNs.load();
+#endif
 				for (int i = 0; i < fdns->size(); i++)
 					fdns->at(i)->SetPrecedingDelay(samples);
 			}
 
 			inline void SetMinimumT60(const Real T60) override
 			{
+#ifdef __ANDROID__
+				auto fdns = std::atomic_load(&mFDNs);
+#else
 				auto fdns = mFDNs.load();
+#endif
 				for (int i = 0; i < fdns->size(); i++)
 					fdns->at(i)->SetMinimumReverbTime(T60);
 			}
@@ -346,7 +365,12 @@ namespace RAC
 			void InitLateReverb(const MoDARTData& data, const std::shared_ptr<DSPConfig>& dspConfig);
 
 			using FDNPtr = std::shared_ptr<std::vector<std::unique_ptr<FDN<Complex>>>>;
+
+#ifdef __ANDROID__
+			FDNPtr mFDNs;
+#else
 			std::atomic<FDNPtr> mFDNs;
+#endif
 		};
 	}
 }

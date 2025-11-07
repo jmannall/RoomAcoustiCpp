@@ -85,7 +85,11 @@ namespace RAC
 				std::shared_ptr<Parameters> gainsCopy = std::make_shared<Parameters>(gains);
 
 				releasePool.Add(gainsCopy);
+#ifdef __ANDROID__
+				std::atomic_store(&targetGains, gainsCopy);
+#else
 				targetGains.store(gainsCopy, std::memory_order_release);
+#endif
 				gainsEqual.store(false, std::memory_order_release);
 			};
 
@@ -120,7 +124,7 @@ namespace RAC
 			*/
 			static inline Parameters CalculateMidFrequencies(const std::array<Real, 3>& fc)
 			{
-				return Parameters({ std::sqrt((Real)20.0 * fc[0]), std::sqrt(fc[0] * fc[1]), std::sqrt(fc[1] * fc[2]), std::sqrt(fc[2] * (Real)20000.0) });
+				return Parameters(std::array<Real, 4>({ std::sqrt((Real)20.0 * fc[0]), std::sqrt(fc[0] * fc[1]), std::sqrt(fc[1] * fc[2]), std::sqrt(fc[2] * (Real)20000.0) }));
 			}
 
 			/*
@@ -130,7 +134,11 @@ namespace RAC
 			*/
 			void InterpolateGains(const Real lerpFactor);
 
+#ifdef __ANDROID__
+			std::shared_ptr<Parameters> targetGains;			// Target filter band gains
+#else
 			std::atomic<std::shared_ptr<Parameters>> targetGains;		// Target filter band gains
+#endif
 			Parameters currentGains;									// Current filter band gains (should only be accessed from the audio thread)
 			
 			std::array<std::optional<LowPass>, 10> lowPassFilters;		// LowFilter sections

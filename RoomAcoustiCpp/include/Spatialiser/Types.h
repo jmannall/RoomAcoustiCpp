@@ -419,6 +419,8 @@ namespace RAC
 
 		struct AudioData
 		{
+			AudioData() {}
+
 			AudioData(const std::shared_ptr<DSPConfig>& dspConfig)
 				: lerpFactor(dspConfig->GetLerpFactor()), lateReverbModel(dspConfig->GetLateReverbModel()),
 				spatialisationMode(dspConfig->GetSpatialisationMode()), impulseResponseMode(dspConfig->GetImpulseResponseMode()),

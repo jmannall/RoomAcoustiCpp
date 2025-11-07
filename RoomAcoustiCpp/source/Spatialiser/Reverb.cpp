@@ -123,7 +123,11 @@ namespace RAC
 			const shared_ptr<CTransform> newTransformCopy = make_shared<CTransform>(newTransform);
 
 			releasePool.Add(newTransformCopy);
+#ifdef __ANDROID__
+			std::atomic_store(&transform, newTransformCopy);
+#else
 			transform.store(newTransformCopy, std::memory_order_release);
+#endif
 		}
 
 		////////////////////////////////////////
@@ -147,7 +151,11 @@ namespace RAC
 			{
 				PROFILE_Spatialisation
 				shared_lock<shared_mutex> lock(tuneInMutex);
+#ifdef __ANDROID__
+				mSource->SetSourceTransform(*std::atomic_load(&transform));
+#else
 				mSource->SetSourceTransform(*transform.load(std::memory_order_acquire));
+#endif
 				mSource->SetBuffer(bInput);
 				mSource->ProcessAnechoic(bOutput.left, bOutput.right);
 			}
@@ -326,7 +334,11 @@ namespace RAC
 			Debug::Log("Init FDN: [" + CoefficientToStr(T60) + "]", Colour::Green);
 #endif
 
+#ifdef __ANDROID__
+			std::atomic_load(&mFDN)->SetTargetT60(T60);
+#else
 			mFDN.load(std::memory_order_acquire)->SetTargetT60(T60);
+#endif
 		}
 
 		////////////////////////////////////////
@@ -347,7 +359,11 @@ namespace RAC
                 break;
             }
 			releasePool.Add(fdn);
-            mFDN.store(fdn, std::memory_order_release);
+#ifdef __ANDROID__
+			std::atomic_store(&mFDN, fdn);
+#else
+			mFDN.store(fdn, std::memory_order_release);
+#endif
 
 			initialised.store(true, std::memory_order_release);
 		}
@@ -360,7 +376,11 @@ namespace RAC
 			if (!initialised.load(std::memory_order_acquire))
 				return;
 
+#ifdef __ANDROID__
+			bool isZero = std::atomic_load(&mFDN)->SetTargetReflectionFilters(gains);
+#else
 			bool isZero = mFDN.load(std::memory_order_acquire)->SetTargetReflectionFilters(gains);
+#endif
 			if (isZero)
 			{
 				running.store(false, std::memory_order_release);
@@ -403,7 +423,11 @@ namespace RAC
 			}
 			releasePool.Add(fdns);
 
+#ifdef __ANDROID__
+			std::atomic_store(&mFDNs, fdns);
+#else
 			mFDNs.store(fdns, std::memory_order_release);
+#endif
 			OctaveBand temporaryFilter(dspConfig->GetData().frequencyBands, dspConfig->GetData().fs);
 			delayOffset = temporaryFilter.GetLatency();
 			SetPrecedingDelay(data.delay, dspConfig->GetData().fs);
@@ -418,7 +442,11 @@ namespace RAC
 			if (!initialised.load(std::memory_order_acquire))
 				return;
 
+#ifdef __ANDROID__
+			auto fdns = std::atomic_load(&mFDNs);
+#else
 			auto fdns = mFDNs.load();
+#endif
 			fdns->at(id)->SetTargetResidues(residues);
 
 			running.store(true, std::memory_order_release);
@@ -434,7 +462,11 @@ namespace RAC
 			if (!initialised.load(std::memory_order_acquire))
 				return;
 
+#ifdef __ANDROID__
+			auto fdns = std::atomic_load(&mFDNs);
+#else
 			auto fdns = mFDNs.load(); // Parallelise the processing of multiple FDNs
+#endif
 			for (int i = 0; i < fdns->size(); i++)
 #if MATRIX_LIBRARY == EIGEN_FLAG
 				fdns->at(i)->SubmitAudio(data.Row(i));

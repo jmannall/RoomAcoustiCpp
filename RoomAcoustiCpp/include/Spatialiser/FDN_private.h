@@ -22,6 +22,7 @@
 #include "Common/Matrix.h"
 #include "Common/Vec.h"
 #include "Common/Coefficients.h"
+#include "Common/RACProfiler.h"
 
 // DSP headers
 #include "DSP/Buffer.h"
@@ -155,6 +156,20 @@ namespace RAC
 			std::conditional_t<std::is_same_v<T, Real>,
 				GraphicEQ<Real>, std::nullptr_t> mReflectionFilter;		// The reflection filter on the FDN output
 		};
+
+		template<>
+		inline Real FDNChannel<Real>::GetOutput(const Real input, const Real lerpFactor)
+		{
+			Real out = mDelayLine.GetOutput(input);
+			return mAbsorptionFilter.GetOutput(out, lerpFactor);
+		}
+
+		template<>
+		inline Complex FDNChannel<Complex>::GetOutput(const Complex input, const Real lerpFactor)
+		{
+			Complex out = mDelayLine.GetOutput(input);
+			return mAbsorptionFilter.load(std::memory_order_acquire) * out;
+		}
 
 		/**
 		* @brief Implements a feedback delay network with modifiable T60 and delay line lengths
@@ -471,6 +486,56 @@ namespace RAC
 			precedingDelay.Reset();
 			for (auto& channel : mChannels)
 				channel->Reset();
+		}
+
+		template <>
+		inline void FDN<Real>::ProcessAudio(const Matrix<>& data, std::vector<Buffer<>>& outputBuffers, const AudioData& audioData)
+		{
+			PROFILE_FDN
+				if (audioData.clearBuffers)
+					Reset();
+
+			// Process feedback loop
+			for (int i = 0; i < data.Cols(); i++)
+			{
+				for (int j = 0; j < mChannels.size(); j++)
+					y(j) = mChannels[j]->GetOutput(x(j) + data(j, i), audioData.lerpFactor);
+
+				for (int j = 0; j < outputBuffers.size(); j++)
+					outputBuffers[j][i] = y(j);
+
+				ProcessMatrix();
+			}
+
+			// Process output filters
+			for (int i = 0; i < mChannels.size(); i++)
+				mChannels[i]->ProcessOutput(outputBuffers[i], outputBuffers[i], audioData.lerpFactor);
+		}
+
+		template<>
+		inline void FDN<Complex>::ProcessAudio(std::vector<Buffer<>>& outputBuffers, const AudioData& audioData)
+		{
+			if (!enabled.load(std::memory_order_acquire))
+				return;
+
+			PROFILE_FDN
+				if (audioData.clearBuffers)
+					Reset();
+
+			// For the purpose of `powerNormalization`, see notes in FDN_private.h
+			inputData *= powerNormalization;
+			// Process feedback loop
+			for (int i = 0; i < outputBuffers[0].Length(); i++)
+			{
+				Complex output = precedingDelay.GetOutput(inputData(i));
+				for (int j = 0; j < mChannels.size(); j++)
+					y(j) = mChannels[j]->GetOutput(x(j) + output, audioData.lerpFactor);
+
+				for (int j = 0; j < outputBuffers.size(); j++)
+					outputBuffers[j][i] += ravesResidues[j].GetOutput(y(j), audioData.lerpFactor);
+
+				ProcessMatrix();
+			}
 		}
 
 		template <typename T = Real>

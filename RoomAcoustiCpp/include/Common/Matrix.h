@@ -21,6 +21,9 @@
 
 // Eigen headers
 #if MATRIX_LIBRARY == EIGEN_FLAG
+#ifdef __ANDROID__
+#define EIGEN_DONT_VECTORIZE
+#endif
 #include <Eigen/Dense>
 #endif
 

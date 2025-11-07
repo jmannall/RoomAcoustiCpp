@@ -9,9 +9,9 @@ EIGEN_DEVICE_FUNC typename internal::traits<Derived>::Scalar Min() const { retur
 template <int NaNPropagation>
 EIGEN_DEVICE_FUNC typename internal::traits<Derived>::Scalar Max() const { return maxCoeff(); }
 
-typedef Transpose<Derived> TransposeReturnType;
+//typedef Transpose<Derived> TransposeReturnType;
 EIGEN_DEVICE_FUNC TransposeReturnType Transposed() { return transpose(); }
-typedef Transpose<const Derived> ConstTransposeReturnType;
+//typedef Transpose<const Derived> ConstTransposeReturnType;
 EIGEN_DEVICE_FUNC const ConstTransposeReturnType Transposed() const { return transpose(); }
 EIGEN_DEVICE_FUNC void Transpose() { transposeInPlace(); }
 

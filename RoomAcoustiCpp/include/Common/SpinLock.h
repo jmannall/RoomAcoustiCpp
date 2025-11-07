@@ -13,7 +13,9 @@
 #include <array>
 #include <thread>
 #include <atomic>
+#ifdef __WINDOWS__
 #include <emmintrin.h>
+#endif
 
 /**
 * @brief Class that implements a spin lock

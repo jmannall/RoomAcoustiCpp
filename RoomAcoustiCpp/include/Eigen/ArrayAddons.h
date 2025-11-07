@@ -11,7 +11,15 @@ EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Array(const std::vector<Scalar>& values)
     std::copy(values.begin(), values.end(), this->data());
 }
 
+#ifdef __ANDROID__
+static constexpr int array_size() {
+    return (RowsAtCompileTime == Eigen::Dynamic || ColsAtCompileTime == Eigen::Dynamic)
+        ? 0 : (RowsAtCompileTime == 1 ? ColsAtCompileTime : RowsAtCompileTime);
+}
+EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Array(const std::array<Scalar, array_size()>& values)
+#else
 EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Array(const std::array<Scalar, RowsAtCompileTime == 1 ? ColsAtCompileTime : RowsAtCompileTime>& values)
+#endif
     requires (RowsAtCompileTime != Eigen::Dynamic &&
             ColsAtCompileTime != Eigen::Dynamic &&
             (RowsAtCompileTime == 1 || ColsAtCompileTime == 1))

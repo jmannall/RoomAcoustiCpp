@@ -93,7 +93,7 @@ namespace RAC
 			typedef Coefficients<> Parameters;
 			typedef Coefficients<Real, 9> CutOffFrequencies;
 
-			CutOffFrequencies cutOffFrequencies{ CutOffFrequencies({ 46.875, 93.75, 187.5, 375.0, 750.0, 1.5e3, 3e3, 6e3, 12e3 }) };	// Possible frequencyBands
+			CutOffFrequencies cutOffFrequencies{ CutOffFrequencies(std::array<Real, 9>({ 46.875, 93.75, 187.5, 375.0, 750.0, 1.5e3, 3e3, 6e3, 12e3 })) };	// Possible frequencyBands
 
 		public:
 			/**
@@ -179,6 +179,15 @@ namespace RAC
 			/**
 			* @return Returns a Hanning window function of length Lwin
 			*/
+#ifdef __ANDROID__
+			static inline std::array<Real, Lwin> GenerateHanningWindow()
+			{
+				std::array<Real, Lwin> w = {};
+				for (int i = 0; i < Lwin; i++)
+					w[i] = 0.5 * (1 - cos(PI_2 * (i + 1) / (Lwin + 1)));
+				return w;
+			}
+#else
 			static constexpr inline std::array<Real, Lwin> GenerateHanningWindow()
 			{
 				std::array<Real, Lwin> w = {};
@@ -186,6 +195,7 @@ namespace RAC
 					w[i] = 0.5 * (1 - cos(PI_2 * (i + 1) / (Lwin + 1)));
 				return w;
 			}
+#endif
 
 			Buffer<> bands;
 			Buffer<> outputs;

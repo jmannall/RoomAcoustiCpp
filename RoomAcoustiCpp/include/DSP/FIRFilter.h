@@ -40,7 +40,11 @@ namespace RAC
 
 				assert(ir.Length() <= maxSize);
 
+#ifdef __ANDROID__
+				irLength = std::atomic_load(&targetIR)->Length();
+#else
 				irLength = targetIR.load(std::memory_order_acquire)->Length();
+#endif
 				oldIrLength = irLength;
 
 				std::copy(ir.begin(), ir.end(), currentIR.begin());
@@ -98,8 +102,11 @@ namespace RAC
 			*/
 			void InterpolateIR(const Real lerpFactor);
 
-
+#ifdef __ANDROID__
+			std::shared_ptr<Buffer<>> targetIR;		// Target impulse response
+#else
 			std::atomic<std::shared_ptr<const Buffer<>>> targetIR;	// Target impulse response
+#endif
 
 			
 

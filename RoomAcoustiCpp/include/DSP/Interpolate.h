@@ -7,7 +7,7 @@
 #define DSP_Interpolate_h
 
 // C++ headers
-#if defined(_WINDOWS)
+#ifdef __WINDOWS__
 #include <intrin.h>
 #endif
 #include <omp.h>
@@ -53,9 +53,9 @@ namespace RAC
 		*/
 		inline void FlushDenormals()
 		{
-#if(_WINDOWS)
+#ifdef __WINDOWS__
 			_MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
-#elif(_ANDROID)
+#elif __ANDROID__
 			unsigned m_savedCSR = getStatusWord();
 			// Bit 24 is the flush-to-zero mode control bit. Setting it to 1 flushes denormals to 0.
 			setStatusWord(m_savedCSR | (1 << 24));
@@ -67,9 +67,9 @@ namespace RAC
 		*/
 		inline void NoFlushDenormals()
 		{
-#if(_WINDOWS)
+#ifdef __WINDOWS__
 			_MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_OFF);
-#elif(_ANDROID)
+#elif __ANDROID__
 			unsigned m_savedCSR = getStatusWord();
 			setStatusWord(m_savedCSR | (0 << 24));
 #endif
@@ -150,7 +150,7 @@ namespace RAC
 		* @params end The target coefficients
 		* @params factor The interpolation factor (must be between 0 and 1)
 		*/
-		template<typename T, size_t Size>
+		template<typename T, int Size>
 		inline void Lerp(Coefficients<T, Size>& start, const Coefficients<T, Size>& end, const Real factor)
 		{
 			assert(0.0 < factor && factor <= 1.0);	
@@ -183,7 +183,7 @@ namespace RAC
 		* @params v Coefficients<> 2
 		* @returns True if equal within the threshold EPS, false otherwise
 		*/
-		template<typename T, size_t Size>
+		template<typename T, int Size>
 		inline bool Equals(const Coefficients<T, Size>& u, const Coefficients<T, Size>& v, const Real threshold = EPS)
 		{
 			if (u.Length() != v.Length())
