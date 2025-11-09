@@ -103,6 +103,11 @@ namespace RAC
 			Vec<int> frontIndices;		// This will have size `numRays`
 			Vec<int> backIndices;		// This will have size `numRays`
 
+			// Distance thresholds (in meters) from the latest updated position which triggers an update.
+			// TODO: Expose methods to modify these. I'm adding them quickly on the eve of the ADC demo.
+			Real listenerMovementThreshold = 0.25;
+			Real sourceMovementThreshold = 0.5;
+
 			/**
 			* @brief Assigns each ray direction to the nearest reverb direction.
 			*/

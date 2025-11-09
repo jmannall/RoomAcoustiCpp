@@ -92,8 +92,12 @@ namespace RAC
 				lock_guard<std::mutex> lock(dataStoreMutex);
 				if (mListenerPosition != mListenerPositionIncoming)
 				{
-					mListenerPosition = mListenerPositionIncoming;
-					listenerMoved = true;
+					Real distanceSinceLastUpdate = (mListenerPosition - mListenerPositionIncoming).Normal();
+					if (distanceSinceLastUpdate > listenerMovementThreshold)
+					{
+						mListenerPosition = mListenerPositionIncoming;
+						listenerMoved = true;
+					}
 				}
 			}
 			if (listenerMoved) {
@@ -132,6 +136,12 @@ namespace RAC
 
 			for (Source::Data& source : mSources) {
 				if (source.needsUpdate) {
+					Real distanceSinceLastUpdate = (source.position - sharedSource->GetLastRTMSourcePosition(source.id)).Normal();
+					if (distanceSinceLastUpdate > sourceMovementThreshold)
+						sharedSource->SetLastRTMSourcePosition(source.id, source.position);
+					else
+						continue;
+
 					hemispherePencil.moveOrigin(source.position);
 					hemispherePencil.traceAll(sharedRoom->GetTriangleMeshSoA());
 
