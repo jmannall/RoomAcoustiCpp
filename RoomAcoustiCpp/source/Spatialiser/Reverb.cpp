@@ -397,6 +397,20 @@ namespace RAC
 			int numFDNs = dspConfig->GetNumFDNs();
 			int fdnSize = dspConfig->GetData().fdnSize;
 
+			// Set the minimum difference between delay line lengths based on the number of lines.
+			// This avoids having excessively long lines when there are many, or excessively colored sets when there are few.
+			Real minDiffSeconds;
+			if (numFDNs * fdnSize > 100)
+				minDiffSeconds = 2e-4;
+			else if (numFDNs * fdnSize > 75)
+				minDiffSeconds = 4e-4;
+			else if (numFDNs * fdnSize > 50)
+				minDiffSeconds = 6e-4;
+			else if (numFDNs * fdnSize > 25)
+				minDiffSeconds = 8e-4;
+			else
+				minDiffSeconds = 2e-3;
+
 			Matrix<int> delayLineLengthSets(numFDNs, fdnSize);
 			buildDelaySets(delayLineLengthSets, dspConfig->GetData().fs);
 			// TODO: Detect failure (unassigned lines) and do something about it.
