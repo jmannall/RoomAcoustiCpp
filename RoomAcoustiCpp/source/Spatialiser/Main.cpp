@@ -640,6 +640,13 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 		END_TRY
 	}
 
+	/**
+	* @brief Initialises a new material with the given absorption parameters.
+	* 
+	* @details This function should be called before any walls using the material are created.
+	* 
+	* @param absorption The frequency absorption coefficients.
+	*/
 	EXPORT int API RACInitMaterial(const float* absorptionData)
 	{
 		BEGIN_TRY
@@ -666,6 +673,11 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 		END_TRY
 	}
 
+	/**
+	* @brief Removes the material with the given ID.
+	* 
+	* @param id The ID of the material to remove.
+	*/
 	EXPORT void API RACRemoveMaterial(int id)
 	{
 		BEGIN_TRY
@@ -680,7 +692,7 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 	* It will allocate resources for the new wall and return an ID that can be used to reference the wall in future calls.
 	*
 	* @param verticesData The vertices of the wall.
-	* @param absorptionData The frequency absorption coefficients.
+	* @param materialID The ID of the wall material.
 	*
 	* @return The ID of the new wall.
 	*/
@@ -703,17 +715,14 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 	* It will update the internal representation of the wall to match the new position and orientation.
 	*
 	* @param id The ID of the wall to update.
-	* @param nX The x-coordinate of the wall's normal vector.
-	* @param nY The y-coordinate of the wall's normal vector.
-	* @param nZ The z-coordinate of the wall's normal vector.
-	* @param vData The vertices of the wall.
+	* @param verticesData The vertices of the wall.
 	*/
-	EXPORT void API RACUpdateWall(int id, const float* vData)
+	EXPORT void API RACUpdateWall(int id, const float* verticesData)
 	{
 		BEGIN_TRY
-		Vertices vertices = { Vec3(vData[0], vData[1], vData[2]),
-			Vec3(vData[3], vData[4], vData[5]),
-			Vec3(vData[6], vData[7], vData[8]) };
+		Vertices vertices = { Vec3(verticesData[0], verticesData[1], verticesData[2]),
+			Vec3(verticesData[3], verticesData[4], verticesData[5]),
+			Vec3(verticesData[6], verticesData[7], verticesData[8]) };
 
 		UpdateWall(static_cast<size_t>(id), vertices);
 		END_TRY

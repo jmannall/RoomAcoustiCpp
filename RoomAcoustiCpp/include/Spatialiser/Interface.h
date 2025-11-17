@@ -195,10 +195,25 @@ namespace RAC
 		*/
 		void RemoveSource(const size_t id);
 
+		/**
+		* @brief Initialises a new material with the given absorption parameters.
+		* 
+		* @param material The frequency absorption coefficients.
+		* @return The ID of the new material.
+		*/
 		int InitMaterial(const Coefficients<>& material);
 
+		/**
+		* @brief Updates the material with the given ID.
+		* 
+		* @param id The ID of the material to update.
+		* @param material The frequency absorption coefficients.
+		*/
 		void UpdateMaterial(size_t id, const Coefficients<>& material);
 
+		/**
+		* @brief Removes the material with the given ID.
+		*/
 		void RemoveMaterial(size_t id);
 
 		/**
