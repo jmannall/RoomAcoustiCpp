@@ -401,5 +401,8 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\ContextOptionalArguments.h">
       <Filter>Header Files\Spatialiser</Filter>
     </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\DCBlocker.h">
+      <Filter>Header Files\DSP</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

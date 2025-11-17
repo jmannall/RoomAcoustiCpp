@@ -230,7 +230,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Reverb::buildDelaySets(Matrix<int>& delayLineLengths, Real fs,
+		void Reverb::buildDelaySets(Matrix<int>& delayLineLengths, int fs,
 			Real minDiffSeconds, Real minLineSeconds, Real maxLineSeconds)
 		{
 			const int numFDNs = ToInt(delayLineLengths.Rows());
