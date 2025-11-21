@@ -196,7 +196,7 @@ namespace RAC
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
 			PeakHighShelf(const Real fc, const Real gain, const Real Q, const int sampleRate) : IIRFilter2Param1<In>(gain, sampleRate),
-				cosOmega(cos(PI_2* fc* this->T)), alpha(sin(PI_2* fc* this->T) / Q) // sin(omega) / (2 * Q) (factor of two cancelled out in UpdateGain)
+				cosOmega(cos(PI_2 * fc * this->T)), alpha(sin(PI_2 * fc * this->T) / Q) // sin(omega) / (2 * Q) (factor of two cancelled out in UpdateGain)
 			{
 				assert(fc < static_cast<Real>(sampleRate) / 2.0); // Ensure cut off frequency is less than Nyquist frequency
 
@@ -254,7 +254,7 @@ namespace RAC
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
 			PeakLowShelf(const Real fc, const Real gain, const Real Q, const int sampleRate) : IIRFilter2Param1<In>(gain, sampleRate),
-				cosOmega(cos(PI_2* fc* this->T)), alpha(sin(PI_2* fc* this->T) / Q) // sin(omega) / (2 * Q) (factor of two cancelled out in UpdateGain)
+				cosOmega(cos(PI_2 * fc * this->T)), alpha(sin(PI_2 * fc * this->T) / Q) // sin(omega) / (2 * Q) (factor of two cancelled out in UpdateGain)
 			{
 				assert(fc < static_cast<Real>(sampleRate) / 2.0); // Ensure cut off frequency is less than Nyquist frequency
 

@@ -356,9 +356,9 @@ namespace RAC
 		//////////////////// Instantiate ////////////////////
 
 		// we don't implement/use every function, so disable the warning (we can't re-enable it since the warning is generated after the file is parsed)
-#ifdef _MSC_VER
-#pragma warning (disable : 4661)
-#endif
+		#ifdef _MSC_VER
+		#pragma warning (disable : 4661)
+		#endif
 
 		template class GraphicEQ<Real>;
 		template class GraphicEQ<Complex>;
