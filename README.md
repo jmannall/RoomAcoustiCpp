@@ -7,7 +7,7 @@ The official documentation of RoomAcoustiC++, including the Unity Engine interfa
 
 ## Citable references
 First publication describing the architecture of RAC, its main features, and analysis of accuracy and real-time performance:
-* Mannall J., Savioja L., Neidhardt A., Mason R. and De Sena E. "RoomAcoustiC++: An open-source room acoustic model for real-time audio simulations,” in Proc. AES Int. Conf. on Headphone Tech., Espoo, Finland, 2025
+* Mannall J., Savioja L., Neidhardt A., Mason R. and De Sena E. "RoomAcoustiC++: An open-source room acoustic model for real-time audio simulations,” in Proc. AES Int. Conf. on Headphone Tech., Espoo, Finland, 2025. [https://aes2.org/publications/elibrary-page/?id=22932](https://aes2.org/publications/elibrary-page/?id=22932)
 
 ## Additional tools
 In addition to this main repository, there are other repositories with associated tools:
