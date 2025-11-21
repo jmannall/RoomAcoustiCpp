@@ -306,7 +306,7 @@ namespace RAC
 			{
 				// make sure we are aligned (in practice this is true; we could always check it and fall
 				// back on a slower case)
-				assert( (reinterpret_cast<ptrdiff_t>(output) % 32) == 0);
+				assert( IsAligned32(output) );
 
 				__m256d scaleFactor = _mm256_broadcast_sd(&currentGain);
 				double* current = output, *end = output + length;

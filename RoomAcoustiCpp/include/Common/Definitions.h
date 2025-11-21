@@ -507,6 +507,14 @@ namespace RAC
 		{
 			return (reinterpret_cast<ptrdiff_t>(pointer) & 0xf) == 0;
 		}
+
+		/**
+		 * Checks if a pointer is aligned to a 32 byte boundary
+		 */
+		inline bool IsAligned32(const void* pointer)
+		{
+			return (reinterpret_cast<ptrdiff_t>(pointer) & 0x1f) == 0;
+		}
 	}
 }
 

@@ -1,5 +1,5 @@
 /*
-* @clss IIRFilter
+* @class IIRFilter
 *
 * @brief Declaration of IIRFilter, IIRFilter1, IIRFilter2 and IIRFilter2Param1 base classes
 * and derived HighShelf, LowPass1, PeakHighShelf, PeakLowShelf, PeakingFilter, ZPKFilter, LowPass and HighPass classes
@@ -314,7 +314,7 @@ namespace RAC
 			*
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
-			ZPKFilter(const int sampleRate) : ZPKFilter(Parameters({ 0.25, -0.99, 0.99, -0.25, 0.0 }), sampleRate) {};
+			ZPKFilter(const int sampleRate) : ZPKFilter(Parameters(std::array<Real, 5>({ 0.25, -0.99, 0.99, -0.25, 0.0 })), sampleRate) {};
 			
 			/**
 			* @brief Constructor that initialises a second order IIRFilter with a given sample rate

@@ -391,7 +391,7 @@ namespace RAC
 					filters[filterIndex]->InterpolateParameters(lerpFactor);
 			}
 
-			// load the result
+			// load the input. we will use this for all values
 			__m128d working = _mm_set_sd(input);
 
 			for (int filterIndex = 0; filterIndex < numFilters; ++filterIndex)
@@ -412,11 +412,13 @@ namespace RAC
 				// shift the filter y1 = y0, y0 = v
 				__m128d newY = _mm_move_sd(_mm_movedup_pd(y), v);
 
-				// save it
+				// save the new filter arguments
 				_mm_store_pd(&currentFilter->y0, newY);
+
+				// the working result doesn't need to be written back yet
 			}
 
-			// save the final result
+			// after all filters are processed, save the final result
 			_mm_store_sd(&output, working);
 		}
 
