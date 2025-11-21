@@ -164,7 +164,10 @@ namespace RAC
 			inline void SetInputBuffer(const Buffer<>& data)
 			{
 				assert(data.Length() == inputBuffer.Length());
-				for (int i = 0; i < inputBuffer.Length(); i++)
+				const int inputBufferLength = ToInt(inputBuffer.Length());
+
+				RAC_IGNORE_VECTOR_DEPENDENCIES
+				for (int i = 0; i < inputBufferLength; i++)
 					inputBuffer[i] = data[i];
 				// std::transform(data.begin(), data.end(), inputBuffer.begin(), [](Real val) { return val; });
 			}
@@ -199,7 +202,11 @@ namespace RAC
 			inline void InitMoDARTParameters(const Vec<int>& frequencyIndexing, int numFrames)
 			{
 				ravesResidues = std::vector<RAVESSourceResidue>(frequencyIndexing.Length());
-				for (int i = 0; i < frequencyIndexing.Length(); i++)
+
+				const int frequencyIndexingLength = ToInt(frequencyIndexing.Length());
+
+				RAC_IGNORE_VECTOR_DEPENDENCIES
+				for (int i = 0; i < frequencyIndexingLength; i++)
 					ravesResidues[i].frequencyIndex = frequencyIndexing(i);
 				frequencyBands = Matrix<>(octaveBandFilter.NumBands(), numFrames);
 			}
@@ -249,8 +256,10 @@ namespace RAC
 				if (!GetAccess())
 					return;
 
-				assert(residues.Length() == ravesResidues.size());
-				for (int i = 0; i < ravesResidues.size(); i++)
+				const int ravesResiduesSize = ToInt(ravesResidues.size());
+				assert(residues.Length() == ravesResiduesSize);
+
+				for (int i = 0; i < ravesResiduesSize; i++)
 					ravesResidues[i].SetTargetEnergy(residues[i]);
 				FreeAccess();
 			}

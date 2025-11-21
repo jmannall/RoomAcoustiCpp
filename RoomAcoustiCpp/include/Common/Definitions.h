@@ -15,6 +15,16 @@
 // Common headers
 #include "Common/Types.h"
 
+#ifdef _MSC_VER
+#	define RAC_IGNORE_VECTOR_DEPENDENCIES			__pragma(loop(ivdep))
+#	define RAC_HINT_PARALLEL(n)						__pragma(loop(hint_parallel(n))
+#	define RAC_FORCE_INLINE							__forceinline
+#else
+#	define RAC_IGNORE_VECTOR_DEPENDENCIES
+#	define RAC_HINT_PARALLEL(n)
+#	define RAC_FORCE_INLINE							__attribute__((always_inline)) inline
+#endif
+
 namespace RAC
 {
 	namespace Common
@@ -488,6 +498,14 @@ namespace RAC
 		inline int ToInt(int value)
 		{
 			return value;
+		}
+
+		/**
+		 * Checks if a pointer is aligned to a 16 byte boundary
+		 */
+		inline bool IsAligned16(const void* pointer)
+		{
+			return (reinterpret_cast<ptrdiff_t>(pointer) & 0xf) == 0;
 		}
 	}
 }

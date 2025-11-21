@@ -1,5 +1,5 @@
 /*
-* @class IIRFilter
+* @clss IIRFilter
 *
 * @brief Declaration of IIRFilter, IIRFilter1, IIRFilter2 and IIRFilter2Param1 base classes
 * and derived HighShelf, LowPass1, PeakHighShelf, PeakLowShelf, PeakingFilter, ZPKFilter, LowPass and HighPass classes
@@ -30,7 +30,7 @@ namespace RAC
 	{
 		/**
 		* @brief Class that implements an Infinite Impulse Response filter
-		* 
+		*
 		* @details Uses the Direct-Form-II implementation
 		*/
 		class IIRFilter
@@ -44,11 +44,11 @@ namespace RAC
 			*/
 			IIRFilter(const int filterOrder, const int sampleRate) : order(filterOrder), T(1.0 / static_cast<Real>(sampleRate)),
 				b(filterOrder + 1), a(filterOrder + 1), y(filterOrder + 1) {};
-			
+
 			/**
 			* @brief Default virtual deconstructor
 			*/
-			virtual ~IIRFilter() {};
+			virtual ~IIRFilter() = default;
 
 			/**
 			* @brief Returns the output of the IIRFilter given an input
@@ -72,6 +72,13 @@ namespace RAC
 			* @return The frequency response of the filter
 			*/
 			Coefficients<> GetFrequencyResponse(const Coefficients<>& frequencies) const;
+
+			/**
+			 * @brief Returns if this filter is valid.
+			 *
+			 * @return true if the valid is valid and GetOutput() can be called.
+			 */
+			bool IsValid() const { return initialised.load(std::memory_order_acquire); }
 
 		protected:
 			const int order;		// Order of the filter
@@ -111,7 +118,7 @@ namespace RAC
 			/**
 			* @brief Default deconstructor
 			*/
-			virtual ~IIRFilter1() {};
+			virtual ~IIRFilter1() = default;
 
 			/**
 			* @brief Returns the output of the IIRFilter given an input
@@ -135,6 +142,13 @@ namespace RAC
 			*/
 			Coefficients<> GetFrequencyResponse(const Coefficients<>& frequencies) const;
 
+			/**
+			 * @brief Returns if this filter is valid.
+			 *
+			 * @return true if the valid is valid and GetOutput() can be called.
+			 */
+			bool IsValid() const { return initialised.load(std::memory_order_acquire); }
+
 		protected:
 			const Real T;				// Sample rate time period
 
@@ -144,7 +158,7 @@ namespace RAC
 
 			std::atomic<bool> parametersEqual{ false };		// True if the current parameters are known to be equal to the target parameters
 			std::atomic<bool> initialised{ false };			// True if the filter has been initialised, false otherwise
-		
+
 		private:
 			/**
 			* @brief Pure virtual function to lineraly interpolates filter parameters. Must be overloaded in the derived classes
@@ -188,13 +202,8 @@ namespace RAC
 			};
 
 			/**
-			* @brief Default deconstructor
-			*/
-			~HighShelf() {};
-
-			/**
 			* @brief Atomically sets the target parameters of the high shelf filter
-			* 
+			*
 			* @param fc The cut off frequency of the filter
 			* @param gain The shelf gain of the filter (linear)
 			*/
@@ -208,7 +217,7 @@ namespace RAC
 		private:
 			/**
 			* @brief Linearly interpolates the current fc and gain with the target fc and gain
-			* 
+			*
 			* @param lerpFactor The lerp factor for interpolation
 			*/
 			void InterpolateParameters(const Real lerpFactor) override;
@@ -239,7 +248,7 @@ namespace RAC
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
 			LowPass1(const int sampleRate) : LowPass1(1000.0, sampleRate) {};
-			
+
 			/**
 			* @brief Constructor that initialises an 1st order low pass filter with a given cut off frequency
 			*
@@ -247,18 +256,13 @@ namespace RAC
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
 			LowPass1(const Real fc, const int sampleRate) : IIRFilter1(sampleRate), targetFc(fc), currentFc(fc)
-			{ 
+			{
 				assert(fc < static_cast<Real>(sampleRate) / 2.0); // Ensure cut off frequency is less than Nyquist frequency
 
 				UpdateCoefficients(currentFc);
 				parametersEqual.store(true, std::memory_order_release);
 				initialised.store(true, std::memory_order_release);
 			};
-
-			/**
-			* @brief Default deconstructor
-			*/
-			~LowPass1() {};
 
 			/**
 			* @brief Atomically sets the target cut-off frequency of the filter
@@ -310,7 +314,7 @@ namespace RAC
 			*
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
-			ZPKFilter(const int sampleRate) : ZPKFilter(Parameters(std::array<Real, 5>({ 0.25, -0.99, 0.99, -0.25, 0.0 })), sampleRate) {};
+			ZPKFilter(const int sampleRate) : ZPKFilter(Parameters({ 0.25, -0.99, 0.99, -0.25, 0.0 }), sampleRate) {};
 			
 			/**
 			* @brief Constructor that initialises a second order IIRFilter with a given sample rate
@@ -375,7 +379,7 @@ namespace RAC
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
 			LowPass(const int sampleRate) : LowPass(1000.0, sampleRate) {}
-			
+
 
 			/**
 			* @brief Constructor that intialises a default pass filter with a given cut off frequency and sample rate
@@ -389,11 +393,6 @@ namespace RAC
 				parametersEqual.store(true, std::memory_order_release);
 				initialised.store(true, std::memory_order_release);
 			}
-
-			/**
-			* @brief Default deconstructor
-			*/
-			~LowPass() {};
 
 			/**
 			* @brief Atomically sets the target cut-of frequency parameter of the filter
@@ -438,11 +437,6 @@ namespace RAC
 			}
 
 			/**
-			* @brief Default deconstructor
-			*/
-			~HighPass() {};
-
-			/**
 			* @brief Atomically sets the target cut-of frequency parameter of the filter
 			*
 			* @param fc The target cut-off frequency of the filter
@@ -460,7 +454,7 @@ namespace RAC
 
 		/**
 		* @brief Class that implements a 1st order high shelf IIR filter
-		* 
+		*
 		* @remarks Based on Matched One-Pole Digital Shelving Filters Vicanek M 2019.
 		* Improved frequency match at large fc values compared to HighShelf class
 		*/
@@ -484,11 +478,6 @@ namespace RAC
 				parametersEqual.store(true, std::memory_order_release);
 				initialised.store(true, std::memory_order_release);
 			};
-
-			/**
-			* @brief Default deconstructor
-			*/
-			~HighShelfMatched() {};
 
 			/**
 			* @brief Atomically sets the target parameters of the high shelf filter
@@ -524,6 +513,7 @@ namespace RAC
 			Real currentFc;					// Current cut off frequency
 			Real currentGain;				// Current shelf gain
 		};
+
 	}
 }
 

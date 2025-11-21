@@ -157,6 +157,7 @@ Options:
     --audio-threads=##	   Overrides the number of audio threads
     --debug                Enables certain memory debugging features
     --detailed-logs        Enables detailed logs
+    --dynamic-scene        Moves the sources around a 1m^2 area
     --inner-iterations=##  The number of times to run the inner loop
     --log-prefix=file      Specifies the log prefix
     --no-debug             Disables certain memory debugging features

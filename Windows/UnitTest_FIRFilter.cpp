@@ -118,12 +118,11 @@ namespace RAC
 
 			FIRFilter filter(ir, 8);
 
-			for (int i = 0; i < input.size(); i++)
-				Assert::AreEqual((Real)0.0, filter.GetOutput(input[i], lerpFactor), EPS, L"Init Error");
+			Assert::IsFalse(filter.IsValid(), L"Filter should be invalid due to to IR length");
 
+			// target needs to be set in construction
 			filter.SetTargetIR(ir);
-			for (int i = 0; i < input.size(); i++)
-				Assert::AreEqual((Real)0.0, filter.GetOutput(input[i], lerpFactor), EPS, L"Set Error");
+			Assert::IsFalse(filter.IsValid(), L"Filter should still be invalid due to IR length");
 		}
 	};
 }

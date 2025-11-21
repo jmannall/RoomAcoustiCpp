@@ -33,8 +33,7 @@ namespace RAC
 
 		Real IIRFilter::GetOutput(const Real input, const Real lerpFactor)
 		{
-			if (!initialised.load(std::memory_order_acquire))
-				return 0.0;
+			assert(IsValid());
 
 			if (!parametersEqual.load(std::memory_order_acquire))
 				InterpolateParameters(lerpFactor);
@@ -60,18 +59,16 @@ namespace RAC
 
 		Coefficients<> IIRFilter::GetFrequencyResponse(const Coefficients<>& frequencies) const
 		{
-			Real omega;
-			Complex e;
 			std::vector<Real> magnitudes(frequencies.Length(), 0.0);
 			for (int i = 0; i < frequencies.Length(); i++)
 			{
-				omega = PI_2 * frequencies[i] * T;
+				Real omega = PI_2 * frequencies[i] * T;
 				Complex num = b[0];
 				Complex den = 1.0;
 
 				for (int j = 1; j <= order; j++)
 				{
-					e = std::exp(-j * imUnit * omega);
+					Complex e = std::exp(-j * imUnit * omega);
 					num += b[j] * e;
 					den += a[j] * e;
 				}
@@ -86,46 +83,16 @@ namespace RAC
 		////////////////////////////////////////
 
 		template<typename In>
-		In IIRFilter2<In>::GetOutput(const In input, const Real lerpFactor)
-		{
-			if (!initialised.load(std::memory_order_acquire))
-				return 0.0;
-
-			if (!parametersEqual.load(std::memory_order_acquire))
-				InterpolateParameters(lerpFactor);
-
-			In v = input;
-			In output = 0.0;
-
-			v -= y0 * a1;
-			output += y0 * b1;
-
-			v -= y1 * a2;
-			output += y1 * b2;
-
-			y1 = y0;
-			y0 = v;
-
-			output += v * b0;
-
-			return output;
-		}
-
-		////////////////////////////////////////
-
-		template<typename In>
 		Coefficients<> IIRFilter2<In>::GetFrequencyResponse(const Coefficients<>& frequencies) const
 		{
-			Real omega;
-			Complex e;
 			Coefficients<> magnitudes = Coefficients<>::Zero(frequencies.Length());
 			for (int i = 0; i < frequencies.Length(); i++)
 			{
-				omega = PI_2 * frequencies[i] * T;
+				Real omega = PI_2 * frequencies[i] * T;
 				Complex num = b0;
 				Complex den = 1.0;
 
-				e = std::exp(-1 * imUnit * omega);
+				Complex e = std::exp(-1 * imUnit * omega);
 				num += b1 * e;
 				den += a1 * e;
 
@@ -149,8 +116,7 @@ namespace RAC
 
 		Real IIRFilter1::GetOutput(const Real input, const Real lerpFactor)
 		{
-			if (!initialised.load(std::memory_order_acquire))
-				return 0.0;
+			assert(IsValid());
 
 			if (!parametersEqual.load(std::memory_order_acquire))
 				InterpolateParameters(lerpFactor);
@@ -511,5 +477,81 @@ namespace RAC
 			b0 /= DCg;
 			b1 /= DCg;
 		}
+
+#if USE_AVX
+		template<>
+		void IIRFilter2<double>::GetOutputBatch(const double* input, double* output, int inputOutputLength, const Real lerpFactor)
+		{
+			assert(IsValid());
+
+			// ~64b / 8 = 8 samples/page. In practice, this doesn't help much
+			//for ( int prefetchIndex = 0; prefetchIndex < (inputOutputLength>>3); ++prefetchIndex )
+			//	_mm_prefetch( reinterpret_cast<const char*>(input + (prefetchIndex << 3)), _MM_HINT_T0);
+
+			int index = 0;
+			if (!parametersEqual.load(std::memory_order_acquire))
+			{
+				while (index < inputOutputLength)
+				{
+					InterpolateParameters(lerpFactor);
+					if (parametersEqual.load(std::memory_order_acquire))
+						break;
+					GetOutputInternal(input[index], output[index]);
+					++index;
+				}
+				if (index >= inputOutputLength)
+					return;
+			}
+
+			// In v = input - y0 * a1 + y1 * a2 --> input - y[0:1] . a[0:1] -> sub(input, y.a)
+			__m128d y = _mm_loadu_pd(&this->y0);
+			__m128d a = _mm_loadu_pd(&this->a1);
+			__m128d b = _mm_loadu_pd(&this->b1);
+			__m128d b0 = _mm_set_sd(this->b0);
+
+			const double* inputIteratorEnd = input + inputOutputLength;
+			double* outputIterator = output;
+			for (const double* inputIterator = input + index; inputIterator < inputIteratorEnd; ++inputIterator)
+			{
+				__m128d aDotY = _mm_dp_pd(a, y, 0x31);
+				// v[low] has the result v[high] is not used
+				__m128d v = _mm_sub_sd(_mm_set_sd(*inputIterator), aDotY);
+
+				// In output	 = y0 * b1 + y1 * b2 + v * b0 --> y[0:1] . b[0:1] + v * b0 --> b0 * v + (y[0:1] . b[0:1]) --> fmadd( b0, v, y.b )
+				__m128d bDotY = _mm_dp_pd(b, y, 0x31);
+				// output[low] has the result; output[high] is not used
+				_mm_store_sd(outputIterator++, _mm_fmadd_pd(v, b0, bDotY));
+
+				// shift the filter y1 = y0, y0 = v
+				y = _mm_move_sd(_mm_movedup_pd(y), v);
+			}
+
+			// save it
+			_mm_store_pd(&this->y0, y);
+		}
+#endif
+
+		template<typename In>
+		void IIRFilter2<In>::GetOutputBatch(const In* input, In* output, int inputOutputLength, const Real lerpFactor)
+		{
+			assert(IsValid());
+
+			if (!parametersEqual.load(std::memory_order_acquire))
+			{
+				for (int index = 0; index < inputOutputLength; ++index)
+				{
+					if (!parametersEqual.load(std::memory_order_acquire))
+						InterpolateParameters(lerpFactor);
+
+					GetOutputInternal(input[index], output[index]);
+				}
+			}
+			else
+			{
+				for (int index = 0; index < inputOutputLength; ++index)
+					GetOutputInternal(input[index], output[index]);
+			}
+		}
+
 	}
 }

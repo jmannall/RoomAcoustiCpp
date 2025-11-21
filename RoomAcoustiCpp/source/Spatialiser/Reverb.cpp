@@ -327,8 +327,7 @@ namespace RAC
 
 		void SingleFDN::SetTargetT60(const Coefficients<>& T60)
 		{
-			if (!initialised.load(std::memory_order_acquire))
-				return;
+			assert(IsValid());
 
 #ifdef DEBUG_INIT
 			Debug::Log("Init FDN: [" + CoefficientToStr(T60) + "]", Colour::Green);
@@ -373,8 +372,7 @@ namespace RAC
 		void SingleFDN::SetTargetOutputFilters(const std::vector<Coefficients<>>& gains)
 		{
 			PROFILE_UpdateAudioData
-			if (!initialised.load(std::memory_order_acquire))
-				return;
+			assert(IsValid());
 
 #ifdef __ANDROID__
 			bool isZero = std::atomic_load(&mFDN)->SetTargetReflectionFilters(gains);
@@ -453,8 +451,7 @@ namespace RAC
 
 		void RAVES::SetTargetListenerResidues(size_t id, const Coefficients<>& residues)
 		{
-			if (!initialised.load(std::memory_order_acquire))
-				return;
+			assert(IsValid());
 
 #ifdef __ANDROID__
 			auto fdns = std::atomic_load(&mFDNs);
@@ -473,8 +470,7 @@ namespace RAC
 			for (Buffer<>& buffer : outputBuffers)
 				buffer.Reset();
 
-			if (!initialised.load(std::memory_order_acquire))
-				return;
+			assert(IsValid());
 
 #ifdef __ANDROID__
 			auto fdns = std::atomic_load(&mFDNs);

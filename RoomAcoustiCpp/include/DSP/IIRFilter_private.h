@@ -3,7 +3,10 @@
 #ifndef RoomAcoustiCpp_IIRFilter_private_h
 #define RoomAcoustiCpp_IIRFilter_private_h
 
+#include <cassert>
+
 #include "Common/Types.h"
+#include "include/Common/Definitions.h"
 
 namespace RAC
 {
@@ -35,9 +38,29 @@ namespace RAC
 			* @brief Returns the output of the IIRFilter given an input
 			*
 			* @param input The input to the IIRFilter
+			* @param lerpFactor The linear interpolation factor for parameters
 			* @return The output of the IIRFilter
 			*/
 			In GetOutput(const In input, const Real lerpFactor);
+
+			/**
+			* @brief Returns the output of the IIRFilter given an input
+			*
+			* @param input The input to the IIRFilter
+			* @param output The output to the filter
+			* @param lerpFactor The linear interpolation factor for parameters
+			*/
+			void GetOutput(const In& input, In& output, const Real lerpFactor);
+
+			/**
+			* @brief Processes a batch of inputs
+			*
+			* @param input The input to the IIRFilter
+			* @param output The output to the filter
+			* @param inputOutputLength The length of the data arrays
+			* @param lerpFactor The linear interpolation factor for parameters
+			*/
+			void GetOutputBatch(const In* input, In* output, int inputOutputLength, const Real lerpFactor);
 
 			/**
 			* @brief Set internal buffers to zeros
@@ -53,12 +76,36 @@ namespace RAC
 			*/
 			Coefficients<> GetFrequencyResponse(const Coefficients<>& frequencies) const;
 
-		protected:
-			const Real T;				// Sample rate time period
+			/**
+			 * @brief Returns if this filter is valid.
+			 *
+			 * @return true if the valid is valid and GetOutput() can be called.
+			 */
+			bool IsValid() const { return initialised.load(std::memory_order_acquire); }
 
-			Real a0{ 0.0 }, a1{ 0.0 }, a2{ 0.0 };		// Denominator coefficients (should only be accessed from the audio thread)
-			Real b0{ 0.0 }, b1{ 0.0 }, b2{ 0.0 };		// Numerator coefficients (should only be accessed from the audio thread)
-			In y0{ 0.0 }, y1{ 0.0 };					// Outputs (should only be accessed from the audio thread)
+			static void GetOutputFromMultipleFilters(IIRFilter2** filters, int numFilters, const In& input, In& output, const Real lerpFactor);
+
+		protected:
+			// to ensure alignment for AVX, these are in a slightly different order
+
+			// a -> Denominator coefficients (should only be accessed from the audio thread)
+			// b -> Numerator coefficients (should only be accessed from the audio thread)
+			// y -> Outputs (should only be accessed from the audio thread)
+
+#if USE_AVX
+			alignas(16)
+#endif
+			Real a1{ 0.0 };
+			Real a2{ 0.0 };
+			Real b1{ 0.0 };
+			Real b2{ 0.0 };
+			In   y0{ 0.0 };
+			In   y1{ 0.0 };
+
+			Real a0{ 0.0 };
+			Real b0{ 0.0 };
+
+			const Real T;				// Sample rate time period
 
 			std::atomic<bool> parametersEqual{ false };		// True if the current parameters are known to be equal to the target parameters
 			std::atomic<bool> initialised{ false };			// True if the filter has been initialised, false otherwise
@@ -70,6 +117,8 @@ namespace RAC
 			* @param lerpFactor The lerp factor for interpolation
 			*/
 			virtual void InterpolateParameters(const Real lerpFactor) = 0;
+
+			void GetOutputInternal(const In& input, In& output);
 		};
 
 		/**
@@ -97,7 +146,11 @@ namespace RAC
 			*
 			* @param parameter The target parameter of the filter
 			*/
-			inline void SetTargetParameter(const Real parameter) { target.store(parameter, std::memory_order_release); this->parametersEqual.store(false, std::memory_order_release); }
+			inline void SetTargetParameter(const Real parameter)
+			{
+				target.store(parameter, std::memory_order_release);
+				this->parametersEqual.store(false, std::memory_order_release);
+			}
 
 			/**
 			* @brief Updates the parameters of the low pass filter
@@ -143,7 +196,7 @@ namespace RAC
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
 			PeakHighShelf(const Real fc, const Real gain, const Real Q, const int sampleRate) : IIRFilter2Param1<In>(gain, sampleRate),
-				cosOmega(cos(PI_2 * fc * this->T)), alpha(sin(PI_2 * fc * this->T) / Q) // sin(omega) / (2 * Q) (factor of two cancelled out in UpdateGain)
+				cosOmega(cos(PI_2* fc* this->T)), alpha(sin(PI_2* fc* this->T) / Q) // sin(omega) / (2 * Q) (factor of two cancelled out in UpdateGain)
 			{
 				assert(fc < static_cast<Real>(sampleRate) / 2.0); // Ensure cut off frequency is less than Nyquist frequency
 
@@ -201,7 +254,7 @@ namespace RAC
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
 			PeakLowShelf(const Real fc, const Real gain, const Real Q, const int sampleRate) : IIRFilter2Param1<In>(gain, sampleRate),
-				cosOmega(cos(PI_2 * fc * this->T)), alpha(sin(PI_2 * fc * this->T) / Q) // sin(omega) / (2 * Q) (factor of two cancelled out in UpdateGain)
+				cosOmega(cos(PI_2* fc* this->T)), alpha(sin(PI_2* fc* this->T) / Q) // sin(omega) / (2 * Q) (factor of two cancelled out in UpdateGain)
 			{
 				assert(fc < static_cast<Real>(sampleRate) / 2.0); // Ensure cut off frequency is less than Nyquist frequency
 
@@ -259,7 +312,7 @@ namespace RAC
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
 			PeakingFilter(const Real fc, const Real gain, const Real Q, const int sampleRate) : IIRFilter2Param1<In>(gain, sampleRate),
-				cosOmega(-2.0 * cos(PI_2 * fc * this->T)), alpha(sin(PI_2 * fc * this->T) / (2.0 * Q))
+				cosOmega(-2.0 * cos(PI_2 * fc * this->T)), alpha(sin(PI_2* fc* this->T) / (2.0 * Q))
 			{
 				assert(fc < static_cast<Real>(sampleRate) / 2.0); // Ensure cut off frequency is less than Nyquist frequency
 
@@ -291,6 +344,142 @@ namespace RAC
 			const Real cosOmega;		// Cos of the cut off frequency
 			const Real alpha;			// Alpha value for the filter
 		};
+
+		////////////////////////////////////////
+
+		// Declare these here to allow potential inlining
+
+#if USE_AVX
+
+		// double is used here and not Real since this MUST work on doubles, even if Real is defined to be float
+
+		template <>
+		RAC_FORCE_INLINE void IIRFilter2<double>::GetOutputInternal(const double& input, double& output)
+		{
+#if CHECK_ALIGNMENT
+			// make sure they are aligned
+			assert((reinterpret_cast<ptrdiff_t>(&this->a1) & 0xf) == 0);
+			assert((reinterpret_cast<ptrdiff_t>(&this->y1) & 0xf) == 0);
+			assert((reinterpret_cast<ptrdiff_t>(&this->b1) & 0xf) == 0);
+#endif
+
+			// In v = input - y0 * a1 + y1 * a2 --> input - y[0:1] . a[0:1] -> sub(input, y.a)
+			__m128d y = _mm_loadu_pd(&this->y0);
+			__m128d aDotY = _mm_dp_pd(_mm_loadu_pd(&this->a1), y, 0x31);
+			// v[low] has the result v[high] is not used
+			__m128d v = _mm_sub_sd(_mm_set_sd(input), aDotY);
+
+			// In output	 = y0 * b1 + y1 * b2 + v * b0 --> y[0:1] . b[0:1] + v * b0 --> b0 * v + (y[0:1] . b[0:1]) --> fmadd( b0, v, y.b )
+			__m128d bDotY = _mm_dp_pd(_mm_loadu_pd(&this->b1), y, 0x31);
+			// output[low] has the result; output[high] is not used
+			_mm_store_sd(&output, _mm_fmadd_pd(v, _mm_set_sd(this->b0), bDotY));
+
+			// shift the filter y1 = y0, y0 = v
+			__m128d newY = _mm_move_sd(_mm_movedup_pd(y), v);
+
+			// save it
+			_mm_store_pd(&this->y0, newY);
+		}
+
+		template <>
+		RAC_FORCE_INLINE void IIRFilter2<double>::GetOutputFromMultipleFilters(IIRFilter2<double>** filters, int numFilters, const double& input, double& output, const Real lerpFactor)
+		{
+			// update parameters first
+			for (int filterIndex = 0; filterIndex < numFilters; ++filterIndex)
+			{
+				if (!filters[filterIndex]->parametersEqual.load(std::memory_order_acquire))
+					filters[filterIndex]->InterpolateParameters(lerpFactor);
+			}
+
+			// load the result
+			__m128d working = _mm_set_sd(input);
+
+			for (int filterIndex = 0; filterIndex < numFilters; ++filterIndex)
+			{
+				IIRFilter2<double>* currentFilter = filters[filterIndex];
+
+				// In v = input - y0 * a1 + y1 * a2 --> input - y[0:1] . a[0:1] -> sub(input, y.a)
+				__m128d y = _mm_loadu_pd(&currentFilter->y0);
+				__m128d aDotY = _mm_dp_pd(_mm_loadu_pd(&currentFilter->a1), y, 0x31);
+				// v[low] has the result v[high] is not used
+				__m128d v = _mm_sub_sd(working, aDotY);
+
+				// In output	 = y0 * b1 + y1 * b2 + v * b0 --> y[0:1] . b[0:1] + v * b0 --> b0 * v + (y[0:1] . b[0:1]) --> fmadd( b0, v, y.b )
+				__m128d bDotY = _mm_dp_pd(_mm_loadu_pd(&currentFilter->b1), y, 0x31);
+				// output[low] has the result; output[high] is not used
+				working = _mm_fmadd_pd(v, _mm_set_sd(currentFilter->b0), bDotY);
+
+				// shift the filter y1 = y0, y0 = v
+				__m128d newY = _mm_move_sd(_mm_movedup_pd(y), v);
+
+				// save it
+				_mm_store_pd(&currentFilter->y0, newY);
+			}
+
+			// save the final result
+			_mm_store_sd(&output, working);
+		}
+
+#endif
+
+		template <typename In>
+		RAC_FORCE_INLINE void IIRFilter2<In>::GetOutputInternal(const In& input, In& output)
+		{
+			In v = input;
+			output = 0.0;
+
+			v -= y0 * a1;
+			output += y0 * b1;
+
+			v -= y1 * a2;
+			output += y1 * b2;
+
+			y1 = y0;
+			y0 = v;
+
+			output += v * b0;
+		}
+
+		template<typename In>
+		RAC_FORCE_INLINE void IIRFilter2<In>::GetOutput(const In& input, In& output, const Real lerpFactor)
+		{
+			assert(IsValid());
+
+			if (!parametersEqual.load(std::memory_order_acquire))
+				InterpolateParameters(lerpFactor);
+
+			GetOutputInternal(input, output);
+		}
+
+		template<typename In>
+		RAC_FORCE_INLINE In IIRFilter2<In>::GetOutput(const In input, const Real lerpFactor)
+		{
+			assert(IsValid());
+
+			if (!parametersEqual.load(std::memory_order_acquire))
+				InterpolateParameters(lerpFactor);
+
+			In output;
+			GetOutputInternal(input, output);
+			return output;
+		}
+
+		template <typename In>
+		RAC_FORCE_INLINE void IIRFilter2<In>::GetOutputFromMultipleFilters(IIRFilter2** filters, int numFilters, const In& input, In& output, const Real lerpFactor)
+		{
+			// update parameters first
+			for (int filterIndex = 0; filterIndex < numFilters; ++filterIndex)
+			{
+				if (!filters[filterIndex]->parametersEqual.load(std::memory_order_acquire))
+					filters[filterIndex]->InterpolateParameters(lerpFactor);
+			}
+
+			// process the data
+			for (int filterIndex = 0; filterIndex < numFilters; ++filterIndex)
+				filters[filterIndex]->GetOutputInternal(input, output);
+		}
+
+		////////////////////////////////////////
 	}
 }
 

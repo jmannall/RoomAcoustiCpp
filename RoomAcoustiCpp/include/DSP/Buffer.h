@@ -184,6 +184,9 @@ namespace RAC
 
 			inline const auto end() const { return mBuffer.end(); }
 
+			T* data() { return &mBuffer[0];	}
+			const T* data() const { return &mBuffer[0]; }
+
 		private:
 
 			std::vector<T> mBuffer;		// Buffer data

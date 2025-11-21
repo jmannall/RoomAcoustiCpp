@@ -107,13 +107,24 @@ namespace RAC
 				for (int dir_idx = 0; dir_idx < numReverbDirections; ++dir_idx) {
 					computeEnergyContributions(dir_idx);
 #ifdef DEBUG_RTM
-				Debug::send_path(IntToStr(dir_idx) + "l", { mListenerPosition }, reverbDirections[dir_idx]);
+					Debug::send_path(IntToStr(dir_idx) + "l", { mListenerPosition }, reverbDirections[dir_idx]);
 #endif
 
 					for (int slope_idx = 0; slope_idx < numFDNs; ++slope_idx) {
+
+						const Real decay = decayPerSecond(slope_idx);
+
+#if MATRIX_LIBRARY == EIGEN_FLAG
+						// decay ^ -contributionDelays[path_index] => e^(-contributionDelays[path_index] * ln(contributionDelays))
+						const Real decayLn = std::log(decay);
+
+						assert(contributionDelayScaling.size() == numPaths);
+						contributionDelayScaling = (-contributionDelays * decayLn).array().exp();
+#else
 						for (int path_idx = 0; path_idx < numPaths; ++path_idx) {
-							contributionDelayScaling(path_idx) = std::pow(decayPerSecond(slope_idx), -contributionDelays(path_idx));
+							contributionDelayScaling(path_idx) = std::pow(decay, -contributionDelays(path_idx));
 						}
+#endif
 
 						listenerResidues[slope_idx][dir_idx] =
 							ThreeWayDot(

@@ -15,6 +15,15 @@
 // DSP headers
 #include "DSP/GraphicEQ_private.h"
 
+// Processes all of the samples through each filter, one filter at a time. In practice, this
+// is slower based on my performance tests then running each sample through all filters.
+#define BATCH_PROCESS_AUDIO_BUFFERS		 ( 0 )
+
+// Run all filters as a single operation without using a temporary variable. This improves performance
+// slightly (~12%) since it eliminates read/writing the temporary value to memory.
+#define BATCH_PROCESS_FILTERS			 ( 1 )
+
+
 namespace RAC
 {
 	namespace DSP
@@ -42,7 +51,14 @@ namespace RAC
 			currentGain = targetGains.second;
 
 			gainsEqual.store(true, std::memory_order_release);
-			initialised.store(true, std::memory_order_release);
+
+			bool isInitialised = lowShelf->IsValid() && highShelf->IsValid();
+			for (const auto& peakingFilter : peakingFilters)
+			{
+				if (!peakingFilter->IsValid())
+					isInitialised = false;
+			}
+			initialised.store(isInitialised, std::memory_order_release);
 		}
 
 		////////////////////////////////////////
@@ -186,33 +202,132 @@ namespace RAC
 		template<typename T>
 		T GraphicEQ<T>::GetOutput(const T input, const Real lerpFactor)
 		{
-			if (!initialised.load(std::memory_order_acquire))
-				return 0.0;
-
+			assert(IsValid());
 			if (!gainsEqual.load(std::memory_order_acquire))
 				InterpolateGain(lerpFactor);
 
 			if (numFilters == 3) // Only one peaking filter
 				return input * currentGain; // Single band EQ is just a gain
 
-			T out = lowShelf->GetOutput(input, lerpFactor);
-			for (auto& filter : peakingFilters)
-				out = filter->GetOutput(out, lerpFactor);
-			out = highShelf->GetOutput(out, lerpFactor);
+			T out;
+			lowShelf->GetOutput(input, out, lerpFactor);
+			for (const auto& filter : peakingFilters)
+				filter->GetOutput(out, out, lerpFactor);
+			highShelf->GetOutput(out, out, lerpFactor);
 			out *= currentGain;
 			return out;
 		}
+
+		template<typename T>
+		void GraphicEQ<T>::GetOutputBatch(const T* input, T* output, int inputOutputLength, const Real lerpFactor)
+		{
+			assert(IsValid());
+
+			if (numFilters == 3)
+			{
+				// Only one peaking filter -> just a gain, so copy the input directly to the output
+				for (int index = 0; index < inputOutputLength; ++index)
+					output[index] = input[index];
+			}
+			else
+			{
+#if BATCH_PROCESS_FILTERS
+				// build a local copy of the filter array
+				IIRFilter2<T>** filters = static_cast<IIRFilter2<T>**>(alloca(sizeof(IIRFilter2<T>*) * numFilters));
+				filters[0] = &*lowShelf;
+				int currentFilter = 1;
+				for (const auto& filter : peakingFilters)
+					filters[currentFilter++] = &*filter;
+				filters[currentFilter++] = &*highShelf;
+				assert(currentFilter == numFilters);
+
+				// process all filters on each sample
+				for (int index = 0; index < inputOutputLength; ++index)
+					IIRFilter2<T>::GetOutputFromMultipleFilters(filters, numFilters, input[index], output[index], lerpFactor);
+
+#elif BATCH_PROCESS_AUDIO_BUFFERS
+				lowShelf->GetOutputBatch(input, output, inputOutputLength, lerpFactor);
+				for (const auto& filter : peakingFilters)
+					filter->GetOutputBatch(output, output, inputOutputLength, lerpFactor);
+				highShelf->GetOutputBatch(output, output, inputOutputLength, lerpFactor);
+#else
+				for (int index = 0; index < inputOutputLength; ++index)
+				{
+					T& out = output[index];
+					lowShelf->GetOutput(input[index], out, lerpFactor);
+					for (const auto& filter : peakingFilters)
+						filter->GetOutput(out, out, lerpFactor);
+					highShelf->GetOutput(out, out, lerpFactor);
+				}
+#endif
+			}
+
+			// process the gain
+			ScaleGain(output, inputOutputLength, lerpFactor);
+		}
+		
+		////////////////////////////////////////
+		///
+		template<typename T>
+		void GraphicEQ<T>::ScaleGain(T *output, int length, const Real lerpFactor)
+		{
+			if (!gainsEqual.load(std::memory_order_acquire))
+			{
+				for (int index = 0; index < length; ++index)
+				{
+					if (!gainsEqual.load(std::memory_order_acquire))
+						InterpolateGain(lerpFactor);
+					output[index] *= currentGain;
+				}
+			}
+			else
+			{
+				for (int index = 0; index < length; ++index)
+					output[index] *= currentGain;
+			}
+		}
+
+		////////////////////////////////////////
+
+#if USE_AVX
+		template<>
+		void GraphicEQ<double>::ScaleGain(double* output, int length, const Real lerpFactor)
+		{
+			if (!gainsEqual.load(std::memory_order_acquire) || (length % 4) != 0)
+			{
+				for (int index = 0; index < length; ++index)
+				{
+					if (!gainsEqual.load(std::memory_order_acquire))
+						InterpolateGain(lerpFactor);
+					output[index] *= currentGain;
+				}
+			}
+			else
+			{
+				// make sure we are aligned (in practice this is true; we could always check it and fall
+				// back on a slower case)
+				assert( (reinterpret_cast<ptrdiff_t>(output) % 32) == 0);
+
+				__m256d scaleFactor = _mm256_broadcast_sd(&currentGain);
+				double* current = output, *end = output + length;
+				while (current < end)
+				{
+					__m256d currentValue = _mm256_load_pd(current);
+					__m256d newValue = _mm256_mul_pd(currentValue, scaleFactor);
+					_mm256_store_pd(current, newValue);
+					current += 4;
+				}
+			}
+		}
+#endif
 
 		////////////////////////////////////////
 
 		template<typename T>
 		void GraphicEQ<T>::ProcessAudio(const Buffer<T>& inBuffer, Buffer<T>& outBuffer, const Real lerpFactor)
 		{
-			if (!initialised.load(std::memory_order_acquire))
-			{
-				outBuffer.Reset();
+			if (!IsValid())
 				return;
-			}
 
 			if (currentGain == 0.0 && gainsEqual.load(std::memory_order_acquire))
 			{
@@ -220,8 +335,8 @@ namespace RAC
 				return;
 			}
 
-			for (int i = 0; i < inBuffer.Length(); i++)
-				outBuffer[i] = GetOutput(inBuffer[i], lerpFactor);
+			const int inBufferLength = ToInt(inBuffer.Length());
+			GetOutputBatch(inBuffer.data(), outBuffer.data(), inBufferLength, lerpFactor);
 		}
 
 		////////////////////////////////////////
@@ -241,9 +356,9 @@ namespace RAC
 		//////////////////// Instantiate ////////////////////
 
 		// we don't implement/use every function, so disable the warning (we can't re-enable it since the warning is generated after the file is parsed)
-		#ifdef _MSC_VER
-		#pragma warning (disable : 4661)
-		#endif
+#ifdef _MSC_VER
+#pragma warning (disable : 4661)
+#endif
 
 		template class GraphicEQ<Real>;
 		template class GraphicEQ<Complex>;

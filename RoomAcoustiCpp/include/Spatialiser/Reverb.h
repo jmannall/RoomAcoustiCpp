@@ -247,6 +247,13 @@ namespace RAC
 					directions.emplace_back(100.0 * reverbSource->GetShift());
 			}
 
+			/**
+			 * @brief Returns if this filter is valid.
+			 *
+			 * @return true if the valid is valid and GetOutput() can be called.
+			 */
+			bool IsValid() const { return initialised.load(std::memory_order_acquire); }
+
 		protected:
 			std::atomic<bool> initialised{ false };		// True if T60 > 0.0 and T60 < 20.0 seconds
 			std::atomic<bool> running{ false };			// True if audio thread should process late reverberation
@@ -280,14 +287,16 @@ namespace RAC
 			*/
 			void SetTargetT60(const Coefficients<>& T60) override;
 
+			/**
+			 * @brief Returns if this filter is valid.
+			 *
+			 * @return true if the valid is valid and GetOutput() can be called.
+			 */
+			bool IsValid() const { return initialised.load(std::memory_order_acquire); }
+
 			inline void ProcessReverberator(const Matrix<>& data, std::vector<Buffer<>>& outputBuffers, const AudioData& audioData) override
 			{
-				if (!initialised.load(std::memory_order_acquire))
-				{
-					for (Buffer<>& outputBuffer : outputBuffers)
-						outputBuffer.Reset();
-					return;
-				}
+				assert(IsValid());
 #ifdef __ANDROID__
 				std::atomic_load(&mFDN)->ProcessAudio(data, outputBuffers, audioData);
 #else
