@@ -29,7 +29,8 @@ namespace RAC
 		void AirAbsorption::ProcessAudio(const Buffer<>& inBuffer, Buffer<>& outBuffer, const Real lerpFactor)
 		{
 			PROFILE_AirAbsorption
-			for (int i = 0; i < inBuffer.Length(); i++)
+			const auto numFrames = inBuffer.Length();
+			for (auto i = 0; i < numFrames; i++)
 				outBuffer[i] = GetOutput(inBuffer[i], lerpFactor);
 		}
 

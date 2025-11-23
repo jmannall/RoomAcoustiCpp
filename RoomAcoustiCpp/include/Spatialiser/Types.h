@@ -114,6 +114,7 @@ namespace RAC
 		struct DSPData
 		{
 		public:
+			// TODO: Should fs be a float?
 			int fs{ 48000 };							// Sample rate
 			int numFrames{ 512 };						// Number of frames per audio callback
 			int numReverbSources{ 12 };					// Number of output channels for late reverberation

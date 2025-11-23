@@ -19,6 +19,9 @@
 #include "Common/Vec3.h"
 #include "Common/Vec4.h"
 
+// DSP headers
+#include "DSP/DCBlocker.h"
+
 // Spatialiser headers
 #include "Spatialiser/ContextOptionalArguments.h"
 #include "Spatialiser/Types.h"
@@ -361,6 +364,7 @@ namespace RAC
 			Real headRadius;					// Stored head radius from 3DTI
 			bool applyHeadphoneEQ;				// Flag to apply headphone EQ
 			HeadphoneEQ headphoneEQ;			// Headphone EQ
+			DCBlocker dcBlocker;				// Filter to remove DC offset
 
 			/**
 			* 3DTI components

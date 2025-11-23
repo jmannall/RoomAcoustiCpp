@@ -142,6 +142,21 @@ namespace RAC
 			inline Vec3 GetSourcePosition(const size_t id) { return mSources[id]->GetPosition(); }
 
 			/**
+			* @brief Returns the position which was last used in ray-tracing for the source with the given ID
+			* 
+			* @params id The ID of the source
+			* @return The last position of the source
+			*/
+			inline Vec3 GetLastRTMSourcePosition(const size_t id) { return mSources[id]->GetLastRTMPosition(); };
+			/**
+			* @brief Sets the position which was last used in ray-tracing for the source with the given ID
+			*
+			* @params id The ID of the source
+			* @params The last position of the source
+			*/
+			inline void SetLastRTMSourcePosition(const size_t id, const Vec3 pos) { mSources[id]->SetLastRTMPosition(pos); };
+
+			/**
 			* @brief Updates the audio DSP parameters and image sources for a given source
 			* 
 			* @params id The ID of the source

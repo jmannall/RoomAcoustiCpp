@@ -176,7 +176,7 @@ namespace RAC
 			 * @param minLineSeconds Minimum delay line length, in seconds
 			 * @param maxLineSeconds Maximum delay line length, in seconds
 			 */
-			static void buildDelaySets(Matrix<int>& delayLineLengths, Real fs,
+			static void buildDelaySets(Matrix<int>& delayLineLengths, int fs,
 				Real minDiffSeconds = 2e-4, Real minLineSeconds = 3e-2, Real maxLineSeconds = 3e-1);
 
 			inline void SetEigenvectors (const std::vector<Vec<>>& rightEigenvectors, const std::vector<Vec<>>& leftEigenvectors)

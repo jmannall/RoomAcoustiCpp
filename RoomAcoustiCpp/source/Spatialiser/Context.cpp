@@ -131,7 +131,7 @@ namespace RAC
 		////////////////////////////////////////
 
 		Context::Context(const DSPData& data,const ContextOptionalArguments& optionalArguments)
-		: dspConfig(std::make_shared<DSPConfig>(data)), mIsRunning(true), IEMThread(), rayTracingThread(), applyHeadphoneEQ(false), headphoneEQ(2048)
+		: dspConfig(std::make_shared<DSPConfig>(data)), mIsRunning(true), IEMThread(), rayTracingThread(), applyHeadphoneEQ(false), headphoneEQ(2048), dcBlocker(data.fs)
 		{
 #ifdef DEBUG_INIT
 			Debug::Log("Init Context", Colour::Green);
@@ -519,6 +519,8 @@ namespace RAC
 
 			if (applyHeadphoneEQ)
 				headphoneEQ.ProcessAudio(outputBuffer, outputBuffer, audioData);
+
+			dcBlocker.ProcessAudio(outputBuffer);
 		}
 
 		////////////////////////////////////////

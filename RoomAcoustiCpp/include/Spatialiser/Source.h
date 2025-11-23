@@ -229,6 +229,12 @@ namespace RAC
 			inline Vec3 GetPosition() const { lock_guard<std::mutex>lock(*dataMutex); return currentPosition; };
 
 			/**
+			* @return The source position which was last used in ray-tracing
+			*/
+			inline Vec3 GetLastRTMPosition() const { lock_guard<std::mutex>lock(*dataMutex); return lastRTMPosition; };
+			inline void SetLastRTMPosition(const Vec3 pos) { lock_guard<std::mutex>lock(*dataMutex); lastRTMPosition = pos; };
+
+			/**
 			* @return The current source orientation
 			*/
 			inline Vec4 GetOrientation() const { lock_guard<std::mutex>lock(*dataMutex); return currentOrientation; };
@@ -388,6 +394,7 @@ namespace RAC
 			OctaveBand octaveBandFilter;		// Octave band filter for source residues
 
 			Vec3 currentPosition;					// Current source position
+			Vec3 lastRTMPosition;					// Source position which was last used for ray-tracing
 			Vec4 currentOrientation;				// Current source orientation
 			UpdateFlags updateFlags;				// Struct of flags to check if the source has changed since last update of each thread
 			std::atomic<bool> isReset{ true };		// Flag to check if the source is ready to be initialised
