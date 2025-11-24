@@ -6,7 +6,7 @@
 */
 
 // C++ headers
-#ifdef __WINDOWS__
+#ifdef _WIN32
 /* Microsoft C/C++-compatible compiler */
 #include <intrin.h>
 #endif
