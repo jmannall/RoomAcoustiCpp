@@ -44,6 +44,14 @@ bool CommandLineParser::Parse()
 		{
 			detailedLogs = false;
 		}
+		else if (argument == "--quality-hrtfs")
+		{
+			useQualityHRTFs = true;
+		}
+		else if (argument == "--performance-hrtfs")
+		{
+			useQualityHRTFs = false;
+		}
 		else if (ParseStandardArgument(argument, "--test-iterations=", value))
 		{
 			const int newIterations = std::stoi(value);
@@ -163,7 +171,9 @@ Options:
     --no-debug             Disables certain memory debugging features
     --no-detailed-logs     Disabled detailed logs 
     --num-rays=##          Sets the number of rays
+    --performance-hrtfs    Use performance HRTFs
     --profile-data=xx      Sets the profile data directory.
+    --quality-hrtfs        Use quality HRTFs
     --reflection-order=##  Sets the reflection order
     --run-log=file         Specifies the log of each run
     --shadow-order=##      Sets the shadow order

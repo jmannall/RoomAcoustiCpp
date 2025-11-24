@@ -28,6 +28,7 @@ public:
 	int GetShadowOrder() const { return shadowOrder; }
 	bool GetStaticSceneFlag() const { return staticScene; }
 	std::optional<size_t> GetDesiredAudioThreads() const { return desiredAudioThreads;  }
+	bool GetUseQualityHRTFs() const { return useQualityHRTFs; }
 
 	const std::string &GetLogPrefix() const { return logPrefix; }
 	const std::string &GetProfileDataDirectory() const { return profileDataDirectory; }
@@ -59,6 +60,7 @@ private:
 	int reflectionOrder = 2;
 	int shadowOrder = 2;
 	bool staticScene = true;
+	bool useQualityHRTFs = true;
 	std::optional<size_t> desiredAudioThreads;
 
 };
