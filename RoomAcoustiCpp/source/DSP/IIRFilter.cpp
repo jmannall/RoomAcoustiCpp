@@ -504,9 +504,9 @@ namespace RAC
 			}
 
 			// In v = input - y0 * a1 + y1 * a2 --> input - y[0:1] . a[0:1] -> sub(input, y.a)
-			__m128d y = _mm_loadu_pd(&this->y0);
-			__m128d a = _mm_loadu_pd(&this->a1);
-			__m128d b = _mm_loadu_pd(&this->b1);
+			__m128d y = _mm_load_pd(&this->y0);
+			__m128d a = _mm_load_pd(&this->a1);
+			__m128d b = _mm_load_pd(&this->b1);
 			__m128d b0 = _mm_set_sd(this->b0);
 
 			const double* inputIteratorEnd = input + inputOutputLength;

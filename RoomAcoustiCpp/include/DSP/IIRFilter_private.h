@@ -364,13 +364,13 @@ namespace RAC
 #endif
 
 			// In v = input - y0 * a1 + y1 * a2 --> input - y[0:1] . a[0:1] -> sub(input, y.a)
-			__m128d y = _mm_loadu_pd(&this->y0);
-			__m128d aDotY = _mm_dp_pd(_mm_loadu_pd(&this->a1), y, 0x31);
+			__m128d y = _mm_load_pd(&this->y0);
+			__m128d aDotY = _mm_dp_pd(_mm_load_pd(&this->a1), y, 0x31);
 			// v[low] has the result v[high] is not used
 			__m128d v = _mm_sub_sd(_mm_set_sd(input), aDotY);
 
 			// In output	 = y0 * b1 + y1 * b2 + v * b0 --> y[0:1] . b[0:1] + v * b0 --> b0 * v + (y[0:1] . b[0:1]) --> fmadd( b0, v, y.b )
-			__m128d bDotY = _mm_dp_pd(_mm_loadu_pd(&this->b1), y, 0x31);
+			__m128d bDotY = _mm_dp_pd(_mm_load_pd(&this->b1), y, 0x31);
 			// output[low] has the result; output[high] is not used
 			_mm_store_sd(&output, _mm_fmadd_pd(v, _mm_set_sd(this->b0), bDotY));
 
@@ -399,13 +399,13 @@ namespace RAC
 				IIRFilter2<double>* currentFilter = filters[filterIndex];
 
 				// In v = input - y0 * a1 + y1 * a2 --> input - y[0:1] . a[0:1] -> sub(input, y.a)
-				__m128d y = _mm_loadu_pd(&currentFilter->y0);
-				__m128d aDotY = _mm_dp_pd(_mm_loadu_pd(&currentFilter->a1), y, 0x31);
+				__m128d y = _mm_load_pd(&currentFilter->y0);
+				__m128d aDotY = _mm_dp_pd(_mm_load_pd(&currentFilter->a1), y, 0x31);
 				// v[low] has the result v[high] is not used
 				__m128d v = _mm_sub_sd(working, aDotY);
 
 				// In output	 = y0 * b1 + y1 * b2 + v * b0 --> y[0:1] . b[0:1] + v * b0 --> b0 * v + (y[0:1] . b[0:1]) --> fmadd( b0, v, y.b )
-				__m128d bDotY = _mm_dp_pd(_mm_loadu_pd(&currentFilter->b1), y, 0x31);
+				__m128d bDotY = _mm_dp_pd(_mm_load_pd(&currentFilter->b1), y, 0x31);
 				// output[low] has the result; output[high] is not used
 				working = _mm_fmadd_pd(v, _mm_set_sd(currentFilter->b0), bDotY);
 
