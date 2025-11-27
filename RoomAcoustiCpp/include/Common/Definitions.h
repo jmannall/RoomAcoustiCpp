@@ -14,11 +14,23 @@
 
 // Common headers
 #include "Common/Types.h"
+#include "Common/Complex.h"
 
 namespace RAC
 {
 	namespace Common
 	{
+
+		inline bool IsNotValid(Real in)
+		{
+			return !std::isfinite(in);
+		}
+
+		inline bool IsNotValid(Complex in)
+		{
+			return !(std::isfinite(in.real()) && std::isfinite(in.imag()));
+		}
+
 		static_assert(std::atomic<bool>::is_always_lock_free, "Bool type must be lock-free for atomic operations");
 #ifdef __WINDOWS__
 		static_assert(!std::atomic<std::shared_ptr<Real>>::is_always_lock_free, "Shared ptr type is now lock free");

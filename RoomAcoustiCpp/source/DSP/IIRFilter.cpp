@@ -22,6 +22,8 @@
 #include "Common/Complex.h"
 #include "DSP/Interpolate.h"
 
+#include "Unity/Debug.h"
+#pragma optimize("", off)
 namespace RAC
 {
 	using namespace Common;
@@ -94,19 +96,64 @@ namespace RAC
 			if (!parametersEqual.load(std::memory_order_acquire))
 				InterpolateParameters(lerpFactor);
 
+			if (IsNotValid(input))
+			{
+				Unity::Debug::Log("Input has nans");
+				return 0.0;
+			}
+
 			In v = input;
 			In output = 0.0;
 
 			v -= y0 * a1;
+			if (IsNotValid(v))
+			{
+				Unity::Debug::Log("v1 is wrong");
+				return 0.0;
+			}
+
 			output += y0 * b1;
+			if (IsNotValid(output))
+			{
+				Unity::Debug::Log("output1 is wrong");
+				return 0.0;
+			}
 
 			v -= y1 * a2;
+			if (IsNotValid(v))
+			{
+				Unity::Debug::Log("v2 is wrong");
+				return 0.0;
+			}
+
 			output += y1 * b2;
+			if (IsNotValid(output))
+			{
+				Unity::Debug::Log("output2 is wrong");
+				return 0.0;
+			}
 
 			y1 = y0;
 			y0 = v;
 
+			if (IsNotValid(y1))
+			{
+				Unity::Debug::Log("y1 is wrong");
+				return 0.0;
+			}
+
+			if (IsNotValid(y0))
+			{
+				Unity::Debug::Log("y0 is wrong");
+				return 0.0;
+			}
+
 			output += v * b0;
+			if (IsNotValid(output))
+			{
+				Unity::Debug::Log("output3 is wrong");
+				return 0.0;
+			}
 
 			return output;
 		}
@@ -513,3 +560,4 @@ namespace RAC
 		}
 	}
 }
+#pragma optimize("", on)

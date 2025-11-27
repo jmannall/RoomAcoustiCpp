@@ -288,11 +288,29 @@ namespace RAC
 				FreeAccess();
 				return;
 			}
+			if (!inputBuffer.Valid())
+			{
+				Unity::Debug::Log("Source input has nans");
+				return;
+			}
+
 			mAirAbsorption->ProcessAudio(inputBuffer, bStore, audioData.lerpFactor);
+
+			if (!bStore.Valid())
+			{
+				Unity::Debug::Log("Source air absorption output has nans");
+				return;
+			}
 
 			{
 				PROFILE_Reflection
 				directivityFilter->ProcessAudio(bStore, bStore, audioData.lerpFactor);
+			}
+
+			if (!bStore.Valid())
+			{
+				Unity::Debug::Log("Source directivity output has nans");
+				return;
 			}
 
 			for (int i = 0; i < numFrames; i++)

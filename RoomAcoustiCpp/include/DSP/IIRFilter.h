@@ -23,7 +23,7 @@
 
 #include "DSP/IIRFilter_private.h"
 #include "Common/Complex.h"
-
+#pragma optimize("", off)
 namespace RAC
 {
 	namespace DSP
@@ -526,5 +526,5 @@ namespace RAC
 		};
 	}
 }
-
+#pragma optimize("", on)
 #endif // DSP_IIRFilter_h

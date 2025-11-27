@@ -111,7 +111,7 @@ namespace RAC
 			bool Valid()
 			{
 				for (int i = 0; i < Length(); i++)
-					if (std::isnan(mBuffer[i]))
+					if (std::isfinite(mBuffer[i]))
 						return false;
 				return true;
 			}

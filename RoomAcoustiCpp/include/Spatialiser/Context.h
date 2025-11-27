@@ -36,6 +36,8 @@
 #include "Common/Transform.h"
 #include "BinauralSpatializer/3DTI_BinauralSpatializer.h"
 
+#include "Unity/Debug.h"
+
 #include <chrono>
 #include <filesystem>
 #include <ctime>
@@ -319,7 +321,15 @@ namespace RAC
 			* @param id The ID of the source to send the audio to.
 			* @param data The audio buffer.
 			*/
-			inline void SubmitAudio(size_t id, const Buffer<>& data) { PROFILE_SubmitAudio mSources->SetInputBuffer(id, data); }
+			inline void SubmitAudio(size_t id, const Buffer<>& data)
+			{
+				PROFILE_SubmitAudio
+				if (!data.Valid())
+				{
+					Unity::Debug::Log("Submit audio input has nans");
+				}
+				mSources->SetInputBuffer(id, data);
+			}
 
 			/**
 			* @brief Accesses the output of the spatialiser.

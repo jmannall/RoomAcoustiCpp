@@ -641,15 +641,40 @@ namespace RAC
 
 			const int numFrames = ToInt(inputBuffer->Length());
 
+			if (!inputBuffer->Valid())
+			{
+				Unity::Debug::Log("Image source input has nans");
+				return;
+			}
+
 			{
 				PROFILE_Reflection
 				mFilter->ProcessAudio(*inputBuffer, bStore, audioData.lerpFactor);
 			}
 
+			if (!bStore.Valid())
+			{
+				Unity::Debug::Log("Image source reflection output has nans");
+				return;
+			}
+
+
 			if (diffraction)
 				ProcessDiffraction(bStore, bStore, audioData.lerpFactor);
 
+			if (!bStore.Valid())
+			{
+				Unity::Debug::Log("Image source diffraction output has nans");
+				return;
+			}
+
 			mAirAbsorption->ProcessAudio(bStore, bStore, audioData.lerpFactor);
+
+			if (!bStore.Valid())
+			{
+				Unity::Debug::Log("Image source air absorption output has nans");
+				return;
+			}
 
 			for (int i = 0; i < numFrames; i++)
 				bInput[i] = static_cast<float>(bStore[i] * gain.Use(audioData.lerpFactor));

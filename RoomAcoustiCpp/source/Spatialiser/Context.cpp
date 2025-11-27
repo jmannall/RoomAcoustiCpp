@@ -511,6 +511,12 @@ namespace RAC
 			if (earlyReverbInitialised.load(std::memory_order_acquire) && (audioData.earlyReverbEnabled || audioData.lateReverbEnabled))
 				mSources->ProcessAudio(outputBuffer, audioData);
 
+			if (!outputBuffer.Valid())
+			{
+				Unity::Debug::Log("Early reverb output has nans");
+				return;
+			}
+
 			if (lateReverbInitialised.load(std::memory_order_acquire) && audioData.lateReverbEnabled)
 			{
 				mSources->ProcessLateReverbSend(mReverbInput, audioData);
@@ -520,7 +526,17 @@ namespace RAC
 			if (applyHeadphoneEQ)
 				headphoneEQ.ProcessAudio(outputBuffer, outputBuffer, audioData);
 
+			if (!outputBuffer.Valid())
+			{
+				Unity::Debug::Log("Reverb output has nans");
+				return;
+			}
 			dcBlocker.ProcessAudio(outputBuffer);
+			if (!outputBuffer.Valid())
+			{
+				Unity::Debug::Log("DC Blocker output has nans");
+				return;
+			}
 		}
 
 		////////////////////////////////////////
