@@ -57,8 +57,6 @@ namespace RAC
 
 		bool LoadSpatialisationFiles(const int hrtfResamplingStep, const std::vector<std::string>& filePaths)
 		{
-			Debug::Log("LoadSpatialisationFiles", Colour::Orange);
-
 			auto context = GetContext();
 			if (context)
 				return context->LoadSpatialisationFiles(hrtfResamplingStep, filePaths);
@@ -70,8 +68,6 @@ namespace RAC
 
 		void SetHeadphoneEQ(const Buffer<>& leftIR, const Buffer<>& rightIR)
 		{
-			Debug::Log("SetHeadphoneEQ", Colour::Orange);
-
 			auto context = GetContext();
 			if (context)
 				context->SetHeadphoneEQ(leftIR, rightIR);
@@ -81,8 +77,6 @@ namespace RAC
 
 		void UpdateSpatialisationMode(const SpatialisationMode mode)
 		{
-			Debug::Log("UpdateSpatialisationMode", Colour::Orange);
-
 			auto context = GetContext();
 			if (context)
 				context->UpdateSpatialisationMode(mode);
@@ -92,8 +86,6 @@ namespace RAC
 
 		void EnableEarlyReverb(const bool enable)
 		{
-			Debug::Log("EnableEarlyReverb", Colour::Orange);
-
 			auto context = GetContext();
 			if (context)
 				context->EnableEarlyReverb(enable);
@@ -103,8 +95,6 @@ namespace RAC
 
 		void UpdateEarlyConfig(const EarlyReverbData& data)
 		{
-			Debug::Log("UpdateEarlyConfig", Colour::Orange);
-
 			auto context = GetContext();
 			if (context)
 				context->UpdateEarlyConfig(data);
@@ -114,8 +104,6 @@ namespace RAC
 
 		void EnableLateReverb(const bool enable)
 		{
-			Debug::Log("EnableLateReverb", Colour::Orange);
-
 			auto context = GetContext();
 			if (context)
 				context->EnableLateReverb(enable);
@@ -125,8 +113,6 @@ namespace RAC
 
 		void UpdateLateReverbNumberOfRays(const int numRays)
 		{
-			Debug::Log("UpdateLateReverbNumberOfRays", Colour::Orange);
-
 			auto context = GetContext();
 			if (context)
 				context->UpdateLateReverbNumberOfRays(numRays);
@@ -136,8 +122,6 @@ namespace RAC
 
 		void UpdateMoDARTDelay(const Real delay)
 		{
-			Debug::Log("UpdateMoDARTDelay", Colour::Orange);
-
 			auto context = GetContext();
 			if (context)
 				context->UpdateMoDARTDelay(delay);
@@ -147,8 +131,6 @@ namespace RAC
 
 		void UpdateMoDARTMinimumReverbTime(const Real T60)
 		{
-			Debug::Log("UpdateMoDARTMinimumReverbTime", Colour::Orange);
-
 			auto context = GetContext();
 			if (context)
 				context->UpdateMoDARTMinimumReverbTime(T60);
@@ -158,8 +140,6 @@ namespace RAC
 
 		void UpdateSingleFDNReverbTime(const ReverbFormula model)
 		{
-			Debug::Log("UpdateSingleFDNReverbTime", Colour::Orange);
-
 			auto context = GetContext();
 			if (context)
 				context->UpdateSingleFDNReverbTime(model);
@@ -169,8 +149,6 @@ namespace RAC
 
 		void UpdateSingleFDNReverbTime(const Coefficients<>& T60)
 		{
-			Debug::Log("UpdateSingleFDNReverbTime", Colour::Orange);
-
 			auto context = GetContext();
 			if (context)
 				context->UpdateSingleFDNReverbTime(T60);
@@ -180,8 +158,6 @@ namespace RAC
 
 		void UpdateDiffractionModel(const DiffractionModel model)
 		{
-			Debug::Log("UpdateDiffractionModel", Colour::Orange);
-
 			auto context = GetContext();
 			if (context)
 				context->UpdateDiffractionModel(model);
@@ -191,8 +167,6 @@ namespace RAC
 
 		bool InitEarlyReverb(const bool enabled, const EarlyReverbData& data, const DiffractionModel model)
 		{
-			Debug::Log("InitEarlyReverb", Colour::Orange);
-
 			auto context = GetContext();
 			if (context)
 				return context->InitEarlyReverb(enabled, data, model);
@@ -203,8 +177,6 @@ namespace RAC
 
 		bool InitSingleFDN(const RoomData& roomData, const LateReverbData& data)
 		{
-			Debug::Log("InitSingleFDN", Colour::Orange);
-
 			auto context = GetContext();
 			if (context)
 				return context->InitSingleFDN(roomData, data);
@@ -215,8 +187,6 @@ namespace RAC
 
 		bool InitMoDART(const MoDARTData& data)
 		{
-			Debug::Log("InitMoDART", Colour::Orange);
-
 			auto context = GetContext();
 			if (context)
 				return context->InitMoDART(data);
@@ -227,8 +197,6 @@ namespace RAC
 
 		void ResetLateReverb()
 		{
-			Debug::Log("ResetLateReverb", Colour::Orange);
-
 			auto context = GetContext();
 			if (context)
 				context->ResetLateReverb();
@@ -238,8 +206,6 @@ namespace RAC
 
 		void UpdateListener(const Vec3& position, const Vec4& orientation)
 		{
-			Debug::Log("UpdateListener", Colour::Orange);
-
 			auto context = GetContext();
 			if (context)
 				context->UpdateListener(position, orientation);
@@ -249,8 +215,6 @@ namespace RAC
 
 		int InitSource()
 		{
-			Debug::Log("InitSource", Colour::Orange);
-
 			auto context = GetContext();
 			if (context)
 				return context->InitSource();
@@ -262,8 +226,6 @@ namespace RAC
 
 		void UpdateSource(const size_t id, const Vec3& position, const Vec4& orientation)
 		{
-			Debug::Log("UpdateSource", Colour::Orange);
-
 			auto context = GetContext();
 			if (context)
 				context->UpdateSource(id, position, orientation);
@@ -273,8 +235,6 @@ namespace RAC
 
 		void UpdateSourceDirectivity(const size_t id, const SourceDirectivity directivity)
 		{
-			Debug::Log("UpdateSourceDirectivity", Colour::Orange);
-
 			auto context = GetContext();
 			if (context)
 				context->UpdateSourceDirectivity(id, directivity);
@@ -284,8 +244,6 @@ namespace RAC
 
 		void RemoveSource(const size_t id)
 		{
-			Debug::Log("RemoveSource", Colour::Orange);
-
 			auto context = GetContext();
 			if (context)
 				context->RemoveSource(id);
@@ -295,8 +253,6 @@ namespace RAC
 
 		int InitMaterial(const Coefficients<>& material)
 		{
-			Debug::Log("InitMaterial", Colour::Orange);
-
 			auto context = GetContext();
 			if (context)
 				return ToInt(context->InitMaterial(material));
@@ -308,8 +264,6 @@ namespace RAC
 
 		void UpdateMaterial(const size_t id, const Coefficients<>& material)
 		{
-			Debug::Log("UpdateMaterial", Colour::Orange);
-
 			auto context = GetContext();
 			if (context)
 				context->UpdateMaterial(id, material);
@@ -319,8 +273,6 @@ namespace RAC
 
 		void RemoveMaterial(const size_t id)
 		{
-			Debug::Log("RemoveMaterial", Colour::Orange);
-
 			auto context = GetContext();
 			if (context)
 				context->RemoveMaterial(id);
@@ -330,8 +282,6 @@ namespace RAC
 
 		int InitWall(const Vertices& vData, const size_t materialId)
 		{
-			Debug::Log("InitWall", Colour::Orange);
-
 			auto context = GetContext();
 			if (context)
 				return ToInt(context->InitWall(vData, materialId));
@@ -343,8 +293,6 @@ namespace RAC
 
 		void UpdateWall(size_t id, const Vertices& vData)
 		{
-			Debug::Log("UpdateWall", Colour::Orange);
-
 			auto context = GetContext();
 			if (context)
 				context->UpdateWall(id, vData);
@@ -354,8 +302,6 @@ namespace RAC
 
 		void RemoveWall(size_t id)
 		{
-			Debug::Log("RemoveWall", Colour::Orange);
-
 			auto context = GetContext();
 			if (context)
 				context->RemoveWall(id);
@@ -365,8 +311,6 @@ namespace RAC
 
 		void UpdatePlanesAndEdges()
 		{
-			Debug::Log("UpdatePlanesAndEdges", Colour::Orange);
-
 			auto context = GetContext();
 			if (context)
 				context->UpdatePlanesAndEdges();
@@ -376,8 +320,6 @@ namespace RAC
 		
 		void UpdateLateReverbGain(const Real gain)
 		{
-			Debug::Log("UpdateLateReverbGain", Colour::Orange);
-
 			auto context = GetContext();
 			if (context)
 				context->UpdateLateReverbGain(gain);
@@ -387,8 +329,6 @@ namespace RAC
 
 		void SubmitAudio(size_t id, const Buffer<>& data)
 		{
-			Debug::Log("SubmitAudio", Colour::Orange);
-
 			auto context = GetContext();
 			if (context)
 				context->SubmitAudio(id, data);
@@ -398,8 +338,6 @@ namespace RAC
 
 		void GetOutput(Buffer<>& outputBuffer)
 		{
-			Debug::Log("GetOutput", Colour::Orange);
-
 			auto context = GetContext();
 			if (context)
 				context->GetOutput(outputBuffer);
@@ -411,8 +349,6 @@ namespace RAC
 
 		void RecordImpulseResponse(const Vec3& position, const Vec4& orientation, Buffer<>& outputBuffer)
 		{
-			Debug::Log("RecordImpulseResponse", Colour::Orange);
-
 			auto context = GetContext();
 			if (context)
 				context->RecordImpulseResponse(position, orientation, outputBuffer);
@@ -422,8 +358,6 @@ namespace RAC
 
 		void UpdateImpulseResponseMode(const bool mode)
 		{
-			Debug::Log("UpdateImpulseResponseMode", Colour::Orange);
-
 			auto context = GetContext();
 			if (context)
 				context->UpdateImpulseResponseMode(mode);

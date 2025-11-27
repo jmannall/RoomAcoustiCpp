@@ -209,10 +209,10 @@ namespace RAC
 			inline void ProcessAudio(Buffer<>& outputBuffer, const AudioData& audioData)
 			{
 				PROFILE_EarlyReflections
-				// audioThreadPool->ProcessAllSources(mSources, mImageSources, outputBuffer, audioData);
-				for (auto& source : mSources)
+				audioThreadPool->ProcessAllSources(mSources, mImageSources, outputBuffer, audioData);
+				/*for (auto& source : mSources)
 					source->ProcessAudio(outputBuffer, audioData);
-				mImageSources.ProcessAudio(outputBuffer, audioData);
+				mImageSources.ProcessAudio(outputBuffer, audioData);*/
 			}
 
 			inline void ProcessLateReverbSend(Matrix<>& reverbInput, const AudioData& audioData)

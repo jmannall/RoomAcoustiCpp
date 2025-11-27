@@ -15,8 +15,6 @@
 // DSP headers
 #include "DSP/GraphicEQ_private.h"
 
-#include "Unity/Debug.h"
-#pragma optimize("", off)
 namespace RAC
 {
 	namespace DSP
@@ -40,10 +38,10 @@ namespace RAC
 			// (same as fc[numFilters - 1] * 2 / SQRT_2 ) Decreasing the high shelf frequency by SQRT_2 creates a smoother response at high frequencies
 			highShelf = std::make_unique<PeakHighShelf<T>>(std::min(f[numFilters - 2] * SQRT_2, (Real)20000.0), targetGains.first(numFilters - 1), Q, sampleRate);
 
+			// TODO: Add a debug warning if this is the case
 			if (targetGains.second > 100.0)
-			{
-				Unity::Debug::Log("Graphic EQ very large target gain input (constructor)");
-			}
+				return; // Note: initialised never gets set to true, silence.
+
 			targetGain.store(targetGains.second, std::memory_order_release);
 			currentGain = targetGains.second;
 
@@ -73,10 +71,11 @@ namespace RAC
 			previousInput = gains;
 
 			const auto targetGains = CalculateGains(gains);
+
+			// TODO: Add a debug warning if this is the case
 			if (targetGains.second > 100.0)
-			{
-				Unity::Debug::Log("Graphic EQ very large target gain input");
-			}
+				return false; // Note: initialised never gets set to true, silence.
+
 			targetGain.store(targetGains.second, std::memory_order_release);
 			gainsEqual.store(false, std::memory_order_release);
 			lowShelf->SetTargetGain(targetGains.first(0));
@@ -91,18 +90,6 @@ namespace RAC
 		template<typename T>
 		std::pair<Rowvec<>, Real> GraphicEQ<T>::CalculateGains(const Coefficients<>& gains) const
 		{
-			for (auto gain : gains)
-			{
-				if (IsNotValid(gain))
-				{
-					Unity::Debug::Log("Graphic EQ invalid gain input");
-				}
-				if (gain > 100.0)
-				{
-					Unity::Debug::Log("Graphic EQ very large gain input");
-				}
-
-			}
 			assert(gains.Length() + 2 == numFilters);
 
 			// TODO: Should this be coefficients?
@@ -217,12 +204,6 @@ namespace RAC
 			if (numFilters == 3) // Only one peaking filter
 				return input * currentGain; // Single band EQ is just a gain
 
-			if (IsNotValid(input))
-			{
-				Unity::Debug::Log("Graphic EQ input has nans");
-				return 0.0;
-			}
-
 			T out = lowShelf->GetOutput(input, lerpFactor);
 			for (auto& filter : peakingFilters)
 				out = filter->GetOutput(out, lerpFactor);
@@ -248,19 +229,8 @@ namespace RAC
 				return;
 			}
 
-			if (!inBuffer.Valid())
-			{
-				Unity::Debug::Log("In buffer graphicEQ Test");
-			}
-
 			for (int i = 0; i < inBuffer.Length(); i++)
-			{
-				if (IsNotValid(inBuffer[i]))
-				{
-					Unity::Debug::Log("Graphic EQ sample test: " + Unity::IntToStr(i) + ", " + Unity::RealToStr(std::abs(inBuffer[i])));
-				}
 				outBuffer[i] = GetOutput(inBuffer[i], lerpFactor);
-			}
 		}
 
 		////////////////////////////////////////
@@ -289,4 +259,3 @@ namespace RAC
 
 	}
 }
-#pragma optimize("", on)
