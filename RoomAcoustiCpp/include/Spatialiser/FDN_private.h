@@ -173,6 +173,24 @@ namespace RAC
 				GraphicEQ<Real>, std::nullptr_t> mReflectionFilter;		// The reflection filter on the FDN output
 		};
 
+		////////////////////////////////////////
+
+		template<>
+		inline void FDNChannel<Real>::GetOutput(Real& output, const Real& input, const Real lerpFactor)
+		{
+			mDelayLine.GetOutput(input, output);
+			output = mAbsorptionFilter.GetOutput(output, lerpFactor);
+		}
+
+		////////////////////////////////////////
+
+		template<>
+		inline void FDNChannel<Complex>::GetOutput(Complex& output, const Complex& input, const Real lerpFactor)
+		{
+			mDelayLine.GetOutput(input, output);
+			output *= mAbsorptionFilter.load(std::memory_order_acquire);
+		}
+
 		/**
 		* @brief Implements a feedback delay network with modifiable T60 and delay line lengths
 		*/
@@ -642,26 +660,6 @@ namespace RAC
 			*/
 			static Matrix<> InitMatrix(const size_t numChannels);
 		};
-
-		////////////////////////////////////////
-
-		template<>
-		inline void FDNChannel<Real>::GetOutput(Real &output, const Real &input, const Real lerpFactor)
-		{
-			mDelayLine.GetOutput(input, output);
-			output = mAbsorptionFilter.GetOutput(output, lerpFactor);
-		}
-
-		////////////////////////////////////////
-
-		template<>
-		inline void FDNChannel<Complex>::GetOutput(Complex &output, const Complex &input, const Real lerpFactor)
-		{
-			mDelayLine.GetOutput(input, output);
-			output *= mAbsorptionFilter.load(std::memory_order_acquire);
-		}
-
-
 	}
 }
 

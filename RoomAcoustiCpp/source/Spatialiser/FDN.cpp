@@ -27,13 +27,7 @@ namespace RAC
 	using namespace Unity;
 	namespace Spatialiser
 	{
-
-		//////////////////// FDN Channel class ////////////////////
-
 		//////////////////// FDN class ////////////////////
-
-		template class FDN<Real>;
-		template class FDN<Complex>;
 		
 		////////////////////////////////////////
 
@@ -162,6 +156,8 @@ namespace RAC
 		template class FDN<Real>;
 		template class FDN<Complex>;
 
+		//////////////////// RandomOrthogonalFDN class ////////////////////
+
 		////////////////////////////////////////
 
 		template<typename T>
@@ -224,16 +220,16 @@ namespace RAC
 		template class RandomOrthogonalFDN<Real>;
 		template class RandomOrthogonalFDN<Complex>;
 
-		//////////////////// Instantiate ////////////////////
+		//////////////////// FDNChannel class ////////////////////
+
+		template class FDNChannel<Real>;
+		template class FDNChannel<Complex>;
+
+		////////////////////////////////////////
 
 		// we don't implement/use every function, so disable the warning (we can't re-enable it since the warning is generated after the file is parsed)
 		#ifdef _MSC_VER
 		#pragma warning (disable : 4661)
 		#endif
-
-		template class FDNChannel<Real>;
-		template class FDNChannel<Complex>;
-
-
 	}
 }
