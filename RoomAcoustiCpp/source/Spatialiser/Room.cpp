@@ -715,7 +715,7 @@ namespace RAC
 
 		Coefficients<> Room::Sabine(const Coefficients<>& absorption) const
 		{
-			Real factor = 24.0 * std::log(10.0) / SPEED_OF_SOUND;
+			Real factor = REAL_CONST(24.0) * std::log(REAL_CONST(10.0)) / SPEED_OF_SOUND;
 			return factor * roomData.volume / absorption;
 		}
 
@@ -723,7 +723,7 @@ namespace RAC
 
 		Coefficients<> Room::Eyring(const Coefficients<>& absorption, const Real& surfaceArea) const
 		{
-			Real factor = 24.0 * std::log(10.0) / SPEED_OF_SOUND;
+			Real factor = REAL_CONST(24.0) * std::log(REAL_CONST(10.0)) / SPEED_OF_SOUND;
 			return -factor * roomData.volume / ((1 - absorption / surfaceArea).Log() * surfaceArea);
 		}
 	}

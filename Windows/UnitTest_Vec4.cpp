@@ -20,10 +20,10 @@ namespace RAC
 
 		TEST_METHOD(Assign)
 		{
-			Real w = (Real)0.5;
-			Real x = (Real)1.0;
-			Real y = (Real)-2.0;
-			Real z = (Real)3.0;
+			Real w = REAL_CONST(0.5);
+			Real x = REAL_CONST(1.0);
+			Real y = REAL_CONST(-2.0);
+			Real z = REAL_CONST(3.0);
 			Vec4 q;
 
 			q.w() = w;
@@ -39,10 +39,10 @@ namespace RAC
 
 		TEST_METHOD(Init)
 		{
-			Real w = (Real)0.5;
-			Real x = (Real)0.8;
-			Real y = (Real)7.1;
-			Real z = (Real)-0.2;
+			Real w = REAL_CONST(0.5);
+			Real x = REAL_CONST(0.8);
+			Real y = REAL_CONST(7.1);
+			Real z = REAL_CONST(-0.2);
 			Vec4 q(w, x, y, z);
 
 			Assert::AreEqual(w, q.w(), L"Error: Init w entry");
@@ -50,8 +50,8 @@ namespace RAC
 			Assert::AreEqual(y, q.y(), L"Error: Init y entry");
 			Assert::AreEqual(z, q.z(), L"Error: Init z entry");
 
-			w = (Real)0.8;
-			Vec3 vec(1.2, 3.4, -1.0);
+			w = REAL_CONST(0.8);
+			Vec3 vec(REAL_CONST(1.2), REAL_CONST(3.4), REAL_CONST(-1.0));
 			Vec4 q2(w, MakeCompatible(vec));
 
 			Assert::AreEqual(w, q.x(), L"Error: Init 2 w entry");
@@ -63,153 +63,145 @@ namespace RAC
 #if MATRIX_LIBRARY == CUSTOM_FLAG
 		TEST_METHOD(Divide)
 		{
+			Vec4 q(REAL_CONST(6.0), REAL_CONST(3.0), REAL_CONST(4.0), REAL_CONST(-3.0));
+			Vec4 z = q / REAL_CONST(2.0);
 
-			constexpr Real tolerance = 1e-10;
-			Vec4 q((Real)6.0, (Real)3.0, (Real)4.0, (Real)-3.0);
-			Vec4 z = q / (Real)2.0;
-
-			Assert::AreEqual((Real)3.0, z.w(), tolerance, L"Error w");
-			Assert::AreEqual((Real)1.5, z.x(), tolerance, L"Error x");
-			Assert::AreEqual((Real)2.0, z.y(), tolerance, L"Error y");
-			Assert::AreEqual((Real)-1.5, z.z(), tolerance, L"Error z");
+			Assert::AreEqual(REAL_CONST(3.0), z.w(), EPS_TEST_ACCURATE, L"Error w");
+			Assert::AreEqual(REAL_CONST(1.5), z.x(), EPS_TEST_ACCURATE, L"Error x");
+			Assert::AreEqual(REAL_CONST(2.0), z.y(), EPS_TEST_ACCURATE, L"Error y");
+			Assert::AreEqual(REAL_CONST(-1.5), z.z(), EPS_TEST_ACCURATE, L"Error z");
 		}
 #endif
 
 		TEST_METHOD(Multiply)
 		{
-			constexpr Real tolerance = 1e-10;
-
-			Vec4 x((Real)6.0, (Real)3.0, (Real)4.0, (Real)-3.0);
-			Vec4 y((Real)2.0, (Real)-2.0, (Real)1.5, (Real)-2.2);
+			Vec4 x(REAL_CONST(6.0), REAL_CONST(3.0), REAL_CONST(4.0), REAL_CONST(-3.0));
+			Vec4 y(REAL_CONST(2.0), REAL_CONST(-2.0), REAL_CONST(1.5), REAL_CONST(-2.2));
 
 			Vec4 z = x * y;
-			Assert::AreEqual((Real)5.4, z.w(), tolerance, L"Error w");
-			Assert::AreEqual((Real)-10.3, z.x(), tolerance, L"Error x");
-			Assert::AreEqual((Real)29.6, z.y(), tolerance, L"Error y");
-			Assert::AreEqual((Real)-6.7, z.z(), tolerance, L"Error z");
+			Assert::AreEqual(REAL_CONST(5.4), z.w(), EPS_TEST_MEDIUM, L"Error w");
+			Assert::AreEqual(REAL_CONST(-10.3), z.x(), EPS_TEST_MEDIUM, L"Error x");
+			Assert::AreEqual(REAL_CONST(29.6), z.y(), EPS_TEST_MEDIUM, L"Error y");
+			Assert::AreEqual(REAL_CONST(-6.7), z.z(), EPS_TEST_MEDIUM, L"Error z");
 		}
 
 		TEST_METHOD(RotateVec)
 		{
-			constexpr Real tolerance = 1e-10;
-			const Real constant = std::sin(PI_1 / (Real)4.0);
+			const Real constant = std::sin(PI_1 / REAL_CONST(4.0));
 
-			Vec4 q(1.0, 0.0, 0.0, 0.0);
-			Vec3 vec(0.0, 0.0, 1.0);
+			Vec4 q(REAL_CONST(1.0), REAL_CONST(0.0), REAL_CONST(0.0), REAL_CONST(0.0));
+			Vec3 vec(REAL_CONST(0.0), REAL_CONST(0.0), REAL_CONST(1.0));
 
 			Vec3 newVec = RotateVector(vec, q);
 
-			Assert::AreEqual((Real)0.0, newVec.x(), tolerance, L"Error x");
-			Assert::AreEqual((Real)0.0, newVec.y(), tolerance, L"Error y");
-			Assert::AreEqual((Real)1.0, newVec.z(), tolerance, L"Error z");
+			Assert::AreEqual(REAL_CONST(0.0), newVec.x(), EPS_TEST_MEDIUM, L"Error x");
+			Assert::AreEqual(REAL_CONST(0.0), newVec.y(), EPS_TEST_MEDIUM, L"Error y");
+			Assert::AreEqual(REAL_CONST(1.0), newVec.z(), EPS_TEST_MEDIUM, L"Error z");
 
-			q = Vec4(constant, 0.0, constant, 0.0);
+			q = Vec4(constant, REAL_CONST(0.0), constant, REAL_CONST(0.0));
 			newVec = RotateVector(vec, q);
 
-			Assert::AreEqual((Real)-1.0, newVec.x(), tolerance, L"Error 2 x");
-			Assert::AreEqual((Real)0.0, newVec.y(), tolerance, L"Error 2 y");
-			Assert::AreEqual((Real)0.0, newVec.z(), tolerance, L"Error 2 z");
+			Assert::AreEqual(REAL_CONST(-1.0), newVec.x(), EPS_TEST_MEDIUM, L"Error 2 x");
+			Assert::AreEqual(REAL_CONST(0.0), newVec.y(), EPS_TEST_MEDIUM, L"Error 2 y");
+			Assert::AreEqual(REAL_CONST(0.0), newVec.z(), EPS_TEST_MEDIUM, L"Error 2 z");
 
-			q = Vec4(constant, 0.0, -constant, 0.0);
+			q = Vec4(constant, REAL_CONST(0.0), -constant, REAL_CONST(0.0));
 			newVec = RotateVector(vec, q);
 
-			Assert::AreEqual((Real)1.0, newVec.x(), tolerance, L"Error 3 x");
-			Assert::AreEqual((Real)0.0, newVec.y(), tolerance, L"Error 3 y");
-			Assert::AreEqual((Real)0.0, newVec.z(), tolerance, L"Error 3 z");
+			Assert::AreEqual(REAL_CONST(1.0), newVec.x(), EPS_TEST_MEDIUM, L"Error 3 x");
+			Assert::AreEqual(REAL_CONST(0.0), newVec.y(), EPS_TEST_MEDIUM, L"Error 3 y");
+			Assert::AreEqual(REAL_CONST(0.0), newVec.z(), EPS_TEST_MEDIUM, L"Error 3 z");
 
-			q = Vec4(0.0, 0.0, 1.0, 0.0);
+			q = Vec4(REAL_CONST(0.0), REAL_CONST(0.0), REAL_CONST(1.0), REAL_CONST(0.0));
 			newVec = RotateVector(vec, q);
 
-			Assert::AreEqual((Real)0.0, newVec.x(), tolerance, L"Error 4 x");
-			Assert::AreEqual((Real)0.0, newVec.y(), tolerance, L"Error 4 y");
-			Assert::AreEqual((Real)-1.0, newVec.z(), tolerance, L"Error 4 z");
+			Assert::AreEqual(REAL_CONST(0.0), newVec.x(), EPS_TEST_MEDIUM, L"Error 4 x");
+			Assert::AreEqual(REAL_CONST(0.0), newVec.y(), EPS_TEST_MEDIUM, L"Error 4 y");
+			Assert::AreEqual(REAL_CONST(-1.0), newVec.z(), EPS_TEST_MEDIUM, L"Error 4 z");
 
-			q = Vec4(constant, -constant, 0.0, 0.0);
+			q = Vec4(constant, -constant, REAL_CONST(0.0), REAL_CONST(0.0));
 			newVec = RotateVector(vec, q);
 
-			Assert::AreEqual((Real)0.0, newVec.x(), tolerance, L"Error 5 x");
-			Assert::AreEqual((Real)-1.0, newVec.y(), tolerance, L"Error 5 y");
-			Assert::AreEqual((Real)0.0, newVec.z(), tolerance, L"Error 5 z");
+			Assert::AreEqual(REAL_CONST(0.0), newVec.x(), EPS_TEST_MEDIUM, L"Error 5 x");
+			Assert::AreEqual(REAL_CONST(-1.0), newVec.y(), EPS_TEST_MEDIUM, L"Error 5 y");
+			Assert::AreEqual(REAL_CONST(0.0), newVec.z(), EPS_TEST_MEDIUM, L"Error 5 z");
 
-			q = Vec4(constant, constant, 0.0, 0.0);
+			q = Vec4(constant, constant, REAL_CONST(0.0), REAL_CONST(0.0));
 			newVec = RotateVector(vec, q);
 
-			Assert::AreEqual((Real)0.0, newVec.x(), tolerance, L"Error 6 x");
-			Assert::AreEqual((Real)1.0, newVec.y(), tolerance, L"Error 6 y");
-			Assert::AreEqual((Real)0.0, newVec.z(), tolerance, L"Error 6 z");
+			Assert::AreEqual(REAL_CONST(0.0), newVec.x(), EPS_TEST_MEDIUM, L"Error 6 x");
+			Assert::AreEqual(REAL_CONST(1.0), newVec.y(), EPS_TEST_MEDIUM, L"Error 6 y");
+			Assert::AreEqual(REAL_CONST(0.0), newVec.z(), EPS_TEST_MEDIUM, L"Error 6 z");
 
-			q = Vec4(-0.14645, -0.35355, 0.85355, -0.35355);
-			vec = Vec3(0.0, -constant, constant);
+			q = Vec4(REAL_CONST(-0.14645), REAL_CONST(-0.35355), REAL_CONST(0.85355), REAL_CONST(-0.35355));
+			vec = Vec3(REAL_CONST(0.0), -constant, constant);
 			newVec = RotateVector(vec, q);
 
-			constexpr Real rotationTolerance = 1e-4;		// use the same precision as 'q' above
+			constexpr Real rotationTolerance = REAL_CONST(1e-4);		// use the same precision as 'q' above
 			Assert::AreEqual(constant, newVec.x(), rotationTolerance, L"Error 7 x");
 			Assert::AreEqual(-constant, newVec.y(), rotationTolerance, L"Error 7 y");
-			Assert::AreEqual((Real)0.0, newVec.z(), rotationTolerance, L"Error 7 z");
-
+			Assert::AreEqual(REAL_CONST(0.0), newVec.z(), rotationTolerance, L"Error 7 z");
 		}
 
 		TEST_METHOD(Conjugate)
 		{
-			Vec4 q((Real)-2.0, (Real)3.0, (Real)1.5, (Real)-3.0);
+			Vec4 q(REAL_CONST(-2.0), REAL_CONST(3.0), REAL_CONST(1.5), REAL_CONST(-3.0));
 			Vec4 conjQ = q.Conjugate();
 
-			Assert::AreEqual((Real)-2.0, conjQ.w(), L"Error w");
-			Assert::AreEqual((Real)-3.0, conjQ.x(), L"Error x");
-			Assert::AreEqual((Real)-1.5, conjQ.y(), L"Error y");
-			Assert::AreEqual((Real)3.0, conjQ.z(), L"Error z");
+			Assert::AreEqual(REAL_CONST(-2.0), conjQ.w(), L"Error w");
+			Assert::AreEqual(REAL_CONST(-3.0), conjQ.x(), L"Error x");
+			Assert::AreEqual(REAL_CONST(-1.5), conjQ.y(), L"Error y");
+			Assert::AreEqual(REAL_CONST(3.0), conjQ.z(), L"Error z");
 		}
 
 		TEST_METHOD(Inverse)
 		{
-			constexpr Real tolerance = 1e-6;
-			Vec4 q((Real)2.0, (Real)-3.0, (Real)1.5, (Real)1.1);
+			Vec4 q(REAL_CONST(2.0), REAL_CONST(-3.0), REAL_CONST(1.5), REAL_CONST(1.1));
 			Vec4 inverseQ = q.InverseMatrix();
 
-			Assert::AreEqual((Real)0.121506682867558, inverseQ.w(), tolerance, L"Error w");
-			Assert::AreEqual((Real)0.182260024301337, inverseQ.x(), tolerance, L"Error x");
-			Assert::AreEqual((Real)-0.091130012150668, inverseQ.y(), tolerance, L"Error y");
-			Assert::AreEqual((Real)-0.066828675577157, inverseQ.z(), tolerance, L"Error z");
+			Assert::AreEqual(REAL_CONST(0.121506682867558), inverseQ.w(), EPS_TEST_MEDIUM, L"Error w");
+			Assert::AreEqual(REAL_CONST(0.182260024301337), inverseQ.x(), EPS_TEST_MEDIUM, L"Error x");
+			Assert::AreEqual(REAL_CONST(-0.091130012150668), inverseQ.y(), EPS_TEST_MEDIUM, L"Error y");
+			Assert::AreEqual(REAL_CONST(-0.066828675577157), inverseQ.z(), EPS_TEST_MEDIUM, L"Error z");
 		}
 
 		TEST_METHOD(Comparison)
 		{
 
-			Real w = (Real)0.5;
-			Real x = (Real)0.8;
-			Real y = (Real)7.1;
-			Real z = (Real)-0.2;
+			Real w = REAL_CONST(0.5);
+			Real x = REAL_CONST(0.8);
+			Real y = REAL_CONST(7.1);
+			Real z = REAL_CONST(-0.2);
 			Vec4 v(w, x, y, z);
 			Vec4 u(w, x, y, z);
 
 			Assert::AreEqual(true, v == u, L"Match");
 
-			u.w() = (Real)1.0;
-			u.x() = (Real)1.0;
-			v.y() = (Real)1.0;
-			u.z() = (Real)1.0;
+			u.w() = REAL_CONST(1.0);
+			u.x() = REAL_CONST(1.0);
+			v.y() = REAL_CONST(1.0);
+			u.z() = REAL_CONST(1.0);
 
 			Assert::AreEqual(false, v == u, L"No match");
 		}
 
 		TEST_METHOD(Dot)
 		{
-			Vec4 v((Real)-1.0, (Real)2.0, (Real)2.5, (Real)-1.2);
-			Vec4 u((Real)3.0, (Real)-0.5, (Real)2.0, (Real)-2.0);
+			Vec4 v(REAL_CONST(-1.0), REAL_CONST(2.0), REAL_CONST(2.5), REAL_CONST(-1.2));
+			Vec4 u(REAL_CONST(3.0), REAL_CONST(-0.5), REAL_CONST(2.0), REAL_CONST(-2.0));
 
 			Real dot = v.dot(u);
-			Assert::AreEqual(3.4, dot, L"Error dot");
+			Assert::AreEqual(REAL_CONST(3.4), dot, L"Error dot");
 		}
 
 		TEST_METHOD(ForwardVector)
 		{
-			constexpr Real tolerance = 1e-6;
-			Vec4 q((Real)-1.0, (Real)2.0, (Real)2.5, (Real)-1.2);
+			Vec4 q(REAL_CONST(-1.0), REAL_CONST(2.0), REAL_CONST(2.5), REAL_CONST(-1.2));
 
 			Vec3 vec = Forward(q.Normalised());
-			Assert::AreEqual((Real)-0.772261623325453, vec.x(), tolerance, L"Error x");
-			Assert::AreEqual((Real)-0.157604412923562, vec.y(), tolerance, L"Error y");
-			Assert::AreEqual((Real)-0.615445232466509, vec.z(), tolerance, L"Error z");
+			Assert::AreEqual(REAL_CONST(-0.772261623325453), vec.x(), EPS_TEST_MEDIUM, L"Error x");
+			Assert::AreEqual(REAL_CONST(-0.157604412923562), vec.y(), EPS_TEST_MEDIUM, L"Error y");
+			Assert::AreEqual(REAL_CONST(-0.615445232466509), vec.z(), EPS_TEST_MEDIUM, L"Error z");
 		}
 	};
 #pragma optimize("", on)

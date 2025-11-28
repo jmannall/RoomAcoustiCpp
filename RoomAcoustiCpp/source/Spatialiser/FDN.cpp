@@ -176,7 +176,7 @@ namespace RAC
 			 matrix.AddColumn(vector.Col(0), 0);
 #endif
 
-			Real tol = 0.000001;
+			Real tol = REAL_CONST(0.000001);
 			for (int j = 1; j < numChannelsI; ++j)
 			{
 				Real norm = 0;
@@ -220,10 +220,6 @@ namespace RAC
 		template class RandomOrthogonalFDN<Real>;
 		template class RandomOrthogonalFDN<Complex>;
 
-		//////////////////// FDNChannel class ////////////////////
-
-		template class FDNChannel<Real>;
-		template class FDNChannel<Complex>;
 
 		////////////////////////////////////////
 
@@ -231,5 +227,12 @@ namespace RAC
 		#ifdef _MSC_VER
 		#pragma warning (disable : 4661)
 		#endif
+
+		//////////////////// FDNChannel class ////////////////////
+
+		template class FDNChannel<Real>;
+		template class FDNChannel<Complex>;
+
+
 	}
 }

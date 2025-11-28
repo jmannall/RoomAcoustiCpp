@@ -119,7 +119,7 @@ namespace RAC
 			int numFrames{ 512 };						// Number of frames per audio callback
 			int numReverbSources{ 12 };					// Number of output channels for late reverberation
 			int fdnSize{ 12 };							// Size of the FDN (number of delay lines)
-			Real Q{ 0.98 };								// Q factor for the GraphicEQ
+			Real Q{ REAL_CONST(0.98) };					// Q factor for the GraphicEQ
 			Coefficients<> frequencyBands;				// Frequency band center frequencies
 			int numFrequencyBands{ 0 };					// Number of frequency bands
 
@@ -391,8 +391,8 @@ namespace RAC
 			Vec<> energyDecay;
 			std::vector<Vec<>> leftEigenvectors;
 			std::vector<Vec<>> rightEigenvectors;
-			Real delay{ 0.0 };
-			Real minimumT60{ 0.1 };
+			Real delay{ REAL_CONST(0.0) };
+			Real minimumT60{ REAL_CONST(0.1) };
 
 			MoDARTData(bool enabled, int numRays, FDNMatrix feedbackMatrix, Real delay, Real minimumT60, Matrix<int> indexing, Vec<int> frequencyIndexing, Vec<> t60s, std::vector<Vec<>> leftEigenvectors, std::vector<Vec<>> rightEigenvectors)
 				: LateReverbData(enabled, numRays, feedbackMatrix), indexing(indexing), delay(delay), minimumT60(minimumT60)
@@ -414,7 +414,7 @@ namespace RAC
 
 				this->energyDecay = Vec<>(t60s.Length());
 				for (int i = 0; i < this->t60s.Length(); i++)
-					this->energyDecay(i) = Pow10(- 6.0 / this->t60s(i));
+					this->energyDecay(i) = Pow10(REAL_CONST(-6.0) / this->t60s(i));
 			}
 		};
 

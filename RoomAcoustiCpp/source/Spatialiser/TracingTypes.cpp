@@ -41,12 +41,12 @@ namespace RAC
                 ir = static_cast<Real>(i);
 
                 /* Fibonacci sphere (a.k.a. Vogel sphere): equal-area spacing in z */
-                z = 1.0 - 2.0 * (ir + 0.5) / Nr;
+                z = REAL_CONST(1.0) - REAL_CONST(2.0) * (ir + REAL_CONST(0.5)) / Nr;
                 if (hemisphereOnly && z < 0)
                     break; // skip lower hemisphere
 
-                r = std::sqrt(std::max(0.0, 1.0 - z * z));
-                phi = PI_2 * std::fmod(ir / PHI, 1.0);
+                r = std::sqrt(std::max(REAL_CONST(0.0), REAL_CONST(1.0) - z * z));
+                phi = PI_2 * std::fmod(ir / PHI, REAL_CONST(1.0));
 
                 D[i] = Vec3(r * std::cos(phi), r * std::sin(phi), z);
             }
@@ -66,12 +66,12 @@ namespace RAC
                 ir = static_cast<Real>(i);
 
                 /* Fibonacci sphere (a.k.a. Vogel sphere): equal-area spacing in z */
-                z = 1.0 - 2.0 * (ir + 0.5) / Nr;
+                z = REAL_CONST(1.0) - REAL_CONST(2.0) * (ir + REAL_CONST(0.5)) / Nr;
                 if (hemisphereOnly && z < 0)
                     break; // skip lower hemisphere
 
-                r = std::sqrt(std::max(0.0, 1.0 - z * z));
-                phi = PI_2 * std::fmod(ir / PHI, 1.0);
+                r = std::sqrt(std::max(REAL_CONST(0.0), REAL_CONST(1.0) - z * z));
+                phi = PI_2 * std::fmod(ir / PHI, REAL_CONST(1.0));
 
                 D[i] = Vec3(r * std::cos(phi), r * std::sin(phi), z);
             }

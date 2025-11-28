@@ -333,25 +333,25 @@ namespace RAC
 			case SourceDirectivity::subcardioid:
 			{
 				Real angle = std::acos(source.forward.dot((point - source.position).Normalised()));
-				directivity.SetConstant(0.7 + 0.3 * cos(angle));
+				directivity.SetConstant(REAL_CONST(0.7) + REAL_CONST(0.3) * cos(angle));
 				break;
 			}
 			case SourceDirectivity::cardioid:
 			{
 				Real angle = std::acos(source.forward.dot((point - source.position).Normalised()));
-				ret = 0.5 * (1 + std::cos(angle));
+				ret = REAL_CONST(0.5) * (1 + std::cos(angle));
 				break;
 			}
 			case SourceDirectivity::supercardioid:
 			{
 				Real angle = std::acos(source.forward.dot((point - source.position).Normalised()));
-				ret = std::abs(0.37 + 0.63 * std::cos(angle));
+				ret = std::abs(REAL_CONST(0.37) + REAL_CONST(0.63) * std::cos(angle));
 				break;
 			}
 			case SourceDirectivity::hypercardioid:
 			{
 				Real angle = std::acos(source.forward.dot((point - source.position).Normalised()));
-				ret = std::abs(0.25 + 0.75 * std::cos(angle));
+				ret = std::abs(REAL_CONST(0.25) + REAL_CONST(0.75) * std::cos(angle));
 				break;
 			}
 			case SourceDirectivity::bidirectional:

@@ -28,8 +28,8 @@ namespace RAC
             Real& distance, Real& cosine)
         {
 			// Users should test the return result, but default the results to qNaN just in case
-			distance = qNaN;
-			cosine = qNaN;
+			distance = std::numeric_limits<Real>::quiet_NaN();
+			cosine = std::numeric_limits<Real>::quiet_NaN();
 
 			// Sanity check: the requested triangle must exist.
 			assert(triangleIndex < triangles.size());
@@ -309,10 +309,10 @@ namespace RAC
 			// Initialize per-ray front/back bests.
 			patchIdFront = -1;
 			patchIdBack = -1;
-			distanceFront = INFINITY;
-			distanceBack = -INFINITY;
-			cosineFront = qNaN;
-			cosineBack = qNaN;
+			distanceFront = std::numeric_limits<Real>::infinity();
+			distanceBack = -std::numeric_limits<Real>::infinity();
+			cosineFront = std::numeric_limits<Real>::quiet_NaN();
+			cosineBack = std::numeric_limits<Real>::quiet_NaN();
 
 #if USE_OMP_RAYTRACE_SINGLE
             constexpr int WorkerBlocks = 4;
@@ -321,10 +321,10 @@ namespace RAC
             struct Instance {
                 int patchIdFront = -1;
                 int patchIdBack = -1;
-                Real distanceFront = INFINITY;
-                Real distanceBack = -INFINITY;
-                Real cosineFront = qNaN;
-                Real cosineBack = qNaN;
+                Real distanceFront = std::numeric_limits<Real>::infinity();
+                Real distanceBack = -std::numeric_limits<Real>::infinity();
+                Real cosineFront = std::numeric_limits<Real>::quiet_NaN();
+                Real cosineBack = std::numeric_limits<Real>::quiet_NaN();
             };
             Instance instances[WorkerBlocks];
 
@@ -425,14 +425,14 @@ namespace RAC
 			if (std::isinf(distanceFront)) {
 				// If it's still the initial INFINITY value, there was no valid hit at all.
 				patchIdFront = -1;
-				distanceFront = qNaN;
-				cosineFront = qNaN;
+				distanceFront = std::numeric_limits<Real>::quiet_NaN();
+				cosineFront = std::numeric_limits<Real>::quiet_NaN();
 			}
 			if (std::isinf(distanceBack)) {
 				// If it's still the initial -INFINITY value, there was no valid hit at all.
 				patchIdBack = -1;
-				distanceBack = qNaN;
-				cosineBack = qNaN;
+				distanceBack = std::numeric_limits<Real>::quiet_NaN();
+				cosineBack = std::numeric_limits<Real>::quiet_NaN();
 			}
 			else // If the distanceBack is valid, return its absolute value.
 				distanceBack = -distanceBack;

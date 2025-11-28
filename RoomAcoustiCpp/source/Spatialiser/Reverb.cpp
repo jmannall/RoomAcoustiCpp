@@ -399,15 +399,15 @@ namespace RAC
 			// This avoids having excessively long lines when there are many, or excessively colored sets when there are few.
 			Real minDiffSeconds;
 			if (numFDNs * fdnSize > 100)
-				minDiffSeconds = 2e-4;
+				minDiffSeconds = REAL_CONST(2e-4);
 			else if (numFDNs * fdnSize > 75)
-				minDiffSeconds = 4e-4;
+				minDiffSeconds = REAL_CONST(4e-4);
 			else if (numFDNs * fdnSize > 50)
-				minDiffSeconds = 6e-4;
+				minDiffSeconds = REAL_CONST(6e-4);
 			else if (numFDNs * fdnSize > 25)
-				minDiffSeconds = 8e-4;
+				minDiffSeconds = REAL_CONST(8e-4);
 			else
-				minDiffSeconds = 2e-3;
+				minDiffSeconds = REAL_CONST(2e-3);
 
 			Matrix<int> delayLineLengthSets(numFDNs, fdnSize);
 			buildDelaySets(delayLineLengthSets, dspConfig->GetData().fs);

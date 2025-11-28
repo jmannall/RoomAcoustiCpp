@@ -195,7 +195,7 @@ namespace RAC
 			/**
 			* @brief Calculates the area of the wall (area of a triangle)
 			*/
-			inline void CalculateArea() { area = 0.5 * ((mVertices[0] - mVertices[1]).cross(mVertices[0] - mVertices[2]).Normal()); }
+			inline void CalculateArea() { area = REAL_CONST(0.5) * ((mVertices[0] - mVertices[1]).cross(mVertices[0] - mVertices[2]).Normal()); }
 
 			Vertices mVertices;				// Vertices of the wall
 			Vec3 mNormal;					// Normal of the wall
