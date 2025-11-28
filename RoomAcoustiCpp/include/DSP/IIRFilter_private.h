@@ -51,16 +51,6 @@ namespace RAC
 			void GetOutput(const In& input, In& output, const Real lerpFactor);
 
 			/**
-			* @brief Processes a batch of inputs
-			*
-			* @param input The input to the IIRFilter
-			* @param output The output to the filter
-			* @param inputOutputLength The length of the data arrays
-			* @param lerpFactor The linear interpolation factor for parameters
-			*/
-			void GetOutputBatch(const In* input, In* output, int inputOutputLength, const Real lerpFactor);
-
-			/**
 			* @brief Set internal buffers to zeros
 			*/
 			inline void ClearBuffers() { y0 = 0.0; y1 = 0.0; }

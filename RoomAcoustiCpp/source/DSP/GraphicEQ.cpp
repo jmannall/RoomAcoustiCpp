@@ -15,10 +15,6 @@
 // DSP headers
 #include "DSP/GraphicEQ_private.h"
 
-// Processes all of the samples through each filter, one filter at a time. In practice, this
-// is slower based on my performance tests then running each sample through all filters.
-#define BATCH_PROCESS_AUDIO_BUFFERS		 ( 0 )
-
 // Run all filters as a single operation without using a temporary variable. This improves performance
 // slightly (~12%) since it eliminates read/writing the temporary value to memory.
 #define BATCH_PROCESS_FILTERS			 ( 1 )
@@ -228,14 +224,19 @@ namespace RAC
 		}
 
 		template<typename T>
-		void GraphicEQ<T>::GetOutputBatch(const T* input, T* output, int inputOutputLength, const Real lerpFactor)
+		void GraphicEQ<T>::GetOutputBatch(const Buffer<T>& inBuffer, Buffer<T>& outBuffer, const Real lerpFactor)
 		{
 			assert(IsValid());
+			assert(outBuffer.Length() >= inBuffer.Length());
+
+			const int bufferLength = ToInt(inBuffer.Length());
+			const T* input = inBuffer.data();
+			T* output = outBuffer.data();
 
 			if (numFilters == 3)
 			{
 				// Only one peaking filter -> just a gain, so copy the input directly to the output
-				for (int index = 0; index < inputOutputLength; ++index)
+				for (int index = 0; index < bufferLength; ++index)
 					output[index] = input[index];
 			}
 			else
@@ -251,16 +252,11 @@ namespace RAC
 				assert(currentFilter == numFilters);
 
 				// process all filters on each sample
-				for (int index = 0; index < inputOutputLength; ++index)
+				for (int index = 0; index < bufferLength; ++index)
 					IIRFilter2<T>::GetOutputFromMultipleFilters(filters, numFilters, input[index], output[index], lerpFactor);
 
-#elif BATCH_PROCESS_AUDIO_BUFFERS
-				lowShelf->GetOutputBatch(input, output, inputOutputLength, lerpFactor);
-				for (const auto& filter : peakingFilters)
-					filter->GetOutputBatch(output, output, inputOutputLength, lerpFactor);
-				highShelf->GetOutputBatch(output, output, inputOutputLength, lerpFactor);
 #else
-				for (int index = 0; index < inputOutputLength; ++index)
+				for (int index = 0; index < bufferLength; ++index)
 				{
 					T& out = output[index];
 					lowShelf->GetOutput(input[index], out, lerpFactor);
@@ -272,14 +268,17 @@ namespace RAC
 			}
 
 			// process the gain
-			ScaleGain(output, inputOutputLength, lerpFactor);
+			ScaleGain(outBuffer, lerpFactor);
 		}
 		
 		////////////////////////////////////////
 		///
 		template<typename T>
-		void GraphicEQ<T>::ScaleGain(T *output, int length, const Real lerpFactor)
+		void GraphicEQ<T>::ScaleGain(Buffer<T>& outBuffer, const Real lerpFactor)
 		{
+			const int length = ToInt(outBuffer.Length());
+			T* output = outBuffer.data();
+
 			if (!gainsEqual.load(std::memory_order_acquire))
 			{
 				for (int index = 0; index < length; ++index)
@@ -302,8 +301,11 @@ namespace RAC
 
 #if DATA_TYPE_DOUBLE
 		template<>
-		void GraphicEQ<double>::ScaleGain(double* output, int length, const Real lerpFactor)
+		void GraphicEQ<double>::ScaleGain(Buffer<>& outBuffer, const Real lerpFactor)
 		{
+			const int length = ToInt(outBuffer.Length());
+			double* output = outBuffer.data();
+
 			if (!gainsEqual.load(std::memory_order_acquire) || (length % 4) != 0)
 			{
 				for (int index = 0; index < length; ++index)
@@ -334,8 +336,11 @@ namespace RAC
 #else
 
 		template<>
-		void GraphicEQ<float>::ScaleGain(float* output, int length, const Real lerpFactor)
+		void GraphicEQ<float>::ScaleGain(Buffer<>& outBuffer, const Real lerpFactor)
 		{
+			const int length = ToInt(outBuffer.Length());
+			float* output = outBuffer.data();
+
 			if (!gainsEqual.load(std::memory_order_acquire) || (length % 4) != 0)
 			{
 				for (int index = 0; index < length; ++index)
@@ -395,8 +400,7 @@ namespace RAC
 				return;
 			}
 
-			const int inBufferLength = ToInt(inBuffer.Length());
-			GetOutputBatch(inBuffer.data(), outBuffer.data(), inBufferLength, lerpFactor);
+			GetOutputBatch(inBuffer, outBuffer, lerpFactor);
 		}
 
 		////////////////////////////////////////
