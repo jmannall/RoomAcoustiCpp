@@ -43,7 +43,7 @@ namespace RAC
 			const int fs = 48000;
 			const Real lerpFactor = REAL_CONST(0.5);
 
-			const Real fc = 1000.0;
+			const Real fc = REAL_CONST(1000.0);
 			const Real gain = REAL_CONST(1.0);
 
 			HighShelf filter(fs);

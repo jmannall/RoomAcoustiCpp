@@ -151,11 +151,6 @@ namespace RAC
 #endif
 		}
 
-		////////////////////////////////////////
-		
-		template class FDN<Real>;
-		template class FDN<Complex>;
-
 		//////////////////// RandomOrthogonalFDN class ////////////////////
 
 		////////////////////////////////////////
@@ -217,19 +212,17 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		template class RandomOrthogonalFDN<Real>;
-		template class RandomOrthogonalFDN<Complex>;
-
-
-		////////////////////////////////////////
-
 		// we don't implement/use every function, so disable the warning (we can't re-enable it since the warning is generated after the file is parsed)
 		#ifdef _MSC_VER
 		#pragma warning (disable : 4661)
 		#endif
 
-		//////////////////// FDNChannel class ////////////////////
+		//////////////////// Instatiate all classes ////////////////////
 
+		template class FDN<Real>;
+		template class FDN<Complex>;
+		template class RandomOrthogonalFDN<Real>;
+		template class RandomOrthogonalFDN<Complex>;
 		template class FDNChannel<Real>;
 		template class FDNChannel<Complex>;
 
