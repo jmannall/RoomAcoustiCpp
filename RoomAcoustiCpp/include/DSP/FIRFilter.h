@@ -56,9 +56,11 @@ namespace RAC
 			};
 			
 			/**
-			* @brief Default deconstructor
-			*/
-			~FIRFilter() {};
+			 * @brief Returns if this filter is valid.
+			 *
+			 * @return true if the valid is valid and GetOutput() can be called.
+			 */
+			bool IsValid() const { return initialised.load(std::memory_order_acquire); }
 
 			/**
 			* @brief Returns the output of the FIRFilter given an input

@@ -126,7 +126,6 @@ namespace RAC
 			*/
 			const Buffer<>& GetOutput(Real input, Real lerpFactor);
 
-
 			/**
 			* @brief Resets the filter buffers
 			*/
@@ -141,6 +140,13 @@ namespace RAC
 			inline int NumBands() const { return numOutputBands; }
 
 			inline int GetLatency() const { return static_cast<int>( (std::pow((Real)2.0, numFrequencyBands) - 1) * Dwin ); }
+
+			/**
+			 * @brief Returns if this filter is valid.
+			 *
+			 * @return true if the valid is valid and GetOutput() can be called.
+			 */
+			bool IsValid() const { return initialised.load(std::memory_order_acquire); }
 
 		private:
 			inline Vec<int> CreateFrequencyIndices(Coefficients<> frequencies)

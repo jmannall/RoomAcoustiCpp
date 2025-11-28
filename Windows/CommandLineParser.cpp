@@ -44,6 +44,14 @@ bool CommandLineParser::Parse()
 		{
 			detailedLogs = false;
 		}
+		else if (argument == "--quality-hrtfs")
+		{
+			useQualityHRTFs = true;
+		}
+		else if (argument == "--performance-hrtfs")
+		{
+			useQualityHRTFs = false;
+		}
 		else if (ParseStandardArgument(argument, "--test-iterations=", value))
 		{
 			const int newIterations = std::stoi(value);
@@ -157,12 +165,15 @@ Options:
     --audio-threads=##	   Overrides the number of audio threads
     --debug                Enables certain memory debugging features
     --detailed-logs        Enables detailed logs
+    --dynamic-scene        Moves the sources around a 1m^2 area
     --inner-iterations=##  The number of times to run the inner loop
     --log-prefix=file      Specifies the log prefix
     --no-debug             Disables certain memory debugging features
     --no-detailed-logs     Disabled detailed logs 
     --num-rays=##          Sets the number of rays
+    --performance-hrtfs    Use performance HRTFs
     --profile-data=xx      Sets the profile data directory.
+    --quality-hrtfs        Use quality HRTFs
     --reflection-order=##  Sets the reflection order
     --run-log=file         Specifies the log of each run
     --shadow-order=##      Sets the shadow order

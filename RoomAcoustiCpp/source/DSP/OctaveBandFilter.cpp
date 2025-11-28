@@ -111,16 +111,11 @@ namespace RAC
 
 		const Buffer<>& OctaveBand::GetOutput(Real input, Real lerpFactor)
 		{
-			if (!initialised.load(std::memory_order_acquire)) // Do nothing if not initialised
-			{
-				for (Real& output : outputs)
-					output = input;
-				return outputs;
-			}
+			assert(IsValid());
 			
 			for (int i = 0; i < numFrequencyBands - 1; i++) // output 0 is 16kHz, output 1 is 8kHz etc
 			{
-				Real output = filters[i]->GetOutput(input);
+				Real output = filters[i]->GetOutput(input); 
 				bands[i] = delayLines[i].GetOutput(input) - output;
 				input = output;
 			}

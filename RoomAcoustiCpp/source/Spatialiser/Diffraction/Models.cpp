@@ -130,7 +130,7 @@ namespace RAC
 				}
 
 				for (int i = 0; i < inBuffer.Length(); i++)
-					outBuffer[i] = filter.GetOutput(inBuffer[i], lerpFactor);
+					filter.GetOutput(inBuffer[i], outBuffer[i], lerpFactor);
 			}
 
 			//////////////////// UTD class ////////////////////
@@ -350,7 +350,7 @@ namespace RAC
 					Real B1vec = sqrtB1vec * sqrtB1vec;
 					Real B2 = -2.0 * constants.R0 * (1 - constants.rho) * constants.rho * cosPhi / constants.rhoOne / constants.factor;
 					Real E1vec = 4.0 * constants.R0Sq * constants.rhoSq * constants.rho * constants.sinTheta[i] / constants.vSq / pow(constants.rhoOne, 4.0) / constants.factor;
-					
+
 					Real multfact = -E1vec * B2 / (B1vec * B2 * B2 + (B1vec - B3) * (B1vec - B3));
 
 					Real P1 = 0.5 * log(abs(B3) * abs(constants.zRange * constants.zRange + B1vec) / abs(B1vec) / abs(constants.zRange * constants.zRange + B2 * constants.zRange + B3));
@@ -370,7 +370,7 @@ namespace RAC
 					}
 					else // q = 0
 						P3 *= 4.0 * constants.zRange / B2 / (2.0 * constants.zRange + B2);
-					
+
 					output += multfact * (P1 + P2 + P3);
 				}
 				return output;

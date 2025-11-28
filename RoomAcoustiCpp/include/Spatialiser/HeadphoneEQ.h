@@ -54,7 +54,8 @@ namespace RAC
 					rightFilter.ClearBuffers();
 				}
 
-				for (int i = 0; i < inputBuffer.Length(); i += 2)
+				const int inputBufferLength = ToInt( inputBuffer.Length() );
+				for (int i = 0; i < inputBufferLength; i += 2)
 				{
 					outputBuffer[i] = leftFilter.GetOutput(inputBuffer[i], audioData.lerpFactor);
 					outputBuffer[i + 1] = rightFilter.GetOutput(inputBuffer[i + 1], audioData.lerpFactor);

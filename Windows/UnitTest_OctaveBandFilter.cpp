@@ -157,13 +157,7 @@ namespace RAC
 
 			Coefficients<> frequencies = Coefficients<>::Constant(1, (Real)2e3);
 			OctaveBand filter = OctaveBand(frequencies, fs);
-
-			Real input = 0.8;
-			const Buffer<>& output = filter.GetOutput(input, lerpFactor);
-			Assert::AreEqual(1, (int)output.Length(), L"Wrong number of bands");
-			Assert::AreEqual(input, output[0], L"Wrong output");
-			
-			Assert::AreEqual(0, filter.GetBandIndex(0), L"Wrong band index");
+			Assert::IsFalse(filter.IsValid(), L"Filter should be invalid due to single band");
 		}
 	};
 }

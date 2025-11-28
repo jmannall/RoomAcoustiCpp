@@ -27,27 +27,6 @@ namespace RAC
 	using namespace Unity;
 	namespace Spatialiser
 	{
-
-		//////////////////// FDN Channel class ////////////////////
-
-		////////////////////////////////////////
-
-		//template<>
-		//Real FDNChannel<Real>::GetOutput(const Real input, const Real lerpFactor)
-		//{
-		//	Real out = mDelayLine.GetOutput(input);
-		//	return mAbsorptionFilter.GetOutput(out, lerpFactor);
-		//}
-
-		//////////////////////////////////////////
-
-		//template<>
-		//Complex FDNChannel<Complex>::GetOutput(const Complex input, const Real lerpFactor)
-		//{
-		//	Complex out = mDelayLine.GetOutput(input);
-		//	return mAbsorptionFilter.load(std::memory_order_acquire) * out;
-		//}
-
 		//////////////////// FDN class ////////////////////
 		
 		////////////////////////////////////////
@@ -55,9 +34,10 @@ namespace RAC
 		template<typename T>
 		bool FDN<T>::IsSetMutuallyPrime(const Vec<int>& numbers)
 		{
-			for (int i = 0; i < numbers.Length(); ++i)
+			const int numbersLength = ToInt(numbers.Length());
+			for (int i = 0; i < numbersLength; ++i)
 			{
-				for (int j = i + 1; j < numbers.Length(); ++j)
+				for (int j = i + 1; j < numbersLength; ++j)
 				{
 					if (std::gcd(numbers(i), numbers(j)) != 1)
 						return false;
@@ -71,7 +51,8 @@ namespace RAC
 		template<typename T>
 		bool FDN<T>::IsEntryMutuallyPrime(const Vec<int>& numbers, int idx)
 		{
-			for (int i = 0; i < numbers.Length(); ++i)
+			const int numbersLength = ToInt(numbers.Length());
+			for (int i = 0; i < numbersLength; ++i)
 			{
 				if (i == idx)
 					continue;
@@ -88,7 +69,7 @@ namespace RAC
 		{
 			for (int i = 0; i < numbers.Length(); ++i)
 			{
-				int limit = static_cast<int>(round(0.1 * numbers(i)));
+				const int limit = static_cast<int>(round(0.1 * numbers(i)));
 				for (int adjustment = 0; adjustment <= limit; ++adjustment)
 				{
 					int original = numbers(i);
@@ -154,60 +135,6 @@ namespace RAC
 
 		////////////////////////////////////////
 
-//		template <>
-//		void FDN<Real>::ProcessAudio(const Matrix<>& data, std::vector<Buffer<>>& outputBuffers, const AudioData& audioData)
-//		{
-//			PROFILE_FDN
-//			if (audioData.clearBuffers)
-//				Reset();
-//
-//			// Process feedback loop
-//			for (int i = 0; i < data.Cols(); i++)
-//			{
-//				for (int j = 0; j < mChannels.size(); j++)
-//					y(j) = mChannels[j]->GetOutput(x(j) + data(j, i), audioData.lerpFactor);
-//
-//				for (int j = 0; j < outputBuffers.size(); j++)
-//					outputBuffers[j][i] = y(j);
-//
-//				ProcessMatrix();
-//			}
-//
-//			// Process output filters
-//			for (int i = 0; i < mChannels.size(); i++)
-//				mChannels[i]->ProcessOutput(outputBuffers[i], outputBuffers[i], audioData.lerpFactor);
-//		}
-
-		////////////////////////////////////////
-
-//		template<>
-//		void FDN<Complex>::ProcessAudio(std::vector<Buffer<>>& outputBuffers, const AudioData& audioData)
-//		{
-//			if (!enabled.load(std::memory_order_acquire))
-//				return;
-//
-//			PROFILE_FDN
-//			if (audioData.clearBuffers)
-//				Reset();
-//
-//			// For the purpose of `powerNormalization`, see notes in FDN_private.h
-//			inputData *= powerNormalization;
-//			// Process feedback loop
-//			for (int i = 0; i < outputBuffers[0].Length(); i++)
-//			{
-//				Complex output = precedingDelay.GetOutput(inputData(i));
-//				for (int j = 0; j < mChannels.size(); j++)
-//					y(j) = mChannels[j]->GetOutput(x(j) + output, audioData.lerpFactor);
-//
-//				for (int j = 0; j < outputBuffers.size(); j++)
-//					outputBuffers[j][i] += ravesResidues[j].GetOutput(y(j), audioData.lerpFactor);
-//
-//				ProcessMatrix();
-//			}
-//		}
-
-		////////////////////////////////////////
-
 		template<typename T>
 		void FDN<T>::ProcessSquare()
 		{
@@ -228,6 +155,8 @@ namespace RAC
 		
 		template class FDN<Real>;
 		template class FDN<Complex>;
+
+		//////////////////// RandomOrthogonalFDN class ////////////////////
 
 		////////////////////////////////////////
 
@@ -291,16 +220,16 @@ namespace RAC
 		template class RandomOrthogonalFDN<Real>;
 		template class RandomOrthogonalFDN<Complex>;
 
-		//////////////////// Instantiate ////////////////////
+		//////////////////// FDNChannel class ////////////////////
+
+		template class FDNChannel<Real>;
+		template class FDNChannel<Complex>;
+
+		////////////////////////////////////////
 
 		// we don't implement/use every function, so disable the warning (we can't re-enable it since the warning is generated after the file is parsed)
 		#ifdef _MSC_VER
 		#pragma warning (disable : 4661)
 		#endif
-
-		template class FDNChannel<Real>;
-		template class FDNChannel<Complex>;
-
-
 	}
 }

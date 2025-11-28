@@ -248,7 +248,7 @@ bool BaseTest::Init()
 	}
 	else
 	{
-		UpdateSpatialisationMode(SpatialisationMode::quality);
+		UpdateSpatialisationMode(executionContext.useQualityHrtfs ? SpatialisationMode::quality : SpatialisationMode::performance);
 	}
 
 	DirectSound dir = DirectSound::doCheck;
@@ -707,6 +707,7 @@ int main(int argc, const char* argv[])
 			.reflectionOrder = commandLineParser.GetReflectionOrder(),
 			.shadowOrder = commandLineParser.GetShadowOrder(),
 			.staticScene = commandLineParser.GetStaticSceneFlag(),
+			.useQualityHrtfs = commandLineParser.GetUseQualityHRTFs(),
 			.desiredAudioThreads = commandLineParser.GetDesiredAudioThreads()
 		};
 

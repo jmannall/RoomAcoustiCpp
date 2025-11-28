@@ -13,7 +13,7 @@
 #include <array>
 #include <thread>
 #include <atomic>
-#ifdef __WINDOWS__
+#ifdef _WIN32
 #include <emmintrin.h>
 #endif
 

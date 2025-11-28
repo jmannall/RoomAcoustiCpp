@@ -14,6 +14,17 @@
 #include <string>
 #include <ctime>
 
+#ifdef __AVX__
+#	define USE_AVX		1
+#else
+#	define USE_AVX		0
+#endif
+
+#if USE_AVX
+#include <intrin.h>
+#include <smmintrin.h>
+#endif
+
 namespace RAC
 {
 	namespace Common
