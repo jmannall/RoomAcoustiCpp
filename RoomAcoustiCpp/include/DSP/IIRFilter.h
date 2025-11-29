@@ -327,7 +327,6 @@ namespace RAC
 			{
 				SetTargetParameters(zpk);
 
-				a0 = 1.0;
 				UpdateCoefficients(currentZPK);
 				parametersEqual.store(true, std::memory_order_release);
 				initialised.store(true, std::memory_order_release);

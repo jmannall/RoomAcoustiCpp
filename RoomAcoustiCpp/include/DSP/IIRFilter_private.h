@@ -90,7 +90,6 @@ namespace RAC
 			In   y0{ 0.0 };
 			In   y1{ 0.0 };
 
-			Real a0{ 0.0 };
 			Real b0{ 0.0 };
 
 			const Real T;				// Sample rate time period

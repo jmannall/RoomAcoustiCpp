@@ -261,13 +261,13 @@ namespace RAC
 			const Real v4 = v2 * cosOmega;
 			const Real v5 = sqrt(A) * alpha; // 2 * sqrt(A) * alpha
 
-			this->a0 = REAL_CONST(1.0) / (v1 - v4 + v5); // a0 isn't used in GetOutput
-			this->a1 = (REAL_CONST(2.0) * (v2 - v3)) * this->a0;
-			this->a2 = (v1 - v4 - v5) * this->a0;
+			const Real a0 = REAL_CONST(1.0) / (v1 - v4 + v5); // a0 isn't used in GetOutput
+			this->a1 = (REAL_CONST(2.0) * (v2 - v3)) * a0;
+			this->a2 = (v1 - v4 - v5) * a0;
 
-			this->b0 = A * (v1 + v4 + v5) * this->a0;
-			this->b1 = REAL_CONST(-2.0) * A * (v2 + v3) * this->a0;
-			this->b2 = A * (v1 + v4 - v5) * this->a0;
+			this->b0 = A * (v1 + v4 + v5) * a0;
+			this->b1 = REAL_CONST(-2.0) * A * (v2 + v3) * a0;
+			this->b2 = A * (v1 + v4 - v5) * a0;
 		}
 
 		////////////////////////////////////////
@@ -291,13 +291,13 @@ namespace RAC
 			const Real v4 = v2 * cosOmega;
 			const Real v5 = sqrt(A) * alpha; // 2 * sqrt(A) * alpha
 
-			this->a0 = REAL_CONST(1.0) / (v1 + v4 + v5); // a0 isn't used in GetOutput
-			this->a1 = (REAL_CONST(-2.0) * (v2 + v3)) * this->a0;
-			this->a2 = (v1 + v4 - v5) * this->a0;
+			const Real a0 = REAL_CONST(1.0) / (v1 + v4 + v5); // a0 isn't used in GetOutput
+			this->a1 = (REAL_CONST(-2.0) * (v2 + v3)) * a0;
+			this->a2 = (v1 + v4 - v5) * a0;
 
-			this->b0 = A * (v1 - v4 + v5) * this->a0;
-			this->b1 = REAL_CONST(2.0) * A * (v2 - v3) * this->a0;
-			this->b2 = A * (v1 - v4 - v5) * this->a0;
+			this->b0 = A * (v1 - v4 + v5) * a0;
+			this->b1 = REAL_CONST(2.0) * A * (v2 - v3) * a0;
+			this->b2 = A * (v1 - v4 - v5) * a0;
 		}
 
 		////////////////////////////////////////
@@ -318,13 +318,13 @@ namespace RAC
 			const Real v1 = alpha * A;
 			const Real v2 = alpha / A;
 
-			this->a0 = REAL_CONST(1.0) / (REAL_CONST(1.0) + v2); // a0 isn't used in GetOutput
-			this->a1 = cosOmega * this->a0;
-			this->a2 = (REAL_CONST(1.0) - v2) * this->a0;
+			const Real a0 = REAL_CONST(1.0) / (REAL_CONST(1.0) + v2); // a0 isn't used in GetOutput
+			this->a1 = cosOmega * a0;
+			this->a2 = (REAL_CONST(1.0) - v2) * a0;
 
-			this->b0 = (REAL_CONST(1.0) + v1) * this->a0;
+			this->b0 = (REAL_CONST(1.0) + v1) * a0;
 			this->b1 = this->a1;
-			this->b2 = (REAL_CONST(1.0) - v1) * this->a0;
+			this->b2 = (REAL_CONST(1.0) - v1) * a0;
 		}
 
 		////////////////////////////////////////
@@ -405,7 +405,7 @@ namespace RAC
 			const Real omega = cot(PI_1 * fc * T); // 2 * PI * fc * T / 2
 			const Real omega_sq = omega * omega;
 
-			a0 = REAL_CONST(1.0) / (REAL_CONST(1.0) + SQRT_2 * omega + omega_sq); // a[0] isn't used in GetOutput
+			const Real a0 = REAL_CONST(1.0) / (REAL_CONST(1.0) + SQRT_2 * omega + omega_sq); // a[0] isn't used in GetOutput
 			a1 = (REAL_CONST(2.0) - REAL_CONST(2.0) * omega_sq) * a0;
 			a2 = (REAL_CONST(1.0) - SQRT_2 * omega + omega_sq) * a0;
 
@@ -423,7 +423,7 @@ namespace RAC
 			const Real omega = cot(PI_1 * fc * T); // 2 * PI * fc * T / 2
 			const Real omega_sq = omega * omega;
 
-			a0 = REAL_CONST(1.0) / (REAL_CONST(1.0) + SQRT_2 * omega + omega_sq); // a[0] isn't used in GetOutput
+			const Real a0 = REAL_CONST(1.0) / (REAL_CONST(1.0) + SQRT_2 * omega + omega_sq); // a[0] isn't used in GetOutput
 			a1 = (REAL_CONST(2.0) - REAL_CONST(2.0) * omega_sq) * a0;
 			a2 = (REAL_CONST(1.0) - SQRT_2 * omega + omega_sq) * a0;
 
