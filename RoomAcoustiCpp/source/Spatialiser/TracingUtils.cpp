@@ -264,7 +264,7 @@ namespace RAC
 			// TODO: Implement Lean Plücker
 #else // not LEAN_PLUCKER
 			// Compute ray moments and load into locals.
-			const Vec3 rayMoment = rayOrigin.cross(rayDirection);
+			const Vec3 rayMoment = O.cross(D);
 			const Vec3& M = rayMoment;
 #endif // end LEAN_PLUCKER
 #else // not PLUCKER_KERNE
