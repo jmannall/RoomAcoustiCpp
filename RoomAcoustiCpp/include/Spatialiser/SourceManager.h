@@ -211,8 +211,8 @@ namespace RAC
 				PROFILE_EarlyReflections
 				audioThreadPool->ProcessAllSources(mSources, mImageSources, outputBuffer, audioData);
 				/*for (auto& source : mSources)
-					source->ProcessAudio(outputBuffer, reverbInput, lerpFactor);
-				mImageSources.ProcessAudio(outputBuffer, reverbInput, lerpFactor);*/
+					source->ProcessAudio(outputBuffer, audioData);
+				mImageSources.ProcessAudio(outputBuffer, audioData);*/
 			}
 
 			inline void ProcessLateReverbSend(Matrix<>& reverbInput, const AudioData& audioData)

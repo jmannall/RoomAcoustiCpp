@@ -111,7 +111,7 @@ namespace RAC
 			bool Valid()
 			{
 				for (int i = 0; i < Length(); i++)
-					if (std::isnan(mBuffer[i]))
+					if (std::isfinite(mBuffer[i]))
 						return false;
 				return true;
 			}
@@ -183,6 +183,9 @@ namespace RAC
 			inline const auto begin() const { return mBuffer.begin(); }
 
 			inline const auto end() const { return mBuffer.end(); }
+
+			T* data() { return &mBuffer[0];	}
+			const T* data() const { return &mBuffer[0]; }
 
 		private:
 

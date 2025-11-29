@@ -20,9 +20,7 @@ namespace RAC
 
 		Real FIRFilter::GetOutput(const Real input, const Real lerpFactor)
 		{
-			if (!initialised.load(std::memory_order_acquire))
-				return 0.0;
-
+			assert(IsValid());
 			if (!irsEqual.load(std::memory_order_acquire))
 				InterpolateIR(lerpFactor);
 

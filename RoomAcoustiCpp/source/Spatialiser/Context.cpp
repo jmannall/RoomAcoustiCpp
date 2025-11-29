@@ -147,6 +147,7 @@ namespace RAC
 			CErrorHandler::Instance().SetAssertMode(ASSERT_MODE_CONTINUE);
 			CErrorHandler::Instance().SetVerbosityMode(VERBOSITYMODE_ERRORSANDWARNINGS);
 
+			// TODO: Comment frame rate doesn't change at runtime
 			// Set dsp settings
 			mCore.SetAudioState({ dspConfig->GetData().fs, dspConfig->GetData().numFrames });
 

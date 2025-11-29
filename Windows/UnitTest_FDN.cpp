@@ -351,7 +351,7 @@ namespace RAC
 
 		TEST_METHOD(DelayLineLengthAssignment)
 		{
-			const Real fs = 48000.0;
+			const int fs = 48000;
 			const Real minDiffSeconds = 2e-4;
 			const Real minLineSeconds = 3e-2;
 			const Real maxLineSeconds = 3e-1;

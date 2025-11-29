@@ -28,7 +28,7 @@ namespace RAC
 			* 
 			* @param length The length of the delay line.
 			*/
-			DelayLine(int length) : buffer(length), initialised(length > 0)
+			inline DelayLine(int length) : buffer(length), length(length), initialised(length > 0)
 			{
 #if MATRIX_LIBRARY == EIGEN_FLAG
 				buffer.Reset();
@@ -41,16 +41,29 @@ namespace RAC
 			* @param input The sample to add to the delay line.
 			* @return The delayed sample.
 			*/
-			T GetOutput(T input)
+			inline T GetOutput(T input)
 			{
-				if (!initialised)
-					return input;
-				if (idx >= buffer.Length())
-					idx = 0;
+				assert(initialised);
 				T out = buffer[idx];
 				buffer[idx] = input;
-				++idx;
+				if (++idx >= length) [[unlikely]]
+					idx = 0;
 				return out;
+			}
+
+			/**
+			* @brief Adds a sample to the delay line and returns the delayed sample
+			*
+			* @param output The location to store the result
+			* @param input The sample to add to the delay line.
+			*/
+			inline void GetOutput(const T& input, T& output)
+			{
+				assert(initialised);
+				output = buffer[idx];
+				buffer[idx] = input;
+				if (++idx >= length) [[unlikely]]
+					idx = 0;
 			}
 
 			/**
@@ -65,8 +78,44 @@ namespace RAC
 		private:
 			Buffer<T> buffer;	// Delay line buffer
 			int idx{ 0 };		// Current write index
+			int length;			// Local copy of the length
 			bool initialised{ false };	// True if the delay line has been initialized
 		};
+
+		///////////////////////////////////////////////////////////////////////////////
+
+#if USE_AVX
+
+		template<>
+		inline void DelayLine<std::complex<std::double_t>>::GetOutput(const std::complex<std::double_t>& input, std::complex<std::double_t>& output)
+		{
+			assert(initialised);
+			assert(IsAligned16(&input));
+			assert(IsAligned16(&output));
+
+			double* entryPointer = reinterpret_cast<double*>(buffer.data() + idx);
+			double* outputPointer = reinterpret_cast<double*>(&output);
+			const double* inputPointer = reinterpret_cast<const double*>(&input);
+
+			// start fetching the entry pointer
+			_mm_prefetch(reinterpret_cast<const char*>(entryPointer), _MM_HINT_T0);
+
+			// while we're doing that, increment our index
+			if (++idx >= length) [[unlikely]]
+				idx = 0;
+
+			// now we start prefetching the new value to load
+			_mm_prefetch(reinterpret_cast<const char*>(inputPointer), _MM_HINT_T0);
+
+			// grab the existing entry
+			_mm_store_pd(outputPointer, _mm_load_pd(entryPointer));
+
+			// and now store the new value
+			_mm_store_pd(entryPointer, _mm_load_pd(inputPointer));
+		}
+
+#endif
+
 	}
 }
 

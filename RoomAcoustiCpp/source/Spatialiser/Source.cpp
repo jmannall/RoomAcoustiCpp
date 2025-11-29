@@ -288,6 +288,7 @@ namespace RAC
 				FreeAccess();
 				return;
 			}
+
 			mAirAbsorption->ProcessAudio(inputBuffer, bStore, audioData.lerpFactor);
 
 			{

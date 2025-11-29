@@ -120,10 +120,26 @@ namespace RAC
 			/**
 			* @brief Processes a single sample output
 			*
-			* @brief input The next audio sample input to the delay line
-			* @return The next output from the channel
+			* @param output The processed audio sample
+			* @param  input The next audio sample input to the delay line
+			* @param lerpFactor The linear interpolation factor
 			*/
-			T GetOutput(const T input, const Real lerpFactor);
+			void GetOutput(T &output, const T &input, const Real lerpFactor);
+
+			/**
+			* @brief Processes a single sample output
+			*
+			* @param input The next audio sample input to the delay line
+			* @param lerpFactor The linear interpolation factor
+			* 
+			* @return output The processed audio sample
+			*/
+			inline T GetOutput(const T& input, const Real lerpFactor)
+			{
+				T ret;
+				GetOutput(ret, input, lerpFactor);
+				return ret;
+			}
 
 		private:
 
@@ -157,18 +173,22 @@ namespace RAC
 				GraphicEQ<Real>, std::nullptr_t> mReflectionFilter;		// The reflection filter on the FDN output
 		};
 
-		template<>
-		inline Real FDNChannel<Real>::GetOutput(const Real input, const Real lerpFactor)
-		{
-			Real out = mDelayLine.GetOutput(input);
-			return mAbsorptionFilter.GetOutput(out, lerpFactor);
-		}
+		////////////////////////////////////////
 
 		template<>
-		inline Complex FDNChannel<Complex>::GetOutput(const Complex input, const Real lerpFactor)
+		inline void FDNChannel<Real>::GetOutput(Real& output, const Real& input, const Real lerpFactor)
 		{
-			Complex out = mDelayLine.GetOutput(input);
-			return mAbsorptionFilter.load(std::memory_order_acquire) * out;
+			mDelayLine.GetOutput(input, output);
+			output = mAbsorptionFilter.GetOutput(output, lerpFactor);
+		}
+
+		////////////////////////////////////////
+
+		template<>
+		inline void FDNChannel<Complex>::GetOutput(Complex& output, const Complex& input, const Real lerpFactor)
+		{
+			mDelayLine.GetOutput(input, output);
+			output *= mAbsorptionFilter.load(std::memory_order_acquire);
 		}
 
 		/**
@@ -495,20 +515,25 @@ namespace RAC
 				if (audioData.clearBuffers)
 					Reset();
 
+			// cache these to help the vectorizer vectorize this
+			const int channelCount = ToInt(mChannels.size());
+			const int outputBufferCount = ToInt(outputBuffers.size());
+
 			// Process feedback loop
 			for (int i = 0; i < data.Cols(); i++)
 			{
-				for (int j = 0; j < mChannels.size(); j++)
-					y(j) = mChannels[j]->GetOutput(x(j) + data(j, i), audioData.lerpFactor);
+				for (int j = 0; j < channelCount; j++)
+					mChannels[j]->GetOutput(y(j), x(j) + data(j, i), audioData.lerpFactor);
 
-				for (int j = 0; j < outputBuffers.size(); j++)
+				for (int j = 0; j < outputBufferCount; j++)
 					outputBuffers[j][i] = y(j);
 
 				ProcessMatrix();
 			}
 
 			// Process output filters
-			for (int i = 0; i < mChannels.size(); i++)
+			const int channelSize = ToInt(mChannels.size());
+			for (int i = 0; i < channelSize; i++)
 				mChannels[i]->ProcessOutput(outputBuffers[i], outputBuffers[i], audioData.lerpFactor);
 		}
 
@@ -522,16 +547,24 @@ namespace RAC
 				if (audioData.clearBuffers)
 					Reset();
 
+			// cache these to help the vectorizer vectorize this
+			const int firstOutputBufferSize = ToInt(outputBuffers[0].Length());
+			const int channelSize = ToInt(mChannels.size());
+			const int outputBuffersSize = ToInt(outputBuffers.size());
+
 			// For the purpose of `powerNormalization`, see notes in FDN_private.h
 			inputData *= powerNormalization;
-			// Process feedback loop
-			for (int i = 0; i < outputBuffers[0].Length(); i++)
-			{
-				Complex output = precedingDelay.GetOutput(inputData(i));
-				for (int j = 0; j < mChannels.size(); j++)
-					y(j) = mChannels[j]->GetOutput(x(j) + output, audioData.lerpFactor);
 
-				for (int j = 0; j < outputBuffers.size(); j++)
+			// Process feedback loop
+			for (int i = 0; i < firstOutputBufferSize; i++)
+			{
+				Complex output;
+				precedingDelay.GetOutput(inputData(i), output);
+
+				for (int j = 0; j < channelSize; j++)
+					mChannels[j]->GetOutput(y(j), x(j) + output, audioData.lerpFactor);
+
+				for (int j = 0; j < outputBuffersSize; j++)
 					outputBuffers[j][i] += ravesResidues[j].GetOutput(y(j), audioData.lerpFactor);
 
 				ProcessMatrix();

@@ -44,6 +44,7 @@ struct ProfileExecutionContext
 	int reflectionOrder = 2;
 	int shadowOrder = 2;
 	bool staticScene = true;
+	bool useQualityHrtfs = true;
 	std::optional<size_t> desiredAudioThreads;
 
 	SimpleTimer stageTimers[(int)ProfileExecutionStage::COUNT];

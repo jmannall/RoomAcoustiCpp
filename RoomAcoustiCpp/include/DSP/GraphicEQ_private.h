@@ -57,11 +57,6 @@ namespace RAC
 			GraphicEQ(const Coefficients<>& gain, const Coefficients<>& fc, const Real Q, const int sampleRate);
 
 			/**
-			* @brief Default deconstructor
-			*/
-			~GraphicEQ() {};
-
-			/**
 			* @brief Sets new target gains for each center frequency
 			*
 			* @param gains The target response for the GraphicEQ
@@ -78,6 +73,16 @@ namespace RAC
 			T GetOutput(const T input, const Real lerpFactor);
 
 			/**
+			* @brief Returns the output of the GraphicEQ given an input
+			*
+			* @param input The input to the GraphicEQ
+			* @param output The output buffer
+			* @param inputOutputLength The length of the input buffer
+			* @return The output of the GraphicEQ
+			*/
+			void GetOutputBatch(const T *input, T *output, int inputOutputLength, const Real lerpFactor);
+
+			/**
 			* @brief Processes an input buffer and updates the output buffer
 			*
 			* @param inBuffer The input buffer
@@ -86,6 +91,13 @@ namespace RAC
 			* @param lerpFactor The linear interpolation factor
 			*/
 			void ProcessAudio(const Buffer<T>& inBuffer, Buffer<T>& outBuffer, const Real lerpFactor);
+
+			/**
+			 * @brief Returns if this filter is valid.
+			 *
+			 * @return true if the valid is valid and GetOutput() can be called.
+			 */
+			bool IsValid() const { return initialised.load(std::memory_order_acquire); }
 
 			/**
 			* @brief Resets the filter buffers
@@ -132,6 +144,15 @@ namespace RAC
 			*/
 			void InterpolateGain(const Real lerpFactor);
 
+			/**
+			 * @brief Scales the specifies buffer by the gain
+			 * 
+			 * @param output The buffer to scasle
+			 * @param length The length of the buffer
+			 * @param lerpFactor The linear interpolation factor
+			 */
+			void ScaleGain(T* output, int length, const Real lerpFactor);
+
 			const int numFilters;			// Number of filters
 			Coefficients<> previousInput;		// Previous target response to check if they have changed
 
@@ -146,8 +167,8 @@ namespace RAC
 
 			std::atomic<bool> initialised{ false };		// True if the GraphicEQ has been initialised
 			std::atomic<bool> gainsEqual{ false };		// True if the currentGain and targetGain are known to be equal
-
 		};
 	}
 }
+
 #endif // DSP_GraphicEQ_private_h

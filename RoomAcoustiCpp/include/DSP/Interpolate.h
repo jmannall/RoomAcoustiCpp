@@ -7,7 +7,7 @@
 #define DSP_Interpolate_h
 
 // C++ headers
-#ifdef __WINDOWS__
+#ifdef _WIN32
 #include <intrin.h>
 #endif
 #include <omp.h>
@@ -53,7 +53,7 @@ namespace RAC
 		*/
 		inline void FlushDenormals()
 		{
-#ifdef __WINDOWS__
+#ifdef _WIN32
 			_MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
 #elif __ANDROID__
 			unsigned m_savedCSR = getStatusWord();
@@ -67,7 +67,7 @@ namespace RAC
 		*/
 		inline void NoFlushDenormals()
 		{
-#ifdef __WINDOWS__
+#ifdef _WIN32
 			_MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_OFF);
 #elif __ANDROID__
 			unsigned m_savedCSR = getStatusWord();

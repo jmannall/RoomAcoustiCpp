@@ -104,7 +104,10 @@ namespace RAC
 			* @param numFrequencyBands The number of frequency bands for applying wall absorption
 			*/
 			ImageSourceData(int numFrequencyBands) : mAbsorption(numFrequencyBands),
-				mPositions(1, Vec3()), pathParts(1, Part(0, true)), mEdges(1, { Vec3(), Vec3() }) {}
+				mPositions(1, Vec3()), pathParts(1, Part(0, true)), mEdges(1, { Vec3(), Vec3() })
+			{
+				ResetAbsorption();
+			}
 
 			/**
 			 * @brief Makes a minimal copy of this
