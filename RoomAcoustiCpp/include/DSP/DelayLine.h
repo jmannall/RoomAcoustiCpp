@@ -75,6 +75,15 @@ namespace RAC
 				idx = 0;
 			}
 
+			/**
+			 * @brief Returns true if this is delay line is valid
+			 * @returns true if valid, false otherwise
+			 */
+			bool IsValid() const 
+			{
+				return initialised;
+			}
+
 		private:
 			Buffer<T> buffer;	// Delay line buffer
 			int idx{ 0 };		// Current write index

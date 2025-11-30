@@ -265,8 +265,14 @@ namespace RAC
 			inline void SetPrecedingDelay(const int samples)
 			requires std::is_same_v<T, Complex>
 			{
-				precedingDelay = DelayLine<Complex>(samples);
-				// precedingDelayBuffer.Reset(); // TODO: Do we want to avoid resetting it?
+				assert(samples > 0);
+
+				// in case they passed in a bad value, make sure our delay line is at least 
+				// one sample
+				const int actualSamples = std::max(samples, 1);
+
+				precedingDelay = DelayLine<Complex>(actualSamples);
+				// the constructor resets, so no need to do a Reset() here
 			}
 
 			inline void SetMinimumReverbTime(Real T60)
