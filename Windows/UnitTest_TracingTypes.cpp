@@ -295,7 +295,6 @@ namespace RAC
 			for (int oi = 0; oi < 2; ++oi) {
 				testRays.O= testOrigins[oi];
 
-				// Note that this also computes the moments if needed.
 				testRays.normalize_directions();
 
 				for (int di = 0; di < 6; ++di) {
@@ -368,7 +367,6 @@ namespace RAC
 			for (int oi = 0; oi < 2; ++oi) {
 				testRays.O = testOrigins[oi];
 
-				// Note that this also computes the moments if needed.
 				testRays.normalize_directions();
 
 				for (int di = 0; di < 6; ++di) {
@@ -455,7 +453,6 @@ namespace RAC
 				}
 			}
 
-			// Note that this also computes the moments if needed.
 			testRays.normalize_directions();
 
 			Real expected_distance, result_distance, result_cosine;
@@ -528,7 +525,6 @@ namespace RAC
 				}
 			}
 
-			// Note that this also computes the moments if needed.
 			testRays.normalize_directions();
 
 			Real expected_distance_front, result_distance_front, result_cosine_front;

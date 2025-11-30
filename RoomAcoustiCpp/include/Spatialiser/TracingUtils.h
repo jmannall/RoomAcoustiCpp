@@ -13,17 +13,14 @@ namespace RAC
     using namespace Common;
 	namespace Spatialiser
 	{
-        // TODO: Consider making one abstract class Ray which gets inherited by RayBundle, RayPencil, RaySingle.
-
         /**
          * @brief Intersect one triangle against one ray.
-         * Uses different algorithms depending on #if PLUCKER_KERNEL and #if LEAN_PLUCKER:
-         * lean Plücker, fat Plücker, or Möller–Trumbore.
+         * Uses a Möller–Trumbore algorithm.
          *
          * The kernel enforces:
-         *  - the triangle's normal faces the ray's origin (dot(n,O)+d0 > eps_face)
-         *  - the intersection point is inside the triangle (edges included)
-         * It does not enforce t > 0 (line–triangle, not ray–triangle).
+         *  - the triangle's normal faces the ray's origin
+         *  - the intersection point is inside the triangle (edges count as valid hits)
+         * It does NOT enforce distance > 0 (finds intersections on either side of the ray's origin).
          *
          * @param triangles Structure of Arrays containing the triangles.
          * @param triangleIndex Index of the triangle to test.
@@ -49,14 +46,13 @@ namespace RAC
 
         /**
          * @brief Intersect all triangles against one ray.
-         * Uses different algorithms depending on #if PLUCKER_KERNEL and #if LEAN_PLUCKER:
-         * lean Plücker, fat Plücker, or Möller–Trumbore.
+         * Uses a Möller–Trumbore algorithm.
          *
          * The kernel enforces:
-         *  - the triangle's normal faces the ray's origin (dot(n,O)+d0 > eps_face)
-         *  - the intersection point is inside the triangle (edges included)
-         * It does not enforce t > 0 (line–triangle, not ray–triangle).
-         * 
+         *  - the triangle's normal faces the ray's origin
+         *  - the intersection point is inside the triangle (edges count as valid hits)
+         * It does NOT enforce distance > 0 (finds intersections on either side of the ray's origin).
+         *
          * In the case of Z-fighting, the lower tirangle index wins.
          *
          * @param triangles Structure of Arrays containing the triangles.
@@ -119,7 +115,7 @@ namespace RAC
              *  and radiance values based on the previously intersected polygons' absorption coefficients.
              *  */
             // TODO: Define this function if we ever want to trace multiple reflection orders.
-            // TODO: Pass pointers to the absorption and scattering coeffs. to use for the reflections.
+            // TODO: Pass (by reference) the absorption and scattering coeffs. to use for the reflections.
             void advanceAndReflect(const TriangleMeshSoA& triangles);
 
             /* @brief Returns the number of rays in the bundle.

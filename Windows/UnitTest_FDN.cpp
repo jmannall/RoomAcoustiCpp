@@ -365,7 +365,7 @@ namespace RAC
 				for (int fdnSize = 6; fdnSize < 21; fdnSize++)
 				{
 					Matrix<int> delayLineLengthSets(numFDNs, fdnSize);
-					Reverb::buildDelaySets(delayLineLengthSets, fs);
+					Reverb::buildDelaySets(delayLineLengthSets, fs, minDiffSeconds, minLineSeconds, maxLineSeconds);
 
 					for (int i = 0; i < numFDNs; i++)
 					{

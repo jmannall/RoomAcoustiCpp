@@ -170,6 +170,29 @@ namespace RAC
 			}
 
 			/**
+			* @brief Sets the distance thresholds (in meters) from the latest updated position which triggers an update of late reverberation tracing.
+			*
+			* @param sourceThresh The distance threshold for all sources.
+			* @param listenerThresh The distance threshold for the listener.
+			*/
+			inline void UpdateLateReverbDistanceThresholds(const Real sourceThresh, const Real listenerThresh)
+			{
+				if (lateReverbInitialised.load(std::memory_order_acquire))
+					mRayTracing->SetUpdateThresholds(sourceThresh, listenerThresh);
+			}
+
+			/**
+			* @brief Sets the sphere radius (in meters) used to determine self-shadowing during late reverberation tracing.
+			*
+			* @param radius The radius of the listener's head radius.
+			*/
+			inline void UpdateSelfShadowingRadius(const Real radius)
+			{
+				if (lateReverbInitialised.load(std::memory_order_acquire))
+					mRayTracing->SetUpdateSelfShadowingRadius(radius);
+			}
+
+			/**
 			* @brief Updates the intial delay for MoDART late reverberation.
 			*
 			* @param delay The initial delay in seconds.
