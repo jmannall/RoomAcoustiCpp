@@ -148,7 +148,7 @@ namespace RAC
 								sharedReverb->GetRightEigenvector(slope_idx));
 
 #ifdef DEBUG_RTM
-						Debug::send_residue(listenerResidues[slope_idx][dir_idx], false, dir_idx, slope_idx);
+						Debug::send_residue(static_cast<float>(listenerResidues[slope_idx][dir_idx]), false, dir_idx, slope_idx);
 #endif
 					}
 				}
@@ -185,7 +185,7 @@ namespace RAC
 								sharedReverb->GetLeftEigenvector(slope_idx));
 
 #ifdef DEBUG_RTM
-						Debug::send_residue(sourceResidues[slope_idx], true, source.id, slope_idx);
+						Debug::send_residue(static_cast<float>(sourceResidues[slope_idx]), true, ToInt(source.id), slope_idx);
 #endif
 
 						// Compensate gain based on preceding delay.
