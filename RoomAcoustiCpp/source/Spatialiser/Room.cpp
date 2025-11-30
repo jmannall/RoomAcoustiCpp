@@ -129,44 +129,14 @@ namespace RAC
 				const Vec3 &A = vertices[0];
 				const Vec3 &B = vertices[1];
 				const Vec3 &C = vertices[2];
-#if PLUCKER_KERNEL
-#if LEAN_PLUCKER
-				// TODO: Implement Lean Plücker
-#else // not LEAN_PLUCKER
 
-				// ----- Edge direction vectors -----
-				// Edge AB = B - A
-				mTriangleMeshSoA.edgeABDirection[i] = B - A;
-
-				// Edge BC = C - B
-				mTriangleMeshSoA.edgeBCDirection[i] = C - B;
-
-				// Edge CA = A - C
-				mTriangleMeshSoA.edgeCADirection[i] = A - C;
-
-				// ----- Wedge terms (endpoint cross products) -----
-				// These are used by Plücker side predicates: s = dot(D, (PxQ)) + dot(M, (Q-P)).
-
-				// A x B
-				Vec3 wedge = vertices[0].cross(vertices[1]);
-				mTriangleMeshSoA.edgeABWedge_AcrossB[i] = wedge;
-
-				// B x C
-				wedge = vertices[1].cross(vertices[2]);
-				mTriangleMeshSoA.edgeBCWedge_BcrossC[i] = wedge;
-
-				// C x A
-				wedge = vertices[2].cross(vertices[0]);
-				mTriangleMeshSoA.edgeCAWedge_CcrossA[i] = wedge;
-#endif // end LEAN_PLUCKER
-#else // not PLUCKER_KERNEL
 				// ----- Anchor vertex A -----
 				mTriangleMeshSoA.A[i] = A;
 
 				// ----- Edges from A -----
 				mTriangleMeshSoA.edge1[i] = B - A;
 				mTriangleMeshSoA.edge2[i] = C - A;
-#endif // end PLUCKER_KERNEL
+
 
 				// ----- Plane parameters: normal n and plane constant d0 -----
 				mTriangleMeshSoA.n[i] = wall.GetNormal();

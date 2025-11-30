@@ -120,6 +120,24 @@ namespace RAC
 		}
 		////////////////////////////////////////
 
+		void UpdateLateReverbDistanceThresholds(const Real sourceThresh, const Real listenerThresh)
+		{
+			auto context = GetContext();
+			if (context)
+				context->UpdateLateReverbDistanceThresholds(sourceThresh, listenerThresh);
+
+		}
+		////////////////////////////////////////
+
+		void UpdateSelfShadowingRadius(const Real radius)
+		{
+			auto context = GetContext();
+			if (context)
+				context->UpdateSelfShadowingRadius(radius);
+
+		}
+		////////////////////////////////////////
+
 		void UpdateMoDARTDelay(const Real delay)
 		{
 			auto context = GetContext();

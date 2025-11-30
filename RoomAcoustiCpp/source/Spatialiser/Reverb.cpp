@@ -486,7 +486,7 @@ namespace RAC
 
 			audioThreadPool->ProcessFDNs(*fdns, outputBuffers, audioData); 
 			/*for (int i = 0; i < fdns->size(); i++)
-				fdns->at(i)->ProcessAudio(outputBuffers, lerpFactor);*/
+				fdns->at(i)->ProcessAudio(outputBuffers, audioData);*/
 		}
 	}
 }

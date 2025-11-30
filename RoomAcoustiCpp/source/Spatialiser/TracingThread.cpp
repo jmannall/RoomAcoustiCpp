@@ -15,7 +15,6 @@ namespace RAC
 	using namespace Common;
 	namespace Spatialiser
 	{
-		// TODO: Save MoDARTData instance, or copy its attributes?
 		TracingThread::TracingThread(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const LateReverbData& data, const std::shared_ptr<DSPConfig>& dspConfig) :
 			mRoom(room), mSourceManager(sourceManager), mReverb(reverb),
 			numReverbDirections(dspConfig->GetData().numReverbSources),
@@ -55,6 +54,22 @@ namespace RAC
 						++clustersSizes(dir_idx);
 				}
 			}
+		}
+
+		void TracingThread::SetUpdateThresholds(Real sourceThresh, Real listenerThresh) {
+			// The ray pencil is not actually being touched, but we can use the same mutex to lock the tracing thread.
+			lock_guard<std::mutex> lock(rayPencilMutex);
+
+			sourceMovementThreshold = sourceThresh;
+			listenerMovementThreshold = listenerThresh;
+		}
+
+		void TracingThread::SetUpdateSelfShadowingRadius(Real radius) {
+			// The ray pencil is not actually being touched, but we can use the same mutex to lock the tracing thread.
+			// Note: the potential data race would be with ComputeEnergyContributions() rather than RunTracing().
+			lock_guard<std::mutex> lock(rayPencilMutex);
+
+			selfShadowingRadius = radius;
 		}
 
 		void MoDARTTracing::InitRoom(const Matrix<int>& indexing, const Vec<>& decayRates) {
@@ -105,7 +120,7 @@ namespace RAC
 				hemispherePencil.traceAll(sharedRoom->GetTriangleMeshSoA());
 
 				for (int dir_idx = 0; dir_idx < numReverbDirections; ++dir_idx) {
-					computeEnergyContributions(dir_idx);
+					ComputeEnergyContributions(dir_idx);
 #ifdef DEBUG_RTM
 					Debug::send_path(IntToStr(dir_idx) + "l", { mListenerPosition }, reverbDirections[dir_idx]);
 #endif
@@ -156,7 +171,7 @@ namespace RAC
 					hemispherePencil.moveOrigin(source.position);
 					hemispherePencil.traceAll(sharedRoom->GetTriangleMeshSoA());
 
-					computeEnergyContributions();
+					ComputeEnergyContributions();
 
 					for (int slope_idx = 0; slope_idx < numFDNs; ++slope_idx) {
 						for (int path_idx = 0; path_idx < numPaths; ++path_idx) {
@@ -186,7 +201,7 @@ namespace RAC
 			tracingStartFlag.store(false, std::memory_order_release);
 		}
 
-		void MoDARTTracing::computeEnergyContributions(int reverbDirectionIdx) {
+		void MoDARTTracing::ComputeEnergyContributions(int reverbDirectionIdx) {
 			int pathIdx;
 			Real distance;
 
@@ -197,7 +212,7 @@ namespace RAC
 				hemispherePencil.getIndices(frontIndices, backIndices);
 			}
 			// If self-shadowing is enabled, get the incidence cosines as well.
-			if (SELF_SHADOWING_RADIUS > 0.0)
+			if (selfShadowingRadius > 0.0)
 				hemispherePencil.getCosines(rayCosines);
 
 			// Reset contributions to 0
@@ -212,8 +227,8 @@ namespace RAC
 				// Does the ray fall within the bundle specified by `reverbDirectionIdx`?
 				if ((reverbDirectionIdx == -1) || (reverbDirectionIdx == rayClusters(ray_idx))) {
 					// Is the ray self-shadowed?
-					if (SELF_SHADOWING_RADIUS > 0.0)
-						if (rayCosines(ray_idx) < SELF_SHADOWING_RADIUS / (2 * rayDistances(ray_idx)))
+					if (selfShadowingRadius > 0.0)
+						if (rayCosines(ray_idx) < selfShadowingRadius / (2 * rayDistances(ray_idx)))
 							continue;
 
 					// Add energy contribution of the ray (pathIndexing is from A to B; back to front)
@@ -294,7 +309,7 @@ namespace RAC
 			hemispherePencil.getDistances(rayDistances);
 			hemispherePencil.getIndices(frontIndices, backIndices);
 			// If self-shadowing is enabled, get the incidence cosines as well.
-			if (SELF_SHADOWING_RADIUS > 0.0)
+			if (selfShadowingRadius > 0.0)
 				hemispherePencil.getCosines(rayCosines);
 
 			for (int ray_idx = 0; ray_idx < numRays; ++ray_idx) {
@@ -305,8 +320,8 @@ namespace RAC
 				// Does the ray fall within the bundle specified by `reverbDirectionIdx`?
 				if ((reverbDirectionIdx == -1) || (reverbDirectionIdx == rayClusters(ray_idx))) {
 					// Is the ray self-shadowed?
-					if (SELF_SHADOWING_RADIUS > 0.0)
-						if (rayCosines(ray_idx) < SELF_SHADOWING_RADIUS / (2 * rayDistances(ray_idx)))
+					if (selfShadowingRadius > 0.0)
+						if (rayCosines(ray_idx) < selfShadowingRadius / (2 * rayDistances(ray_idx)))
 							continue;
 
 					// Add energy contribution of the ray

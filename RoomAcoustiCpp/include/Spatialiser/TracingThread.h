@@ -56,6 +56,21 @@ namespace RAC
 			void SetNumberOfRays(int newNumRays);
 
 			/**
+			* @brief Change the distance thresholds (in meters) from the latest updated position which triggers an update.
+			*
+			* @param sourceThresh The distance threshold for all sources.
+			* @param listenerThresh The distance threshold for the listener.
+			*/
+			void SetUpdateThresholds(Real sourceThresh, Real listenerThresh);
+
+			/**
+			* @brief Change the sphere radius (in meters) used to determine self-shadowing during late reverberation tracing.
+			*
+			* @param radius The radius of the listener's head radius.
+			*/
+			void SetUpdateSelfShadowingRadius(Real radius);
+
+			/**
 			* @brief Process the ray-tracing from every new position and update the related residues.
 			*/
 			virtual void RunTracing() = 0;
@@ -97,21 +112,20 @@ namespace RAC
 			std::atomic<bool> tracingStartFlag{ false };	// True if the ray tracing is running, false otherwise
 			std::atomic<bool> tracingEndFlag{ false };		// True if the ray tracing has finished running, false otherwise
 
-			// These will be used exclusively inside `computeEnergyContributions`. All four will have size `numRays`.
+			// These will be used exclusively inside `ComputeEnergyContributions`. All four will have size `numRays`.
 			Vec<Real> rayDistances;				// This will have size `numRays`
 			Vec<Real> rayCosines;				// This will have size `numRays`
 			Vec<int> frontIndices;		// This will have size `numRays`
 			Vec<int> backIndices;		// This will have size `numRays`
 
 			// Distance thresholds (in meters) from the latest updated position which triggers an update.
-			// TODO: Expose methods to modify these. I'm adding them quickly on the eve of the ADC demo.
-			Real listenerMovementThreshold = 0.25;
 			Real sourceMovementThreshold = 0.5;
+			Real listenerMovementThreshold = 0.05;
 
-			/**
-			* @brief Assigns each ray direction to the nearest reverb direction.
-			*/
-			void clusterReverbDirections();
+			// Radius of the sphere modeling the listener's head, used to consider self-shadowing. Setting to 0 disables the feature.
+			Real selfShadowingRadius = 0.0;
+
+			// TODO: Use REAL_CONST for the settings above, after merging with Dan's branch (check other constants in the CPP as well)
 		};
 
 		class MoDARTTracing : public TracingThread
@@ -145,11 +159,12 @@ namespace RAC
 			/**
 			* @brief Computes the energy constributions of the ray pencil to each ART propagation path and stores them in the attribute `energyContributions`.
 			* Makes internal use of the latest tracing results stored in hemispherePencil in conjunction with pathIndexing.
+			* N.B.: This method should only be called under `rayPencilMutex`, i.e., privately within `RunTracing()`.
 			*
 			* @param reverbDirectionIdx If `reverbDirectionIdx == -1` (default), take all rays' contributions into account (omnidirectional).
 			*						 Otherwise, only tally up the contributions of rays within the cluster with index `reverbDirectionIdx`.
 			*/
-			void computeEnergyContributions(int reverbDirectionIdx = -1);
+			void ComputeEnergyContributions(int reverbDirectionIdx = -1);
 
 			// The geometry is assumed unchanging.
 			int numPaths;									// Number of ART propagation paths

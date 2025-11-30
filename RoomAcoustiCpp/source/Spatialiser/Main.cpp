@@ -453,6 +453,31 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 	}
 
 	/**
+	* @brief Sets the distance thresholds (in meters) from the latest updated position which triggers an update of late reverberation tracing.
+	*
+	* @param sourceThresh The distance threshold for all sources.
+	* @param listenerThresh The distance threshold for the listener.
+	*/
+	EXPORT void API RACUpdateLateReverbDistanceThresholds(float sourceThresh, float listenerThresh)
+	{
+		BEGIN_TRY
+			UpdateLateReverbDistanceThresholds(static_cast<Real>(sourceThresh), static_cast<Real>(listenerThresh));
+		END_TRY
+	}
+
+	/**
+	* @brief Sets the sphere radius (in meters) used to determine self-shadowing during late reverberation tracing.
+	*
+	* @param radius The radius of the listener's head radius.
+	*/
+	EXPORT void API RACUpdateSelfShadowingRadius(float radius)
+	{
+		BEGIN_TRY
+			UpdateSelfShadowingRadius(static_cast<Real>(radius));
+		END_TRY
+	}
+
+	/**
 	* @brief Updates the intial delay for MoDART late reverberation.
 	*
 	* @param delay The initial delay in seconds.

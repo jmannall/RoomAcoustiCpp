@@ -24,7 +24,7 @@ namespace RAC
 
         bool intersection_test_internal(
             const TriangleMeshSoA& triangles, int triangleIndex,
-            const Vec3& O, const Vec3& D, const Vec3& M,
+            const Vec3& O, const Vec3& D,
             Real& distance, Real& cosine)
         {
 			// Users should test the return result, but default the results to qNaN just in case
@@ -38,125 +38,26 @@ namespace RAC
 			const Vec3 n = triangles.n[triangleIndex];
 			const Real d0 = triangles.d0[triangleIndex];
 
-#if PLUCKER_KERNEL
-#if LEAN_PLUCKER
-			// TODO: Implement Lean Plücker
-#else // not LEAN_PLUCKER
-			// Load "fat Plücker" triangle data into locals.
-			const Vec3& edgeABDirection = triangles.edgeABDirection[triangleIndex];
-			const Vec3& edgeBCDirection = triangles.edgeBCDirection[triangleIndex];
-			const Vec3& edgeCADirection = triangles.edgeCADirection[triangleIndex];
-			const Vec3& edgeABWedge_AcrossB = triangles.edgeABWedge_AcrossB[triangleIndex];
-			const Vec3& edgeBCWedge_BcrossC = triangles.edgeBCWedge_BcrossC[triangleIndex];
-			const Vec3& edgeCAWedge_CcrossA = triangles.edgeCAWedge_CcrossA[triangleIndex];
-			// ---------------------------------------------------------------------
-			// 1) Facing test: ensure the triangle faces the ray origin.
-			//    faceNum = dot(n, O) - d0; require faceNum > eps_face
-			// ---------------------------------------------------------------------
-			const Real faceNum = n.dot(O) - d0;
-			if (faceNum < EPS_FACING) {
-				return false;
-			}
-
-			// ---------------------------------------------------------------------
-			// 2) Plücker side predicates for the three edges.
-			//    For an edge PQ with direction e = Q - P and wedge W = P × Q,
-			//    side = dot(D, W) + dot(M, e), where M = O × D (precomputed).
-			//
-			//    We inline the dot products (a0*b0 + a1*b1 + a2*b2) to avoid the
-			//    overhead of tiny helper calls in this scalar, hot function.
-			// ---------------------------------------------------------------------
-			const Real sAB = D.dot(edgeABWedge_AcrossB) +
-				M.dot(edgeABDirection);
-
-			const Real sBC = D.dot(edgeBCWedge_BcrossC) +
-				M.dot(edgeBCDirection);
-
-			// ---------------------------------------------------------------------
-			// Early-out on mismatched signs for the first two edges.
-			// This matches the original logic exactly (edges included via epsilon).
-			// ---------------------------------------------------------------------
-			{
-				const bool bothNonNeg = (sAB >= -EPS_EDGE) && (sBC >= -EPS_EDGE);
-				const bool bothNonPos = (sAB <= EPS_EDGE) && (sBC <= EPS_EDGE);
-				if (!(bothNonNeg || bothNonPos)) {
-					return false;
-				}
-			}
-
-			const Real sCA =
-				D.dot(edgeCAWedge_CcrossA) +
-				M.dot(edgeCADirection);
-
-			// Keep the exact inclusion rule (edges included) via the provided helper.
-			if (!same_sign_with_zero_included(sAB, sBC, sCA, EPS_EDGE)) {
-				return false;
-			}
-
-			// ---------------------------------------------------------------------
-			// 3) Compute the line parameter t with the triangle plane.
-			//    No t>0 constraint (this is line–triangle, not ray–triangle).
-			//    If the line is near-parallel to the plane, report no hit (NaN).
-			// ---------------------------------------------------------------------
-			const Real denom = n.dot(D);        // dot(n, D)
-			if (std::abs(denom) <= EPS_PARALLEL) {
-				return false;
-			}
-			else {
-				distance = -faceNum / denom;
-				cosine = std::abs(denom);
-			}
-			return true;
-#endif // end LEAN_PLUCKER
-#else // not PLUCKER_KERNEL
 			// Load "Möller–Trumbore" triangle data into locals.
 			const Vec3& A = triangles.A[triangleIndex];
 			const Vec3& e1 = triangles.edge1[triangleIndex];
 			const Vec3& e2 = triangles.edge2[triangleIndex];
 
-			// ---------------------------------------------------------------------
-			// 1) Facing test.
-			//    faceNum = dot(n, O) - d0 > eps_face
-			// ---------------------------------------------------------------------
+			// Facing test.
 			const Real faceNum = n.dot(O) - d0;
 			if (faceNum < EPS_FACING) {
 				return false;
 			}
 
-			// ---------------------------------------------------------------------
-			// 2) Möller–Trumbore barycentric numerators (unnormalized).
-			//
-			//    pvec = D × e2
-			//    det  = e1 · pvec  (also equals dot(n, D))
-			//    tvec = O - A
-			//    u_num = dot(tvec, pvec)
-			//    qvec  = tvec × e1
-			//    v_num = dot(D, qvec)
-			//    w_num = det - u_num - v_num   (since u+v+w = 1)
-			//
-			// We perform *sign* checks on (u_num, v_num, w_num) with an absolute
-			// epsilon, for inclusive-edge behavior (no division by det => no sign flip issues).
-			// ---------------------------------------------------------------------
-
-			// pvec = D × e2
+			// Möller–Trumbore barycentric numerators (unnormalized).
 			const Vec3 pvec = D.cross(e2);
-
-			// det = e1 · pvec  (also equals dot(n, D))
 			const Real det = e1.dot(pvec);
-
-			// tvec = O - A
 			const Vec3 tvec = O - A;
-
-			// u_num = dot(tvec, pvec)
 			const Real u_num = tvec.dot(pvec);
-
-			// qvec = tvec × e1
 			const Vec3 qvec = tvec.cross(e1);
-
-			// v_num = dot(D, qvec)
 			const Real v_num = D.dot(qvec);
 
-			// Early-out on u & v having opposite signs (edges included via epsilon).
+			// Early-out on u and v having opposite signs (edges included via epsilon).
 			{
 				const bool bothNonNeg = (u_num >= -EPS_EDGE) && (v_num >= -EPS_EDGE);
 				const bool bothNonPos = (u_num <= EPS_EDGE) && (v_num <= EPS_EDGE);
@@ -165,23 +66,13 @@ namespace RAC
 				}
 			}
 
-			// w_num = det - u_num - v_num
 			const Real w_num = det - (u_num + v_num);
-
 			// All three barycentric numerators must share the same sign (edges included).
 			if (!same_sign_with_zero_included(u_num, v_num, w_num, EPS_EDGE)) {
 				return false;
 			}
 
-			// ---------------------------------------------------------------------
-			// 3) Parallel test + compute t.
-			//    If |det| is tiny, treat as parallel (report no hit).
-			//    Otherwise: t = (e2 · qvec) / det
-			//
-			// NOTE: We postpone the parallel test until here to mirror the control
-			// flow of your Plücker kernel (inside first, then parallel); we never
-			// divide by det before checking it.
-			// ---------------------------------------------------------------------
+			// Parallel test + compute t.
 			if (std::abs(det) <= EPS_PARALLEL) {
 				return false;
 			}
@@ -191,7 +82,6 @@ namespace RAC
 				cosine = std::abs(n.dot(D));
 			}
 			return true;
-#endif // end PLUCKER_KERNEL
         }
 
 
@@ -207,13 +97,7 @@ namespace RAC
             const Vec3& O = rays.O[rayIndex];
             const Vec3& D = rays.D[rayIndex];
 
-#if PLUCKER_KERNEL
-			const Vec3& M = rays.M[rayIndex];
-#else
-            static Vec3 M(0.0, 0.0, 0.0);
-#endif
-
-            return intersection_test_internal(triangles, triangleIndex, O, D, M, distance, cosine);
+            return intersection_test_internal(triangles, triangleIndex, O, D, distance, cosine);
         }
 
         bool intersection_test(
@@ -228,19 +112,7 @@ namespace RAC
             const Vec3& O = rays.O;
         	const Vec3& D = rays.D[rayIndex];
 
-#if PLUCKER_KERNEL
-#if LEAN_PLUCKER
-            // TODO: Implement Lean Plücker
-#else // not LEAN_PLUCKER
-            // Load ray moments into locals.
-            const Vec3 &M = rays.M[rayIndex];
-
-#endif // end LEAN_PLUCKER
-#else // not PLUCKER_KERNEL
-            static const Vec3 M(0.0, 0.0, 0.0);
-#endif
-
-			return intersection_test_internal(triangles, triangleIndex, O, D, M, distance, cosine);
+			return intersection_test_internal(triangles, triangleIndex, O, D, distance, cosine);
         }
 
 		struct SingleRay
@@ -259,19 +131,7 @@ namespace RAC
 			const Vec3& O = ray.rayOrigin;
 			const Vec3& D = ray.rayDirection;
 
-#if PLUCKER_KERNEL
-#if LEAN_PLUCKER
-			// TODO: Implement Lean Plücker
-#else // not LEAN_PLUCKER
-			// Compute ray moments and load into locals.
-			const Vec3 rayMoment = O.cross(D);
-			const Vec3& M = rayMoment;
-#endif // end LEAN_PLUCKER
-#else // not PLUCKER_KERNE
-			static const Vec3 M(0.0, 0.0, 0.0);
-#endif // end PLUCKER_KERNEL
-
-			return intersection_test_internal(triangles, triangleIndex, O, D, M, distance, cosine);
+			return intersection_test_internal(triangles, triangleIndex, O, D, distance, cosine);
 		}
 
         bool intersection_test(
@@ -283,19 +143,7 @@ namespace RAC
             const Vec3& O = rayOrigin;
             const Vec3& D = rayDirection;
 
-#if PLUCKER_KERNEL
-#if LEAN_PLUCKER
-            // TODO: Implement Lean Plücker
-#else // not LEAN_PLUCKER
-            // Compute ray moments and load into locals.
-            const Vec3 rayMoment = rayOrigin.cross(rayDirection);
-            const Vec3& M = rayMoment;
-#endif // end LEAN_PLUCKER
-#else // not PLUCKER_KERNE
-            static const Vec3 M(0.0, 0.0, 0.0);
-#endif // end PLUCKER_KERNEL
-
-			return intersection_test_internal(triangles, triangleIndex, O, D, M, distance, cosine);
+			return intersection_test_internal(triangles, triangleIndex, O, D, distance, cosine);
         }
 
         // ------------------------ Tracing loop kernels ------------------------
@@ -396,7 +244,7 @@ namespace RAC
 			}
 
 #if USE_OMP_RAYTRACE_SINGLE
-			// find the best candidate
+			// Find the best candidate
 		   for (int workerIndex = 0; workerIndex < WorkerBlocks; ++workerIndex)
             {
 				const Instance& instance = instances[workerIndex];
@@ -439,8 +287,7 @@ namespace RAC
 #endif
         }
 
-
-        // TODO: The three definitions of this overloaded function are identical except for one line. I'm sure there's a more elegant way to do that.
+        // Overloaded exposed signatures for cleanliness.
         void trace_ray(
             const TriangleMeshSoA& triangles, const RayBundleSoA& rays, int rayIndex,
             int& patchIdFront, Real& distanceFront, Real& cosineFront,
@@ -492,7 +339,6 @@ namespace RAC
                 rays.O[i] = origin;
                 rays.D[i] = directions[i];
             }
-            // Note that this also computes the moments if needed.
             rays.normalize_directions();
 
             radiance = Vec<>::Constant(numRays, 1.0);
@@ -512,7 +358,6 @@ namespace RAC
                 rays.O[i] = origins[i];
                 rays.D[i] = directions[i];
             }
-            // Note that this also computes the moments if needed.
             rays.normalize_directions();
 
             radiance = Vec<>::Constant(numRays, 1.0);
@@ -572,7 +417,6 @@ namespace RAC
         {
             // TODO: Port definition from a different project, if we ever want to trace multiple reflection orders.
             
-            // Note that this also computes the moments if needed.
             rays.normalize_directions();
         }
 
@@ -647,7 +491,7 @@ namespace RAC
             exposeMirrorCopies = hemisphereOnly;
 
             rays.O = Vec3(0.0, 0.0, 0.0);
-            // Note that this automatically normalizes the directions and computes the moments if needed.
+            // Note that this automatically normalizes the directions.
             rays.fill_uniform_sphere(hemisphereOnly);
 
             frontDistance = Vec<>::Zero(numRays);
@@ -667,7 +511,6 @@ namespace RAC
             for (int i = 0; i < numRays; ++i) {
                 rays.D[i] = directions[i];
             }
-            // Note that this also computes the moments if needed.
             rays.normalize_directions();
 
             frontDistance = Vec<>::Zero(numRays);
@@ -681,10 +524,6 @@ namespace RAC
         void RayPencil::moveOrigin(const Vec3& origin)
         {
             rays.O = origin;
-
-#if PLUCKER_KERNEL
-            rays.compute_moments();
-#endif // end PLUCKER_KERNEL
 
             frontDistance = Vec<>::Zero(numRays);
             backDistance = Vec<>::Zero(numRays);
