@@ -273,6 +273,7 @@ namespace RAC
 
 				precedingDelay = DelayLine<Complex>(actualSamples);
 				// the constructor resets, so no need to do a Reset() here
+				assert(precedingDelay.IsValid());
 			}
 
 			inline void SetMinimumReverbTime(Real T60)
