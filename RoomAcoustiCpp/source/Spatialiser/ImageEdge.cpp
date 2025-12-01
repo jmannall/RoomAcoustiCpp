@@ -51,9 +51,6 @@ namespace RAC
 			PROFILE_BackgroundThread
 			bool doIEM = false;
 
-#ifdef IEM_FLAG
-			Debug::IEMStartFlag();
-#endif
 			iemStartFlag.store(true, std::memory_order_release);
 
 			shared_ptr<Room> sharedRoom = mRoom.lock();
@@ -97,9 +94,6 @@ namespace RAC
 				}
 			}
 
-#ifdef IEM_FLAG
-			Debug::IEMEndFlag();
-#endif
 			iemEndFlag.store(true, std::memory_order_release);
 			iemStartFlag.store(false, std::memory_order_release);
 		}

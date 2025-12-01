@@ -88,9 +88,6 @@ namespace RAC
 
 		void MoDARTTracing::RunTracing() {
 			PROFILE_ReverbRayTracing
-#ifdef RTM_FLAG
-			Debug::RTMStartFlag();
-#endif
 			tracingStartFlag.store(true, std::memory_order_release);
 
 			// TODO: Should we only update residues relevant to currently active FDNs (i.e T60 > minimumT60)?
@@ -188,9 +185,6 @@ namespace RAC
 					sharedSource->SetSourceTargetResidues(source.id, sourceResidues);
 				}
 			}
-#ifdef RTM_FLAG
-			Debug::RTMEndFlag();
-#endif
 			tracingEndFlag.store(true, std::memory_order_release);
 			tracingStartFlag.store(false, std::memory_order_release);
 		}
@@ -254,9 +248,6 @@ namespace RAC
 
 		void SingleFDNTracing::RunTracing() {
 			PROFILE_ReverbRayTracing
-#ifdef RTM_FLAG
-				Debug::RTMStartFlag();
-#endif
 			tracingStartFlag.store(true, std::memory_order_release);
 
 			// TODO: Should we only update residues relevant to currently active FDNs (i.e T60 > minimumT60)?
@@ -286,9 +277,6 @@ namespace RAC
 				}
 				sharedReverb->SetTargetOutputFilters(reflectionGains);
 			}
-#ifdef RTM_FLAG
-			Debug::RTMEndFlag();
-#endif
 			tracingEndFlag.store(true, std::memory_order_release);
 			tracingStartFlag.store(false, std::memory_order_release);
 		}
