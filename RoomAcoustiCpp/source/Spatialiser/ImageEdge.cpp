@@ -418,16 +418,13 @@ namespace RAC
 
 			if (lineOfSight)
 			{
-#ifdef DEBUG_IEM
-				Debug::send_path(IntToStr(source.id) + "s", { source.position }, mListenerPosition);
-#endif
+
+				Debug::SendPath(ToString(source.id) + "s", { source.position }, mListenerPosition);
 				return CalculateDirectivity(source, mListenerPosition);
 			}
 			else
 			{
-#ifdef DEBUG_IEM
-				Debug::remove_path(IntToStr(source.id) + "s");
-#endif
+				Debug::RemovePath(ToString(source.id) + "s");
 				return Coefficients<>::Constant(ToInt(frequencyBands.Length()), 0.0);
 			}
 		}
@@ -548,11 +545,8 @@ namespace RAC
 					continue;
 
 				InitImageSource(source, imageSource->GetApex(), imageSource, imageSources, feedsFDN);
-#ifdef DEBUG_IEM
-				CVector3 pos = imageSource->GetTransform().GetPosition();
-				Vec3 position(static_cast<Real>(pos.x), static_cast<Real>(pos.y), static_cast<Real>(pos.z));
-				Debug::send_path(imageSource->GetKey(), { imageSource->GetApex() }, position);
-#endif
+
+				Debug::SendPath(imageSource->GetKey(), { imageSource->GetApex() }, imageSource->GetTransform().GetPosition());
 			}
 			return counter;
 		}
@@ -601,11 +595,8 @@ namespace RAC
 					continue;
 
 				InitImageSource(source, intersections[0], imageSource, imageSources, feedsFDN);
-#ifdef DEBUG_IEM
-				CVector3 pos = imageSource->GetTransform().GetPosition();
-				Vec3 position(static_cast<Real>(pos.x), static_cast<Real>(pos.y), static_cast<Real>(pos.z));
-				Debug::send_path(imageSource->GetKey(), intersections, position);
-#endif
+
+				Debug::SendPath(imageSource->GetKey(), intersections, imageSource->GetTransform().GetPosition());
 			}
 			return counter;
 		}
@@ -717,11 +708,8 @@ namespace RAC
 									continue;
 
 								InitImageSource(source, intersections[0], imageSource, imageSources, feedsFDN);
-#ifdef DEBUG_IEM
-								CVector3 pos = imageSource->GetTransform().GetPosition();
-								Vec3 position(static_cast<Real>(pos.x), static_cast<Real>(pos.y), static_cast<Real>(pos.z));
-								Debug::send_path(imageSource->GetKey(), intersections, position);
-#endif
+
+								Debug::SendPath(imageSource->GetKey(), intersections, imageSource->GetTransform().GetPosition());
 							}
 							// HOD reflections (post diffraction)
 							else if (refIdx < earlyReverbData.shadowDiffOrder || refIdx < earlyReverbData.specularDiffOrder)
@@ -805,11 +793,8 @@ namespace RAC
 									continue;
 
 								InitImageSource(source, intersections[0], imageSource, imageSources, feedsFDN);
-#ifdef DEBUG_IEM
-								CVector3 pos = imageSource->GetTransform().GetPosition();
-								Vec3 position(static_cast<Real>(pos.x), static_cast<Real>(pos.y), static_cast<Real>(pos.z));
-								Debug::send_path(imageSource->GetKey(), intersections, position);
-#endif
+
+								Debug::SendPath(imageSource->GetKey(), intersections, imageSource->GetTransform().GetPosition());
 							}
 						}
 					}
@@ -905,11 +890,8 @@ namespace RAC
 							continue;
 
 						InitImageSource(source, intersections[0], imageSource, imageSources, feedsFDN);
-#ifdef DEBUG_IEM
-						CVector3 pos = imageSource->GetTransform().GetPosition();
-						Vec3 position(static_cast<Real>(pos.x), static_cast<Real>(pos.y), static_cast<Real>(pos.z));
-						Debug::send_path(imageSource->GetKey(), intersections, position);
-#endif
+
+						Debug::SendPath(imageSource->GetKey(), intersections, imageSource->GetTransform().GetPosition());
 					}
 				}
 				const size_t currentSize = sp[refIdx].size();

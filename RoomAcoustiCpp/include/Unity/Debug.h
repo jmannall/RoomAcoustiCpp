@@ -23,6 +23,12 @@
 // Spatialiser headers
 #include "Spatialiser/Types.h"
 
+// 3DTI headers
+#include "Common/Vector3.h"
+
+/**
+* @brief Define DLL linkage
+*/
 #ifdef _ANDROID
 #define DLLExport __attribute__ ((visibility ("default")))
 #elif _WINDOWS
@@ -31,45 +37,42 @@
 #define DLLExport
 #endif
 
+/**
+* @brief Mutexes to protect callback instances
+*/
 static std::mutex debugMutex;		// Protects debugCallbackInstance
 static std::mutex pathMutex;		// Protects pathCallbackInstance
 static std::mutex residueMutex;		// Protects residueCallbackInstance
-static std::mutex iemStartMutex;	// Protects iemStartCallbackInstance
-static std::mutex iemEndMutex;	    // Protects iemEndCallbackInstance
-static std::mutex rtmStartMutex;	// Protects rtmStartCallbackInstance
-static std::mutex rtmEndMutex;	    // Protects rtmEndCallbackInstance
 
 extern "C"
 {
-    //Create a callback delegate
+    /**
+	* @brief Define callback function types
+    */
     typedef void(*FuncDebugCallback)(const char* message, int colour, int size);
     typedef void(*FuncPathCallback)(const char* key, const float* intersections, int size, int numIntersections);
     typedef void(*FuncResidueCallback)(float residue, bool isSource, int sourceIndex, int slopeIndex);
-    typedef void(*FuncIEMStartCallback)();
-    typedef void(*FuncIEMEndCallback)();
-    typedef void(*FuncRTMStartCallback)();
-    typedef void(*FuncRTMEndCallback)();
+
+    /**
+	* @brief Create callback instances
+    */
     static FuncDebugCallback debugCallbackInstance = nullptr;
     static FuncPathCallback pathCallbackInstance = nullptr;
     static FuncResidueCallback residueCallbackInstance = nullptr;
-    static FuncIEMStartCallback iemStartCallbackInstance = nullptr;
-    static FuncIEMEndCallback iemEndCallbackInstance = nullptr;
-    static FuncRTMStartCallback rtmStartCallbackInstance = nullptr;
-    static FuncRTMEndCallback rtmEndCallbackInstance = nullptr;
+
+    /**
+    * @brief Functions to register callback instances
+    */
     DLLExport void RegisterDebugCallback(FuncDebugCallback cb);
     DLLExport void RegisterPathCallback(FuncPathCallback cb);
     DLLExport void RegisterResidueCallback(FuncResidueCallback cb);
-    DLLExport void RegisterIEMStartCallback(FuncIEMStartCallback cb);
-    DLLExport void RegisterIEMEndCallback(FuncIEMEndCallback cb);
-    DLLExport void RegisterRTMStartCallback(FuncRTMStartCallback cb);
-    DLLExport void RegisterRTMEndCallback(FuncRTMEndCallback cb);
+
+    /**
+    * @brief Functions to unregister callback instances
+    */
     DLLExport void UnregisterDebugCallback();
     DLLExport void UnregisterPathCallback();
     DLLExport void UnregisterResidueCallback();
-    DLLExport void UnregisterIEMStartCallback();
-    DLLExport void UnregisterIEMEndCallback();
-    DLLExport void UnregisterRTMStartCallback();
-    DLLExport void UnregisterRTMEndCallback();
 }
 
 namespace RAC
@@ -81,110 +84,71 @@ namespace RAC
         enum class Colour { Red, Green, Blue, Black, White, Yellow, Orange };
 
         /**
-		* @brief Provides a simple interface for logging debug messages to the Unity console
+		* @brief Provides a simple interface for logging debug messages to a callback function
         */
-        class  Debug
+        class Debug
         {
         public:
+#ifdef DEBUG_LOG
             static void Log(const char* message, Colour colour = Colour::Black);
             static void Log(const std::string message, Colour colour = Colour::Black);
-            static void Log(const int message, Colour colour = Colour::Black);
-            static void Log(const char message, Colour colour = Colour::Black);
-            static void Log(const float message, Colour colour = Colour::Black);
-            static void Log(const double message, Colour colour = Colour::Black);
-            static void Log(const bool message, Colour colour = Colour::Black);
+#else
+            static inline void Log(const char* message, Colour colour = Colour::Black) {}
+            static inline void Log(const std::string message, Colour colour = Colour::Black) {}
+#endif
 
-            static void send_path(const std::string& key, const std::vector<Vec3>& intersections, const Vec3& position);
-            static void remove_path(const std::string& key);
+            static inline void SendPath(const std::string& key, const std::vector<Vec3>& intersections, const ::Common::CVector3& position)
+            {
+                Vec3 vec3Position(static_cast<Real>(position.x), static_cast<Real>(position.y), static_cast<Real>(position.z));
+				SendPath(key, intersections, vec3Position);
+            }
 
-            static void send_residue(float residue, bool isSource, int sourceIndex, int slopeIndex);
-            
-            static void IEMStartFlag();
-            static void IEMEndFlag();
-            static void RTMStartFlag();
-            static void RTMEndFlag();
+#ifdef DEBUG_PATHS
+            static void SendPath(const std::string& key, const std::vector<Vec3>& intersections, const Vec3& position);
+            static void RemovePath(const std::string& key);
+#else
+            static inline void SendPath(const std::string& key, const std::vector<Vec3>& intersections, const Vec3& position) {}
+            static inline void RemovePath(const std::string& key) {}
+#endif
+
+#ifdef DEBUG_RESIDUES
+            static void SendResidue(float residue, bool isSource, int sourceIndex, int slopeIndex);
+#else
+            static inline void SendResidue(float residue, bool isSource, int sourceIndex, int slopeIndex) {}
+#endif
 
         private:
-            static void send_log(const std::stringstream& ss, const Colour& colour);
         };
 
         /**
-		* @brief Converts an int to a string
+        * @brief Converts a type T to a string
         */
-        inline std::string IntToStr(int x)
+        template <typename T>
+        std::string ToString(const T& value)
         {
             std::stringstream ss;
-            ss << x;
-            return ss.str();
-        }
-
-        /**
-        * @brief Converts a size_t to a string
-        */
-        inline std::string IntToStr(size_t x)
-        {
-            return IntToStr(static_cast<int>(x));
-        }
-
-        /**
-        * @brief Converts a float to a string
-        */
-        inline std::string FloatToStr(float x)
-        {
-            std::stringstream ss;
-            ss << x;
-            return ss.str();
-        }
-
-        /**
-        * @brief Converts a Real to a string
-        */
-        inline std::string RealToStr(Real x)
-        {
-            std::stringstream ss;
-            ss << x;
+            ss << value;
             return ss.str();
         }
 
         /**
         * @brief Converts a bool to a string
         */
-        inline std::string BoolToStr(bool x)
+        template <>
+        inline std::string ToString<bool>(const bool& x)
         {
-            if (x)
-                return "true";
-            else
-                return "false;";
-        }
-
-        /**
-        * @brief Converts a Vec3 to a string
-        */
-        inline std::string VecToStr(const Vec3& x)
-        {
-            std::stringstream ss;
-            ss << x;
-            return ss.str();
+            return x ? "true" : "false";
         }
 
         /**
         * @brief Converts a Vertices to a string
         */
-        inline std::string VerticesToStr(const Vertices& x)
+        template <>
+        inline std::string ToString<Vertices>(const Vertices& x)
         {
             std::stringstream ss;
             for (int i = 0; i < x.size(); i++)
                 ss << x[i];
-            return ss.str();
-        }
-
-        /**
-        * @brief Converts a Coefficients to a string
-        */
-        inline std::string CoefficientToStr(const Coefficients<>& x)
-        {
-            std::stringstream ss;
-            ss << x;
             return ss.str();
         }
     }

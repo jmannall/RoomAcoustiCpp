@@ -55,9 +55,8 @@ namespace RAC
 		void IEMProcessor(Context* context)
 		{
 
-#ifdef DEBUG_INIT
 			Debug::Log("Begin image edge model thread", Colour::Green);
-#endif
+
 #ifdef USE_UNITY_PROFILER
 			RegisterIEMThread();
 #endif
@@ -84,9 +83,8 @@ namespace RAC
 #ifdef USE_UNITY_PROFILER
 			UnregisterIEMThread();
 #endif
-#ifdef DEBUG_REMOVE
+
 			Debug::Log("End image edge model thread", Colour::Red);
-#endif
 		}
 
 		//////////////////// Ray Tracing Thread ////////////////////
@@ -96,9 +94,8 @@ namespace RAC
 		void RayTracerProcessor(Context* context)
 		{
 
-#ifdef DEBUG_INIT
 			Debug::Log("Begin racy tracing thread", Colour::Green);
-#endif
+
 #ifdef USE_UNITY_PROFILER
 			RegisterRayTracingThread();
 #endif
@@ -121,9 +118,8 @@ namespace RAC
 #ifdef USE_UNITY_PROFILER
 			UnregisterRayTracingThread();
 #endif
-#ifdef DEBUG_REMOVE
+
 			Debug::Log("End ray tracing thread", Colour::Red);
-#endif
 		}
 
 		//////////////////// Context ////////////////////
@@ -133,9 +129,7 @@ namespace RAC
 		Context::Context(const DSPData& data,const ContextOptionalArguments& optionalArguments)
 		: dspConfig(std::make_shared<DSPConfig>(data)), mIsRunning(true), IEMThread(), rayTracingThread(), applyHeadphoneEQ(false), headphoneEQ(2048), dcBlocker(data.fs)
 		{
-#ifdef DEBUG_INIT
 			Debug::Log("Init Context", Colour::Green);
-#endif
 
 			if (!optionalArguments.logPrefix.empty())
 			{
@@ -171,9 +165,8 @@ namespace RAC
 
 		Context::~Context()
 		{
-#ifdef DEBUG_REMOVE
 			Debug::Log("Exit Context", Colour::Red);
-#endif
+
 			StopRunning();
 			if (IEMThread.joinable())
 				IEMThread.join();
@@ -396,10 +389,7 @@ namespace RAC
 
 		int Context::InitSource()
 		{
-#ifdef DEBUG_INIT
-	Debug::Log("Init Source", Colour::Green);
-#endif
-
+			Debug::Log("Init Source", Colour::Green);
 			return mSources->Init();
 		}
 
@@ -435,10 +425,7 @@ namespace RAC
 
 		void Context::RemoveSource(size_t id)
 		{
-
-#ifdef DEBUG_REMOVE
-	Debug::Log("Remove Source", Colour::Red);
-#endif
+			Debug::Log("Remove Source", Colour::Red);
 			mSources->Remove(id);
 		}
 
@@ -455,10 +442,7 @@ namespace RAC
 
 		size_t Context::InitWall(const Vertices& vData, size_t materialID)
 		{
-#ifdef DEBUG_INIT
-	Debug::Log("Init Wall", Colour::Green);
-#endif
-
+			Debug::Log("Init Wall", Colour::Green);
 			Wall wall = Wall(vData, materialID);
 			size_t id = mRoom->AddWall(wall);
 			mRoom->InitEdges(id);
@@ -469,9 +453,7 @@ namespace RAC
 
 		void Context::RemoveWall(size_t id)
 		{
-#ifdef DEBUG_REMOVE
-	Debug::Log("Remove Wall", Colour::Red);
-#endif
+			Debug::Log("Remove Wall", Colour::Red);
 			mRoom->RemoveWall(id);
 		}
 

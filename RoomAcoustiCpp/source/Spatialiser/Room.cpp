@@ -234,16 +234,11 @@ namespace RAC
 			if (it == mWalls.end()) { return; } // case: wall does not exist
 			else { it->second.AddEdge(id); } // case: wall does exist
 
-#ifdef DEBUG_INIT
 			Debug::Log("Init Edge", Colour::Green);
-#endif
-
 			mEdges.insert_or_assign(id, edge);
 			RecordChange();
 
-#ifdef DEBUG_GEOMETRY
-			Debug::send_path(std::to_string(id) + "e", { edge.GetBase() }, edge.GetTop());
-#endif
+			Debug::SendPath(ToString(id) + "e", { edge.GetBase() }, edge.GetTop());
 		}
 
 		////////////////////////////////////////
@@ -454,9 +449,7 @@ namespace RAC
 			if (it == mEdges.end()) { return false; } // case: edge does not exist
 			else { it->second = edge; } // case: edge does exist
 
-#ifdef DEBUG_GEOMETRY
-			Debug::send_path(std::to_string(id) + "e", { edge.GetBase() }, edge.GetTop());
-#endif
+			Debug::SendPath(ToString(id) + "e", { edge.GetBase() }, edge.GetTop());
 			return false;
 		}
 
@@ -510,9 +503,7 @@ namespace RAC
 				if (itW != mWalls.end()) // case: wall exists
 					itW->second.RemoveEdge(edgeID);
 
-#ifdef DEBUG_IEM
-				Debug::remove_path(std::to_string(edgeID) + "e");
-#endif
+				Debug::RemovePath(ToString(edgeID) + "e");
 				mEdges.erase(edgeID);
 				while (!mEdgeTimers.empty() && difftime(time(nullptr), mEdgeTimers.front().time) > 60)
 				{

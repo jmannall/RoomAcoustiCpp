@@ -1,16 +1,17 @@
 /*
+* @class Debug
 *
-*  \Unity interface Debug class
+* @brief Declaration of Debug class
 *
+* @remarks Thanks to: https://stackoverflow.com/questions/43732825/use-debug-log-from-c
 */
 
 // C++ headers
 #include<stdio.h>
 #include <string>
-#include <stdio.h>
 #include <sstream>
 
-// UNity headers
+// Unity headers
 #include "Unity/Debug.h"
 
 namespace RAC
@@ -19,12 +20,16 @@ namespace RAC
     {
         //////////////////// Debug class ////////////////////
 
+        ////////////////////////////////////////
+#ifdef DEBUG_LOG
         void Debug::Log(const char* message, Colour colour)
         {
             std::lock_guard lock(debugMutex);
             if (debugCallbackInstance != nullptr)
                 debugCallbackInstance(message, (int)colour, (int)strlen(message));
         }
+
+        ////////////////////////////////////////
 
         void Debug::Log(const std::string message, Colour colour)
         {
@@ -33,56 +38,10 @@ namespace RAC
             if (debugCallbackInstance != nullptr)
                 debugCallbackInstance(tmsg, (int)colour, (int)strlen(tmsg));
         }
-
-        void Debug::Log(const int message, Colour colour)
-        {
-            std::stringstream ss;
-            ss << message;
-            send_log(ss, colour);
-        }
-
-        void Debug::Log(const char message, Colour colour)
-        {
-            std::stringstream ss;
-            ss << message;
-            send_log(ss, colour);
-        }
-
-        void Debug::Log(const float message, Colour colour)
-        {
-            std::stringstream ss;
-            ss << message;
-            send_log(ss, colour);
-        }
-
-        void Debug::Log(const double message, Colour colour)
-        {
-            std::stringstream ss;
-            ss << message;
-            send_log(ss, colour);
-        }
-
-        void Debug::Log(const bool message, Colour colour)
-        {
-            std::stringstream ss;
-            if (message)
-                ss << "true";
-            else
-                ss << "false";
-
-            send_log(ss, colour);
-        }
-
-        void Debug::send_log(const std::stringstream& ss, const Colour& colour)
-        {
-            std::lock_guard lock(debugMutex);
-            const std::string tmp = ss.str();
-            const char* tmsg = tmp.c_str();
-            if (debugCallbackInstance != nullptr)
-                debugCallbackInstance(tmsg, (int)colour, (int)strlen(tmsg));
-        }
-
-        void Debug::send_path(const std::string& key, const std::vector<Vec3>& intersections, const Vec3& position)
+#endif
+        ////////////////////////////////////////
+#ifdef DEBUG_PATHS
+        void Debug::SendPath(const std::string& key, const std::vector<Vec3>& intersections, const Vec3& position)
         {
             std::lock_guard lock(pathMutex);
             const char* tmsg = key.c_str();
@@ -107,7 +66,9 @@ namespace RAC
             delete[] intersectionArray;
         }
 
-        void Debug::remove_path(const std::string& key)
+        ////////////////////////////////////////
+
+        void Debug::RemovePath(const std::string& key)
         {
             std::lock_guard lock(pathMutex);
             const char* tmsg = key.c_str();
@@ -117,52 +78,30 @@ namespace RAC
             if (pathCallbackInstance != nullptr)
                 pathCallbackInstance(tmsg, &intersectionArray, (int)strlen(tmsg), 0);
         }
-
-        void Debug::send_residue(float residue, bool isSource, int sourceIndex, int slopeIndex)
+#endif
+        ////////////////////////////////////////
+#ifdef DEBUG_RESIDUES
+        void Debug::SendResidue(float residue, bool isSource, int sourceIndex, int slopeIndex)
         {
             std::lock_guard lock(residueMutex);
             if (residueCallbackInstance != nullptr)
                 residueCallbackInstance(residue, isSource, sourceIndex, slopeIndex);
         }
-
-        void Debug::IEMStartFlag()
-        {
-            std::lock_guard lock(iemStartMutex);
-            if (iemStartCallbackInstance != nullptr)
-                iemStartCallbackInstance();
-        }
-
-        void Debug::IEMEndFlag()
-        {
-            std::lock_guard lock(iemEndMutex);
-            if (iemEndCallbackInstance != nullptr)
-                iemEndCallbackInstance();
-        }
-
-        void Debug::RTMStartFlag()
-        {
-            std::lock_guard lock(rtmStartMutex);
-            if (rtmStartCallbackInstance != nullptr)
-                rtmStartCallbackInstance();
-        }
-
-        void Debug::RTMEndFlag()
-        {
-            std::lock_guard lock(rtmEndMutex);
-            if (rtmEndCallbackInstance != nullptr)
-                rtmEndCallbackInstance();
-        }
+#endif
     }
 }
 
-//////////////////// Functions ////////////////////
+//////////////////// Create callback delegates ////////////////////
 
-// Create a callback delegate
+////////////////////////////////////////
+
 void RegisterDebugCallback(FuncDebugCallback cb)
 {
     std::lock_guard lock(debugMutex);
     debugCallbackInstance = cb;
 }
+
+////////////////////////////////////////
 
 void RegisterPathCallback(FuncPathCallback cb)
 {
@@ -170,35 +109,15 @@ void RegisterPathCallback(FuncPathCallback cb)
     pathCallbackInstance = cb;
 }
 
+////////////////////////////////////////
+
 void RegisterResidueCallback(FuncResidueCallback cb)
 {
     std::lock_guard lock(residueMutex);
     residueCallbackInstance = cb;
 }
 
-void RegisterIEMStartCallback(FuncIEMStartCallback cb)
-{
-    std::lock_guard lock(iemStartMutex);
-    iemStartCallbackInstance = cb;
-}
-
-void RegisterIEMEndCallback(FuncIEMEndCallback cb)
-{
-    std::lock_guard lock(iemEndMutex);
-    iemEndCallbackInstance = cb;
-}
-
-void RegisterRTMStartCallback(FuncRTMStartCallback cb)
-{
-    std::lock_guard lock(rtmStartMutex);
-    rtmStartCallbackInstance = cb;
-}
-
-void RegisterRTMEndCallback(FuncRTMEndCallback cb)
-{
-    std::lock_guard lock(rtmEndMutex);
-    rtmEndCallbackInstance = cb;
-}
+////////////////////////////////////////
 
 void UnregisterDebugCallback()
 {
@@ -206,38 +125,18 @@ void UnregisterDebugCallback()
     debugCallbackInstance = nullptr;
 }
 
+////////////////////////////////////////
+
 void UnregisterPathCallback()
 {
     std::lock_guard lock(pathMutex);
     pathCallbackInstance = nullptr;
 }
 
+////////////////////////////////////////
+
 void UnregisterResidueCallback()
 {
     std::lock_guard lock(residueMutex);
     residueCallbackInstance = nullptr;
-}
-
-void UnregisterIEMStartCallback()
-{
-    std::lock_guard lock(iemStartMutex);
-    iemStartCallbackInstance = nullptr;
-}
-
-void UnregisterIEMEndCallback()
-{
-    std::lock_guard lock(iemEndMutex);
-    iemEndCallbackInstance = nullptr;
-}
-
-void UnregisterRTMStartCallback()
-{
-    std::lock_guard lock(rtmStartMutex);
-    rtmStartCallbackInstance = nullptr;
-}
-
-void UnregisterRTMEndCallback()
-{
-    std::lock_guard lock(rtmEndMutex);
-    rtmEndCallbackInstance = nullptr;
 }

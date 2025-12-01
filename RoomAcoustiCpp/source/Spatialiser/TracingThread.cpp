@@ -121,9 +121,7 @@ namespace RAC
 
 				for (int dir_idx = 0; dir_idx < numReverbDirections; ++dir_idx) {
 					ComputeEnergyContributions(dir_idx);
-#ifdef DEBUG_RTM
-					Debug::send_path(IntToStr(dir_idx) + "l", { mListenerPosition }, reverbDirections[dir_idx]);
-#endif
+					Debug::SendPath(ToString(dir_idx) + "l", { mListenerPosition }, reverbDirections[dir_idx]);
 
 					for (int slope_idx = 0; slope_idx < numFDNs; ++slope_idx) {
 
@@ -147,9 +145,7 @@ namespace RAC
 								contributionDelayScaling,
 								sharedReverb->GetRightEigenvector(slope_idx));
 
-#ifdef DEBUG_RTM
-						Debug::send_residue(static_cast<float>(listenerResidues[slope_idx][dir_idx]), false, dir_idx, slope_idx);
-#endif
+						Debug::SendResidue(static_cast<float>(listenerResidues[slope_idx][dir_idx]), false, dir_idx, slope_idx);
 					}
 				}
 
@@ -184,9 +180,7 @@ namespace RAC
 								contributionDelayScaling,
 								sharedReverb->GetLeftEigenvector(slope_idx));
 
-#ifdef DEBUG_RTM
-						Debug::send_residue(static_cast<float>(sourceResidues[slope_idx]), true, ToInt(source.id), slope_idx);
-#endif
+						Debug::SendResidue(static_cast<float>(sourceResidues[slope_idx]), true, ToInt(source.id), slope_idx);
 
 						// Compensate gain based on preceding delay.
 						sourceResidues[slope_idx] *= std::pow(decayPerSecond(slope_idx), sharedReverb->GetPrecedingDelay());
@@ -288,9 +282,7 @@ namespace RAC
 				for (int dir_idx = 0; dir_idx < numReverbDirections; ++dir_idx)
 				{
 					ComputeEnergyContributions(materials, dir_idx);
-#ifdef DEBUG_RTM
-					Debug::send_path(IntToStr(dir_idx) + "l", { mListenerPosition }, reverbDirections[dir_idx]);
-#endif
+					Debug::SendPath(ToString(dir_idx) + "l", { mListenerPosition }, reverbDirections[dir_idx]);
 				}
 				sharedReverb->SetTargetOutputFilters(reflectionGains);
 			}

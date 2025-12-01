@@ -51,9 +51,8 @@ namespace RAC
 
 		ReverbSource::~ReverbSource()
 		{
-#ifdef DEBUG_REMOVE
-	Debug::Log("Remove reverb source", Colour::Red);
-#endif
+			Debug::Log("Remove reverb source", Colour::Red);
+
 			{
 				unique_lock<shared_mutex> lock(tuneInMutex);
 				mCore->RemoveSingleSourceDSP(mSource);
@@ -64,9 +63,8 @@ namespace RAC
 
 		void ReverbSource::InitSource(const std::shared_ptr<DSPConfig>& dspConfig)
 		{
-#ifdef DEBUG_INIT
 			Debug::Log("Init reverb source", Colour::Green);
-#endif
+
 			{
 				unique_lock<shared_mutex> lock(tuneInMutex);
 
@@ -328,10 +326,7 @@ namespace RAC
 		void SingleFDN::SetTargetT60(const Coefficients<>& T60)
 		{
 			assert(IsValid());
-
-#ifdef DEBUG_INIT
-			Debug::Log("Init FDN: " + CoefficientToStr(T60), Colour::Green);
-#endif
+			Debug::Log("Init FDN: " + ToString(T60), Colour::Green);
 
 #ifdef __ANDROID__
 			std::atomic_load(&mFDN)->SetTargetT60(T60);
