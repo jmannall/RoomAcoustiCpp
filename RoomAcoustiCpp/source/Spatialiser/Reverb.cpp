@@ -330,7 +330,7 @@ namespace RAC
 			assert(IsValid());
 
 #ifdef DEBUG_INIT
-			Debug::Log("Init FDN: [" + CoefficientToStr(T60) + "]", Colour::Green);
+			Debug::Log("Init FDN: " + CoefficientToStr(T60), Colour::Green);
 #endif
 
 #ifdef __ANDROID__

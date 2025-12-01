@@ -464,6 +464,23 @@ namespace RAC
 #endif // MATRIX_LIBRARY == CUSTOM_FLAG
 
 		inline Coefficients<> CalculateReflectance(const Coefficients<>& values) { return ((Real)1.0 - values).Sqrt(); }
+
+		/**
+		* @brief prints a Coefficients using std::cout << vec3 << std::endl;
+		*/
+		inline std::ostream& operator<<(std::ostream& os, const Coefficients<>& v)
+		{
+			int numCoefficients = v.Length();
+			os << "[ ";
+			for (int i = 0; i < numCoefficients; i++)
+			{
+				os << v[i];
+				if (i < numCoefficients - 1)
+					os << " , ";
+			}
+			os << " ]";
+			return os;
+		}
 	}
 }
 

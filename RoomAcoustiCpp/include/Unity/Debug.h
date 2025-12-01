@@ -20,9 +20,6 @@
 // Common headers
 #include "Common/Coefficients.h"
 
-// Unity headers
-#include "Unity/IUnityInterface.h"
-
 // Spatialiser headers
 #include "Spatialiser/Types.h"
 
@@ -182,7 +179,7 @@ namespace RAC
         }
 
         /**
-        * @brief Converts a Vec3 to a string
+        * @brief Converts a Coefficients to a string
         */
         inline std::string CoefficientToStr(const Coefficients<>& x)
         {
