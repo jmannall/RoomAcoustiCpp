@@ -43,7 +43,7 @@ namespace RAC
 
 			void Path::CorrectT()
 			{
-				Real halfThetaW = eData.t / 2.0;
+				Real halfThetaW = eData.t / REAL_CONST(2.0);
 				if (sData.rot == rData.rot)
 				{
 					if (sData.t > rData.t)

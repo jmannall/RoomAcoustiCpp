@@ -159,7 +159,7 @@ namespace RAC
 			* @return The required gain
 			*/
 			inline Real CalculateFilterGains(const Real T60) const
-			requires std::is_same_v<T, Complex> { return Pow10(-3.0 * mT / T60); } // 20 * log10(H(f)) = -60 * t / t60(f);
+			requires std::is_same_v<T, Complex> { return Pow10(Real(-3.0) * mT / T60); } // 20 * log10(H(f)) = -60 * t / t60(f);
 
 
 			const Real mT;		// The current delay in seconds
@@ -265,8 +265,15 @@ namespace RAC
 			inline void SetPrecedingDelay(const int samples)
 			requires std::is_same_v<T, Complex>
 			{
-				precedingDelay = DelayLine<Complex>(samples);
-				// precedingDelayBuffer.Reset(); // TODO: Do we want to avoid resetting it?
+				assert(samples > 0);
+
+				// in case they passed in a bad value, make sure our delay line is at least 
+				// one sample
+				const int actualSamples = std::max(samples, 1);
+
+				precedingDelay = DelayLine<Complex>(actualSamples);
+				// the constructor resets, so no need to do a Reset() here
+				assert(precedingDelay.IsValid());
 			}
 
 			inline void SetMinimumReverbTime(Real T60)
@@ -584,7 +591,7 @@ namespace RAC
 			* @param dspConfig The spatialiser configuration
 			*/
 			HouseHolderFDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<DSPConfig>& dspConfig)
-				requires std::is_same_v<T, Real> : FDN<T>(T60, dimensions, dspConfig, Matrix<>()), houseHolderFactor(2.0 / static_cast<Real>(dspConfig->GetData().fdnSize)) {}
+				requires std::is_same_v<T, Real> : FDN<T>(T60, dimensions, dspConfig, Matrix<>()), houseHolderFactor(REAL_CONST(2.0) / static_cast<Real>(dspConfig->GetData().fdnSize)) {}
 			
 			/**
 			* @brief Initialises an FDN with a target T60 and given delay line lengths
@@ -595,7 +602,7 @@ namespace RAC
 			* @param dspConfig The spatialiser configuration
 			*/
 			HouseHolderFDN(const Real T60, const Vec<int>& delayLengths, const std::shared_ptr<DSPConfig>& dspConfig)
-				requires std::is_same_v<T, Complex> : FDN<T>(T60, delayLengths, dspConfig, Matrix<>()), houseHolderFactor(2.0 / static_cast<Real>(dspConfig->GetData().fdnSize)) {}
+				requires std::is_same_v<T, Complex> : FDN<T>(T60, delayLengths, dspConfig, Matrix<>()), houseHolderFactor(REAL_CONST(2.0) / static_cast<Real>(dspConfig->GetData().fdnSize)) {}
 
 			/**
 			* @brief Default deconstructor

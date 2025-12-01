@@ -75,12 +75,11 @@ namespace RAC
 			/**
 			* @brief Returns the output of the GraphicEQ given an input
 			*
-			* @param input The input to the GraphicEQ
-			* @param output The output buffer
-			* @param inputOutputLength The length of the input buffer
+			* @param inBuffer The input buffer to the GraphicEQ
+			* @param outBuffer The output buffer
 			* @return The output of the GraphicEQ
 			*/
-			void GetOutputBatch(const T *input, T *output, int inputOutputLength, const Real lerpFactor);
+			void GetOutputBatch(const Buffer<T>& inBuffer, Buffer<T>& outBuffer, const Real lerpFactor);
 
 			/**
 			* @brief Processes an input buffer and updates the output buffer
@@ -147,11 +146,10 @@ namespace RAC
 			/**
 			 * @brief Scales the specifies buffer by the gain
 			 * 
-			 * @param output The buffer to scasle
-			 * @param length The length of the buffer
+			 * @param buffer The buffer to scale
 			 * @param lerpFactor The linear interpolation factor
 			 */
-			void ScaleGain(T* output, int length, const Real lerpFactor);
+			void ScaleGain(Buffer<T> &buffer, const Real lerpFactor);
 
 			const int numFilters;			// Number of filters
 			Coefficients<> previousInput;		// Previous target response to check if they have changed

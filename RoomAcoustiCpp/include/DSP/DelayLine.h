@@ -75,6 +75,15 @@ namespace RAC
 				idx = 0;
 			}
 
+			/**
+			 * @brief Returns true if this is delay line is valid
+			 * @returns true if valid, false otherwise
+			 */
+			bool IsValid() const 
+			{
+				return initialised;
+			}
+
 		private:
 			Buffer<T> buffer;	// Delay line buffer
 			int idx{ 0 };		// Current write index
@@ -112,6 +121,34 @@ namespace RAC
 
 			// and now store the new value
 			_mm_store_pd(entryPointer, _mm_load_pd(inputPointer));
+		}
+
+		template<>
+		inline void DelayLine<std::complex<float>>::GetOutput(const std::complex<float>& input, std::complex<float> & output)
+		{
+			assert(initialised);
+
+			__m64 *entryPointer = reinterpret_cast<__m64*>(buffer.data() + idx);
+			__m64 *outputPointer = reinterpret_cast<__m64*>(&output);
+			const __m64* inputPointer = reinterpret_cast<const __m64*>(&input);
+
+			// start fetching the entry pointer
+			_mm_prefetch(reinterpret_cast<const char*>(entryPointer), _MM_HINT_T0);
+
+			// while we're doing that, increment our index
+			if (++idx >= length) [[unlikely]]
+				idx = 0;
+
+			// now we start prefetching the new value to load
+			_mm_prefetch(reinterpret_cast<const char*>(inputPointer), _MM_HINT_T0);
+
+			__m128 zero = _mm_setzero_ps();
+
+			// grab the existing entry
+			_mm_storel_pi(outputPointer, _mm_loadl_pi(zero, entryPointer));
+
+			// and now store the new value
+			_mm_storel_pi(entryPointer, _mm_loadl_pi(zero, inputPointer));
 		}
 
 #endif

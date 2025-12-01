@@ -198,7 +198,7 @@ namespace RAC
 			{
 				std::array<Real, Lwin> w = {};
 				for (int i = 0; i < Lwin; i++)
-					w[i] = 0.5 * (1 - cos(PI_2 * (i + 1) / (Lwin + 1)));
+					w[i] = REAL_CONST(0.5) * (1 - cos(PI_2 * (i + 1) / (Lwin + 1)));
 				return w;
 			}
 #endif

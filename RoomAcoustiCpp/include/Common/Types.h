@@ -57,12 +57,18 @@ namespace RAC
 		/**
 		* Contols Real typedef
 		*/
-#define DATA_TYPE_DOUBLE true 
+#define DATA_TYPE_DOUBLE true
 
 #if DATA_TYPE_DOUBLE
 		typedef double Real; // Define Real as double
+
+		// Defines a floating point "Real" constant (e.g., a double)
+#define REAL_CONST(n)		n
 #else
 		typedef float Real; // Define Real as float
+
+		// Defines a floating point "Real" constant (e.g., a float)
+#define REAL_CONST(n)		n##f
 #endif
 
 		/** @brief Shorthands for quiet NaN. */

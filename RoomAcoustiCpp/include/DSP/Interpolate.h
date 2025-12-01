@@ -89,7 +89,7 @@ namespace RAC
 		{
 			assert(0.0 < factor && factor <= 1.0);
 	
-			start *= 1.0 - factor;
+			start *= REAL_CONST(1.0) - factor;
 			start += end * factor;
 			return start;
 		}
@@ -114,33 +114,33 @@ namespace RAC
 			int i = 0;
 			while(i < len) // Easier for compiler to vectorise ~1.6x faster
 			{
-				start[i] *= (1.0 - factor);
+				start[i] *= (REAL_CONST(1.0) - factor);
 				start[i] += factor * end[i];
 				i++;
-				start[i] *= (1.0 - factor);
+				start[i] *= (REAL_CONST(1.0) - factor);
 				start[i] += factor * end[i];
 				i++;
-				start[i] *= (1.0 - factor);
+				start[i] *= (REAL_CONST(1.0) - factor);
 				start[i] += factor * end[i];
 				i++;
-				start[i] *= (1.0 - factor);
+				start[i] *= (REAL_CONST(1.0) - factor);
 				start[i] += factor * end[i];
 				i++;
-				start[i] *= (1.0 - factor);
+				start[i] *= (REAL_CONST(1.0) - factor);
 				start[i] += factor * end[i];
 				i++;
-				start[i] *= (1.0 - factor);
+				start[i] *= (REAL_CONST(1.0) - factor);
 				start[i] += factor * end[i];
 				i++;
-				start[i] *= (1.0 - factor);
+				start[i] *= (REAL_CONST(1.0) - factor);
 				start[i] += factor * end[i];
 				i++;
-				start[i] *= (1.0 - factor);
+				start[i] *= (REAL_CONST(1.0) - factor);
 				start[i] += factor * end[i];
 				i++;
 			}
 			for (int i = ToInt( end.Length() ); i < startLength; i++) // Interpolating to zero
-				start[i] *= (1.0 - factor);
+				start[i] *= (REAL_CONST(1.0) - factor);
 		}
 
 		/**
@@ -156,7 +156,7 @@ namespace RAC
 			assert(0.0 < factor && factor <= 1.0);	
 			assert(start.Length() == end.Length());
 			
-			start *= (1.0 - factor);
+			start *= (REAL_CONST(1.0) - factor);
 			start += factor * end;
 		}
 

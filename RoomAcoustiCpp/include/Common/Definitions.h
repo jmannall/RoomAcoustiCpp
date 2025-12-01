@@ -86,26 +86,30 @@ namespace RAC
 
 		//////////////////// Epsilons ////////////////////
 
-		const constexpr Real EPS_FACING = 1e-7;			// Tolerance for facing test: dot(n,O) + d0 > facing.
-		const constexpr Real EPS_EDGE = 1e-7;			// Tolerance for side predicates (edge-inclusive).
-		const constexpr Real EPS_PARALLEL = 1e-7;		// Tolerance for near-parallel plane denominator.
-		const constexpr Real EPS_SELFHIT = 1e-3;		// Minimum distance between ray origin and valid intersection.
-		const constexpr Real EPS_ZFIGHT = 1e-5;			// Detection range for Z-fighting triangles.
+		const constexpr Real EPS_FACING = 1e-7;							// Tolerance for facing test: dot(n,O) + d0 > facing.
+		const constexpr Real EPS_EDGE = 1e-7;							// Tolerance for side predicates (edge-inclusive).
+		const constexpr Real EPS_PARALLEL = 1e-7;						// Tolerance for near-parallel plane denominator.
+		const constexpr Real EPS_SELFHIT = 1e-3;						// Minimum distance between ray origin and valid intersection.
+		const constexpr Real EPS_ZFIGHT = 1e-5;							// Detection range for Z-fighting triangles.
 
 		const constexpr Real EPS_POSITION = 0.05;						// Tolerance for position changes (m)
 		const constexpr Real EPS_ORIENTATION = 1.0 * PI_1 / 180.0;		// Tolerance for orientation changes (rad)
+
+		const constexpr Real EPS_TEST_ACCURATE = 1e-15;					// Test with a reasonable degree of accuracy
+		const constexpr Real EPS_TEST_MEDIUM = 1e-10f;					// Test with a medium degree of accuracy
+		const constexpr Real EPS_TEST_LOW = 1e-6f;						// Test with a low degree of accuracy
 
 		//////////////////// Mathematical Functions ////////////////////
 
 		/**
 		* @brief Converts degrees to radians
 		*/
-		inline Real Deg2Rad(Real x) { return x * PI_1 / 180.0; }
+		inline Real Deg2Rad(Real x) { return x * PI_1 / REAL_CONST(180.0); }
 
 		/**
 		* @brief Converts radians to degrees
 		*/
-		inline Real Rad2Deg(Real x) { return x * 180.0 / PI_1; }
+		inline Real Rad2Deg(Real x) { return x * REAL_CONST(180.0) / PI_1; }
 
 		/**
 		* @brief Calculates 10 raised to the power of x
@@ -124,10 +128,10 @@ namespace RAC
 
 		inline Real SafeAcos(Real x)
 		{
-			if (x < -1.0)
-				x = -1.0;
-			else if (x > 1.0)
-				x = 1.0;
+			if (x < REAL_CONST(-1.0))
+				x = REAL_CONST(-1.0);
+			else if (x > REAL_CONST(1.0))
+				x = REAL_CONST(1.0);
 			return std::acos(x);
 		}
 
@@ -164,14 +168,18 @@ namespace RAC
 
 		//////////////////// Epsilons ////////////////////
 
-		const constexpr Real EPS_FACING = 1e-7f;		// Tolerance for facing test: dot(n,O) + d0 > facing.
-		const constexpr Real EPS_EDGE = 1e-7f;			// Tolerance for side predicates (edge-inclusive).
-		const constexpr Real EPS_PARALLEL = 1e-7f;		// Tolerance for near-parallel plane denominator.
-		const constexpr Real EPS_SELFHIT = 1e-3f;		// Minimum distance between ray origin and valid intersection.
-		const constexpr Real EPS_ZFIGHT = 1e-5f;		// Detection range for Z-fighting triangles.
+		const constexpr Real EPS_FACING = 1e-7f;						// Tolerance for facing test: dot(n,O) + d0 > facing.
+		const constexpr Real EPS_EDGE = 1e-7f;							// Tolerance for side predicates (edge-inclusive).
+		const constexpr Real EPS_PARALLEL = 1e-7f;						// Tolerance for near-parallel plane denominator.
+		const constexpr Real EPS_SELFHIT = 1e-3f;						// Minimum distance between ray origin and valid intersection.
+		const constexpr Real EPS_ZFIGHT = 1e-5f;						// Detection range for Z-fighting triangles.
 
 		const constexpr Real EPS_POSITION = 0.05f;						// Tolerance for position changes (m)
 		const constexpr Real EPS_ORIENTATION = 1.0f * PI_1 / 180.0f;	// Tolerance for orientation changes (rad)
+
+		const constexpr Real EPS_TEST_ACCURATE = 1e-8f;					// Test with a reasonable degree of accuracy
+		const constexpr Real EPS_TEST_MEDIUM   = 1e-5f;					// Test with a medium degree of accuracy
+		const constexpr Real EPS_TEST_LOW	   = 1e-4f;					// Test with a low degree of accuracy
 
 		//////////////////// Mathematical Functions ////////////////////
 
@@ -188,17 +196,17 @@ namespace RAC
 		/**
 		* @brief Calculates 10 raised to the power of x
 		*/
-		inline Real Pow10(Real x) { return expf(LOG_10 * x); }
+		inline Real Pow10(Real x) { return std::exp(LOG_10 * x); }
 
 		/**
 		* @brief Calculates the base 10 logarithm of x
 		*/
-		inline Real Log10(Real x) { return std::log2f(x) * INV_LOG2_10; }
+		inline Real Log10(Real x) { return std::log2(x) * INV_LOG2_10; }
 
 		/**
 		* Calculates the cotangent of x
 		*/
-		inline Real cot(const Real x) { return cosf(x) / sinf(x); }
+		inline Real cot(const Real x) { return std::cos(x) / std::sin(x); }
 #endif
 
 		//////////////////// Mathematical Constants ////////////////////
@@ -211,7 +219,7 @@ namespace RAC
 		/**
 		* @return The sign of x
 		*/
-		inline Real Sign(const Real x) { return (x > 0) - (x < 0); }
+		inline Real Sign(const Real x) { return static_cast<Real>((x > 0) - (x < 0)); }
 
 		/**
 		* @brief Rounds x to decimal places based on ROUND_FACTOR
@@ -236,8 +244,8 @@ namespace RAC
 		inline Real Factorial(const int n)
 		{
 			if (n == 0 || n == 1)
-				return 1.0;
-			Real result = 1.0;
+				return REAL_CONST(1.0);
+			Real result = REAL_CONST(1.0);
 			for (int i = 2; i <= n; ++i)
 				result *= i;
 			return result;
@@ -250,7 +258,7 @@ namespace RAC
 		{
 			if (n <= 0)
 				return 1.0;  // By convention, 0!! = 1
-			Real result = 1.0;
+			Real result = REAL_CONST(1.0);
 			for (int i = n; i > 1; i -= 2)
 				result *= i;
 			return result;
@@ -267,14 +275,14 @@ namespace RAC
 		{
 			// Base case: P_0^0(x) = 1
 			if (l == 0 && m == 0)
-				return 1.0;
+				return REAL_CONST(1.0);
 
 			// Compute P_m^m(x) using the relation:
 			// P_m^m(x) = (-1)^m * (2m-1)!! * (1-x^2)^(m/2)
 			if (l == m)
 			{
 				Real factorial = (m % 2 == 0 ? 1 : -1) * DoubleFactorial(2 * m - 1);
-				return factorial * std::pow(1.0 - x * x, m / 2.0);
+				return factorial * std::pow(REAL_CONST(1.0) - x * x, m / REAL_CONST(2.0));
 			}
 
 			// Compute P_(m+1)^m(x) using:
@@ -303,7 +311,7 @@ namespace RAC
 				return 0.0; // Convention: P_l^m(x) = 0 for m > l
 
 			Real Plm = LegendrePolynomial(l, m, x);
-			Real norm = std::sqrt((2.0 * l + 1.0) / (PI_4) * Factorial(l - m) / Factorial(l + m));
+			Real norm = std::sqrt((REAL_CONST(2.0) * l + REAL_CONST(1.0)) / (PI_4) * Factorial(l - m) / Factorial(l + m));
 			return norm * Plm;
 		}
 

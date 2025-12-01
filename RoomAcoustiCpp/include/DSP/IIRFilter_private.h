@@ -1,5 +1,3 @@
-
-
 #ifndef RoomAcoustiCpp_IIRFilter_private_h
 #define RoomAcoustiCpp_IIRFilter_private_h
 
@@ -27,7 +25,7 @@ namespace RAC
 			*
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
-			IIRFilter2(const int sampleRate) : T(1.0 / static_cast<Real>(sampleRate)) {};
+			IIRFilter2(const int sampleRate) : T(REAL_CONST(1.0) / static_cast<Real>(sampleRate)) {};
 
 			/**
 			* @brief Default deconstructor
@@ -51,16 +49,6 @@ namespace RAC
 			* @param lerpFactor The linear interpolation factor for parameters
 			*/
 			void GetOutput(const In& input, In& output, const Real lerpFactor);
-
-			/**
-			* @brief Processes a batch of inputs
-			*
-			* @param input The input to the IIRFilter
-			* @param output The output to the filter
-			* @param inputOutputLength The length of the data arrays
-			* @param lerpFactor The linear interpolation factor for parameters
-			*/
-			void GetOutputBatch(const In* input, In* output, int inputOutputLength, const Real lerpFactor);
 
 			/**
 			* @brief Set internal buffers to zeros
@@ -102,7 +90,6 @@ namespace RAC
 			In   y0{ 0.0 };
 			In   y1{ 0.0 };
 
-			Real a0{ 0.0 };
 			Real b0{ 0.0 };
 
 			const Real T;				// Sample rate time period
@@ -312,7 +299,7 @@ namespace RAC
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
 			PeakingFilter(const Real fc, const Real gain, const Real Q, const int sampleRate) : IIRFilter2Param1<In>(gain, sampleRate),
-				cosOmega(-2.0 * cos(PI_2 * fc * this->T)), alpha(sin(PI_2* fc* this->T) / (2.0 * Q))
+				cosOmega(REAL_CONST(-2.0)* cos(PI_2* fc* this->T)), alpha(sin(PI_2* fc* this->T) / (REAL_CONST(2.0) * Q))
 			{
 				assert(fc < static_cast<Real>(sampleRate) / 2.0); // Ensure cut off frequency is less than Nyquist frequency
 
@@ -351,17 +338,15 @@ namespace RAC
 
 #if USE_AVX
 
-		// double is used here and not Real since this MUST work on doubles, even if Real is defined to be float
+#if DATA_TYPE_DOUBLE
 
 		template <>
 		RAC_FORCE_INLINE void IIRFilter2<double>::GetOutputInternal(const double& input, double& output)
 		{
-#if CHECK_ALIGNMENT
 			// make sure they are aligned
-			assert((reinterpret_cast<ptrdiff_t>(&this->a1) & 0xf) == 0);
-			assert((reinterpret_cast<ptrdiff_t>(&this->y1) & 0xf) == 0);
-			assert((reinterpret_cast<ptrdiff_t>(&this->b1) & 0xf) == 0);
-#endif
+			assert(IsAligned16(&this->a1));
+			assert(IsAligned16(&this->b1));
+			assert(IsAligned16(&this->y0));
 
 			// In v = input - y0 * a1 + y1 * a2 --> input - y[0:1] . a[0:1] -> sub(input, y.a)
 			__m128d y = _mm_load_pd(&this->y0);
@@ -421,6 +406,86 @@ namespace RAC
 			// after all filters are processed, save the final result
 			_mm_store_sd(&output, working);
 		}
+
+#else
+
+		template <>
+		RAC_FORCE_INLINE void IIRFilter2<float>::GetOutputInternal(const float& input, float& output)
+		{
+#if CHECK_ALIGNMENT
+			// make sure they are aligned
+			assert((reinterpret_cast<ptrdiff_t>(&this->a1) & 0xf) == 0);
+			assert((reinterpret_cast<ptrdiff_t>(&this->y1) & 0xf) == 0);
+#endif
+
+			__m128 a12b12 = _mm_load_ps(&this->a1);
+			__m128 y = _mm_load_ps(&this->y0);			// we only use y01
+			y = _mm_movelh_ps(y, y);					// duplicate y01 into the high and low
+
+			// In v = input - y0 * a1 + y1 * a2 --> input - y[0:1] . a[0:1] -> sub(input, y.a)
+			__m128 aDotY = _mm_dp_ps(a12b12, y, 0x31);
+			// v[low] has the result v[low+1] is not used
+			__m128 v = _mm_sub_ss(_mm_set_ss(input), aDotY);
+
+			// In output	 = y0 * b1 + y1 * b2 + v * b0 --> y[0:1] . b[0:1] + v * b0 --> b0 * v + (y[0:1] . b[0:1]) --> fmadd( b0, v, y.b )
+			__m128 bDotY = _mm_dp_ps(a12b12, y, 0xc1);
+			// output[low] has the result; output[high] is not used
+			_mm_store_ss(&output, _mm_fmadd_ps(v, _mm_set_ss(this->b0), bDotY));
+
+			// shift the filter y1 = y0, y0 = v
+			__m128 shifted = _mm_move_ss(_mm_shuffle_ps(y, y, _MM_SHUFFLE(3, 2, 0, 1)), v);
+
+			// store it
+			_mm_storel_pi(reinterpret_cast<__m64*>(&this->y0), shifted);
+		}
+
+		template <>
+		RAC_FORCE_INLINE void IIRFilter2<float>::GetOutputFromMultipleFilters(IIRFilter2<float>** filters, int numFilters, const float& input, float& output, const Real lerpFactor)
+		{
+			// update parameters first
+			for (int filterIndex = 0; filterIndex < numFilters; ++filterIndex)
+			{
+				if (!filters[filterIndex]->parametersEqual.load(std::memory_order_acquire))
+					filters[filterIndex]->InterpolateParameters(lerpFactor);
+			}
+
+			// load the input. we will use this for all values
+			__m128 working = _mm_set_ss(input);
+
+			for (int filterIndex = 0; filterIndex < numFilters; ++filterIndex)
+			{
+				IIRFilter2<float>* currentFilter = filters[filterIndex];
+
+				__m128 a12b12 = _mm_load_ps(&currentFilter->a1);
+
+				// In v = input - y0 * a1 + y1 * a2 --> input - y[0:1] . a[0:1] -> sub(input, y.a)
+				__m128 y = _mm_load_ps(&currentFilter->y0);			// we only use y01
+				y = _mm_movelh_ps(y, y);					// duplicate y01 into the high and low
+
+				// In v = input - y0 * a1 + y1 * a2 --> input - y[0:1] . a[0:1] -> sub(input, y.a)
+				__m128 aDotY = _mm_dp_ps(a12b12, y, 0x31);
+				// v[low] has the result v[low+1] is not used
+				__m128 v = _mm_sub_ss(working, aDotY);
+
+				// In output	 = y0 * b1 + y1 * b2 + v * b0 --> y[0:1] . b[0:1] + v * b0 --> b0 * v + (y[0:1] . b[0:1]) --> fmadd( b0, v, y.b )
+				__m128 bDotY = _mm_dp_ps(a12b12, y, 0xc1);
+				// output[low] has the result; output[high] is not used
+				working = _mm_fmadd_ps(v, _mm_set_ss(currentFilter->b0), bDotY);
+
+				// shift the filter y1 = y0, y0 = v
+				__m128 shifted = _mm_move_ss(_mm_shuffle_ps(y, y, _MM_SHUFFLE(3, 2, 0, 1)), v);
+
+				// store it
+				_mm_storel_pi(reinterpret_cast<__m64*>(&currentFilter->y0), shifted);
+
+				// the working result doesn't need to be written back yet
+			}
+
+			// after all filters are processed, save the final result
+			_mm_store_ss(&output, working);
+		}
+
+#endif
 
 #endif
 

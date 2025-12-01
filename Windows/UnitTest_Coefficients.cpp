@@ -32,72 +32,72 @@ namespace RAC
 
 		void TestRealInit(Coefficients<Real, 3> input)
 		{
-			Real x = 1.0;
+			Real x = REAL_CONST(1.0);
 		}
 
 		TEST_METHOD(InitReal)
 		{
-			Real input = 2.0;
+			Real input = REAL_CONST(2.0);
 			TestRealInit(input);
 		}
 
 		TEST_METHOD(Addition)
 		{
-			Coefficients<> c1 = Coefficients<>(std::vector<Real>({ 2.0, 3.0 }));
-			Coefficients<> c2 = Coefficients<>(std::vector<Real>({ 5.0, 2.0 }));
-			Coefficients<> out = Coefficients<>(std::vector<Real>({7.0, 5.0}));
+			Coefficients<> c1 = Coefficients<>(std::vector<Real>({ REAL_CONST(2.0), REAL_CONST(3.0) }));
+			Coefficients<> c2 = Coefficients<>(std::vector<Real>({ REAL_CONST(5.0), REAL_CONST(2.0) }));
+			Coefficients<> out = Coefficients<>(std::vector<Real>({ REAL_CONST(7.0), REAL_CONST(5.0) }));
 
 			Coefficients<> result = c1 + c2;
 
 			Assert::IsTrue(out.IsApprox(result), L"Error: Incorrect addition");
 
-			out = Coefficients<>(std::vector<Real>({ 4.0, 5.0 }));
+			out = Coefficients<>(std::vector<Real>({ REAL_CONST(4.0), REAL_CONST(5.0) }));
 
-			result = c1 + (Real)2.0;
+			result = c1 + REAL_CONST(2.0);
 			Assert::IsTrue(out.IsApprox(result), L"Error: Incorrect factor addition");
 		}
 
 		TEST_METHOD(Subtraction)
 		{
-			Coefficients<> c1 = Coefficients<>(std::vector<Real>({ 2.0, 3.0 }));
-			Coefficients<> c2 = Coefficients<>(std::vector<Real>({ 5.0, 2.0 }));
-			Coefficients<> out = Coefficients<>(std::vector<Real>({ -3.0, 1.0 }));
+			Coefficients<> c1 = Coefficients<>(std::vector<Real>({ REAL_CONST(2.0), REAL_CONST(3.0) }));
+			Coefficients<> c2 = Coefficients<>(std::vector<Real>({ REAL_CONST(5.0), REAL_CONST(2.0) }));
+			Coefficients<> out = Coefficients<>(std::vector<Real>({ REAL_CONST(-3.0), REAL_CONST(1.0) }));
 
 			Coefficients<> result = c1 - c2;
 			Assert::IsTrue(out.IsApprox(result), L"Error: Incorrect subtraction");
 
-			out = Coefficients<>(std::vector<Real>({ 0.0, -1.0 }));
+			out = Coefficients<>(std::vector<Real>({ REAL_CONST(0.0), REAL_CONST(-1.0) }));
 			
-			result = (Real)2.0 - c1;
+			result = REAL_CONST(2.0) - c1;
 			Assert::IsTrue(out.IsApprox(result), L"Error: Incorrect factor subtraction");
 		}
 
 		TEST_METHOD(Multiplication)
 		{
-			Coefficients<> c1 = Coefficients<>(std::vector<Real>({ 2.0, 3.0 }));
-			Coefficients<> c2 = Coefficients<>(std::vector<Real>({ 5.0, 2.0 }));
-			Coefficients<> out = Coefficients<>(std::vector<Real>({ 10.0, 6.0 }));
+			Coefficients<> c1 = Coefficients<>(std::vector<Real>({ REAL_CONST(2.0), REAL_CONST(3.0) }));
+			Coefficients<> c2 = Coefficients<>(std::vector<Real>({ REAL_CONST(5.0), REAL_CONST(2.0) }));
+			Coefficients<> out = Coefficients<>(std::vector<Real>({ REAL_CONST(10.0), REAL_CONST(6.0) }));
 
 			Coefficients<> result = c1 * c2;
 			Assert::IsTrue(out.IsApprox(result), L"Error: Incorrect multiplication");
 
-			out = Coefficients<>(std::vector<Real>({ 4.0, 6.0 }));
+			out = Coefficients<>(std::vector<Real>({ REAL_CONST(4.0), REAL_CONST(6.0) }));
 
-			result = c1 * (Real)2.0;
+			result = c1 * REAL_CONST(2.0);
 			Assert::IsTrue(out.IsApprox(result), L"Error: Incorrect factor multiplication");
 		}
 
 		TEST_METHOD(Division)
 		{
-			Coefficients<> c1 = Coefficients<>(std::vector<Real>({ 2.0, 3.0 }));
-			Coefficients<> c2 = Coefficients<>(std::vector<Real>({ 5.0, 2.0 }));
-			Coefficients<> out = Coefficients<>(std::vector<Real>({ 0.4, 1.5 }));
+			Coefficients<> c1 = Coefficients<>(std::vector<Real>({ REAL_CONST(2.0), REAL_CONST(3.0) }));
+			Coefficients<> c2 = Coefficients<>(std::vector<Real>({ REAL_CONST(5.0), REAL_CONST(2.0) }));
+			Coefficients<> out = Coefficients<>(std::vector<Real>({ REAL_CONST(0.4), REAL_CONST(1.5) }));
 
 			Coefficients<> result = c1 / c2;
 			Assert::IsTrue(out.IsApprox(result), L"Error: Incorrect division");
 
-			out = Coefficients<>(std::vector<Real>({ 1.0, 1.5 }));
-			result = c1 / (Real)2.0;
+			out = Coefficients<>(std::vector<Real>({ REAL_CONST(1.0), REAL_CONST(1.5) }));
+			result = c1 / REAL_CONST(2.0);
 			Assert::IsTrue(out.IsApprox(result), L"Error: Incorrect factor division");
 		}
 	};
@@ -108,22 +108,22 @@ namespace RAC
 
 		TEST_METHOD(Addition)
 		{
-			std::vector<Real> a = { (Real)0.5, (Real)0.7 };
-			std::vector<Real> b = { (Real)0.5, (Real)0.8 };
+			std::vector<Real> a = { REAL_CONST(0.5), REAL_CONST(0.7) };
+			std::vector<Real> b = { REAL_CONST(0.5), REAL_CONST(0.8) };
 
 			Coefficients<> c1 = CalculateReflectance(a);
 			Coefficients<> c2 = CalculateReflectance(b);
 
 			Coefficients<> out = Coefficients<>(c1.Length());
-			out[0] = sqrt(1.0 - a[0]) + sqrt(1.0 - b[0]);
-			out[1] = sqrt(1.0 - a[1]) + sqrt(1.0 - b[1]);
+			out[0] = sqrt(REAL_CONST(1.0) - a[0]) + sqrt(REAL_CONST(1.0) - b[0]);
+			out[1] = sqrt(REAL_CONST(1.0) - a[1]) + sqrt(REAL_CONST(1.0) - b[1]);
 
 			Coefficients<> result = c1 + c2;
 			Assert::IsTrue(out.IsApprox(result), L"Error: Incorrect addition");
 
-			Real x = 2.0;
-			out[0] = sqrt(1.0 - a[0]) + x;
-			out[1] = sqrt(1.0 - a[1]) + x;
+			Real x = REAL_CONST(2.0);
+			out[0] = sqrt(REAL_CONST(1.0) - a[0]) + x;
+			out[1] = sqrt(REAL_CONST(1.0) - a[1]) + x;
 
 			result = c1 + x;
 			Assert::IsTrue(out.IsApprox(result), L"Error: Incorrect factor addition");
@@ -131,22 +131,22 @@ namespace RAC
 
 		TEST_METHOD(Subtraction)
 		{
-			std::vector<Real> a = { (Real)0.5, (Real)0.7 };
-			std::vector<Real> b = { (Real)0.5, (Real)0.8 };
+			std::vector<Real> a = { REAL_CONST(0.5), REAL_CONST(0.7) };
+			std::vector<Real> b = { REAL_CONST(0.5), REAL_CONST(0.8) };
 
 			Coefficients<> c1 = CalculateReflectance(a);
 			Coefficients<> c2 = CalculateReflectance(b);
 
 			Coefficients<> out = Coefficients<>(c1.Length());
-			out[0] = sqrt(1.0 - a[0]) - sqrt(1.0 - b[0]);
-			out[1] = sqrt(1.0 - a[1]) - sqrt(1.0 - b[1]);
+			out[0] = sqrt(REAL_CONST(1.0) - a[0]) - sqrt(REAL_CONST(1.0) - b[0]);
+			out[1] = sqrt(REAL_CONST(1.0) - a[1]) - sqrt(REAL_CONST(1.0) - b[1]);
 
 			Coefficients<> result = c1 - c2;
 			Assert::IsTrue(out.IsApprox(result), L"Error: Incorrect subtraction");
 
-			Real x = 2.0;
-			out[0] = x - sqrt(1.0 - a[0]);
-			out[1] = x - sqrt(1.0 - a[1]);
+			Real x = REAL_CONST(2.0);
+			out[0] = x - sqrt(REAL_CONST(1.0) - a[0]);
+			out[1] = x - sqrt(REAL_CONST(1.0) - a[1]);
 
 			result = x - c1;
 			Assert::IsTrue(out.IsApprox(result), L"Error: Incorrect factor subtraction");
@@ -154,22 +154,22 @@ namespace RAC
 
 		TEST_METHOD(Multiplication)
 		{
-			std::vector<Real> a = { (Real)0.5, (Real)0.7 };
-			std::vector<Real> b = { (Real)0.5, (Real)0.8 };
+			std::vector<Real> a = { REAL_CONST(0.5), REAL_CONST(0.7) };
+			std::vector<Real> b = { REAL_CONST(0.5), REAL_CONST(0.8) };
 
 			Coefficients<> c1 = CalculateReflectance(a);
 			Coefficients<> c2 = CalculateReflectance(b);
 
 			Coefficients<> out = Coefficients<>(c1.Length());
-			out[0] = sqrt(1.0 - a[0]) * sqrt(1.0 - b[0]);
-			out[1] = sqrt(1.0 - a[1]) * sqrt(1.0 - b[1]);
+			out[0] = sqrt(REAL_CONST(1.0) - a[0]) * sqrt(REAL_CONST(1.0) - b[0]);
+			out[1] = sqrt(REAL_CONST(1.0) - a[1]) * sqrt(REAL_CONST(1.0) - b[1]);
 
 			Coefficients<> result = c1 * c2;
 			Assert::IsTrue(out.IsApprox(result), L"Error: Incorrect multiplication");
 
-			Real x = 2.0;
-			out[0] = sqrt(1.0 - a[0]) * x;
-			out[1] = sqrt(1.0 - a[1]) * x;
+			Real x = REAL_CONST(2.0);
+			out[0] = sqrt(REAL_CONST(1.0) - a[0]) * x;
+			out[1] = sqrt(REAL_CONST(1.0) - a[1]) * x;
 
 			result = c1 * x;
 			Assert::IsTrue(out.IsApprox(result), L"Error: Incorrect factor multiplication");
@@ -177,22 +177,22 @@ namespace RAC
 
 		TEST_METHOD(Division)
 		{
-			std::vector<Real> a = { (Real)0.5, (Real)0.7 };
-			std::vector<Real> b = { (Real)0.5, (Real)0.8 };
+			std::vector<Real> a = { REAL_CONST(0.5), REAL_CONST(0.7) };
+			std::vector<Real> b = { REAL_CONST(0.5), REAL_CONST(0.8) };
 
 			Coefficients<> c1 = CalculateReflectance(a);
 			Coefficients<> c2 = CalculateReflectance(b);
 
 			Coefficients<> out = Coefficients<>(c1.Length());
-			out[0] = sqrt(1.0 - a[0]) / sqrt(1.0 - b[0]);
-			out[1] = sqrt(1.0 - a[1]) / sqrt(1.0 - b[1]);
+			out[0] = sqrt(REAL_CONST(1.0) - a[0]) / sqrt(REAL_CONST(1.0) - b[0]);
+			out[1] = sqrt(REAL_CONST(1.0) - a[1]) / sqrt(REAL_CONST(1.0) - b[1]);
 
 			Coefficients<> result = c1 / c2;
 			Assert::IsTrue(out.IsApprox(result), L"Error: Incorrect division");
 
-			Real x = 2.0;
-			out[0] = sqrt(1.0 - a[0]) / x;
-			out[1] = sqrt(1.0 - a[1]) / x;
+			Real x = REAL_CONST(2.0);
+			out[0] = sqrt(REAL_CONST(1.0) - a[0]) / x;
+			out[1] = sqrt(REAL_CONST(1.0) - a[1]) / x;
 
 			result = c1 / x;
 			Assert::IsTrue(out.IsApprox(result), L"Error: Incorrect factor division");

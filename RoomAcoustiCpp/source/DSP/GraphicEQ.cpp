@@ -15,10 +15,6 @@
 // DSP headers
 #include "DSP/GraphicEQ_private.h"
 
-// Processes all of the samples through each filter, one filter at a time. In practice, this
-// is slower based on my performance tests then running each sample through all filters.
-#define BATCH_PROCESS_AUDIO_BUFFERS		 ( 0 )
-
 // Run all filters as a single operation without using a temporary variable. This improves performance
 // slightly (~12%) since it eliminates read/writing the temporary value to memory.
 #define BATCH_PROCESS_FILTERS			 ( 1 )
@@ -48,7 +44,7 @@ namespace RAC
 			highShelf = std::make_unique<PeakHighShelf<T>>(std::min(f[numFilters - 2] * SQRT_2, (Real)20000.0), targetGains.first(numFilters - 1), Q, sampleRate);
 
 			// TODO: Add a debug warning if this is the case
-			if (targetGains.second > 100.0)
+			if (targetGains.second > REAL_CONST(100.0))
 				return; // Note: initialised never gets set to true, silence.
 
 			targetGain.store(targetGains.second, std::memory_order_release);
@@ -89,7 +85,7 @@ namespace RAC
 			const auto targetGains = CalculateGains(gains);
 
 			// TODO: Add a debug warning if this is the case
-			if (targetGains.second > 100.0)
+			if (targetGains.second > REAL_CONST(100.0))
 				return false; // Note: initialised never gets set to true, silence.
 
 			targetGain.store(targetGains.second, std::memory_order_release);
@@ -125,10 +121,10 @@ namespace RAC
 			}
 			else
 			{
-				inputGains(0) = (gains[0] + gains[1]) / 2.0; // Low shelf gain
+				inputGains(0) = (gains[0] + gains[1]) / REAL_CONST(2.0); // Low shelf gain
 				for (int i = 1; i < numFilters - 1; i++)
 					inputGains(i) = gains[i - 1]; // Peaking filter gains
-				inputGains(numFilters - 1) = (gains[numFilters - 4] + gains[numFilters - 3]) / 2.0; // High shelf gain
+				inputGains(numFilters - 1) = (gains[numFilters - 4] + gains[numFilters - 3]) / REAL_CONST(2.0); // High shelf gain
 			}
 
 			inputGains.Max(EPS); // Prevent log10(0)
@@ -165,7 +161,7 @@ namespace RAC
 			assert(fc.Length() == numFilters);
 
 			Real pdb = 6.0;
-			Real p = pow(10.0, pdb / 20.0);
+			Real p = pow(REAL_CONST(10.0), pdb / REAL_CONST(20.0));
 
 #if MATRIX_LIBRARY == EIGEN_FLAG
 			const PeakLowShelf tempLowShelf(fc[0] * SQRT_2, p, Q, fs); // Times SQRT_2. See constructor
@@ -176,7 +172,7 @@ namespace RAC
 				const PeakingFilter tempPeakingFilter(fc[j], p, Q, fs);
 				filterResponseMatrix.Row(j) = tempPeakingFilter.GetFrequencyResponse(fc);
 			}
-			const PeakHighShelf tempHighShelf(std::min(fc[numFilters - 2] * SQRT_2, (Real)20000.0), p, Q, fs); // Times SQRT_2. See constructor
+			const PeakHighShelf tempHighShelf(std::min(fc[numFilters - 2] * SQRT_2, REAL_CONST(20000.0)), p, Q, fs); // Times SQRT_2. See constructor
 			filterResponseMatrix.Row(numFilters - 1) = tempHighShelf.GetFrequencyResponse(fc);
 #else
 			Coefficients<> out(numFilters);
@@ -196,7 +192,7 @@ namespace RAC
 					filterResponseMatrix(j, i) = out[i];
 			}
 
-			const PeakHighShelf tempHighShelf(std::min(fc[numFilters - 2] * SQRT_2, (Real)20000.0), p, Q, static_cast<int>(fs)); // Times SQRT_2. See constructor
+			const PeakHighShelf tempHighShelf(std::min(fc[numFilters - 2] * SQRT_2, RAC_CONST(20000.0)), p, Q, static_cast<int>(fs)); // Times SQRT_2. See constructor
 			out = tempHighShelf.GetFrequencyResponse(fc);
 
 			for (int i = 0; i < out.Length(); i++)
@@ -228,14 +224,19 @@ namespace RAC
 		}
 
 		template<typename T>
-		void GraphicEQ<T>::GetOutputBatch(const T* input, T* output, int inputOutputLength, const Real lerpFactor)
+		void GraphicEQ<T>::GetOutputBatch(const Buffer<T>& inBuffer, Buffer<T>& outBuffer, const Real lerpFactor)
 		{
 			assert(IsValid());
+			assert(outBuffer.Length() >= inBuffer.Length());
+
+			const int bufferLength = ToInt(inBuffer.Length());
+			const T* input = inBuffer.data();
+			T* output = outBuffer.data();
 
 			if (numFilters == 3)
 			{
 				// Only one peaking filter -> just a gain, so copy the input directly to the output
-				for (int index = 0; index < inputOutputLength; ++index)
+				for (int index = 0; index < bufferLength; ++index)
 					output[index] = input[index];
 			}
 			else
@@ -251,16 +252,11 @@ namespace RAC
 				assert(currentFilter == numFilters);
 
 				// process all filters on each sample
-				for (int index = 0; index < inputOutputLength; ++index)
+				for (int index = 0; index < bufferLength; ++index)
 					IIRFilter2<T>::GetOutputFromMultipleFilters(filters, numFilters, input[index], output[index], lerpFactor);
 
-#elif BATCH_PROCESS_AUDIO_BUFFERS
-				lowShelf->GetOutputBatch(input, output, inputOutputLength, lerpFactor);
-				for (const auto& filter : peakingFilters)
-					filter->GetOutputBatch(output, output, inputOutputLength, lerpFactor);
-				highShelf->GetOutputBatch(output, output, inputOutputLength, lerpFactor);
 #else
-				for (int index = 0; index < inputOutputLength; ++index)
+				for (int index = 0; index < bufferLength; ++index)
 				{
 					T& out = output[index];
 					lowShelf->GetOutput(input[index], out, lerpFactor);
@@ -272,14 +268,17 @@ namespace RAC
 			}
 
 			// process the gain
-			ScaleGain(output, inputOutputLength, lerpFactor);
+			ScaleGain(outBuffer, lerpFactor);
 		}
 		
 		////////////////////////////////////////
 		///
 		template<typename T>
-		void GraphicEQ<T>::ScaleGain(T *output, int length, const Real lerpFactor)
+		void GraphicEQ<T>::ScaleGain(Buffer<T>& outBuffer, const Real lerpFactor)
 		{
+			const int length = ToInt(outBuffer.Length());
+			T* output = outBuffer.data();
+
 			if (!gainsEqual.load(std::memory_order_acquire))
 			{
 				for (int index = 0; index < length; ++index)
@@ -299,9 +298,14 @@ namespace RAC
 		////////////////////////////////////////
 
 #if USE_AVX
+
+#if DATA_TYPE_DOUBLE
 		template<>
-		void GraphicEQ<double>::ScaleGain(double* output, int length, const Real lerpFactor)
+		void GraphicEQ<double>::ScaleGain(Buffer<>& outBuffer, const Real lerpFactor)
 		{
+			const int length = ToInt(outBuffer.Length());
+			double* output = outBuffer.data();
+
 			if (!gainsEqual.load(std::memory_order_acquire) || (length % 4) != 0)
 			{
 				for (int index = 0; index < length; ++index)
@@ -328,6 +332,58 @@ namespace RAC
 				}
 			}
 		}
+
+#else
+
+		template<>
+		void GraphicEQ<float>::ScaleGain(Buffer<>& outBuffer, const Real lerpFactor)
+		{
+			const int length = ToInt(outBuffer.Length());
+			float* output = outBuffer.data();
+
+			if (!gainsEqual.load(std::memory_order_acquire) || (length % 4) != 0)
+			{
+				for (int index = 0; index < length; ++index)
+				{
+					if (!gainsEqual.load(std::memory_order_acquire))
+						InterpolateGain(lerpFactor);
+					output[index] *= currentGain;
+				}
+			}
+			else if ( (length % 8) != 0 )
+			{
+				// make sure we are aligned (in practice this is true; we could always check it and fall
+				// back on a slower case)
+				assert(IsAligned32(output));
+
+				__m256 scaleFactor = _mm256_broadcast_ss(&currentGain);
+				float* current = output, * end = output + length;
+				while (current < end)
+				{
+					__m256 currentValue = _mm256_load_ps(current);
+					__m256 newValue = _mm256_mul_ps(currentValue, scaleFactor);
+					_mm256_store_ps(current, newValue);
+					current += 8;
+				}
+			}
+			else 
+			{
+				assert(IsAligned16(output));
+
+				__m128 scaleFactor = _mm_broadcast_ss(&currentGain);
+				float* current = output, * end = output + length;
+				while (current < end)
+				{
+					__m128 currentValue = _mm_load_ps(current);
+					__m128 newValue = _mm_mul_ps(currentValue, scaleFactor);
+					_mm_store_ps(current, newValue);
+					current += 4;
+				}
+			}
+		}
+
+#endif
+
 #endif
 
 		////////////////////////////////////////
@@ -344,8 +400,7 @@ namespace RAC
 				return;
 			}
 
-			const int inBufferLength = ToInt(inBuffer.Length());
-			GetOutputBatch(inBuffer.data(), outBuffer.data(), inBufferLength, lerpFactor);
+			GetOutputBatch(inBuffer, outBuffer, lerpFactor);
 		}
 
 		////////////////////////////////////////

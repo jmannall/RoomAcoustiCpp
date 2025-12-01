@@ -130,8 +130,8 @@ namespace RAC
 			case 3: {
 				// Equilateral triangle on the equator (great circle)
 				for (int k = 0; k < 3; ++k) {
-					Real theta = PI_2 * k / 3.0;
-					verts[k] = Vec3(std::cos(theta), std::sin(theta), (Real)0.0);
+					Real theta = PI_2 * k / REAL_CONST(3.0);
+					verts[k] = Vec3(std::cos(theta), std::sin(theta), REAL_CONST(0.0));
 				}
 				return;
 			}
@@ -179,8 +179,8 @@ namespace RAC
 			case 12: {
 				// Icosahedron: (0, +-1, +-phi), (+-1, +-phi, 0), (+-phi, 0, +-1)
 				// Circumradius of raw coords is sqrt(1 + phi^2); normalize to unit sphere
-				const Real r = std::sqrt(1.0 + PHI * PHI);
-				const Real s1 = 1.0 / r;
+				const Real r = std::sqrt(REAL_CONST(1.0) + PHI * PHI);
+				const Real s1 = REAL_CONST(1.0) / r;
 				const Real sP = PHI / r;
 
 				int i = 0;

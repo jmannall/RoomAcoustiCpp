@@ -151,11 +151,6 @@ namespace RAC
 #endif
 		}
 
-		////////////////////////////////////////
-		
-		template class FDN<Real>;
-		template class FDN<Complex>;
-
 		//////////////////// RandomOrthogonalFDN class ////////////////////
 
 		////////////////////////////////////////
@@ -176,7 +171,7 @@ namespace RAC
 			 matrix.AddColumn(vector.Col(0), 0);
 #endif
 
-			Real tol = 0.000001;
+			Real tol = REAL_CONST(0.000001);
 			for (int j = 1; j < numChannelsI; ++j)
 			{
 				Real norm = 0;
@@ -217,19 +212,20 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		template class RandomOrthogonalFDN<Real>;
-		template class RandomOrthogonalFDN<Complex>;
-
-		//////////////////// FDNChannel class ////////////////////
-
-		template class FDNChannel<Real>;
-		template class FDNChannel<Complex>;
-
-		////////////////////////////////////////
-
 		// we don't implement/use every function, so disable the warning (we can't re-enable it since the warning is generated after the file is parsed)
 		#ifdef _MSC_VER
 		#pragma warning (disable : 4661)
 		#endif
+
+		//////////////////// Instatiate all classes ////////////////////
+
+		template class FDN<Real>;
+		template class FDN<Complex>;
+		template class RandomOrthogonalFDN<Real>;
+		template class RandomOrthogonalFDN<Complex>;
+		template class FDNChannel<Real>;
+		template class FDNChannel<Complex>;
+
+
 	}
 }

@@ -111,7 +111,7 @@ namespace RAC
 			if (det > -MIN_VALUE && det < MIN_VALUE)
 				return { false, Vec3() };    // This ray is parallel to this triangle.
 
-			Real invdet = 1.0 / det;
+			Real invdet = REAL_CONST(1.0) / det;
 
 			Vec3 tVec = origin - v1;
 			Real u = tVec.dot(pVec) * invdet;
