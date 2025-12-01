@@ -349,7 +349,8 @@
     <TargetName>RoomAcoustiCpp_$(Platform)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_NoOptimise|x64'">
-    <TargetName>RoomAcoustiCpp_$(Platform)</TargetName>
+    <TargetName>RoomAcoustiCpp_NoOptimise_$(Platform)</TargetName>
+    <OutDir>$(SolutionDir)$(Platform)\Release\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_Debug|x64'">
     <TargetName>RoomAcoustiCpp_Debug_$(Platform)</TargetName>
