@@ -18,8 +18,9 @@
 // DSP headers
 #include "DSP/Buffer.h"
 
-//////////////////// DLL Linkage ////////////////////
-
+/**
+* @brief Define DLL linkage
+*/
 #ifdef _ANDROID
 #define API
 #define EXPORT __attribute__ ((visibility ("default")))
@@ -31,6 +32,9 @@
 #define EXPORT
 #endif
 
+/**
+* @brief Catch and log any exceptions
+*/
 #define BEGIN_TRY \
     try {
 
@@ -54,6 +58,10 @@ static Buffer<> inputBuffer(1);	// Send buffer for reverb processing
 static int NUM_FREQUENCY_BANDS = 0;	// Store number of frequency bands for any reflection filters
 static int NUM_FRAMES = 0;
 
+//////////////////// Utility functions ////////////////////
+
+////////////////////////////////////////
+
 FDNMatrix SelectFDNMatrix(int mat)
 {
 	switch (mat)
@@ -65,6 +73,8 @@ FDNMatrix SelectFDNMatrix(int mat)
 	{ return FDNMatrix::randomOrthogonal; }
 	}
 }
+
+////////////////////////////////////////
 
 ReverbFormula SelectReverbFormula(int formula)
 {
@@ -80,6 +90,8 @@ ReverbFormula SelectReverbFormula(int formula)
 	}
 }
 
+////////////////////////////////////////
+
 DirectSound SelectDirectMode(int dir)
 {
 	switch (dir)
@@ -94,6 +106,8 @@ DirectSound SelectDirectMode(int dir)
 	}
 }
 
+////////////////////////////////////////
+
 DiffractionSound SelectDiffractionMode(int diff)
 {
 	switch (diff)
@@ -107,6 +121,8 @@ DiffractionSound SelectDiffractionMode(int diff)
 	{ return DiffractionSound::allZones; }
 	}
 }
+
+////////////////////////////////////////
 
 DiffractionModel SelectDiffractionModel(int model)
 {
@@ -132,6 +148,37 @@ DiffractionModel SelectDiffractionModel(int model)
 	}
 }
 
+////////////////////////////////////////
+
+SourceDirectivity SelectDirectivity(int directivity)
+{
+	switch (directivity)
+	{
+	case(0):
+	{ return SourceDirectivity::omni; }
+	case(1):
+	{ return SourceDirectivity::subcardioid; }
+	case(2):
+	{ return SourceDirectivity::cardioid; }
+	case(3):
+	{ return SourceDirectivity::supercardioid; }
+	case(4):
+	{ return SourceDirectivity::hypercardioid; }
+	case(5):
+	{ return SourceDirectivity::bidirectional; }
+	case(6):
+	{ return SourceDirectivity::genelec8020c; }
+	case(7):
+	{ return SourceDirectivity::genelec8020cDTF; }
+	case(8):
+	{ return SourceDirectivity::qscK8; }
+	default:
+	{ return SourceDirectivity::omni; }
+	}
+}
+
+////////////////////////////////////////
+
 Vec<> CreateVec(const float* data, int length)
 {
 	Vec<> vec = Vec<>(length);
@@ -139,6 +186,8 @@ Vec<> CreateVec(const float* data, int length)
 		vec(i) = static_cast<Real>(data[i]);
 	return vec;
 }
+
+////////////////////////////////////////
 
 Vec<int> CreateIntVec(const int* data, int length)
 {
@@ -148,6 +197,8 @@ Vec<int> CreateIntVec(const int* data, int length)
 	return vec;
 }
 
+////////////////////////////////////////
+
 Coefficients<> CreateCoefficients(const float* data, int length)
 {
 	Coefficients<> coeff = Coefficients<>(length);
@@ -156,16 +207,18 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 	return coeff;
 }
 
-	Coefficients<> CreateAbsorptions(const float* data)
-	{
-		return CreateCoefficients(data, NUM_FREQUENCY_BANDS);
-	}
+////////////////////////////////////////
 
-	//////////////////// API ////////////////////
+Coefficients<> CreateAbsorptions(const float* data)
+{
+	return CreateCoefficients(data, NUM_FREQUENCY_BANDS);
+}
 
-	extern "C"
-	{
-		/**
+//////////////////// DLL API ////////////////////
+
+extern "C"
+{
+	/**
 	* @brief Initializes the spatialiser with the given parameters.
 	*
 	* @param fs The sample rate for audio processing.
@@ -335,8 +388,6 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 			left[i] = static_cast<Real>(leftIR[i]);
 			right[i] = static_cast<Real>(rightIR[i]);
 		}
-		// std::transform(leftIR, leftIR + irLength, left.begin(), [](float f) { return static_cast<Real>(f); });
-		// std::transform(rightIR, rightIR + irLength, right.begin(), [](float f) { return static_cast<Real>(f); });
 
 		SetHeadphoneEQ(left, right);
 		END_TRY
@@ -593,36 +644,6 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 	}
 
 	/**
-	* @brief Convert Directivity id to enum
-	*/
-	SourceDirectivity SelectDirectivity(int directivity)
-	{
-		switch (directivity)
-		{
-		case(0):
-		{ return SourceDirectivity::omni; }
-		case(1):
-		{ return SourceDirectivity::subcardioid; }
-		case(2):
-		{ return SourceDirectivity::cardioid; }
-		case(3):
-		{ return SourceDirectivity::supercardioid; }
-		case(4):
-		{ return SourceDirectivity::hypercardioid; }
-		case(5):
-		{ return SourceDirectivity::bidirectional; }
-		case(6):
-		{ return SourceDirectivity::genelec8020c; }
-		case(7):
-		{ return SourceDirectivity::genelec8020cDTF; }
-		case(8):
-		{ return SourceDirectivity::qscK8; }
-		default:
-		{ return SourceDirectivity::omni; }
-		}
-	}
-
-	/**
 	* @brief Updates the directivity of the audio source with the given ID.
 	* 
 	* The mapping is as follows:
@@ -848,7 +869,7 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 	/**
 	* @brief Record an impulse response using the current listener position
 	*
-	* Assumes listener position does not change during recording
+	* @details Assumes listener position does not change during recording
 	*
 	* @param posX The x-coordinate of the source's position.
 	* @param posY The y-coordinate of the source's position.
@@ -866,21 +887,6 @@ Coefficients<> CreateCoefficients(const float* data, int length)
 		RecordImpulseResponse(Vec3(posX, posY, posZ), Vec4(oriW, oriX, oriY, oriZ), buffer);
 		for (Real value : buffer)
 			*sendBuffer++ = static_cast<float>(value);
-		END_TRY
-	}
-
-	/**
-	* @brief Sets the spatialiser to impulse response mode if mode is true
-	*
-	* @details This function should be called with true if the output of a stationary source is being recorded.
-	* 
-	* @param lerpFactor The default interpolation factor.
-	* @params mode True if disable all interpolation, false otherwise.
-	*/
-	EXPORT void API RACUpdateImpulseResponseMode(bool mode)
-	{
-		BEGIN_TRY
-		UpdateImpulseResponseMode(mode);
 		END_TRY
 	}
 }

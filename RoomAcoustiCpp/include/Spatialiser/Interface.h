@@ -294,13 +294,6 @@ namespace RAC
 		* @params outputBuffer Buffer to write to.
 		*/
 		void RecordImpulseResponse(const Vec3& position, const Vec4& orientation, Buffer<>& outputBuffer);
-
-		/**
-		* @brief Sets the spatialiser to impulse response mode if mode is true
-		*
-		* @params mode True if disable all interpolation, false otherwise.
-		*/
-		void UpdateImpulseResponseMode(const bool mode);
 	}
 }
 #endif

@@ -366,14 +366,5 @@ namespace RAC
 			if (context)
 				context->RecordImpulseResponse(position, orientation, outputBuffer);
 		}
-
-		////////////////////////////////////////
-
-		void UpdateImpulseResponseMode(const bool mode)
-		{
-			auto context = GetContext();
-			if (context)
-				context->UpdateImpulseResponseMode(mode);
-		}
 	}
 }

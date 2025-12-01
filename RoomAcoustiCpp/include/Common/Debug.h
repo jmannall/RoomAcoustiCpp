@@ -10,7 +10,7 @@
 #define Unity_Debug_h
 
 // C++ headers
-#include <stdio.h>
+#include <cstdio>
 #include <string>
 #include <sstream>
 #include <iostream>
