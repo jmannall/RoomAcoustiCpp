@@ -9,6 +9,7 @@
 
 // Common headers
 #include "Common/Coefficients.h"
+#include "Common/Debug.h"
 
 // Spatialiser headers
 #include "Spatialiser/Types.h"
@@ -16,9 +17,6 @@
 
 // DSP headers
 #include "DSP/Buffer.h"
-
-// Unity headers
-#include "Unity/Debug.h"
 
 //////////////////// DLL Linkage ////////////////////
 
@@ -48,7 +46,6 @@
 using namespace RAC::Spatialiser;
 using namespace RAC::Common;
 using namespace RAC::DSP;
-using namespace RAC::Unity;
 
 //////////////////// Variables ////////////////////
 

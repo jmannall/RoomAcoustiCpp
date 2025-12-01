@@ -77,9 +77,8 @@ extern "C"
 
 namespace RAC
 {
-    using namespace Common;
     using namespace Spatialiser;
-    namespace Unity
+    namespace Common
     {
         enum class Colour { Red, Green, Blue, Black, White, Yellow, Orange };
 

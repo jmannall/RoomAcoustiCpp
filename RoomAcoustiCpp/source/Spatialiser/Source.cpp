@@ -10,7 +10,8 @@
 
 //Common headers
 #include "Common/RACProfiler.h"
- 
+#include "Common/Debug.h"
+
 // Spatialiser headers
 #include "Spatialiser/Source.h"
 #include "Spatialiser/Directivity.h"
@@ -18,9 +19,6 @@
 
 // DSP headers
 #include "DSP/Interpolate.h"
-
-// Unity headers
-#include "Unity/Debug.h"
 
 using namespace Common;
 namespace RAC

@@ -9,14 +9,12 @@
 #include "Common/RACProfiler.h"
 #include "Common/FileReader.h"
 #include "Common/Access.h"
+#include "Common/Debug.h"
 
 // Spatialiser headers
 #include "Spatialiser/Globals.h"
 #include "Spatialiser/Context.h"
 #include "Spatialiser/Types.h"
-
-// Unity headers
-#include "Unity/Debug.h"
 
 // 3DTI headers
 #include "HRTF/HRTFFactory.h"
@@ -36,7 +34,6 @@ std::unique_ptr<RAC::DSP::AudioThreadPool> RAC::DSP::audioThreadPool;
 
 namespace RAC
 {
-	using namespace Unity;
 	using namespace DSP;
 	using namespace Common;
 	namespace Spatialiser

@@ -9,15 +9,15 @@
 #include <algorithm>
 #include <cmath>
 
-// Unity headers
-#include "Unity/Debug.h"
+// Common headers
+#include "Common/Debug.h"
 
 // Spatialiser headers
 #include "Spatialiser/Room.h"
 
 namespace RAC
 {
-	using namespace Unity;
+	using namespace Common;
 	namespace Spatialiser
 	{
 

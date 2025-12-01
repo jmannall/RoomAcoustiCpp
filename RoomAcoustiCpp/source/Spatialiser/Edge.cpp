@@ -8,9 +8,7 @@
 #include "Common/Vec3.h"
 #include "Common/Types.h"
 #include "Common/Definitions.h"
-
-// Unity headers
-#include "Unity/Debug.h" 
+#include "Common/Debug.h" 
 
 // Spatialiser headers
 #include "Spatialiser/Edge.h"
@@ -18,7 +16,6 @@
 
 namespace RAC
 {
-	using namespace Unity;
 	using namespace Common;
 	namespace Spatialiser
 	{

@@ -2,16 +2,13 @@
 
 // Common headers
 #include "Common/RACProfiler.h"
-
-// Unity headers
-#include "Unity/Debug.h"
+#include "Common/Debug.h"
 
 // helpers
 #include <cassert>
 
 namespace RAC
 {
-	using namespace Unity;
 	using namespace Common;
 	namespace Spatialiser
 	{

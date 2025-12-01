@@ -9,13 +9,11 @@
 
 //Common headers
 #include "Common/RACProfiler.h"
+#include "Common/Debug.h"
 
 // Spatialiser headers
 #include "Spatialiser/ImageSource.h"
 #include "Spatialiser/Globals.h"
-
-// Unity headers
-#include "Unity/Debug.h"
 
 // DSP headers
 #include "DSP/Interpolate.h"
@@ -25,7 +23,6 @@ namespace RAC
 {
 	using namespace Common;
 	using namespace DSP;
-	using namespace Unity;
 	namespace Spatialiser
 	{
 

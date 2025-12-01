@@ -5,8 +5,8 @@
 *
 */
 
-#if defined(_ANDROID)
 // Common headers
+#if defined(_ANDROID)
 #include "Common/Definitions.h"
 #endif
 
@@ -14,20 +14,18 @@
 #include "Spatialiser/Reverb.h"
 #include "Spatialiser/Globals.h"
 
-// Unity headers
-#include "Unity/Debug.h"
-
 // DSP headers
 #include "DSP/Interpolate.h"
 
 // Common headers
 #include "Common/SphericalGeometries.h"
 #include "Common/RACProfiler.h"
+#include "Common/Debug.h"
 
 using namespace Common;
 namespace RAC
 {
-	using namespace Unity;
+	using namespace Common;
 	using namespace DSP;
 	namespace Spatialiser
 	{

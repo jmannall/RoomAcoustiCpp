@@ -7,9 +7,7 @@
 
 // Common headers
 #include "Common/Definitions.h"
-
-// Unity headers
-#include "Unity/Debug.h"
+#include "Common/Debug.h"
 
 // Spatialiser headers
 #include "Spatialiser/Wall.h"
@@ -17,7 +15,6 @@
 namespace RAC
 {
 	using namespace Common;
-	using namespace Unity;
 	namespace Spatialiser
 	{
 

@@ -13,18 +13,15 @@
 
 // Common headers
 #include "Common/RACProfiler.h"
+#include "Common/Debug.h"
 
 // Spatialiser headers
 #include "Spatialiser/FDN_private.h"
 #include "Spatialiser/Globals.h"
 
-// Unity headers
-#include "Unity/Debug.h"
-
 namespace RAC
 {
 	using namespace Common;
-	using namespace Unity;
 	namespace Spatialiser
 	{
 		//////////////////// FDN class ////////////////////

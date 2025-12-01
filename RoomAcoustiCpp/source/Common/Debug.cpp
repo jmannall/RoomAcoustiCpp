@@ -12,11 +12,11 @@
 #include <sstream>
 
 // Unity headers
-#include "Unity/Debug.h"
+#include "Common/Debug.h"
 
 namespace RAC
 {
-    namespace Unity
+    namespace Common
     {
         //////////////////// Debug class ////////////////////
 
