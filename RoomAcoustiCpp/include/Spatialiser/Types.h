@@ -557,7 +557,9 @@ namespace RAC
 			* @param numFrequencyBands The number of frequency bands
 			*/
 			RoomData(int numFrequencyBands) : RoomData((Real)34.0, Coefficients<>(numFrequencyBands), ReverbFormula::Sabine, Vec<>())
-			{}
+			{
+				Validate(numFrequencyBands);
+			}
 
 			/**
 			* @brief Constructor for the RoomData struct
@@ -570,7 +572,7 @@ namespace RAC
 			RoomData(Real volume, const Coefficients<>& t60, ReverbFormula formula, const Vec<>& dimensions)
 				: volume(volume), formula(formula), dimensions(dimensions), customT60(t60)
 			{
-				Validate(numFrequencyBands);
+				Validate(t60.Length());
 			}
 
 			ReverbFormula formula{ ReverbFormula::Sabine };	// Reverberation formula
@@ -581,6 +583,12 @@ namespace RAC
 		private:
 			friend class Room;
 
+			/**
+			* @brief Validates and corrects the room data
+			* @details Dimensions are set to default if not provided, volume is clamped to a minimum value, and custom T60 must be positive and match the number of frequency bands
+			* 
+			* @param numFrequencyBands The number of frequency bands
+			*/
 			inline void Validate(int numFrequencyBands)
 			{
 				if (dimensions.Length() < 1) // No dimensions provided
