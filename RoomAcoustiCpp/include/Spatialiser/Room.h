@@ -105,6 +105,15 @@ namespace RAC
 			void RemoveMaterial(size_t id);
 
 			/**
+			* @return True if the material with the given ID exists, false otherwise
+			*/
+			bool MaterialExists(size_t id)
+			{
+				std::lock_guard<std::mutex> lock(mMaterialMutex);
+				return mMaterials.find(id) != mMaterials.end();
+			}
+
+			/**
 			* @brief Add a wall to the room
 			*/
 			size_t AddWall(Wall& wall);

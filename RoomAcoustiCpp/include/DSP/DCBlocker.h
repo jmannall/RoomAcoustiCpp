@@ -33,7 +33,7 @@ namespace RAC
 			*
 			* @param sampleRate The sample rate for calculating the filter pole
 			*/
-			DCBlocker(const int sampleRate) : R(std::exp(-PI_2 * 20 / sampleRate)) {}
+			DCBlocker(const int sampleRate) : R(std::exp(-PI_2 * REAL_CONST(20.0) / sampleRate)) {}
 
 			/**
 			* @brief Default deconstructor
@@ -47,13 +47,12 @@ namespace RAC
 			*/
 			inline void ProcessAudio(Buffer<>& buffer)
 			{
-				const auto numFrames = buffer.Length();
-				for (auto i = 0; i < numFrames; i++)
+				for (auto& sample : buffer)
 				{
-					x0 = buffer[i];
-					buffer[i] = x0 - x1 + R * y0;
+					x0 = sample;
+					sample = x0 - x1 + R * y0;
 					x1 = x0;
-					y0 = buffer[i];
+					y0 = sample;
 				}
 			}
 

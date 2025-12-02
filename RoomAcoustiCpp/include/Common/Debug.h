@@ -16,15 +16,17 @@
 #include <iostream>
 #include <vector>
 #include <mutex>
-
-// Common headers
-#include "Common/Coefficients.h"
-
-// Spatialiser headers
-#include "Spatialiser/Types.h"
+#include <source_location>
 
 // 3DTI headers
 #include "Common/Vector3.h"
+
+#ifdef _WIN32
+#define NOMINMAX
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>   // IsDebuggerPresent
+#include <intrin.h>    // __debugbreak
+#endif
 
 /**
 * @brief Define DLL linkage
@@ -77,10 +79,12 @@ extern "C"
 
 namespace RAC
 {
-    using namespace Spatialiser;
     namespace Common
     {
-        enum class Colour { Red, Green, Blue, Black, White, Yellow, Orange };
+		// Predeclare CustomVec3 to avoid circular dependency from including Common/Vec3.h
+        class CustomVec3;
+
+        enum class DebugType { Error, Init, Update, Remove, Parameter, Warning, Assert, External };
 
         /**
 		* @brief Provides a simple interface for logging debug messages to a callback function
@@ -88,37 +92,145 @@ namespace RAC
         class Debug
         {
         public:
-#ifdef DEBUG_LOG
-            static void Log(const char* message, Colour colour = Colour::Black);
-            static void Log(const std::string message, Colour colour = Colour::Black);
+
+#ifdef DEBUG_ASSERT
+            /**
+			* @brief Asserts a condition and logs an error message if the assertion fails
+			* @details If the assertion fails, the debugger hits a break point and a runtime_error exception is thrown.
+            * 
+			* @param result The result of the assertion (true if the assertion passes, false otherwise)
+			* @param message The message to log if the assertion fails
+			* @param location The source location of the assert call (filename and line number appended to message)
+            */
+            template<typename T>
+            static inline void Assert(bool result, const T message, const std::source_location& location = std::source_location::current())
+            {
+                if (result)
+                    return;
+
+                WriteToLog(message, DebugType::Assert, location);
+#ifdef _WIN32
+                if (IsDebuggerPresent())
+                    __debugbreak();
+#endif
+                // throw std::runtime_error(message);
+            }
 #else
-            static inline void Log(const char* message, Colour colour = Colour::Black) {}
-            static inline void Log(const std::string message, Colour colour = Colour::Black) {}
+            /**
+            * @brief Empty function for when assert callbacks are disabled
+            */
+            template<typename T>
+            static inline void Assert(bool result, const T message, const std::source_location& location = std::source_location::current()) {}
 #endif
 
-            static inline void SendPath(const std::string& key, const std::vector<Vec3>& intersections, const ::Common::CVector3& position)
+#ifdef DEBUG_LOG
+            /**
+			* @brief Logs a message to the debug log callback
+            * 
+			* @param message The message to log
+			* @param type The type of debug message
+			* @param location The source location of the log call (filename and line number appended to message)
+            */
+            template<typename T>
+            static inline void Log(const T message, DebugType type, const std::source_location& location = std::source_location::current())
             {
-                Vec3 vec3Position(static_cast<Real>(position.x), static_cast<Real>(position.y), static_cast<Real>(position.z));
-				SendPath(key, intersections, vec3Position);
+                Debug::WriteToLog(message, type, location);
             }
+#else
+            /**
+            * @brief Empty function for when log callbacks are disabled
+            */
+            template<typename T>
+            static inline void Log(const T message, DebugType type, const std::source_location& location = std::source_location::current()) {}
+#endif
 
 #ifdef DEBUG_PATHS
-            static void SendPath(const std::string& key, const std::vector<Vec3>& intersections, const Vec3& position);
+            /**
+			* @brief Sends a path to the path callback
+            * 
+			* @param key The unique key for the path
+			* @param intersections The intersection points of the path
+			* @param position The starting position of the path (as a CVector3)
+            */
+            static void SendPath(const std::string& key, const std::vector<CustomVec3>& intersections, const ::Common::CVector3& position);
+
+            /**
+            * @brief Sends a path to the path callback
+            *
+            * @param key The unique key for the path
+            * @param intersections The intersection points of the path
+            * @param position The starting position of the path (as a Vec3)
+            */
+            static void SendPath(const std::string& key, const std::vector<CustomVec3>& intersections, const CustomVec3& position);
+
+            /**
+			* @brief Sends a removes a path message to the path callback
+            * 
+			* @param key The unique key for the path to remove
+            */
             static void RemovePath(const std::string& key);
 #else
-            static inline void SendPath(const std::string& key, const std::vector<Vec3>& intersections, const Vec3& position) {}
+            /**
+            * @brief Empty function for when path callbacks are disabled
+            */
+            static inline void SendPath(const std::string& key, const std::vector<CustomVec3>& intersections, const ::Common::CVector3& position) {}
+
+            /**
+            * @brief Empty function for when path callbacks are disabled
+            */
+            static inline void SendPath(const std::string& key, const std::vector<CustomVec3>& intersections, const CustomVec3& position) {}
+            
+            /**
+            * @brief Empty function for when path callbacks are disabled
+            */
             static inline void RemovePath(const std::string& key) {}
 #endif
 
-#ifdef DEBUG_RESIDUES
+#ifdef RESIDUE_CALLBACKS
+            /**
+			* @brief Sends a residue value to the residue callback
+            * 
+			* @param residue The residue value to send
+			* @param isSource True if the residue is for a source, false if for a listener
+			* @param sourceIndex The index of the source or listener
+			* @param slopeIndex The index of the slope (corresponding to the FDN)
+            */
             static void SendResidue(float residue, bool isSource, int sourceIndex, int slopeIndex);
 #else
+            /**
+			* @brief Empty function for when residue callbacks are disabled
+            */
             static inline void SendResidue(float residue, bool isSource, int sourceIndex, int slopeIndex) {}
 #endif
 
         private:
+
+            /**
+            * @brief Internal function to write messages to the debug log
+            *
+			* @param message The message to log (as a C-style string)
+            * @param type The type of debug message
+            * @param location The source location of the log call (filename and line number appended to message)
+            */
+            static void WriteToLog(const char* message, DebugType type, const std::source_location& location = std::source_location::current())
+            {
+				WriteToLog(std::string(message), type, location);
+            }
+
+            /**
+			* @brief Internal function to write messages to the debug log
+            * 
+			* @param message The message to log (as a C++ string)
+			* @param type The type of debug message
+			* @param location The source location of the log call (filename and line number appended to message)
+            */
+            static void WriteToLog(const std::string& message, DebugType type, const std::source_location& location = std::source_location::current());
         };
 
+        /**
+		* @brief Stream buffer that sends output to the debug log
+		* @details Used to redirect 3DTI messages to the debug log
+        */
         class DebugLogStreamBuffer : public std::streambuf
         {
         public:
@@ -134,7 +246,7 @@ namespace RAC
                     // When a newline appears, send message
                     if (ch == '\n')
                     {
-                        Debug::Log(buffer.c_str());
+                        Debug::Log(buffer.c_str(), DebugType::External);
                         buffer.clear();
                     }
                 }
@@ -145,7 +257,7 @@ namespace RAC
             {
                 if (!buffer.empty())
                 {
-                    Debug::Log(buffer.c_str());
+                    Debug::Log(buffer.c_str(), DebugType::External);
                     buffer.clear();
                 }
                 return 0;
@@ -177,14 +289,26 @@ namespace RAC
 
         /**
         * @brief Converts a Vertices to a string
+		* @details Defined in cpp to avoid circular dependency on Vec3 and Vertices headers
         */
         template <>
-        inline std::string ToString<Vertices>(const Vertices& x)
+        std::string ToString<std::array<CustomVec3, 3>>(const std::array<CustomVec3, 3>& x);
+
+        template <>
+        inline std::string ToString<DebugType>(const DebugType& type)
         {
-            std::stringstream ss;
-            for (int i = 0; i < x.size(); i++)
-                ss << x[i];
-            return ss.str();
+            switch (type)
+            {
+            case DebugType::Error: return "Error";
+            case DebugType::Init: return "Init";
+            case DebugType::Update: return "Update";
+            case DebugType::Remove: return "Remove";
+            case DebugType::Parameter: return "Parameter";
+            case DebugType::Warning: return "Warning";
+            case DebugType::Assert: return "Assert";
+            case DebugType::External: return "External";
+            default: return "Unknown";
+            }
         }
     }
 }

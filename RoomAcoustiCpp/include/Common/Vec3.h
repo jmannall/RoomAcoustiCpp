@@ -14,7 +14,6 @@
 #include <algorithm>
 
 // Common headers
-
 #include "Common/Types.h"
 #include "Common/Definitions.h"
 

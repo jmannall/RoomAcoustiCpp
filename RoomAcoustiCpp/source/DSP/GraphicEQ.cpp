@@ -7,9 +7,8 @@
 *
 */
 
-#include "Common/RACProfiler.h"
-
 // Common headers
+#include "Common/RACProfiler.h"
 #include "Common/Complex.h"
 
 // DSP headers
@@ -30,7 +29,7 @@ namespace RAC
 		GraphicEQ<T>::GraphicEQ(const Coefficients<>& gain, const Coefficients<>& fc, const Real Q, const int sampleRate) :
 			numFilters(ToInt(gain.Length() + 2)), filterResponseMatrix(numFilters, numFilters), previousInput(gain)
 		{
-			assert(gain.Length() == fc.Length());
+			Debug::Assert(gain.Length() == fc.Length(), "Gain and frequency parameters must have the same length");
 
 			Coefficients<> f = CreateFrequencyVector(fc);
 			InitMatrix(f, Q, sampleRate);
@@ -66,7 +65,9 @@ namespace RAC
 		template<typename T>
 		bool GraphicEQ<T>::SetTargetGains(const Coefficients<>& gains)
 		{
-			assert(gains.Length() == peakingFilters.size());
+			Debug::Assert(gains.Length() == ToInt(peakingFilters.size()), "Incorrect number of gains provided: " + ToString(gains.Length()));
+			Debug::Assert(gains.IsGreaterEqThan(REAL_CONST(0.0)), "Invalid target gains: " + ToString(gains));
+			Debug::Assert(gains.IsLessEqThan(REAL_CONST(1.0)), "Invalid target gains: " + ToString(gains));
 
 			if (gains.IsApprox(previousInput)) // No change in gains
 			{
@@ -74,19 +75,17 @@ namespace RAC
 					return true;
 				return false;
 			}
-			//if (gains == previousInput) // No change in gains
-			//{
-			//	if (gainsEqual.load(std::memory_order_acquire) && gains <= 0.0) // Gains currently zero
-			//		return true;
-			//	return false;
-			//}
+
 			previousInput = gains;
 
 			const auto targetGains = CalculateGains(gains);
 
-			// TODO: Add a debug warning if this is the case
+			// TODO: This is now covered by the assert above, remove?
 			if (targetGains.second > REAL_CONST(100.0))
+			{
+				Debug::Log("GraphicEQ target gain too high: " + ToString(targetGains.second), DebugType::Warning);
 				return false; // Note: initialised never gets set to true, silence.
+			}
 
 			targetGain.store(targetGains.second, std::memory_order_release);
 			gainsEqual.store(false, std::memory_order_release);
@@ -102,16 +101,13 @@ namespace RAC
 		template<typename T>
 		std::pair<Rowvec<>, Real> GraphicEQ<T>::CalculateGains(const Coefficients<>& gains) const
 		{
-			assert(gains.Length() + 2 == numFilters);
+			Debug::Assert(gains.Length() + 2 == numFilters, "Incorrect number of gains provided: " + ToString(gains.Length()));
 
 			// TODO: Should this be coefficients?
-			Rowvec<> inputGains = Rowvec<>::Constant(numFilters, 1.0);
+			Rowvec<> inputGains = Rowvec<>::Constant(numFilters, REAL_CONST(1.0));
 
 			if (gains.IsLessEqThan(0.0))
-				return std::make_pair(inputGains, (Real)0.0);
-
-			/*if (gains <= 0.0)
-				return std::make_pair(inputGains, (Real)0.0);*/
+				return std::make_pair(inputGains, REAL_CONST(0.0));
 
 			if (gains.Length() == 1)
 			{
@@ -158,7 +154,7 @@ namespace RAC
 		template<typename T>
 		void GraphicEQ<T>::InitMatrix(const Coefficients<>& fc, const Real Q, const int fs)
 		{
-			assert(fc.Length() == numFilters);
+			Debug::Assert(fc.Length() == numFilters, "Incorrect number of frequencies provided: " + ToString(fc.Length()));
 
 			Real pdb = 6.0;
 			Real p = pow(REAL_CONST(10.0), pdb / REAL_CONST(20.0));
@@ -207,7 +203,7 @@ namespace RAC
 		template<typename T>
 		T GraphicEQ<T>::GetOutput(const T input, const Real lerpFactor)
 		{
-			assert(IsValid());
+			Debug::Assert(IsValid(), "Invalid filter");
 			if (!gainsEqual.load(std::memory_order_acquire))
 				InterpolateGain(lerpFactor);
 
@@ -226,8 +222,8 @@ namespace RAC
 		template<typename T>
 		void GraphicEQ<T>::GetOutputBatch(const Buffer<T>& inBuffer, Buffer<T>& outBuffer, const Real lerpFactor)
 		{
-			assert(IsValid());
-			assert(outBuffer.Length() >= inBuffer.Length());
+			Debug::Assert(IsValid(), "Invalid filter");
+			Debug::Assert(outBuffer.Length() >= inBuffer.Length(), "Input and output buffer lengths do not match");
 
 			const int bufferLength = ToInt(inBuffer.Length());
 			const T* input = inBuffer.data();
@@ -249,7 +245,7 @@ namespace RAC
 				for (const auto& filter : peakingFilters)
 					filters[currentFilter++] = &*filter;
 				filters[currentFilter++] = &*highShelf;
-				assert(currentFilter == numFilters);
+				Debug::Assert(currentFilter == numFilters, "Processed the wrong number of filters");
 
 				// process all filters on each sample
 				for (int index = 0; index < bufferLength; ++index)
@@ -319,7 +315,7 @@ namespace RAC
 			{
 				// make sure we are aligned (in practice this is true; we could always check it and fall
 				// back on a slower case)
-				assert( IsAligned32(output) );
+				Debug::Assert(IsAligned32(output), "Output buffer not aligned");
 
 				__m256d scaleFactor = _mm256_broadcast_sd(&currentGain);
 				double* current = output, *end = output + length;
@@ -354,7 +350,7 @@ namespace RAC
 			{
 				// make sure we are aligned (in practice this is true; we could always check it and fall
 				// back on a slower case)
-				assert(IsAligned32(output));
+				Debug::Assert(IsAligned32(output), "Output buffer not aligned");
 
 				__m256 scaleFactor = _mm256_broadcast_ss(&currentGain);
 				float* current = output, * end = output + length;
@@ -368,7 +364,7 @@ namespace RAC
 			}
 			else 
 			{
-				assert(IsAligned16(output));
+				Debug::Assert(IsAligned16(output), "Output buffer not aligned");
 
 				__m128 scaleFactor = _mm_broadcast_ss(&currentGain);
 				float* current = output, * end = output + length;
@@ -391,8 +387,7 @@ namespace RAC
 		template<typename T>
 		void GraphicEQ<T>::ProcessAudio(const Buffer<T>& inBuffer, Buffer<T>& outBuffer, const Real lerpFactor)
 		{
-			if (!IsValid())
-				return;
+			Debug::Assert(IsValid(), "Invalid filter");
 
 			if (currentGain == 0.0 && gainsEqual.load(std::memory_order_acquire))
 			{

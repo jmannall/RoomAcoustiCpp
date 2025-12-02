@@ -10,7 +10,6 @@
 
 // C++ headers
 #include <vector>
-#include <assert.h>
 
 // Common headers
 #include "Common/Types.h"
@@ -88,8 +87,6 @@ namespace RAC
 			*/
 			void Resize(const size_t numSamples)
 			{
-				assert(numSamples >= 0);
-
 				size_t size = Length();
 				if (size == numSamples)
 					return;
@@ -122,7 +119,12 @@ namespace RAC
 			* @param i The index of the value to return
 			* @return A reference to the value at the specified index
 			*/
-			inline T& operator[](const int i) { return mBuffer[i]; };
+			inline T& operator[](const int i)
+			{
+				Debug::Assert(i >= 0, "Buffer index out of bounds: " + ToString(i));
+				Debug::Assert(i < ToInt(mBuffer.size()), "Buffer index out of bounds: " + ToString(i));
+				return mBuffer[i];
+			};
 
 			/**
 			* @brief Access the buffer at the specified index
@@ -130,7 +132,12 @@ namespace RAC
 			* @param i The index of the value to return
 			* @return The value at the specified index
 			*/
-			inline T operator[](const int i) const { assert(i < mBuffer.size()); return mBuffer[i]; };
+			inline T operator[](const int i) const
+			{
+				Debug::Assert(i >= 0, "Buffer index out of bounds: " + ToString(i));
+				Debug::Assert(i < ToInt(mBuffer.size()), "Buffer index out of bounds: " + ToString(i));
+				return mBuffer[i];
+			};
 
 			/**
 			* @brief Multiplies each sample in the buffer by a scalar value.

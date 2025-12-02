@@ -13,6 +13,7 @@
 
 // Common headers
 #include "Common/Coefficients.h"
+#include "Common/Vec3.h"
 
 namespace RAC
 {

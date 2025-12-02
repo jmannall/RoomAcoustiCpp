@@ -29,10 +29,10 @@ namespace RAC
 		{
 			if (context) // Delete any existing context
 			{
-				Debug::Log("Delete Existing Context", Colour::Red);
+				Debug::Log("Delete Existing Context", DebugType::Remove);
 				Exit();
 			}
-			Debug::Log("Create New Context", Colour::Green);
+			Debug::Log("Create New Context", DebugType::Init);
 			context = std::make_shared<Context>(data, optionalArguments);
 			return context->IsRunning();
 		}

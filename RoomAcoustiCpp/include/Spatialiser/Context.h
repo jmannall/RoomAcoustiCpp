@@ -368,8 +368,9 @@ namespace RAC
 			inline void EnsureAudioThreadPoolInitialized()
 			{
 				if (!audioThreadPool)
-					CreateAudioThreadPool();;
+					CreateAudioThreadPool();
 			}
+
 			void CreateAudioThreadPool();
 
 			size_t numDesiredWorkerThreads;			// The number of desired threads

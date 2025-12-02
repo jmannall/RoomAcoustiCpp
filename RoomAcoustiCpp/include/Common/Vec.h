@@ -8,13 +8,11 @@
 #ifndef Common_Vec_h
 #define Common_Vec_h
 
-// C++ headers
-#include <assert.h>
-
 // Common headers
 #include "Common/Types.h"
 #include "Common/Complex.h"
 #include "Common/Definitions.h"
+#include "Common/Debug.h"
 #if MATRIX_LIBRARY == CUSTOM_FLAG
 #include "Common/Vec_private.h"
 #endif
@@ -38,9 +36,8 @@ namespace RAC
 
 		inline Real ThreeWayDot(const Vec<>& u, const Vec<>& v, const Vec<>& w)
 		{
-			assert(u.Length() == v.Length());
-			assert(u.Length() == w.Length());
-
+			Debug::Assert(u.Length() == v.Length(), "Lengths of vectors do not match");
+			Debug::Assert(u.Length() == w.Length(), "Lengths of vectors do not match");
 			return u.dot(v.cwiseProduct(w));
 		}
 

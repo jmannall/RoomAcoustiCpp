@@ -49,7 +49,7 @@ namespace RAC
 
 		ReverbSource::~ReverbSource()
 		{
-			Debug::Log("Remove reverb source", Colour::Red);
+			Debug::Log("Remove reverb source", DebugType::Remove);
 
 			{
 				unique_lock<shared_mutex> lock(tuneInMutex);
@@ -61,7 +61,7 @@ namespace RAC
 
 		void ReverbSource::InitSource(const std::shared_ptr<DSPConfig>& dspConfig)
 		{
-			Debug::Log("Init reverb source", Colour::Green);
+			Debug::Log("Init reverb source", DebugType::Init);
 
 			{
 				unique_lock<shared_mutex> lock(tuneInMutex);
@@ -323,8 +323,9 @@ namespace RAC
 
 		void SingleFDN::SetTargetT60(const Coefficients<>& T60)
 		{
-			assert(IsValid());
-			Debug::Log("Init FDN: " + ToString(T60), Colour::Green);
+			Debug::Log("Init FDN: " + ToString(T60), DebugType::Init);
+			Debug::Assert(IsValid(), "Invalid Single FDN reverberator");
+			Debug::Assert(T60.IsGreaterThan(REAL_CONST(0.0)), "Invalid target T60: " + ToString(T60));
 
 #ifdef __ANDROID__
 			std::atomic_load(&mFDN)->SetTargetT60(T60);
@@ -365,7 +366,7 @@ namespace RAC
 		void SingleFDN::SetTargetOutputFilters(const std::vector<Coefficients<>>& gains)
 		{
 			PROFILE_UpdateAudioData
-			assert(IsValid());
+			Debug::Assert(IsValid(), "Invalid Single FDN reverberator");
 
 #ifdef __ANDROID__
 			bool isZero = std::atomic_load(&mFDN)->SetTargetReflectionFilters(gains);
@@ -430,7 +431,7 @@ namespace RAC
 
 		void RAVES::SetTargetListenerResidues(size_t id, const Coefficients<>& residues)
 		{
-			assert(IsValid());
+			Debug::Assert(IsValid(), "Invalid MoD-ART reverberator");
 
 #ifdef __ANDROID__
 			auto fdns = std::atomic_load(&mFDNs);
@@ -449,7 +450,7 @@ namespace RAC
 			for (Buffer<>& buffer : outputBuffers)
 				buffer.Reset();
 
-			assert(IsValid());
+			Debug::Assert(IsValid(), "Invalid MoD-ART reverberator");
 
 #ifdef __ANDROID__
 			auto fdns = std::atomic_load(&mFDNs);

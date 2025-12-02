@@ -187,13 +187,15 @@ namespace RAC
 
 			inline const Vec<>& GetRightEigenvector(const int id)
 			{
-				assert(id < rightEigenvectors.size());
+				Debug::Assert(id >= 0, "Invalid eigenvector ID: " + ToString(id));
+				Debug::Assert(id < ToInt(rightEigenvectors.size()), "Invalid eigenvector ID: " + ToString(id));
 				return rightEigenvectors[id];
 			}
 
 			inline const Vec<>& GetLeftEigenvector(const int id)
 			{
-				assert(id < leftEigenvectors.size());
+				Debug::Assert(id >= 0, "Invalid eigenvector ID: " + ToString(id));
+				Debug::Assert(id < ToInt(leftEigenvectors.size()), "Invalid eigenvector ID: " + ToString(id));
 				return leftEigenvectors[id];
 			}
 
@@ -296,7 +298,7 @@ namespace RAC
 
 			inline void ProcessReverberator(const Matrix<>& data, std::vector<Buffer<>>& outputBuffers, const AudioData& audioData) override
 			{
-				assert(IsValid());
+				Debug::Assert(IsValid(), "Invalid reverberator");
 #ifdef __ANDROID__
 				std::atomic_load(&mFDN)->ProcessAudio(data, outputBuffers, audioData);
 #else
@@ -346,8 +348,9 @@ namespace RAC
 			*/
 			inline void SetPrecedingDelay(const Real delay, int fs) override
 			{
-				int samples = static_cast<int>(std::max(0, static_cast<int>(delay * fs) - delayOffset));
-				precedingDelayLength = samples > 0 ? delay : static_cast<Real>(delayOffset) / fs;
+				int samples = static_cast<int>(std::max(1, static_cast<int>(delay * fs) - delayOffset));
+				precedingDelayLength = samples > 1 ? delay : static_cast<Real>(delayOffset + 1) / fs;
+
 #ifdef __ANDROID__
 				auto fdns = std::atomic_load(&mFDNs);
 #else

@@ -457,7 +457,7 @@ namespace RAC
 							});
 					}
 					else
-						assert(false && "Invalid UDFAModel specified.");
+						Debug::Assert(false, "Invalid UDFAModel specified");
 				}
 
 				/**

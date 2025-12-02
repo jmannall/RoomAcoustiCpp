@@ -25,6 +25,7 @@
 #include "Common/Types.h"
 #include "Common/Coefficients.h"
 #include "Common/ReleasePool.h"
+#include "Common/Vec.h"
 
 namespace RAC
 {

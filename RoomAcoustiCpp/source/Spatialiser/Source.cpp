@@ -603,7 +603,7 @@ namespace RAC
 
 				bool remove = imageSources.at(id).Update(*data, fdnChannel);
 
-				assert(!(data->IsFeedingFDN() && imageSources.at(id).GetFDNChannel() == -1));
+				Debug::Assert(!(data->IsFeedingFDN() && imageSources.at(id).GetFDNChannel() == -1), "Invalid FDN channel");
 
 				if (fdnChannel >= 0) // Add vSource old fdnChannel to freeFDNChannels (Also prevents leaking FDN channels if !data->visible and the channel is not assigned to vSource)
 					freeFDNChannels.push_back(fdnChannel);

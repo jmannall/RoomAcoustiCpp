@@ -94,39 +94,35 @@ namespace RAC
 		template<typename T>
 		Vec<int> FDN<T>::CalculateTimeDelay(const Vec<>& dimensions, const int fdnSize, const int fs)
 		{
-			assert(dimensions.Length() >  0);
+			Debug::Assert(dimensions.Length() > 0, "No dimensions provided");
+			Debug::Assert(dimensions.Length() >= fdnSize, "Number of dimensions provided exceeds the fdnSize");
 
 			Vec<> t(fdnSize);
 			Vec<int> delays = Vec<int>::Constant(fdnSize, 1);
-			if (dimensions.Length() > 0)
+
+			// gives [-1:1], divide by 10 to get [-0.1:0.1]
+			t.RandomUniformDistribution();
+			t *= dimensions.Mean() / (Real)10.0;
+
+			int k = 0;
+			while (k < fdnSize)
 			{
-
-				assert(dimensions.Length() <= fdnSize);
-
-				// gives [-1:1], divide by 10 to get [-0.1:0.1]
-				t.RandomUniformDistribution();
-				t *= dimensions.Mean() / (Real)10.0;
-
-				int k = 0;
-				while (k < fdnSize)
+				for (int i = 0; i < dimensions.Length(); ++i)
 				{
-					for (int i = 0; i < dimensions.Length(); ++i)
-					{
-						if (k >= fdnSize)
-							break;
-						assert(dimensions(i) > 0.0);
-						t(k) += dimensions(i);
-						++k;
-					}
+					if (k >= fdnSize)
+						break;
+					Debug::Assert(dimensions(i) > 0.0, "Invalid dimension: " + ToString(dimensions(i)));
+					t(k) += dimensions(i);
+					++k;
 				}
-				t *= INV_SPEED_OF_SOUND;
-				t.Max((Real)1.0 / static_cast<Real>(fs));
-
-				for (int i = 0; i < fdnSize; i++)
-					delays(i) = static_cast<int>(round(t(i) * static_cast<Real>(fs)));
-				if (!IsSetMutuallyPrime(delays))
-					MakeSetMutuallyPrime(delays);
 			}
+			t *= INV_SPEED_OF_SOUND;
+			t.Max((Real)1.0 / static_cast<Real>(fs));
+
+			for (int i = 0; i < fdnSize; i++)
+				delays(i) = static_cast<int>(round(t(i) * static_cast<Real>(fs)));
+			if (!IsSetMutuallyPrime(delays))
+				MakeSetMutuallyPrime(delays);
 			return delays;
 		}
 

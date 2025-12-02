@@ -15,6 +15,7 @@
 // Common headers
 #include "Common/Types.h"
 #include "Common/Complex.h"
+#include "Common/Debug.h"
 
 #ifdef _MSC_VER
 #	define RAC_IGNORE_VECTOR_DEPENDENCIES			__pragma(loop(ivdep))
@@ -492,7 +493,7 @@ namespace RAC
 		 */
 		inline int ToInt(size_t value)
 		{
-			assert(value <= std::numeric_limits<int>::max());
+			Debug::Assert(value <= std::numeric_limits<int>::max(), "size_t out of range of int");
 			return static_cast<int>(value);
 		}
 
@@ -504,7 +505,7 @@ namespace RAC
 		 */
 		inline int ToInt(ptrdiff_t value)
 		{
-			assert(value >= std::numeric_limits<int>::min() && value <= std::numeric_limits<int>::max());
+			Debug::Assert(value >= std::numeric_limits<int>::min() && value <= std::numeric_limits<int>::max(), "ptrdiff_t out of range of int");
 			return static_cast<int>(value);
 		}
 

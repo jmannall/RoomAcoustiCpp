@@ -30,6 +30,7 @@ namespace RAC
 			*/
 			inline DelayLine(int length) : buffer(length), length(length), initialised(length > 0)
 			{
+				Debug::Assert(length > 0, "Delay line length must be greater than zero");
 #if MATRIX_LIBRARY == EIGEN_FLAG
 				buffer.Reset();
 #endif
@@ -43,7 +44,8 @@ namespace RAC
 			*/
 			inline T GetOutput(T input)
 			{
-				assert(initialised);
+				Debug::Assert(initialised, "Delay line not initialised");
+
 				T out = buffer[idx];
 				buffer[idx] = input;
 				if (++idx >= length) [[unlikely]]
@@ -59,7 +61,8 @@ namespace RAC
 			*/
 			inline void GetOutput(const T& input, T& output)
 			{
-				assert(initialised);
+				Debug::Assert(initialised, "Delay line not initialised");
+
 				output = buffer[idx];
 				buffer[idx] = input;
 				if (++idx >= length) [[unlikely]]
@@ -98,9 +101,9 @@ namespace RAC
 		template<>
 		inline void DelayLine<std::complex<std::double_t>>::GetOutput(const std::complex<std::double_t>& input, std::complex<std::double_t>& output)
 		{
-			assert(initialised);
-			assert(IsAligned16(&input));
-			assert(IsAligned16(&output));
+			Debug::Assert(initialised, "Delay line not initialised");
+			Debug::Assert(IsAligned16(&input), "Input is not aligned");
+			Debug::Assert(IsAligned16(&output), "Output is not aligned");
 
 			double* entryPointer = reinterpret_cast<double*>(buffer.data() + idx);
 			double* outputPointer = reinterpret_cast<double*>(&output);
@@ -126,7 +129,7 @@ namespace RAC
 		template<>
 		inline void DelayLine<std::complex<float>>::GetOutput(const std::complex<float>& input, std::complex<float> & output)
 		{
-			assert(initialised);
+			Debug::Assert(initialised, "Delay line not initialised");
 
 			__m64 *entryPointer = reinterpret_cast<__m64*>(buffer.data() + idx);
 			__m64 *outputPointer = reinterpret_cast<__m64*>(&output);

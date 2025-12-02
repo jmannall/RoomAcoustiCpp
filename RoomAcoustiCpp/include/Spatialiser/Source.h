@@ -163,13 +163,12 @@ namespace RAC
 			*/
 			inline void SetInputBuffer(const Buffer<>& data)
 			{
-				assert(data.Length() == inputBuffer.Length());
 				const int inputBufferLength = ToInt(inputBuffer.Length());
+				Debug::Assert(data.Length() == inputBufferLength, "Buffer lengths do not match");
 
 				RAC_IGNORE_VECTOR_DEPENDENCIES
 				for (int i = 0; i < inputBufferLength; i++)
 					inputBuffer[i] = data[i];
-				// std::transform(data.begin(), data.end(), inputBuffer.begin(), [](Real val) { return val; });
 			}
 			
 			/**
@@ -257,7 +256,7 @@ namespace RAC
 					return;
 
 				const int ravesResiduesSize = ToInt(ravesResidues.size());
-				assert(residues.Length() == ravesResiduesSize);
+				Debug::Assert(residues.Length() == ravesResiduesSize, "Residue lengths do not match");
 
 				for (int i = 0; i < ravesResiduesSize; i++)
 					ravesResidues[i].SetTargetEnergy(residues[i]);
