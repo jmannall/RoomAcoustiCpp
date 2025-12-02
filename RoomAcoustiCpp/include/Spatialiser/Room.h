@@ -19,6 +19,7 @@
 
 // Spatialiser headers
 #include "Spatialiser/Types.h"
+#include "Spatialiser/Configs.h"
 #include "Spatialiser/Wall.h"
 #include "Spatialiser/Edge.h"
 #include "Spatialiser/TracingTypes.h"

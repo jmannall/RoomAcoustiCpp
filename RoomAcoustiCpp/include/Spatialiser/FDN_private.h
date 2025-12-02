@@ -15,7 +15,8 @@
 
 // Spatialiser headers
 #include "Spatialiser/Types.h"
-#include"Spatialiser/RAVESResidue.h"
+#include "Spatialiser/Configs.h"
+#include "Spatialiser/RAVESResidue.h"
 
 // Common headers
 #include "Common/Types.h"

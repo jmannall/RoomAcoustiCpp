@@ -26,6 +26,7 @@
 #include "Spatialiser/Wall.h"
 #include "Spatialiser/Edge.h"
 #include "Spatialiser/Types.h"
+#include "Spatialiser/Configs.h"
 #include "Diffraction/Path.h"
 #include "Diffraction/Models.h"
 #include "Spatialiser/AirAbsorption.h"

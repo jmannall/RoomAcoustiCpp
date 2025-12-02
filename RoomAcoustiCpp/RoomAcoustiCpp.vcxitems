@@ -155,6 +155,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Eigen\QuaternionBaseAddons.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\moodycamel\concurrentqueue.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\AirAbsorption.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Configs.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Context.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\ContextOptionalArguments.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Diffraction\Models.h" />
