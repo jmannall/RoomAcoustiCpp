@@ -470,7 +470,7 @@ namespace RAC
 		*/
 		inline std::ostream& operator<<(std::ostream& os, const Coefficients<>& v)
 		{
-			int numCoefficients = v.Length();
+			int numCoefficients = ToInt(v.Length());
 			os << "[ ";
 			for (int i = 0; i < numCoefficients; i++)
 			{
