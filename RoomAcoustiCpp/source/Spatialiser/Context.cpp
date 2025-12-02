@@ -121,6 +121,9 @@ namespace RAC
 
 		//////////////////// Context ////////////////////
 
+		static DebugLogStreamBuffer logBuffer;
+		static std::ostream logStream(&logBuffer);
+
 		////////////////////////////////////////
 
 		Context::Context(const DSPData& data,const ContextOptionalArguments& optionalArguments)
@@ -128,9 +131,10 @@ namespace RAC
 		{
 			Debug::Log("Init Context", Colour::Green);
 
+			CErrorHandler::Instance().SetErrorLogStream(&logStream, true);
 			if (!optionalArguments.logPrefix.empty())
 			{
-				CErrorHandler::Instance().SetErrorLogFile(optionalArguments.logPrefix + "_log.txt", true);
+				// CErrorHandler::Instance().SetErrorLogFile(optionalArguments.logPrefix + "_log.txt", true);
 #if defined(PROFILE_BACKGROUND_THREAD) || defined(PROFILE_AUDIO_THREAD)
 				Profiler::Instance().SetOutputFile(optionalArguments.logPrefix + "_profile.txt", true);
 #endif

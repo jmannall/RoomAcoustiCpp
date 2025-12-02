@@ -119,6 +119,42 @@ namespace RAC
         private:
         };
 
+        class DebugLogStreamBuffer : public std::streambuf
+        {
+        public:
+            DebugLogStreamBuffer() {}
+
+        protected:
+            int overflow(int ch) override
+            {
+                if (ch != EOF)
+                {
+                    buffer += static_cast<char>(ch);
+
+                    // When a newline appears, send message
+                    if (ch == '\n')
+                    {
+                        Debug::Log(buffer.c_str());
+                        buffer.clear();
+                    }
+                }
+                return ch;
+            }
+
+            int sync() override
+            {
+                if (!buffer.empty())
+                {
+                    Debug::Log(buffer.c_str());
+                    buffer.clear();
+                }
+                return 0;
+            }
+
+        private:
+            std::string buffer;
+        };
+
         /**
         * @brief Converts a type T to a string
         */
