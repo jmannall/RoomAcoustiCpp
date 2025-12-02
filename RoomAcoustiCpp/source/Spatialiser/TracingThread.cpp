@@ -2,16 +2,13 @@
 
 // Common headers
 #include "Common/RACProfiler.h"
-
-// Unity headers
-#include "Unity/Debug.h"
+#include "Common/Debug.h"
 
 // helpers
 #include <cassert>
 
 namespace RAC
 {
-	using namespace Unity;
 	using namespace Common;
 	namespace Spatialiser
 	{
@@ -88,9 +85,6 @@ namespace RAC
 
 		void MoDARTTracing::RunTracing() {
 			PROFILE_ReverbRayTracing
-#ifdef RTM_FLAG
-			Debug::RTMStartFlag();
-#endif
 			tracingStartFlag.store(true, std::memory_order_release);
 
 			// TODO: Should we only update residues relevant to currently active FDNs (i.e T60 > minimumT60)?
@@ -121,9 +115,7 @@ namespace RAC
 
 				for (int dir_idx = 0; dir_idx < numReverbDirections; ++dir_idx) {
 					ComputeEnergyContributions(dir_idx);
-#ifdef DEBUG_RTM
-					Debug::send_path(IntToStr(dir_idx) + "l", { mListenerPosition }, reverbDirections[dir_idx]);
-#endif
+					Debug::SendPath(ToString(dir_idx) + "l", { mListenerPosition }, reverbDirections[dir_idx]);
 
 					for (int slope_idx = 0; slope_idx < numFDNs; ++slope_idx) {
 
@@ -147,9 +139,7 @@ namespace RAC
 								contributionDelayScaling,
 								sharedReverb->GetRightEigenvector(slope_idx));
 
-#ifdef DEBUG_RTM
-						Debug::send_residue(static_cast<float>(listenerResidues[slope_idx][dir_idx]), false, dir_idx, slope_idx);
-#endif
+						Debug::SendResidue(static_cast<float>(listenerResidues[slope_idx][dir_idx]), false, dir_idx, slope_idx);
 					}
 				}
 
@@ -184,9 +174,7 @@ namespace RAC
 								contributionDelayScaling,
 								sharedReverb->GetLeftEigenvector(slope_idx));
 
-#ifdef DEBUG_RTM
-						Debug::send_residue(static_cast<float>(sourceResidues[slope_idx]), true, ToInt(source.id), slope_idx);
-#endif
+						Debug::SendResidue(static_cast<float>(sourceResidues[slope_idx]), true, ToInt(source.id), slope_idx);
 
 						// Compensate gain based on preceding delay.
 						sourceResidues[slope_idx] *= std::pow(decayPerSecond(slope_idx), sharedReverb->GetPrecedingDelay());
@@ -194,9 +182,6 @@ namespace RAC
 					sharedSource->SetSourceTargetResidues(source.id, sourceResidues);
 				}
 			}
-#ifdef RTM_FLAG
-			Debug::RTMEndFlag();
-#endif
 			tracingEndFlag.store(true, std::memory_order_release);
 			tracingStartFlag.store(false, std::memory_order_release);
 		}
@@ -260,9 +245,6 @@ namespace RAC
 
 		void SingleFDNTracing::RunTracing() {
 			PROFILE_ReverbRayTracing
-#ifdef RTM_FLAG
-				Debug::RTMStartFlag();
-#endif
 			tracingStartFlag.store(true, std::memory_order_release);
 
 			// TODO: Should we only update residues relevant to currently active FDNs (i.e T60 > minimumT60)?
@@ -288,15 +270,10 @@ namespace RAC
 				for (int dir_idx = 0; dir_idx < numReverbDirections; ++dir_idx)
 				{
 					ComputeEnergyContributions(materials, dir_idx);
-#ifdef DEBUG_RTM
-					Debug::send_path(IntToStr(dir_idx) + "l", { mListenerPosition }, reverbDirections[dir_idx]);
-#endif
+					Debug::SendPath(ToString(dir_idx) + "l", { mListenerPosition }, reverbDirections[dir_idx]);
 				}
 				sharedReverb->SetTargetOutputFilters(reflectionGains);
 			}
-#ifdef RTM_FLAG
-			Debug::RTMEndFlag();
-#endif
 			tracingEndFlag.store(true, std::memory_order_release);
 			tracingStartFlag.store(false, std::memory_order_release);
 		}

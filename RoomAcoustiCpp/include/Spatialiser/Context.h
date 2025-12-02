@@ -355,6 +355,7 @@ namespace RAC
 
 			void RecordImpulseResponse(const Vec3& position, const Vec4& orientation, Buffer<>& outputBuffer);
 
+		private:
 			/**
 			* @brief Sets the spatialiser to impulse response mode if mode is true
 			*
@@ -362,7 +363,6 @@ namespace RAC
 			*/
 			inline void UpdateImpulseResponseMode(const bool mode) { dspConfig->UpdateImpulseResponseMode(mode); }
 
-		private:
 			void InitLateReverb(const LateReverbData& data);
 
 			inline void EnsureAudioThreadPoolInitialized()

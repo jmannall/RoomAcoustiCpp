@@ -265,9 +265,9 @@ namespace RAC
 		*/
 		inline Vec3 Forward(const Vec4& q)
 		{
-			Real x = 2.0 * (q.x() * q.z() + q.w() * q.y());
-			Real y = 2.0 * (q.y() * q.z() - q.w() * q.x());
-			Real z = 1.0 - 2.0 * (q.x() * q.x() + q.y() * q.y());
+			Real x = REAL_CONST(2.0) * (q.x() * q.z() + q.w() * q.y());
+			Real y = REAL_CONST(2.0) * (q.y() * q.z() - q.w() * q.x());
+			Real z = REAL_CONST(1.0) - REAL_CONST(2.0) * (q.x() * q.x() + q.y() * q.y());
 			// TODO: Check if normalise is necessary
 			return Vec3(x, y, z).Normalised();
 			// (quaternion * Vec3::UnitZ()).normalized();

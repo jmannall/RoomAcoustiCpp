@@ -8,9 +8,7 @@
 #include "Common/Vec3.h"
 #include "Common/Types.h"
 #include "Common/Definitions.h"
-
-// Unity headers
-#include "Unity/Debug.h" 
+#include "Common/Debug.h" 
 
 // Spatialiser headers
 #include "Spatialiser/Edge.h"
@@ -18,7 +16,6 @@
 
 namespace RAC
 {
-	using namespace Unity;
 	using namespace Common;
 	namespace Spatialiser
 	{
@@ -26,7 +23,7 @@ namespace RAC
 		//////////////////// Edge class ////////////////////
 
 		Edge::Edge(const Vec3& base, const Vec3& top, const Vec3& normal1, const Vec3& normal2, const size_t wallId1, const size_t wallId2, const size_t planeId1, const size_t planeId2)
-			: zW(0.0f), mBase(base), mTop(top), mFaceNormals(normal1, normal2), mWallIds(wallId1, wallId2), mPlaneIds(planeId1, planeId2), mDs(0.0, 0.0), receiverZone(EdgeZone::Invalid)
+			: zW(0.0f), mBase(base), mTop(top), mFaceNormals(normal1, normal2), mWallIds(wallId1, wallId2), mPlaneIds(planeId1, planeId2), mDs(REAL_CONST(0.0), REAL_CONST(0.0)), receiverZone(EdgeZone::Invalid)
 		{
 			Update();
 		}

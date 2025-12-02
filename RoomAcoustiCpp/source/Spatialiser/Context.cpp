@@ -9,14 +9,12 @@
 #include "Common/RACProfiler.h"
 #include "Common/FileReader.h"
 #include "Common/Access.h"
+#include "Common/Debug.h"
 
 // Spatialiser headers
 #include "Spatialiser/Globals.h"
 #include "Spatialiser/Context.h"
 #include "Spatialiser/Types.h"
-
-// Unity headers
-#include "Unity/Debug.h"
 
 // 3DTI headers
 #include "HRTF/HRTFFactory.h"
@@ -36,7 +34,6 @@ std::unique_ptr<RAC::DSP::AudioThreadPool> RAC::DSP::audioThreadPool;
 
 namespace RAC
 {
-	using namespace Unity;
 	using namespace DSP;
 	using namespace Common;
 	namespace Spatialiser
@@ -55,9 +52,8 @@ namespace RAC
 		void IEMProcessor(Context* context)
 		{
 
-#ifdef DEBUG_INIT
 			Debug::Log("Begin image edge model thread", Colour::Green);
-#endif
+
 #ifdef USE_UNITY_PROFILER
 			RegisterIEMThread();
 #endif
@@ -84,9 +80,8 @@ namespace RAC
 #ifdef USE_UNITY_PROFILER
 			UnregisterIEMThread();
 #endif
-#ifdef DEBUG_REMOVE
+
 			Debug::Log("End image edge model thread", Colour::Red);
-#endif
 		}
 
 		//////////////////// Ray Tracing Thread ////////////////////
@@ -96,9 +91,8 @@ namespace RAC
 		void RayTracerProcessor(Context* context)
 		{
 
-#ifdef DEBUG_INIT
 			Debug::Log("Begin racy tracing thread", Colour::Green);
-#endif
+
 #ifdef USE_UNITY_PROFILER
 			RegisterRayTracingThread();
 #endif
@@ -121,25 +115,26 @@ namespace RAC
 #ifdef USE_UNITY_PROFILER
 			UnregisterRayTracingThread();
 #endif
-#ifdef DEBUG_REMOVE
+
 			Debug::Log("End ray tracing thread", Colour::Red);
-#endif
 		}
 
 		//////////////////// Context ////////////////////
+
+		static DebugLogStreamBuffer logBuffer;
+		static std::ostream logStream(&logBuffer);
 
 		////////////////////////////////////////
 
 		Context::Context(const DSPData& data,const ContextOptionalArguments& optionalArguments)
 		: dspConfig(std::make_shared<DSPConfig>(data)), mIsRunning(true), IEMThread(), rayTracingThread(), applyHeadphoneEQ(false), headphoneEQ(2048), dcBlocker(data.fs)
 		{
-#ifdef DEBUG_INIT
 			Debug::Log("Init Context", Colour::Green);
-#endif
 
+			CErrorHandler::Instance().SetErrorLogStream(&logStream, true);
 			if (!optionalArguments.logPrefix.empty())
 			{
-				CErrorHandler::Instance().SetErrorLogFile(optionalArguments.logPrefix + "_log.txt", true);
+				// CErrorHandler::Instance().SetErrorLogFile(optionalArguments.logPrefix + "_log.txt", true);
 #if defined(PROFILE_BACKGROUND_THREAD) || defined(PROFILE_AUDIO_THREAD)
 				Profiler::Instance().SetOutputFile(optionalArguments.logPrefix + "_profile.txt", true);
 #endif
@@ -171,9 +166,8 @@ namespace RAC
 
 		Context::~Context()
 		{
-#ifdef DEBUG_REMOVE
 			Debug::Log("Exit Context", Colour::Red);
-#endif
+
 			StopRunning();
 			if (IEMThread.joinable())
 				IEMThread.join();
@@ -396,10 +390,7 @@ namespace RAC
 
 		int Context::InitSource()
 		{
-#ifdef DEBUG_INIT
-	Debug::Log("Init Source", Colour::Green);
-#endif
-
+			Debug::Log("Init Source", Colour::Green);
 			return mSources->Init();
 		}
 
@@ -435,10 +426,7 @@ namespace RAC
 
 		void Context::RemoveSource(size_t id)
 		{
-
-#ifdef DEBUG_REMOVE
-	Debug::Log("Remove Source", Colour::Red);
-#endif
+			Debug::Log("Remove Source", Colour::Red);
 			mSources->Remove(id);
 		}
 
@@ -455,10 +443,7 @@ namespace RAC
 
 		size_t Context::InitWall(const Vertices& vData, size_t materialID)
 		{
-#ifdef DEBUG_INIT
-	Debug::Log("Init Wall", Colour::Green);
-#endif
-
+			Debug::Log("Init Wall", Colour::Green);
 			Wall wall = Wall(vData, materialID);
 			size_t id = mRoom->AddWall(wall);
 			mRoom->InitEdges(id);
@@ -469,9 +454,7 @@ namespace RAC
 
 		void Context::RemoveWall(size_t id)
 		{
-#ifdef DEBUG_REMOVE
-	Debug::Log("Remove Wall", Colour::Red);
-#endif
+			Debug::Log("Remove Wall", Colour::Red);
 			mRoom->RemoveWall(id);
 		}
 

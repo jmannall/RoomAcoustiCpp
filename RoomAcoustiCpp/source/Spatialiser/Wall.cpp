@@ -7,9 +7,7 @@
 
 // Common headers
 #include "Common/Definitions.h"
-
-// Unity headers
-#include "Unity/Debug.h"
+#include "Common/Debug.h"
 
 // Spatialiser headers
 #include "Spatialiser/Wall.h"
@@ -17,7 +15,6 @@
 namespace RAC
 {
 	using namespace Common;
-	using namespace Unity;
 	namespace Spatialiser
 	{
 
@@ -111,7 +108,7 @@ namespace RAC
 			if (det > -MIN_VALUE && det < MIN_VALUE)
 				return { false, Vec3() };    // This ray is parallel to this triangle.
 
-			Real invdet = 1.0 / det;
+			Real invdet = REAL_CONST(1.0) / det;
 
 			Vec3 tVec = origin - v1;
 			Real u = tVec.dot(pVec) * invdet;

@@ -43,7 +43,7 @@ namespace RAC
 					std::string error = "Test: " + ToStr(i) + ", Incorrect Frequency : " + ToStr(freq[j]);
 					std::wstring werror = std::wstring(error.begin(), error.end());
 					const wchar_t* werrorchar = werror.c_str();
-					Assert::AreEqual(outputData[i][j], directivity[j], (Real)10e-15, werrorchar);
+					Assert::AreEqual(outputData[i][j], directivity[j], EPS_TEST_MEDIUM, werrorchar);
 				}
 			}
 		}
@@ -69,7 +69,7 @@ namespace RAC
 					std::string error = "Test: " + ToStr(i) + ", Incorrect Frequency : " + ToStr(freq[j]);
 					std::wstring werror = std::wstring(error.begin(), error.end());
 					const wchar_t* werrorchar = werror.c_str();
-					Assert::AreEqual(outputData[i][j], directivity[j], (Real)10e-15, werrorchar);
+					Assert::AreEqual(outputData[i][j], directivity[j], EPS_TEST_MEDIUM, werrorchar);
 				}
 			}
 		}

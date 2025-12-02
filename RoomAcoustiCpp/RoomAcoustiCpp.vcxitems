@@ -70,6 +70,7 @@
       <WarningLevel Condition="'$(Configuration)|$(Platform)'=='ReleaseTest|x64'">TurnOffAllWarnings</WarningLevel>
       <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release_Debug|x64'">TurnOffAllWarnings</WarningLevel>
     </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Common\Debug.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Common\Matrix.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Common\Vec.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\AudioThreadPool.cpp" />
@@ -97,7 +98,6 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\TracingUtils.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\TracingThread.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Wall.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\Unity\Debug.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Unity\UnityInterface.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -116,6 +116,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Access.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Coefficients.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Complex.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Debug.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Definitions.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\FileReader.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Matrix.h" />
@@ -178,7 +179,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\TracingThread.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Types.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Wall.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Unity\Debug.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Unity\IUnityInterface.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Unity\IUnityProfiler.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Unity\UnityInterface.h" />

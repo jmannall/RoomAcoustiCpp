@@ -18,9 +18,9 @@ namespace RAC
 
 		std::vector<Real> CreateRandomVector(const size_t length)
 		{
-			std::vector<Real> vec(length, 0.0);
+			std::vector<Real> vec(length, REAL_CONST(0.0));
 			for (int i = 0; i < length; i++)
-				vec[i] = rand();
+				vec[i] = static_cast<Real>(rand());
 			return vec;
 		}
 
@@ -30,7 +30,7 @@ namespace RAC
 			const Buffer<> buffer = Buffer<>();
 			Assert::AreEqual(length, (int)buffer.Length(), L"Buffer not initialised correctly");
 			for (int i = 0; i < buffer.Length(); i++)
-				Assert::AreEqual((Real)0.0, buffer[i], L"Buffer not initialised to zero");
+				Assert::AreEqual(REAL_CONST(0.0), buffer[i], L"Buffer not initialised to zero");
 		}
 
 		TEST_METHOD(InitLength)
@@ -39,7 +39,7 @@ namespace RAC
 			const Buffer<> buffer = Buffer<>::Zero(length);
 			Assert::AreEqual((int)buffer.Length(), length, L"Buffer not initialised correctly");
 			for (int i = 0; i < buffer.Length(); i++)
-				Assert::AreEqual((Real)0.0, buffer[i], L"Buffer not initialised to zero");
+				Assert::AreEqual(REAL_CONST(0.0), buffer[i], L"Buffer not initialised to zero");
 		}
 
 		TEST_METHOD(InitVector)
@@ -61,7 +61,7 @@ namespace RAC
 
 			buffer.Reset();
 			for (int i = 0; i < length; i++)
-				Assert::AreEqual((Real)0.0, buffer[i], L"Buffer not reset to zero");
+				Assert::AreEqual(REAL_CONST(0.0), buffer[i], L"Buffer not reset to zero");
 		}
 
 		TEST_METHOD(Resize)
@@ -74,7 +74,7 @@ namespace RAC
 			buffer.Resize(newLength);
 			Assert::AreEqual((int)buffer.Length(), newLength, L"Buffer not resized correctly");
 			for (int i = length; i < buffer.Length(); i++)
-				Assert::AreEqual((Real)0.0, buffer[i], L"New values not initialised to zero");
+				Assert::AreEqual(REAL_CONST(0.0), buffer[i], L"New values not initialised to zero");
 
 			buffer.Resize(length);
 			Assert::AreEqual((int)buffer.Length(), length, L"Buffer not resized correctly");
@@ -88,7 +88,7 @@ namespace RAC
 			Buffer<> buffer = Buffer<>::Zero(length);
 			Assert::IsTrue(buffer.Valid(), L"Buffer not valid");
 			for (int i = 0; i < length; i++)
-				buffer[i] = rand();
+				buffer[i] = static_cast<Real>(rand());
 			Assert::IsTrue(buffer.Valid(), L"Buffer not valid");
 			buffer[3] = NAN;
 			Assert::IsFalse(buffer.Valid(), L"Buffer valid");
@@ -130,7 +130,7 @@ namespace RAC
 			Buffer<> buffer2(vec);
 			Assert::IsTrue(buffer1.IsApprox(buffer2), L"Buffers not equal");
 
-			vec[56] = vec[56] / 5.2; // Change one value
+			vec[56] = vec[56] / REAL_CONST(5.2); // Change one value
 			Buffer<> buffer3(vec);
 			Assert::IsFalse(buffer1.IsApprox(buffer3), L"Buffers are equal");
 		}

@@ -51,7 +51,7 @@ namespace RAC
 		OctaveBand::OctaveBand(const Coefficients<>& frequencies, int fs) :
 			octaveBandIndices(CreateFrequencyIndices(frequencies))
 		{
-			 std::vector<Real> uniqueIndices;
+			 std::vector<int> uniqueIndices;
 			 int maxIndex = 0;
 			 int minIndex = ToInt(cutOffFrequencies.Length());
 			 for (int i = 0; i < octaveBandIndices.Length(); i++)

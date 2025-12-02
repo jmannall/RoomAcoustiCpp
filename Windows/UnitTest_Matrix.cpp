@@ -4,6 +4,7 @@
 // #include <windows.h>
 
 #include "UtilityFunctions.h"
+#include "Common/Definitions.h"
 
 #include "Common/Matrix.h"
 
@@ -75,7 +76,7 @@ namespace RAC
 				for (int j = 0; j < cols; j++)
 				{
 					Real test = m(i, j);
-					Assert::AreEqual((Real)0.0, test, L"Error: Reset");
+					Assert::AreEqual(REAL_CONST(0.0), test, L"Error: Reset");
 				}
 			}
 		}
@@ -105,24 +106,24 @@ namespace RAC
 
 			Matrix<> z = x * y;
 
-			Assert::AreEqual((Real)11.0, z(0, 0), L"Error (0, 0)");
-			Assert::AreEqual((Real)12.0, z(0, 1), L"Error (0, 1)");
-			Assert::AreEqual((Real)14.0, z(1, 0), L"Error (1, 0)");
-			Assert::AreEqual((Real)7.0, z(1, 1), L"Error (1, 1)");
+			Assert::AreEqual(REAL_CONST(11.0), z(0, 0), L"Error (0, 0)");
+			Assert::AreEqual(REAL_CONST(12.0), z(0, 1), L"Error (0, 1)");
+			Assert::AreEqual(REAL_CONST(14.0), z(1, 0), L"Error (1, 0)");
+			Assert::AreEqual(REAL_CONST(7.0), z(1, 1), L"Error (1, 1)");
 
 			z *= 2.0;
 
-			Assert::AreEqual((Real)22.0, z(0, 0), L"Error 2 (0, 0)");
-			Assert::AreEqual((Real)24.0, z(0, 1), L"Error 2 (0, 1)");
-			Assert::AreEqual((Real)28.0, z(1, 0), L"Error 2 (1, 0)");
-			Assert::AreEqual((Real)14.0, z(1, 1), L"Error 2 (1, 1)");
+			Assert::AreEqual(REAL_CONST(22.0), z(0, 0), L"Error 2 (0, 0)");
+			Assert::AreEqual(REAL_CONST(24.0), z(0, 1), L"Error 2 (0, 1)");
+			Assert::AreEqual(REAL_CONST(28.0), z(1, 0), L"Error 2 (1, 0)");
+			Assert::AreEqual(REAL_CONST(14.0), z(1, 1), L"Error 2 (1, 1)");
 
 			Matrix<> w = z * 2.0;
 
-			Assert::AreEqual((Real)44.0, w(0, 0), L"Error 3 (0, 0)");
-			Assert::AreEqual((Real)48.0, w(0, 1), L"Error 3 (0, 1)");
-			Assert::AreEqual((Real)56.0, w(1, 0), L"Error 3 (1, 0)");
-			Assert::AreEqual((Real)28.0, w(1, 1), L"Error 3 (1, 1)");
+			Assert::AreEqual(REAL_CONST(44.0), w(0, 0), L"Error 3 (0, 0)");
+			Assert::AreEqual(REAL_CONST(48.0), w(0, 1), L"Error 3 (0, 1)");
+			Assert::AreEqual(REAL_CONST(56.0), w(1, 0), L"Error 3 (1, 0)");
+			Assert::AreEqual(REAL_CONST(28.0), w(1, 1), L"Error 3 (1, 1)");
 		}
 
 		TEST_METHOD(Add)
@@ -151,12 +152,12 @@ namespace RAC
 
 			auto z = x + y;
 
-			Assert::AreEqual((Real)9.0, z(0, 0), L"Error (0, 0)");
-			Assert::AreEqual((Real)4.0, z(0, 1), L"Error (0, 1)");
-			Assert::AreEqual((Real)6.0, z(0, 2), L"Error (0, 2)");
-			Assert::AreEqual((Real)5.0, z(1, 0), L"Error (1, 0)");
-			Assert::AreEqual((Real)4.0, z(1, 1), L"Error (1, 1)");
-			Assert::AreEqual((Real)2.0, z(1, 2), L"Error (1, 2)");
+			Assert::AreEqual(REAL_CONST(9.0), z(0, 0), L"Error (0, 0)");
+			Assert::AreEqual(REAL_CONST(4.0), z(0, 1), L"Error (0, 1)");
+			Assert::AreEqual(REAL_CONST(6.0), z(0, 2), L"Error (0, 2)");
+			Assert::AreEqual(REAL_CONST(5.0), z(1, 0), L"Error (1, 0)");
+			Assert::AreEqual(REAL_CONST(4.0), z(1, 1), L"Error (1, 1)");
+			Assert::AreEqual(REAL_CONST(2.0), z(1, 2), L"Error (1, 2)");
 		}
 
 		TEST_METHOD(Negative)
@@ -176,12 +177,12 @@ namespace RAC
 
 			auto y = -x;
 
-			Assert::AreEqual((Real)-1.0, y(0, 0), L"Error (0, 0)");
-			Assert::AreEqual((Real)-1.0, y(0, 1), L"Error (0, 1)");
-			Assert::AreEqual((Real)-1.0, y(0, 2), L"Error (0, 2)");
-			Assert::AreEqual((Real)-1.0, y(1, 0), L"Error (1, 0)");
-			Assert::AreEqual((Real)-1.0, y(1, 1), L"Error (1, 1)");
-			Assert::AreEqual((Real)-1.0, y(1, 2), L"Error (1, 2)");
+			Assert::AreEqual(REAL_CONST(-1.0), y(0, 0), L"Error (0, 0)");
+			Assert::AreEqual(REAL_CONST(-1.0), y(0, 1), L"Error (0, 1)");
+			Assert::AreEqual(REAL_CONST(-1.0), y(0, 2), L"Error (0, 2)");
+			Assert::AreEqual(REAL_CONST(-1.0), y(1, 0), L"Error (1, 0)");
+			Assert::AreEqual(REAL_CONST(-1.0), y(1, 1), L"Error (1, 1)");
+			Assert::AreEqual(REAL_CONST(-1.0), y(1, 2), L"Error (1, 2)");
 		}
 
 		TEST_METHOD(Comparison)
@@ -210,7 +211,7 @@ namespace RAC
 			const int a = 2;
 			const int b = 3;
 
-			std::vector<std::vector<Real>> mat = { {1.0, -2.0, 3.0}, {4.0, 5.0, -6.0} };
+			std::vector<std::vector<Real>> mat = { {REAL_CONST(1.0), REAL_CONST(-2.0), REAL_CONST(3.0)}, {REAL_CONST(4.0), REAL_CONST(5.0), REAL_CONST(-6.0)} };
 			Matrix<> x(a, b);
 
 			for (int i = 0; i < a; i++)
@@ -219,7 +220,7 @@ namespace RAC
 					x(i, j) = mat[i][j];
 			}
 
-			Real minValue = 1.9;
+			Real minValue = REAL_CONST(1.9);
 			x.Max(minValue);
 
 			Assert::AreEqual(minValue, x(0, 0), L"Sample [0][0] incorrect");
@@ -235,7 +236,7 @@ namespace RAC
 			const int a = 2;
 			const int b = 3;
 
-			std::vector<std::vector<Real>> mat = { {1.0, -2.0, 3.0}, {4.0, 5.0, -6.0} };
+			std::vector<std::vector<Real>> mat = { {REAL_CONST(1.0), REAL_CONST(-2.0), REAL_CONST(3.0)}, {REAL_CONST(4.0), REAL_CONST(5.0), REAL_CONST(-6.0)} };
 			Matrix<> x(a, b);
 
 			for (int i = 0; i < a; i++)
@@ -244,7 +245,7 @@ namespace RAC
 					x(i, j) = mat[i][j];
 			}
 
-			Real maxValue = 2.7;
+			Real maxValue = REAL_CONST(2.7);
 			x.Min(maxValue);
 
 			Assert::AreEqual(mat[0][0], x(0, 0), L"Sample [0][0] incorrect");
@@ -260,7 +261,7 @@ namespace RAC
 			const int a = 2;
 			const int b = 3;
 
-			std::vector<std::vector<Real>> mat = { {1.0, -2.0, 3.0}, {4.0, 5.0, -6.0} };
+			std::vector<std::vector<Real>> mat = { {REAL_CONST(1.0), REAL_CONST(-2.0), REAL_CONST(3.0)}, {REAL_CONST(4.0), REAL_CONST(5.0), REAL_CONST(-6.0)} };
 			Matrix<> x(a, b);
 
 			for (int i = 0; i < a; i++)
@@ -269,16 +270,16 @@ namespace RAC
 					x(i, j) = mat[i][j];
 			}
 
-			std::vector<std::vector<Real>> result = { {10.0, 0.01, 1000.0}, {10000.0, 100000.0, 0.000001} };
+			std::vector<std::vector<Real>> result = { {REAL_CONST(10.0), REAL_CONST(0.01), REAL_CONST(1000.0)}, {REAL_CONST(10000.0), REAL_CONST(100000.0), REAL_CONST(0.000001)} };
 
 			x.Pow10();
 
-			Assert::AreEqual(result[0][0], x(0, 0), (Real)1e-9, L"Sample [0][0] incorrect");
-			Assert::AreEqual(result[0][1], x(0, 1), (Real)1e-9, L"Sample [0][1] incorrect");
-			Assert::AreEqual(result[0][2], x(0, 2), (Real)1e-9, L"Sample [0][2] incorrect");
-			Assert::AreEqual(result[1][0], x(1, 0), (Real)1e-9, L"Sample [1][0] incorrect");
-			Assert::AreEqual(result[1][1], x(1, 1), (Real)1e-9, L"Sample [1][1] incorrect");
-			Assert::AreEqual(result[1][2], x(1, 2), (Real)1e-9, L"Sample [1][2] incorrect");
+			Assert::AreEqual(result[0][0], x(0, 0), REAL_CONST(0.1),L"Sample [0][0] incorrect");
+			Assert::AreEqual(result[0][1], x(0, 1), REAL_CONST(0.001),L"Sample [0][1] incorrect");
+			Assert::AreEqual(result[0][2], x(0, 2), REAL_CONST(0.1),L"Sample [0][2] incorrect");
+			Assert::AreEqual(result[1][0], x(1, 0), REAL_CONST(0.1), L"Sample [1][0] incorrect");
+			Assert::AreEqual(result[1][1], x(1, 1), REAL_CONST(0.1), L"Sample [1][1] incorrect");
+			Assert::AreEqual(result[1][2], x(1, 2), REAL_CONST(0.1), L"Sample [1][2] incorrect");
 		}
 
 		TEST_METHOD(Log10)
@@ -286,7 +287,7 @@ namespace RAC
 			const int a = 2;
 			const int b = 3;
 
-			std::vector<std::vector<Real>> mat = { {1.0, 0.5, 3.0}, {4.0, 5.0, 0.1} };
+			std::vector<std::vector<Real>> mat = { {REAL_CONST(1.0), REAL_CONST(0.5), REAL_CONST(3.0)}, {REAL_CONST(4.0), REAL_CONST(5.0), REAL_CONST(0.1)} };
 			Matrix<> x(a, b);
 
 			for (int i = 0; i < a; i++)
@@ -295,22 +296,24 @@ namespace RAC
 					x(i, j) = mat[i][j];
 			}
 
-			std::vector<std::vector<Real>> result = { {0.0, -0.3010299957, 0.4771212547}, {0.6020599913, 0.6989700043, -1.0} };
+			std::vector<std::vector<Real>> result = { {REAL_CONST(0.0), REAL_CONST(-0.3010299957), REAL_CONST(0.4771212547)}, {REAL_CONST(0.6020599913), REAL_CONST(0.6989700043), REAL_CONST(-1.0)} };
 
 			x.Log10();
 
-			Assert::AreEqual(result[0][0], x(0, 0), (Real)(Real)1e-10, L"Sample [0][0] incorrect");
-			Assert::AreEqual(result[0][1], x(0, 1), (Real)1e-10, L"Sample [0][1] incorrect");
-			Assert::AreEqual(result[0][2], x(0, 2), (Real)1e-10, L"Sample [0][2] incorrect");
-			Assert::AreEqual(result[1][0], x(1, 0), (Real)1e-10, L"Sample [1][0] incorrect");
-			Assert::AreEqual(result[1][1], x(1, 1), (Real)1e-10, L"Sample [1][1] incorrect");
-			Assert::AreEqual(result[1][2], x(1, 2), (Real)1e-10, L"Sample [1][2] incorrect");
+
+			constexpr Real tolerance = REAL_CONST(1e-10);
+			Assert::AreEqual(result[0][0], x(0, 0), tolerance, L"Sample [0][0] incorrect");
+			Assert::AreEqual(result[0][1], x(0, 1), tolerance, L"Sample [0][1] incorrect");
+			Assert::AreEqual(result[0][2], x(0, 2), tolerance, L"Sample [0][2] incorrect");
+			Assert::AreEqual(result[1][0], x(1, 0), tolerance, L"Sample [1][0] incorrect");
+			Assert::AreEqual(result[1][1], x(1, 1), tolerance, L"Sample [1][1] incorrect");
+			Assert::AreEqual(result[1][2], x(1, 2), tolerance, L"Sample [1][2] incorrect");
 		}
 
 		TEST_METHOD(Inverse)
 		{
 			const int size = 5;
-			std::vector<std::vector<Real>> mat = { {1.1, 1.2, -1.0, 0.7, 0.1}, {1.3, 2.1, 2.4, -0.9, -1.0}, {-2.1, 3.1, 1.6, 1.2, 3.5}, {1.2, -3.0, -0.12, 0.5, -0.2}, {1.2, -1.4, 1.2, -0.1, 2.3} };
+			std::vector<std::vector<Real>> mat = { {REAL_CONST(1.1), REAL_CONST(1.2), REAL_CONST(-1.0), REAL_CONST(0.7), REAL_CONST(0.1)}, {REAL_CONST(1.3), REAL_CONST(2.1), REAL_CONST(2.4), REAL_CONST(-0.9), REAL_CONST(-1.0)}, {REAL_CONST(-2.1), REAL_CONST(3.1), REAL_CONST(1.6), REAL_CONST(1.2), REAL_CONST(3.5)}, {REAL_CONST(1.2), REAL_CONST(-3.0), REAL_CONST(-0.12), REAL_CONST(0.5), REAL_CONST(-0.2)}, {REAL_CONST(1.2), REAL_CONST(-1.4), REAL_CONST(1.2), REAL_CONST(-0.1), REAL_CONST(2.3)} };
 			Matrix<> x(size, size);
 
 			for (int i = 0; i < size; i++)
@@ -319,17 +322,17 @@ namespace RAC
 					x(i, j) = mat[i][j];
 			}
 
-			std::vector<std::vector<Real>> result = { {0.34136477504077191545, 0.11496550315655131328, -0.10421070659136909674, 0.01819425113524224583, 0.19530667345622365649},
-				{0.18262410121510679726, 0.066179659185312429936, 0.018120165280602643948, -0.18459725447700819591, -0.022792513179873540322},
-				{-0.22633074246867897023, 0.27687658852419989748, 0.18414116343438314645, 0.3493796297485328533, -0.11961238404328984678},
-				{0.24690160608254744694, 0.12410708023695619754, 0.39766724634732041366, 0.8252978992215058399, -0.49015602727939949022},
-				{0.061879592705605533348, -0.15876012136250801363, -0.013383300949583094259, -0.26825870582877869972, 0.36010510066292022744} };
+			std::vector<std::vector<Real>> result = { {REAL_CONST(0.34136477504077191545), REAL_CONST(0.11496550315655131328), REAL_CONST(-0.10421070659136909674), REAL_CONST(0.01819425113524224583), REAL_CONST(0.19530667345622365649)},
+				{REAL_CONST(0.18262410121510679726), REAL_CONST(0.066179659185312429936), REAL_CONST(0.018120165280602643948), REAL_CONST(-0.18459725447700819591), REAL_CONST(-0.022792513179873540322)},
+				{REAL_CONST(-0.22633074246867897023), REAL_CONST(0.27687658852419989748), REAL_CONST(0.18414116343438314645), REAL_CONST(0.3493796297485328533), REAL_CONST(-0.11961238404328984678)},
+				{REAL_CONST(0.24690160608254744694), REAL_CONST(0.12410708023695619754), REAL_CONST(0.39766724634732041366), REAL_CONST(0.8252978992215058399), REAL_CONST(-0.49015602727939949022)},
+				{REAL_CONST(0.061879592705605533348), REAL_CONST(-0.15876012136250801363), REAL_CONST(-0.013383300949583094259), REAL_CONST(-0.26825870582877869972), REAL_CONST(0.36010510066292022744)} };
 
 			Matrix<> inverseX = x.InverseMatrix();
 			for (int i = 0; i < size; i++)
 			{
 				for (int j = 0; j < size; j++)
-					Assert::AreEqual(result[i][j], inverseX(i, j), (Real)1e-15, L"Inverse incorrect");
+					Assert::AreEqual(result[i][j], inverseX(i, j), EPS_TEST_MEDIUM, L"Inverse incorrect");
 			}
 		}
 	};

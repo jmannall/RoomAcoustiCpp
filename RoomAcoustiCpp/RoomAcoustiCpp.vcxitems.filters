@@ -93,9 +93,6 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Common\Vec.cpp">
       <Filter>Source Files\Common</Filter>
     </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\Unity\Debug.cpp">
-      <Filter>Source Files\Unity</Filter>
-    </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Unity\UnityInterface.cpp">
       <Filter>Source Files\Unity</Filter>
     </ClCompile>
@@ -159,6 +156,9 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\OctaveBandFilter.cpp">
       <Filter>Source Files\DSP</Filter>
     </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Common\Debug.cpp">
+      <Filter>Source Files\Common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Types.h">
@@ -196,9 +196,6 @@
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Source.h">
       <Filter>Header Files\Spatialiser</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Unity\Debug.h">
-      <Filter>Header Files\Unity</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Unity\IUnityInterface.h">
       <Filter>Header Files\Unity</Filter>
@@ -403,6 +400,9 @@
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\DCBlocker.h">
       <Filter>Header Files\DSP</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Debug.h">
+      <Filter>Header Files\Common</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

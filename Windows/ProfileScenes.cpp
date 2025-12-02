@@ -6,6 +6,7 @@
 
 #include "Spatialiser/Interface.h"
 #include "Spatialiser/ContextOptionalArguments.h"
+#include "Common/Debug.h"
 
 #include "MoDARTLoader.h"
 
@@ -221,8 +222,15 @@ void BaseTest::Run()
 	Exit();
 }
 
+void DebugCallback(const char* message, int colour, int size)
+{
+	std::cout << "[Debug] " << message << std::endl;
+}
+
 bool BaseTest::Init()
 {
+	RegisterDebugCallback(DebugCallback);
+
 	int fs{ 48000 };							// Sample rate
 	int numReverbSources{ 12 };					// Number of output channels for late reverberation
 	int fdnSize{ 12 };							// Size of the FDN (number of delay lines)
@@ -267,6 +275,7 @@ bool BaseTest::Init()
 
 void BaseTest::Exit()
 {
+	UnregisterDebugCallback();
 	::Exit();
 }
 

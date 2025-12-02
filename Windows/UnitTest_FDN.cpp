@@ -33,10 +33,10 @@ namespace RAC
 		}
 		envelope /= cumSum;
 		for (int j = 0; j < numSamples; j++)
-			envelope(j) = 1.0 - envelope(j);
+			envelope(j) = REAL_CONST(1.0) - envelope(j);
 
 		//// Find time to reach -60 dB on the mean decay curve
-		Real targetDecay = std::pow(10.0f, -6.0f); // -60 dB corresponds to 1e-6 in linear scale
+		Real targetDecay = std::pow(REAL_CONST(10.0), REAL_CONST(-6.0)); // -60 dB corresponds to 1e-6 in linear scale
 		for (int j = 0; j < numSamples; j++)
 		{
 			if (envelope(j) <= targetDecay)
@@ -51,15 +51,15 @@ namespace RAC
 
 		TEST_METHOD(Reset)
 		{
-			const Coefficients<> T60(std::vector<Real>({ 0.1, 0.2, 0.3, 0.4 }));
-			const Coefficients<> gains(std::vector<Real>({ 0.87, 0.75, 0.81, 0.84 }));
+			const Coefficients<> T60(std::vector<Real>({ REAL_CONST(0.1), REAL_CONST(0.2), REAL_CONST(0.3), REAL_CONST(0.4) }));
+			const Coefficients<> gains(std::vector<Real>({ REAL_CONST(0.87), REAL_CONST(0.75), REAL_CONST(0.81), REAL_CONST(0.84) }));
 			const std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>();
 			AudioData audioData(config);
 			int numReverbSources = config->GetData().numReverbSources;
 			int numFrames = config->GetData().numFrames;
 			const std::vector<Coefficients<>> reflectionGains(numReverbSources, gains);
 
-			Vec<> dimensions(std::vector<Real>({ (Real)1.0, (Real)1.5, (Real)2.0 }));
+			Vec<> dimensions(std::vector<Real>({ REAL_CONST(1.0), REAL_CONST(1.5), REAL_CONST(2.0) }));
 			FDN<> fdn(T60, dimensions, config);
 
 			Matrix<> in(numReverbSources, numFrames);
@@ -74,7 +74,7 @@ namespace RAC
 				Real sum = 0.0;
 				for (int j = 0; j < numFrames; j++)
 					sum += out[i][j] * out[i][j];
-				Assert::AreNotEqual((Real)0.0, sum, L"ProcessAudio is zero");
+				Assert::AreNotEqual(REAL_CONST(0.0), sum, L"ProcessAudio is zero");
 			}
 
 			config->FlagClearBuffers();
@@ -85,21 +85,21 @@ namespace RAC
 			for (int i = 0; i < numReverbSources; i++)
 			{
 				for (int j = 0; j < numFrames; j++)
-					Assert::AreEqual((Real)0.0, out[i][j], L"ProcessAudio not zero");
+					Assert::AreEqual(REAL_CONST(0.0), out[i][j], L"ProcessAudio not zero");
 			}
 		}
 
 		TEST_METHOD(ReflectionFilters)
 		{
-			const Coefficients<> T60(std::vector<Real>({ 0.1, 0.2, 0.3, 0.4 }));
-			const Coefficients<> gains(std::vector<Real>({ 1.0, 1.0, 1.0, 1.0 }));
+			const Coefficients<> T60(std::vector<Real>({ REAL_CONST(0.1), REAL_CONST(0.2), REAL_CONST(0.3), REAL_CONST(0.4) }));
+			const Coefficients<> gains(std::vector<Real>({ REAL_CONST(1.0), REAL_CONST(1.0), REAL_CONST(1.0), REAL_CONST(1.0) }));
 			const std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>();
 			AudioData audioData(config);
 			int numReverbSources = config->GetData().numReverbSources;
 			int numFrames = config->GetData().numFrames;
 			const std::vector<Coefficients<>> reflectionGains(numReverbSources, CalculateReflectance(gains));
 
-			Vec<> dimensions(std::vector<Real>({ (Real)1.0, (Real)1.5, (Real)2.0 }));
+			Vec<> dimensions(std::vector<Real>({ REAL_CONST(1.0), REAL_CONST(1.5), REAL_CONST(2.0) }));
 			FDN<> fdn(T60, dimensions, config);
 			fdn.SetTargetReflectionFilters(reflectionGains);
 
@@ -112,151 +112,151 @@ namespace RAC
 			for (int i = 0; i < numReverbSources; i++)
 			{
 				for (int j = 0; j < numFrames; j++)
-					Assert::AreEqual((Real)0.0, out[i][j], L"Refelctions filters not zero");
+					Assert::AreEqual(REAL_CONST(0.0), out[i][j], L"Refelctions filters not zero");
 			}
 		}
 
 		TEST_METHOD(ProcessIdentity)
 		{
-			const Real target = RandomValue(0.1, 2.0);
+			const Real target = RandomValue(REAL_CONST(0.1), REAL_CONST(2.0));
 			const int fs = 48000;
-			const int numFrames = static_cast<int>(fs * target * 1.2);
+			const int numFrames = static_cast<int>(fs * target * REAL_CONST(1.2));
 			const int numReverbSources = 12;
 			const int fdnSize = 12;
-			const Real lerpFactor = 1.0;
-			const Real Q = 0.98;
-			const std::vector<Real> fBands = { 500.0, 1000.0, 2000.0, 4000.0 };
+			const Real lerpFactor = REAL_CONST(1.0);
+			const Real Q = REAL_CONST(0.98);
+			const std::vector<Real> fBands = { REAL_CONST(500.0), REAL_CONST(1000.0), REAL_CONST(2000.0), REAL_CONST(4000.0) };
 			const DSPData data(fs, numFrames, numReverbSources, fdnSize, lerpFactor, Q, fBands);
 			const std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>(data);
 			AudioData audioData(config);
 
 			const Coefficients<> T60(std::vector<Real>({ target, target, target, target }));
-			const Coefficients<> gains(std::vector<Real>({ 0.1, 0.05, 0.3, 0.25 }));
+			const Coefficients<> gains(std::vector<Real>({ REAL_CONST(0.1), REAL_CONST(0.05), REAL_CONST(0.3), REAL_CONST(0.25) }));
 			const std::vector<Coefficients<>> reflectionGains(numReverbSources, gains);
 
 			// Long delay lines cause issues with the T60 estimation due to less frequent but larger drops in energy
-			Vec<> dimensions(std::vector<Real>({ RandomValue((Real)0.1, (Real)2.0), RandomValue((Real)0.1, (Real)5.0), RandomValue((Real)0.1, (Real)10.0) }));
+			Vec<> dimensions(std::vector<Real>({ RandomValue(REAL_CONST(0.1), REAL_CONST(2.0)), RandomValue(REAL_CONST(0.1), REAL_CONST(5.0)), RandomValue(REAL_CONST(0.1), REAL_CONST(10.0)) }));
 			FDN<> fdn(T60, dimensions, config);
 			fdn.SetTargetReflectionFilters(reflectionGains);
 
 			Matrix<> in = Matrix<>::Zero(numReverbSources, numFrames);
 			for (int i = 0; i < numReverbSources; i++)
-				in(i, 1) = 1.0;
+				in(i, 1) = REAL_CONST(1.0);
 
 			std::vector<Buffer<>> out(numReverbSources, Buffer<>(numFrames));
 			fdn.ProcessAudio(in, out, audioData);
 
 			// Analyze Output Decay
-			Real decayTime = 0.0;
+			Real decayTime = REAL_CONST(0.0);
 			for (int i = 0; i < numReverbSources; i++)
 				decayTime += CalculateT60(out[i], numFrames, config->GetData().fs);
 			decayTime /= numReverbSources;
 			Assert::IsTrue(decayTime > 0.0f, L"Decay not detected.");
-			Assert::AreEqual(target, decayTime, (Real)0.10, L"Decay time does not match target RT60.");
+			Assert::AreEqual(target, decayTime, REAL_CONST(0.10), L"Decay time does not match target RT60.");
 		}
 
 		TEST_METHOD(ProcessRandomOrthogonal)
 		{
-			const Real target = RandomValue(0.1, 2.0);
+			const Real target = RandomValue(REAL_CONST(0.1), REAL_CONST(2.0));
 			const int fs = 48000;
-			const int numFrames = static_cast<int>(fs * target * 1.2);
+			const int numFrames = static_cast<int>(fs * target * REAL_CONST(1.2));
 			const int numReverbSources = 12;
 			const int fdnSize = 12;
-			const Real lerpFactor = 1.0;
-			const Real Q = 0.98;
-			const std::vector<Real> fBands = { 500.0, 1000.0, 2000.0, 4000.0 };
+			const Real lerpFactor = REAL_CONST(1.0);
+			const Real Q = REAL_CONST(0.98);
+			const std::vector<Real> fBands = { REAL_CONST(500.0), REAL_CONST(1000.0), REAL_CONST(2000.0), REAL_CONST(4000.0) };
 			const DSPData data(fs, numFrames, numReverbSources, fdnSize, lerpFactor, Q, fBands);
 			const std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>(data);
 			AudioData audioData(config);
 
 			const Coefficients<> T60(std::vector<Real>({ target, target, target, target }));
-			const Coefficients<> gains(std::vector<Real>({ 0.1, 0.05, 0.3, 0.25 }));
+			const Coefficients<> gains(std::vector<Real>({ REAL_CONST(0.1), REAL_CONST(0.05), REAL_CONST(0.3), REAL_CONST(0.25) }));
 			const std::vector<Coefficients<>> reflectionGains(numReverbSources, gains);
 
 			// Long delay lines cause issues with the T60 estimation due to less frequent but larger drops in energy
-			Vec<> dimensions(std::vector<Real>({ RandomValue(0.1, 2.0), RandomValue(0.1, 5.0), RandomValue(0.1, 10.0) }));
+			Vec<> dimensions(std::vector<Real>({ RandomValue(REAL_CONST(0.1), REAL_CONST(2.0)), RandomValue(REAL_CONST(0.1), REAL_CONST(5.0)), RandomValue(REAL_CONST(0.1), REAL_CONST(10.0)) }));
 			FDN<> fdn(T60, dimensions, config);
 			fdn.SetTargetReflectionFilters(reflectionGains);
 
 			Matrix<> in = Matrix<>::Zero(numReverbSources, numFrames);
 			for (int i = 0; i < numReverbSources; i++)
-				in(i, 1) = 1.0;
+				in(i, 1) = REAL_CONST(1.0);
 
 			std::vector<Buffer<>> out(numReverbSources, Buffer<>(numFrames));
 			fdn.ProcessAudio(in, out, audioData);
 
 			// Analyze Output Decay
-			Real decayTime = 0.0;
+			Real decayTime = REAL_CONST(0.0);
 			for (int i = 0; i < numReverbSources; i++)
 				decayTime += CalculateT60(out[i], numFrames, config->GetData().fs);
 			decayTime /= numReverbSources;
-			Assert::IsTrue(decayTime > 0.0f, L"Decay not detected.");
-			Assert::AreEqual(target, decayTime, (Real)0.03, L"Decay time does not match target RT60.");
+			Assert::IsTrue(decayTime > REAL_CONST(0.0), L"Decay not detected.");
+			Assert::AreEqual(target, decayTime, REAL_CONST(0.03), L"Decay time does not match target RT60.");
 		}
 
 		TEST_METHOD(ProcessHouseHolder)
 		{
-			const Real target = RandomValue(0.1, 2.0);
+			const Real target = RandomValue(REAL_CONST(0.1), REAL_CONST(2.0));
 			const int fs = 48000;
-			const int numFrames = static_cast<int>(fs * target * 1.2);
+			const int numFrames = static_cast<int>(fs * target * REAL_CONST(1.2));
 			const int numReverbSources = 12;
 			const int fdnSize = 12;
-			const Real lerpFactor = 1.0;
-			const Real Q = 0.98;
-			const std::vector<Real> fBands = { 500.0, 1000.0, 2000.0, 4000.0 };
+			const Real lerpFactor = REAL_CONST(1.0);
+			const Real Q = REAL_CONST(0.98);
+			const std::vector<Real> fBands = { REAL_CONST(500.0), REAL_CONST(1000.0), REAL_CONST(2000.0), REAL_CONST(4000.0) };
 			const DSPData data(fs, numFrames, numReverbSources, fdnSize, lerpFactor, Q, fBands);
 			const std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>(data);
 			AudioData audioData(config);
 
 			const Coefficients<> T60(std::vector<Real>({ target, target, target, target }));
-			const Coefficients<> gains(std::vector<Real>({ 0.1, 0.05, 0.3, 0.25 }));
+			const Coefficients<> gains(std::vector<Real>({ REAL_CONST(0.1), REAL_CONST(0.05), REAL_CONST(0.3), REAL_CONST(0.25) }));
 			const std::vector<Coefficients<>> reflectionGains(numReverbSources, gains);
 
 			// Long delay lines cause issues with the T60 estimation due to less frequent but larger drops in energy
-			Vec<> dimensions(std::vector<Real>({ RandomValue(0.1f, 2.0f), RandomValue(0.1f, 5.0f), RandomValue(0.1f, 10.0f) }));
+			Vec<> dimensions(std::vector<Real>({ RandomValue(REAL_CONST(0.1), REAL_CONST(2.0)), RandomValue(REAL_CONST(0.1), REAL_CONST(5.0)), RandomValue(REAL_CONST(0.1), REAL_CONST(10.0)) }));
 			FDN<> fdn(T60, dimensions, config);
 			fdn.SetTargetReflectionFilters(reflectionGains);
 
 			Matrix<> in = Matrix<>::Zero(numReverbSources, numFrames);
 			for (int i = 0; i < numReverbSources; i++)
-				in(i, 1) = 1.0;
+				in(i, 1) = REAL_CONST(1.0);
 
 			std::vector<Buffer<>> out(numReverbSources, Buffer<>(numFrames));
 			fdn.ProcessAudio(in, out, audioData);
 
 			// Analyze Output Decay
-			Real decayTime = 0.0;
+			Real decayTime = REAL_CONST(0.0);
 			for (int i = 0; i < numReverbSources; i++)
 				decayTime += CalculateT60(out[i], numFrames, config->GetData().fs);
 			decayTime /= numReverbSources;
-			Assert::IsTrue(decayTime > 0.0f, L"Decay not detected.");
-			Assert::AreEqual(target, decayTime, (Real)0.02, L"Decay time does not match target RT60.");
+			Assert::IsTrue(decayTime > REAL_CONST(0.0), L"Decay not detected.");
+			Assert::AreEqual(target, decayTime, REAL_CONST(0.02), L"Decay time does not match target RT60.");
 		}
 
 		TEST_METHOD(FeedbackMatrixIdentity)
 		{
-			const Real target = 0.56;
+			const Real target = REAL_CONST(0.56);
 			const int fs = 48000;
 			const int numFrames = static_cast<int>(fs * target);
 			const int numReverbSources = 12;
 			const int fdnSize = 12;
-			const Real lerpFactor = 1.0;
-			const Real Q = 0.98;
-			const std::vector<Real> fBands = { 500.0, 1000.0, 2000.0, 4000.0 };
+			const Real lerpFactor = REAL_CONST(1.0);
+			const Real Q = REAL_CONST(0.98);
+			const std::vector<Real> fBands = { REAL_CONST(500.0), REAL_CONST(1000.0), REAL_CONST(2000.0), REAL_CONST(4000.0) };
 			const DSPData data(fs, numFrames, numReverbSources, fdnSize, lerpFactor, Q, fBands);
 			const std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>(data);
 			AudioData audioData(config);
 
 			const Coefficients<> T60(std::vector<Real>({ target, target, target, target }));
-			const Coefficients<> reflectionGains(std::vector<Real>({ 0.1, 0.05, 0.3, 0.25 }));
+			const Coefficients<> reflectionGains(std::vector<Real>({ REAL_CONST(0.1), REAL_CONST(0.05), REAL_CONST(0.3), REAL_CONST(0.25) }));
 
 			// Long delay lines cause issues with the T60 estimation due to less frequent but larger drops in energy
-			Vec<> dimensions(std::vector<Real>({ 2.3, 1.5, 5.6 }));
+			Vec<> dimensions(std::vector<Real>({ REAL_CONST(2.3), REAL_CONST(1.5), REAL_CONST(5.6) }));
 			FDN<> fdn(T60, dimensions, config);
 			fdn.SetTargetReflectionFilters(std::vector<Coefficients<>>(numReverbSources, reflectionGains));
 
 			Matrix<> in = Matrix<>::Zero(numReverbSources, numFrames);
-			in(0, 0) = 1.0;
+			in(0, 0) = REAL_CONST(1.0);
 
 			std::vector<Buffer<>> out(numReverbSources, Buffer<>(numFrames));
 			fdn.ProcessAudio(in, out, audioData);
@@ -264,41 +264,41 @@ namespace RAC
 			Real sum = 0.0;
 			for (int j = 0; j < numFrames; j++)
 				sum += out[0][j] * out[0][j];
-			Assert::AreNotEqual((Real)0.0, sum, L"Feedback matrix is not identity.");
+			Assert::AreNotEqual(REAL_CONST(0.0), sum, L"Feedback matrix is not identity.");
 
 			for (int i = 1; i < numReverbSources; i++)
 			{
-				Real sum = 0.0;
+				Real sum = REAL_CONST(0.0);
 				for (int j = 0; j < numFrames; j++)
 					sum += out[i][j] * out[i][j];
-				Assert::AreEqual((Real)0.0, sum, L"Feedback matrix is not identity.");
+				Assert::AreEqual(REAL_CONST(0.0), sum, L"Feedback matrix is not identity.");
 			}
 		}
 
 		TEST_METHOD(FeedbackMatrixRandomOrthogonal)
 		{
-			const Real target = 0.56;
+			const Real target = REAL_CONST(0.56);
 			const int fs = 48000;
 			const int numFrames = static_cast<int>(fs * target);
 			const int numReverbSources = 12;
 			const int fdnSize = 12;
-			const Real lerpFactor = 1.0;
-			const Real Q = 0.98;
-			const std::vector<Real> fBands = { 500.0, 1000.0, 2000.0, 4000.0 };
+			const Real lerpFactor = REAL_CONST(1.0);
+			const Real Q = REAL_CONST(0.98);
+			const std::vector<Real> fBands = { REAL_CONST(500.0), REAL_CONST(1000.0), REAL_CONST(2000.0), REAL_CONST(4000.0) };
 			const DSPData data(fs, numFrames, numReverbSources, fdnSize, lerpFactor, Q, fBands);
 			const std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>(data);
 			AudioData audioData(config);
 
 			const Coefficients<> T60(std::vector<Real>({ target, target, target, target }));
-			const Coefficients<> reflectionGains(std::vector<Real>({ 0.1, 0.05, 0.3, 0.25 }));
+			const Coefficients<> reflectionGains(std::vector<Real>({ REAL_CONST(0.1), REAL_CONST(0.05), REAL_CONST(0.3), REAL_CONST(0.25) }));
 
 			// Long delay lines cause issues with the T60 estimation due to less frequent but larger drops in energy
-			Vec<> dimensions(std::vector<Real>({ 2.3, 1.5, 5.6 }));
+			Vec<> dimensions(std::vector<Real>({ REAL_CONST(2.3), REAL_CONST(1.5), REAL_CONST(5.6) }));
 			RandomOrthogonalFDN fdn(T60, dimensions, config);
 			fdn.SetTargetReflectionFilters(std::vector<Coefficients<>>(numReverbSources, reflectionGains));
 
 			Matrix<> in = Matrix<>::Zero(numReverbSources, numFrames);
-			in(0, 0) = 1.0;
+			in(0, 0) = REAL_CONST(1.0);
 
 			std::vector<Buffer<>> out(numReverbSources, Buffer<>(numFrames));
 			fdn.ProcessAudio(in, out, audioData);
@@ -308,29 +308,29 @@ namespace RAC
 				Real sum = 0.0;
 				for (int j = 0; j < numFrames; j++)
 					sum += out[i][j] * out[i][j];
-				Assert::AreNotEqual((Real)0.0, sum, L"Feedback matrix is not random orthogonal.");
+				Assert::AreNotEqual(REAL_CONST(0.0), sum, L"Feedback matrix is not random orthogonal.");
 			}
 		}
 
 		TEST_METHOD(FeedbackMatrixHouseHolder)
 		{
-			const Real target = 0.56;
+			const Real target = REAL_CONST(0.56);
 			const int fs = 48000;
 			const int numFrames = static_cast<int>(fs * target);
 			const int numReverbSources = 12;
 			const int fdnSize = 12;
-			const Real lerpFactor = 1.0;
-			const Real Q = 0.98;
-			const std::vector<Real> fBands = { 500.0, 1000.0, 2000.0, 4000.0 };
+			const Real lerpFactor = REAL_CONST(1.0);
+			const Real Q = REAL_CONST(0.98);
+			const std::vector<Real> fBands = { REAL_CONST(500.0), REAL_CONST(1000.0), REAL_CONST(2000.0), REAL_CONST(4000.0) };
 			const DSPData data(fs, numFrames, numReverbSources, fdnSize, lerpFactor, Q, fBands);
 			const std::shared_ptr<DSPConfig> config = std::make_shared<DSPConfig>(data);
 			AudioData audioData(config);
 
 			const Coefficients<> T60(std::vector<Real>({ target, target, target, target }));
-			const Coefficients<> reflectionGains(std::vector<Real>({ 0.1, 0.05, 0.3, 0.25 }));
+			const Coefficients<> reflectionGains(std::vector<Real>({ REAL_CONST(0.1), REAL_CONST(0.05), REAL_CONST(0.3), REAL_CONST(0.25) }));
 
 			// Long delay lines cause issues with the T60 estimation due to less frequent but larger drops in energy
-			Vec<> dimensions(std::vector<Real>({ 2.3, 1.5, 5.6 }));
+			Vec<> dimensions(std::vector<Real>({ REAL_CONST(2.3), REAL_CONST(1.5), REAL_CONST(5.6) }));
 			HouseHolderFDN fdn(T60, dimensions, config);
 			fdn.SetTargetReflectionFilters(std::vector<Coefficients<>>(numReverbSources, reflectionGains));
 
@@ -345,16 +345,16 @@ namespace RAC
 				Real sum = 0.0;
 				for (int j = 0; j < numFrames; j++)
 					sum += out[i][j] * out[i][j];
-				Assert::AreNotEqual((Real)0.0, sum, L"Feedback matrix is not random orthogonal.");
+				Assert::AreNotEqual(REAL_CONST(0.0), sum, L"Feedback matrix is not random orthogonal.");
 			}
 		}
 
 		TEST_METHOD(DelayLineLengthAssignment)
 		{
 			const int fs = 48000;
-			const Real minDiffSeconds = 2e-4;
-			const Real minLineSeconds = 3e-2;
-			const Real maxLineSeconds = 3e-1;
+			const Real minDiffSeconds = REAL_CONST(2e-4);
+			const Real minLineSeconds = REAL_CONST(3e-2);
+			const Real maxLineSeconds = REAL_CONST(3e-1);
 
 			const int minDiff = static_cast<int>(minDiffSeconds * fs);
 			const int minLine = static_cast<int>(minLineSeconds * fs);

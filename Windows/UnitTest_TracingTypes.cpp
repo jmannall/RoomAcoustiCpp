@@ -72,20 +72,20 @@ namespace RAC
 		// Note: these are very approximate distances. The important parts are the sign and validity.
 		Real EXPECTED_DIST[2][6][14] = {
 		{ /* origin index 0 */
-			{1.,  2.,  -1.,   -2.,   3.,  qNaN, 5e-4, qNaN, qNaN, -11., -12., qNaN, qNaN, qNaN}, /* dir 0 */
-			{1.,    qNaN,     qNaN, qNaN, qNaN, qNaN, 5e-4, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN}, /* dir 1 */
-			{1.,    qNaN, -1.,   -2.,   qNaN, qNaN, 5e-4, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN}, /* dir 2 */
-			{-1.,  -2.,  1.,    2.,    -3.,  qNaN, -5e-4, qNaN, qNaN, 11., 12., qNaN, qNaN, qNaN}, /* dir 3 */
+			{1.,  2.,  -1.,   -2.,   3.,  qNaN, REAL_CONST(5e-4), qNaN, qNaN, -11., -12., qNaN, qNaN, qNaN}, /* dir 0 */
+			{1.,    qNaN,     qNaN, qNaN, qNaN, qNaN, REAL_CONST(5e-4), qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN}, /* dir 1 */
+			{1.,    qNaN, -1.,   -2.,   qNaN, qNaN, REAL_CONST(5e-4), qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN}, /* dir 2 */
+			{-1.,  -2.,  1.,    2.,    -3.,  qNaN, REAL_CONST(-5e-4), qNaN, qNaN, 11., 12., qNaN, qNaN, qNaN}, /* dir 3 */
 			{qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN}, /* dir 4 */
-			{qNaN, qNaN, qNaN, qNaN, qNaN, 2.,    -5e-4, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN}, /* dir 5 */
+			{qNaN, qNaN, qNaN, qNaN, qNaN, 2.,   REAL_CONST(-5e-4), qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN}, /* dir 5 */
 		},
 		{ /* origin index 1 */
-			{11., 12., qNaN, qNaN, 13., qNaN, 10.,   1.,    2.,    -1.,  -2.,  3.,    qNaN, 5e-4}, /* dir 0 */
-			{qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, 1.,    qNaN, qNaN, qNaN, qNaN, qNaN, 5e-4}, /* dir 1 */
-			{qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, 1.,    qNaN, -1.,   -2.,   qNaN, qNaN, 5e-4}, /* dir 2 */
-			{-11., -12., qNaN, qNaN, -13., qNaN, -10.,  -1.,   -2.,   1.,  2.,  -3.,   qNaN, -5e-4}, /* dir 3 */
+			{11., 12., qNaN, qNaN, 13., qNaN, 10.,   1.,    2.,    -1.,  -2.,  3.,    qNaN, REAL_CONST(5e-4)}, /* dir 0 */
+			{qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, 1.,    qNaN, qNaN, qNaN, qNaN, qNaN, REAL_CONST(5e-4)}, /* dir 1 */
+			{qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, 1.,    qNaN, -1.,   -2.,   qNaN, qNaN, REAL_CONST(5e-4)}, /* dir 2 */
+			{-11., -12., qNaN, qNaN, -13., qNaN, -10.,  -1.,   -2.,   1.,  2.,  -3.,   qNaN, REAL_CONST(-5e-4)}, /* dir 3 */
 			{qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN}, /* dir 4 */
-			{qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, 2.,    -5e-4}, /* dir 5 */
+			{qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, qNaN, 2.,    REAL_CONST(-5e-4)}, /* dir 5 */
 		},
 		};
 		// Note: these are very approximate distances. The important parts are the triangle index and validity.

@@ -42,7 +42,7 @@ namespace RAC
 			* @param filterOrder The order of the filter
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
-			IIRFilter(const int filterOrder, const int sampleRate) : order(filterOrder), T(1.0 / static_cast<Real>(sampleRate)),
+			IIRFilter(const int filterOrder, const int sampleRate) : order(filterOrder), T(REAL_CONST(1.0) / static_cast<Real>(sampleRate)),
 				b(filterOrder + 1), a(filterOrder + 1), y(filterOrder + 1) {};
 
 			/**
@@ -113,7 +113,7 @@ namespace RAC
 			*
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
-			IIRFilter1(const int sampleRate) : T(1.0 / static_cast<Real>(sampleRate)) {};
+			IIRFilter1(const int sampleRate) : T(REAL_CONST(1.0) / static_cast<Real>(sampleRate)) {};
 
 			/**
 			* @brief Default deconstructor
@@ -314,7 +314,7 @@ namespace RAC
 			*
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
-			ZPKFilter(const int sampleRate) : ZPKFilter(Parameters(std::array<Real, 5>({ 0.25, -0.99, 0.99, -0.25, 0.0 })), sampleRate) {};
+			ZPKFilter(const int sampleRate) : ZPKFilter(Parameters(std::array<Real, 5>({ REAL_CONST(0.25), REAL_CONST(-0.99), REAL_CONST(0.99), REAL_CONST(-0.25), REAL_CONST(0.0) })), sampleRate) {};
 			
 			/**
 			* @brief Constructor that initialises a second order IIRFilter with a given sample rate
@@ -327,7 +327,6 @@ namespace RAC
 			{
 				SetTargetParameters(zpk);
 
-				a0 = 1.0;
 				UpdateCoefficients(currentZPK);
 				parametersEqual.store(true, std::memory_order_release);
 				initialised.store(true, std::memory_order_release);

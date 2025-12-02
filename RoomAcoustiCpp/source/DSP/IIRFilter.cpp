@@ -64,11 +64,11 @@ namespace RAC
 			{
 				Real omega = PI_2 * frequencies[i] * T;
 				Complex num = b[0];
-				Complex den = 1.0;
+				Complex den = REAL_CONST(1.0);
 
 				for (int j = 1; j <= order; j++)
 				{
-					Complex e = std::exp(-j * imUnit * omega);
+					Complex e = std::exp(-static_cast<Real>(j) * imUnit * omega);
 					num += b[j] * e;
 					den += a[j] * e;
 				}
@@ -187,7 +187,7 @@ namespace RAC
 			const Real v1 = omega / sqrtG;
 			const Real v2 = omega * sqrtG;
 
-			a0 = 1.0 / (1.0 + v1); // a0 isn't used in GetOutput
+			a0 = REAL_CONST(1.0) / (REAL_CONST(1.0) + v1); // a0 isn't used in GetOutput
 			a1 = (1 - v1) * a0;
 
 			b0 = (1 + v2) * a0;
@@ -216,8 +216,8 @@ namespace RAC
 		{
 			const Real K = PI_2 * fc * T;
 
-			a0 = 1.0 / (K + 2.0); // a0 isn't used in GetOutput
-			a1 = (K - 2.0) * a0;
+			a0 = REAL_CONST(1.0) / (K + REAL_CONST(2.0)); // a0 isn't used in GetOutput
+			a1 = (K - REAL_CONST(2.0)) * a0;
 
 			b0 = K * a0;
 			b1 = K * a0;
@@ -255,19 +255,19 @@ namespace RAC
 			assert(gain > 0.0);
 
 			const Real A = sqrt(gain);
-			const Real v1 = A + 1.0;
-			const Real v2 = A - 1.0;
+			const Real v1 = A + REAL_CONST(1.0);
+			const Real v2 = A - REAL_CONST(1.0);
 			const Real v3 = v1 * cosOmega;
 			const Real v4 = v2 * cosOmega;
 			const Real v5 = sqrt(A) * alpha; // 2 * sqrt(A) * alpha
 
-			this->a0 = 1.0 / (v1 - v4 + v5); // a0 isn't used in GetOutput
-			this->a1 = (2.0 * (v2 - v3)) * this->a0;
-			this->a2 = (v1 - v4 - v5) * this->a0;
+			const Real a0 = REAL_CONST(1.0) / (v1 - v4 + v5); // a0 isn't used in GetOutput
+			this->a1 = (REAL_CONST(2.0) * (v2 - v3)) * a0;
+			this->a2 = (v1 - v4 - v5) * a0;
 
-			this->b0 = A * (v1 + v4 + v5) * this->a0;
-			this->b1 = -2.0 * A * (v2 + v3) * this->a0;
-			this->b2 = A * (v1 + v4 - v5) * this->a0;
+			this->b0 = A * (v1 + v4 + v5) * a0;
+			this->b1 = REAL_CONST(-2.0) * A * (v2 + v3) * a0;
+			this->b2 = A * (v1 + v4 - v5) * a0;
 		}
 
 		////////////////////////////////////////
@@ -285,19 +285,19 @@ namespace RAC
 			assert(gain > 0.0);
 
 			const Real A = sqrt(gain);
-			const Real v1 = A + 1.0;
-			const Real v2 = A - 1.0;
+			const Real v1 = A + REAL_CONST(1.0);
+			const Real v2 = A - REAL_CONST(1.0);
 			const Real v3 = v1 * cosOmega;
 			const Real v4 = v2 * cosOmega;
 			const Real v5 = sqrt(A) * alpha; // 2 * sqrt(A) * alpha
 
-			this->a0 = 1.0 / (v1 + v4 + v5); // a0 isn't used in GetOutput
-			this->a1 = (-2.0 * (v2 + v3)) * this->a0;
-			this->a2 = (v1 + v4 - v5) * this->a0;
+			const Real a0 = REAL_CONST(1.0) / (v1 + v4 + v5); // a0 isn't used in GetOutput
+			this->a1 = (REAL_CONST(-2.0) * (v2 + v3)) * a0;
+			this->a2 = (v1 + v4 - v5) * a0;
 
-			this->b0 = A * (v1 - v4 + v5) * this->a0;
-			this->b1 = 2.0 * A * (v2 - v3) * this->a0;
-			this->b2 = A * (v1 - v4 - v5) * this->a0;
+			this->b0 = A * (v1 - v4 + v5) * a0;
+			this->b1 = REAL_CONST(2.0) * A * (v2 - v3) * a0;
+			this->b2 = A * (v1 - v4 - v5) * a0;
 		}
 
 		////////////////////////////////////////
@@ -318,13 +318,13 @@ namespace RAC
 			const Real v1 = alpha * A;
 			const Real v2 = alpha / A;
 
-			this->a0 = 1.0 / (1.0 + v2); // a0 isn't used in GetOutput
-			this->a1 = cosOmega * this->a0;
-			this->a2 = (1.0 - v2) * this->a0;
+			const Real a0 = REAL_CONST(1.0) / (REAL_CONST(1.0) + v2); // a0 isn't used in GetOutput
+			this->a1 = cosOmega * a0;
+			this->a2 = (REAL_CONST(1.0) - v2) * a0;
 
-			this->b0 = (1.0 + v1) * this->a0;
+			this->b0 = (REAL_CONST(1.0) + v1) * a0;
 			this->b1 = this->a1;
-			this->b2 = (1.0 - v1) * this->a0;
+			this->b2 = (REAL_CONST(1.0) - v1) * a0;
 		}
 
 		////////////////////////////////////////
@@ -405,12 +405,12 @@ namespace RAC
 			const Real omega = cot(PI_1 * fc * T); // 2 * PI * fc * T / 2
 			const Real omega_sq = omega * omega;
 
-			a0 = 1.0 / (1.0 + SQRT_2 * omega + omega_sq); // a[0] isn't used in GetOutput
-			a1 = (2.0 - 2.0 * omega_sq) * a0;
-			a2 = (1.0 - SQRT_2 * omega + omega_sq) * a0;
+			const Real a0 = REAL_CONST(1.0) / (REAL_CONST(1.0) + SQRT_2 * omega + omega_sq); // a[0] isn't used in GetOutput
+			a1 = (REAL_CONST(2.0) - REAL_CONST(2.0) * omega_sq) * a0;
+			a2 = (REAL_CONST(1.0) - SQRT_2 * omega + omega_sq) * a0;
 
 			b0 = a0;
-			b1 = 2.0 * a0;
+			b1 = REAL_CONST(2.0) * a0;
 			b2 = a0;
 		}
 
@@ -423,12 +423,12 @@ namespace RAC
 			const Real omega = cot(PI_1 * fc * T); // 2 * PI * fc * T / 2
 			const Real omega_sq = omega * omega;
 
-			a0 = 1.0 / (1.0 + SQRT_2 * omega + omega_sq); // a[0] isn't used in GetOutput
-			a1 = (2.0 - 2.0 * omega_sq) * a0;
-			a2 = (1.0 - SQRT_2 * omega + omega_sq) * a0;
+			const Real a0 = REAL_CONST(1.0) / (REAL_CONST(1.0) + SQRT_2 * omega + omega_sq); // a[0] isn't used in GetOutput
+			a1 = (REAL_CONST(2.0) - REAL_CONST(2.0) * omega_sq) * a0;
+			a2 = (REAL_CONST(1.0) - SQRT_2 * omega + omega_sq) * a0;
 
 			b0 = omega_sq * a0;
-			b1 = -2.0 * omega_sq * a0;
+			b1 = REAL_CONST(-2.0) * omega_sq * a0;
 			b2 = omega_sq * a0;
 		}	
 
@@ -457,15 +457,15 @@ namespace RAC
 
 		void HighShelfMatched::UpdateCoefficients(const Real fc, const Real gain)
 		{
-			constexpr static Real fm = 0.9;
-			constexpr static Real fmSq = 1.0 / (fm * fm);
+			constexpr static Real fm = REAL_CONST(0.9);
+			constexpr static Real fmSq = REAL_CONST(1.0) / (fm * fm);
 			Real newFc = 2 * fc * T;
 			newFc *= newFc;
 			Real Phim = 1 - cos(PI_1 * fm);
 			Phim = 1 / Phim;
 
-			Real alpha = 2.0 / PI_SQ * (fmSq + 1 / (gain * newFc)) - Phim;
-			Real beta = 2.0 / PI_SQ * (fmSq + gain / newFc) - Phim;
+			Real alpha = REAL_CONST(2.0) / PI_SQ * (fmSq + 1 / (gain * newFc)) - Phim;
+			Real beta = REAL_CONST(2.0) / PI_SQ * (fmSq + gain / newFc) - Phim;
 
 			a1 = -alpha / (1 + alpha + sqrt(1 + 2 * alpha));
 			Real bAll = -beta / (1 + beta + sqrt(1 + 2 * beta));
@@ -476,81 +476,6 @@ namespace RAC
 
 			b0 /= DCg;
 			b1 /= DCg;
-		}
-
-#if USE_AVX
-		template<>
-		void IIRFilter2<double>::GetOutputBatch(const double* input, double* output, int inputOutputLength, const Real lerpFactor)
-		{
-			assert(IsValid());
-
-			// ~64b / 8 = 8 samples/page. In practice, this doesn't help much
-			//for ( int prefetchIndex = 0; prefetchIndex < (inputOutputLength>>3); ++prefetchIndex )
-			//	_mm_prefetch( reinterpret_cast<const char*>(input + (prefetchIndex << 3)), _MM_HINT_T0);
-
-			int index = 0;
-			if (!parametersEqual.load(std::memory_order_acquire))
-			{
-				while (index < inputOutputLength)
-				{
-					InterpolateParameters(lerpFactor);
-					if (parametersEqual.load(std::memory_order_acquire))
-						break;
-					GetOutputInternal(input[index], output[index]);
-					++index;
-				}
-				if (index >= inputOutputLength)
-					return;
-			}
-
-			// In v = input - y0 * a1 + y1 * a2 --> input - y[0:1] . a[0:1] -> sub(input, y.a)
-			__m128d y = _mm_load_pd(&this->y0);
-			__m128d a = _mm_load_pd(&this->a1);
-			__m128d b = _mm_load_pd(&this->b1);
-			__m128d b0 = _mm_set_sd(this->b0);
-
-			const double* inputIteratorEnd = input + inputOutputLength;
-			double* outputIterator = output;
-			for (const double* inputIterator = input + index; inputIterator < inputIteratorEnd; ++inputIterator)
-			{
-				__m128d aDotY = _mm_dp_pd(a, y, 0x31);
-				// v[low] has the result v[high] is not used
-				__m128d v = _mm_sub_sd(_mm_set_sd(*inputIterator), aDotY);
-
-				// In output	 = y0 * b1 + y1 * b2 + v * b0 --> y[0:1] . b[0:1] + v * b0 --> b0 * v + (y[0:1] . b[0:1]) --> fmadd( b0, v, y.b )
-				__m128d bDotY = _mm_dp_pd(b, y, 0x31);
-				// output[low] has the result; output[high] is not used
-				_mm_store_sd(outputIterator++, _mm_fmadd_pd(v, b0, bDotY));
-
-				// shift the filter y1 = y0, y0 = v
-				y = _mm_move_sd(_mm_movedup_pd(y), v);
-			}
-
-			// save it
-			_mm_store_pd(&this->y0, y);
-		}
-#endif
-
-		template<typename In>
-		void IIRFilter2<In>::GetOutputBatch(const In* input, In* output, int inputOutputLength, const Real lerpFactor)
-		{
-			assert(IsValid());
-
-			if (!parametersEqual.load(std::memory_order_acquire))
-			{
-				for (int index = 0; index < inputOutputLength; ++index)
-				{
-					if (!parametersEqual.load(std::memory_order_acquire))
-						InterpolateParameters(lerpFactor);
-
-					GetOutputInternal(input[index], output[index]);
-				}
-			}
-			else
-			{
-				for (int index = 0; index < inputOutputLength; ++index)
-					GetOutputInternal(input[index], output[index]);
-			}
 		}
 
 	}

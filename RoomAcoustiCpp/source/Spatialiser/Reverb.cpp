@@ -5,8 +5,8 @@
 *
 */
 
-#if defined(_ANDROID)
 // Common headers
+#if defined(_ANDROID)
 #include "Common/Definitions.h"
 #endif
 
@@ -14,20 +14,18 @@
 #include "Spatialiser/Reverb.h"
 #include "Spatialiser/Globals.h"
 
-// Unity headers
-#include "Unity/Debug.h"
-
 // DSP headers
 #include "DSP/Interpolate.h"
 
 // Common headers
 #include "Common/SphericalGeometries.h"
 #include "Common/RACProfiler.h"
+#include "Common/Debug.h"
 
 using namespace Common;
 namespace RAC
 {
-	using namespace Unity;
+	using namespace Common;
 	using namespace DSP;
 	namespace Spatialiser
 	{
@@ -51,9 +49,8 @@ namespace RAC
 
 		ReverbSource::~ReverbSource()
 		{
-#ifdef DEBUG_REMOVE
-	Debug::Log("Remove reverb source", Colour::Red);
-#endif
+			Debug::Log("Remove reverb source", Colour::Red);
+
 			{
 				unique_lock<shared_mutex> lock(tuneInMutex);
 				mCore->RemoveSingleSourceDSP(mSource);
@@ -64,9 +61,8 @@ namespace RAC
 
 		void ReverbSource::InitSource(const std::shared_ptr<DSPConfig>& dspConfig)
 		{
-#ifdef DEBUG_INIT
 			Debug::Log("Init reverb source", Colour::Green);
-#endif
+
 			{
 				unique_lock<shared_mutex> lock(tuneInMutex);
 
@@ -328,10 +324,7 @@ namespace RAC
 		void SingleFDN::SetTargetT60(const Coefficients<>& T60)
 		{
 			assert(IsValid());
-
-#ifdef DEBUG_INIT
-			Debug::Log("Init FDN: [" + CoefficientToStr(T60) + "]", Colour::Green);
-#endif
+			Debug::Log("Init FDN: " + ToString(T60), Colour::Green);
 
 #ifdef __ANDROID__
 			std::atomic_load(&mFDN)->SetTargetT60(T60);

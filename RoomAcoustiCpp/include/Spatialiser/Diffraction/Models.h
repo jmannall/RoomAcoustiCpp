@@ -124,7 +124,7 @@ namespace RAC
 				* @param path The path to calculate the gain from
 				* @return 1.0 if the path is valid and the receiver is in the shadow zone, otherwise 0.0
 				*/
-				inline Real CalculateGain(const Path& path) const { return (path.valid && path.inShadowZone) ? 1.0 : 0.0; }
+				inline Real CalculateGain(const Path& path) const { return (path.valid && path.inShadowZone) ? REAL_CONST(1.0) : REAL_CONST(0.0); }
 			
 				Parameter gain;		// Gain parameter
 			};
@@ -173,7 +173,7 @@ namespace RAC
 				* @param path The path to calculate the gain from
 				* @return 1.0 if the path is valid and the receiver is in the shadow zone, otherwise 0.0
 				*/
-				inline Real CalculateGain(const Path& path) const { return (path.valid && path.inShadowZone) ? 1.0 : 0.0; }
+				inline Real CalculateGain(const Path& path) const { return (path.valid && path.inShadowZone) ? REAL_CONST(1.0) : REAL_CONST(0.0); }
 
 				LowPass1 filter;	// Low-pass filter with cutoff frequency of 1000Hz
 				Parameter gain;		// Gain parameter
@@ -224,10 +224,10 @@ namespace RAC
 				*/
 				struct Parameters
 				{
-					Real fc;				// Cut-off frequency
-					Real gain;				// Gain
-					Real blend{ 1.44 };		// Blend factor for the filter
-					Real Q{ 0.2 };			// Q factor for the filter
+					Real fc;							// Cut-off frequency
+					Real gain;							// Gain
+					Real blend{ REAL_CONST(1.44) };		// Blend factor for the filter
+					Real Q{ REAL_CONST(0.2) };			// Q factor for the filter
 
 					/**
 					* @brief Constructor that initialises the parameters for a given cut-off frequency, gain and time difference
@@ -240,10 +240,10 @@ namespace RAC
 					{
 						Real halfGain = CalculateHalfGain(fc, tDiff); // eq. 10
 						Real halfGainSq = halfGain * halfGain;
-						fc *= (1.0 / halfGainSq); // eq. 11
+						fc *= (REAL_CONST(1.0) / halfGainSq); // eq. 11
 						gain *= halfGain;
-						blend = 1.0 + (blend - 1.0) * halfGainSq; // eq. 12a
-						Q = 0.5 + (Q - 0.5) * halfGainSq; // eq. 12b
+						blend = REAL_CONST(1.0) + (blend - REAL_CONST(1.0)) * halfGainSq; // eq. 12a
+						Q = REAL_CONST(0.5) + (Q - REAL_CONST(0.5)) * halfGainSq; // eq. 12b
 					}
 
 					/**
@@ -254,7 +254,7 @@ namespace RAC
 					* @return The DC gain for a half wedge
 					*/
 					inline Real CalculateHalfGain(Real fc, Real tDiff) const {
-						return (2 / PI_1) * atan(PI_1 * sqrt(2.0 * fc * tDiff)); }
+						return (2 / PI_1) * atan(PI_1 * sqrt(REAL_CONST(2.0) * fc * tDiff)); }
 				};
 
 				/**
@@ -280,8 +280,8 @@ namespace RAC
 						Real cosVt1 = cos(v * (path.rData.t - path.sData.t));
 						Real cosVt2 = cos(v * (path.rData.t + path.sData.t));
 
-						Real dStar = 2.0 * path.sData.r * path.rData.r / (path.sData.d + path.rData.d);
-						Real front = 2.0 * SPEED_OF_SOUND / (PI_SQ * dStar); // eq. 4
+						Real dStar = REAL_CONST(2.0) * path.sData.r * path.rData.r / (path.sData.d + path.rData.d);
+						Real front = REAL_CONST(2.0) * SPEED_OF_SOUND / (PI_SQ * dStar); // eq. 4
 
 						Real nV1 = CalcNv(cosVt1, v, cosVpi); // eq. 5
 						Real nV2 = CalcNv(cosVt2, v, cosVpi);
@@ -297,7 +297,7 @@ namespace RAC
 							// Factor of 0.5 already accounted for in CalcGv
 							Real fcTerm = gain1 * sqrt(fc1) + gain2 * sqrt(fc2);
 							fc1 = fcTerm * fcTerm; // eq. 7
-							gain1 = 1.0;
+							gain1 = REAL_CONST(1.0);
 						}
 						else
 						{
@@ -308,7 +308,7 @@ namespace RAC
 						}
 
 						Real d = path.sData.d + path.rData.d;
-						tDiffBase = (path.GetD(0.0) - d) / SPEED_OF_SOUND;	// Sec III. A
+						tDiffBase = (path.GetD(REAL_CONST(0.0)) - d) / SPEED_OF_SOUND;	// Sec III. A
 						tDiffTop = (path.GetD(path.eData.z) - d) / SPEED_OF_SOUND;
 					}
 
@@ -331,7 +331,7 @@ namespace RAC
 					* @param sinVpi sin(v*pi) where v is the exterior wedge index
 					*/
 					inline Real CalcGv(Real cosVt, Real cosVpi, Real sinVpi) const {
-						return 0.5 * sinVpi / sqrt(1 - cosVpi * cosVt);
+						return REAL_CONST(0.5) * sinVpi / sqrt(1 - cosVpi * cosVt);
 					}
 				};
 
@@ -477,8 +477,8 @@ namespace RAC
 
 					const ParametersI gdSq = gd * gd;
 					const ParametersI gSq = filterParameters.g * filterParameters.g;
-					filterParameters.fc = fi * ((gdSq - gSq) / (filterParameters.g * (1.0 - gdSq))).Sqrt() * (1.0 + gSq / 12.0); // eq. 20
-					filterParameters.gain = gt[0] * parameters.gain * 0.5;
+					filterParameters.fc = fi * ((gdSq - gSq) / (filterParameters.g * (REAL_CONST(1.0) - gdSq))).Sqrt() * (REAL_CONST(1.0) + gSq / REAL_CONST(12.0)); // eq. 20
+					filterParameters.gain = gt[0] * parameters.gain * REAL_CONST(0.5);
 					return filterParameters;
 				}
 
@@ -491,13 +491,13 @@ namespace RAC
 				inline ParametersT CalcFT(int fs) const
 				{
 					ParametersT f(numShelvingFilters + 1);
-					Real fMin = log10(10.0);
+					Real fMin = log10(REAL_CONST(10.0));
 					Real fMax = log10(static_cast<Real>(fs));
 
 					Real delta = (fMax - fMin) / numShelvingFilters;
 
 					for (int i = 0; i <= numShelvingFilters; i++)
-						f[i] = pow(10.0, fMin + delta * i);
+						f[i] = pow(REAL_CONST(10.0), fMin + delta * i);
 					return f;
 				}
 
@@ -793,7 +793,7 @@ namespace RAC
 				{
 					std::array<Complex, 4> E;
 					for (int i = 0; i < 4; ++i)
-						E[i] = std::exp(-imUnit * (PI_1 / 4.0)) / (2.0 * std::sqrt(PI_2 * k[i])); // eq. 25
+						E[i] = std::exp(-imUnit * (PI_1 / REAL_CONST(4.0))) / (REAL_CONST(2.0) * std::sqrt(PI_2 * k[i])); // eq. 25
 					return E;
 				}
 
@@ -986,16 +986,16 @@ namespace RAC
 						cosTheta = vTheta.Cos();
 
 						int n0 = (int)round(samplesPerMetre * R0);
-						Real x = (n0 + 0.5) / samplesPerMetre;
+						Real x = (n0 + REAL_CONST(0.5)) / samplesPerMetre;
 						Real xSq = x * x;
 						Real MSq = rSSq + zSRel * zSRel;
 						Real LSq = rRSq + zRRel * zRRel;
 						Real K = MSq - LSq - xSq;
 						Real denom = dzSq - xSq;
-						Real a = (2.0 * xSq * zRRel - K * dz) / denom;
+						Real a = (REAL_CONST(2.0) * xSq * zRRel - K * dz) / denom;
 						Real b = ((K * K / 4) - xSq * LSq) / denom;
-						zRangeApex = -a / 2.0 + sqrt(a * a / 4.0 - b);
-						zRange = 0.1 * std::min(path.sData.r, path.rData.r);
+						zRangeApex = -a / REAL_CONST(2.0) + std::sqrt(a * a / REAL_CONST(4.0) - b);
+						zRange = REAL_CONST(0.1) * std::min(path.sData.r, path.rData.r);
 
 						if (zRange > zRangeApex)
 						{
@@ -1005,12 +1005,12 @@ namespace RAC
 
 						rho = path.rData.r / path.sData.r;
 						rhoSq = rho * rho;
-						rhoOne = rho + 1.0;
+						rhoOne = rho + REAL_CONST(1.0);
 						rhoOneSq = rhoOne * rhoOne;
 						R0rho = R0 * rho;
 
 						Real sinPsi = (path.sData.r + path.rData.r) / R0;
-						factor = rhoOneSq * sinPsi * sinPsi - 2.0 * rho;
+						factor = rhoOneSq * sinPsi * sinPsi - REAL_CONST(2.0) * rho;
 					}
 				};
 
