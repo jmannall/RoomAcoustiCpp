@@ -118,6 +118,11 @@ namespace RAC
 			*/
 			inline void Update(const size_t id, const Vec3& position, const Vec4& orientation, Real& distance)
 			{
+				if (id >= MAX_SOURCES)
+				{
+					Debug::Log("SourceManager::Update: Invalid source ID", Colour::Red);
+					return;
+				}
 				mSources[id]->Update(position, orientation, distance);
 			}
 
@@ -126,7 +131,15 @@ namespace RAC
 			* 
 			* @params id The ID of the source to remove
 			*/
-			inline void Remove(const size_t id) { mSources[id]->Remove(); }
+			inline void Remove(const size_t id)
+			{
+				if (id >= MAX_SOURCES)
+				{
+					Debug::Log("SourceManager::Remove: Invalid source ID", Colour::Red);
+					return;
+				}
+				mSources[id]->Remove();
+			}
 
 			/**
 			* @return Position, orientation and directivity data for all sources
