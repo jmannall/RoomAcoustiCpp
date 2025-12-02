@@ -5,7 +5,7 @@
   <PropertyGroup />
   <ItemDefinitionGroup>
     <ClCompile>
-      <PreprocessorDefinitions>DEBUG_ASSERT;DEBUG_LOG;DEBUG_PATHS;RTM_FLAG;IEM_FLAG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>RESIDUE_CALLBACKS;DEBUG_ASSERT;DEBUG_LOG;DEBUG_PATHS;RTM_FLAG;IEM_FLAG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
     </Link>
