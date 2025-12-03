@@ -138,7 +138,7 @@ namespace RAC
 			*/
 			inline Vec operator=(const Matrix<T>& matrix)
 			{
-				Debug::Assert(matrix.Cols() == 1, "Matrix must have only one column");
+				RAC_DEBUG_ASSERT(matrix.Cols() == 1, "Matrix must have only one column");
 				Matrix<T>::operator=(matrix);
 				return *this;
 			}
@@ -242,7 +242,7 @@ namespace RAC
 			*/
 			inline Rowvec operator=(const Matrix<T>& matrix)
 			{
-				Debug::Assert(matrix.Rows() == 1, "Matrix must have only one row");
+				RAC_DEBUG_ASSERT(matrix.Rows() == 1, "Matrix must have only one row");
 				Matrix<T>::operator=(matrix);
 				return *this;
 			}

@@ -37,8 +37,8 @@ namespace RAC
 			cosine = std::numeric_limits<Real>::quiet_NaN();
 
 			// Sanity check: the requested triangle must exist.
-            Debug::Assert(triangleIndex >= 0, "Triangle index out of bounds: " + ToString(triangleIndex));
-            Debug::Assert(triangleIndex < ToInt(triangles.size()), "Triangle index out of bounds: " + ToString(triangleIndex));
+            RAC_DEBUG_ASSERT(triangleIndex >= 0, "Triangle index out of bounds: " + ToString(triangleIndex));
+            RAC_DEBUG_ASSERT(triangleIndex < ToInt(triangles.size()), "Triangle index out of bounds: " + ToString(triangleIndex));
 
 			// Load plane data into locals.
 			const Vec3 n = triangles.n[triangleIndex];
@@ -97,8 +97,8 @@ namespace RAC
             Real& distance, Real& cosine)
         {
             // Sanity check: the requested ray must exist.
-            Debug::Assert(rayIndex >= 0, "Ray index out of bounds: " + ToString(rayIndex));
-            Debug::Assert(rayIndex < ToInt(rays.size()), "Ray index out of bounds" + ToString(rayIndex));
+            RAC_DEBUG_ASSERT(rayIndex >= 0, "Ray index out of bounds: " + ToString(rayIndex));
+            RAC_DEBUG_ASSERT(rayIndex < ToInt(rays.size()), "Ray index out of bounds" + ToString(rayIndex));
 
             // Load ray data into locals.
             const Vec3& O = rays.O[rayIndex];
@@ -113,8 +113,8 @@ namespace RAC
             Real& distance, Real& cosine)
         {
             // Sanity check: the requested ray must exist.
-            Debug::Assert(rayIndex >= 0, "Ray index out of bounds: " + ToString(rayIndex));
-            Debug::Assert(rayIndex < ToInt(rays.size()), "Ray index out of bounds" + ToString(rayIndex));
+            RAC_DEBUG_ASSERT(rayIndex >= 0, "Ray index out of bounds: " + ToString(rayIndex));
+            RAC_DEBUG_ASSERT(rayIndex < ToInt(rays.size()), "Ray index out of bounds" + ToString(rayIndex));
 
             // Load ray data into locals.
             const Vec3& O = rays.O;
@@ -430,7 +430,7 @@ namespace RAC
 
         void RayBundle::getOrigins(std::vector<Vec3>& origins) const
         {
-            Debug::Assert(ToInt(origins.size()) == numRays, "Origins size and numRays must be equal" + ToString(ToInt(origins.size())));
+            RAC_DEBUG_ASSERT(ToInt(origins.size()) == numRays, "Origins size and numRays must be equal" + ToString(ToInt(origins.size())));
             for (int i = 0; i < numRays; ++i) {
                 origins[i] = rays.O[i];
             }
@@ -438,7 +438,7 @@ namespace RAC
 
         void RayBundle::getDirections(std::vector<Vec3>& directions) const
         {
-            Debug::Assert(ToInt(directions.size()) == numRays, "Directions size and numRays must be equal" + ToString(ToInt(directions.size())));
+            RAC_DEBUG_ASSERT(ToInt(directions.size()) == numRays, "Directions size and numRays must be equal" + ToString(ToInt(directions.size())));
             for (int i = 0; i < numRays; ++i) {
                 directions[i] = rays.D[i];
             }
@@ -447,22 +447,22 @@ namespace RAC
         // TODO: Can these not just use operator= ?
         void RayBundle::getTotalDistances(Vec<>& distances) const
         {
-            Debug::Assert(distances.Length() == numRays, "Distances length and numRays must be equal" + ToString(distances.Length()));
+            RAC_DEBUG_ASSERT(distances.Length() == numRays, "Distances length and numRays must be equal" + ToString(distances.Length()));
             for (int i = 0; i < numRays; ++i)
                 distances(i) = totalDistance(i);
         }
 
         void RayBundle::getCosines(Vec<>& cosines) const
         {
-            Debug::Assert(cosines.Length() == numRays, "Cosines length and numRays must be equal" + ToString(cosines.Length()));
+            RAC_DEBUG_ASSERT(cosines.Length() == numRays, "Cosines length and numRays must be equal" + ToString(cosines.Length()));
             for (int i = 0; i < numRays; ++i)
                 cosines(i) = latestCosine(i);
         }
 
         void RayBundle::getIndices(Vec<int>& current, Vec<int>& previous) const
         {
-            Debug::Assert(current.Length() == numRays, "Current length and numRays must be equal" + ToString(current.Length()));
-            Debug::Assert(previous.Length() == numRays, "Previous length and numRays must be equal" + ToString(previous.Length()));
+            RAC_DEBUG_ASSERT(current.Length() == numRays, "Current length and numRays must be equal" + ToString(current.Length()));
+            RAC_DEBUG_ASSERT(previous.Length() == numRays, "Previous length and numRays must be equal" + ToString(previous.Length()));
             for (int i = 0; i < numRays; ++i) {
                 current(i) = latestPatchId(i);
                 previous(i) = previousPatchId(i);
@@ -471,8 +471,8 @@ namespace RAC
 
         void RayBundle::getRadiance(Vec<>& rad) const
         {
-            Debug::Assert(rad.Length() == numRays, "Rad length and numRays must be equal" + ToString(rad.Length()));
-            Debug::Assert(radiance.Length() == numRays, "Radiance length and numRays must be equal" + ToString(radiance.Length()));
+            RAC_DEBUG_ASSERT(rad.Length() == numRays, "Rad length and numRays must be equal" + ToString(rad.Length()));
+            RAC_DEBUG_ASSERT(radiance.Length() == numRays, "Radiance length and numRays must be equal" + ToString(radiance.Length()));
             for (int i = 0; i < numRays; ++i)
                 rad(i) = radiance(i);
         }
@@ -587,9 +587,9 @@ namespace RAC
             Vec<int>& clusters) const
         {
             if (exposeMirrorCopies)
-                Debug::Assert(clusters.Length() == 2 * numRays, "Clusters length must equal 2 * numRays" + ToString(clusters.Length()));
+                RAC_DEBUG_ASSERT(clusters.Length() == 2 * numRays, "Clusters length must equal 2 * numRays" + ToString(clusters.Length()));
             else
-                Debug::Assert(clusters.Length() == numRays, "Clusters length must equal numRays" + ToString(clusters.Length()));
+                RAC_DEBUG_ASSERT(clusters.Length() == numRays, "Clusters length must equal numRays" + ToString(clusters.Length()));
 
             // Buffer used while iterating
             std::vector<Real> cosineSimilarity(directions.size());
@@ -635,9 +635,9 @@ namespace RAC
         void RayPencil::getDirections(std::vector<Vec3>& directions) const
         {
             if (exposeMirrorCopies)
-                Debug::Assert(ToInt(directions.size()) == 2 * numRays, "Directions size must equal 2 * numRays" + ToString(ToInt(directions.size())));
+                RAC_DEBUG_ASSERT(ToInt(directions.size()) == 2 * numRays, "Directions size must equal 2 * numRays" + ToString(ToInt(directions.size())));
             else
-                Debug::Assert(ToInt(directions.size()) == numRays, "Directions size must equal numRays" + ToString(ToInt(directions.size())));
+                RAC_DEBUG_ASSERT(ToInt(directions.size()) == numRays, "Directions size must equal numRays" + ToString(ToInt(directions.size())));
 
             for (int i = 0; i < numRays; ++i) {
                 directions[i] = rays.D[i];
@@ -654,9 +654,9 @@ namespace RAC
         void RayPencil::getDistances(Vec<>& distances) const
         {
             if (exposeMirrorCopies)
-                Debug::Assert(distances.Length() == 2 * numRays, "Distances length must equal 2 * numRays" + ToString(distances.Length()));
+                RAC_DEBUG_ASSERT(distances.Length() == 2 * numRays, "Distances length must equal 2 * numRays" + ToString(distances.Length()));
             else
-                Debug::Assert(distances.Length() == numRays, "Distances length must equal numRays" + ToString(distances.Length()));
+                RAC_DEBUG_ASSERT(distances.Length() == numRays, "Distances length must equal numRays" + ToString(distances.Length()));
 
             for (int i = 0; i < numRays; ++i)
                 distances(i) = frontDistance(i);
@@ -672,9 +672,9 @@ namespace RAC
         void RayPencil::getCosines(Vec<>& cosines) const
         {
             if (exposeMirrorCopies)
-                Debug::Assert(cosines.Length() == 2 * numRays, "Cosines length must equal 2 * numRays" + ToString(cosines.Length()));
+                RAC_DEBUG_ASSERT(cosines.Length() == 2 * numRays, "Cosines length must equal 2 * numRays" + ToString(cosines.Length()));
             else
-                Debug::Assert(cosines.Length() == numRays, "Cosines length must equal numRays" + ToString(cosines.Length()));
+                RAC_DEBUG_ASSERT(cosines.Length() == numRays, "Cosines length must equal numRays" + ToString(cosines.Length()));
 
             for (int i = 0; i < numRays; ++i)
                 cosines(i) = frontCosine(i);
@@ -691,13 +691,13 @@ namespace RAC
         {
             if (exposeMirrorCopies)
             {
-                Debug::Assert(front.Length() == 2 * numRays, "Front length must equal 2 * numRays" + ToString(front.Length()));
-                Debug::Assert(back.Length() == 2 * numRays, "Back length must equal 2 * numRays" + ToString(back.Length()));
+                RAC_DEBUG_ASSERT(front.Length() == 2 * numRays, "Front length must equal 2 * numRays" + ToString(front.Length()));
+                RAC_DEBUG_ASSERT(back.Length() == 2 * numRays, "Back length must equal 2 * numRays" + ToString(back.Length()));
             }
             else
             {
-                Debug::Assert(front.Length() == numRays, "Front length must equal numRays" + ToString(front.Length()));
-                Debug::Assert(back.Length() == numRays, "Back length must equal numRays" + ToString(back.Length()));
+                RAC_DEBUG_ASSERT(front.Length() == numRays, "Front length must equal numRays" + ToString(front.Length()));
+                RAC_DEBUG_ASSERT(back.Length() == numRays, "Back length must equal numRays" + ToString(back.Length()));
             }
 
             for (int i = 0; i < numRays; ++i)

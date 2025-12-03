@@ -212,8 +212,8 @@ namespace RAC
 
 		bool Context::LoadSpatialisationFiles(const int hrtfResamplingStep, const std::vector<std::string>& filePaths)
 		{
-			Debug::Assert(hrtfResamplingStep > 0, "Invalid HRTF resampling step: " + ToString(hrtfResamplingStep));
-			Debug::Assert(filePaths.size() == 3, "Invalid number of file paths");
+			RAC_DEBUG_ASSERT(hrtfResamplingStep > 0, "Invalid HRTF resampling step: " + ToString(hrtfResamplingStep));
+			RAC_DEBUG_ASSERT(filePaths.size() == 3, "Invalid number of file paths");
 
 			unique_lock<shared_mutex> lock(tuneInMutex);
 
@@ -234,7 +234,7 @@ namespace RAC
 
 		void Context::UpdateMoDARTDelay(const Real delay)
 		{
-			Debug::Assert(delay >= 0, "Invalid MoD-ART delay: " + ToString(delay));
+			RAC_DEBUG_ASSERT(delay >= 0, "Invalid MoD-ART delay: " + ToString(delay));
 
 			if (!lateReverbInitialised.load(std::memory_order_acquire))
 				return;
@@ -249,7 +249,7 @@ namespace RAC
 
 		void Context::UpdateMoDARTMinimumReverbTime(const Real T60)
 		{
-			Debug::Assert(T60 > 0, "Invalid MoD-ART minimum reverb time: " + ToString(T60));
+			RAC_DEBUG_ASSERT(T60 > 0, "Invalid MoD-ART minimum reverb time: " + ToString(T60));
 
 			if (lateReverbInitialised.load(std::memory_order_acquire))
 				mReverb->SetMinimumT60(T60);
@@ -267,7 +267,7 @@ namespace RAC
 
 		void Context::UpdateSingleFDNReverbTime(const Coefficients<>& T60)
 		{
-			Debug::Assert(T60.IsGreaterThan(0), "Invalid Single FDN reverb time: " + ToString(T60));
+			RAC_DEBUG_ASSERT(T60.IsGreaterThan(0), "Invalid Single FDN reverb time: " + ToString(T60));
 
 			mRoom->UpdateReverbTime(T60);
 			if (lateReverbInitialised.load(std::memory_order_acquire))
@@ -289,7 +289,7 @@ namespace RAC
 
 		void Context::CreateAudioThreadPool()
 		{
-			Debug::Assert(!audioThreadPool, "Audio thread pool already created");
+			RAC_DEBUG_ASSERT(!audioThreadPool, "Audio thread pool already created");
 			audioThreadPool = std::make_unique<AudioThreadPool>(numDesiredWorkerThreads, dspConfig);
 		}
 
@@ -304,11 +304,11 @@ namespace RAC
 				return false;
 			}
 
-			Debug::Assert(data.reflOrder >= 0 , "Invalid reflection order: " + ToString(data.reflOrder));
-			Debug::Assert(data.shadowDiffOrder >= 0, "Invalid shadow diffraction order: " + ToString(data.shadowDiffOrder));
-			Debug::Assert(data.specularDiffOrder >= 0, "Invalid specular diffraction order: " + ToString(data.specularDiffOrder));
-			Debug::Assert(data.minEdgeLength >= 0, "Invalid minimum edge length: " + ToString(data.minEdgeLength));
-			Debug::Assert(data.maxPathLength >= 0, "Invalid maximum path length: " + ToString(data.maxPathLength));
+			RAC_DEBUG_ASSERT(data.reflOrder >= 0 , "Invalid reflection order: " + ToString(data.reflOrder));
+			RAC_DEBUG_ASSERT(data.shadowDiffOrder >= 0, "Invalid shadow diffraction order: " + ToString(data.shadowDiffOrder));
+			RAC_DEBUG_ASSERT(data.specularDiffOrder >= 0, "Invalid specular diffraction order: " + ToString(data.specularDiffOrder));
+			RAC_DEBUG_ASSERT(data.minEdgeLength >= 0, "Invalid minimum edge length: " + ToString(data.minEdgeLength));
+			RAC_DEBUG_ASSERT(data.maxPathLength >= 0, "Invalid maximum path length: " + ToString(data.maxPathLength));
 
 			UpdateDiffractionModel(model);
 			mImageEdgeModel = std::make_shared<ImageEdge>(mRoom, mSources, data, dspConfig);
@@ -326,7 +326,7 @@ namespace RAC
 
 		void Context::InitLateReverb(const LateReverbData& data)
 		{
-			Debug::Assert(data.numRays >= 0, "Invalid number of rays: " + ToString(data.numRays));
+			RAC_DEBUG_ASSERT(data.numRays >= 0, "Invalid number of rays: " + ToString(data.numRays));
 
 			auto dimensions = dspConfig->GetReverbInputDimensions();
 			mReverbInput = Matrix<>::Zero(dimensions.first, dimensions.second);
@@ -346,11 +346,11 @@ namespace RAC
 				return false;
 			}
 
-			Debug::Assert(data.numRays >= 0, "Invalid number of rays: " + ToString(data.numRays));
-			Debug::Assert(roomData.volume > 0, "Invalid room volume: " + ToString(roomData.volume));
-			Debug::Assert(roomData.dimensions.Length() > 0, "No room dimensions provided");
-			Debug::Assert(roomData.dimensions.IsGreaterThan(0), "Invalid room dimensions: " + ToString(roomData.dimensions));
-			Debug::Assert(roomData.customT60.IsGreaterThan(0), "Invalid custom room reverb time: " + ToString(roomData.customT60));
+			RAC_DEBUG_ASSERT(data.numRays >= 0, "Invalid number of rays: " + ToString(data.numRays));
+			RAC_DEBUG_ASSERT(roomData.volume > 0, "Invalid room volume: " + ToString(roomData.volume));
+			RAC_DEBUG_ASSERT(roomData.dimensions.Length() > 0, "No room dimensions provided");
+			RAC_DEBUG_ASSERT(roomData.dimensions.IsGreaterThan(0), "Invalid room dimensions: " + ToString(roomData.dimensions));
+			RAC_DEBUG_ASSERT(roomData.customT60.IsGreaterThan(0), "Invalid custom room reverb time: " + ToString(roomData.customT60));
 
 			AtomicFlagGuard guard(audioFlag);
 
@@ -374,13 +374,13 @@ namespace RAC
 			if (lateReverbInitialised.load(std::memory_order_acquire))
 				return false;
 
-			Debug::Assert(data.numRays >= 0, "Invalid number of rays: " + ToString(data.numRays));
-			Debug::Assert(data.delay >= 0, "Invalid delay: " + ToString(data.delay));
-			Debug::Assert(data.minimumT60 >= 0, "Invalid minimum reverb time: " + ToString(data.minimumT60));
-			Debug::Assert(data.t60s.IsGreaterThan(0), "Invalid reverb times: " + ToString(data.t60s));
-			Debug::Assert(data.energyDecay.IsGreaterThan(0), "Invalid energy decays: " + ToString(data.energyDecay));
-			Debug::Assert(data.frequencyIndexing.IsGreaterThan(-1), "Invalid frequency indexing: " + ToString(data.frequencyIndexing));
-			// Debug::Assert(data.frequencyIndexing.IsLessThan(), "Invalid frequency indexing: " + ToString(data.frequencyIndexing));
+			RAC_DEBUG_ASSERT(data.numRays >= 0, "Invalid number of rays: " + ToString(data.numRays));
+			RAC_DEBUG_ASSERT(data.delay >= 0, "Invalid delay: " + ToString(data.delay));
+			RAC_DEBUG_ASSERT(data.minimumT60 >= 0, "Invalid minimum reverb time: " + ToString(data.minimumT60));
+			RAC_DEBUG_ASSERT(data.t60s.IsGreaterThan(0), "Invalid reverb times: " + ToString(data.t60s));
+			RAC_DEBUG_ASSERT(data.energyDecay.IsGreaterThan(0), "Invalid energy decays: " + ToString(data.energyDecay));
+			RAC_DEBUG_ASSERT(data.frequencyIndexing.IsGreaterThan(-1), "Invalid frequency indexing: " + ToString(data.frequencyIndexing));
+			// RAC_DEBUG_ASSERT(data.frequencyIndexing.IsLessThan(), "Invalid frequency indexing: " + ToString(data.frequencyIndexing));
 			// TODO: Further validation of indexing and eigenvectors?
 
 			AtomicFlagGuard guard(audioFlag);
@@ -435,7 +435,7 @@ namespace RAC
 		{
 			Debug::Log("Init Source", DebugType::Init);
 			int id = mSources->Init();
-			Debug::Assert(id >= 0, "Failed to initialise source");
+			RAC_DEBUG_ASSERT(id >= 0, "Failed to initialise source");
 			return id;
 		}
 
@@ -499,8 +499,8 @@ namespace RAC
 
 		void Context::UpdateMaterial(size_t id, const Coefficients<>& material)
 		{
-			Debug::Assert(material.IsGreaterEqThan(0) && material.IsLessEqThan(1), "Invalid material coefficients: " + ToString(material));
-			Debug::Assert(material.Length() == dspConfig->GetData().numFrequencyBands, "Invalid material coefficients length: " + ToString(material.Length()));
+			RAC_DEBUG_ASSERT(material.IsGreaterEqThan(0) && material.IsLessEqThan(1), "Invalid material coefficients: " + ToString(material));
+			RAC_DEBUG_ASSERT(material.Length() == dspConfig->GetData().numFrequencyBands, "Invalid material coefficients length: " + ToString(material.Length()));
 			
 			mRoom->UpdateMaterial(id, material);
 			if (lateReverbInitialised.load(std::memory_order_acquire))
@@ -512,7 +512,7 @@ namespace RAC
 		size_t Context::InitWall(const Vertices& vData, size_t materialID)
 		{
 			Debug::Log("Init Wall", DebugType::Init);
-			Debug::Assert(mRoom->MaterialExists(materialID), "Material ID does not exist: " + ToString(materialID));
+			RAC_DEBUG_ASSERT(mRoom->MaterialExists(materialID), "Material ID does not exist: " + ToString(materialID));
 
 			Wall wall = Wall(vData, materialID);
 			size_t id = mRoom->AddWall(wall);
@@ -547,7 +547,7 @@ namespace RAC
 
 			PROFILE_AudioThread;
 			outputBuffer.Reset();
-			Debug::Assert(outputBuffer.Length() == 2 * dspConfig->GetData().numFrames, "Output buffer has incorrect length");
+			RAC_DEBUG_ASSERT(outputBuffer.Length() == 2 * dspConfig->GetData().numFrames, "Output buffer has incorrect length");
 
 			// make sure our threads are initialized
 			EnsureAudioThreadPoolInitialized();

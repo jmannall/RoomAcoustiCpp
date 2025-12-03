@@ -103,7 +103,7 @@ namespace RAC
 
 			void NN::AssignInputRZ(const Path::SRData& one, const Path::SRData& two, Real zW, Input& input) const
 			{
-				Debug::Assert(one.r <= two.r, "Second NN input radius is less than the first");
+				RAC_DEBUG_ASSERT(one.r <= two.r, "Second NN input radius is less than the first");
 
 				input[4] = static_cast<float>(one.r);
 				input[5] = static_cast<float>(two.r);

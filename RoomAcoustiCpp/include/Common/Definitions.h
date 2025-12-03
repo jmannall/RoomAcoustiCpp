@@ -493,7 +493,7 @@ namespace RAC
 		 */
 		inline int ToInt(size_t value)
 		{
-			Debug::Assert(value <= std::numeric_limits<int>::max(), "size_t out of range of int");
+			RAC_DEBUG_ASSERT(value <= std::numeric_limits<int>::max(), "size_t out of range of int");
 			return static_cast<int>(value);
 		}
 
@@ -505,7 +505,7 @@ namespace RAC
 		 */
 		inline int ToInt(ptrdiff_t value)
 		{
-			Debug::Assert(value >= std::numeric_limits<int>::min() && value <= std::numeric_limits<int>::max(), "ptrdiff_t out of range of int");
+			RAC_DEBUG_ASSERT(value >= std::numeric_limits<int>::min() && value <= std::numeric_limits<int>::max(), "ptrdiff_t out of range of int");
 			return static_cast<int>(value);
 		}
 

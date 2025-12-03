@@ -38,7 +38,7 @@ namespace RAC
 				if (!SetTargetIR(ir))
 					return;
 
-				Debug::Assert(ir.Length() <= maxSize, "Length exceeds max length of the filter");
+				RAC_DEBUG_ASSERT(ir.Length() <= maxSize, "Length exceeds max length of the filter");
 
 #ifdef __ANDROID__
 				irLength = std::atomic_load(&targetIR)->Length();
