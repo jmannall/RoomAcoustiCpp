@@ -567,7 +567,7 @@ namespace RAC
 				mReverb->ProcessAudio(mReverbInput, outputBuffer, audioData);
 			}
 
-			if (applyHeadphoneEQ.load(std::memory_order_aquire)
+			if (applyHeadphoneEQ.load(std::memory_order_acquire))
 				headphoneEQ.ProcessAudio(outputBuffer, outputBuffer, audioData);
 
 			dcBlocker.ProcessAudio(outputBuffer);

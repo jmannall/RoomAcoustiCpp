@@ -13,6 +13,7 @@
 namespace RAC
 {
 	using namespace DSP;
+	using namespace Common;
 	namespace Spatialiser
 	{
 		/**
@@ -36,7 +37,6 @@ namespace RAC
 			*/
 			inline void SetFilters(const Buffer<>& leftIR, const Buffer<>& rightIR)
 			{
-				Debug::Log(leftIR.Length() == rightIR.Length(), DebugType::Warning, "Left and right IRs have different lengths");
 				leftFilter.SetTargetIR(leftIR);
 				rightFilter.SetTargetIR(rightIR);
 			}
