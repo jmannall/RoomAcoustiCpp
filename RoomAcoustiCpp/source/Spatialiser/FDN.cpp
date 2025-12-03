@@ -95,7 +95,7 @@ namespace RAC
 		Vec<int> FDN<T>::CalculateTimeDelay(const Vec<>& dimensions, const int fdnSize, const int fs)
 		{
 			RAC_DEBUG_ASSERT(dimensions.Length() > 0, "No dimensions provided");
-			RAC_DEBUG_ASSERT(dimensions.Length() >= fdnSize, "Number of dimensions provided exceeds the fdnSize");
+			RAC_DEBUG_ASSERT(dimensions.Length() <= fdnSize, "Number of dimensions provided exceeds the fdnSize");
 
 			Vec<> t(fdnSize);
 			Vec<int> delays = Vec<int>::Constant(fdnSize, 1);
