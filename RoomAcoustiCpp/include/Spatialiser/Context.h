@@ -109,7 +109,11 @@ namespace RAC
 			* @param leftIR The impulse response for the left channel.
 			* @param rightIR The impulse response for the right channel.
 			*/
-			inline void SetHeadphoneEQ(const Buffer<>& leftIR, const Buffer<>& rightIR) { headphoneEQ.SetFilters(leftIR, rightIR); applyHeadphoneEQ = true; }
+			inline void SetHeadphoneEQ(const Buffer<>& leftIR, const Buffer<>& rightIR)
+			{
+				headphoneEQ.SetFilters(leftIR, rightIR);
+				applyHeadphoneEQ.store(true, std::memory_order_release);
+			}
 
 			/**
 			* @brief Updates the spatialisation mode for each component of the spatialiser.
@@ -386,7 +390,7 @@ namespace RAC
 			Vec3 listenerPosition;				// Stored listener position
 			bool listenerInitialised{ false };	// Flag to check if the listener has been initialised
 			Real headRadius;					// Stored head radius from 3DTI
-			bool applyHeadphoneEQ;				// Flag to apply headphone EQ
+			std::atomic<bool> applyHeadphoneEQ;				// Flag to apply headphone EQ
 			HeadphoneEQ headphoneEQ;			// Headphone EQ
 			DCBlocker dcBlocker;				// Filter to remove DC offset
 

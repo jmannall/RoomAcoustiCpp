@@ -58,7 +58,9 @@ namespace RAC
 
 		bool FIRFilter::SetTargetIR(const Buffer<>& ir)
 		{
-			int length = ToInt( ir.Length() );
+			RAC_DEBUG_ASSERT(ir.Valid(), "Invalid IR");
+
+			int length = ToInt(ir.Length());
 
 			// Pad to multiple of 8
 			if (length % 8 != 0)

@@ -36,6 +36,7 @@ namespace RAC
 			*/
 			inline void SetFilters(const Buffer<>& leftIR, const Buffer<>& rightIR)
 			{
+				Debug::Log(leftIR.Length() == rightIR.Length(), DebugType::Warning, "Left and right IRs have different lengths");
 				leftFilter.SetTargetIR(leftIR);
 				rightFilter.SetTargetIR(rightIR);
 			}
@@ -54,7 +55,7 @@ namespace RAC
 					rightFilter.ClearBuffers();
 				}
 
-				const int inputBufferLength = ToInt( inputBuffer.Length() );
+				const int inputBufferLength = ToInt(inputBuffer.Length());
 				for (int i = 0; i < inputBufferLength; i += 2)
 				{
 					outputBuffer[i] = leftFilter.GetOutput(inputBuffer[i], audioData.lerpFactor);

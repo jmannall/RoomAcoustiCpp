@@ -567,10 +567,12 @@ namespace RAC
 				mReverb->ProcessAudio(mReverbInput, outputBuffer, audioData);
 			}
 
-			if (applyHeadphoneEQ)
+			if (applyHeadphoneEQ.load(std::memory_order_aquire)
 				headphoneEQ.ProcessAudio(outputBuffer, outputBuffer, audioData);
 
 			dcBlocker.ProcessAudio(outputBuffer);
+
+			RAC_DEBUG_ASSERT(outputBuffer.Valid(), "Invalid output buffer");
 		}
 
 		////////////////////////////////////////
@@ -631,6 +633,8 @@ namespace RAC
 
 			RemoveSource(static_cast<size_t>(id));
 			UpdateImpulseResponseMode(false);
+
+			RAC_DEBUG_ASSERT(outputBuffer.Valid(), "Invalid output buffer");
 		}
 	}
 }
