@@ -5,7 +5,7 @@
   <PropertyGroup />
   <ItemDefinitionGroup>
     <ClCompile>
-      <PreprocessorDefinitions>RESIDUE_CALLBACKS;PROFILE_BACKGROUND_THREAD_DETAILED;PROFILE_AUDIO_THREAD_DETAILED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>PROFILE_BACKGROUND_THREAD_DETAILED;PROFILE_AUDIO_THREAD_DETAILED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
     </Link>
