@@ -116,16 +116,10 @@ namespace RAC
                 // throw std::runtime_error(message);
             }
 
-			#define RAC_DEBUG_ASSERT(condition, message)        Debug::Assert((result), (message))
+			#define RAC_DEBUG_ASSERT(result, message)        Debug::Assert((result), (message))
 
 #else
-            /**
-            * @brief Empty function for when assert callbacks are disabled
-            */
-            template<typename T>
-            static inline void Assert(bool result, const T message, const std::source_location& location = std::source_location::current()) {}
-
-			#define RAC_DEBUG_ASSERT(condition, message)        (void)0
+			#define RAC_DEBUG_ASSERT(result, message)        (void)0
 #endif
 
 #ifdef DEBUG_LOG
