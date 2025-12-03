@@ -18,7 +18,7 @@
 #	define USE_AVX		1
 #	define RAC_ALIGN(n)								alignas(n)
 
-	// typedefs can't use alignas(), so use th4e compiler specific pragmas
+	// typedefs can't use alignas(), so use the compiler specific pragmas
 #	ifdef _MSC_VER
 #		define RAC_ALIGN_TYPEDEF(n)					__declspec(align(n))
 #	else

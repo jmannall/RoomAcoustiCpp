@@ -27,7 +27,7 @@ namespace RAC
 	TEST_CLASS(DelayLine_Class)
 	{
 	public:
-		TEST_METHOD(DelayLineInitialise)
+		TEST_METHOD(Initialise)
 		{
 			DelayLine<Complex> uninitialised(0);
 			Assert::IsFalse(uninitialised.IsValid());
@@ -36,7 +36,7 @@ namespace RAC
 			Assert::IsTrue(uninitialised.IsValid());
 		}
 
-		TEST_METHOD(DelayLineBasic)
+		TEST_METHOD(Basic)
 		{
 			constexpr int LineSize = 10;
 			DelayLine<Complex> basicLine(LineSize);
@@ -71,7 +71,7 @@ namespace RAC
 			}
 		}
 
-		TEST_METHOD(DelayLineAlignment)
+		TEST_METHOD(Alignment)
 		{
 			constexpr int LineSize = 2;
 			DelayLine<Complex> basicLine(LineSize);
