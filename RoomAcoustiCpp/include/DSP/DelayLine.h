@@ -88,10 +88,7 @@ namespace RAC
 			}
 
 		private:
-#if USE_AVX
-			RAC_ALIGN(16)
 			Buffer<T> buffer;	// Delay line buffer
-#endif
 			int idx{ 0 };		// Current write index
 			int length;			// Local copy of the length
 			bool initialised{ false };	// True if the delay line has been initialized
