@@ -164,6 +164,9 @@ namespace RAC
 				bounceIdxTakeOne--; bounceIdx--;
 			}
 
+			if (absorption.IsApprox(REAL_CONST(0.0)))
+				return false;
+
 			if (!valid)
 				return false;
 
