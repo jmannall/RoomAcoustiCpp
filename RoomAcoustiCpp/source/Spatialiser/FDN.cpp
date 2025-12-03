@@ -94,8 +94,8 @@ namespace RAC
 		template<typename T>
 		Vec<int> FDN<T>::CalculateTimeDelay(const Vec<>& dimensions, const int fdnSize, const int fs)
 		{
-			Debug::Assert(dimensions.Length() > 0, "No dimensions provided");
-			Debug::Assert(dimensions.Length() >= fdnSize, "Number of dimensions provided exceeds the fdnSize");
+			RAC_DEBUG_ASSERT(dimensions.Length() > 0, "No dimensions provided");
+			RAC_DEBUG_ASSERT(dimensions.Length() >= fdnSize, "Number of dimensions provided exceeds the fdnSize");
 
 			Vec<> t(fdnSize);
 			Vec<int> delays = Vec<int>::Constant(fdnSize, 1);
@@ -111,7 +111,7 @@ namespace RAC
 				{
 					if (k >= fdnSize)
 						break;
-					Debug::Assert(dimensions(i) > 0.0, "Invalid dimension: " + ToString(dimensions(i)));
+					RAC_DEBUG_ASSERT(dimensions(i) > 0.0, "Invalid dimension: " + ToString(dimensions(i)));
 					t(k) += dimensions(i);
 					++k;
 				}

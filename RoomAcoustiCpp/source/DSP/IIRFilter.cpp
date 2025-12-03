@@ -33,7 +33,7 @@ namespace RAC
 
 		Real IIRFilter::GetOutput(const Real input, const Real lerpFactor)
 		{
-			Debug::Assert(IsValid(), "Invalid filter");
+			RAC_DEBUG_ASSERT(IsValid(), "Invalid filter");
 
 			if (!parametersEqual.load(std::memory_order_acquire))
 				InterpolateParameters(lerpFactor);
@@ -116,7 +116,7 @@ namespace RAC
 
 		Real IIRFilter1::GetOutput(const Real input, const Real lerpFactor)
 		{
-			Debug::Assert(IsValid(), "Invalid filter");
+			RAC_DEBUG_ASSERT(IsValid(), "Invalid filter");
 
 			if (!parametersEqual.load(std::memory_order_acquire))
 				InterpolateParameters(lerpFactor);
@@ -252,7 +252,7 @@ namespace RAC
 		template<typename In>
 		void PeakHighShelf<In>::UpdateCoefficients(const Real gain)
 		{
-			Debug::Assert(gain > REAL_CONST(0.0), "Invalid gain: " + ToString(gain));
+			RAC_DEBUG_ASSERT(gain > REAL_CONST(0.0), "Invalid gain: " + ToString(gain));
 
 			const Real A = sqrt(gain);
 			const Real v1 = A + REAL_CONST(1.0);
@@ -282,7 +282,7 @@ namespace RAC
 		template<typename In>
 		void PeakLowShelf<In>::UpdateCoefficients(const Real gain)
 		{
-			Debug::Assert(gain > REAL_CONST(0.0), "Invalid gain: " + ToString(gain));
+			RAC_DEBUG_ASSERT(gain > REAL_CONST(0.0), "Invalid gain: " + ToString(gain));
 
 			const Real A = sqrt(gain);
 			const Real v1 = A + REAL_CONST(1.0);
@@ -312,7 +312,7 @@ namespace RAC
 		template<typename In>
 		void PeakingFilter<In>::UpdateCoefficients(const Real gain)
 		{
-			Debug::Assert(gain > REAL_CONST(0.0), "Invalid gain: " + ToString(gain));
+			RAC_DEBUG_ASSERT(gain > REAL_CONST(0.0), "Invalid gain: " + ToString(gain));
 
 			const Real A = sqrt(gain);
 			const Real v1 = alpha * A;

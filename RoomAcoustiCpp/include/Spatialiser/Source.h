@@ -164,7 +164,7 @@ namespace RAC
 			inline void SetInputBuffer(const Buffer<>& data)
 			{
 				const int inputBufferLength = ToInt(inputBuffer.Length());
-				Debug::Assert(data.Length() == inputBufferLength, "Buffer lengths do not match");
+				RAC_DEBUG_ASSERT(data.Length() == inputBufferLength, "Buffer lengths do not match");
 
 				RAC_IGNORE_VECTOR_DEPENDENCIES
 				for (int i = 0; i < inputBufferLength; i++)
@@ -256,7 +256,7 @@ namespace RAC
 					return;
 
 				const int ravesResiduesSize = ToInt(ravesResidues.size());
-				Debug::Assert(residues.Length() == ravesResiduesSize, "Residue lengths do not match");
+				RAC_DEBUG_ASSERT(residues.Length() == ravesResiduesSize, "Residue lengths do not match");
 
 				for (int i = 0; i < ravesResiduesSize; i++)
 					ravesResidues[i].SetTargetEnergy(residues[i]);

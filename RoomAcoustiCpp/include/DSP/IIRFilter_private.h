@@ -185,7 +185,7 @@ namespace RAC
 			PeakHighShelf(const Real fc, const Real gain, const Real Q, const int sampleRate) : IIRFilter2Param1<In>(gain, sampleRate),
 				cosOmega(cos(PI_2 * fc * this->T)), alpha(sin(PI_2 * fc * this->T) / Q) // sin(omega) / (2 * Q) (factor of two cancelled out in UpdateGain)
 			{
-				Debug::Assert(fc < static_cast<Real>(sampleRate) / REAL_CONST(2.0), "Cut off frequency is greater than Nyquist frequency");
+				RAC_DEBUG_ASSERT(fc < static_cast<Real>(sampleRate) / REAL_CONST(2.0), "Cut off frequency is greater than Nyquist frequency");
 
 				UpdateCoefficients(gain);
 				this->parametersEqual.store(true, std::memory_order_release);
@@ -243,7 +243,7 @@ namespace RAC
 			PeakLowShelf(const Real fc, const Real gain, const Real Q, const int sampleRate) : IIRFilter2Param1<In>(gain, sampleRate),
 				cosOmega(cos(PI_2 * fc * this->T)), alpha(sin(PI_2 * fc * this->T) / Q) // sin(omega) / (2 * Q) (factor of two cancelled out in UpdateGain)
 			{
-				Debug::Assert(fc < static_cast<Real>(sampleRate) / REAL_CONST(2.0), "Cut off frequency is greater than Nyquist frequency");
+				RAC_DEBUG_ASSERT(fc < static_cast<Real>(sampleRate) / REAL_CONST(2.0), "Cut off frequency is greater than Nyquist frequency");
 
 				UpdateCoefficients(gain);
 				this->parametersEqual.store(true, std::memory_order_release);
@@ -301,7 +301,7 @@ namespace RAC
 			PeakingFilter(const Real fc, const Real gain, const Real Q, const int sampleRate) : IIRFilter2Param1<In>(gain, sampleRate),
 				cosOmega(REAL_CONST(-2.0)* cos(PI_2* fc* this->T)), alpha(sin(PI_2* fc* this->T) / (REAL_CONST(2.0) * Q))
 			{
-				Debug::Assert(fc < static_cast<Real>(sampleRate) / REAL_CONST(2.0), "Cut off frequency is greater than Nyquist frequency");
+				RAC_DEBUG_ASSERT(fc < static_cast<Real>(sampleRate) / REAL_CONST(2.0), "Cut off frequency is greater than Nyquist frequency");
 
 				UpdateCoefficients(gain);
 				this->parametersEqual.store(true, std::memory_order_release);
@@ -344,9 +344,9 @@ namespace RAC
 		RAC_FORCE_INLINE void IIRFilter2<double>::GetOutputInternal(const double& input, double& output)
 		{
 			// make sure they are aligned
-			Debug::Assert(IsAligned16(&this->a1), "a1 is not aligned");
-			Debug::Assert(IsAligned16(&this->b1), "b1 is not aligned");
-			Debug::Assert(IsAligned16(&this->y0), "y0 is not aligned");
+			RAC_DEBUG_ASSERT(IsAligned16(&this->a1), "a1 is not aligned");
+			RAC_DEBUG_ASSERT(IsAligned16(&this->b1), "b1 is not aligned");
+			RAC_DEBUG_ASSERT(IsAligned16(&this->y0), "y0 is not aligned");
 
 			// In v = input - y0 * a1 + y1 * a2 --> input - y[0:1] . a[0:1] -> sub(input, y.a)
 			__m128d y = _mm_load_pd(&this->y0);
@@ -412,8 +412,8 @@ namespace RAC
 		template <>
 		RAC_FORCE_INLINE void IIRFilter2<float>::GetOutputInternal(const float& input, float& output)
 		{
-			Debug::Assert(IsAligned16(&this->a1), "a1 is not aligned"));
-			Debug::Assert(IsAligned16(&this->y1), "y1 is not aligned"));
+			RAC_DEBUG_ASSERT((reinterpret_cast<ptrdiff_t>(&this->a1) & 0xf) == 0, "a1 is not aligned");
+			RAC_DEBUG_ASSERT((reinterpret_cast<ptrdiff_t>(&this->y1) & 0xf) == 0, "y1 is not aligned");
 
 			__m128 a12b12 = _mm_load_ps(&this->a1);
 			__m128 y = _mm_load_ps(&this->y0);			// we only use y01
@@ -507,7 +507,7 @@ namespace RAC
 		template<typename In>
 		RAC_FORCE_INLINE void IIRFilter2<In>::GetOutput(const In& input, In& output, const Real lerpFactor)
 		{
-			Debug::Assert(IsValid(), "Invalid filter");
+			RAC_DEBUG_ASSERT(IsValid(), "Invalid filter");
 
 			if (!parametersEqual.load(std::memory_order_acquire))
 				InterpolateParameters(lerpFactor);
@@ -518,7 +518,7 @@ namespace RAC
 		template<typename In>
 		RAC_FORCE_INLINE In IIRFilter2<In>::GetOutput(const In input, const Real lerpFactor)
 		{
-			Debug::Assert(IsValid(), "Invalid filter");
+			RAC_DEBUG_ASSERT(IsValid(), "Invalid filter");
 
 			if (!parametersEqual.load(std::memory_order_acquire))
 				InterpolateParameters(lerpFactor);

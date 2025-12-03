@@ -29,7 +29,7 @@ namespace RAC
 		{
 			data.rows = static_cast<int>(matrix.size());
 			for (int i = 1; i < data.rows; i++)
-				Debug::Assert(matrix[i].size() == matrix[0].size(), "Matrix rows must all be the same length");
+				RAC_DEBUG_ASSERT(matrix[i].size() == matrix[0].size(), "Matrix rows must all be the same length");
 
 			if (data.rows > 0)
 			{
@@ -51,7 +51,7 @@ namespace RAC
 		template<typename T>
 		Matrix<T> Matrix<T>::Transposed()
 		{
-			Debug::Assert(data.rows * data.cols == data.matrix.size(), "Invalid matrix size");
+			RAC_DEBUG_ASSERT(data.rows * data.cols == data.matrix.size(), "Invalid matrix size");
 			Matrix<T> matrix = Matrix<T>(data.cols, data.rows);
 			for (int i = 0; i < data.rows; i++)
 			{
@@ -75,7 +75,7 @@ namespace RAC
 		template<>
 		void Matrix<Real>::Invert()
 		{
-			Debug::Assert(data.rows == data.cols, "Matrix must be square");
+			RAC_DEBUG_ASSERT(data.rows == data.cols, "Matrix must be square");
 
 			// Create the augmented matrix [A|I]
 			data.matrix.resize(2 * data.cols * data.rows, 0.0);

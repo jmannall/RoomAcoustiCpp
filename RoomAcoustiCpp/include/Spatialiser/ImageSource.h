@@ -166,7 +166,7 @@ namespace RAC
 			*/
 			inline size_t GetID() const
 			{
-				Debug::Assert(ToInt(pathParts.size()) > 0, "No path parts have been created");
+				RAC_DEBUG_ASSERT(ToInt(pathParts.size()) > 0, "No path parts have been created");
 				return pathParts.back().id;
 			}
 
@@ -178,8 +178,8 @@ namespace RAC
 			*/
 			inline size_t GetID(int i) const
 			{
-				Debug::Assert(i >= 0, "Path parts index out of bounds: " + ToString(i));
-				Debug::Assert(i < ToInt(pathParts.size()), "Path parts index out of bounds: " + ToString(i));
+				RAC_DEBUG_ASSERT(i >= 0, "Path parts index out of bounds: " + ToString(i));
+				RAC_DEBUG_ASSERT(i < ToInt(pathParts.size()), "Path parts index out of bounds: " + ToString(i));
 				return pathParts[i].id;
 			}
 
@@ -191,8 +191,8 @@ namespace RAC
 			*/
 			inline bool IsReflection(int i) const
 			{
-				Debug::Assert(i >= 0, "Path parts index out of bounds: " + ToString(i));
-				Debug::Assert(i < ToInt(pathParts.size()), "Path parts index out of bounds: " + ToString(i));
+				RAC_DEBUG_ASSERT(i >= 0, "Path parts index out of bounds: " + ToString(i));
+				RAC_DEBUG_ASSERT(i < ToInt(pathParts.size()), "Path parts index out of bounds: " + ToString(i));
 				return pathParts[i].isReflection;
 			}
 
@@ -241,16 +241,16 @@ namespace RAC
 			*/
 			inline Vec3 GetPosition(int i) const
 			{
-				Debug::Assert(i >= 0, "Positions index out of bounds: " + ToString(i));
+				RAC_DEBUG_ASSERT(i >= 0, "Positions index out of bounds: " + ToString(i));
 				if (diffraction)
 				{
 					if (i >= diffractionIndex)
 					{
-						Debug::Assert(i < ToInt(mEdges.size()), "Edges index out of bounds: " + ToString(i));
+						RAC_DEBUG_ASSERT(i < ToInt(mEdges.size()), "Edges index out of bounds: " + ToString(i));
 						return mEdges[i].GetEdgeCoordinate(mDiffractionPath.GetApexZ());
 					}
 				}
-				Debug::Assert(i < ToInt(mPositions.size()), "Positions index out of bounds: " + ToString(i));
+				RAC_DEBUG_ASSERT(i < ToInt(mPositions.size()), "Positions index out of bounds: " + ToString(i));
 				return mPositions[i];
 			}
 
@@ -297,9 +297,9 @@ namespace RAC
 			*/
 			inline Vec3 GetApex() const
 			{
-				Debug::Assert(ToInt(mEdges.size()) > 0, "No edges added to image source");
-				Debug::Assert(diffractionIndex >= 0, "Diffraction index out of bounds: " + ToString(diffractionIndex));
-				Debug::Assert(diffractionIndex < ToInt(mEdges.size()), "Diffraction index out of bounds: " + ToString(diffractionIndex));
+				RAC_DEBUG_ASSERT(ToInt(mEdges.size()) > 0, "No edges added to image source");
+				RAC_DEBUG_ASSERT(diffractionIndex >= 0, "Diffraction index out of bounds: " + ToString(diffractionIndex));
+				RAC_DEBUG_ASSERT(diffractionIndex < ToInt(mEdges.size()), "Diffraction index out of bounds: " + ToString(diffractionIndex));
 				return mEdges[diffractionIndex].GetEdgeCoordinate(mDiffractionPath.GetApexZ());
 			}
 
@@ -406,7 +406,7 @@ namespace RAC
 			*/
 			inline Diffraction::Path GetDiffractionPath() const
 			{
-				Debug::Assert(diffraction, "Accessing diffraction path from a reflection only image source");
+				RAC_DEBUG_ASSERT(diffraction, "Accessing diffraction path from a reflection only image source");
 				return mDiffractionPath;
 			}
 

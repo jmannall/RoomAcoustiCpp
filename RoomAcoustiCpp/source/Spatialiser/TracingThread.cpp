@@ -72,7 +72,7 @@ namespace RAC
 		void MoDARTTracing::InitRoom(const Matrix<int>& indexing, const Vec<>& decayRates) {
 			lock_guard<std::mutex> lock(rayPencilMutex);
 
-			Debug::Assert(decayRates.Length() == numFDNs, "Decay rate length does not match numFDNs: " + ToString(decayRates.Length()));
+			RAC_DEBUG_ASSERT(decayRates.Length() == numFDNs, "Decay rate length does not match numFDNs: " + ToString(decayRates.Length()));
 			pathIndexing = indexing;
 			decayPerSecond = decayRates;
 			sourceResidues = Coefficients<>(numFDNs);
@@ -116,8 +116,8 @@ namespace RAC
 
 				for (int dir_idx = 0; dir_idx < numReverbDirections; ++dir_idx) {
 					ComputeEnergyContributions(dir_idx);
-					Debug::Assert(contributionDelays.Length() == numPaths, "Contribution delays length does not match numPaths: " + ToString(contributionDelayScaling.Length()));
-					Debug::Assert(contributionDelayScaling.Length() == numPaths, "Contribution delay scaling length does not match numPaths: " + ToString(contributionDelayScaling.Length()));
+					RAC_DEBUG_ASSERT(contributionDelays.Length() == numPaths, "Contribution delays length does not match numPaths: " + ToString(contributionDelayScaling.Length()));
+					RAC_DEBUG_ASSERT(contributionDelayScaling.Length() == numPaths, "Contribution delay scaling length does not match numPaths: " + ToString(contributionDelayScaling.Length()));
 					Debug::SendPath(ToString(dir_idx) + "l", { mListenerPosition }, reverbDirections[dir_idx]);
 
 					for (int slope_idx = 0; slope_idx < numFDNs; ++slope_idx) {

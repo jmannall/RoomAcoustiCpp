@@ -111,7 +111,7 @@ namespace RAC
 
 		const Buffer<>& OctaveBand::GetOutput(Real input, Real lerpFactor)
 		{
-			Debug::Assert(IsValid(), "Invalid filter");
+			RAC_DEBUG_ASSERT(IsValid(), "Invalid filter");
 
 			for (int i = 0; i < numFrequencyBands - 1; i++) // output 0 is 16kHz, output 1 is 8kHz etc
 			{

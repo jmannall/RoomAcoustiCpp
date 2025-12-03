@@ -229,8 +229,8 @@ namespace RAC
 			*/
 			inline Real& operator[](const size_t i)
 			{
-				Debug::Assert(i >= 0, "Index out of bounds");
-				Debug::Assert(i < ToInt(this->mCoefficients.size()), "Index out of bounds");
+				RAC_DEBUG_ASSERT(i >= 0, "Index out of bounds");
+				RAC_DEBUG_ASSERT(i < ToInt(this->mCoefficients.size()), "Index out of bounds");
 				return mCoefficients[i];
 			};
 			
@@ -242,8 +242,8 @@ namespace RAC
 			*/
 			inline Real operator[](const size_t i) const
 			{
-				Debug::Assert(i >= 0, "Index out of bounds");
-				Debug::Assert(i < ToInt(this->mCoefficients.size()), "Index out of bounds");
+				RAC_DEBUG_ASSERT(i >= 0, "Index out of bounds");
+				RAC_DEBUG_ASSERT(i < ToInt(this->mCoefficients.size()), "Index out of bounds");
 				return mCoefficients[i];
 			};
 
@@ -262,7 +262,7 @@ namespace RAC
 			*/
 			inline Coefficients& operator+=(const Coefficients& v)
 			{
-				Debug::Assert(ToInt(mCoefficients.size()) == v.Length(), "Coefficients must have the same length");
+				RAC_DEBUG_ASSERT(ToInt(mCoefficients.size()) == v.Length(), "Coefficients must have the same length");
 				for (int i = 0; i < mCoefficients.size(); i++)
 					mCoefficients[i] += v[i];
 				return *this;
@@ -273,7 +273,7 @@ namespace RAC
 			*/
 			inline Coefficients& operator-=(const Coefficients& v)
 			{
-				Debug::Assert(ToInt(mCoefficients.size()) == v.Length(), "Coefficients must have the same length");
+				RAC_DEBUG_ASSERT(ToInt(mCoefficients.size()) == v.Length(), "Coefficients must have the same length");
 				for (int i = 0; i < mCoefficients.size(); i++)
 					mCoefficients[i] -= v[i];
 				return *this;
@@ -284,7 +284,7 @@ namespace RAC
             */
             inline Coefficients& operator*=(const Coefficients& v)
             {
-				Debug::Assert(ToInt(mCoefficients.size()) == v.Length(), "Coefficients must have the same length");
+				RAC_DEBUG_ASSERT(ToInt(mCoefficients.size()) == v.Length(), "Coefficients must have the same length");
 				for (int i = 0; i < mCoefficients.size(); i++)
 				mCoefficients[i] *= v[i];
 				return *this;
@@ -295,7 +295,7 @@ namespace RAC
             */
             inline Coefficients& operator/=(const Coefficients& v)
             {
-				Debug::Assert(ToInt(mCoefficients.size()) == v.Length(), "Coefficients must have the same length");
+				RAC_DEBUG_ASSERT(ToInt(mCoefficients.size()) == v.Length(), "Coefficients must have the same length");
 				for (int i = 0; i < mCoefficients.size(); i++)
 				mCoefficients[i] /= v[i];
 				return *this;
