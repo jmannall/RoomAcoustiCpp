@@ -20,9 +20,7 @@ namespace RAC
 {
 	namespace Common
 	{
-		typedef std::complex<Real> Complex;
-
-#define RAC_ALIGN_COMPLEX		RAC_ALIGN(16)
+		typedef RAC_ALIGN_TYPEDEF(16) std::complex<Real> Complex;
 
 #if DATA_TYPE_DOUBLE
 		static const Complex imUnit(0.0, 1.0); // Imaginary unit
