@@ -19,6 +19,7 @@
 
 // Spatialiser headers
 #include "Spatialiser/Types.h"
+#include "Spatialiser/Configs.h"
 #include "Spatialiser/Wall.h"
 #include "Spatialiser/Edge.h"
 #include "Spatialiser/TracingTypes.h"
@@ -102,6 +103,15 @@ namespace RAC
 			}
 
 			void RemoveMaterial(size_t id);
+
+			/**
+			* @return True if the material with the given ID exists, false otherwise
+			*/
+			bool MaterialExists(size_t id)
+			{
+				std::lock_guard<std::mutex> lock(mMaterialMutex);
+				return mMaterials.find(id) != mMaterials.end();
+			}
 
 			/**
 			* @brief Add a wall to the room

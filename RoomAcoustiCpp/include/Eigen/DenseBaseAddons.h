@@ -28,9 +28,9 @@ EIGEN_DEVICE_FUNC inline ConstColXpr Col(Index i) const { return this->col(i); }
 template <typename OtherDerived>
 EIGEN_DEVICE_FUNC inline bool IsApprox(const DenseBase<OtherDerived>& other) const { return this->isApprox(other); }
 
-EIGEN_DEVICE_FUNC inline bool IsLessThan(const Scalar& value) const { return (this->derived() < value).all(); }
-EIGEN_DEVICE_FUNC inline bool IsGreaterThan(const Scalar& value) const { return (this->derived() > value).all(); }
-EIGEN_DEVICE_FUNC inline bool IsLessEqThan(const Scalar& value) const { return (this->derived() <= value).all(); }
-EIGEN_DEVICE_FUNC inline bool IsGreaterEqThan(const Scalar& value) const { return (this->derived() >= value).all(); }
+EIGEN_DEVICE_FUNC inline bool IsLessThan(const Scalar& value) const { return (this->derived().array() < value).all(); }
+EIGEN_DEVICE_FUNC inline bool IsGreaterThan(const Scalar& value) const { return (this->derived().array() > value).all(); }
+EIGEN_DEVICE_FUNC inline bool IsLessEqThan(const Scalar& value) const { return (this->derived().array() <= value).all(); }
+EIGEN_DEVICE_FUNC inline bool IsGreaterEqThan(const Scalar& value) const { return (this->derived().array() >= value).all(); }
 
 EIGEN_DEVICE_FUNC inline bool Valid() const { return this->allFinite(); }

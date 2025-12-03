@@ -128,7 +128,7 @@ namespace RAC
 
 		Real Dot(const Vec<>& u, const Vec<>& v)
 		{
-			assert(u.Length() == v.Length());
+			Debug::Assert(u.Length() == v.Length(), "Vectors must have equal length");
 			Real out = 0.0;
 			for (int i = 0; i < u.Length(); ++i)
 				out += u(i) * v(i);
@@ -137,8 +137,8 @@ namespace RAC
 
 		Real ThreeWayDot(const Vec<>& u, const Vec<>& v, const Vec<>& w)
 		{
-			assert(u.Length() == v.Length());
-			assert(u.Length() == w.Length());
+			Debug::Assert(u.Length() == v.Length(), "Vectors must have equal length");
+			Debug::Assert(u.Length() == w.Length(), "Vectors must have equal length");
 			Real out = 0.0;
 			for (int i = 0; i < u.Length(); ++i)
 				out += u(i) * v(i) * w(i);

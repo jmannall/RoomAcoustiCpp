@@ -222,9 +222,9 @@ void BaseTest::Run()
 	Exit();
 }
 
-void DebugCallback(const char* message, int colour, int size)
+void DebugCallback(const char* message, int type, int size)
 {
-	std::cout << "[Debug] " << message << std::endl;
+	std::cout << "[" << ToString((DebugType)type) << "] " << message << std::endl;
 }
 
 bool BaseTest::Init()

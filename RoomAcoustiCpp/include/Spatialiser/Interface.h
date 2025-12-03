@@ -15,6 +15,7 @@
 
 // Spatialiser headers
 #include "Spatialiser/Types.h"
+#include "Spatialiser/Configs.h"
 #include "Spatialiser/ContextOptionalArguments.h"
 
 namespace RAC

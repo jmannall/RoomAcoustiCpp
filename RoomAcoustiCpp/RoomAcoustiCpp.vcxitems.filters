@@ -404,5 +404,8 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Debug.h">
       <Filter>Header Files\Common</Filter>
     </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Configs.h">
+      <Filter>Header Files\Spatialiser</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

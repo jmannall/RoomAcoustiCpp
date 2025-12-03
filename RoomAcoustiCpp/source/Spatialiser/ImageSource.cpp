@@ -161,7 +161,7 @@ namespace RAC
 
 		void ImageSourceData::Update(const ImageSourceData& imageSource)
 		{
-			assert(pathParts.size() >= imageSource.pathParts.size());
+			Debug::Assert(pathParts.size() >= imageSource.pathParts.size(), "Current path parts are smaller than the incoming data");
 			for (int i = 0; i < imageSource.pathParts.size(); i++)
 			{
 				pathParts[i] = imageSource.pathParts[i];
@@ -172,7 +172,7 @@ namespace RAC
 			diffraction = imageSource.diffraction;
 			if (diffraction)
 			{
-				assert(mEdges.size() >= imageSource.mEdges.size());
+				Debug::Assert(mEdges.size() >= imageSource.mEdges.size(), "Current edges are smaller than the incoming data");
 				for (int i = 0; i < imageSource.mEdges.size(); i++)
 					mEdges[i] = imageSource.mEdges[i];
 
@@ -438,7 +438,7 @@ namespace RAC
 
 		void ImageSource::InitDiffractionModel(const DiffractionModel model, const Diffraction::Path& path, const int fs)
 		{
-			assert(diffraction);
+			Debug::Assert(diffraction, "Image source does not include diffraction");
 
 			diffractionGain.Reset((Real)1.0);
 			isCrossFading.store(false, std::memory_order_release);

@@ -87,8 +87,8 @@ namespace RAC
 		*/
 		inline Real Lerp(Real start, const Real end, const Real factor)
 		{
-			assert(0.0 < factor && factor <= 1.0);
-	
+			Debug::Assert(0.0 < factor && factor <= 1.0, "Interpolation factor must be between 0 and 1: " + ToString(factor));
+
 			start *= REAL_CONST(1.0) - factor;
 			start += end * factor;
 			return start;
@@ -105,10 +105,10 @@ namespace RAC
 		*/
 		inline void Lerp(Buffer<>& start, const Buffer<>& end, const int startLength, const Real factor)
 		{
-			assert(0.0 < factor && factor <= 1.0);
-			assert(end.Length() % 8 == 0);
-			assert(start.Length() >= end.Length());
-			assert(startLength <= start.Length());
+			Debug::Assert(0.0 < factor && factor <= 1.0, "Interpolation factor must be between 0 and 1: " + ToString(factor));
+			Debug::Assert(end.Length() % 8 == 0, "End length not a multiple of eight");
+			Debug::Assert(start.Length() >= end.Length(), "End length is greater than the start length");
+			Debug::Assert(startLength <= start.Length(), "Old start length is greater than the current start length");
 
 			const int len = ToInt(end.Length());
 			int i = 0;
@@ -153,9 +153,9 @@ namespace RAC
 		template<typename T, int Size>
 		inline void Lerp(Coefficients<T, Size>& start, const Coefficients<T, Size>& end, const Real factor)
 		{
-			assert(0.0 < factor && factor <= 1.0);	
-			assert(start.Length() == end.Length());
-			
+			Debug::Assert(0.0 < factor && factor <= 1.0, "Interpolation factor must be between 0 and 1: " + ToString(factor));
+			Debug::Assert(start.Length() == end.Length(), "Coefficients must have the same length");
+
 			start *= (REAL_CONST(1.0) - factor);
 			start += factor * end;
 		}
@@ -199,12 +199,14 @@ namespace RAC
 		* 
 		* @param u Buffer 1
 		* @param v Buffer 2
+		* @param length The length up to which to check for equality
+		* @param threshold The threshold for equality
 		* @returns True if equal within the threshold EPS, false otherwise
 		*/
 		inline bool Equals(const Buffer<>& u, const Buffer<>& v, const int length, const Real threshold = EPS)
 		{
-			assert(v.Length() == length);
-			assert(u.Length() >= length);
+			Debug::Assert(v.Length() == length, "Buffer 2 length does not equal the assigned length");
+			Debug::Assert(u.Length() >= length, "Buffer 1 length is less than the assigned length");
 
 			for (int i = 0; i < length; i++)
 				if (u[i] > v[i] + threshold || u[i] < v[i] - threshold)

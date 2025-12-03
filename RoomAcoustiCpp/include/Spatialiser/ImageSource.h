@@ -26,6 +26,7 @@
 #include "Spatialiser/Wall.h"
 #include "Spatialiser/Edge.h"
 #include "Spatialiser/Types.h"
+#include "Spatialiser/Configs.h"
 #include "Diffraction/Path.h"
 #include "Diffraction/Models.h"
 #include "Spatialiser/AirAbsorption.h"
@@ -163,7 +164,11 @@ namespace RAC
 			/**
 			* @return The previous plane or edge ID
 			*/
-			inline size_t GetID() const { assert(pathParts.size() > 0); return pathParts.back().id; }
+			inline size_t GetID() const
+			{
+				Debug::Assert(ToInt(pathParts.size()) > 0, "No path parts have been created");
+				return pathParts.back().id;
+			}
 
 			/**
 			* @brief Returns the ID of the plane or edge at the given index within the image source path
@@ -171,7 +176,12 @@ namespace RAC
 			* @param i The index of the reflection or diffraction within the image source path
 			* @return The ID of the plane or edge at the given index
 			*/
-			inline size_t GetID(int i) const { assert(i < pathParts.size()); return pathParts[i].id; }
+			inline size_t GetID(int i) const
+			{
+				Debug::Assert(i >= 0, "Path parts index out of bounds: " + ToString(i));
+				Debug::Assert(i < ToInt(pathParts.size()), "Path parts index out of bounds: " + ToString(i));
+				return pathParts[i].id;
+			}
 
 			/**
 			* @brief Returns whether given index within the image source path is a reflection or diffraction
@@ -179,7 +189,12 @@ namespace RAC
 			* @param i The index of the reflection or diffraction within the image source path
 			* @return True if the part is a reflection, false if it is a diffraction
 			*/
-			inline bool IsReflection(int i) const { assert(i < pathParts.size()); return pathParts[i].isReflection; }
+			inline bool IsReflection(int i) const
+			{
+				Debug::Assert(i >= 0, "Path parts index out of bounds: " + ToString(i));
+				Debug::Assert(i < ToInt(pathParts.size()), "Path parts index out of bounds: " + ToString(i));
+				return pathParts[i].isReflection;
+			}
 
 			/**
 			* @return The string key representing the image source path
@@ -226,15 +241,16 @@ namespace RAC
 			*/
 			inline Vec3 GetPosition(int i) const
 			{
+				Debug::Assert(i >= 0, "Positions index out of bounds: " + ToString(i));
 				if (diffraction)
 				{
 					if (i >= diffractionIndex)
 					{
-						assert(i < mEdges.size());
+						Debug::Assert(i < ToInt(mEdges.size()), "Edges index out of bounds: " + ToString(i));
 						return mEdges[i].GetEdgeCoordinate(mDiffractionPath.GetApexZ());
 					}
 				}
-				assert(i < mPositions.size());
+				Debug::Assert(i < ToInt(mPositions.size()), "Positions index out of bounds: " + ToString(i));
 				return mPositions[i];
 			}
 
@@ -279,7 +295,13 @@ namespace RAC
 			/**
 			* @return The apex of the diffraction path
 			*/
-			inline Vec3 GetApex() const { assert(mEdges.size() > 0); return mEdges[diffractionIndex].GetEdgeCoordinate(mDiffractionPath.GetApexZ()); }
+			inline Vec3 GetApex() const
+			{
+				Debug::Assert(ToInt(mEdges.size()) > 0, "No edges added to image source");
+				Debug::Assert(diffractionIndex >= 0, "Diffraction index out of bounds: " + ToString(diffractionIndex));
+				Debug::Assert(diffractionIndex < ToInt(mEdges.size()), "Diffraction index out of bounds: " + ToString(diffractionIndex));
+				return mEdges[diffractionIndex].GetEdgeCoordinate(mDiffractionPath.GetApexZ());
+			}
 
 			/**
 			* @brief Sets the image source as visible and whether it feeds the FDN
@@ -382,7 +404,11 @@ namespace RAC
 			/**
 			* @return The diffraction path of the image source
 			*/
-			inline Diffraction::Path GetDiffractionPath() const { assert(diffraction); return mDiffractionPath; }
+			inline Diffraction::Path GetDiffractionPath() const
+			{
+				Debug::Assert(diffraction, "Accessing diffraction path from a reflection only image source");
+				return mDiffractionPath;
+			}
 
 		private:
 

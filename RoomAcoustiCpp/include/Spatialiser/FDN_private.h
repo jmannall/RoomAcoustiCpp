@@ -15,7 +15,8 @@
 
 // Spatialiser headers
 #include "Spatialiser/Types.h"
-#include"Spatialiser/RAVESResidue.h"
+#include "Spatialiser/Configs.h"
+#include "Spatialiser/RAVESResidue.h"
 
 // Common headers
 #include "Common/Types.h"
@@ -240,7 +241,7 @@ namespace RAC
 			inline void SetTargetResidues(const Coefficients<>& residues)
 			requires std::is_same_v<T, Complex>
 			{
-				assert(residues.Length() == ravesResidues.size());
+				Debug::Assert(residues.Length() == ravesResidues.size(), "Residue lengths do not match");
 				for (int i = 0; i < ravesResidues.size(); i++)
 					ravesResidues[i].SetTargetEnergy(residues[i]);
 			}
@@ -254,8 +255,7 @@ namespace RAC
 			inline bool SetTargetReflectionFilters(const std::vector<Coefficients<>>& gains)
 			requires std::is_same_v<T, Real>
 			{
-				// assert(gains.size() == mChannels.size());
-
+				Debug::Assert(gains.size() == mChannels.size(), "Incorrect number of reflection filter target gains");
 				bool isZero = true;
 				for (int i = 0; i < mChannels.size(); i++)
 					isZero = mChannels[i]->SetTargetReflectionFilter(gains[i]) && isZero;
@@ -265,15 +265,11 @@ namespace RAC
 			inline void SetPrecedingDelay(const int samples)
 			requires std::is_same_v<T, Complex>
 			{
-				assert(samples > 0);
+				Debug::Assert(samples > 0, "Invalid MoD-ART preceding delay: " + ToString(samples));
 
-				// in case they passed in a bad value, make sure our delay line is at least 
-				// one sample
-				const int actualSamples = std::max(samples, 1);
-
-				precedingDelay = DelayLine<Complex>(actualSamples);
+				precedingDelay = DelayLine<Complex>(samples);
 				// the constructor resets, so no need to do a Reset() here
-				assert(precedingDelay.IsValid());
+				Debug::Assert(precedingDelay.IsValid(), "Invalid delay line");
 			}
 
 			inline void SetMinimumReverbTime(Real T60)
@@ -334,7 +330,7 @@ namespace RAC
 			requires std::is_same_v<T, Real> : x(dspConfig->GetData().fdnSize), y(dspConfig->GetData().fdnSize),
 				feedbackMatrix(matrix), mT60(nullptr), inputData(nullptr)
 			{
-				assert(T60.IsGreaterThan(0.0));
+				Debug::Assert(T60.IsGreaterThan(0.0), "Invalid reverb time: " + ToString(T60));
 
 #if MATRIX_LIBRARY == EIGEN_FLAG
 				x.SetConstant(0.0);
@@ -367,9 +363,9 @@ namespace RAC
 			FDN(const Real T60, const Vec<int>& delayLengths, const std::shared_ptr<DSPConfig> dspConfig, const Matrix<>& matrix)
 			requires std::is_same_v<T, Complex> : x(dspConfig->GetData().fdnSize), y(dspConfig->GetData().fdnSize),
 				feedbackMatrix(matrix), mT60(T60), inputData(dspConfig->GetData().numFrames),
-				ravesResidues(dspConfig->GetData().numReverbSources), precedingDelay(0), enabled(false)
+				ravesResidues(dspConfig->GetData().numReverbSources), precedingDelay(1), enabled(false)
 			{
-				assert(T60 > 0);
+				Debug::Assert(T60 > 0.0, "Invalid reverb time: " + ToString(T60));
 
 #if MATRIX_LIBRARY == EIGEN_FLAG
 				x.SetConstant(0.0);

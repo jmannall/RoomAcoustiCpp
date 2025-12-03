@@ -194,7 +194,7 @@ namespace RAC
 			HighShelf(const Real fc, const Real gain, const int sampleRate) : IIRFilter1(sampleRate),
 				targetFc(fc), targetGain(gain), currentFc(fc), currentGain(gain)
 			{
-				assert(fc < static_cast<Real>(sampleRate) / 2.0); // Ensure cut off frequency is less than Nyquist frequency
+				Debug::Assert(fc < static_cast<Real>(sampleRate) / REAL_CONST(2.0), "Cut off frequency is greater than Nyquist frequency");
 
 				UpdateCoefficients(currentFc, currentGain);
 				parametersEqual.store(true, std::memory_order_release);
@@ -257,7 +257,7 @@ namespace RAC
 			*/
 			LowPass1(const Real fc, const int sampleRate) : IIRFilter1(sampleRate), targetFc(fc), currentFc(fc)
 			{
-				assert(fc < static_cast<Real>(sampleRate) / 2.0); // Ensure cut off frequency is less than Nyquist frequency
+				Debug::Assert(fc < static_cast<Real>(sampleRate) / REAL_CONST(2.0), "Cut off frequency is greater than Nyquist frequency");
 
 				UpdateCoefficients(currentFc);
 				parametersEqual.store(true, std::memory_order_release);
@@ -471,7 +471,7 @@ namespace RAC
 			HighShelfMatched(const Real fc, const Real gain, const int sampleRate) : IIRFilter1(sampleRate),
 				targetFc(fc), targetGain(gain), currentFc(fc), currentGain(gain)
 			{
-				assert(fc < static_cast<Real>(sampleRate) / 2.0); // Ensure cut off frequency is less than Nyquist frequency
+				Debug::Assert(fc < static_cast<Real>(sampleRate) / REAL_CONST(2.0), "Cut off frequency is greater than Nyquist frequency");
 
 				UpdateCoefficients(currentFc, currentGain);
 				parametersEqual.store(true, std::memory_order_release);

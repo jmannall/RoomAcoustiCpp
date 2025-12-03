@@ -11,8 +11,9 @@
 #include <string>
 #include <sstream>
 
-// Unity headers
+// Commone headers
 #include "Common/Debug.h"
+#include "Common/Vec3.h"
 
 namespace RAC
 {
@@ -21,26 +22,53 @@ namespace RAC
         //////////////////// Debug class ////////////////////
 
         ////////////////////////////////////////
-#ifdef DEBUG_LOG
-        void Debug::Log(const char* message, Colour colour)
+
+        std::string GetRelativePath(std::string fullPath)
         {
-            std::lock_guard lock(debugMutex);
-            if (debugCallbackInstance != nullptr)
-                debugCallbackInstance(message, (int)colour, (int)strlen(message));
+            std::string path(fullPath);
+            const std::string marker = "\\RoomAcoustiCpp\\";
+
+            size_t pos = path.find(marker);
+            if (pos != std::string::npos)
+            {
+                // Keep everything *after* RoomAcoustiCpp
+                return path.substr(pos + marker.size());
+            }
+
+            // Marker not found, return original path
+            return path;
         }
 
         ////////////////////////////////////////
 
-        void Debug::Log(const std::string message, Colour colour)
+        void Debug::WriteToLog(const std::string& message, DebugType type, const std::source_location& location)
         {
+            std::string formatted = message;
+
+            formatted += " (File: ";
+            formatted += GetRelativePath(location.file_name());
+            // formatted += ", Function: ";
+			// formatted += location.function_name();
+            formatted += ", Line: ";
+            formatted += ToString(location.line());
+            formatted += ")";
+
             std::lock_guard lock(debugMutex);
-            const char* tmsg = message.c_str();
+            const char* tmsg = formatted.c_str();
             if (debugCallbackInstance != nullptr)
-                debugCallbackInstance(tmsg, (int)colour, (int)strlen(tmsg));
+                debugCallbackInstance(tmsg, (int)type, (int)strlen(tmsg));
         }
-#endif
+
         ////////////////////////////////////////
 #ifdef DEBUG_PATHS
+        void Debug::SendPath(const std::string& key, const std::vector<Vec3>& intersections, const ::Common::CVector3& position)
+        {
+            Vec3 vec3Position(static_cast<Real>(position.x), static_cast<Real>(position.y), static_cast<Real>(position.z));
+            SendPath(key, intersections, vec3Position);
+        }
+
+        ////////////////////////////////////////
+
         void Debug::SendPath(const std::string& key, const std::vector<Vec3>& intersections, const Vec3& position)
         {
             std::lock_guard lock(pathMutex);
@@ -80,7 +108,7 @@ namespace RAC
         }
 #endif
         ////////////////////////////////////////
-#ifdef DEBUG_RESIDUES
+#ifdef RESIDUE_CALLBACKS
         void Debug::SendResidue(float residue, bool isSource, int sourceIndex, int slopeIndex)
         {
             std::lock_guard lock(residueMutex);
@@ -88,6 +116,16 @@ namespace RAC
                 residueCallbackInstance(residue, isSource, sourceIndex, slopeIndex);
         }
 #endif
+        ////////////////////////////////////////
+
+        template<>
+        std::string ToString<std::array<Vec3, 3>>(const std::array<Vec3, 3>& x)
+        {
+            std::stringstream ss;
+            for (auto i = 0; i < x.size(); i++)
+                ss << x[i];
+            return ss.str();
+        }
     }
 }
 

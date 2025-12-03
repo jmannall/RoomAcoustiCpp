@@ -1,9 +1,14 @@
 
+// C++ headers
 #include <cassert>
 #include <omp.h>
-#include "Spatialiser/TracingUtils.h"
-
 #include <chrono>
+
+// Common headers
+#include "Common/Debug.h"
+
+// Spatialiser headers
+#include "Spatialiser/TracingUtils.h"
 
 // Enable OMP at the triangle level. Using up to 4 threads can result in an improvement, but it is nowhere near as much as USE_OMP_RAYTRACE_ALL
 #define USE_OMP_RAYTRACE_SINGLE            ( 0 )
@@ -32,7 +37,8 @@ namespace RAC
 			cosine = std::numeric_limits<Real>::quiet_NaN();
 
 			// Sanity check: the requested triangle must exist.
-			assert(triangleIndex < triangles.size());
+            Debug::Assert(triangleIndex >= 0, "Triangle index out of bounds: " + ToString(triangleIndex));
+            Debug::Assert(triangleIndex < ToInt(triangles.size()), "Triangle index out of bounds: " + ToString(triangleIndex));
 
 			// Load plane data into locals.
 			const Vec3 n = triangles.n[triangleIndex];
@@ -91,7 +97,8 @@ namespace RAC
             Real& distance, Real& cosine)
         {
             // Sanity check: the requested ray must exist.
-            assert(rayIndex < rays.size());
+            Debug::Assert(rayIndex >= 0, "Ray index out of bounds: " + ToString(rayIndex));
+            Debug::Assert(rayIndex < ToInt(rays.size()), "Ray index out of bounds" + ToString(rayIndex));
 
             // Load ray data into locals.
             const Vec3& O = rays.O[rayIndex];
@@ -106,7 +113,8 @@ namespace RAC
             Real& distance, Real& cosine)
         {
             // Sanity check: the requested ray must exist.
-            assert(rayIndex < rays.size());
+            Debug::Assert(rayIndex >= 0, "Ray index out of bounds: " + ToString(rayIndex));
+            Debug::Assert(rayIndex < ToInt(rays.size()), "Ray index out of bounds" + ToString(rayIndex));
 
             // Load ray data into locals.
             const Vec3& O = rays.O;
@@ -422,7 +430,7 @@ namespace RAC
 
         void RayBundle::getOrigins(std::vector<Vec3>& origins) const
         {
-            assert(origins.size() == numRays);
+            Debug::Assert(ToInt(origins.size()) == numRays, "Origins size and numRays must be equal" + ToString(ToInt(origins.size())));
             for (int i = 0; i < numRays; ++i) {
                 origins[i] = rays.O[i];
             }
@@ -430,7 +438,7 @@ namespace RAC
 
         void RayBundle::getDirections(std::vector<Vec3>& directions) const
         {
-            assert(directions.size() == numRays);
+            Debug::Assert(ToInt(directions.size()) == numRays, "Directions size and numRays must be equal" + ToString(ToInt(directions.size())));
             for (int i = 0; i < numRays; ++i) {
                 directions[i] = rays.D[i];
             }
@@ -439,22 +447,22 @@ namespace RAC
         // TODO: Can these not just use operator= ?
         void RayBundle::getTotalDistances(Vec<>& distances) const
         {
-            assert(distances.Length() == numRays);
+            Debug::Assert(distances.Length() == numRays, "Distances length and numRays must be equal" + ToString(distances.Length()));
             for (int i = 0; i < numRays; ++i)
                 distances(i) = totalDistance(i);
         }
 
         void RayBundle::getCosines(Vec<>& cosines) const
         {
-            assert(cosines.Length() == numRays);
+            Debug::Assert(cosines.Length() == numRays, "Cosines length and numRays must be equal" + ToString(cosines.Length()));
             for (int i = 0; i < numRays; ++i)
                 cosines(i) = latestCosine(i);
         }
 
         void RayBundle::getIndices(Vec<int>& current, Vec<int>& previous) const
         {
-            assert(current.Length() == numRays);
-            assert(previous.Length() == numRays);
+            Debug::Assert(current.Length() == numRays, "Current length and numRays must be equal" + ToString(current.Length()));
+            Debug::Assert(previous.Length() == numRays, "Previous length and numRays must be equal" + ToString(previous.Length()));
             for (int i = 0; i < numRays; ++i) {
                 current(i) = latestPatchId(i);
                 previous(i) = previousPatchId(i);
@@ -463,7 +471,8 @@ namespace RAC
 
         void RayBundle::getRadiance(Vec<>& rad) const
         {
-            assert(rad.Length() == numRays);
+            Debug::Assert(rad.Length() == numRays, "Rad length and numRays must be equal" + ToString(rad.Length()));
+            Debug::Assert(radiance.Length() == numRays, "Radiance length and numRays must be equal" + ToString(radiance.Length()));
             for (int i = 0; i < numRays; ++i)
                 rad(i) = radiance(i);
         }
@@ -578,9 +587,9 @@ namespace RAC
             Vec<int>& clusters) const
         {
             if (exposeMirrorCopies)
-                assert(clusters.Length() == 2 * numRays);
+                Debug::Assert(clusters.Length() == 2 * numRays, "Clusters length must equal 2 * numRays" + ToString(clusters.Length()));
             else
-                assert(clusters.Length() == numRays);
+                Debug::Assert(clusters.Length() == numRays, "Clusters length must equal numRays" + ToString(clusters.Length()));
 
             // Buffer used while iterating
             std::vector<Real> cosineSimilarity(directions.size());
@@ -626,9 +635,9 @@ namespace RAC
         void RayPencil::getDirections(std::vector<Vec3>& directions) const
         {
             if (exposeMirrorCopies)
-                assert(directions.size() == 2 * numRays);
+                Debug::Assert(ToInt(directions.size()) == 2 * numRays, "Directions size must equal 2 * numRays" + ToString(ToInt(directions.size())));
             else
-                assert(directions.size() == numRays);
+                Debug::Assert(ToInt(directions.size()) == numRays, "Directions size must equal numRays" + ToString(ToInt(directions.size())));
 
             for (int i = 0; i < numRays; ++i) {
                 directions[i] = rays.D[i];
@@ -645,9 +654,9 @@ namespace RAC
         void RayPencil::getDistances(Vec<>& distances) const
         {
             if (exposeMirrorCopies)
-                assert(distances.Length() == 2 * numRays);
+                Debug::Assert(distances.Length() == 2 * numRays, "Distances length must equal 2 * numRays" + ToString(distances.Length()));
             else
-                assert(distances.Length() == numRays);
+                Debug::Assert(distances.Length() == numRays, "Distances length must equal numRays" + ToString(distances.Length()));
 
             for (int i = 0; i < numRays; ++i)
                 distances(i) = frontDistance(i);
@@ -663,9 +672,9 @@ namespace RAC
         void RayPencil::getCosines(Vec<>& cosines) const
         {
             if (exposeMirrorCopies)
-                assert(cosines.Length() == 2 * numRays);
+                Debug::Assert(cosines.Length() == 2 * numRays, "Cosines length must equal 2 * numRays" + ToString(cosines.Length()));
             else
-                assert(cosines.Length() == numRays);
+                Debug::Assert(cosines.Length() == numRays, "Cosines length must equal numRays" + ToString(cosines.Length()));
 
             for (int i = 0; i < numRays; ++i)
                 cosines(i) = frontCosine(i);
@@ -682,13 +691,13 @@ namespace RAC
         {
             if (exposeMirrorCopies)
             {
-                assert(front.Length() == 2 * numRays);
-                assert(back.Length() == 2 * numRays);
+                Debug::Assert(front.Length() == 2 * numRays, "Front length must equal 2 * numRays" + ToString(front.Length()));
+                Debug::Assert(back.Length() == 2 * numRays, "Back length must equal 2 * numRays" + ToString(back.Length()));
             }
             else
             {
-                assert(front.Length() == numRays);
-                assert(back.Length() == numRays);
+                Debug::Assert(front.Length() == numRays, "Front length must equal numRays" + ToString(front.Length()));
+                Debug::Assert(back.Length() == numRays, "Back length must equal numRays" + ToString(back.Length()));
             }
 
             for (int i = 0; i < numRays; ++i)
