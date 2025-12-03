@@ -187,15 +187,15 @@ namespace RAC
 
 			inline const Vec<>& GetRightEigenvector(const int id)
 			{
-				Debug::Assert(id >= 0, "Invalid eigenvector ID: " + ToString(id));
-				Debug::Assert(id < ToInt(rightEigenvectors.size()), "Invalid eigenvector ID: " + ToString(id));
+				RAC_DEBUG_ASSERT(id >= 0, "Invalid eigenvector ID: " + ToString(id));
+				RAC_DEBUG_ASSERT(id < ToInt(rightEigenvectors.size()), "Invalid eigenvector ID: " + ToString(id));
 				return rightEigenvectors[id];
 			}
 
 			inline const Vec<>& GetLeftEigenvector(const int id)
 			{
-				Debug::Assert(id >= 0, "Invalid eigenvector ID: " + ToString(id));
-				Debug::Assert(id < ToInt(leftEigenvectors.size()), "Invalid eigenvector ID: " + ToString(id));
+				RAC_DEBUG_ASSERT(id >= 0, "Invalid eigenvector ID: " + ToString(id));
+				RAC_DEBUG_ASSERT(id < ToInt(leftEigenvectors.size()), "Invalid eigenvector ID: " + ToString(id));
 				return leftEigenvectors[id];
 			}
 
@@ -298,7 +298,7 @@ namespace RAC
 
 			inline void ProcessReverberator(const Matrix<>& data, std::vector<Buffer<>>& outputBuffers, const AudioData& audioData) override
 			{
-				Debug::Assert(IsValid(), "Invalid reverberator");
+				RAC_DEBUG_ASSERT(IsValid(), "Invalid reverberator");
 #ifdef __ANDROID__
 				std::atomic_load(&mFDN)->ProcessAudio(data, outputBuffers, audioData);
 #else

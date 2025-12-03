@@ -20,7 +20,7 @@ namespace RAC
 
 		Real FIRFilter::GetOutput(const Real input, const Real lerpFactor)
 		{
-			Debug::Assert(IsValid(), "Invalid filter");
+			RAC_DEBUG_ASSERT(IsValid(), "Invalid filter");
 
 			if (!irsEqual.load(std::memory_order_acquire))
 				InterpolateIR(lerpFactor);
@@ -32,8 +32,8 @@ namespace RAC
 			inputLine[index] = input;
 			inputLine[index + maxFilterLength] = input;
 
-			Debug::Assert(currentIR.Length() >= ToInt(irLength), "IR length exceeds max length of the filter");
-			Debug::Assert(irLength % 8 == 0, "IR length is not a multiple of eight");
+			RAC_DEBUG_ASSERT(currentIR.Length() >= ToInt(irLength), "IR length exceeds max length of the filter");
+			RAC_DEBUG_ASSERT(irLength % 8 == 0, "IR length is not a multiple of eight");
 
 			// Assume length is always a multiple of 8
 			for (int i = 0; i < irLength; i += 8)
@@ -66,7 +66,7 @@ namespace RAC
 
 			if (length > maxFilterLength)
 				return false;
-			Debug::Assert(length <= maxFilterLength, "Length exceeds max length of the filter");
+			RAC_DEBUG_ASSERT(length <= maxFilterLength, "Length exceeds max length of the filter");
 
 			const std::shared_ptr<Buffer<>> irCopy = std::make_shared<Buffer<>>(ir);
 			irCopy->Resize(length);

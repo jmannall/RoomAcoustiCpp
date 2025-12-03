@@ -115,9 +115,9 @@ namespace RAC
 			*/
 			inline void AddColumn(const std::vector<T>& column, const int c)
 			{
-				Debug::Assert(ToInt(column.size()) == data.rows, "Wrong column length: " + ToString(ToInt(column.size()));
-				Debug::Assert(c < data.cols, "Column index out of bounds: " + ToString(c));
-				Debug::Assert(c >= 0, "Column index out of bounds: " + ToString(c));
+				RAC_DEBUG_ASSERT(ToInt(column.size()) == data.rows, "Wrong column length: " + ToString(ToInt(column.size()));
+				RAC_DEBUG_ASSERT(c < data.cols, "Column index out of bounds: " + ToString(c));
+				RAC_DEBUG_ASSERT(c >= 0, "Column index out of bounds: " + ToString(c));
 				for (int i = 0; i < data.rows; i++)
 					data(i, c) = column[i];
 			}
@@ -130,9 +130,9 @@ namespace RAC
 			*/
 			inline void AddRow(const std::vector<T>& row, const int r)
 			{
-				Debug::Assert(ToInt(row.size()) == data.rows, "Wrong row length: " + ToString(ToInt(row.size()));
-				Debug::Assert(r < data.rows, "Row index out of bounds: " + ToString(r));
-				Debug::Assert(r >= 0, "Row index out of bounds: " + ToString(r));
+				RAC_DEBUG_ASSERT(ToInt(row.size()) == data.rows, "Wrong row length: " + ToString(ToInt(row.size()));
+				RAC_DEBUG_ASSERT(r < data.rows, "Row index out of bounds: " + ToString(r));
+				RAC_DEBUG_ASSERT(r >= 0, "Row index out of bounds: " + ToString(r));
 				for (int i = 0; i < data.cols; i++)
 					data(r, i) = row[i];
 			}
@@ -145,8 +145,8 @@ namespace RAC
 			*/
 			inline const std::vector<T>& Row(int r)
 			{
-				Debug::Assert(r < data.rows, "Row index out of bounds: " + ToString(r));
-				Debug::Assert(r >= 0, "Row index out of bounds: " + ToString(r));
+				RAC_DEBUG_ASSERT(r < data.rows, "Row index out of bounds: " + ToString(r));
+				RAC_DEBUG_ASSERT(r >= 0, "Row index out of bounds: " + ToString(r));
 				for (int i = 0; i < data.cols; i++)
 					row[i] = data(r, i);
 				return row;
@@ -160,8 +160,8 @@ namespace RAC
 			*/
 			inline const std::vector<T>& Col(int c)
 			{
-				Debug::Assert(c < data.cols, "Column index out of bounds: " + ToString(c));
-				Debug::Assert(c >= 0, "Column index out of bounds: " + ToString(c));
+				RAC_DEBUG_ASSERT(c < data.cols, "Column index out of bounds: " + ToString(c));
+				RAC_DEBUG_ASSERT(c >= 0, "Column index out of bounds: " + ToString(c));
 				for (int i = 0; i < data.rows; i++)
 					column[i] = data(i, c);
 				return column;
@@ -255,8 +255,8 @@ namespace RAC
 			*/
 			inline Matrix operator+=(const Matrix& matrix)
 			{
-				Debug::Assert(data.rows == matrix.Rows(), "Number of rows do not match");
-				Debug::Assert(data.cols == matrix.Cols(), "Number of cols do not match");
+				RAC_DEBUG_ASSERT(data.rows == matrix.Rows(), "Number of rows do not match");
+				RAC_DEBUG_ASSERT(data.cols == matrix.Cols(), "Number of cols do not match");
 
 				std::transform(std::execution::unseq,
 					begin(), end(),
@@ -271,8 +271,8 @@ namespace RAC
 			*/
 			inline Matrix operator-=(const Matrix& matrix)
 			{
-				Debug::Assert(data.rows == matrix.Rows(), "Number of rows do not match");
-				Debug::Assert(data.cols == matrix.Cols(), "Number of cols do not match");
+				RAC_DEBUG_ASSERT(data.rows == matrix.Rows(), "Number of rows do not match");
+				RAC_DEBUG_ASSERT(data.cols == matrix.Cols(), "Number of cols do not match");
 
 				std::transform(std::execution::unseq,
 					begin(), end(),
@@ -361,8 +361,8 @@ namespace RAC
 		template<typename T>
 		inline bool operator==(const Matrix<T>& u, const Matrix<T>& v)
 		{
-			Debug::Assert(u.Rows() == v.Rows(), "Number of rows do not match");
-			Debug::Assert(u.Cols() == v.Cols(), "Number of cols do not match");
+			RAC_DEBUG_ASSERT(u.Rows() == v.Rows(), "Number of rows do not match");
+			RAC_DEBUG_ASSERT(u.Cols() == v.Cols(), "Number of cols do not match");
 
 			if (u.Rows() != v.Rows())
 				return false;
@@ -391,8 +391,8 @@ namespace RAC
 		template<typename T>
 		inline Matrix<T> operator+(const Matrix<T>& u, const Matrix<T>& v)
 		{
-			Debug::Assert(u.Rows() == v.Rows(), "Number of rows do not match");
-			Debug::Assert(u.Cols() == v.Cols(), "Number of cols do not match");
+			RAC_DEBUG_ASSERT(u.Rows() == v.Rows(), "Number of rows do not match");
+			RAC_DEBUG_ASSERT(u.Cols() == v.Cols(), "Number of cols do not match");
 
 			Matrix<T> out = Matrix<T>(u.Rows(), u.Cols());
 			std::transform(std::execution::unseq,
@@ -423,8 +423,8 @@ namespace RAC
 		template<typename T>
 		inline Matrix<T> operator-(const Matrix<T>& u, const Matrix<T>& v)
 		{
-			Debug::Assert(u.Rows() == v.Rows(), "Number of rows do not match");
-			Debug::Assert(u.Cols() == v.Cols(), "Number of cols do not match");
+			RAC_DEBUG_ASSERT(u.Rows() == v.Rows(), "Number of rows do not match");
+			RAC_DEBUG_ASSERT(u.Cols() == v.Cols(), "Number of cols do not match");
 
 			Matrix out = Matrix(u.Rows(), u.Cols());
 			std::transform(std::execution::unseq,
@@ -441,9 +441,9 @@ namespace RAC
 		template<typename T>
 		inline void Multiply(Matrix<T>& out, const Matrix<T>& u, const Matrix<T>& v)
 		{
-			Debug::Assert(u.Rows() == v.Rows(), "Number of rows do not match");
-			Debug::Assert(out.Rows() == u.Rows(), "Number of rows do not match");
-			Debug::Assert(out.Cols() == v.Cols(), "Number of cols do not match");
+			RAC_DEBUG_ASSERT(u.Rows() == v.Rows(), "Number of rows do not match");
+			RAC_DEBUG_ASSERT(out.Rows() == u.Rows(), "Number of rows do not match");
+			RAC_DEBUG_ASSERT(out.Cols() == v.Cols(), "Number of cols do not match");
 
 			for (int i = 0; i < u.Rows(); ++i)
 			{

@@ -36,8 +36,8 @@ namespace RAC
 
 		inline Real ThreeWayDot(const Vec<>& u, const Vec<>& v, const Vec<>& w)
 		{
-			Debug::Assert(u.Length() == v.Length(), "Lengths of vectors do not match");
-			Debug::Assert(u.Length() == w.Length(), "Lengths of vectors do not match");
+			RAC_DEBUG_ASSERT(u.Length() == v.Length(), "Lengths of vectors do not match");
+			RAC_DEBUG_ASSERT(u.Length() == w.Length(), "Lengths of vectors do not match");
 			return u.dot(v.cwiseProduct(w));
 		}
 

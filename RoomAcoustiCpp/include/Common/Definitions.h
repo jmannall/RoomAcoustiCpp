@@ -493,7 +493,7 @@ namespace RAC
 		 */
 		inline int ToInt(size_t value)
 		{
-			Debug::Assert(value <= std::numeric_limits<int>::max(), "size_t out of range of int");
+			RAC_DEBUG_ASSERT(value <= std::numeric_limits<int>::max(), "size_t out of range of int");
 			return static_cast<int>(value);
 		}
 
@@ -505,7 +505,7 @@ namespace RAC
 		 */
 		inline int ToInt(ptrdiff_t value)
 		{
-			Debug::Assert(value >= std::numeric_limits<int>::min() && value <= std::numeric_limits<int>::max(), "ptrdiff_t out of range of int");
+			RAC_DEBUG_ASSERT(value >= std::numeric_limits<int>::min() && value <= std::numeric_limits<int>::max(), "ptrdiff_t out of range of int");
 			return static_cast<int>(value);
 		}
 
@@ -526,7 +526,7 @@ namespace RAC
 		 */
 		inline bool IsAligned16(const void* pointer)
 		{
-			return (reinterpret_cast<ptrdiff_t>(pointer) & 0xf) == 0;
+			return (reinterpret_cast<uintptr_t>(pointer) & 0xf) == 0;
 		}
 
 		/**
@@ -534,7 +534,7 @@ namespace RAC
 		 */
 		inline bool IsAligned32(const void* pointer)
 		{
-			return (reinterpret_cast<ptrdiff_t>(pointer) & 0x1f) == 0;
+			return (reinterpret_cast<uintptr_t>(pointer) & 0x1f) == 0;
 		}
 	}
 }

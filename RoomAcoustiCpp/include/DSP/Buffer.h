@@ -121,8 +121,8 @@ namespace RAC
 			*/
 			inline T& operator[](const int i)
 			{
-				Debug::Assert(i >= 0, "Buffer index out of bounds: " + ToString(i));
-				Debug::Assert(i < ToInt(mBuffer.size()), "Buffer index out of bounds: " + ToString(i));
+				RAC_DEBUG_ASSERT(i >= 0, "Buffer index out of bounds: " + ToString(i));
+				RAC_DEBUG_ASSERT(i < ToInt(mBuffer.size()), "Buffer index out of bounds: " + ToString(i));
 				return mBuffer[i];
 			};
 
@@ -134,8 +134,8 @@ namespace RAC
 			*/
 			inline T operator[](const int i) const
 			{
-				Debug::Assert(i >= 0, "Buffer index out of bounds: " + ToString(i));
-				Debug::Assert(i < ToInt(mBuffer.size()), "Buffer index out of bounds: " + ToString(i));
+				RAC_DEBUG_ASSERT(i >= 0, "Buffer index out of bounds: " + ToString(i));
+				RAC_DEBUG_ASSERT(i < ToInt(mBuffer.size()), "Buffer index out of bounds: " + ToString(i));
 				return mBuffer[i];
 			};
 

@@ -241,7 +241,7 @@ namespace RAC
 			inline void SetTargetResidues(const Coefficients<>& residues)
 			requires std::is_same_v<T, Complex>
 			{
-				Debug::Assert(residues.Length() == ravesResidues.size(), "Residue lengths do not match");
+				RAC_DEBUG_ASSERT(residues.Length() == ravesResidues.size(), "Residue lengths do not match");
 				for (int i = 0; i < ravesResidues.size(); i++)
 					ravesResidues[i].SetTargetEnergy(residues[i]);
 			}
@@ -255,7 +255,7 @@ namespace RAC
 			inline bool SetTargetReflectionFilters(const std::vector<Coefficients<>>& gains)
 			requires std::is_same_v<T, Real>
 			{
-				Debug::Assert(gains.size() == mChannels.size(), "Incorrect number of reflection filter target gains");
+				RAC_DEBUG_ASSERT(gains.size() == mChannels.size(), "Incorrect number of reflection filter target gains");
 				bool isZero = true;
 				for (int i = 0; i < mChannels.size(); i++)
 					isZero = mChannels[i]->SetTargetReflectionFilter(gains[i]) && isZero;
@@ -265,11 +265,11 @@ namespace RAC
 			inline void SetPrecedingDelay(const int samples)
 			requires std::is_same_v<T, Complex>
 			{
-				Debug::Assert(samples > 0, "Invalid MoD-ART preceding delay: " + ToString(samples));
+				RAC_DEBUG_ASSERT(samples > 0, "Invalid MoD-ART preceding delay: " + ToString(samples));
 
 				precedingDelay = DelayLine<Complex>(samples);
 				// the constructor resets, so no need to do a Reset() here
-				Debug::Assert(precedingDelay.IsValid(), "Invalid delay line");
+				RAC_DEBUG_ASSERT(precedingDelay.IsValid(), "Invalid delay line");
 			}
 
 			inline void SetMinimumReverbTime(Real T60)
@@ -330,7 +330,7 @@ namespace RAC
 			requires std::is_same_v<T, Real> : x(dspConfig->GetData().fdnSize), y(dspConfig->GetData().fdnSize),
 				feedbackMatrix(matrix), mT60(nullptr), inputData(nullptr)
 			{
-				Debug::Assert(T60.IsGreaterThan(0.0), "Invalid reverb time: " + ToString(T60));
+				RAC_DEBUG_ASSERT(T60.IsGreaterThan(0.0), "Invalid reverb time: " + ToString(T60));
 
 #if MATRIX_LIBRARY == EIGEN_FLAG
 				x.SetConstant(0.0);
@@ -365,7 +365,7 @@ namespace RAC
 				feedbackMatrix(matrix), mT60(T60), inputData(dspConfig->GetData().numFrames),
 				ravesResidues(dspConfig->GetData().numReverbSources), precedingDelay(1), enabled(false)
 			{
-				Debug::Assert(T60 > 0.0, "Invalid reverb time: " + ToString(T60));
+				RAC_DEBUG_ASSERT(T60 > 0.0, "Invalid reverb time: " + ToString(T60));
 
 #if MATRIX_LIBRARY == EIGEN_FLAG
 				x.SetConstant(0.0);

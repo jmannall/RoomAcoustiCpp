@@ -59,7 +59,7 @@ namespace RAC
 			*/
 			inline void SetTargetDistance(const Real distance)
 			{ 
-				Debug::Assert(distance > REAL_CONST(0.0), "Invalid target distance: " + ToString(distance));
+				RAC_DEBUG_ASSERT(distance > REAL_CONST(0.0), "Invalid target distance: " + ToString(distance));
 
 				targetDistance.store(distance, std::memory_order_release);
 				parametersEqual.store(false, std::memory_order_release);
