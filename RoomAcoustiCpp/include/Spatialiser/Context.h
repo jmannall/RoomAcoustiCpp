@@ -419,7 +419,6 @@ namespace RAC
 			std::shared_ptr<ImageEdge> mImageEdgeModel{ nullptr };	// Image edge class
 			std::shared_ptr<TracingThread> mRayTracing{ nullptr };	// Ray tracing class
 
-			std::string logFile;		// Log file path
 #if defined(PROFILE_BACKGROUND_THREAD) || defined(PROFILE_AUDIO_THREAD)
 			std::string profileFile;	// Profile file path
 #endif

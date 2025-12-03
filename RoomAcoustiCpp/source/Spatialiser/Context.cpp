@@ -121,8 +121,10 @@ namespace RAC
 
 		//////////////////// Context ////////////////////
 
+#if defined(SWITCH_ON_3DTI_ERRORHANDLER) 
 		static DebugLogStreamBuffer logBuffer;
 		static std::ostream logStream(&logBuffer);
+#endif
 
 		////////////////////////////////////////
 
@@ -131,16 +133,16 @@ namespace RAC
 		{
 			RAC_DEBUG_LOG("Init Context", DebugType::Init);
 
+#if defined(SWITCH_ON_3DTI_ERRORHANDLER) 
 			CErrorHandler::Instance().SetErrorLogStream(&logStream, true);
-			if (!optionalArguments.logPrefix.empty())
-			{
-				// CErrorHandler::Instance().SetErrorLogFile(optionalArguments.logPrefix + "_log.txt", true);
-#if defined(PROFILE_BACKGROUND_THREAD) || defined(PROFILE_AUDIO_THREAD)
-				Profiler::Instance().SetOutputFile(optionalArguments.logPrefix + "_profile.txt", true);
-#endif
-			}
 			CErrorHandler::Instance().SetAssertMode(ASSERT_MODE_CONTINUE);
 			CErrorHandler::Instance().SetVerbosityMode(VERBOSITYMODE_ERRORSANDWARNINGS);
+#endif
+
+#if defined(PROFILE_BACKGROUND_THREAD) || defined(PROFILE_AUDIO_THREAD)
+			if (!optionalArguments.logPrefix.empty())
+				Profiler::Instance().SetOutputFile(optionalArguments.logPrefix + "_profile.txt", true);
+#endif
 
 			// TODO: Comment frame rate doesn't change at runtime
 			// Set dsp settings
@@ -193,16 +195,9 @@ namespace RAC
 			unique_lock<shared_mutex> lock(tuneInMutex);
 			mCore.RemoveListener();
 
-			CErrorHandler::Instance().SetErrorLogFile(logFile, false); // Disable logging to file
-			if (!logFile.empty())
-			{
-				std::ifstream f(logFile);	// Delete file if it is empty
-				if (f.good() && f.peek() == std::ifstream::traits_type::eof())
-				{
-					f.close();
-					std::remove(logFile.c_str());
-				}
-			}
+#if defined(SWITCH_ON_3DTI_ERRORHANDLER)
+			CErrorHandler::Instance().SetErrorLogStream(&logStream, false); // Disable logging to stream
+#endif
 #if defined(PROFILE_BACKGROUND_THREAD) || defined(PROFILE_AUDIO_THREAD)
 			Profiler::Instance().SetOutputFile(profileFile, false);
 #endif

@@ -93,7 +93,7 @@ namespace RAC
         {
         public:
 
-#ifdef DEBUG_ASSERT
+#if defined(DEBUG_ASSERT)
             /**
 			* @brief Asserts a condition and logs an error message if the assertion fails
 			* @details If the assertion fails, the debugger hits a break point and a runtime_error exception is thrown.
@@ -121,7 +121,7 @@ namespace RAC
 			#define RAC_DEBUG_ASSERT(result, message)        (void)0
 #endif
 
-#ifdef DEBUG_LOG
+#if defined(DEBUG_LOG)
             /**
 			* @brief Logs a message to the debug log callback
             * 
@@ -140,7 +140,7 @@ namespace RAC
             #define RAC_DEBUG_LOG(message, type)        (void)0
 #endif
 
-#ifdef DEBUG_PATHS
+#if defined(DEBUG_PATHS)
             /**
 			* @brief Sends a path to the path callback
             * 
@@ -182,7 +182,7 @@ namespace RAC
             static inline void RemovePath(const std::string& key) {}
 #endif
 
-#ifdef RESIDUE_CALLBACKS
+#if defined(RESIDUE_CALLBACKS)
             /**
 			* @brief Sends a residue value to the residue callback
             * 
