@@ -442,7 +442,7 @@ namespace RAC
 			RoomData(Real volume, const Coefficients<>& t60, ReverbFormula formula, const Vec<>& dimensions)
 				: volume(volume), formula(formula), dimensions(dimensions), customT60(t60)
 			{
-				Validate(t60.Length());
+				Validate(ToInt(t60.Length()));
 			}
 
 			ReverbFormula formula{ ReverbFormula::Sabine };	// Reverberation formula
