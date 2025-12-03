@@ -87,8 +87,6 @@ namespace RAC
 		*/
 		inline Real Lerp(Real start, const Real end, const Real factor)
 		{
-			RAC_DEBUG_ASSERT(0.0 < factor && factor <= 1.0, "Interpolation factor must be between 0 and 1: " + ToString(factor));
-
 			start *= REAL_CONST(1.0) - factor;
 			start += end * factor;
 			return start;
@@ -105,7 +103,6 @@ namespace RAC
 		*/
 		inline void Lerp(Buffer<>& start, const Buffer<>& end, const int startLength, const Real factor)
 		{
-			RAC_DEBUG_ASSERT(0.0 < factor && factor <= 1.0, "Interpolation factor must be between 0 and 1: " + ToString(factor));
 			RAC_DEBUG_ASSERT(end.Length() % 8 == 0, "End length not a multiple of eight");
 			RAC_DEBUG_ASSERT(start.Length() >= end.Length(), "End length is greater than the start length");
 			RAC_DEBUG_ASSERT(startLength <= start.Length(), "Old start length is greater than the current start length");
@@ -153,7 +150,6 @@ namespace RAC
 		template<typename T, int Size>
 		inline void Lerp(Coefficients<T, Size>& start, const Coefficients<T, Size>& end, const Real factor)
 		{
-			RAC_DEBUG_ASSERT(0.0 < factor && factor <= 1.0, "Interpolation factor must be between 0 and 1: " + ToString(factor));
 			RAC_DEBUG_ASSERT(start.Length() == end.Length(), "Coefficients must have the same length");
 
 			start *= (REAL_CONST(1.0) - factor);

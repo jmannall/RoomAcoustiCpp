@@ -545,6 +545,7 @@ namespace RAC
 				spatialisationMode(dspConfig->GetSpatialisationMode()), impulseResponseMode(dspConfig->GetImpulseResponseMode()),
 				clearBuffers(dspConfig->GetClearBuffers()), earlyReverbEnabled(dspConfig->GetEarlyReverbEnabled()), lateReverbEnabled(dspConfig->GetLateReverbEnabled())
 			{
+				RAC_DEBUG_ASSERT(0.0 < lerpFactor && lerpFactor <= 1.0, "Interpolation factor must be between 0 and 1: " + ToString(lerpFactor));
 			}
 
 			Real lerpFactor;						// Lerp factor for DSP parameter interpolation
