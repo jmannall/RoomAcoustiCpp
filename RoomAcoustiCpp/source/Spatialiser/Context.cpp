@@ -52,7 +52,7 @@ namespace RAC
 		void IEMProcessor(Context* context)
 		{
 
-			Debug::Log("Begin image edge model thread", DebugType::Init);
+			RAC_DEBUG_LOG("Begin image edge model thread", DebugType::Init);
 
 #ifdef USE_UNITY_PROFILER
 			RegisterIEMThread();
@@ -81,7 +81,7 @@ namespace RAC
 			UnregisterIEMThread();
 #endif
 
-			Debug::Log("End image edge model thread", DebugType::Remove);
+			RAC_DEBUG_LOG("End image edge model thread", DebugType::Remove);
 		}
 
 		//////////////////// Ray Tracing Thread ////////////////////
@@ -91,7 +91,7 @@ namespace RAC
 		void RayTracerProcessor(Context* context)
 		{
 
-			Debug::Log("Begin racy tracing thread", DebugType::Init);
+			RAC_DEBUG_LOG("Begin racy tracing thread", DebugType::Init);
 
 #ifdef USE_UNITY_PROFILER
 			RegisterRayTracingThread();
@@ -116,7 +116,7 @@ namespace RAC
 			UnregisterRayTracingThread();
 #endif
 
-			Debug::Log("End ray tracing thread", DebugType::Remove);
+			RAC_DEBUG_LOG("End ray tracing thread", DebugType::Remove);
 		}
 
 		//////////////////// Context ////////////////////
@@ -129,7 +129,7 @@ namespace RAC
 		Context::Context(const DSPData& data,const ContextOptionalArguments& optionalArguments)
 		: dspConfig(std::make_shared<DSPConfig>(data)), mIsRunning(true), IEMThread(), rayTracingThread(), applyHeadphoneEQ(false), headphoneEQ(2048), dcBlocker(data.fs)
 		{
-			Debug::Log("Init Context", DebugType::Init);
+			RAC_DEBUG_LOG("Init Context", DebugType::Init);
 
 			CErrorHandler::Instance().SetErrorLogStream(&logStream, true);
 			if (!optionalArguments.logPrefix.empty())
@@ -166,7 +166,7 @@ namespace RAC
 
 		Context::~Context()
 		{
-			Debug::Log("Exit Context", DebugType::Remove);
+			RAC_DEBUG_LOG("Exit Context", DebugType::Remove);
 
 			StopRunning();
 			if (IEMThread.joinable())
@@ -300,7 +300,7 @@ namespace RAC
 		{
 			if (earlyReverbInitialised.load(std::memory_order_acquire))
 			{
-				Debug::Log("Early reverb already initialized", DebugType::Warning);
+				RAC_DEBUG_LOG("Early reverb already initialized", DebugType::Warning);
 				return false;
 			}
 
@@ -342,7 +342,7 @@ namespace RAC
 		{
 			if (lateReverbInitialised.load(std::memory_order_acquire))
 			{
-				Debug::Log("Late reverb already initialized", DebugType::Warning);
+				RAC_DEBUG_LOG("Late reverb already initialized", DebugType::Warning);
 				return false;
 			}
 
@@ -419,12 +419,12 @@ namespace RAC
 				mRayTracing->SetListenerPosition(position);
 			}
 			else
-				Debug::Log("Late reverb not initialised when updating listener position", DebugType::Warning);
+				RAC_DEBUG_LOG("Late reverb not initialised when updating listener position", DebugType::Warning);
 
 			if (earlyReverbInitialised.load(std::memory_order_acquire))
 				mImageEdgeModel->SetListenerPosition(position);
 			else
-				Debug::Log("Early reverb not initialised when updating listener position", DebugType::Warning);
+				RAC_DEBUG_LOG("Early reverb not initialised when updating listener position", DebugType::Warning);
 
 			listenerInitialised = true;
 		}
@@ -433,7 +433,7 @@ namespace RAC
 
 		int Context::InitSource()
 		{
-			Debug::Log("Init Source", DebugType::Init);
+			RAC_DEBUG_LOG("Init Source", DebugType::Init);
 			int id = mSources->Init();
 			RAC_DEBUG_ASSERT(id >= 0, "Failed to initialise source");
 			return id;
@@ -445,13 +445,13 @@ namespace RAC
 		{
 			if (!listenerInitialised)
 			{
-				Debug::Log("Update Source called before listener initialised", DebugType::Warning);
+				RAC_DEBUG_LOG("Update Source called before listener initialised", DebugType::Warning);
 				return;
 			}
 
 			if (id >= MAX_SOURCES)
 			{
-				Debug::Log("Invalid source ID", DebugType::Error);
+				RAC_DEBUG_LOG("Invalid source ID", DebugType::Error);
 				return;
 			}
 
@@ -464,13 +464,13 @@ namespace RAC
 				if (distance == 0.0)
 				{
 					newPosition = mSources->GetSourcePosition(id);
-					Debug::Log("Source position coincides with listener position. Using previous source position", DebugType::Warning);
+					RAC_DEBUG_LOG("Source position coincides with listener position. Using previous source position", DebugType::Warning);
 				}
 				distance = (newPosition - listenerPosition).Normal();
 				if (distance == 0.0)
 				{
 					newPosition = listenerPosition + Vec3(1.0, 0.0, 0.0);
-					Debug::Log("Previous source position coincides with listener position. Defaulting source position to in front of the listener", DebugType::Warning);
+					RAC_DEBUG_LOG("Previous source position coincides with listener position. Defaulting source position to in front of the listener", DebugType::Warning);
 				}
 				newPosition = listenerPosition + (newPosition - listenerPosition).Normalised() * headRadius;
 
@@ -486,10 +486,10 @@ namespace RAC
 
 		void Context::RemoveSource(size_t id)
 		{
-			Debug::Log("Remove Source", DebugType::Remove);
+			RAC_DEBUG_LOG("Remove Source", DebugType::Remove);
 			if (id >= MAX_SOURCES)
 			{
-				Debug::Log("Invalid source ID", DebugType::Error);
+				RAC_DEBUG_LOG("Invalid source ID", DebugType::Error);
 				return;
 			}
 			mSources->Remove(id);
@@ -511,7 +511,7 @@ namespace RAC
 
 		size_t Context::InitWall(const Vertices& vData, size_t materialID)
 		{
-			Debug::Log("Init Wall", DebugType::Init);
+			RAC_DEBUG_LOG("Init Wall", DebugType::Init);
 			RAC_DEBUG_ASSERT(mRoom->MaterialExists(materialID), "Material ID does not exist: " + ToString(materialID));
 
 			Wall wall = Wall(vData, materialID);
@@ -524,7 +524,7 @@ namespace RAC
 
 		void Context::RemoveWall(size_t id)
 		{
-			Debug::Log("Remove Wall", DebugType::Remove);
+			RAC_DEBUG_LOG("Remove Wall", DebugType::Remove);
 			mRoom->RemoveWall(id);
 		}
 
@@ -582,7 +582,7 @@ namespace RAC
 			int id = InitSource();
 			if (id < 0)
 			{
-				Debug::Log("Failed to initialise source", DebugType::Error);
+				RAC_DEBUG_LOG("Failed to initialise source", DebugType::Error);
 				return;
 			}
 

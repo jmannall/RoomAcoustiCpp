@@ -40,9 +40,9 @@
 
 #define END_TRY \
     } catch (const std::exception& e) { \
-		Debug::Log(std::string("RoomAcoustiC++ exception: ") + e.what(), DebugType::Assert); \
+		RAC_DEBUG_LOG(std::string("RoomAcoustiC++ exception: ") + e.what(), DebugType::Assert); \
     } catch (...) { \
-		Debug::Log(std::string("RoomAcoustiC++ unknown exception"), DebugType::Assert); \
+		RAC_DEBUG_LOG(std::string("RoomAcoustiC++ unknown exception"), DebugType::Assert); \
     }
 
 //////////////////// Namespaces ////////////////////

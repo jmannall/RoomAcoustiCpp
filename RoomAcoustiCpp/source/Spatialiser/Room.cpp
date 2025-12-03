@@ -234,7 +234,7 @@ namespace RAC
 			if (it == mWalls.end()) { return; } // case: wall does not exist
 			else { it->second.AddEdge(id); } // case: wall does exist
 
-			Debug::Log("Init Edge", DebugType::Init);
+			RAC_DEBUG_LOG("Init Edge", DebugType::Init);
 			mEdges.insert_or_assign(id, edge);
 			RecordChange();
 
@@ -496,7 +496,7 @@ namespace RAC
 			if (itE != mEdges.end())
 			{
 #ifdef DEBUG_REMOVE
-				Debug::Log("Remove Edge", Colour::Red);
+				RAC_DEBUG_LOG("Remove Edge", Colour::Red);
 #endif
 				size_t id = itE->second.GetWallID(wallID);
 				auto itW = mWalls.find(id);

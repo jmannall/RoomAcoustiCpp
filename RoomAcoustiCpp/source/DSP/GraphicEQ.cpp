@@ -83,7 +83,7 @@ namespace RAC
 			// TODO: This is now covered by the assert above, remove?
 			if (targetGains.second > REAL_CONST(100.0))
 			{
-				Debug::Log("GraphicEQ target gain too high: " + ToString(targetGains.second), DebugType::Warning);
+				RAC_DEBUG_LOG("GraphicEQ target gain too high: " + ToString(targetGains.second), DebugType::Warning);
 				return false; // Note: initialised never gets set to true, silence.
 			}
 

@@ -49,7 +49,7 @@ namespace RAC
 
 		ReverbSource::~ReverbSource()
 		{
-			Debug::Log("Remove reverb source", DebugType::Remove);
+			RAC_DEBUG_LOG("Remove reverb source", DebugType::Remove);
 
 			{
 				unique_lock<shared_mutex> lock(tuneInMutex);
@@ -61,7 +61,7 @@ namespace RAC
 
 		void ReverbSource::InitSource(const std::shared_ptr<DSPConfig>& dspConfig)
 		{
-			Debug::Log("Init reverb source", DebugType::Init);
+			RAC_DEBUG_LOG("Init reverb source", DebugType::Init);
 
 			{
 				unique_lock<shared_mutex> lock(tuneInMutex);
@@ -323,7 +323,7 @@ namespace RAC
 
 		void SingleFDN::SetTargetT60(const Coefficients<>& T60)
 		{
-			Debug::Log("Init FDN: " + ToString(T60), DebugType::Init);
+			RAC_DEBUG_LOG("Init FDN: " + ToString(T60), DebugType::Init);
 			RAC_DEBUG_ASSERT(IsValid(), "Invalid Single FDN reverberator");
 			RAC_DEBUG_ASSERT(T60.IsGreaterThan(REAL_CONST(0.0)), "Invalid target T60: " + ToString(T60));
 

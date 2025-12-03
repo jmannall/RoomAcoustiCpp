@@ -117,7 +117,6 @@ namespace RAC
             }
 
 			#define RAC_DEBUG_ASSERT(result, message)        Debug::Assert((result), (message))
-
 #else
 			#define RAC_DEBUG_ASSERT(result, message)        (void)0
 #endif
@@ -135,12 +134,10 @@ namespace RAC
             {
                 Debug::WriteToLog(message, type, location);
             }
+
+            #define RAC_DEBUG_LOG(message, type)        Debug::Log((message), (type))
 #else
-            /**
-            * @brief Empty function for when log callbacks are disabled
-            */
-            template<typename T>
-            static inline void Log(const T message, DebugType type, const std::source_location& location = std::source_location::current()) {}
+            #define RAC_DEBUG_LOG(message, type)        (void)0
 #endif
 
 #ifdef DEBUG_PATHS
@@ -245,7 +242,7 @@ namespace RAC
                     // When a newline appears, send message
                     if (ch == '\n')
                     {
-                        Debug::Log(buffer.c_str(), DebugType::External);
+                        RAC_DEBUG_LOG(buffer.c_str(), DebugType::External);
                         buffer.clear();
                     }
                 }
@@ -256,7 +253,7 @@ namespace RAC
             {
                 if (!buffer.empty())
                 {
-                    Debug::Log(buffer.c_str(), DebugType::External);
+                    RAC_DEBUG_LOG(buffer.c_str(), DebugType::External);
                     buffer.clear();
                 }
                 return 0;
