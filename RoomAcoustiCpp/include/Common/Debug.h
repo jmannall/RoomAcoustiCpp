@@ -141,6 +141,25 @@ namespace RAC
 #endif
 
 #if defined(DEBUG_PATHS)
+
+            /**
+            * @brief Sends a path to the path callback
+            *
+            * @param key The unique key for the path
+            * @param intersection The intersection point of the path
+            * @param position The starting position of the path (as a CVector3)
+            */
+            static void SendPath(const std::string& key, const CustomVec3& intersection, const ::Common::CVector3& position);
+
+            /**
+            * @brief Sends a path to the path callback
+            *
+            * @param key The unique key for the path
+            * @param intersection The intersection point of the path
+            * @param position The starting position of the path (as a Vec3)
+            */
+            static void SendPath(const std::string& key, const CustomVec3& intersection, const CustomVec3& position);
+
             /**
 			* @brief Sends a path to the path callback
             * 
@@ -157,7 +176,10 @@ namespace RAC
             * @param intersections The intersection points of the path
             * @param position The starting position of the path (as a Vec3)
             */
-            static void SendPath(const std::string& key, const std::vector<CustomVec3>& intersections, const CustomVec3& position);
+            static inline void SendPath(const std::string& key, const std::vector<CustomVec3>& intersections, const CustomVec3& position)
+            {
+				WriteToSendPath(key, intersections, position);
+            }
 
             /**
 			* @brief Sends a removes a path message to the path callback
@@ -165,21 +187,12 @@ namespace RAC
 			* @param key The unique key for the path to remove
             */
             static void RemovePath(const std::string& key);
-#else
-            /**
-            * @brief Empty function for when path callbacks are disabled
-            */
-            static inline void SendPath(const std::string& key, const std::vector<CustomVec3>& intersections, const ::Common::CVector3& position) {}
 
-            /**
-            * @brief Empty function for when path callbacks are disabled
-            */
-            static inline void SendPath(const std::string& key, const std::vector<CustomVec3>& intersections, const CustomVec3& position) {}
-            
-            /**
-            * @brief Empty function for when path callbacks are disabled
-            */
-            static inline void RemovePath(const std::string& key) {}
+            #define RAC_DEBUG_SENDPATH(key, intersections, position)        Debug::SendPath((key), (intersections), (position))
+            #define RAC_DEBUG_REMOVEPATH(key)                               Debug::RemovePath((key))
+#else
+            #define RAC_DEBUG_SENDPATH(key, intersections, position)        (void)0            
+            #define RAC_DEBUG_REMOVEPATH(key)                               (void)0
 #endif
 
 #if defined(RESIDUE_CALLBACKS)
@@ -192,11 +205,10 @@ namespace RAC
 			* @param slopeIndex The index of the slope (corresponding to the FDN)
             */
             static void SendResidue(float residue, bool isSource, int sourceIndex, int slopeIndex);
+
+            #define RAC_DEBUG_SENDRESIDUE(residue, isSource, sourceIndex, slopeIndex)        Debug::SendResidue((residue), (isSource), (sourceIndex), (slopeIndex))
 #else
-            /**
-			* @brief Empty function for when residue callbacks are disabled
-            */
-            static inline void SendResidue(float residue, bool isSource, int sourceIndex, int slopeIndex) {}
+            #define RAC_DEBUG_SENDRESIDUE(residue, isSource, sourceIndex, slopeIndex)        (void)0
 #endif
 
         private:
@@ -208,7 +220,7 @@ namespace RAC
             * @param type The type of debug message
             * @param location The source location of the log call (filename and line number appended to message)
             */
-            static void WriteToLog(const char* message, DebugType type, const std::source_location& location = std::source_location::current())
+            static inline void WriteToLog(const char* message, DebugType type, const std::source_location& location = std::source_location::current())
             {
 				WriteToLog(std::string(message), type, location);
             }
@@ -221,6 +233,8 @@ namespace RAC
 			* @param location The source location of the log call (filename and line number appended to message)
             */
             static void WriteToLog(const std::string& message, DebugType type, const std::source_location& location = std::source_location::current());
+
+            static void WriteToSendPath(const std::string& key, const std::vector<CustomVec3>& intersections, const CustomVec3& position);
         };
 
         /**

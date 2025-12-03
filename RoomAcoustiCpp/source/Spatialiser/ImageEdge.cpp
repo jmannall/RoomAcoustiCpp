@@ -410,12 +410,12 @@ namespace RAC
 			if (lineOfSight)
 			{
 
-				Debug::SendPath(ToString(source.id) + "s", { source.position }, mListenerPosition);
+				RAC_DEBUG_SENDPATH(ToString(source.id) + "s", source.position, mListenerPosition);
 				return CalculateDirectivity(source, mListenerPosition);
 			}
 			else
 			{
-				Debug::RemovePath(ToString(source.id) + "s");
+				RAC_DEBUG_REMOVEPATH(ToString(source.id) + "s");
 				return Coefficients<>::Constant(ToInt(frequencyBands.Length()), 0.0);
 			}
 		}
@@ -537,7 +537,7 @@ namespace RAC
 
 				InitImageSource(source, imageSource->GetApex(), imageSource, imageSources, feedsFDN);
 
-				Debug::SendPath(imageSource->GetKey(), { imageSource->GetApex() }, imageSource->GetTransform().GetPosition());
+				RAC_DEBUG_SENDPATH(imageSource->GetKey(), imageSource->GetApex(), imageSource->GetTransform().GetPosition());
 			}
 			return counter;
 		}
@@ -587,7 +587,7 @@ namespace RAC
 
 				InitImageSource(source, intersections[0], imageSource, imageSources, feedsFDN);
 
-				Debug::SendPath(imageSource->GetKey(), intersections, imageSource->GetTransform().GetPosition());
+				RAC_DEBUG_SENDPATH(imageSource->GetKey(), intersections, imageSource->GetTransform().GetPosition());
 			}
 			return counter;
 		}
@@ -700,7 +700,7 @@ namespace RAC
 
 								InitImageSource(source, intersections[0], imageSource, imageSources, feedsFDN);
 
-								Debug::SendPath(imageSource->GetKey(), intersections, imageSource->GetTransform().GetPosition());
+								RAC_DEBUG_SENDPATH(imageSource->GetKey(), intersections, imageSource->GetTransform().GetPosition());
 							}
 							// HOD reflections (post diffraction)
 							else if (refIdx < earlyReverbData.shadowDiffOrder || refIdx < earlyReverbData.specularDiffOrder)
@@ -785,7 +785,7 @@ namespace RAC
 
 								InitImageSource(source, intersections[0], imageSource, imageSources, feedsFDN);
 
-								Debug::SendPath(imageSource->GetKey(), intersections, imageSource->GetTransform().GetPosition());
+								RAC_DEBUG_SENDPATH(imageSource->GetKey(), intersections, imageSource->GetTransform().GetPosition());
 							}
 						}
 					}
@@ -882,7 +882,7 @@ namespace RAC
 
 						InitImageSource(source, intersections[0], imageSource, imageSources, feedsFDN);
 
-						Debug::SendPath(imageSource->GetKey(), intersections, imageSource->GetTransform().GetPosition());
+						RAC_DEBUG_SENDPATH(imageSource->GetKey(), intersections, imageSource->GetTransform().GetPosition());
 					}
 				}
 				const size_t currentSize = sp[refIdx].size();

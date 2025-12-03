@@ -574,7 +574,7 @@ namespace RAC
 			for (const std::string& key : keys)
 			{
 				currentImageSources.erase(key);
-				Debug::RemovePath(key);
+				RAC_DEBUG_REMOVEPATH(key);
 			}
 			FreeAccess();
 		}

@@ -238,7 +238,7 @@ namespace RAC
 			mEdges.insert_or_assign(id, edge);
 			RecordChange();
 
-			Debug::SendPath(ToString(id) + "e", { edge.GetBase() }, edge.GetTop());
+			RAC_DEBUG_SENDPATH(ToString(id) + "e", edge.GetBase(), edge.GetTop());
 		}
 
 		////////////////////////////////////////
@@ -449,7 +449,7 @@ namespace RAC
 			if (it == mEdges.end()) { return false; } // case: edge does not exist
 			else { it->second = edge; } // case: edge does exist
 
-			Debug::SendPath(ToString(id) + "e", { edge.GetBase() }, edge.GetTop());
+			RAC_DEBUG_SENDPATH(ToString(id) + "e", edge.GetBase(), edge.GetTop());
 			return false;
 		}
 
@@ -503,7 +503,7 @@ namespace RAC
 				if (itW != mWalls.end()) // case: wall exists
 					itW->second.RemoveEdge(edgeID);
 
-				Debug::RemovePath(ToString(edgeID) + "e");
+				RAC_DEBUG_REMOVEPATH(ToString(edgeID) + "e");
 				mEdges.erase(edgeID);
 				while (!mEdgeTimers.empty() && difftime(time(nullptr), mEdgeTimers.front().time) > 60)
 				{

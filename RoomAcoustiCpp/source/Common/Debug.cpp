@@ -61,15 +61,30 @@ namespace RAC
 
         ////////////////////////////////////////
 #ifdef DEBUG_PATHS
-        void Debug::SendPath(const std::string& key, const std::vector<Vec3>& intersections, const ::Common::CVector3& position)
+        void Debug::SendPath(const std::string& key, const CustomVec3& intersection, const ::Common::CVector3& position)
         {
             Vec3 vec3Position(static_cast<Real>(position.x), static_cast<Real>(position.y), static_cast<Real>(position.z));
-            SendPath(key, intersections, vec3Position);
+            WriteToSendPath(key, { intersection }, vec3Position);
         }
 
         ////////////////////////////////////////
 
-        void Debug::SendPath(const std::string& key, const std::vector<Vec3>& intersections, const Vec3& position)
+        void Debug::SendPath(const std::string& key, const CustomVec3& intersection, const CustomVec3& position)
+        {
+            WriteToSendPath(key, { intersection }, position);
+        }
+
+        ////////////////////////////////////////
+
+        void Debug::SendPath(const std::string& key, const std::vector<CustomVec3>& intersections, const ::Common::CVector3& position)
+        {
+            Vec3 vec3Position(static_cast<Real>(position.x), static_cast<Real>(position.y), static_cast<Real>(position.z));
+            WriteToSendPath(key, intersections, vec3Position);
+        }
+
+        ////////////////////////////////////////
+
+        void Debug::WriteToSendPath(const std::string& key, const std::vector<CustomVec3>& intersections, const CustomVec3& position)
         {
             std::lock_guard lock(pathMutex);
             const char* tmsg = key.c_str();
