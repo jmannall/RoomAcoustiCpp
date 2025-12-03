@@ -565,7 +565,7 @@ namespace RAC
 			// Process feedback loop
 			for (int i = 0; i < firstOutputBufferSize; i++)
 			{
-				Complex output;
+				RAC_ALIGN_COMPLEX Complex output;
 				precedingDelay.GetOutput(inputData(i), output);
 
 				for (int j = 0; j < channelSize; j++)

@@ -12,6 +12,8 @@
 #include <complex>
 
 // Common headers
+#include <format>
+
 #include "Common/Types.h"
 
 namespace RAC
@@ -19,6 +21,8 @@ namespace RAC
 	namespace Common
 	{
 		typedef std::complex<Real> Complex;
+
+#define RAC_ALIGN_COMPLEX		RAC_ALIGN(16)
 
 #if DATA_TYPE_DOUBLE
 		static const Complex imUnit(0.0, 1.0); // Imaginary unit

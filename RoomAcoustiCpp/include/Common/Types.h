@@ -16,8 +16,10 @@
 
 #ifdef __AVX__
 #	define USE_AVX		1
+#	define RAC_ALIGN(n)								alignas(n)
 #else
 #	define USE_AVX		0
+#	define RAC_ALIGN(n)								
 #endif
 
 #if USE_AVX

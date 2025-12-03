@@ -4,7 +4,7 @@
 #include <cassert>
 
 #include "Common/Types.h"
-#include "include/Common/Definitions.h"
+#include "Common/Definitions.h"
 
 namespace RAC
 {
@@ -80,9 +80,7 @@ namespace RAC
 			// b -> Numerator coefficients (should only be accessed from the audio thread)
 			// y -> Outputs (should only be accessed from the audio thread)
 
-#if USE_AVX
-			alignas(16)
-#endif
+			RAC_ALIGN(16)
 			Real a1{ 0.0 };
 			Real a2{ 0.0 };
 			Real b1{ 0.0 };
@@ -412,11 +410,8 @@ namespace RAC
 		template <>
 		RAC_FORCE_INLINE void IIRFilter2<float>::GetOutputInternal(const float& input, float& output)
 		{
-#if CHECK_ALIGNMENT
-			// make sure they are aligned
-			assert((reinterpret_cast<ptrdiff_t>(&this->a1) & 0xf) == 0);
-			assert((reinterpret_cast<ptrdiff_t>(&this->y1) & 0xf) == 0);
-#endif
+			assert(IsAligned16(&this->a1));
+			assert(IsAligned16(&this->y1));
 
 			__m128 a12b12 = _mm_load_ps(&this->a1);
 			__m128 y = _mm_load_ps(&this->y0);			// we only use y01

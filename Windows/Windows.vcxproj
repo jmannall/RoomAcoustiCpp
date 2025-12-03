@@ -83,6 +83,7 @@
     <ClCompile Include="UnitTest_Coefficients.cpp">
       <ExcludedFromBuild Condition="!$(HasUnitTests)">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="UnitTest_DelayLine.cpp" />
     <ClCompile Include="UnitTest_DiffractionModels.cpp">
       <ExcludedFromBuild Condition="!$(HasUnitTests)">true</ExcludedFromBuild>
     </ClCompile>
