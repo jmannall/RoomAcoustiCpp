@@ -1,4 +1,4 @@
-/*
+﻿/*
 * @class Debug
 *
 * @brief Declaration of Debug class
@@ -15,6 +15,16 @@
 #include "Common/Debug.h"
 #include "Common/Vec3.h"
 
+//////////////////// Callback instances ////////////////////
+
+FuncDebugCallback debugCallbackInstance = nullptr;
+FuncPathCallback pathCallbackInstance = nullptr;
+FuncResidueCallback residueCallbackInstance = nullptr;
+
+std::mutex debugMutex;		// Protects debugCallbackInstance
+std::mutex pathMutex;		// Protects pathCallbackInstance
+std::mutex residueMutex;	// Protects residueCallbackInstance
+
 namespace RAC
 {
     namespace Common
@@ -23,35 +33,39 @@ namespace RAC
 
         ////////////////////////////////////////
 
-        std::string GetRelativePath(std::string fullPath)
+        std::string GetRelativePath(std::string_view fullPath)
         {
-            std::string path(fullPath);
-            const std::string marker = "\\RoomAcoustiCpp\\";
+            static constexpr std::string_view marker = R"(\RoomAcoustiCpp\)";
 
-            size_t pos = path.find(marker);
-            if (pos != std::string::npos)
-            {
-                // Keep everything *after* RoomAcoustiCpp
-                return path.substr(pos + marker.size());
-            }
+            size_t pos = fullPath.find(marker);
+            if (pos == std::string_view::npos)
+                return std::string(fullPath);
 
-            // Marker not found, return original path
-            return path;
+            // slice after the marker
+            return std::string(fullPath.substr(pos + marker.size()));
         }
 
         ////////////////////////////////////////
 
-        void Debug::WriteToLog(const std::string& message, DebugType type, const std::source_location& location)
+        void Debug::WriteToLog(const std::string_view message, DebugType type, const std::source_location& location)
         {
-            std::string formatted = message;
+            std::string path = GetRelativePath(location.file_name());
 
-            formatted += " (File: ";
-            formatted += GetRelativePath(location.file_name());
-            // formatted += ", Function: ";
-			// formatted += location.function_name();
-            formatted += ", Line: ";
-            formatted += ToString(location.line());
-            formatted += ")";
+                // Precompute size to avoid reallocations
+            std::string formatted;
+            formatted.reserve(
+                message.size()
+                + path.size()
+				+ 20 // size for line number
+                + 32 // constant overhead for fixed text
+            );
+
+            formatted.append(message);
+            formatted.append(" (File: ");
+            formatted.append(path);
+            formatted.append(", Line: ");
+            formatted.append(ToString(location.line()));
+            formatted.push_back(')');
 
             std::lock_guard lock(debugMutex);
             const char* tmsg = formatted.c_str();
@@ -61,7 +75,7 @@ namespace RAC
 
         ////////////////////////////////////////
 #ifdef DEBUG_PATHS
-        void Debug::SendPath(const std::string& key, const CustomVec3& intersection, const ::Common::CVector3& position)
+        void Debug::SendPath(const std::string_view key, const CustomVec3& intersection, const ::Common::CVector3& position)
         {
             Vec3 vec3Position(static_cast<Real>(position.x), static_cast<Real>(position.y), static_cast<Real>(position.z));
             WriteToSendPath(key, { intersection }, vec3Position);
@@ -69,14 +83,14 @@ namespace RAC
 
         ////////////////////////////////////////
 
-        void Debug::SendPath(const std::string& key, const CustomVec3& intersection, const CustomVec3& position)
+        void Debug::SendPath(const std::string_view key, const CustomVec3& intersection, const CustomVec3& position)
         {
             WriteToSendPath(key, { intersection }, position);
         }
 
         ////////////////////////////////////////
 
-        void Debug::SendPath(const std::string& key, const std::vector<CustomVec3>& intersections, const ::Common::CVector3& position)
+        void Debug::SendPath(const std::string_view key, const std::vector<CustomVec3>& intersections, const ::Common::CVector3& position)
         {
             Vec3 vec3Position(static_cast<Real>(position.x), static_cast<Real>(position.y), static_cast<Real>(position.z));
             WriteToSendPath(key, intersections, vec3Position);
@@ -84,14 +98,17 @@ namespace RAC
 
         ////////////////////////////////////////
 
-        void Debug::WriteToSendPath(const std::string& key, const std::vector<CustomVec3>& intersections, const CustomVec3& position)
+        void Debug::WriteToSendPath(const std::string_view key, const std::vector<CustomVec3>& intersections, const CustomVec3& position)
         {
             std::lock_guard lock(pathMutex);
-            const char* tmsg = key.c_str();
+            int length = ToInt(key.size());
+            const char* tmsg = key.data();
             
             // Convert intersections to an array format
             size_t size = intersections.size() + 1;
-            float* intersectionArray = new float[3 * size];
+            std::vector<float> intersectionArray;
+            intersectionArray.reserve(3 * size);
+
             int count = 0;
             for (size_t i = 0; i < size - 1; ++i)
             {
@@ -104,22 +121,21 @@ namespace RAC
             intersectionArray[count++] = static_cast<float>(position.z());
 
             if (pathCallbackInstance != nullptr)
-                pathCallbackInstance(tmsg, &intersectionArray[0], ToInt(strlen(tmsg)), ToInt(size) );
-
-            delete[] intersectionArray;
+                pathCallbackInstance(tmsg, &intersectionArray[0], length, ToInt(size) );
         }
 
         ////////////////////////////////////////
 
-        void Debug::RemovePath(const std::string& key)
+        void Debug::RemovePath(const std::string_view key)
         {
             std::lock_guard lock(pathMutex);
-            const char* tmsg = key.c_str();
+            int length = ToInt(key.size());
+            const char* tmsg = key.data();
 
             float intersectionArray = 0.0f;
 
             if (pathCallbackInstance != nullptr)
-                pathCallbackInstance(tmsg, &intersectionArray, (int)strlen(tmsg), 0);
+                pathCallbackInstance(tmsg, &intersectionArray, length, 0);
         }
 #endif
         ////////////////////////////////////////
@@ -134,12 +150,17 @@ namespace RAC
         ////////////////////////////////////////
 
         template<>
+        std::string ToString<CustomVec3>(const CustomVec3& x)
+        {
+            return std::string('[' + ToString(x.x()) + ", " + ToString(x.y()) + ", " + ToString(x.z()) + ']');
+        }
+
+        ////////////////////////////////////////
+
+        template<>
         std::string ToString<std::array<Vec3, 3>>(const std::array<Vec3, 3>& x)
         {
-            std::stringstream ss;
-            for (auto i = 0; i < x.size(); i++)
-                ss << x[i];
-            return ss.str();
+            return std::string(ToString(x[0]) + ToString(x[1]) + ToString(x[2]));
         }
     }
 }

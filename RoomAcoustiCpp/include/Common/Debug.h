@@ -42,9 +42,9 @@
 /**
 * @brief Mutexes to protect callback instances
 */
-static std::mutex debugMutex;		// Protects debugCallbackInstance
-static std::mutex pathMutex;		// Protects pathCallbackInstance
-static std::mutex residueMutex;		// Protects residueCallbackInstance
+extern std::mutex debugMutex;		// Protects debugCallbackInstance
+extern std::mutex pathMutex;		// Protects pathCallbackInstance
+extern std::mutex residueMutex;		// Protects residueCallbackInstance
 
 extern "C"
 {
@@ -56,11 +56,11 @@ extern "C"
     typedef void(*FuncResidueCallback)(float residue, bool isSource, int sourceIndex, int slopeIndex);
 
     /**
-	* @brief Create callback instances
+	* @brief Extern callback instances
     */
-    static FuncDebugCallback debugCallbackInstance = nullptr;
-    static FuncPathCallback pathCallbackInstance = nullptr;
-    static FuncResidueCallback residueCallbackInstance = nullptr;
+    extern FuncDebugCallback debugCallbackInstance;
+    extern FuncPathCallback pathCallbackInstance;
+    extern FuncResidueCallback residueCallbackInstance;
 
     /**
     * @brief Functions to register callback instances
@@ -103,12 +103,13 @@ namespace RAC
 			* @param location The source location of the assert call (filename and line number appended to message)
             */
             template<typename T>
-            static inline void Assert(bool result, const T message, const std::source_location& location = std::source_location::current())
+            static inline void Assert(bool result, const T&& message, const std::source_location& location = std::source_location::current())
             {
                 if (result)
                     return;
 
-                WriteToLog(message, DebugType::Assert, location);
+                auto msgStr = message();
+                WriteToLog(msgStr, DebugType::Assert, location);
 #ifdef _WIN32
                 if (IsDebuggerPresent())
                     __debugbreak();
@@ -116,9 +117,9 @@ namespace RAC
                 // throw std::runtime_error(message);
             }
 
-			#define RAC_DEBUG_ASSERT(result, message)        Debug::Assert((result), (message))
+            #define RAC_DEBUG_ASSERT(result, message)       Debug::Assert((result), [&]() { return (message); })
 #else
-			#define RAC_DEBUG_ASSERT(result, message)        (void)0
+			#define RAC_DEBUG_ASSERT(result, message)       (void)0
 #endif
 
 #if defined(DEBUG_LOG)
@@ -149,7 +150,7 @@ namespace RAC
             * @param intersection The intersection point of the path
             * @param position The starting position of the path (as a CVector3)
             */
-            static void SendPath(const std::string& key, const CustomVec3& intersection, const ::Common::CVector3& position);
+            static void SendPath(const std::string_view key, const CustomVec3& intersection, const ::Common::CVector3& position);
 
             /**
             * @brief Sends a path to the path callback
@@ -158,7 +159,7 @@ namespace RAC
             * @param intersection The intersection point of the path
             * @param position The starting position of the path (as a Vec3)
             */
-            static void SendPath(const std::string& key, const CustomVec3& intersection, const CustomVec3& position);
+            static void SendPath(const std::string_view key, const CustomVec3& intersection, const CustomVec3& position);
 
             /**
 			* @brief Sends a path to the path callback
@@ -167,7 +168,7 @@ namespace RAC
 			* @param intersections The intersection points of the path
 			* @param position The starting position of the path (as a CVector3)
             */
-            static void SendPath(const std::string& key, const std::vector<CustomVec3>& intersections, const ::Common::CVector3& position);
+            static void SendPath(const std::string_view key, const std::vector<CustomVec3>& intersections, const ::Common::CVector3& position);
 
             /**
             * @brief Sends a path to the path callback
@@ -176,7 +177,7 @@ namespace RAC
             * @param intersections The intersection points of the path
             * @param position The starting position of the path (as a Vec3)
             */
-            static inline void SendPath(const std::string& key, const std::vector<CustomVec3>& intersections, const CustomVec3& position)
+            static inline void SendPath(const std::string_view key, const std::vector<CustomVec3>& intersections, const CustomVec3& position)
             {
 				WriteToSendPath(key, intersections, position);
             }
@@ -186,7 +187,7 @@ namespace RAC
             * 
 			* @param key The unique key for the path to remove
             */
-            static void RemovePath(const std::string& key);
+            static void RemovePath(const std::string_view key);
 
             #define RAC_DEBUG_SENDPATH(key, intersections, position)        Debug::SendPath((key), (intersections), (position))
             #define RAC_DEBUG_REMOVEPATH(key)                               Debug::RemovePath((key))
@@ -222,7 +223,7 @@ namespace RAC
             */
             static inline void WriteToLog(const char* message, DebugType type, const std::source_location& location = std::source_location::current())
             {
-				WriteToLog(std::string(message), type, location);
+				WriteToLog(std::string_view(message), type, location);
             }
 
             /**
@@ -232,9 +233,9 @@ namespace RAC
 			* @param type The type of debug message
 			* @param location The source location of the log call (filename and line number appended to message)
             */
-            static void WriteToLog(const std::string& message, DebugType type, const std::source_location& location = std::source_location::current());
+            static void WriteToLog(const std::string_view message, DebugType type, const std::source_location& location = std::source_location::current());
 
-            static void WriteToSendPath(const std::string& key, const std::vector<CustomVec3>& intersections, const CustomVec3& position);
+            static void WriteToSendPath(const std::string_view key, const std::vector<CustomVec3>& intersections, const CustomVec3& position);
         };
 
         /**
@@ -283,9 +284,10 @@ namespace RAC
         template <typename T>
         std::string ToString(const T& value)
         {
-            std::stringstream ss;
-            ss << value;
-            return ss.str();
+            if constexpr (std::is_arithmetic_v<T>)
+                return std::to_string(value);
+            else
+                return "Failed to convert string";
         }
 
         /**
@@ -296,6 +298,13 @@ namespace RAC
         {
             return x ? "true" : "false";
         }
+
+        /**
+        * @brief Converts a Vec3 to a string
+        * @details Defined in cpp to avoid circular dependency on Vec3 header
+        */
+        template <>
+        std::string ToString<CustomVec3>(const CustomVec3& x);
 
         /**
         * @brief Converts a Vertices to a string
