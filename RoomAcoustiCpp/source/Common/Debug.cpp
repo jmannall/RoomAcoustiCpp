@@ -106,8 +106,7 @@ namespace RAC
             
             // Convert intersections to an array format
             size_t size = intersections.size() + 1;
-            std::vector<float> intersectionArray;
-            intersectionArray.reserve(3 * size);
+            float* intersectionArray = new float[3 * size];
 
             int count = 0;
             for (size_t i = 0; i < size - 1; ++i)
@@ -122,6 +121,8 @@ namespace RAC
 
             if (pathCallbackInstance != nullptr)
                 pathCallbackInstance(tmsg, &intersectionArray[0], length, ToInt(size) );
+
+            delete[] intersectionArray;
         }
 
         ////////////////////////////////////////
