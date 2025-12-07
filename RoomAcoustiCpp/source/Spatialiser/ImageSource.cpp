@@ -259,20 +259,18 @@ namespace RAC
 
 		bool ImageSource::Update(const ImageSourceData& data, int& fdnChannel)
 		{
+			if (!GetAccess()) // Image source has been removed
+				return true;
+
 			if (data.IsVisible())
 			{
 				gain.SetTarget((Real)1.0);
 				UpdateParameters(data, fdnChannel);
 			}
 			else
-			{
 				gain.SetTarget(0.0);
-				if (gain.IsZero())
-				{
-					Remove();
-					return true;
-				}
-			}
+
+			FreeAccess();
 			return false;
 		}
 
@@ -325,6 +323,9 @@ namespace RAC
 		{
 			if (isReset.load(std::memory_order_acquire))
 				return;
+			if (!gain.IsZero())
+				return;
+			Remove();
 			if (!CanEdit())
 				return;
 			if (!mSource) // TODO: Is this check necessary?

@@ -40,6 +40,8 @@ namespace RAC
 			AirAbsorption(const Real distance, const int sampleRate) : IIRFilter1(sampleRate), currentDistance(distance), targetDistance(distance),
 				constant(static_cast<Real>(sampleRate) / (SPEED_OF_SOUND * REAL_CONST(7782.0)))
 			{
+				RAC_DEBUG_ASSERT(distance > REAL_CONST(0.0), "Invalid target distance: " + ToString(distance));
+
 				a0 = REAL_CONST(1.0); b1 = REAL_CONST(0.0); // Not used by this filter
 				UpdateCoefficients(distance);
 

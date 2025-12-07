@@ -47,10 +47,12 @@ namespace RAC
 #endif
 				oldIrLength = irLength;
 
-				std::copy(ir.begin(), ir.end(), currentIR.begin());
 #if MATRIX_LIBRARY == EIGEN_FLAG
-				inputLine.Reset();
+				inputLine.Reset(); // Initialise to zero
+				currentIR.Reset();
 #endif
+				std::copy(ir.begin(), ir.end(), currentIR.begin());
+
 				irsEqual.store(true, std::memory_order_release);
 				initialised.store(true, std::memory_order_release);
 			};
