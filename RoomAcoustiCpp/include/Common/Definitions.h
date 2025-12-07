@@ -87,6 +87,8 @@ namespace RAC
 
 		//////////////////// Epsilons ////////////////////
 
+		const constexpr Real EPS_GENERAL = 1e-5;						// Tolerance for general floating point comparisons (mainly geometry based)
+		const constexpr Real EPS_ANGULAR = 0.9999984769;				// Angular tolerance between normals, cos(0.1 degrees)
 		const constexpr Real EPS_FACING = 1e-7;							// Tolerance for facing test: dot(n,O) + d0 > facing.
 		const constexpr Real EPS_EDGE = 1e-7;							// Tolerance for side predicates (edge-inclusive).
 		const constexpr Real EPS_PARALLEL = 1e-7;						// Tolerance for near-parallel plane denominator.
@@ -134,6 +136,11 @@ namespace RAC
 			else if (x > REAL_CONST(1.0))
 				x = REAL_CONST(1.0);
 			return std::acos(x);
+		}
+
+		inline bool IsApprox(Real a, Real b, Real epsilon = EPS_GENERAL)
+		{
+			return std::abs(a - b) <= epsilon;
 		}
 
 #else	// Float

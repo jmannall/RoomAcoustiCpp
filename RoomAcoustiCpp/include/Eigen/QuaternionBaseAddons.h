@@ -9,3 +9,6 @@ EIGEN_DEVICE_FUNC inline Scalar Dot(const QuaternionBase<OtherDerived>& other) c
 
 EIGEN_DEVICE_FUNC Quaternion<Scalar> InverseMatrix() const { return this->inverse(); }
 EIGEN_DEVICE_FUNC Quaternion<Scalar> Conjugate() const { return this->conjugate(); }
+
+template <class OtherDerived>
+EIGEN_DEVICE_FUNC inline bool IsApprox(const QuaternionBase<OtherDerived>& other) const { return this->isApprox(other); }

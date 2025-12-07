@@ -155,6 +155,11 @@ namespace RAC
 					mX * v.mY - mY * v.mX);
 			}
 
+			inline bool IsApprox(const CustomVec3& v, Real eps = EPS_GENERAL) const
+			{
+				return (std::abs(mX - v.mX) <= eps) && (std::abs(mY - v.mY) <= eps) && (std::abs(mZ - v.mZ) <= eps);
+			}
+
 			/**
 			* @brief Adds a vector to the current vector
 			*/
