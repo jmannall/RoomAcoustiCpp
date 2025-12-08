@@ -27,7 +27,7 @@ using namespace RAC::DSP;
 
 // Enable this to use the AMD uProf timing API
 #define USE_AMD_UPROF			( 0 )
-#define USE_INTEL_VTUNE			( 0 )
+#define USE_INTEL_VTUNE			( 1 )
 
 #if USE_AMD_UPROF
 #include <AMDProfileController.h>
