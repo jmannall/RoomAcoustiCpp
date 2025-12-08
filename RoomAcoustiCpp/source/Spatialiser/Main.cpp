@@ -32,6 +32,8 @@
 #define EXPORT
 #endif
 
+#define UNUSED_ARG(arg)		(void)(arg)
+
 /**
 * @brief Catch and log any exceptions
 */
@@ -40,6 +42,7 @@
 
 #define END_TRY \
     } catch (const std::exception& e) { \
+		UNUSED_ARG(e); \
 		RAC_DEBUG_LOG(std::string("RoomAcoustiC++ exception: ") + e.what(), DebugType::Assert); \
     } catch (...) { \
 		RAC_DEBUG_LOG(std::string("RoomAcoustiC++ unknown exception"), DebugType::Assert); \

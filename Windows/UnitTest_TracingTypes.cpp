@@ -154,6 +154,9 @@ namespace RAC
 				for (int di = 0; di < 6; ++di) {
 					for (int ti = 0; ti < 14; ++ti) {
 						expected_distance = EXPECTED_DIST[oi][di][ti];
+
+						result_distance = std::numeric_limits<Real>::quiet_NaN();
+						result_cosine = std::numeric_limits<Real>::quiet_NaN();
 						const bool success = intersection_test(
 							testRoom.GetTriangleMeshSoA(), ti,
 							testOrigins[oi], testDirections[di],
@@ -300,6 +303,9 @@ namespace RAC
 				for (int di = 0; di < 6; ++di) {
 					for (int ti = 0; ti < 14; ++ti) {
 						expected_distance = EXPECTED_DIST[oi][di][ti];
+
+						result_distance = std::numeric_limits<Real>::quiet_NaN();
+						result_cosine = std::numeric_limits<Real>::quiet_NaN();
 						const bool success = intersection_test(
 							testRoom.GetTriangleMeshSoA(), ti,
 							testRays, di,
@@ -460,6 +466,9 @@ namespace RAC
 				for (int di = 0; di < 6; ++di) {
 					for (int ti = 0; ti < 14; ++ti) {
 						expected_distance = EXPECTED_DIST[oi][di][ti];
+
+						result_distance = std::numeric_limits<Real>::quiet_NaN();
+						result_cosine = std::numeric_limits<Real>::quiet_NaN();
 						const bool success = intersection_test(
 							testRoom.GetTriangleMeshSoA(), ti,
 							testRays, di + (oi * 6),

@@ -32,28 +32,23 @@ namespace RAC
             const Vec3& O, const Vec3& D,
             Real& distance, Real& cosine)
         {
-			// Users should test the return result, but default the results to qNaN just in case
-			distance = std::numeric_limits<Real>::quiet_NaN();
-			cosine = std::numeric_limits<Real>::quiet_NaN();
-
 			// Sanity check: the requested triangle must exist.
             RAC_DEBUG_ASSERT(triangleIndex >= 0, "Triangle index out of bounds: " + ToString(triangleIndex));
             RAC_DEBUG_ASSERT(triangleIndex < ToInt(triangles.size()), "Triangle index out of bounds: " + ToString(triangleIndex));
 
 			// Load plane data into locals.
-			const Vec3 n = triangles.n[triangleIndex];
-			const Real d0 = triangles.d0[triangleIndex];
+			const Vec3 &n = triangles.n[triangleIndex];
+			const Real d0WithEPS = triangles.d0PlusEPS[triangleIndex];
+
+			// Facing test.
+			if (n.dot(O) < d0WithEPS) {
+				return false;
+			}
 
 			// Load "Möller–Trumbore" triangle data into locals.
 			const Vec3& A = triangles.A[triangleIndex];
 			const Vec3& e1 = triangles.edge1[triangleIndex];
 			const Vec3& e2 = triangles.edge2[triangleIndex];
-
-			// Facing test.
-			const Real faceNum = n.dot(O) - d0;
-			if (faceNum < EPS_FACING) {
-				return false;
-			}
 
 			// Möller–Trumbore barycentric numerators (unnormalized).
 			const Vec3 pvec = D.cross(e2);
@@ -64,29 +59,35 @@ namespace RAC
 			const Real v_num = D.dot(qvec);
 
 			// Early-out on u and v having opposite signs (edges included via epsilon).
-			{
-				const bool bothNonNeg = (u_num >= -EPS_EDGE) && (v_num >= -EPS_EDGE);
-				const bool bothNonPos = (u_num <= EPS_EDGE) && (v_num <= EPS_EDGE);
-				if (!(bothNonNeg || bothNonPos)) {
-					return false;
-				}
-			}
+            // either value is close to EPS_EDGE, treat them as the same sign
+            if ( abs(u_num) > EPS_EDGE && abs(v_num) > EPS_EDGE)
+            {
+                // otherwise make sure the signs are ok
+                if (std::signbit(u_num) != std::signbit(v_num))
+                    return false;
+            }
 
 			const Real w_num = det - (u_num + v_num);
-			// All three barycentric numerators must share the same sign (edges included).
-			if (!same_sign_with_zero_included(u_num, v_num, w_num, EPS_EDGE)) {
+
+            // We know that u_num & v_num have the same sign, so we just need to make sure that w_num is
+            if (std::abs(w_num) > EPS_EDGE)
+            {
+                // check if the sign is equal to either u_num && v_num
+                if (abs(u_num) > EPS_EDGE && std::signbit(u_num) != std::signbit(w_num))
+                    return false;
+				if (abs(v_num) > EPS_EDGE && std::signbit(v_num) != std::signbit(w_num))
+					return false;
+            }
+
+			// Parallel test + compute t.
+			if (std::abs(det) <= EPS_PARALLEL)
+			{
 				return false;
 			}
 
-			// Parallel test + compute t.
-			if (std::abs(det) <= EPS_PARALLEL) {
-				return false;
-			}
-			else {
-				const Real t_num = e2.dot(qvec);; // e2 · qvec
-				distance = t_num / det;
-				cosine = std::abs(n.dot(D));
-			}
+        	const Real t_num = e2.dot(qvec); // e2 · qvec
+			distance = t_num / det;
+			cosine = std::abs(n.dot(D));
 			return true;
         }
 

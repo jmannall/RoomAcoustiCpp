@@ -126,14 +126,14 @@ namespace RAC
 			/** @brief Node that the triangle belongs to */
             std::vector<int> patchId;
 
-            /** @brief Plane constant d0 such that dot(n, X) + d0 = 0. */
-            std::vector<Real> d0;
+            /** @brief Plane constant d0 such that dot(n, X) + d0 = 0. plus EPS_FACING */
+            std::vector<Real> d0PlusEPS;
 
             /**
              * @brief Number of triangles stored.
              * @return Count of triangles.
              */
-            inline int size() const { return ToInt( d0.size() ); }
+            inline int size() const { return ToInt( d0PlusEPS.size() ); }
 
             /**
              * @brief Resize all internal arrays to hold @p n triangles.

@@ -142,7 +142,7 @@ namespace RAC
 				mTriangleMeshSoA.n[i] = wall.GetNormal();
 				mTriangleMeshSoA.patchId[i] = static_cast<int>(wall.GetMaterialID());
 
-				mTriangleMeshSoA.d0[i] = wall.GetD();
+				mTriangleMeshSoA.d0PlusEPS[i] = wall.GetD() + EPS_FACING;
 			}
 		}
 
