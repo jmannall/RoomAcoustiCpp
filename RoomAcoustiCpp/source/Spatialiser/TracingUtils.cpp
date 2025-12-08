@@ -32,10 +32,6 @@ namespace RAC
             const Vec3& O, const Vec3& D,
             Real& distance, Real& cosine)
         {
-			// Users should test the return result, but default the results to qNaN just in case
-			distance = std::numeric_limits<Real>::quiet_NaN();
-			cosine = std::numeric_limits<Real>::quiet_NaN();
-
 			// Sanity check: the requested triangle must exist.
             RAC_DEBUG_ASSERT(triangleIndex >= 0, "Triangle index out of bounds: " + ToString(triangleIndex));
             RAC_DEBUG_ASSERT(triangleIndex < ToInt(triangles.size()), "Triangle index out of bounds: " + ToString(triangleIndex));
