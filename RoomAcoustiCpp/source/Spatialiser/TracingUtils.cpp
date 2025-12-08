@@ -42,18 +42,17 @@ namespace RAC
 
 			// Load plane data into locals.
 			const Vec3 &n = triangles.n[triangleIndex];
-			const Real d0 = triangles.d0[triangleIndex];
+			const Real d0WithEPS = triangles.d0PlusEPS[triangleIndex];
+
+			// Facing test.
+			if (n.dot(O) < d0WithEPS) {
+				return false;
+			}
 
 			// Load "Möller–Trumbore" triangle data into locals.
 			const Vec3& A = triangles.A[triangleIndex];
 			const Vec3& e1 = triangles.edge1[triangleIndex];
 			const Vec3& e2 = triangles.edge2[triangleIndex];
-
-			// Facing test.
-			const Real faceNum = n.dot(O) - d0;
-			if (faceNum < EPS_FACING) {
-				return false;
-			}
 
 			// Möller–Trumbore barycentric numerators (unnormalized).
 			const Vec3 pvec = D.cross(e2);
@@ -65,8 +64,7 @@ namespace RAC
 
 			// Early-out on u and v having opposite signs (edges included via epsilon).
             // either value is close to EPS_EDGE, treat them as the same sign
-			
-            if ( abs(u_num) > EPS_EDGE  && abs(v_num) > EPS_EDGE)
+            if ( abs(u_num) > EPS_EDGE && abs(v_num) > EPS_EDGE)
             {
                 // otherwise make sure the signs are ok
                 if (std::signbit(u_num) != std::signbit(v_num))

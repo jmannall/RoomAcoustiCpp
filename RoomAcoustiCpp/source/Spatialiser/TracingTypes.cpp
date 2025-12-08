@@ -94,7 +94,7 @@ namespace RAC
 
             this->n.resize(n);
             patchId.resize(n);
-            d0.resize(n);
+            d0PlusEPS.resize(n);
         }
     }
 }
