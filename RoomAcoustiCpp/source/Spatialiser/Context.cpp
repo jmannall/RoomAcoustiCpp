@@ -511,8 +511,8 @@ namespace RAC
 
 			Wall wall = Wall(vData, materialID);
 			size_t id = mRoom->AddWall(wall);
-			mRoom->InitEdges(id);
-			return static_cast<int>(id);
+			// mRoom->InitEdges(id);
+			return id;
 		}
 
 		////////////////////////////////////////
@@ -565,9 +565,9 @@ namespace RAC
 			if (applyHeadphoneEQ.load(std::memory_order_acquire))
 				headphoneEQ.ProcessAudio(outputBuffer, outputBuffer, audioData);
 
-			dcBlocker.ProcessAudio(outputBuffer);
+			// dcBlocker.ProcessAudio(outputBuffer);
 
-			RAC_DEBUG_ASSERT(outputBuffer.Valid(), "Invalid output buffer");
+			// RAC_DEBUG_ASSERT(outputBuffer.Valid(), "Invalid output buffer");
 		}
 
 		////////////////////////////////////////

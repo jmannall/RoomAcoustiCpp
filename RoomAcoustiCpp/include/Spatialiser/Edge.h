@@ -46,6 +46,19 @@ namespace RAC
 			Invalid
 		};
 
+		struct EdgeSegment
+		{
+			Real base;
+			Real top;
+			bool valid;
+
+			EdgeSegment(Real k1, Real k2, bool valid) : valid(valid)
+			{
+				base = std::min(k1, k2);
+				top = std::max(k1, k2);
+			}
+		};
+
 		/**
 		* @brief Class that describes an edge
 		*/
@@ -70,7 +83,7 @@ namespace RAC
 			* @param planeId1 The ID of the first plane
 			* @param planeId2 The ID of the second plane
 			*/
-			Edge(const Vec3& base, const Vec3& top, const Vec3& normal1, const Vec3& normal2, const size_t wallId1, const size_t wallId2, const size_t planeId1, const size_t planeId2);
+			Edge(const Vec3& base, const Vec3& top, const Vec3& normal1, const Vec3& normal2, const size_t planeId1, const size_t planeId2);
 
 			/**
 			* @brief Default deconstructor
@@ -141,28 +154,23 @@ namespace RAC
 			inline const Vec3& GetEdgeVector() const { return mEdgeVector; }
 
 			/**
-			* @brief Gets the second wall ID
+			* @brief Gets the second plane ID
 			*
-			* @param id The first wall ID
-			* @return The wall ID that does not match the input ID
+			* @param id The first plane ID
+			* @return The plane ID that does not match the input ID
 			*/
-			inline size_t GetWallID(const size_t id) const
+			inline size_t GetPlaneID(const size_t id) const
 			{
-				if (id == mWallIds.first)
-					return mWallIds.second;
+				if (id == mPlaneIds.first)
+					return mPlaneIds.second;
 				else
-					return mWallIds.first;
+					return mPlaneIds.first;
 			}
 
 			/**
 			* @return The plane IDs as an ID pair
 			*/
 			inline IDPair GetPlaneIDs() const { return mPlaneIds; }
-
-			/**
-			* @return The wall IDs as an ID pair
-			*/
-			inline IDPair GetWallIDs() const { return mWallIds; }
 
 			/**
 			* Gets the face normals
@@ -219,7 +227,6 @@ namespace RAC
 			Vec3Pair mFaceNormals;		// Face normals of the edge
 			RealPair mDs;				// The D values describing the planes containing the walls making up the edge
 			IDPair mPlaneIds;			// The plane IDs of the planes containing the walls making up the edge
-			IDPair mWallIds;			// The wall IDs of the walls making up the edge
 
 			EdgeZone receiverZone;		// The edge zone where the receiver is located
 		};

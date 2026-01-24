@@ -29,7 +29,6 @@ namespace RAC
 	using namespace Common;
 	namespace Spatialiser
 	{
-
 		/**
 		* @class Room
 		* 
@@ -144,7 +143,7 @@ namespace RAC
 			* 
 			* @params id The ID of the wall to search for edges for
 			*/
-			void InitEdges(const size_t id);
+			// void InitEdges(const size_t id);
 
 			/**
 			* @brief Update planes and grouping of coplanar walls
@@ -155,6 +154,16 @@ namespace RAC
 			* @brief Update edges and check connections between walls
 			*/
 			void UpdateEdges();
+
+			void FindSegments(const Vec3& lineDir, const std::vector<size_t>& wallIDs, const Plane& plane, std::vector<EdgeSegment>& segments);
+
+			void FindSegmentsParallel(const Vec3& lineDir, const Vec3& linePoint, const std::vector<size_t>& wallIDs, const Plane& plane, std::vector<EdgeSegment>& segments);
+
+			Vec3 FindEdges(const Plane& planeA, const Plane& planeB, std::vector<std::pair<Real, Real>>& edges);
+
+			void FindEdgesParallel(const Vec3& lineDir, const Vec3& linePoint, const Plane& planeA, const Plane& planeB, std::vector<std::pair<Real, Real>>& edges);
+
+			void FindExteriorEdges(const std::vector<size_t>& wallIDs);
 
 			/**
 			* @return The reverb time of the room
@@ -227,7 +236,7 @@ namespace RAC
 			/**
 			* @brief Add a located edge to the room
 			*/
-			void AddEdge(const Edge& edge);
+			void AddEdge(const Edge& edge, Plane& planeA, Plane& planeB);
 
 			/**
 			* @brief Initialise edges between walls
@@ -235,7 +244,7 @@ namespace RAC
 			* @params id The ID of the wall to search for edges for
 			* @params wallIDs The IDs of walls with already connected edges
 			*/
-			void InitEdges(const size_t id, const std::vector<size_t>& wallIDs);
+			// void InitEdges(const size_t id, const std::vector<size_t>& wallIDs);
 
 			/**
 			* @brief Locate edges between walls
@@ -245,7 +254,7 @@ namespace RAC
 			* @params edges To store the located edges
 			* @params IDs To store the IDs of the previously located edges
 			*/
-			void FindEdges(const size_t idA, const size_t idB, std::vector<Edge>& edges, std::vector<size_t>& IDs);
+			// void FindEdges(const size_t idA, const size_t idB, std::vector<Edge>& edges, std::vector<size_t>& IDs);
 
 			/**
 			* @brief Locate edges between walls
@@ -256,7 +265,7 @@ namespace RAC
 			* @params idB The ID of the second wall
 			* @params edges To store the located edges
 			*/
-			void FindEdges(const Wall& wallA, const Wall& wallB, const size_t idA, const size_t idB, std::vector<Edge>& edges);
+			// void FindEdges(const Wall& wallA, const Wall& wallB, const size_t idA, const size_t idB, std::vector<Edge>& edges);
 
 			/**
 			* @brief Locate parallel edges between walls
@@ -267,7 +276,7 @@ namespace RAC
 			* @params idB The ID of the second wall
 			* @params edges To store the located edges
 			*/
-			void FindParallelEdges(const Wall& wallA, const Wall& wallB, const size_t idA, const size_t idB, std::vector<Edge>& edges);
+			// void FindParallelEdges(const Wall& wallA, const Wall& wallB, const size_t idA, const size_t idB, std::vector<Edge>& edges);
 			
 			/**
 			* Locate a single edge between walls
@@ -278,7 +287,7 @@ namespace RAC
 			* @params idB The ID of the second wall
 			* @params edges To store the located edge
 			*/
-			void FindEdge(const Wall& wallA, const Wall& wallB, const size_t idA, const size_t idB, std::vector<Edge>& edges);
+			// void FindEdge(const Wall& wallA, const Wall& wallB, const size_t idA, const size_t idB, std::vector<Edge>& edges);
 
 			/**
 			* @brief Update the edge with the given ID
@@ -290,25 +299,6 @@ namespace RAC
 			bool UpdateEdge(const size_t id, const Edge& edge);
 
 			/**
-			* @brief Update the edges with the given IDs
-			* 
-			* @params IDs The IDs of the edges to update
-			* @params edges The new edge data
-			*/
-			inline std::vector<size_t> UpdateEdges(const std::vector<size_t>& IDs, const std::vector<Edge>& edges)
-			{
-				std::vector<size_t> removeIDs;
-				int i = 0;
-				for (const Edge& edge : edges)
-				{
-					if (UpdateEdge(IDs[i], edge))
-						removeIDs.push_back(IDs[i]);
-					i++;
-				}
-				return removeIDs;
-			}
-
-			/**
 			* @brief Checks if an edge is coplanar with a plane not making up a wall attached to the edge
 			* 
 			* @params edge The edge to check
@@ -317,37 +307,38 @@ namespace RAC
 			bool IsCoplanarEdge(const Edge& edge);
 
 			/**
-			* @brief Remove the edges with the given IDs
-			* 
-			* @params edgeIDs The IDs of the edges to remove
-			* @params wallID The ID of the first wall the edge was atatched to
-			*/
-			inline void RemoveEdges(const std::vector<size_t>& edgeIDs, const size_t wallID)
-			{
-				std::lock_guard<std::mutex> lock(mEdgeMutex);
-				for (const size_t edgeID : edgeIDs)
-					RemoveEdge(edgeID, wallID);
-			}
-
-			/**
 			* @brief Remove the edge with the given ID
-			* 
-			* @params edgeID The ID of the edge to remove
-			* @params wallID The ID of the first wall the edge was atatched to
-			*/
-			void RemoveEdge(const size_t edgeID, const size_t wallID);
-
-			/**
-			* @brief Remove the edge with the given ID
-			* 
+			*
 			* @params idE The ID of the edge to remove
 			*/
 			void RemoveEdge(const size_t edgeID);
 
 			/**
+			* @brief Remove the edge with the given ID
+			* 
+			* @params edgeID The ID of the edge to remove
+			* @params planeID The ID of the first plane the edge was atatched to
+			*/
+			void RemoveEdge(const size_t edgeID, const size_t planeID);
+
+			/**
+			* @brief Remove the edge with the given ID
+			* 
+			* @params edgeID The ID of the edge to remove
+			* @params planeA The first plane the edge was atatched to
+			* @params planeB The second plane the edge was atatched to
+			*/
+			inline void RemoveEdge(const size_t edgeID, Plane& planeA, Plane& planeB)
+			{
+				planeA.RemoveEdge(edgeID);
+				planeB.RemoveEdge(edgeID);
+				RemoveEdge(edgeID);
+			}
+
+			/**
 			* @brief Record a change in the room geometry
 			*/
-			void RecordChange() { hasChanged.store(true, std::memory_order_release); }
+			inline void RecordChange() { hasChanged.store(true, std::memory_order_release); }
 
 			/**
 			* @brief Calculate the reverb time of the room using the Sabine formula
@@ -394,9 +385,9 @@ namespace RAC
 			size_t nextEdge{ 0 };							// Next edge ID if none are available
 
 			std::mutex mWallMutex;		// Protects mWalls. Must always be locked before Plane and Edge
-			std::mutex mPlaneMutex;		// Protects mPlanes. Can be locked after Edge (not before)
-			std::mutex mMaterialMutex;		// Protects mMaterials
-			std::mutex mEdgeMutex;		// Protects mEdges. Cannot be locked after Plane
+			std::mutex mPlaneMutex;		// Protects mPlanes. Cannot be locked after Edge
+			std::mutex mMaterialMutex;	// Protects mMaterials
+			std::mutex mEdgeMutex;		// Protects mEdges. Can be locked after Plane (not before)
 			std::mutex roomDataMutex;	// Protects roomData
 		};
 	}

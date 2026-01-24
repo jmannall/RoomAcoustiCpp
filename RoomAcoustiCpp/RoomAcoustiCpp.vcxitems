@@ -162,6 +162,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Diffraction\Path.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Directivity.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Edge.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\EdgeLocating.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\FDN.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\FDN_private.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\HeadphoneEQ.h" />

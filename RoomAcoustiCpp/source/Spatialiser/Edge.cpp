@@ -22,21 +22,24 @@ namespace RAC
 
 		//////////////////// Edge class ////////////////////
 
-		Edge::Edge(const Vec3& base, const Vec3& top, const Vec3& normal1, const Vec3& normal2, const size_t wallId1, const size_t wallId2, const size_t planeId1, const size_t planeId2)
-			: zW(0.0f), mBase(base), mTop(top), mFaceNormals(normal1, normal2), mWallIds(wallId1, wallId2), mPlaneIds(planeId1, planeId2), mDs(REAL_CONST(0.0), REAL_CONST(0.0)), receiverZone(EdgeZone::Invalid)
+		Edge::Edge(const Vec3& base, const Vec3& top, const Vec3& normal1, const Vec3& normal2, const size_t planeId1, const size_t planeId2)
+			: zW(0.0f), mBase(base), mTop(top), mFaceNormals(normal1, normal2), mPlaneIds(planeId1, planeId2), mDs(REAL_CONST(0.0), REAL_CONST(0.0)), receiverZone(EdgeZone::Invalid)
 		{
 			Update();
 		}
 
 		void Edge::Update()
 		{
-			midPoint = (mTop + mBase) / 2;
 			mEdgeVector = (mTop - mBase).Normalised();
 
 			if (mFaceNormals.first == -mFaceNormals.second)
 				mEdgeNormal = mEdgeVector.cross(mFaceNormals.first);
 			else
 				mEdgeNormal = (mFaceNormals.first + mFaceNormals.second).Normalised();
+
+			// Offset slightly in direction of edge normal to avoid numerical issues when checking
+			// coplanarity when planes are back to back
+			midPoint = (mTop + mBase) / 2 + mEdgeNormal * REAL_CONST(10.0) * EPS_GENERAL;
 
 			if (mFaceNormals.first.cross(mFaceNormals.second).dot(mEdgeVector) >= 0) // case true: angle is reflex
 				t = PI_1 + acos(mFaceNormals.first.dot(mFaceNormals.second));
