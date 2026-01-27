@@ -1,5 +1,7 @@
 Functions for generating points on the surface of regular polyhedra (tetrahedron, octahedron, cube, icosahedron, dodecahedron).
 
+Most users will interact with RoomAcoustiC++ through the high-level API in [`Spatialiser/Interface.h`](../spatialiser/interface.md). This page documents lower-level details for advanced usage.
+
 - **Namespace:** `RAC::Common`
 - **Header:** `Common/SphericalGeometries.h`
 - **Source:** *(header only)*

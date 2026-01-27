@@ -1,5 +1,7 @@
 A simple RAII timer for measuring code execution time, printing the result on destruction.
 
+Most users will interact with RoomAcoustiC++ through the high-level API in [`Spatialiser/Interface.h`](../spatialiser/interface.md). This page documents lower-level details for advanced usage.
+
 - **Namespace:** `RAC::Common`
 - **Header:** `Common/ScopedTimer.h`
 - **Source:** *(header only)*

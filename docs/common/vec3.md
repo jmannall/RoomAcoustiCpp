@@ -1,4 +1,8 @@
-A 3D vector class with arithmetic, normalization, and geometric operations.
+A 3D vector type used for positions, directions, and geometry.
+
+Most users will interact with RoomAcoustiC++ through the high-level API in [`Spatialiser/Interface.h`](../spatialiser/interface.md). This page documents lower-level details for advanced usage.
+
+`Vec3` provides common vector operations (normalisation, dot/cross products, approximate comparisons) and is used in the API for listener/source positions and room geometry.
 
 - **Namespace:** `RAC::Common`
 - **Header:** `Common/Vec3.h`
@@ -7,129 +11,69 @@ A 3D vector class with arithmetic, normalization, and geometric operations.
 
 ---
 
-## Class Definition
+## Type Definition
 
 ```cpp
-class Vec3
-{
-public:
-    Vec3();
-    Vec3(const Real x, const Real y, const Real z);
-    Vec3(const float x, const float y, const float z);
-    Vec3(const double x, const double y, const double z);
-    ~Vec3();
-
-    inline Real Length() const;
-    inline void Normalise();
-    inline void RoundVec();
-    inline Vec3& operator+=(const Vec3& v);
-    inline Vec3& operator-=(const Vec3& v);
-    inline Vec3& operator*=(const Real& a);
-    inline Vec3& operator/=(const Real& a);
-    template <typename Vector3Type>
-    inline Vec3& operator=(const Vector3Type& v);
-
-    Real x, y, z;
-};
+Vec3 p;                 // default (0, 0, 0)
+Vec3 q(1.0, 2.0, 3.0);  // (x, y, z)
 ```
 
 ---
 
-## Public Methods
+## Common Operations
 
-### `#!cpp Vec3()`
-**Default constructor.**  
-Initializes a zero vector.
+### Component accessors
+Returns the vector components.
 
----
-
-### `#!cpp Vec3(const Real x, const Real y, const Real z)`
-**Constructor.**  
-Initializes with specified values.
-
----
-
-### `#!cpp Vec3(const float x, const float y, const float z)`
-**Constructor.**  
-Initializes from floats (if using double).
+```cpp
+Real x() const; Real& x();
+Real y() const; Real& y();
+Real z() const; Real& z();
+```
 
 ---
 
-### `#!cpp Vec3(const double x, const double y, const double z)`
-**Constructor.**  
-Initializes from doubles (if using float).
+### `#!cpp Real SquareNormal() const`
+Returns the squared magnitude.
 
 ---
 
-### `#!cpp ~Vec3()`
-**Destructor.**  
-Cleans up the vector.
+### `#!cpp Real Normal() const`
+Returns the magnitude.
 
 ---
 
-### `#!cpp inline Real Length() const`
-Returns the vector length.
+### `#!cpp void Normalise()`
+Normalises the vector in place.
 
 ---
 
-### `#!cpp inline void Normalise()`
-Normalizes the vector.
+### `#!cpp Vec3 Normalised() const`
+Returns a normalised copy.
 
 ---
 
-### `#!cpp inline void RoundVec()`
-Rounds the vector components.
+### `#!cpp Real dot(const Vec3& other) const`
+Returns the dot product.
 
 ---
 
-### `#!cpp inline Vec3& operator+=(const Vec3& v)`
-Adds another vector.
+### `#!cpp Vec3 cross(const Vec3& other) const`
+Returns the cross product.
 
 ---
 
-### `#!cpp inline Vec3& operator-=(const Vec3& v)`
-Subtracts another vector.
+### `#!cpp bool IsApprox(const Vec3& other, Real eps = EPS_GENERAL) const`
+Checks approximate equality.
 
 ---
 
-### `#!cpp inline Vec3& operator*=(const Real& a)`
-Multiplies by a scalar.
+## Helper Functions
+
+### `#!cpp Vec3 Round(const Vec3& v)`
+Rounds the components using the library's rounding factor.
 
 ---
-
-### `#!cpp inline Vec3& operator/=(const Real& a)`
-Divides by a scalar.
-
----
-
-### `#!cpp template <typename Vector3Type> inline Vec3& operator=(const Vector3Type& v)`
-Assigns from another type with x, y, z.
-
----
-
-## Operators
-
-- `operator+`, `operator-`, `operator*`, `operator/`: Arithmetic.
-- `operator==`, `operator!=`: Comparison.
-- `operator<<`: Stream output.
-
----
-
-## Functions
-
-- `UnitVector`, `UnitVectorRound`, `Dot`, `Cross`: Geometric operations.
-
----
-
-## Internal Data Members
-
-- `#!cpp Real x, y, z`: Vector components.
-
----
-
-## Implementation Notes
-
-- Used for 3D geometry and spatial calculations.
 
 ## Example Usage
 
@@ -139,6 +83,9 @@ using namespace RAC::Common;
 
 Vec3 a(1.0, 2.0, 3.0);
 Vec3 b(4.0, 5.0, 6.0);
-Vec3 c = a + b;
-c.Normalise();
+
+Real d = a.dot(b);
+Vec3 c = a.cross(b);
+
+a.Normalise();
 ```

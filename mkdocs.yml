@@ -6,8 +6,8 @@ site_description: >-
   Real-time room acoustic C++ library
 
 # Repository
-repo_name: jmannall/RoomAcoustiCpp
-repo_url: https://github.com/jmannall/RoomAcoustiCpp
+repo_name: IoSR/RoomAcoustiCpp
+repo_url: https://github.com/IoSR/RoomAcoustiCpp
 edit_uri: edit/main/docs/
 
 # Configuration
@@ -76,7 +76,7 @@ extra:
     property: !ENV GOOGLE_ANALYTICS_KEY
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/jmannall/RoomAcoustiCpp
+      link: https://github.com/IoSR/RoomAcoustiCpp
 
 markdown_extensions:
   - abbr
@@ -123,8 +123,6 @@ markdown_extensions:
   - pymdownx.tasklist:
       custom_checkbox: true
   - pymdownx.tilde
-  - pymdownx.arithmatex:
-      generic: true
   
   
 extra_javascript:
@@ -140,8 +138,11 @@ nav:
     - Diffraction: overview/diffraction.md
   - Unity Interface: unity/index.md
   - API Reference:
-    - API Reference: api/index.md
-    - Interface: api/interface.md
+    - Overview: api/index.md
+    - Interface: spatialiser/interface.md
+    - Types: api/types.md
+    - Configs: api/configs.md
+    - Optional arguments: api/contextoptionalarguments.md
     - Structure: api/structure.md
     # - Common:
     #   - Definitions: common/definitions.md

@@ -9,7 +9,7 @@ This section provides an overview of the library's features.
 * Binaural spatialisation including custom HRTFs (using the 3D Tune-In toolbox)
 * Geometry dependent early reflections
 * Diffraction modelling
-* FDN late reverberation
+* Late reverberation (SingleFDN / MoD-ART)
 * Dynamic geometry
 <!-- 
 ## Description

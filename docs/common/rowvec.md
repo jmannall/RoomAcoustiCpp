@@ -1,100 +1,54 @@
-Implements a row vector (`Rowvec`) class, inheriting from `Matrix`.  
-Supports vector arithmetic, statistics, and assignment from matrices.
+Implements the dynamic-length row vector type (`Rowvec`) used throughout the library.
+
+Most users will interact with RoomAcoustiC++ through the high-level API in [`Spatialiser/Interface.h`](../spatialiser/interface.md). This page documents lower-level details for advanced usage.
+
+`Rowvec<>` is a 1D container of `Real` values laid out as a row vector.
 
 - **Namespace:** `RAC::Common`
 - **Header:** `Common/Vec.h`
 - **Source:** `Common/Vec.cpp`
-- **Dependencies:** `Common/Types.h`, `Common/Matrix.h`
+- **Dependencies:** `Common/Types.h`
 
 ---
 
-## Class Definition
+## Type Definition
+
+`Rowvec` is a template:
 
 ```cpp
-class Rowvec : public Matrix
-{
-public:
-    Rowvec();
-    Rowvec(const int& length);
-    Rowvec(const std::vector<Real>& vector);
-    ~Rowvec();
-
-    Real Sum() const;
-    inline Real Mean() const;
-    inline Real operator[](const int i) const;
-    inline Real& operator[](const int i);
-    inline Rowvec operator=(const Matrix& matrix);
-
-private:
-    void Init(const std::vector<Real>& vec);
-};
+template <typename T = Real>
+using Rowvec = /* dynamic-length row vector */;
+Rowvec<> r; // Defaults to Real
 ```
 
 ---
 
-## Public Methods
+## Common Operations
 
-### `#!cpp Rowvec()`
-**Default constructor.**  
-Initializes an empty row vector.
-
----
-
-### `#!cpp Rowvec(const int& length)`
-**Constructor.**  
-Initializes a row vector of zeros.
-- `length`: Vector length.
+### `#!cpp int Length() const`
+Returns the number of elements.
 
 ---
 
-### `#!cpp Rowvec(const std::vector<Real>& vector)`
-**Constructor.**  
-Initializes a row vector with data.
-- `vector`: Data to initialize.
-
----
-
-### `#!cpp ~Rowvec()`
-**Destructor.**  
-Cleans up the row vector.
+### `#!cpp void Reset()`
+Sets all entries to 0.
 
 ---
 
 ### `#!cpp Real Sum() const`
-Returns the sum of all elements.
+Returns the sum of all entries.
 
 ---
 
-### `#!cpp inline Real Mean() const`
-Returns the mean value of the row vector.
+### `#!cpp Real Mean() const`
+Returns the mean value.
 
 ---
 
-### `#!cpp inline Real operator[](const int i) const`
-Returns the value at index `i`.
+### Indexing
+Access elements using the container's indexing operator.
 
 ---
-
-### `#!cpp inline Real& operator[](const int i)`
-Returns a reference to the value at index `i`.
-
----
-
-### `#!cpp inline Rowvec operator=(const Matrix& matrix)`
-Assigns a matrix to this row vector (must be a row vector).
-
----
-
-## Internal Data Members
-
-- Inherited from `Matrix`.
-
----
-
-## Implementation Notes
-
-- `Rowvec` is specialized for row vectors.
-- Supports statistics and assignment from matrices.
 
 ## Example Usage
 
@@ -102,6 +56,6 @@ Assigns a matrix to this row vector (must be a row vector).
 #include "Common/Vec.h"
 using namespace RAC::Common;
 
-Rowvec r({1.0, 2.0, 3.0});
+Rowvec<> r(std::vector<Real>({1.0, 2.0, 3.0}));
 Real mean = r.Mean();
 ```

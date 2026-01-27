@@ -1,19 +1,20 @@
-Provides the main API for interacting with the RoomAcoustiC++ library, including initialisation, source, listener and wall control, audio submission and retrieval.
+Provides the main API for interacting with the RoomAcoustiC++ library, including initialisation, listener control, source and geometry creation and manipulation, and audio submission and retrieval.
 
 - **Namespace:** `RAC::Spatialiser`
 - **Header:** `Spatialiser/Interface.h`
 - **Source:** `Spatialiser/Interface.cpp`
-- **Dependencies:** `Common/Vec.h`, `Common/Vec3.h`, `Common/Vec4.h`, `Common/Types.h`, `DSP/Buffer.h`, `Spatialiser/Types.h`, `Spatialiser/Context.h`
+- **Dependencies:** `Common/Vec.h`, `Common/Vec3.h`, `Common/Vec4.h`, `Common/Types.h`, `DSP/Buffer.h`, `Spatialiser/Types.h`, `Spatialiser/Configs.h`, `Spatialiser/ContextOptionalArguments.h`
 
 ---
 
-## Initialization & Configuration
+## Configuration
 
-### `#!cpp bool Init(const std::shared_ptr<Config> config)`
+### `#!cpp bool Init(const DSPData& data, const ContextOptionalArguments &optionalArguments)`
 Initializes the spatialiser with the given configuration.
 
-`config`: Shared pointer to configuration object.  
-**Returns:** True if initialization was successful.
+`data`: The configuration of the spatialiser.  
+`optionalArguments`: Optional arguments.  
+**Returns:** True if initialization was successful, false otherwise.
 
 ---
 
@@ -46,158 +47,251 @@ Sets the spatialisation mode (none: mono, performance: interaural time and level
 
 ---
 
-### `#!cpp void UpdateIEMConfig(const IEMConfig& config)`
+## Early Reverberation (IEM)
+
+### `#!cpp void EnableEarlyReverb(const bool enable)`
+Toggles the Image Edge Model on or off.
+
+`enable`: True to enable early reflections, false to disable.
+
+---
+
+### `#!cpp void UpdateEarlyConfig(const EarlyReverbData& data)`
 Updates the Image Edge Model configuration.
 
-`config`: IEM configuration.
-
----
-
-### `#!cpp void UpdateReverbTime(const ReverbFormula model)`
-Sets the late reverberation time calculation model (Sabine or Eyring's formula)
-
-`model`: Reverberation formula.
-
----
-
-### `#!cpp void UpdateReverbTime(const Coefficients<>& T60)`
-Overrides the late reverberation time.
-
-`T60`: Reverberation time coefficients.
+`data`: The new configuration for the IEM.
 
 ---
 
 ### `#!cpp void UpdateDiffractionModel(const DiffractionModel model)`
-Sets the diffraction model (Attenuate, LPF, UDFA, UDFA-I, NNBest, NNSmall, UTD, BTM).
+Updates the model used to process diffraction.
 
-`model`: Diffraction model.
-
----
-
-### `#!cpp void InitLateReverb(const Real volume, const Vec& dimensions, FDNMatrix matrix)`
-Initializes late reverberation with room volume, dimensions, and FDN matrix.
-
-`volume`: Room volume.
-`dimensions`: Room dimensions.
-`matrix`: FDN feedback matrix.
+`model`: The diffraction model.
 
 ---
 
-### `#!cpp void ResetFDN()`
-Clears internal FDN buffers.
+### `#!cpp bool InitEarlyReverb(const bool enabled, const EarlyReverbData& data, const DiffractionModel model)`
+Initialises the Image Edge Model (IEM) and sets the diffraction model.
+
+`enabled`: True to enable early reflection DSP, false to disable.  
+`data`: The user defined IEM configuration data.  
+`model`: The diffraction model to use.  
+**Returns:** True if the early reverberation DSP was initialised successfully, false otherwise.
+
+---
+
+## Late Reverberation (MoD-ART or single FDN)
+
+### `#!cpp void EnableLateReverb(const bool enable)`
+Toggles the late reverberation DSP on or off.
+
+`enable`: True to enable late reflections, false to disable.
+
+---
+
+### `#!cpp void UpdateLateReverbNumberOfRays(const int numRays)`
+Sets the number of rays used in the late reverberation ray tracing.
+
+`numRays`: The number of rays to use for ray tracing.
+
+---
+
+### `#!cpp void UpdateLateReverbDistanceThresholds(const Real sourceThresh, const Real listenerThresh)`
+Sets the distance thresholds (in meters) from the latest updated position which triggers an update of late reverberation tracing.
+
+`sourceThresh`: The distance threshold for all sources.  
+`listenerThresh`: The distance threshold for the listener.
+
+---
+
+### `#!cpp void UpdateSelfShadowingRadius(const Real radius)`
+Sets the sphere radius (in meters) used to determine self-shadowing during late reverberation tracing.
+
+`radius`: The radius of the listener head used for self-shadowing.
+
+---
+
+### `#!cpp void UpdateMoDARTDelay(const Real delay)`
+Updates the initial delay for MoDART late reverberation.
+
+`delay`: The initial delay in seconds.
+
+---
+
+### `#!cpp void UpdateMoDARTMinimumReverbTime(const Real T60)`
+Updates the minimum reverberation time to model. This controls the number of modes in MoDART.
+
+`T60`: The minimum reverberation time in seconds.
+
+---
+
+### `#!cpp void UpdateSingleFDNReverbTime(const ReverbFormula model)`
+Updates the model used to calculate the late reverberation time (T60).
+
+`model`: The model used to calculate the late reverberation time.
+
+---
+
+### `#!cpp void UpdateSingleFDNReverbTime(const Coefficients<>& T60)`
+Overrides the current late reverberation time (T60).
+
+`T60`: The late reverberation time (frequency dependent).
+
+---
+
+### `#!cpp bool InitSingleFDN(const RoomData& roomData, const LateReverbData& data)`
+Initialises SingleFDN late reverberation.
+
+`roomData`: The user defined room configuration data.  
+`data`: The user defined SingleFDN configuration data.  
+**Returns:** True if the SingleFDN late reverberation was initialised successfully, false otherwise.
+
+---
+
+### `#!cpp bool InitMoDART(const MoDARTData& data)`
+Initialises MoDART late reverberation.
+
+`data`: The user defined MoDART configuration data.  
+**Returns:** True if the MoDART late reverberation was initialised successfully, false otherwise.
+
+---
+
+### `#!cpp void ResetLateReverb()`
+Clears the internal late reverberation buffers.
+
+---
+
+### `#!cpp void UpdateLateReverbGain(const Real gain)`
+Updates the late reverberation gain.
+
+`gain`: The new late reverberation gain.
 
 ---
 
 ## Listener
 
 ### `#!cpp void UpdateListener(const Vec3& position, const Vec4& orientation)`
-Sets the listener's position and orientation.
+Updates the listener's position and orientation.
 
-- `position`: Listener position.
-- `orientation`: Listener orientation (quaternion).
+`position`: The new position of the listener.  
+`orientation`: The new orientation of the listener (quaternion).
 
 ---
 
 ## Sources
 
-### `#!cpp size_t InitSource()`
-Creates a new audio source.
+### `#!cpp int InitSource()`
+Initializes a new audio source.
 
-- **Returns:** Source ID.
+**Returns:** The ID of the new audio source.
 
 ---
 
 ### `#!cpp void UpdateSource(const size_t id, const Vec3& position, const Vec4& orientation)`
-Updates the position and orientation of a source.
+Updates the position and orientation of the audio source with the given ID.
 
-- `id`: Source ID.
-- `position`: New position.
-- `orientation`: New orientation.
+`id`: The ID of the audio source to update.  
+`position`: The new position of the source.  
+`orientation`: The new orientation of the source (quaternion).
 
 ---
 
 ### `#!cpp void UpdateSourceDirectivity(const size_t id, const SourceDirectivity directivity)`
-Sets the directivity pattern for a source.
+Updates the directivity of the audio source with the given ID.
 
-- `id`: Source ID.
-- `directivity`: Directivity pattern.
+`id`: The ID of the audio source to update.  
+`directivity`: The new directivity of the source.
 
 ---
 
 ### `#!cpp void RemoveSource(const size_t id)`
-Removes a source.
+Removes the audio source with the given ID.
 
-- `id`: Source ID.
+`id`: The ID of the audio source to remove.
 
 ---
 
 ## Geometry
 
-### `#!cpp size_t InitWall(const Vertices& vData, const Absorption<>& absorption)`
-Creates a new wall with vertices and absorption.
+### `#!cpp int InitMaterial(const Coefficients<>& material)`
+Initialises a new material with the given absorption parameters.
 
-- `vData`: Wall vertices.
-- `absorption`: Absorption coefficients.
-- **Returns:** Wall ID.
+`material`: The frequency absorption coefficients.  
+**Returns:** The ID of the new material.
+
+---
+
+### `#!cpp void UpdateMaterial(size_t id, const Coefficients<>& material)`
+Updates the material with the given ID.
+
+`id`: The ID of the material to update.  
+`material`: The frequency absorption coefficients.
+
+---
+
+### `#!cpp void RemoveMaterial(size_t id)`
+Removes the material with the given ID.
+
+`id`: The ID of the material to remove.
+
+---
+
+### `#!cpp int InitWall(const Vertices& vData, const size_t materialId)`
+Initializes a new wall with the given parameters.
+
+`vData`: The vertices of the wall.  
+`materialId`: The ID of the material to use for this wall.  
+**Returns:** The ID of the new wall.
 
 ---
 
 ### `#!cpp void UpdateWall(size_t id, const Vertices& vData)`
-Updates the geometry of a wall.
+Updates the vertices of the wall with the given ID.
 
-- `id`: Wall ID.
-- `vData`: New vertices.
-
----
-
-### `#!cpp void UpdateWallAbsorption(size_t id, const Absorption<>& absorption)`
-Updates the absorption of a wall.
-
-- `id`: Wall ID.
-- `absorption`: New absorption coefficients.
+`id`: The ID of the wall to update.  
+`vData`: The new vertices of the wall.
 
 ---
 
 ### `#!cpp void RemoveWall(size_t id)`
-Removes a wall.
+Removes the wall with the given ID.
 
-- `id`: Wall ID.
+`id`: The ID of the wall to remove.
 
 ---
 
 ### `#!cpp void UpdatePlanesAndEdges()`
-Updates room planes and edges.
+Rebuilds internal room planes and edges after geometry changes (e.g., after adding, updating, or removing walls).
 
 ---
 
-## Audio
-
-### `#!cpp void UpdateLateReverbGain(const Real gain)`
-Sets the late reverberation gain.
-
-- `gain`: Gain value.
-
----
+## Audio I/O
 
 ### `#!cpp void SubmitAudio(size_t id, const Buffer<>& data)`
-Submits an audio buffer for a source.
+Submits an audio buffer to the audio source with the given ID.
 
-- `id`: Source ID.
-- `data`: Audio buffer.
-
----
-
-### `#!cpp void GetOutput(float** bufferPtr)`
-Retrieves the processed output buffer.
-
-- `bufferPtr`: Pointer to output buffer.
+`id`: The ID of the audio source to submit audio to.  
+`data`: The audio data for the source.
 
 ---
 
-### `#!cpp void UpdateImpulseResponseMode(const bool mode)`
-Sets impulse response mode.
+### `#!cpp void GetOutput(Buffer<>& outputBuffer)`
+Processes audio for the current audio callback and writes the output.
 
-- `mode`: True to enable IR mode.
+If `outputBuffer.Length()` does not match the required number of samples (interleaved stereo), it will be resized.
+
+`outputBuffer`: Buffer to write the audio output to.
+
+---
+
+### `#!cpp void RecordImpulseResponse(const Vec3& position, const Vec4& orientation, Buffer<>& outputBuffer)`
+Records an impulse response using the current listener position.
+
+Assumes the listener position does not change during recording.
+
+`position`: The source position.  
+`orientation`: The source orientation (quaternion).  
+`outputBuffer`: Buffer to write the recorded impulse response to.
 
 ---
 
@@ -207,74 +301,88 @@ Sets impulse response mode.
 #include "Spatialiser/Interface.h"
 using namespace RAC::Spatialiser;
 
-std::shared_ptr<Config> config = std::make_shared<Config>();
+DSPData config;
 Init(config);
-bool success = RACLoadSpatialisationFiles(5, { "path/to/hrtf", "path/to/ildNearField", "path/to/ild" });
-UpdateSpatialisationMode(SpatialisationMode::Quality);
 
-IEMConfig iemConfig(DirectSound::doCheck, 2, 2, 1, true, 0.0);
-UpdateIEMConfig(iemConfig);
+bool success = LoadSpatialisationFiles(5, { "path/to/hrtf", "path/to/ildNearField", "path/to/ild" });
+UpdateSpatialisationMode(SpatialisationMode::quality);
+
+EarlyReverbData iemConfig(DirectSound::doCheck, 2, 2, 1, 0.0, 1e10);
+InitEarlyReverb(true, iemConfig, DiffractionModel::nnSmall);
 
 UpdateListener(Vec3(0, 2, 0), Vec4(1, 0, 0, 0));
 
 // Create shoebox
 Vec3 pos(7, 3, 4);
-double volume = pos.x * pos.y * pos.z;
-Absorption<> absorption(0.03, 0.04, 0.06, 0.1, 0.12);
+double volume = pos.x() * pos.y() * pos.z();
+
+Coefficients<> absorption(std::vector<Real>({ 0.03, 0.04, 0.06, 0.1, 0.12 }));
+size_t materialId = (size_t)InitMaterial(absorption);
+
 std::vector<size_t> wallIDs(12);
-wallIDs[0] = InitWall({ Vec3(0.0, pos.y, 0.0),
-        Vec3(pos.x, pos.y, 0.0),
-        Vec3(pos.x, pos.y, pos.z) }, absorption);
-wallIDs[1] = InitWall({ Vec3(0.0, pos.y, 0.0),
-        Vec3(pos.x, pos.y, pos.z),
-        Vec3(0.0, pos.y, pos.z) }, absorption);
-wallIDs[2] = InitWall({ Vec3(pos.x, 0.0, 0.0),
+wallIDs[0] = InitWall({ Vec3(0.0, pos.y(), 0.0),
+        Vec3(pos.x(), pos.y(), 0.0),
+        Vec3(pos.x(), pos.y(), pos.z()) }, materialId);
+wallIDs[1] = InitWall({ Vec3(0.0, pos.y(), 0.0),
+        Vec3(pos.x(), pos.y(), pos.z()),
+        Vec3(0.0, pos.y(), pos.z()) }, materialId);
+wallIDs[2] = InitWall({ Vec3(pos.x(), 0.0, 0.0),
         Vec3(0.0, 0.0, 0.0),
-        Vec3(0.0, 0.0, pos.z) }, absorption);
-wallIDs[3] = InitWall({ Vec3(pos.x, 0.0, 0.0),
-        Vec3(0.0, 0.0, pos.z),
-        Vec3(pos.x, 0.0, pos.z) }, absorption);
-wallIDs[4] = InitWall({ Vec3(pos.x, 0.0, pos.z),
-        Vec3(pos.x, pos.y, pos.z),
-        Vec3(pos.x, pos.y, 0.0) }, absorption);
-wallIDs[5] = InitWall({ Vec3(pos.x, 0.0, pos.z),
-        Vec3(pos.x, pos.y, 0.0),
-        Vec3(pos.x, 0.0, 0.0) }, absorption);
+        Vec3(0.0, 0.0, pos.z()) }, materialId);
+wallIDs[3] = InitWall({ Vec3(pos.x(), 0.0, 0.0),
+        Vec3(0.0, 0.0, pos.z()),
+        Vec3(pos.x(), 0.0, pos.z()) }, materialId);
+wallIDs[4] = InitWall({ Vec3(pos.x(), 0.0, pos.z()),
+        Vec3(pos.x(), pos.y(), pos.z()),
+        Vec3(pos.x(), pos.y(), 0.0) }, materialId);
+wallIDs[5] = InitWall({ Vec3(pos.x(), 0.0, pos.z()),
+        Vec3(pos.x(), pos.y(), 0.0),
+        Vec3(pos.x(), 0.0, 0.0) }, materialId);
 wallIDs[6] = InitWall({ Vec3(0.0, 0.0, 0.0),
-        Vec3(0.0, pos.y, 0.0),
-        Vec3(0.0, pos.y, pos.z) }, absorption);
+        Vec3(0.0, pos.y(), 0.0),
+        Vec3(0.0, pos.y(), pos.z()) }, materialId);
 wallIDs[7] = InitWall({ Vec3(0.0, 0.0, 0.0),
-        Vec3(0.0, pos.y, pos.z),
-        Vec3(0.0, 0.0, pos.z) }, absorption);
+        Vec3(0.0, pos.y(), pos.z()),
+        Vec3(0.0, 0.0, pos.z()) }, materialId);
 wallIDs[8] = InitWall({ Vec3(0.0, 0.0, 0.0),
-        Vec3(pos.x, 0.0, 0.0),
-        Vec3(pos.x, pos.y, 0.0) }, absorption);
+        Vec3(pos.x(), 0.0, 0.0),
+        Vec3(pos.x(), pos.y(), 0.0) }, materialId);
 wallIDs[9] = InitWall({ Vec3(0.0, 0.0, 0.0),
-        Vec3(pos.x, pos.y, 0.0),
-        Vec3(0.0, pos.y, 0.0) }, absorption);
-wallIDs[10] = InitWall({ Vec3(0.0, pos.y, pos.z),
-        Vec3(pos.x, pos.y, pos.z),
-        Vec3(pos.x, 0.0, pos.z) }, absorption);
-wallIDs[11] = InitWall({ Vec3(0.0, pos.y, pos.z),
-        Vec3(pos.x, 0.0, pos.z),
-        Vec3(0.0, 0.0, pos.z) }, absorption);
+        Vec3(pos.x(), pos.y(), 0.0),
+        Vec3(0.0, pos.y(), 0.0) }, materialId);
+wallIDs[10] = InitWall({ Vec3(0.0, pos.y(), pos.z()),
+        Vec3(pos.x(), pos.y(), pos.z()),
+        Vec3(pos.x(), 0.0, pos.z()) }, materialId);
+wallIDs[11] = InitWall({ Vec3(0.0, pos.y(), pos.z()),
+        Vec3(pos.x(), 0.0, pos.z()),
+        Vec3(0.0, 0.0, pos.z()) }, materialId);
 UpdatePlanesAndEdges();
 
-InitLateReverb(volume, Vec(pos.z, pos.y, pos.z), FDNMatrix::RandomOrthogonal);
+Vec<> dimensions(3);
+dimensions[0] = (Real)pos.z();
+dimensions[1] = (Real)pos.y();
+dimensions[2] = (Real)pos.z();
 
-size_t id = InitSource();
-UpdateDirectivity(id, SourceDirectivity::Genelec8020c);
+Coefficients<> T60 = Coefficients<>::Constant(config.frequencyBands.Length(), (Real)1.0);
+RoomData roomData((Real)volume, T60, ReverbFormula::Sabine, dimensions);
+
+LateReverbData lateData(true, 1000, FDNMatrix::randomOrthogonal);
+InitSingleFDN(roomData, lateData);
+
+size_t id = (size_t)InitSource();
+UpdateSourceDirectivity(id, SourceDirectivity::genelec8020c);
 UpdateSource(id, Vec3(1, 2, 3), Vec4(1, 0, 0, 0));
 
-SubmitAudio(id, Buffer<>(config->numFrames));
+SubmitAudio(id, Buffer<>(config.numFrames));
 
-Buffer<float> output(2 * config->numFrames);
-float* outputPtr = &output[0];
-GetOutput(&outputPtr);
+Buffer<> output(2 * config.numFrames);
+GetOutput(output);
 
 RemoveSource(id);
 for (size_t wallID : wallIDs)
     RemoveWall(wallID);
+
+RemoveMaterial(materialId);
 Exit();
 
 ```

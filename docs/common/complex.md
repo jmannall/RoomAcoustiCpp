@@ -1,5 +1,7 @@
 Defines a complex number type alias and arithmetic operators for real/complex combinations.
 
+Most users will interact with RoomAcoustiC++ through the high-level API in [`Spatialiser/Interface.h`](../spatialiser/interface.md). This page documents lower-level details for advanced usage.
+
 - **Namespace:** `RAC::Common`
 - **Header:** `Common/Complex.h`
 - **Source:** *(header only)*
@@ -23,17 +25,19 @@ typedef std::complex<Real> Complex;
 
 ## Operators
 
-### `#!cpp Complex operator*(const Complex a, const Real b)`
+Overloads are also provided for `Real` on the left-hand side (e.g., `Real * Complex`) and for complex-to-complex arithmetic.
+
+### `#!cpp Complex operator*(Complex a, Real b)`
 Multiplies a complex number by a real number.
 
 ---
 
-### `#!cpp Complex operator+(const Complex a, const Real b)`
+### `#!cpp Complex operator+(Complex a, Real b)`
 Adds a real number to a complex number.
 
 ---
 
-### `#!cpp Complex operator/(const Complex a, const Real b)`
+### `#!cpp Complex operator/(Complex a, Real b)`
 Divides a complex number by a real number.
 
 ---

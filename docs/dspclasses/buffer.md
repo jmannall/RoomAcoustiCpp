@@ -1,5 +1,8 @@
-A resizeable buffer class for storing and manipulating audio or impulse response data.  
-Provides element access, resizing, arithmetic operations, and validity checks.
+A resizable 1D buffer used for storing and manipulating audio samples and impulse responses.
+
+Most users will interact with RoomAcoustiC++ through the high-level API in [`Spatialiser/Interface.h`](../spatialiser/interface.md). This page documents lower-level details for advanced usage.
+
+`Buffer<>` is used in the API for audio submission (`SubmitAudio`), output retrieval (`GetOutput`), and for providing impulse responses (e.g., headphone EQ).
 
 - **Namespace:** `RAC::DSP`
 - **Header:** `DSP/Buffer.h`
@@ -8,153 +11,70 @@ Provides element access, resizing, arithmetic operations, and validity checks.
 
 ---
 
-## Class Definition
+## Type Definition
+
+`Buffer` is a template:
 
 ```cpp
-class Buffer
-{
-public:
-    Buffer();
-    Buffer(const int length);
-    Buffer(const std::vector<Real>& vector);
-    ~Buffer();
-
-    inline void Reset();
-    inline size_t Length() const;
-    void ResizeBuffer(const size_t numSamples);
-    bool Valid();
-    inline Real& operator[](const int i);
-    inline Real operator[](const int i) const;
-    inline Buffer operator*=(const Real a);
-    inline Buffer operator+=(const Real a);
-    inline Buffer operator+=(const Buffer& x);
-
-    inline auto begin();
-    inline auto end();
-    inline const auto begin() const;
-    inline const auto end() const;
-
-private:
-    std::vector<Real> mBuffer;
-};
+template <typename T = Real>
+using Buffer = /* 1D sample buffer */;
+Buffer<> b; // Defaults to Real
 ```
 
 ---
 
-## Public Methods
+## Common Operations
 
 ### `#!cpp Buffer()`
-**Default constructor.**  
-Initializes buffer with 1 sample.
+Creates an empty buffer.
 
 ---
 
-### `#!cpp Buffer(const int length)`
-**Constructor.**  
-Initializes the buffer with a specified number of samples.
-- `length`: Number of samples.
+### `#!cpp Buffer(int length)`
+Creates a buffer of the given length, initialised to 0.
+
+`length`: Number of samples.
 
 ---
 
-### `#!cpp Buffer(const std::vector<Real>& vector)`
-**Constructor.**  
-Initializes the buffer with a vector of Real values.
-- `vector`: Vector of values.
+### `#!cpp Buffer(const std::vector<T>& values)`
+Creates a buffer from an existing vector of values.
+
+`values`: Initial sample data.
 
 ---
 
-### `#!cpp ~Buffer()`
-**Destructor.**  
-Cleans up the buffer.
+### `#!cpp static Buffer Zero(int length)`
+Creates a zero-initialised buffer.
 
 ---
 
-### `#!cpp inline void Reset()`
-Sets all samples in the buffer to 0.
+### `#!cpp size_t Length() const`
+Returns the number of samples.
 
 ---
 
-### `#!cpp inline size_t Length() const`
-Returns the length of the buffer.
-- **Returns:** Number of samples.
+### `#!cpp void Resize(size_t newLength)`
+Resizes the buffer.
+
+If the buffer grows, new samples are initialised to 0.
 
 ---
 
-### `#!cpp void ResizeBuffer(const size_t numSamples)`
-Resizes the buffer to a specified number of samples.
-- `numSamples`: New buffer size.
+### `#!cpp void Reset()`
+Sets all samples to 0.
 
 ---
 
 ### `#!cpp bool Valid()`
-Checks if the buffer contains only valid (non-NaN) values.
-- **Returns:** False if any value is NaN, true otherwise.
+Returns true if all values are finite (i.e., no NaNs/Infs).
 
 ---
 
-### `#!cpp inline Real& operator[](const int i)`
-Access the buffer at the specified index.
-- `i`: Index.
-- **Returns:** Reference to value at index.
+### Indexing
+Access samples using the buffer's indexing operator (e.g., `buf[i]`), or via `data()` if you need raw contiguous access.
 
 ---
-
-### `#!cpp inline Real operator[](const int i) const`
-Access the buffer at the specified index (const).
-- `i`: Index.
-- **Returns:** Value at index.
-
----
-
-### `#!cpp inline Buffer operator*=(const Real a)`
-Multiplies each sample in the buffer by a scalar value.
-- `a`: Scalar.
-
----
-
-### `#!cpp inline Buffer operator+=(const Real a)`
-Adds a scalar value to each sample in the buffer.
-- `a`: Scalar.
-
----
-
-### `#!cpp inline Buffer operator+=(const Buffer& x)`
-Adds another buffer to this buffer (element-wise).
-- `x`: Buffer to add.
-
----
-
-### `#!cpp inline auto begin()`
-Returns iterator to beginning of buffer.
-
----
-
-### `#!cpp inline auto end()`
-Returns iterator to end of buffer.
-
----
-
-### `#!cpp inline const auto begin() const`
-Returns const iterator to beginning of buffer.
-
----
-
-### `#!cpp inline const auto end() const`
-Returns const iterator to end of buffer.
-
----
-
-## Internal Data Members
-
-- `#!cpp std::vector<Real> mBuffer`: Buffer data.
-
----
-
-## Implementation Notes
-
-- Used for audio and impulse response storage.
-- Supports arithmetic and element-wise operations.
-- Provides validity checking for NaN values.
 
 ## Example Usage
 
@@ -162,12 +82,15 @@ Returns const iterator to end of buffer.
 #include "DSP/Buffer.h"
 using namespace RAC::DSP;
 
-Buffer buf(8);
-buf[0] = 1.0;
-buf[1] = 2.0;
+Buffer<> buf(8);
+buf.data()[0] = 1.0;
+buf.data()[1] = 2.0;
+
 buf += 0.5;
 buf *= 2.0;
-if (buf.Valid()) {
+
+if (buf.Valid())
+{
     // Use buffer
 }
 ```

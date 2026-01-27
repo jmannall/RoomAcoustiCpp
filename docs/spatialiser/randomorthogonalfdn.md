@@ -1,22 +1,26 @@
-Implements a Feedback Delay Network (FDN) using a random orthogonal feedback matrix for decorrelation and natural-sounding reverberation.
+Implements a Feedback Delay Network (FDN) using a random orthogonal feedback matrix for high decorrelation and natural-sounding reverberation.
+
+Most users will configure late reverberation through the main API in `Spatialiser/Interface.h` (e.g., `InitSingleFDN`). `RandomOrthogonalFDN` is exposed for advanced usage.
 
 - **Namespace:** `RAC::Spatialiser`
 - **Header:** `Spatialiser/FDN.h`
 - **Source:** `Spatialiser/FDN.cpp`
-- **Dependencies:** `Common/Types.h`, `Common/Matrix.h`, `Common/Vec.h`, `Common/Coefficients.h`, `DSP/Buffer.h`, `DSP/GraphicEQ.h`, `Spatialiser/Types.h`
+- **Dependencies:** `Common/Types.h`, `Common/Matrix.h`, `Common/Vec.h`, `Common/Coefficients.h`, `DSP/Buffer.h`, `Spatialiser/Types.h`, `Spatialiser/Configs.h`
 
 ---
 
 ## Class Definition
 
 ```cpp
-class RandomOrthogonalFDN : public FDN
+template <typename T = Real>
+class RandomOrthogonalFDN : public FDN<T>
 {
 public:
-    RandomOrthogonalFDN(const Coefficients& T60, const Vec& dimensions, const Config& config);
+    RandomOrthogonalFDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<DSPConfig>& dspConfig);
+    RandomOrthogonalFDN(const Real T60, const Vec<int>& delayLengths, const std::shared_ptr<DSPConfig>& dspConfig);
     ~RandomOrthogonalFDN();
 
-    static Matrix InitMatrix(const size_t numChannels);
+    static Matrix<> InitMatrix(const size_t numChannels);
 };
 ```
 
@@ -24,51 +28,64 @@ public:
 
 ## Public Methods
 
-### `#!cpp RandomOrthogonalFDN(const Coefficients& T60, const Vec& dimensions, const Config& config)`
-**Constructor.**  
-Initializes a RandomOrthogonalFDN with the given decay time, room dimensions, and configuration.
-- `T60`: Target decay time.
-- `dimensions`: Room dimensions.
-- `config`: Spatialiser configuration.
+### `#!cpp RandomOrthogonalFDN(const Coefficients<>& T60, const Vec<>& dimensions, const std::shared_ptr<DSPConfig>& dspConfig)`
+**Constructor (Real).**  
+Initialises a random-orthogonal FDN with the given target decay time, room dimensions, and DSP configuration.
+
+`T60`: Target decay time per frequency band.  
+`dimensions`: Room dimensions.  
+`dspConfig`: DSP configuration.
+
+---
+
+### `#!cpp RandomOrthogonalFDN(const Real T60, const Vec<int>& delayLengths, const std::shared_ptr<DSPConfig>& dspConfig)`
+**Constructor (Complex).**  
+Initialises a complex-valued random-orthogonal FDN using explicit delay lengths.
+
+`T60`: Target decay time in seconds.  
+`delayLengths`: Delay line lengths (in samples).  
+`dspConfig`: DSP configuration.
 
 ---
 
 ### `#!cpp ~RandomOrthogonalFDN()`
 **Destructor.**  
-Cleans up the RandomOrthogonalFDN.
+Cleans up the random-orthogonal FDN.
 
 ---
 
-### `#!cpp static Matrix InitMatrix(const size_t numChannels)`
-Initializes a random orthogonal matrix for use as the FDN feedback matrix.
-- `numChannels`: Number of FDN channels.
-- **Returns:** Random orthogonal matrix.
+### `#!cpp static Matrix<> InitMatrix(const size_t numChannels)`
+Initialises a random orthogonal feedback matrix.
+
+`numChannels`: The number of FDN channels.  
+**Returns:** A random orthogonal matrix.
 
 ---
 
 ## Implementation Notes
 
-- The random orthogonal matrix is generated using Gram-Schmidt orthogonalization.
-- Used to provide decorrelation and natural-sounding late reverberation in FDNs.
+- Random orthogonal feedback matrices are typically less prone to coloration than simpler matrices such as Householder, at the cost of additional computation.
 
 ## Example Usage
 
 ```cpp
+#include "Spatialiser/Configs.h"
 #include "Spatialiser/FDN.h"
+
 using namespace RAC::Spatialiser;
 
-Coefficients T60 = { 1.2, 1.0, 0.8 };
-Vec dimensions = { 5.0, 4.0, 3.0 };
-Config config;
-config.fs = 48000;
-config.numLateReverbChannels = 3;
-config.numFrames = 512;
+DSPData dsp;
+std::shared_ptr<DSPConfig> dspConfig = std::make_shared<DSPConfig>(dsp);
 
-// Create RandomOrthogonalFDN
-RandomOrthogonalFDN fdn(T60, dimensions, config);
+Coefficients<> T60 = Coefficients<>::Constant(dsp.frequencyBands.Length(), 1.0);
 
-// Process audio
-Matrix input(config.numLateReverbChannels, config.numFrames);
-std::vector<Buffer> output(config.numLateReverbChannels, Buffer(config.numFrames));
-fdn.ProcessAudio(input, output);
+Vec<> dims(std::vector<Real>({ 5.0, 4.0, 3.0 }));
+
+RandomOrthogonalFDN<Real> fdn(T60, dims, dspConfig);
+AudioData audioData(dspConfig);
+
+Matrix<> input(dspConfig->GetData().fdnSize, dspConfig->GetData().numFrames);
+std::vector<Buffer<>> output(dspConfig->GetData().numReverbSources, Buffer<>(dspConfig->GetData().numFrames));
+
+fdn.ProcessAudio(input, output, audioData);
 ```

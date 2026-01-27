@@ -1,5 +1,7 @@
 # LowPass1
 
+Most users will interact with RoomAcoustiC++ through the high-level API in [`Spatialiser/Interface.h`](../spatialiser/interface.md). This page documents lower-level details for advanced usage.
+
 The `LowPass1` class implements a first-order low-pass IIR filter with real-time parameter interpolation.
 It derives from `IIRFilter1`.
 
@@ -18,7 +20,6 @@ class LowPass1 : public IIRFilter1
 public:
     LowPass1(const int sampleRate);
     LowPass1(const Real fc, const int sampleRate);
-    ~LowPass1();
 
     inline void SetTargetFc(const Real fc);
     // ...inherited methods from IIRFilter1...
@@ -39,27 +40,24 @@ private:
 ### `#!cpp LowPass1(const int sampleRate)`
 **Constructor.**  
 Initializes the low-pass filter with the given sample rate and a default cutoff frequency of 1kHz.
-- `sampleRate`: The sample rate for calculating filter coefficients.
+
+`sampleRate`: The sample rate for calculating filter coefficients.
 
 ---
 
 ### `#!cpp LowPass1(const Real fc, const int sampleRate)`
 **Constructor.**  
 Initializes the low-pass filter with the given sample rate and cutoff frequency.
-- `fc`: The cutoff frequency (Hz).
-- `sampleRate`: The sample rate for calculating filter coefficients.
 
----
-
-### `#!cpp ~LowPass1()`
-**Destructor.**  
-Cleans up the filter.
+`fc`: The cutoff frequency (Hz).  
+`sampleRate`: The sample rate for calculating filter coefficients.
 
 ---
 
 ### `#!cpp inline void SetTargetFc(const Real fc)`
 Sets the target cutoff frequency for the filter.
-- `fc`: The cutoff frequency (Hz).
+
+`fc`: The cutoff frequency (Hz).
 
 ---
 
@@ -67,13 +65,15 @@ Sets the target cutoff frequency for the filter.
 
 ### `#!cpp void InterpolateParameters(const Real lerpFactor) override`
 Interpolates between the current cutoff frequency and target cutoff frequency using linear interpolation.
-- `lerpFactor`: Interpolation factor (0.0 to 1.0)
+
+`lerpFactor`: Interpolation factor (0.0 to 1.0)
 
 ---
 
 ### `#!cpp void UpdateCoefficients(const Real fc)`
 Updates the filter coefficients based on the current frequency.
-- `fc`: The cutoff frequency (Hz).
+
+`fc`: The cutoff frequency (Hz).
 
 ---
 
