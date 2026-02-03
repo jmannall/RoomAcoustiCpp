@@ -337,7 +337,7 @@ namespace RAC
 				y.SetConstant(0.0);
 #endif
 
-				// For the purpose of `powerNormalization`, see notes in FDN_private.h
+				// For the purpose of `powerNormalization`, see the notes next to its declaration
 				powerNormalization = 0.0;
 
 				int fdnSize = dspConfig->GetData().fdnSize;
@@ -349,7 +349,7 @@ namespace RAC
 					powerNormalization += static_cast<Real>(delayLengths(i));
 				}
 
-				powerNormalization = std::sqrt(powerNormalization / static_cast<Real>(fdnSize));
+				powerNormalization = std::sqrt(powerNormalization / static_cast<Real>(fdnSize * dspConfig->GetData().fs));
 			}
 
 			/**
@@ -372,7 +372,7 @@ namespace RAC
 				y.SetConstant(0.0);
 #endif
 
-				// For the purpose of `powerNormalization`, see notes in FDN_private.h
+				// For the purpose of `powerNormalization`, see the notes next to its declaration
 				powerNormalization = 0.0;
 
 				int fdnSize = dspConfig->GetData().fdnSize;
@@ -383,7 +383,7 @@ namespace RAC
 					powerNormalization += static_cast<Real>(delayLengths(i));
 				}
 
-				powerNormalization = std::sqrt(powerNormalization / static_cast<Real>(fdnSize));
+				powerNormalization = std::sqrt(powerNormalization / static_cast<Real>(fdnSize * dspConfig->GetData().fs));
 			}
 
 			/**
@@ -454,23 +454,34 @@ namespace RAC
 
 			std::vector<std::unique_ptr<FDNChannel<T>>> mChannels;		// Internal delay line channels
 
-			// TODO: Update to consider numReverbSources is different from fdnSize
-			/* The MoD-ART model relies on the assumption that each FDN's power output starts from a value of 1 at time 0.
-			 * The `powerNormalization` value is used to ensure that is the case. The following is an explanation of what's going on.
+			/* The MoD-ART model relies on the assumption that each FDN's power output (defined below) starts from a value of 1 at time 0.
+			 * The `powerNormalization` value is used to ensure that is the case.
+			 * In short: FDNs should be such that, if the FDN were lossless, taking an average (over any duration of time) of
+			 *  the square of its response would give (1 / sampleRate). Equivalently, taking an average (over any duration of time) of
+			 *  the absolute value of the response would give sqrt(1 / sampleRate).
 			 * 
+			 * What is meant here by "power output" is the envelope of the square of the hypothetical continuous-time impulse response;
+			 *  note that this is a very different definition from an echogram, which is defined as "energy which falls into each time bin."
+			 * The "energy per time bin" definition leads to an envelope value which is dependent on the sample rate used by the echogram;
+			 *  the definition used here does not.
+			 * 
+			 * Let's start by considering what happens in the discrete-time domain, which is how the FDN actually operates.
 			 * Let N be the number of delay lines in the FDN, and let M be the total number of taps in the FDN (sum of delay line lengths).
 			 * Say the FDN receives a single, unit-magnitude impulse as input. The value "1" is copied into the first sample of each delay line.
 			 * The FDN's state now consists of N taps set to 1, and M-N taps set to 0. This (N) is the power which will be circulated through the FDN.
 			 * If the FDN was lossless, this initial power would be circulated indefinitely.
 			 * **IF** the feedback matrix provides good mixing **AND** the delay line lengths provide decorrelated signals, the power would eventually
-			 * be spread uniformly over all taps: each tap would, on average, have a steady power of N/M.
+			 *  be spread uniformly over all taps: each tap would, on average, have a steady power of N/M.
 			 * This power-per-tap is equal to the power-per-sample leaving each delay line: the output signal of a line is just the value of its last tap.
-			 * In other words, the power output of each individual delay line is N/M, and the power output of the whole FDN is N*N/M.
+			 * In other words, the power output of each individual delay line is N/M, and the power output of the whole FDN is L*N/M where L is the number
+			 *  of "reverb sources" reading outputs from the FDN.
 			 * In the case of a lossy FDN (finite T60), these are the starting power values, which then decay exponentially.
 			 * 
 			 * Each (directional) listener residue takes the output of a single delay line, and assumes that its power starts from a value of 1 at time 0.
 			 * In order to achieve this, the FDN's power needs to be multiplied by M/N.
-			 * The value of `powerNormalization` is therefore sqrt(M/N), because it is applied to the audio signal, not to its power.
+			 * THAT IS, IN DISCRETE TIME. The MoD-ART residues, by construction, refer to the continuous-time power -- this normalization needs
+			 *  to be further divided by the sample rate `fs`.
+			 * The value of `powerNormalization` is therefore sqrt(M/(N*fs)), because it is applied to the audio signal, not to its power.
 			 */
 			Real powerNormalization;
 			
@@ -555,7 +566,7 @@ namespace RAC
 			const int channelSize = ToInt(mChannels.size());
 			const int outputBuffersSize = ToInt(outputBuffers.size());
 
-			// For the purpose of `powerNormalization`, see notes in FDN_private.h
+			// For the purpose of `powerNormalization`, see the notes next to its declaration
 			inputData *= powerNormalization;
 
 			// Process feedback loop
