@@ -14,7 +14,7 @@ This section provides an overview of the library's features.
 
 ## Citable References
 
-If you make use of RAC in your own research or other projects, please consider citing the following publication:
+If you make use of RAC in your own research or other projects, please consider citing the following publications:
 
 * Mannall J, Savioja L, Neidhardt A, Mason R, and De Sena E. "RoomAcoustiC++: An open-source room acoustic model for real-time audio simulations,” in Proc. AES Int. Conf. Headphone Tech., Espoo, Finland. 1-13, 2025.
 * Scerbo M, Schlecht SJ, Ali R, Savioja L, and De Sena E. "Efficient multichannel auralization based on the modal decomposition of acoustic radiance transfer (MoD-ART)," in IEEE Trans. Audio, Speech and Language Proc., 33:4748-4759, 2025.
