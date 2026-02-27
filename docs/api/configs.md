@@ -76,7 +76,7 @@ Room configuration used to estimate and/or override late reverberation times.
 Configuration and precomputed data for the MoD-ART late reverberation model.
 
 Other than `minimumT60`, the entries of `MoDARTData` are generated offline and then passed to RoomAcoustiC++ (`InitMoDART`) when the scene is loaded.
-See the [notes about preprocessing](https://github.com/Matteo-Scerbo/RAVES-Preprocessing/) for more details about these parameters.
+See the [notes about preprocessing](https://github.com/IoSR-Surrey/MoD-ART/) for more details about these parameters.
 
 `MoDARTData` extends `LateReverbData`.
 
