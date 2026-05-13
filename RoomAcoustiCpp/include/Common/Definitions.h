@@ -7,6 +7,7 @@
 #define Common_Definitions_h
 
 // C++ headers
+#include <cfloat>
 #include <vector>
 #include <atomic>
 #include <memory>

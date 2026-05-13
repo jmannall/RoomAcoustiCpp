@@ -10,6 +10,7 @@
 
 // C++ headers
 #include <thread>
+#include <optional>
 
 // DSP headers
 #include "DSP/Buffer.h"

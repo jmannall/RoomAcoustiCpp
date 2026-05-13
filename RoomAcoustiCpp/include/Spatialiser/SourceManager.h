@@ -11,6 +11,7 @@
 // C++ headers
 #include <mutex>
 #include <shared_mutex>
+#include <optional>
 
 // Common headers
 #include "Common/Types.h"

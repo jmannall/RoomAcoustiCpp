@@ -10,6 +10,7 @@
 
 // C++ headers
 #include <mutex>
+#include <optional>
 
 // NN headers
 #include "rtwtypes.h"

@@ -11,6 +11,7 @@
 // C++ headers
 #include <cassert>
 #include <memory>
+#include <optional>
 
 // DSP headers
 #include "DSP/IIRFilter.h"

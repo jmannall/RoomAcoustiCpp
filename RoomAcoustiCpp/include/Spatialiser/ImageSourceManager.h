@@ -10,6 +10,7 @@
 
 // C++ headers
 #include <array>
+#include <optional>
 
 // Spatialiser headers
 #include "Spatialiser/ImageSource.h"

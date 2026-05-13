@@ -421,10 +421,10 @@ namespace RAC
 				IntegralLimits zn1 = CalculateLimits((n - 0.5) / samplesPerMetre, constants);
 				IntegralLimits zn2 = CalculateLimits((n + 0.5) / samplesPerMetre, constants);
 
-				if (isnan(zn2.p))	// Both limits of integration are imaginary
+				if (std::isnan(zn2.p))	// Both limits of integration are imaginary
 					return 0.0;		// Entire sample has no existing edge
 
-				if (isnan(zn1.p))	// Only lower limit of integration is imaginary
+				if (std::isnan(zn1.p))	// Only lower limit of integration is imaginary
 				{					// Instead start integrating at apex point
 					zn1.p = 0.0;
 					zn1.m = 0.0;

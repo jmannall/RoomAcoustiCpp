@@ -36,7 +36,7 @@ namespace RAC
 			{
 				Vec3 k = UnitVector(data->point - mEdge.GetEdgeCoord(data->z));
 				data->t = acos(Dot(k, mEdge.GetEdgeNormal()));
-				data->rot = signbit(Dot(Cross(k, mEdge.GetEdgeNormal()), mEdge.GetEdgeVector()));
+				data->rot = std::signbit(Dot(Cross(k, mEdge.GetEdgeNormal()), mEdge.GetEdgeVector()));
 			}
 
 			////////////////////////////////////////

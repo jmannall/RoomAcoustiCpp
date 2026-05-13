@@ -7,7 +7,11 @@
 
 #pragma once
 
-#if defined(_OPENMP_LLVM_RUNTIME)
+#if !defined(_WIN32) && !defined(_WIN64)
+
+#include_next <omp.h>
+
+#elif defined(_OPENMP_LLVM_RUNTIME)
 
 #include <omp_llvm.h>
 

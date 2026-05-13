@@ -10,6 +10,7 @@
 
 // C++ headers
 #include <tuple>
+#include <optional>
 
 // Common headers
 #include "Common/Matrix.h"
