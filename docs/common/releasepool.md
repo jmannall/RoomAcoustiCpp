@@ -1,5 +1,7 @@
 Garbage collector for shared pointers, periodically erasing unreferenced objects.
 
+Most users will interact with RoomAcoustiC++ through the high-level API in [`Spatialiser/Interface.h`](../spatialiser/interface.md). This page documents lower-level details for advanced usage.
+
 - **Namespace:** *(global)*
 - **Header:** `Common/ReleasePool.h`
 - **Source:** *(header only)*

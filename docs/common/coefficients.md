@@ -1,4 +1,8 @@
-Stores and manipulates arbitrary coefficient vectors or arrays, with arithmetic and utility operations.
+Stores and manipulates coefficient arrays, most commonly used for **frequency-dependent parameters** (e.g., absorption, T60, band gains).
+
+Most users will interact with RoomAcoustiC++ through the high-level API in [`Spatialiser/Interface.h`](../spatialiser/interface.md). This page documents lower-level details for advanced usage.
+
+`Coefficients<>` behaves like a 1D array of `Real` values, with convenience methods for sizing, initialisation and common element-wise transforms.
 
 - **Namespace:** `RAC::Common`
 - **Header:** `Common/Coefficients.h`
@@ -7,195 +11,74 @@ Stores and manipulates arbitrary coefficient vectors or arrays, with arithmetic 
 
 ---
 
-## Class Definition
+## Type Definition
+
+`Coefficients` is a template:
 
 ```cpp
-template <class T = std::vector<Real>>
-class Coefficients
-{
-public:
-    Coefficients(const Real in);
-    Coefficients(const int len);
-    Coefficients(const int len, const Real in);
-    Coefficients(const T& coefficients);
-    ~Coefficients();
-
-    inline void Update(const T& coefficients);
-    inline int Length() const;
-    inline Coefficients Log();
-    inline Coefficients Pow10();
-    inline Coefficients Sqrt();
-    inline Real& operator[](const size_t i);
-    inline Real operator[](const size_t i) const;
-    inline Coefficients& operator=(Real x);
-    inline Coefficients& operator-();
-    inline Coefficients& operator+=(const Coefficients& v);
-    inline Coefficients& operator-=(const Coefficients& v);
-    inline Coefficients& operator*=(const Coefficients& v);
-    inline Coefficients& operator/=(const Coefficients& v);
-    inline Coefficients& operator+=(const Real a);
-    inline Coefficients& operator*=(const Real a);
-    inline Coefficients& operator/=(const Real a);
-    inline bool operator<(const Real a) const;
-    inline bool operator>(const Real a) const;
-    inline bool operator<=(const Real a) const;
-    inline bool operator>=(const Real a) const;
-    inline auto begin();
-    inline auto end();
-    inline const auto begin() const;
-    inline const auto end() const;
-
-protected:
-    T mCoefficients;
-};
+template <typename T = Real, /*dynamic or fixed size*/>
+using Coefficients = /* 1D coefficient array */;
+Coefficients<> c; // Defaults to Real
 ```
 
 ---
 
-## Public Methods
+## Common Operations
 
-### `#!cpp Coefficients(const Real in)`
-Initializes all coefficients to a value.
-- `in`: Value for all coefficients.
-
----
-
-### `#!cpp Coefficients(const int len)`
-Initializes with zeros.
-- `len`: Number of coefficients.
-
----
-
-### `#!cpp Coefficients(const int len, const Real in)`
-Initializes with a value.
-- `len`: Number of coefficients.
-- `in`: Value for all coefficients.
-
----
-
-### `#!cpp Coefficients(const T& coefficients)`
-Initializes from a vector or array.
-- `coefficients`: Data.
-
----
-
-### `#!cpp ~Coefficients()`
-Destructor.
-
----
-
-### `#!cpp inline void Update(const T& coefficients)`
-Updates the coefficients.
-- `coefficients`: New data.
-
----
-
-### `#!cpp inline int Length() const`
+### `#!cpp int Length() const`
 Returns the number of coefficients.
 
 ---
 
-### `#!cpp inline Coefficients Log()`
-Applies log to each coefficient.
+### `#!cpp void Reset()`
+Sets all coefficients to 0.
 
 ---
 
-### `#!cpp inline Coefficients Pow10()`
-Applies 10^x to each coefficient.
+### `#!cpp Coefficients Log() const`
+Returns element-wise natural logarithm.
 
 ---
 
-### `#!cpp inline Coefficients Sqrt()`
-Applies sqrt to each coefficient.
+### `#!cpp Coefficients Pow10() const`
+Returns element-wise `10^x`.
 
 ---
 
-### `#!cpp inline Real& operator[](const size_t i)`
-Access by index.
+### `#!cpp Coefficients Pow(Real exponent) const`
+Returns element-wise `x^exponent`.
 
 ---
 
-### `#!cpp inline Real operator[](const size_t i) const`
-Access by index (const).
+### `#!cpp Coefficients Sqrt() const`
+Returns element-wise square root.
 
 ---
 
-### `#!cpp inline Coefficients& operator=(Real x)`
-Sets all coefficients to `x`.
+### `#!cpp Coefficients Square() const`
+Returns element-wise square.
 
 ---
 
-### `#!cpp inline Coefficients& operator-()`
-Negates all coefficients.
+### `#!cpp Coefficients Abs() const`
+Returns element-wise absolute value.
 
 ---
 
-### `#!cpp inline Coefficients& operator+=(const Coefficients& v)`
-Adds another set of coefficients.
+### `#!cpp Coefficients Sin() const`
+Returns element-wise sine.
 
 ---
 
-### `#!cpp inline Coefficients& operator-=(const Coefficients& v)`
-Subtracts another set of coefficients.
+### `#!cpp Coefficients Cos() const`
+Returns element-wise cosine.
 
 ---
 
-### `#!cpp inline Coefficients& operator*=(const Coefficients& v)`
-Element-wise multiply.
+### Indexing
+Access coefficients using the container's indexing operator.
 
 ---
-
-### `#!cpp inline Coefficients& operator/=(const Coefficients& v)`
-Element-wise divide.
-
----
-
-### `#!cpp inline Coefficients& operator+=(const Real a)`
-Adds a value to all coefficients.
-
----
-
-### `#!cpp inline Coefficients& operator*=(const Real a)`
-Multiplies all coefficients by a value.
-
----
-
-### `#!cpp inline Coefficients& operator/=(const Real a)`
-Divides all coefficients by a value.
-
----
-
-### `#!cpp inline bool operator<(const Real a) const`
-True if all coefficients < a.
-
----
-
-### `#!cpp inline bool operator>(const Real a) const`
-True if all coefficients > a.
-
----
-
-### `#!cpp inline bool operator<=(const Real a) const`
-True if all coefficients <= a.
-
----
-
-### `#!cpp inline bool operator>=(const Real a) const`
-True if all coefficients >= a.
-
----
-
-## Internal Data Members
-
-- `#!cpp T mCoefficients`: Array or vector of coefficients.
-
----
-
-## Implementation Notes
-
-- Supports element-wise and scalar arithmetic.
-- Operator overloads for arithmetic and comparison.
-- Includes utility functions: `Sin`, `Cos`, `Abs`, `Sum`, `Pow`.
 
 ## Example Usage
 
@@ -203,8 +86,11 @@ True if all coefficients >= a.
 #include "Common/Coefficients.h"
 using namespace RAC::Common;
 
-Coefficients<> c(4, 1.0);
-c[2] = 2.0;
-c += 1.0;
-auto s = Sum(c);
+// 4-band coefficient vector
+Coefficients<> c(std::vector<Real>({0.2, 0.3, 0.4, 0.5}));
+
+int n = c.Length();
+
+// Convert from dB-like values using 10^x
+Coefficients<> linear = c.Pow10();
 ```

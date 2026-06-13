@@ -38,7 +38,8 @@ namespace RAC
 				if (!SetTargetIR(ir))
 					return;
 
-				assert(ir.Length() <= maxSize);
+				RAC_DEBUG_ASSERT(ir.Length() <= maxSize, "Length exceeds max length of the filter");
+
 #ifdef __ANDROID__
 				irLength = std::atomic_load(&targetIR)->Length();
 #else
@@ -46,15 +47,22 @@ namespace RAC
 #endif
 				oldIrLength = irLength;
 
+#if MATRIX_LIBRARY == EIGEN_FLAG
+				inputLine.Reset(); // Initialise to zero
+				currentIR.Reset();
+#endif
 				std::copy(ir.begin(), ir.end(), currentIR.begin());
+
 				irsEqual.store(true, std::memory_order_release);
 				initialised.store(true, std::memory_order_release);
 			};
 			
 			/**
-			* @brief Default deconstructor
-			*/
-			~FIRFilter() {};
+			 * @brief Returns if this filter is valid.
+			 *
+			 * @return true if the valid is valid and GetOutput() can be called.
+			 */
+			bool IsValid() const { return initialised.load(std::memory_order_acquire); }
 
 			/**
 			* @brief Returns the output of the FIRFilter given an input
@@ -63,7 +71,7 @@ namespace RAC
 			* @param lerpFactor The lerp factor for interpolation
 			* @return The output of the FIRFilter
 			*/
-			Real GetOutput(const Real input, const Real lerpFactor);
+			virtual Real GetOutput(const Real input, const Real lerpFactor);
 
 			/**
 			* @brief Atomically sets the new target impulse response
@@ -74,37 +82,41 @@ namespace RAC
 			bool SetTargetIR(const Buffer<>& ir);
 
 			/**
-			* @brief Set flag to clear input line to zeros next time GetOutput is called
+			* @brief Set the internal input line to zeros
 			*/
-			inline void Reset() { clearInputLine.store(true, std::memory_order_release); }
+			inline void ClearBuffers() { inputLine.Reset(); }
+
+		protected:
+			const int maxFilterLength;	// Maximum filter length
+			size_t irLength;		// Length of the current impulse response (should only be accessed from the audio thread)
+
+			std::atomic<bool> initialised;		// True if the filter has been initialised, false otherwise
+            
+			Buffer<> currentIR;	// Current impulse response buffer (should only be accessed from the audio thread)
+			Buffer<> inputLine;	// Input line buffer (should only be accessed from the audio thread)
+
+			int count{ 0 };			// Index for the next sample entry to the input line buffer (should only be accessed from the audio thread)
 
 		private:
 
 			/*
 			* @brief Linearly interpolates the current impulse response with the target impulse response
-			* 
+			*
 			* @param lerpFactor The lerp factor for interpolation
 			*/
 			void InterpolateIR(const Real lerpFactor);
-				
-            const int maxFilterLength;	// Maximum filter length
 
 #ifdef __ANDROID__
-			std::shared_ptr<Buffer<>> targetIR;	// Target impulse response
+			std::shared_ptr<Buffer<>> targetIR;		// Target impulse response
 #else
 			std::atomic<std::shared_ptr<const Buffer<>>> targetIR;	// Target impulse response
 #endif
 
-			Buffer<> currentIR;	// Current impulse response buffer (should only be accessed from the audio thread)
-			Buffer<> inputLine;	// Input line buffer (should only be accessed from the audio thread)
+			
 
-			size_t irLength;		// Length of the current impulse response (should only be accessed from the audio thread)
 			size_t oldIrLength;		// Previous length of the impulse response (should only be accessed from the audio thread)
-			int count{ 0 };			// Index for the next sample entry to the input line buffer (should only be accessed from the audio thread)
 
-			std::atomic<bool> clearInputLine;	// Flag to clear input line
 			std::atomic<bool> irsEqual;			// True if the current impulse response is known to be equal to the target impulse response
-			std::atomic<bool> initialised;		// True if the filter has been initialised, false otherwise
 
 			static ReleasePool releasePool;		// Garbage collector for shared pointers after atomic replacement
 		};

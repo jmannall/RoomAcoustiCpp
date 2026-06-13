@@ -3,16 +3,18 @@
 *
 */
 
+#include <random>
+
 //Common headers
 #include "Common/RACProfiler.h"
+#include "Common/FileReader.h"
+#include "Common/Access.h"
+#include "Common/Debug.h"
 
 // Spatialiser headers
 #include "Spatialiser/Globals.h"
 #include "Spatialiser/Context.h"
 #include "Spatialiser/Types.h"
-
-// Unity headers
-#include "Unity/Debug.h"
 
 // 3DTI headers
 #include "HRTF/HRTFFactory.h"
@@ -24,11 +26,14 @@
 std::shared_mutex RAC::DSP::tuneInMutex;
 std::unique_ptr<RAC::DSP::AudioThreadPool> RAC::DSP::audioThreadPool;
 
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#include <windows.h>
+#endif
+
 namespace RAC
 {
-#ifdef USE_UNITY_DEBUG
-	using namespace Unity;
-#endif
 	using namespace DSP;
 	using namespace Common;
 	namespace Spatialiser
@@ -40,18 +45,22 @@ namespace RAC
 #endif
 #endif
 
-		//////////////////// Background Thread ////////////////////
+		//////////////////// IEM Thread ////////////////////
 
-		void BackgroundProcessor(Context* context)
+		////////////////////////////////////////
+
+		void IEMProcessor(Context* context)
 		{
 
-#ifdef DEBUG_INIT
-			Debug::Log("Begin background thread", Colour::Green);
-#endif
+			RAC_DEBUG_LOG("Begin image edge model thread", DebugType::Init);
+
 #ifdef USE_UNITY_PROFILER
-			RegisterBackgroundThread();
+			RegisterIEMThread();
 #endif
-			std::shared_ptr<Room> room = context->GetRoom();
+#ifdef _WIN32
+			SetThreadDescription(GetCurrentThread(), L"IEMProcessor");
+#endif
+
 			std::shared_ptr<ImageEdge> imageEdgeModel = context->GetImageEdgeModel();
 
 			const int loopInterval_ms = 10;
@@ -69,68 +78,115 @@ namespace RAC
 			}
 
 #ifdef USE_UNITY_PROFILER
-			UnregisterBackgroundThread();
+			UnregisterIEMThread();
 #endif
-#ifdef DEBUG_REMOVE
-			Debug::Log("End background thread", Colour::Red);
+
+			RAC_DEBUG_LOG("End image edge model thread", DebugType::Remove);
+		}
+
+		//////////////////// Ray Tracing Thread ////////////////////
+
+		////////////////////////////////////////
+
+		void RayTracerProcessor(Context* context)
+		{
+
+			RAC_DEBUG_LOG("Begin racy tracing thread", DebugType::Init);
+
+#ifdef USE_UNITY_PROFILER
+			RegisterRayTracingThread();
 #endif
+			std::shared_ptr<TracingThread> rayTracing = context->GetRayTracing();
+
+			const int loopInterval_ms = 50;
+			while (context->IsRunning())
+			{
+				auto startTime = std::chrono::steady_clock::now();
+
+				// Update RTM
+				rayTracing->RunTracing();
+
+				auto endTime = std::chrono::steady_clock::now();
+				auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
+				if (elapsedTime < loopInterval_ms)
+					std::this_thread::sleep_for(std::chrono::milliseconds(loopInterval_ms - elapsedTime));
+			}
+
+#ifdef USE_UNITY_PROFILER
+			UnregisterRayTracingThread();
+#endif
+
+			RAC_DEBUG_LOG("End ray tracing thread", DebugType::Remove);
 		}
 
 		//////////////////// Context ////////////////////
 
+#if defined(SWITCH_ON_3DTI_ERRORHANDLER) 
+		static DebugLogStreamBuffer logBuffer;
+		static std::ostream logStream(&logBuffer);
+#endif
+
 		////////////////////////////////////////
 
-		Context::Context(const std::shared_ptr<Config> config) : mConfig(config), mIsRunning(true), IEMThread(), applyHeadphoneEQ(false), headphoneEQ(2048)
+		Context::Context(const DSPData& data,const ContextOptionalArguments& optionalArguments)
+		: dspConfig(std::make_shared<DSPConfig>(data)), mIsRunning(true), IEMThread(), rayTracingThread(), applyHeadphoneEQ(false), headphoneEQ(2048), dcBlocker(data.fs)
 		{
-#ifdef DEBUG_INIT
-			Debug::Log("Init Context", Colour::Green);
-#endif
+			RAC_DEBUG_LOG("Init Context", DebugType::Init);
+
+#if defined(SWITCH_ON_3DTI_ERRORHANDLER) 
+			CErrorHandler::Instance().SetErrorLogStream(&logStream, true);
 			CErrorHandler::Instance().SetAssertMode(ASSERT_MODE_CONTINUE);
 			CErrorHandler::Instance().SetVerbosityMode(VERBOSITYMODE_ERRORSANDWARNINGS);
-			std::string timestamp = GetTimestamp();
-			logFile = GetLogPath(timestamp);
-			CErrorHandler::Instance().SetErrorLogFile(logFile, true);
-
-#ifdef PROFILE_BACKGROUND_THREAD || PROFILE_AUDIO_THREAD
-			profileFile = GetProfilePath(timestamp);
-			Profiler::Instance().SetOutputFile(profileFile, true);
 #endif
 
+#if defined(PROFILE_BACKGROUND_THREAD) || defined(PROFILE_AUDIO_THREAD)
+			if (!optionalArguments.logPrefix.empty())
+				Profiler::Instance().SetOutputFile(optionalArguments.logPrefix + "_profile.txt", true);
+#endif
+
+			// TODO: Comment frame rate doesn't change at runtime
 			// Set dsp settings
-			mCore.SetAudioState({ mConfig->fs, mConfig->numFrames });
+			mCore.SetAudioState({ dspConfig->GetData().fs, dspConfig->GetData().numFrames });
 
 			// Create listener
 			mListener = mCore.CreateListener();
 			headRadius = mListener->GetHeadRadius();
 
-			InitialiseAudio();
-			mRoom = std::make_shared<Room>(mConfig->frequencyBands.Length());
-			mSources = std::make_shared<SourceManager>(&mCore, mConfig);
-			mImageEdgeModel = std::make_shared<ImageEdge>(mRoom, mSources, mReverb, mConfig);
-			
+			if (optionalArguments.desiredAudioThreads.has_value())
+				numDesiredWorkerThreads = optionalArguments.desiredAudioThreads.value();
+			else
+				numDesiredWorkerThreads = std::min((unsigned int)8, std::thread::hardware_concurrency());
+
+			mSources = std::make_shared<SourceManager>(&mCore, dspConfig);
+			mRoom = std::make_shared<Room>(dspConfig->GetData().numFrequencyBands);
+
 			// Initialize NNs
 			myNN_initialize();
-
-			// Start background thread after all systems are initialized
-			IEMThread = std::thread(BackgroundProcessor, this);
 		}
 
 		////////////////////////////////////////
 
 		Context::~Context()
 		{
-#ifdef DEBUG_REMOVE
-			Debug::Log("Exit Context", Colour::Red);
-#endif
+			RAC_DEBUG_LOG("Exit Context", DebugType::Remove);
+
 			StopRunning();
-			IEMThread.join();
-			if (audioThreadPool)
-				audioThreadPool->Stop();
+			if (IEMThread.joinable())
+				IEMThread.join();
+			if (rayTracingThread.joinable())
+				rayTracingThread.join();
 
 			mImageEdgeModel.reset();
+			mRayTracing.reset();
+
+			AtomicFlagGuard guard(audioFlag);
+
 			mSources.reset();
 			mRoom.reset();
 			mReverb.reset();
+
+			if (audioThreadPool)
+				audioThreadPool->Stop();
 			audioThreadPool.reset();
 
 			// Terminate NNs
@@ -139,17 +195,10 @@ namespace RAC
 			unique_lock<shared_mutex> lock(tuneInMutex);
 			mCore.RemoveListener();
 
-			CErrorHandler::Instance().SetErrorLogFile(logFile, false); // Disable logging to file
-			if (!logFile.empty())
-			{
-				std::ifstream f(logFile);	// Delete file if it is empty
-				if (f.good() && f.peek() == std::ifstream::traits_type::eof())
-				{
-					f.close();
-					std::remove(logFile.c_str());
-				}
-			}
-#ifdef PROFILE_BACKGROUND_THREAD || PROFILE_AUDIO_THREAD
+#if defined(SWITCH_ON_3DTI_ERRORHANDLER)
+			CErrorHandler::Instance().SetErrorLogStream(&logStream, false); // Disable logging to stream
+#endif
+#if defined(PROFILE_BACKGROUND_THREAD) || defined(PROFILE_AUDIO_THREAD)
 			Profiler::Instance().SetOutputFile(profileFile, false);
 #endif
 		}
@@ -168,6 +217,9 @@ namespace RAC
 
 		bool Context::LoadSpatialisationFiles(const int hrtfResamplingStep, const std::vector<std::string>& filePaths)
 		{
+			RAC_DEBUG_ASSERT(hrtfResamplingStep > 0, "Invalid HRTF resampling step: " + ToString(hrtfResamplingStep));
+			RAC_DEBUG_ASSERT(filePaths.size() == 3, "Invalid number of file paths");
+
 			unique_lock<shared_mutex> lock(tuneInMutex);
 
 			// Set HRTF resampling step
@@ -185,52 +237,169 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Context::UpdateSpatialisationMode(const SpatialisationMode mode)
+		void Context::UpdateMoDARTDelay(const Real delay)
 		{
-			mConfig->spatialisationMode.store(mode, std::memory_order_release);
-			mReverb->UpdateSpatialisationMode(mode);
-			mSources->UpdateSpatialisationMode(mode);
+			RAC_DEBUG_ASSERT(delay >= 0, "Invalid MoD-ART delay: " + ToString(delay));
+
+			if (!lateReverbInitialised.load(std::memory_order_acquire))
+				return;
+
+			AtomicFlagGuard guard(audioFlag);
+
+			mReverb->SetPrecedingDelay(delay, dspConfig->GetData().fs);
+			ResetLateReverb();
 		}
 
 		////////////////////////////////////////
 
-		void Context::UpdateReverbTime(const ReverbFormula model)
+		void Context::UpdateMoDARTMinimumReverbTime(const Real T60)
 		{
-			mRoom->UpdateReverbTimeFormula(model);
-			mReverb->SetTargetT60(mRoom->GetReverbTime());
+			RAC_DEBUG_ASSERT(T60 > 0, "Invalid MoD-ART minimum reverb time: " + ToString(T60));
+
+			if (lateReverbInitialised.load(std::memory_order_acquire))
+				mReverb->SetMinimumT60(T60);
 		}
 
 		////////////////////////////////////////
 
-		void Context::UpdateReverbTime(const Coefficients<>& T60)
+		void Context::UpdateSingleFDNReverbTime(const ReverbFormula model)
 		{
+			if (lateReverbInitialised.load(std::memory_order_acquire))
+				mReverb->SetTargetT60(mRoom->GetReverbTime(model));
+		}
+
+		////////////////////////////////////////
+
+		void Context::UpdateSingleFDNReverbTime(const Coefficients<>& T60)
+		{
+			RAC_DEBUG_ASSERT(T60.IsGreaterThan(0), "Invalid Single FDN reverb time: " + ToString(T60));
+
 			mRoom->UpdateReverbTime(T60);
-			mReverb->SetTargetT60(mRoom->GetReverbTime());
+			if (lateReverbInitialised.load(std::memory_order_acquire))
+				mReverb->SetTargetT60(T60);
 		}
 
 		////////////////////////////////////////
 
 		void Context::UpdateDiffractionModel(const DiffractionModel model)
 		{
-			mConfig->diffractionModel.store(model, std::memory_order_release);
-			mImageEdgeModel->UpdateDiffractionModel(model);
+			dspConfig->UpdateDiffractionModel(model);
 			mSources->UpdateDiffractionModel(model);
+
+			if (earlyReverbInitialised.load(std::memory_order_acquire))
+				mImageEdgeModel->UpdateDiffractionModel(model);
 		}
 
 		////////////////////////////////////////
 
-		bool Context::InitLateReverb(const Real volume, const Vec& dimensions, const FDNMatrix matrix)
+		void Context::CreateAudioThreadPool()
 		{
-			if (dimensions.Rows() == 0)
+			RAC_DEBUG_ASSERT(!audioThreadPool, "Audio thread pool already created");
+			audioThreadPool = std::make_unique<AudioThreadPool>(numDesiredWorkerThreads, dspConfig);
+		}
+
+
+		////////////////////////////////////////
+
+		bool Context::InitEarlyReverb(const bool enabled, const EarlyReverbData& data, const DiffractionModel model)
+		{
+			if (earlyReverbInitialised.load(std::memory_order_acquire))
 			{
-#ifdef DEBUG_INIT
-				Debug::Log("No dimensions provided for room", Colour::Red);
-#endif
+				RAC_DEBUG_LOG("Early reverb already initialized", DebugType::Warning);
 				return false;
 			}
 
-			Coefficients T60 = mRoom->GetReverbTime(volume);
-			mReverb->InitLateReverb(T60, dimensions, matrix, mConfig);
+			RAC_DEBUG_ASSERT(data.reflOrder >= 0 , "Invalid reflection order: " + ToString(data.reflOrder));
+			RAC_DEBUG_ASSERT(data.shadowDiffOrder >= 0, "Invalid shadow diffraction order: " + ToString(data.shadowDiffOrder));
+			RAC_DEBUG_ASSERT(data.specularDiffOrder >= 0, "Invalid specular diffraction order: " + ToString(data.specularDiffOrder));
+			RAC_DEBUG_ASSERT(data.minEdgeLength >= 0, "Invalid minimum edge length: " + ToString(data.minEdgeLength));
+			RAC_DEBUG_ASSERT(data.maxPathLength >= 0, "Invalid maximum path length: " + ToString(data.maxPathLength));
+
+			UpdateDiffractionModel(model);
+			mImageEdgeModel = std::make_shared<ImageEdge>(mRoom, mSources, data, dspConfig);
+
+			// Start background thread after all systems are initialized
+			IEMThread = std::thread(IEMProcessor, this);
+
+			EnableEarlyReverb(enabled);
+			earlyReverbInitialised.store(true, std::memory_order_release);
+
+			return true;
+		}
+
+		////////////////////////////////////////
+
+		void Context::InitLateReverb(const LateReverbData& data)
+		{
+			RAC_DEBUG_ASSERT(data.numRays >= 0, "Invalid number of rays: " + ToString(data.numRays));
+
+			auto dimensions = dspConfig->GetReverbInputDimensions();
+			mReverbInput = Matrix<>::Zero(dimensions.first, dimensions.second);
+
+			// Start background thread after all systems are initialized
+			rayTracingThread = std::thread(RayTracerProcessor, this);
+			EnableLateReverb(data.enabled);
+		}
+
+		////////////////////////////////////////
+
+		bool Context::InitSingleFDN(const RoomData& roomData, const LateReverbData& data)
+		{
+			if (lateReverbInitialised.load(std::memory_order_acquire))
+			{
+				RAC_DEBUG_LOG("Late reverb already initialized", DebugType::Warning);
+				return false;
+			}
+
+			RAC_DEBUG_ASSERT(data.numRays >= 0, "Invalid number of rays: " + ToString(data.numRays));
+			RAC_DEBUG_ASSERT(roomData.volume > 0, "Invalid room volume: " + ToString(roomData.volume));
+			RAC_DEBUG_ASSERT(roomData.dimensions.Length() > 0, "No room dimensions provided");
+			RAC_DEBUG_ASSERT(roomData.dimensions.IsGreaterThan(0), "Invalid room dimensions: " + ToString(roomData.dimensions));
+			RAC_DEBUG_ASSERT(roomData.customT60.IsGreaterThan(0), "Invalid custom room reverb time: " + ToString(roomData.customT60));
+
+			AtomicFlagGuard guard(audioFlag);
+
+			mRoom->UpdateRoomData(roomData);
+			dspConfig->UpdateLateReverbModel(LateReverbModel::fdn, 1);
+			mReverb = std::make_shared<SingleFDN>(&mCore, mRoom->GetReverbTime(), mRoom->GetDimensions(), data, dspConfig);
+			mRayTracing = std::make_shared<SingleFDNTracing>(mRoom, mSources, mReverb, data, dspConfig);
+
+			InitLateReverb(data);
+
+			mRoom->CreateTriangleMeshSoA();
+
+			lateReverbInitialised.store(true, std::memory_order_release);
+			return true;
+		}
+
+		////////////////////////////////////////
+
+		bool Context::InitMoDART(const MoDARTData& data)
+		{
+			if (lateReverbInitialised.load(std::memory_order_acquire))
+				return false;
+
+			RAC_DEBUG_ASSERT(data.numRays >= 0, "Invalid number of rays: " + ToString(data.numRays));
+			RAC_DEBUG_ASSERT(data.delay >= 0, "Invalid delay: " + ToString(data.delay));
+			RAC_DEBUG_ASSERT(data.minimumT60 >= 0, "Invalid minimum reverb time: " + ToString(data.minimumT60));
+			RAC_DEBUG_ASSERT(data.t60s.IsGreaterThan(0), "Invalid reverb times: " + ToString(data.t60s));
+			RAC_DEBUG_ASSERT(data.energyDecay.IsGreaterThan(0), "Invalid energy decays: " + ToString(data.energyDecay));
+			RAC_DEBUG_ASSERT(data.frequencyIndexing.IsGreaterThan(-1), "Invalid frequency indexing: " + ToString(data.frequencyIndexing));
+			// RAC_DEBUG_ASSERT(data.frequencyIndexing.IsLessThan(), "Invalid frequency indexing: " + ToString(data.frequencyIndexing));
+			// TODO: Further validation of indexing and eigenvectors?
+
+			AtomicFlagGuard guard(audioFlag);
+
+			dspConfig->UpdateLateReverbModel(LateReverbModel::raves, ToInt(data.t60s.Length()));
+			mReverb = std::make_shared<RAVES>(&mCore, data, dspConfig);
+			mRayTracing = std::make_shared<MoDARTTracing>(mRoom, mSources, mReverb, data, dspConfig);
+
+			InitLateReverb(data);
+
+			mSources->UpdateMoDARTParameters(data.frequencyIndexing, dspConfig->GetData().numFrames);
+			mRoom->CreateTriangleMeshSoA();
+
+			lateReverbInitialised.store(true, std::memory_order_release);
 			return true;
 		}
 
@@ -242,32 +411,56 @@ namespace RAC
 
 			// Set listener position and orientation
 			CTransform transform;
-			transform.SetOrientation(CQuaternion(static_cast<float>(orientation.w), static_cast<float>(orientation.x), static_cast<float>(orientation.y), static_cast<float>(orientation.z)));
-			transform.SetPosition(CVector3(static_cast<float>(position.x), static_cast<float>(position.y), static_cast<float>(position.z)));
+			transform.SetOrientation(CQuaternion(static_cast<float>(orientation.w()), static_cast<float>(orientation.x()), static_cast<float>(orientation.y()), static_cast<float>(orientation.z())));
+			transform.SetPosition(CVector3(static_cast<float>(position.x()), static_cast<float>(position.y()), static_cast<float>(position.z())));
 			
 			{
 				unique_lock<shared_mutex> lock(tuneInMutex);
 				mListener->SetListenerTransform(transform);
 			}
-			mReverb->UpdateReverbSourcePositions(position);
-			mImageEdgeModel->SetListenerPosition(position);
+			if (lateReverbInitialised.load(std::memory_order_acquire))
+			{
+				mReverb->UpdateReverbSourcePositions(position);
+				mRayTracing->SetListenerPosition(position);
+			}
+			else
+				RAC_DEBUG_LOG("Late reverb not initialised when updating listener position", DebugType::Warning);
+
+			if (earlyReverbInitialised.load(std::memory_order_acquire))
+				mImageEdgeModel->SetListenerPosition(position);
+			else
+				RAC_DEBUG_LOG("Early reverb not initialised when updating listener position", DebugType::Warning);
+
+			listenerInitialised = true;
 		}
 
 		////////////////////////////////////////
 
 		int Context::InitSource()
 		{
-#ifdef DEBUG_INIT
-	Debug::Log("Init Source", Colour::Green);
-#endif
-			return mSources->Init();
+			RAC_DEBUG_LOG("Init Source", DebugType::Init);
+			int id = mSources->Init();
+			RAC_DEBUG_ASSERT(id >= 0, "Failed to initialise source");
+			return id;
 		}
 
 		////////////////////////////////////////
 
 		void Context::UpdateSource(size_t id, const Vec3& position, const Vec4& orientation)
 		{
-			Real distance = (position - listenerPosition).Length();
+			if (!listenerInitialised)
+			{
+				RAC_DEBUG_LOG("Update Source called before listener initialised", DebugType::Warning);
+				return;
+			}
+
+			if (id >= MAX_SOURCES)
+			{
+				RAC_DEBUG_LOG("Invalid source ID", DebugType::Error);
+				return;
+			}
+
+			Real distance = (position - listenerPosition).Normal();
 
 			// Ensure source is outside listener head radius
 			if (distance < headRadius)
@@ -276,14 +469,15 @@ namespace RAC
 				if (distance == 0.0)
 				{
 					newPosition = mSources->GetSourcePosition(id);
-					if (!newPosition.has_value())
-						return; // Exit if source position is not found
+					RAC_DEBUG_LOG("Source position coincides with listener position. Using previous source position", DebugType::Warning);
 				}
-
-				distance = (newPosition.value() - listenerPosition).Length();
+				distance = (newPosition - listenerPosition).Normal();
 				if (distance == 0.0)
-					newPosition = listenerPosition + Vec3(1.0,0.0,0.0);
-				newPosition = listenerPosition + UnitVector(newPosition.value() - listenerPosition) * headRadius;
+				{
+					newPosition = listenerPosition + Vec3(1.0, 0.0, 0.0);
+					RAC_DEBUG_LOG("Previous source position coincides with listener position. Defaulting source position to in front of the listener", DebugType::Warning);
+				}
+				newPosition = listenerPosition + (newPosition - listenerPosition).Normalised() * headRadius;
 
 				// Update source position, orientation and virtual sources
 				mSources->Update(id, newPosition.value(), orientation, headRadius);
@@ -297,61 +491,45 @@ namespace RAC
 
 		void Context::RemoveSource(size_t id)
 		{
-
-#ifdef DEBUG_REMOVE
-	Debug::Log("Remove Source", Colour::Red);
-#endif
+			RAC_DEBUG_LOG("Remove Source", DebugType::Remove);
+			if (id >= MAX_SOURCES)
+			{
+				RAC_DEBUG_LOG("Invalid source ID", DebugType::Error);
+				return;
+			}
 			mSources->Remove(id);
 		}
 
 		////////////////////////////////////////
 
-		int Context::InitWall(const Vertices& vertices, const Absorption<>& absorption)
+		void Context::UpdateMaterial(size_t id, const Coefficients<>& material)
 		{
-#ifdef DEBUG_INIT
-			Debug::Log("Init Wall", Colour::Green);
-#endif
-			if (absorption.Length() != mConfig->frequencyBands.Length())
-			{
-#ifdef DEBUG_INIT
-				Debug::Log("Absorption coefficients length does not match frequency bands length", Colour::Red);
-#endif
-				return -1; // Return -1 if absorption coefficients length is incorrect
-			}
-			size_t id = mRoom->InitWall(vertices, absorption);
+			RAC_DEBUG_ASSERT(material.IsGreaterEqThan(0) && material.IsLessEqThan(1), "Invalid material coefficients: " + ToString(material));
+			RAC_DEBUG_ASSERT(material.Length() == dspConfig->GetData().numFrequencyBands, "Invalid material coefficients length: " + ToString(material.Length()));
+			
+			mRoom->UpdateMaterial(id, material);
+			if (lateReverbInitialised.load(std::memory_order_acquire))
+				mReverb->SetTargetT60(mRoom->GetReverbTime());
+		}
+
+		////////////////////////////////////////
+
+		size_t Context::InitWall(const Vertices& vData, size_t materialID)
+		{
+			RAC_DEBUG_LOG("Init Wall", DebugType::Init);
+			RAC_DEBUG_ASSERT(mRoom->MaterialExists(materialID), "Material ID does not exist: " + ToString(materialID));
+
+			Wall wall = Wall(vData, materialID);
+			size_t id = mRoom->AddWall(wall);
 			mRoom->InitEdges(id);
 			return static_cast<int>(id);
 		}
 
 		////////////////////////////////////////
 
-		void Context::UpdateWall(size_t id, const Vertices& vData)
-		{
-			mRoom->UpdateWall(id, vData);
-		}
-
-		////////////////////////////////////////
-
-		void Context::UpdateWallAbsorption(size_t id, const Absorption<>& absorption)
-		{
-			if (absorption.Length() != mConfig->frequencyBands.Length())
-			{
-#ifdef USE_UNITY_DEBUG
-				Debug::Log("Absorption coefficients length does not match frequency bands length", Colour::Red);
-#endif
-				return;
-			}
-			mRoom->UpdateWallAbsorption(id, absorption);
-			mReverb->SetTargetT60(mRoom->GetReverbTime());
-		}
-
-		////////////////////////////////////////
-
 		void Context::RemoveWall(size_t id)
 		{
-#ifdef DEBUG_REMOVE
-	Debug::Log("Remove Wall", Colour::Red);
-#endif
+			RAC_DEBUG_LOG("Remove Wall", DebugType::Remove);
 			mRoom->RemoveWall(id);
 		}
 
@@ -367,36 +545,101 @@ namespace RAC
 
 		void Context::GetOutput(Buffer<>& outputBuffer)
 		{
+			AtomicFlagGuard guard(audioFlag, true); // Try once
+
+			if (!guard.Acquired())
+				return; // someone else has the flag, exit early
+
 			PROFILE_AudioThread;
-			if (outputBuffer.Length() != 2 * mConfig->numFrames)
-			{
-#ifdef USE_UNITY_DEBUG
-				Debug::Log("Incorrect buffer size", Colour::Red);
-#endif
-				outputBuffer.ResizeBuffer(2 * mConfig->numFrames);
-			}
+			outputBuffer.Reset();
+			RAC_DEBUG_ASSERT(outputBuffer.Length() == 2 * dspConfig->GetData().numFrames, "Output buffer has incorrect length");
+
+			// make sure our threads are initialized
+			EnsureAudioThreadPoolInitialized();
 
 			// Reset buffers
-			outputBuffer.Reset();
-			mReverbInput.Reset();
-			const Real lerpFactor = mConfig->GetLerpFactor();
-
-			mSources->ProcessAudio(outputBuffer, mReverbInput, lerpFactor);
-			mReverb->ProcessAudio(mReverbInput, outputBuffer, lerpFactor);
 			mReverbInput.Reset();
 
-			if (applyHeadphoneEQ)
-				headphoneEQ.ProcessAudio(outputBuffer, outputBuffer, lerpFactor);
+			const AudioData audioData(dspConfig);
+
+			mSources->ResetInputBuffers();
+			if (earlyReverbInitialised.load(std::memory_order_acquire) && (audioData.earlyReverbEnabled || audioData.lateReverbEnabled))
+				mSources->ProcessAudio(outputBuffer, audioData);
+
+			if (lateReverbInitialised.load(std::memory_order_acquire) && audioData.lateReverbEnabled)
+			{
+				mSources->ProcessLateReverbSend(mReverbInput, audioData);
+				mReverb->ProcessAudio(mReverbInput, outputBuffer, audioData);
+			}
+
+			if (applyHeadphoneEQ.load(std::memory_order_acquire))
+				headphoneEQ.ProcessAudio(outputBuffer, outputBuffer, audioData);
+
+			dcBlocker.ProcessAudio(outputBuffer);
+
+			RAC_DEBUG_ASSERT(outputBuffer.Valid(), "Invalid output buffer");
 		}
 
 		////////////////////////////////////////
 
-		void Context::UpdateImpulseResponseMode(const bool mode)
+		void Context::RecordImpulseResponse(const Vec3& position, const Vec4& orientation, Buffer<>& outputBuffer)
 		{
-			mConfig->impulseResponseMode.store(mode, std::memory_order_release);
-			mSources->UpdateImpulseResponseMode(mode);
-			if (mode)
-				headphoneEQ.Reset();		// TO DO: Should this be here?
+			int id = InitSource();
+			if (id < 0)
+			{
+				RAC_DEBUG_LOG("Failed to initialise source", DebugType::Error);
+				return;
+			}
+
+			// TODO: Allow different directivities
+			UpdateSourceDirectivity(static_cast<size_t>(id), SourceDirectivity::omni);
+			UpdateSource(static_cast<size_t>(id), position, orientation);
+
+			mImageEdgeModel->ResetEndFlag();
+			mRayTracing->ResetEndFlag();
+			UpdateImpulseResponseMode(true);
+			ResetLateReverb();
+
+			int numFrames = dspConfig->GetData().numFrames;
+			Buffer<> input = Buffer<>::Zero(numFrames);
+			Buffer<> output = Buffer<>::Zero(2 * numFrames);
+
+			while (!mImageEdgeModel->HasCompleted())
+				std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+			while (!mRayTracing->HasCompleted())
+				std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+			// Run once with empty input (ensures all interpolation is updated)
+			mSources->SetInputBuffer(static_cast<size_t>(id), input);
+			GetOutput(output);
+
+			int irLength = ToInt(outputBuffer.Length());
+			int outputBufferLength = ToInt(output.Length());
+			int numBuffers = irLength / outputBufferLength;
+			int remainder = irLength - numBuffers * outputBufferLength;
+
+			// Process buffers
+			int count = 0;
+			input[0] = 1.0;
+			for (int i = 0; i < numBuffers; i++)
+			{
+				mSources->SetInputBuffer(static_cast<size_t>(id), input);
+				GetOutput(output);
+				for (int j = 0; j < outputBufferLength; j++)
+					outputBuffer[count++] = output[j];
+				input[0] = 0.0;
+			}
+			// Process remaining samples
+			mSources->SetInputBuffer(static_cast<size_t>(id), input);
+			GetOutput(output);
+			for (int i = 0; i < remainder; i++)
+				outputBuffer[count++] = output[i];
+
+			RemoveSource(static_cast<size_t>(id));
+			UpdateImpulseResponseMode(false);
+
+			RAC_DEBUG_ASSERT(outputBuffer.Valid(), "Invalid output buffer");
 		}
 	}
 }

@@ -6,8 +6,8 @@ site_description: >-
   Real-time room acoustic C++ library
 
 # Repository
-repo_name: jmannall/RoomAcoustiCpp
-repo_url: https://github.com/jmannall/RoomAcoustiCpp
+repo_name: IoSR/RoomAcoustiCpp
+repo_url: https://github.com/IoSR/RoomAcoustiCpp
 edit_uri: edit/main/docs/
 
 # Configuration
@@ -127,8 +127,6 @@ markdown_extensions:
   - pymdownx.tasklist:
       custom_checkbox: true
   - pymdownx.tilde
-  - pymdownx.arithmatex:
-      generic: true
   
   
 extra_javascript:
@@ -161,6 +159,16 @@ nav:
     - Overview: api/index.md
     - Installation: api/installation.md
     - Interface: api/interface.md
+  - Overview:
+    - Overview: overview/about.md
+    - Acoustic Model: overview/model.md
+    - Diffraction: overview/diffraction.md
+  - API Reference:
+    - Overview: api/index.md
+    - Interface: spatialiser/interface.md
+    - Types: api/types.md
+    - Configs: api/configs.md
+    - Optional arguments: api/contextoptionalarguments.md
     - Structure: api/structure.md
     
     # - Common:

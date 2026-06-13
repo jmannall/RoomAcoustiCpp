@@ -14,13 +14,63 @@
     <ProjectCapability Include="SourceItemsFromImports" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\elementwiseOperationInPlace.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\myBestNN.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\myNN_data.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\myNN_initialize.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\myNN_terminate.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\mySmallNN.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\predict.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\elementwiseOperationInPlace.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release_ProfileDetailed|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release_Profile|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='ReleaseTest|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release_Debug|x64'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\myBestNN.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release_ProfileDetailed|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release_Profile|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='ReleaseTest|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release_Debug|x64'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\myNN_data.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release_ProfileDetailed|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release_Profile|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='ReleaseTest|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release_Debug|x64'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\myNN_initialize.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release_ProfileDetailed|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release_Profile|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='ReleaseTest|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release_Debug|x64'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\myNN_terminate.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release_ProfileDetailed|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release_Profile|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='ReleaseTest|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release_Debug|x64'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\mySmallNN.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release_ProfileDetailed|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release_Profile|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='ReleaseTest|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release_Debug|x64'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)codegen\lib\myNN\source\predict.cpp">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release_ProfileDetailed|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release_Profile|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='ReleaseTest|x64'">TurnOffAllWarnings</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release_Debug|x64'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Common\Debug.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Common\Matrix.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Common\Vec.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\AudioThreadPool.cpp" />
@@ -29,6 +79,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\GraphicEQ.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\IIRFilter.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\LinkwitzRileyFilter.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\DSP\OctaveBandFilter.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\AirAbsorption.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Context.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Diffraction\Models.cpp" />
@@ -43,8 +94,10 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Reverb.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Room.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Source.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\TracingTypes.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\TracingUtils.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\TracingThread.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Spatialiser\Wall.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)source\Unity\Debug.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)source\Unity\UnityInterface.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -63,8 +116,11 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Access.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Coefficients.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Complex.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Debug.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Definitions.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\FileReader.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Matrix.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Matrix_private.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\RACProfiler.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\ReleasePool.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\SphericalGeometries.h" />
@@ -76,36 +132,54 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Types.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Vec.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Vec3.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Common\Vec_private.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\AudioThreadPool.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\Buffer.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\DCBlocker.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\DelayLine.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\FIRFilter.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\GraphicEQ.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\GraphicEQ_private.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\IIRFilter.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\IIRFilter_private.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\Interpolate.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\LinkwitzRileyFilter.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\OctaveBandFilter.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DSP\Parameter.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Eigen\ArrayAddons.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Eigen\ArrayBaseAddons.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Eigen\DenseBaseAddons.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Eigen\MatrixAddons.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Eigen\MatrixBaseAddons.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Eigen\PlainObjectBaseAddons.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Eigen\QuaternionBaseAddons.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\moodycamel\concurrentqueue.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\AirAbsorption.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\ComplexFDN.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Configs.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Context.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\ContextOptionalArguments.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Diffraction\Models.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Diffraction\Path.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Directivity.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Edge.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\FDN.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\FDN_private.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\HeadphoneEQ.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\ImageEdge.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\ImageSource.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\ImageSourceManager.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Interface.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Globals.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\RAVESResidue.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\SourceManager.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Reverb.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Room.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Source.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\TracingTypes.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\TracingUtils.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\TracingThread.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Types.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Wall.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Unity\Debug.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Unity\IUnityInterface.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Unity\IUnityProfiler.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Unity\UnityInterface.h" />

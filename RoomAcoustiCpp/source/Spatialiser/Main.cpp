@@ -9,6 +9,7 @@
 
 // Common headers
 #include "Common/Coefficients.h"
+#include "Common/Debug.h"
 
 // Spatialiser headers
 #include "Spatialiser/Types.h"
@@ -17,11 +18,9 @@
 // DSP headers
 #include "DSP/Buffer.h"
 
-// Unity headers
-#include "Unity/Debug.h"
-
-//////////////////// DLL Linkage ////////////////////
-
+/**
+* @brief Define DLL linkage
+*/
 #ifdef _ANDROID
 #define API
 #define EXPORT __attribute__ ((visibility ("default")))
@@ -33,6 +32,22 @@
 #define EXPORT
 #endif
 
+#define UNUSED_ARG(arg)		(void)(arg)
+
+/**
+* @brief Catch and log any exceptions
+*/
+#define BEGIN_TRY \
+    try {
+
+#define END_TRY \
+    } catch (const std::exception& e) { \
+		UNUSED_ARG(e); \
+		RAC_DEBUG_LOG(std::string("RoomAcoustiC++ exception: ") + e.what(), DebugType::Assert); \
+    } catch (...) { \
+		RAC_DEBUG_LOG(std::string("RoomAcoustiC++ unknown exception"), DebugType::Assert); \
+    }
+
 //////////////////// Namespaces ////////////////////
 
 using namespace RAC::Spatialiser;
@@ -41,54 +56,218 @@ using namespace RAC::DSP;
 
 //////////////////// Variables ////////////////////
 
-static Buffer<> buffer(1);	// Return buffer
+static Buffer<> outputBuffer(1);	// Return buffer
+static Buffer<> inputBuffer(1);	// Send buffer for reverb processing
 static int NUM_FREQUENCY_BANDS = 0;	// Store number of frequency bands for any reflection filters
 static int NUM_FRAMES = 0;
 
+//////////////////// Utility functions ////////////////////
+
+////////////////////////////////////////
+
+FDNMatrix SelectFDNMatrix(int mat)
+{
+	switch (mat)
+	{
+	default:
+	case(0):
+	{ return FDNMatrix::householder; }
+	case(1):
+	{ return FDNMatrix::randomOrthogonal; }
+	}
+}
+
+////////////////////////////////////////
+
+ReverbFormula SelectReverbFormula(int formula)
+{
+	switch (formula)
+	{
+	default:
+	case(0):
+	{ return ReverbFormula::Sabine; }
+	case(1):
+	{ return ReverbFormula::Eyring; }
+	case(2):
+	{ return ReverbFormula::Custom; }
+	}
+}
+
+////////////////////////////////////////
+
+DirectSound SelectDirectMode(int dir)
+{
+	switch (dir)
+	{
+	default:
+	case(0):
+	{ return DirectSound::none; }
+	case(1):
+	{ return DirectSound::doCheck; }
+	case(2):
+	{ return DirectSound::alwaysTrue; }
+	}
+}
+
+////////////////////////////////////////
+
+DiffractionSound SelectDiffractionMode(int diff)
+{
+	switch (diff)
+	{
+	default:
+	case(0):
+	{ return DiffractionSound::none; }
+	case(1):
+	{ return DiffractionSound::shadowZone; }
+	case(2):
+	{ return DiffractionSound::allZones; }
+	}
+}
+
+////////////////////////////////////////
+
+DiffractionModel SelectDiffractionModel(int model)
+{
+	switch (model)
+	{
+	default:
+	case(0):
+	{ return DiffractionModel::attenuate; }
+	case(1):
+	{ return DiffractionModel::lowPass; }
+	case(2):
+	{ return DiffractionModel::udfa; }
+	case(3):
+	{ return DiffractionModel::udfai; }
+	case(4):
+	{ return DiffractionModel::nnBest; }
+	case(5):
+	{ return DiffractionModel::nnSmall; }
+	case(6):
+	{ return DiffractionModel::utd; }
+	case(7):
+	{ return DiffractionModel::btm; }
+	}
+}
+
+////////////////////////////////////////
+
+SourceDirectivity SelectDirectivity(int directivity)
+{
+	switch (directivity)
+	{
+	case(0):
+	{ return SourceDirectivity::omni; }
+	case(1):
+	{ return SourceDirectivity::subcardioid; }
+	case(2):
+	{ return SourceDirectivity::cardioid; }
+	case(3):
+	{ return SourceDirectivity::supercardioid; }
+	case(4):
+	{ return SourceDirectivity::hypercardioid; }
+	case(5):
+	{ return SourceDirectivity::bidirectional; }
+	case(6):
+	{ return SourceDirectivity::genelec8020c; }
+	case(7):
+	{ return SourceDirectivity::genelec8020cDTF; }
+	case(8):
+	{ return SourceDirectivity::qscK8; }
+	default:
+	{ return SourceDirectivity::omni; }
+	}
+}
+
+////////////////////////////////////////
+
+Vec<> CreateVec(const float* data, int length)
+{
+	Vec<> vec = Vec<>(length);
+	for (int i = 0; i < length; i++)
+		vec(i) = static_cast<Real>(data[i]);
+	return vec;
+}
+
+////////////////////////////////////////
+
+Vec<int> CreateIntVec(const int* data, int length)
+{
+	Vec<int> vec = Vec<int>(length);
+	for (int i = 0; i < length; i++)
+		vec(i) = data[i];
+	return vec;
+}
+
+////////////////////////////////////////
+
+Coefficients<> CreateCoefficients(const float* data, int length)
+{
+	Coefficients<> coeff = Coefficients<>(length);
+	for (int i = 0; i < length; i++)
+		coeff[i] = static_cast<Real>(data[i]);
+	return coeff;
+}
+
+////////////////////////////////////////
+
+Coefficients<> CreateAbsorptions(const float* data)
+{
+	return CreateCoefficients(data, NUM_FREQUENCY_BANDS);
+}
+
+//////////////////// DLL API ////////////////////
+
 extern "C"
 {
-
-	//////////////////// API ////////////////////
-
 	/**
-	* Initializes the spatialiser with the given parameters.
+	* @brief Initializes the spatialiser with the given parameters.
 	*
 	* @param fs The sample rate for audio processing.
 	* @param numFrames The number of frames in an audio buffer.
-	* @param numReverbSources The number of reverb sources for late reverberation spatialisation.
+	* @param numReverbSources The number of reverb sources.
+	* @param fdnSize The number of channels in each feedback delay network
 	* @param lerpFactor The interpolation factor for audio parameters.
-	* @param Q The quality factor for GraphicEQ. (0.98 is a good starting point)
-	* @param frequencyBandData The center frequency bands for frequency dependent filtering.
-	* @param numFrequencyBands The number of frequency bands provided by the frequencyBandData parameter.
+	* @param Q The quality factor for reflection filters. (0.77 is a good starting point)
+	* @param frequencyData The center frequency bands for reflection filters.
+	* @param numFrequencyBands The number of frequency bands provided in the fBands parameter.
 	*
 	* @return True if the initialization was successful, false otherwise.
 	*/
-	EXPORT bool API RACInit(int fs, int numFrames, int numReverbSources, float lerpFactor, float Q, const float* frequencyBandData, int numFrequencyBands)
+	EXPORT bool API RACInit(int fs, int numFrames, int numReverbSources, int fdnSize, float lerpFactor, float Q, const float* frequencyBandsData, int numFrequencyBands)
 	{
-		buffer.ResizeBuffer(2 * numFrames);
+		BEGIN_TRY
+
 		NUM_FREQUENCY_BANDS = numFrequencyBands;
 		NUM_FRAMES = numFrames;
-		Coefficients<> frequencyBands = Coefficients<>(numFrequencyBands);
-		for (int i = 0; i < numFrequencyBands; i++)
-			frequencyBands[i] = static_cast<Real>(frequencyBandData[i]);
 
-		std::shared_ptr<Config> config = std::make_shared<Config>(fs, numFrames, numReverbSources, static_cast<Real>(lerpFactor), static_cast<Real>(Q), frequencyBands);
-		return Init(config);
+		inputBuffer = Buffer<>::Zero(NUM_FRAMES);
+		outputBuffer = Buffer<>::Zero(2 * NUM_FRAMES);
+
+		Coefficients<> frequencyBands = CreateCoefficients(frequencyBandsData, numFrequencyBands);
+
+		return Init(DSPData(fs, numFrames, numReverbSources, fdnSize, static_cast<Real>(lerpFactor), static_cast<Real>(Q), frequencyBands));
+
+		END_TRY
+		return false;
 	}
 
 	/**
-	* Exits and cleans up the spatialiser.
+	* @brief Exits and cleans up the spatialiser.
 	*
 	* This function should be called when the spatialiser is no longer needed.
 	* It will free up any resources that the spatialiser is using.
 	*/
 	EXPORT void API RACExit()
 	{
+		BEGIN_TRY
 		Exit();
+		END_TRY
 	}
 
 	/**
-	* Loads the HRTF, near field and ILD files.
+	* @brief Loads the HRTF, near field and ILD files.
 	*
 	* @param hrtfResamplingStep The step size for resampling the HRTF. This should be between 5 - 90. Smaller values indicate higher quality.
 	* @param paths An array of file paths in the order HRTF, near field and ILD files. The paths are expected to be null-terminated C strings.
@@ -97,8 +276,102 @@ extern "C"
 	*/
 	EXPORT bool API RACLoadSpatialisationFiles(int hrtfResamplingStep, const char** paths)
 	{
+		BEGIN_TRY
 		std::vector<std::string> filePaths = { std::string(*(paths)), std::string(*(paths + 1)), std::string(*(paths + 2)) };
 		return LoadSpatialisationFiles(hrtfResamplingStep, filePaths);
+		END_TRY
+		return false;
+	}
+
+	/**
+	* @brief Initialises the Image Edge Model (IEM) and sets the diffraction model.
+	* 
+	* The direct sound is mapped as follows.
+	* 0 -> none
+	* 1 -> doCheck
+	* 2 -> alwaysTrue
+	* 
+	* @param enabled True to enable early reflection DSP, false to disable.
+	* @param direct Whether to consider direct sound.
+	* @param reflOrder The maximum number of reflections in reflection only paths.
+	* @param shadowDiffOrder The maximum number of reflections or diffractions in shadowed diffraction paths.
+	* @param specularDiffOrder The maximum number of reflections or diffractions in specular diffraction paths.
+	* @param rev Whether to consider late reverberation.
+	*/
+	EXPORT bool API RACInitEarlyReverb(bool enabled, int direct, int reflOrder, int shadowDiffOrder, int specularDiffOrder, float minEdgeLength, float maxPathLen, int diffractionId)
+	{
+		BEGIN_TRY
+		DiffractionModel model = SelectDiffractionModel(diffractionId);
+		EarlyReverbData data(SelectDirectMode(direct), reflOrder, shadowDiffOrder, specularDiffOrder, static_cast<Real>(minEdgeLength), static_cast<Real>(maxPathLen));
+		return InitEarlyReverb(enabled, data, model);
+		END_TRY
+		return false;
+	}
+
+	/**
+	* @brief Initialises SingleFDN late reverberation.
+	*
+	* @param enabled True to enable early reflection DSP, false to disable.
+	* @params volume The room volume in cubic meters.
+	* @params t60Data The late reverberation time in seconds for each frequency band.
+	* @params reverbFormulaId The ID corresponding to a reverberation formula.
+	* @parmas dimensionData The primary room dimensions in meters.
+	* @params numDimensions The number of dimensions provided in the dimensionData parameter.
+	* @params numRays The number of rays to use for ray tracing.
+	* @param matrixId The ID corresponding to a FDN matrix type.
+	*/
+	EXPORT bool API RACInitSingleFDN(bool enabled, float volume, const float* t60Data, int reverbFormulaId, const float* dimensionData, int numDimensions, int numRays, int matrixId)
+	{
+		BEGIN_TRY
+		Coefficients<> t60 = CreateCoefficients(t60Data, NUM_FREQUENCY_BANDS);
+		Vec<> dimensions = CreateVec(dimensionData, numDimensions);
+
+		RoomData roomData(static_cast<Real>(volume), t60, SelectReverbFormula(reverbFormulaId), dimensions);
+
+		LateReverbData data(enabled, numRays, SelectFDNMatrix(matrixId));
+		return InitSingleFDN(roomData, data);
+		END_TRY
+		return false;
+	}
+
+	/**
+	* @brief Initialises MoDART late reverberation.
+	*
+	* @param enabled True to enable early reflection DSP, false to disable.
+	* @params numRays The number of rays to use for ray tracing.
+	* @param matrixId The ID corresponding to a FDN matrix type.
+	* @params delay The delay in seconds before late reverberation starts.
+	* @params indexingData The indexing matrix for MoDART.
+	* @oarams frequencyData The center frequency bands for each FDN.
+	* @params t60sData The late reverberation time in seconds for each FDN.
+	* @params leftEigenvectorsData The left eigenvectors for each FDN.
+	* @params rightEigenvectorsData The right eigenvectors for each FDN.
+	* @params numFDNs The number of FDNs.
+	* @params numNodes The number of nodes in the indexing matrix.
+	* @params numPaths The number of propagation paths in MoDART.
+	*/
+	EXPORT bool API RACInitMoDART(bool enabled, int numRays, int matrixId, float delay, float minimumT60, const int* indexingData, const int* frequencyIndexingData, const float* t60sData, const float* leftEigenvectorsData, const float* rightEigenvectorsData, int numFDNs, int numNodes, int numPaths)
+	{
+		BEGIN_TRY
+		Vec<int> frequencyIndexing = CreateIntVec(frequencyIndexingData, numFDNs);
+		Vec<> t60s = CreateVec(t60sData, numFDNs);
+
+		Matrix<int> indexing(numNodes, numNodes);
+		for (int i = 0; i < numNodes; i++)
+			for (int j = 0; j < numNodes; j++)
+				indexing(i, j) = indexingData[i * numNodes + j];
+
+		std::vector<Vec<>> leftEigenvectors, rightEigenvectors;
+		for (int i = 0; i < numFDNs; i++)
+		{
+			leftEigenvectors.push_back(CreateVec(leftEigenvectorsData + i * numPaths, numPaths));
+			rightEigenvectors.push_back(CreateVec(rightEigenvectorsData + i * numPaths, numPaths));
+		}
+
+		MoDARTData data(enabled, numRays, SelectFDNMatrix(matrixId), static_cast<Real>(delay), static_cast<Real>(minimumT60), indexing, frequencyIndexing, t60s, leftEigenvectors, rightEigenvectors);
+		return InitMoDART(data);
+		END_TRY
+		return false;
 	}
 
 	/**
@@ -113,17 +386,22 @@ extern "C"
 	*/
 	EXPORT void API RACSetHeadphoneEQ(const float* leftIR, const float* rightIR, int irLength)
 	{
-		std::vector<Real> left(irLength);
-		std::vector<Real> right(irLength);
+		BEGIN_TRY
+		Buffer<> left(irLength);
+		Buffer<> right(irLength);
 
-		std::transform(leftIR, leftIR + irLength, left.begin(), [](float f) { return static_cast<Real>(f); });
-		std::transform(rightIR, rightIR + irLength, right.begin(), [](float f) { return static_cast<Real>(f); });
+		for (int i = 0; i < irLength; i++)
+		{
+			left[i] = static_cast<Real>(leftIR[i]);
+			right[i] = static_cast<Real>(rightIR[i]);
+		}
 
 		SetHeadphoneEQ(left, right);
+		END_TRY
 	}
 
 	/**
-	* Sets the spatialisation mode (high quality, high performance or none).
+	* @brief Sets the spatialisation mode (high quality, high performance or none).
 	*
 	* Should be called after spatialisation files have been loaded, otherwise defaults to none
 	* 
@@ -136,39 +414,34 @@ extern "C"
 	*/
 	EXPORT void API RACUpdateSpatialisationMode(int id)
 	{
+		BEGIN_TRY
 		switch (id)
 		{
+		default:
 		case(0):
 		{ UpdateSpatialisationMode(SpatialisationMode::none); break; }
 		case(1):
 		{ UpdateSpatialisationMode(SpatialisationMode::performance); break; }
 		case(2):
 		{ UpdateSpatialisationMode(SpatialisationMode::quality); break; }
-		default:
-		{ UpdateSpatialisationMode(SpatialisationMode::none); break; }
 		}
+		END_TRY
 	}
 
 	/**
-	* @brief Convert direct sound mode id to enum
+	* @brief Enables the late reverberation DSP.
+	*
+	* @param enable True to enable late reflections, false to disable.
 	*/
-	DirectSound SelectDirectMode(int directMode)
+	EXPORT void API RACEnableEarlyReverb(bool enable)
 	{
-		switch (directMode)
-		{
-		case(0):
-		{ return DirectSound::none; break; }
-		case(1):
-		{ return DirectSound::check; break; }
-		case(2):
-		{ return DirectSound::ignoreCheck; break; }
-		default:
-		{ return DirectSound::none; break; }
-		}
+		BEGIN_TRY
+		EnableEarlyReverb(enable);
+		END_TRY
 	}
 
 	/**
-	* Updates the configuration for the Image Edge Model (IEM).
+	* @brief Updates the configuration for the Image Edge Model (IEM).
 	* 
 	* The direct sound is mapped as follows.
 	* 0 -> none
@@ -182,57 +455,16 @@ extern "C"
 	* @param lateReverb Whether to consider late reverberation.
 	* @param minEdgeLength The minimum edge length to consider diffraction for.
 	*/
-	EXPORT void API RACUpdateIEMConfig(int dir, int reflOrder, int shadowDiffOrder, int specularDiffOrder, bool rev, float edgeLen)
+	EXPORT void API RACUpdateEarlyConfig(int direct, int reflOrder, int shadowDiffOrder, int specularDiffOrder, float minEdgeLength, float maxPathLen)
 	{
-		DirectSound direct = SelectDirectMode(dir);
-		UpdateIEMConfig(IEMData(direct, reflOrder, shadowDiffOrder, specularDiffOrder, rev, static_cast<Real>(edgeLen)));
+		BEGIN_TRY
+		EarlyReverbData data(SelectDirectMode(direct), reflOrder, shadowDiffOrder, specularDiffOrder, static_cast<Real>(minEdgeLength), static_cast<Real>(maxPathLen));
+		UpdateEarlyConfig(data);
+		END_TRY
 	}
 
 	/**
-	* Updates the late reverberation time (T60).
-	* 
-	* Should be called after the late reverberation has been initialised, if a custom T60 is desired.
-	*
-	* @param T60Data The late reverberation time.
-	*/
-	EXPORT void API RACUpdateReverbTime(const float* T60Data)
-	{
-		Coefficients T60 = Coefficients<>(static_cast<size_t>(NUM_FREQUENCY_BANDS));
-		for (int i = 0; i < NUM_FREQUENCY_BANDS; i++)
-			T60[i] = static_cast<Real>(T60Data[i]);
-
-		UpdateReverbTime(T60);
-	}
-
-	/**
-	* Updates the model in order to calculate the late reverberation time (T60).
-	*
-	* Should be called after the late reverberation has been initialised.
-	* 
-	* The mapping is as follows:
-	* 0 -> Sabine
-	* 1 -> Eyring
-	* 2 -> Custom
-	* 
-	* @param id The ID corresponding to a reverb time formula.
-	*/
-	EXPORT void API RACUpdateReverbTimeModel(int id)
-	{
-		switch (id)
-		{
-			case(0):
-			{ UpdateReverbTime(ReverbFormula::Sabine); break; }
-			case(1):
-			{ UpdateReverbTime(ReverbFormula::Eyring); break; }
-			case(2):
-			{ UpdateReverbTime(ReverbFormula::Custom); break; }
-			default:
-			{ UpdateReverbTime(ReverbFormula::Sabine); break; }
-		}
-	}
-
-	/**
-	* Updates the model used to process diffraction.
+	* @brief Updates the model used to process diffraction.
 	*
 	* The mapping is as follows:
 	* 0 -> Atteuate (1 / r)
@@ -246,84 +478,130 @@ extern "C"
 	*
 	* @param id The ID corresponding to a diffraction model.
 	*/
-	EXPORT void API RACUpdateDiffractionModel(int id)
+	EXPORT void API RACUpdateDiffractionModel(int diffractionId)
 	{
-		switch (id)
-		{
-		case(0):
-		{ UpdateDiffractionModel(DiffractionModel::attenuate); break; }
-		case(1):
-		{ UpdateDiffractionModel(DiffractionModel::lowPass); break; }
-		case(2):
-		{ UpdateDiffractionModel(DiffractionModel::udfa); break; }
-		case(3):
-		{ UpdateDiffractionModel(DiffractionModel::udfai); break; }
-		case(4):
-		{ UpdateDiffractionModel(DiffractionModel::nnBest); break; }
-		case(5):
-		{ UpdateDiffractionModel(DiffractionModel::nnSmall); break; }
-		case(6):
-		{ UpdateDiffractionModel(DiffractionModel::utd); break; }
-		case(7):
-		{ UpdateDiffractionModel(DiffractionModel::btm); break; }
-		default:
-		{ UpdateDiffractionModel(DiffractionModel::attenuate); break; }
-		}
+		BEGIN_TRY
+		DiffractionModel model = SelectDiffractionModel(diffractionId);
+		UpdateDiffractionModel(model);
+		END_TRY
 	}
 
 	/**
-	* @brief Convert FDN matrix id to enum
-	*/
-	FDNMatrix SelectFDNMatrix(int fdnMatrix)
-	{
-		switch (fdnMatrix)
-		{
-		case(0):
-		{ return FDNMatrix::householder; break; }
-		case(1):
-		{ return FDNMatrix::randomOrthogonal; break; }
-		default:
-		{ return FDNMatrix::householder; break; }
-		}
-	}
-
-	/**
-	* Updates the volume and dimensions of the room.
+	* @brief Enables the late reverberation DSP.
 	*
-	* This function should be called when the volume or dimensions of the room changes and after all walls have been initialised.
-	* It will reset the Feedback Delay Network (FDN) so should be considered a new room rather than a dynamic change.
-	* 
+	* @param enable True to enable late reflections, false to disable.
+	*/
+	EXPORT void API RACEnableLateReverb(bool enable)
+	{
+		BEGIN_TRY
+		EnableLateReverb(enable);
+		END_TRY
+	}
+
+	/**
+	* @brief Sets the number of rays used in the late reverberation ray tracing.
+	*
+	* @param numRays The number of rays to use for ray tracing.
+	*/
+	EXPORT void API RACUpdateLateReverbNumberOfRays(int numRays)
+	{
+		BEGIN_TRY
+		UpdateLateReverbNumberOfRays(numRays);
+		END_TRY
+	}
+
+	/**
+	* @brief Sets the distance thresholds (in meters) from the latest updated position which triggers an update of late reverberation tracing.
+	*
+	* @param sourceThresh The distance threshold for all sources.
+	* @param listenerThresh The distance threshold for the listener.
+	*/
+	EXPORT void API RACUpdateLateReverbDistanceThresholds(float sourceThresh, float listenerThresh)
+	{
+		BEGIN_TRY
+			UpdateLateReverbDistanceThresholds(static_cast<Real>(sourceThresh), static_cast<Real>(listenerThresh));
+		END_TRY
+	}
+
+	/**
+	* @brief Sets the sphere radius (in meters) used to determine self-shadowing during late reverberation tracing.
+	*
+	* @param radius The radius of the listener's head radius.
+	*/
+	EXPORT void API RACUpdateSelfShadowingRadius(float radius)
+	{
+		BEGIN_TRY
+			UpdateSelfShadowingRadius(static_cast<Real>(radius));
+		END_TRY
+	}
+
+	/**
+	* @brief Updates the intial delay for MoDART late reverberation.
+	*
+	* @param delay The initial delay in seconds.
+	*/
+	EXPORT void API RACUpdateMoDARTDelay(float delay)
+	{
+		BEGIN_TRY
+		UpdateMoDARTDelay(static_cast<Real>(delay));
+		END_TRY
+	}
+
+	/**
+	* @brief Updates the minimum reverberation time to model. Controls the number of modes in MoDART.
+	*
+	* @param T60 The minimum reverberation time in seconds.
+	*/
+	EXPORT void API RACUpdateMoDARTMinimumReverbTime(float T60)
+	{
+		BEGIN_TRY
+		UpdateMoDARTMinimumReverbTime(static_cast<Real>(T60));
+		END_TRY
+	}
+
+	/**
+	* @brief Updates the late reverberation time (T60).
+	*
+	* @param t60 The late reverberation time.s
+	*/
+	EXPORT void API RACUpdateSingleFDNReverbTime(const float* t60Data)
+	{
+		BEGIN_TRY
+		Coefficients<> t60 = CreateCoefficients(t60Data, NUM_FREQUENCY_BANDS);
+		UpdateSingleFDNReverbTime(t60);
+		END_TRY
+	}
+
+	/**
+	* @brief Updates the model in order to calculate the late reverberation time (T60).
+	*
 	* The mapping is as follows:
-	* 0 -> Householder
-	* 1 -> Random orthogonal
+	* 0 -> Sabine
+	* 1 -> Eyring
+	* 2 -> Custom
 	* 
-	* @param volume The volume (m^3) of the room.
-	* @param dimensionData The primary dimensions (m) of the room.
-	* @param numDimensions The number of dimensions provided in the dimensionData parameter.
-	* @param id The ID corresponding to a FDN matrix type.
-	* @return True if the late reverb was initialised successfully, false otherwise.
+	* @param id The ID corresponding to a reverb time formula.
 	*/
-	EXPORT bool API RACInitLateReverb(float volume, const float* dimensionData, int numDimensions, int id)
+	EXPORT void API RACUpdateSingleFDNReverbTimeModel(int formulaId)
 	{
-		Vec dimensions = Vec(numDimensions);
-		for (int i = 0; i < numDimensions; i++)
-			dimensions[i] = static_cast<Real>(dimensionData[i]);
-
-		FDNMatrix fdnMatrix = SelectFDNMatrix(id);
-
-		return InitLateReverb(static_cast<Real>(volume), dimensions, fdnMatrix);
+		BEGIN_TRY
+		ReverbFormula formula = SelectReverbFormula(formulaId);
+		UpdateSingleFDNReverbTime(formula);
+		END_TRY
 	}
 
 	/**
-	* Clears the internal FDN buffers.
+	* @brief Clears the internal FDN buffers.
 	*/
-	EXPORT void API RACResetFDN()
+	EXPORT void API RACResetLateReverb()
 	{
-		ResetFDN();
+		BEGIN_TRY
+		ResetLateReverb();
+		END_TRY
 	}
 
 	/**
-	* Updates the listener's position and orientation.
+	* @brief Updates the listener's position and orientation.
 	*
 	* @param posX The x-coordinate of the listener's position.
 	* @param posY The y-coordinate of the listener's position.
@@ -335,24 +613,29 @@ extern "C"
 	*/
 	EXPORT void API RACUpdateListener(float posX, float posY, float posZ, float oriW, float oriX, float oriY, float oriZ)
 	{
+		BEGIN_TRY
 		UpdateListener(Vec3(posX, posY, posZ), Vec4(oriW, oriX, oriY, oriZ));
+		END_TRY
 	}
 
 	/**
-	* Initializes a new audio source and returns its ID.
+	* @brief Initializes a new audio source and returns its ID.
 	*
-	* This function should be called when a new audio source is created.
+	* @details This function should be called when a new audio source is created.
 	* It will allocate resources for the new source and return an ID that can be used to reference the source in future calls.
 	*
 	* @return The ID of the new audio source.
 	*/
 	EXPORT int API RACInitSource()
 	{
+		BEGIN_TRY
 		return InitSource();
+		END_TRY
+		return - 1;
 	}
 
 	/**
-	* Updates the position and orientation of the audio source with the given ID.
+	* @brief Updates the position and orientation of the audio source with the given ID.
 	*
 	* @param id The ID of the audio source to update.
 	* @param posX The x-coordinate of the source's position.
@@ -365,41 +648,13 @@ extern "C"
 	*/
 	EXPORT void API RACUpdateSource(int id, float posX, float posY, float posZ, float oriW, float oriX, float oriY, float oriZ)
 	{
+		BEGIN_TRY
 		UpdateSource(static_cast<size_t>(id), Vec3(posX, posY, posZ), Vec4(oriW, oriX, oriY, oriZ));
+		END_TRY
 	}
 
 	/**
-	* @brief Convert Directivity id to enum
-	*/
-	SourceDirectivity SelectDirectivity(int directivity)
-	{
-		switch (directivity)
-		{
-		case(0):
-		{ return SourceDirectivity::omni; }
-		case(1):
-		{ return SourceDirectivity::subcardioid; }
-		case(2):
-		{ return SourceDirectivity::cardioid; }
-		case(3):
-		{ return SourceDirectivity::supercardioid; }
-		case(4):
-		{ return SourceDirectivity::hypercardioid; }
-		case(5):
-		{ return SourceDirectivity::bidirectional; }
-		case(6):
-		{ return SourceDirectivity::genelec8020c; }
-		case(7):
-		{ return SourceDirectivity::genelec8020cDTF; }
-		case(8):
-		{ return SourceDirectivity::qscK8; }
-		default:
-		{ return SourceDirectivity::omni; }
-		}
-	}
-
-	/**
-	* Updates the directivity of the audio source with the given ID.
+	* @brief Updates the directivity of the audio source with the given ID.
 	* 
 	* The mapping is as follows:
 	* 0 -> omni
@@ -415,54 +670,101 @@ extern "C"
 	* @param id The ID of the audio source to update.
 	* @param directivityID The new directivity of the source.
 	*/
-	EXPORT void API RACUpdateSourceDirectivity(int id, int directivityID)
+	EXPORT void API RACUpdateSourceDirectivity(int id, int directivityId)
 	{
-		SourceDirectivity directivity = SelectDirectivity(directivityID);
+		BEGIN_TRY
+		SourceDirectivity directivity = SelectDirectivity(directivityId);
 		UpdateSourceDirectivity(static_cast<size_t>(id), directivity);
+		END_TRY
 	}
 
 	/**
-	* Removes the audio source with the given ID.
+	* @brief Removes the audio source with the given ID.
 	*
-	* This function should be called when an audio source is no longer needed.
+	* @details This function should be called when an audio source is no longer needed.
 	* It will free up any resources that the source was using.
 	*
 	* @param id The ID of the audio source to remove.
 	*/
 	EXPORT void API RACRemoveSource(int id)
 	{
+		BEGIN_TRY
 		RemoveSource(static_cast<size_t>(id));
+		END_TRY
 	}
 
 	/**
-	* Initializes a new wall with the given parameters and returns its ID.
+	* @brief Initialises a new material with the given absorption parameters.
+	* 
+	* @details This function should be called before any walls using the material are created.
+	* 
+	* @param absorption The frequency absorption coefficients.
+	*/
+	EXPORT int API RACInitMaterial(const float* absorptionData)
+	{
+		BEGIN_TRY
+		Coefficients<> absorption = CreateAbsorptions(absorptionData);
+		return InitMaterial(absorption);
+		END_TRY
+		return -1;
+	}
+
+	/**
+	* @brief Updates the absorption of the wall with the given ID.
 	*
-	* This function should be called when a new wall is created. A wall must have 3 vertices.
+	* @details This function should be called when the absorption of a wall changes.
+	* It will update the internal representation of the wall to match the new absorption and update the late reverberation time.
+	*
+	* @param id The ID of the wall to update.
+	* @param absorptionData The frequency absorption coefficients.
+	*/
+	EXPORT void API RACUpdateMaterial(int id, const float* absorptionData)
+	{
+		BEGIN_TRY
+		Coefficients<> absorption = CreateAbsorptions(absorptionData);
+		UpdateMaterial(static_cast<size_t>(id), absorption);
+		END_TRY
+	}
+
+	/**
+	* @brief Removes the material with the given ID.
+	* 
+	* @param id The ID of the material to remove.
+	*/
+	EXPORT void API RACRemoveMaterial(int id)
+	{
+		BEGIN_TRY
+		RemoveMaterial(static_cast<size_t>(id));
+		END_TRY
+	}
+
+	/**
+	* @brief Initializes a new wall with the given parameters and returns its ID.
+	*
+	* @details This function should be called when a new wall is created. A wall must have 3 vertices.
 	* It will allocate resources for the new wall and return an ID that can be used to reference the wall in future calls.
 	*
 	* @param verticesData The vertices of the wall.
-	* @param absorptionData The frequency absorption coefficients.
+	* @param materialID The ID of the wall material.
 	*
 	* @return The ID of the new wall.
 	*/
-	EXPORT int API RACInitWall(const float* verticesData, const float* absorptionData)
+	EXPORT int API RACInitWall(const float* verticesData, int materialId)
 	{
-		std::vector<Real> a = std::vector<Real>(NUM_FREQUENCY_BANDS);
-		for (int i = 0; i < NUM_FREQUENCY_BANDS; i++)
-			a[i] = static_cast<Real>(absorptionData[i]);
-		Absorption absorption = Absorption(a);
-
+		BEGIN_TRY
 		Vertices vertices = { Vec3(verticesData[0], verticesData[1], verticesData[2]),
 			Vec3(verticesData[3], verticesData[4], verticesData[5]),
 			Vec3(verticesData[6], verticesData[7], verticesData[8]) };
 
-		return InitWall(vertices, absorption);
+		return InitWall(vertices, materialId);
+		END_TRY
+		return -1;
 	}
 
 	/**
-	* Updates the position and orientation of the wall with the given ID.
+	* @brief Updates the position and orientation of the wall with the given ID.
 	*
-	* This function should be called when the position or orientation of a wall changes.
+	* @details This function should be called when the position or orientation of a wall changes.
 	* It will update the internal representation of the wall to match the new position and orientation.
 	*
 	* @param id The ID of the wall to update.
@@ -470,60 +772,59 @@ extern "C"
 	*/
 	EXPORT void API RACUpdateWall(int id, const float* verticesData)
 	{
+		BEGIN_TRY
 		Vertices vertices = { Vec3(verticesData[0], verticesData[1], verticesData[2]),
 			Vec3(verticesData[3], verticesData[4], verticesData[5]),
 			Vec3(verticesData[6], verticesData[7], verticesData[8]) };
 
 		UpdateWall(static_cast<size_t>(id), vertices);
+		END_TRY
 	}
 
 	/**
-	* Updates the absorption of the wall with the given ID.
+	* @brief Removes the wall with the given ID.
 	*
-	* This function should be called when the absorption of a wall changes.
-	* It will update the internal representation of the wall to match the new absorption and update the late reverberation time.
-	*
-	* @param id The ID of the wall to update.
-	* @param absorptionData The frequency absorption coefficients.
-	*/
-	EXPORT void API RACUpdateWallAbsorption(int id, const float* absorptionData)
-	{
-		std::vector<Real> a = std::vector<Real>(NUM_FREQUENCY_BANDS);
-		for (int i = 0; i < NUM_FREQUENCY_BANDS; i++)
-			a[i] = static_cast<Real>(absorptionData[i]);
-		Absorption absorption = Absorption(a);
-
-		UpdateWallAbsorption(static_cast<size_t>(id), absorption);
-	}
-
-	/**
-	* Removes the wall with the given ID.
-	*
-	* This function should be called when a wall is no longer needed.
+	* @details This function should be called when a wall is no longer needed.
 	* It will free up any resources that the wall was using and remove it from the spatialiser.
 	*
 	* @param id The ID of the wall to remove.
 	*/
 	EXPORT void API RACRemoveWall(int id)
 	{
+		BEGIN_TRY
 		RemoveWall(static_cast<size_t>(id));
+		END_TRY
 	}
 
 	/**
-	* Updates the planes and edges of the room.
+	* @brief Updates the planes and edges of the room.
 	*
-	* This function should be called after all walls have been updated for a frame.
+	* @details This function should be called after all walls have been updated for a frame.
 	* It will update the planes and edges of the room to match the new wall positions and orientations.
 	*/
 	EXPORT void API RACUpdatePlanesAndEdges()
 	{
+		BEGIN_TRY
 		UpdatePlanesAndEdges();
+		END_TRY
 	}
 
 	/**
-	* Submits an audio buffer to the audio source with the given ID.
+	* @brief Updates the late reverberation gain.
+	* 
+	* @param gain The new late reverberation gain.
+	*/
+	EXPORT void API RACUpdateLateReverbGain(float gain)
+	{
+		BEGIN_TRY
+		UpdateLateReverbGain(static_cast<Real>(gain));
+		END_TRY
+	}
+
+	/**
+	* @brief Submits an audio buffer to the audio source with the given ID.
 	*
-	* This function should be called when there is a new audio buffer for a source.
+	* @details This function should be called when there is a new audio buffer for a source.
 	* It will process the audio buffer and add it to the output buffer.
 	*
 	* @param id The ID of the audio source to update.
@@ -531,52 +832,71 @@ extern "C"
 	*/
 	EXPORT void API RACSubmitAudio(int id, const float* data)
 	{
-		Buffer<> buffer = Buffer<>(NUM_FRAMES);
-		std::transform(data, data + NUM_FRAMES, buffer.begin(),
-			[](float value) { return static_cast<Real>(value); });
-		SubmitAudio(static_cast<size_t>(id), buffer);
+		BEGIN_TRY
+		/*std::transform(data, data + NUM_FRAMES, buffer.begin(),
+			[](float value) { return static_cast<Real>(value); });*/
+		for (int i = 0; i < NUM_FRAMES; i++)
+			inputBuffer[i] = static_cast<Real>(data[i]);
+		SubmitAudio(static_cast<size_t>(id), inputBuffer);
+		END_TRY
 	}
 
 	/**
-	* Processes the output of the spatialiser.
+	* @brief Processes the output of the spatialiser.
 	*
-	* This function should be called after all audio sources have been updated for a frame.
+	* @details This function should be called after all audio sources have been updated for a frame.
 	* It will process the late reverberation and prepare the interleaved output buffer.
 	*
 	* @return True if the processing was successful and the output buffer is ready, false otherwise.
 	*/
 	EXPORT bool API RACProcessOutput()
 	{
-		GetOutput(buffer);	
-		if (!buffer.Valid())
+		BEGIN_TRY
+		GetOutput(outputBuffer);	
+		if (!outputBuffer.Valid())
 			return false;
 		return true;
+		END_TRY
+		return false;
 	}
 
 	/**
-	* Returns a pointer to the output buffer of the spatialiser.
+	* @brief Returns a pointer to the output buffer of the spatialiser.
 	*
-	* This function should be called after RACProcessOutput has returned true.
+	* @details This function should be called after RACProcessOutput has returned true.
 	* It will return a pointer to the output buffer that contains the processed output buffer.
 	*
 	* @param buf A pointer to a float pointer. This will be set to point to the interleaved output buffer.
 	*/
 	EXPORT void API RACGetOutputBuffer(float* sendBuffer)
 	{
-		for (Real value : buffer)
+		BEGIN_TRY
+		for (Real value : outputBuffer)
 			*sendBuffer++ = static_cast<float>(value);
+		END_TRY
 	}
 
 	/**
-	* Sets the spatialiser to impulse response mode if mode is true
+	* @brief Record an impulse response using the current listener position
 	*
-	* This function should be called with true if the output of a stationary source is being recorded.
-	* 
-	* @param lerpFactor The default interpolation factor.
-	* @params mode True if disable all interpolation, false otherwise.
+	* @details Assumes listener position does not change during recording
+	*
+	* @param posX The x-coordinate of the source's position.
+	* @param posY The y-coordinate of the source's position.
+	* @param posZ The z-coordinate of the source's position.
+	* @param oriW The w-component of the source's orientation quaternion.
+	* @param oriX The x-component of the source's orientation quaternion.
+	* @param oriY The y-component of the source's orientation quaternion.
+	* @param oriZ The z-component of the source's orientation quaternion.
+	* @params outputBuffer Buffer to write to.
 	*/
-	EXPORT void API RACUpdateImpulseResponseMode(bool mode)
+	EXPORT void API RACRecordImpulseResponse(float posX, float posY, float posZ, float oriW, float oriX, float oriY, float oriZ, float* sendBuffer, int numSamples)
 	{
-		UpdateImpulseResponseMode(mode);
+		BEGIN_TRY
+		Buffer<> buffer = Buffer<>::Zero(numSamples);
+		RecordImpulseResponse(Vec3(posX, posY, posZ), Vec4(oriW, oriX, oriY, oriZ), buffer);
+		for (Real value : buffer)
+			*sendBuffer++ = static_cast<float>(value);
+		END_TRY
 	}
 }

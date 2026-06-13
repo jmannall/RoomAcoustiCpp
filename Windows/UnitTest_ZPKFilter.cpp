@@ -37,18 +37,18 @@ namespace RAC
 
 		TEST_METHOD(Default)
 		{
-			const int fs = 48e3;
-			const Real lerpFactor = 0.5;
+			const int fs = 48000;
+			const Real lerpFactor = REAL_CONST(0.5);
 
-			const Real z1 = 0.25;
-			const Real z2 = -0.99;
-			const Real p1 = 0.99;
-			const Real p2 = -0.25;
-			const Real k = 0.0;
+			const Real z1 = REAL_CONST(0.25);
+			const Real z2 = REAL_CONST(-0.99);
+			const Real p1 = REAL_CONST(0.99);
+			const Real p2 = REAL_CONST(-0.25);
+			const Real k = REAL_CONST(0.0);
 
 			ZPKFilter filter(fs);
 
-			std::vector<Real> input = { 1.0, 0.0, 0.2, 0.0, -0.3, 0.0, 0.0, 0.0, 0.0, 2.0, 0.0, -0.2 };
+			std::vector<Real> input = { REAL_CONST(1.0), REAL_CONST(0.0), REAL_CONST(0.2), REAL_CONST(0.0), REAL_CONST(-0.3), REAL_CONST(0.0), REAL_CONST(0.0), REAL_CONST(0.0), REAL_CONST(0.0), REAL_CONST(2.0), REAL_CONST(0.0), REAL_CONST(-0.2) };
 			std::vector<Real> output = ProcessZPKFilter(z1, z2, p1, p2, k, input);
 			;
 			for (int i = 0; i < output.size(); i++)
@@ -57,19 +57,19 @@ namespace RAC
 
 		TEST_METHOD(ProcessAudio)
 		{
-			const int fs = 48e3;
-			const Real lerpFactor = 0.5;
+			const int fs = 48000;
+			const Real lerpFactor = REAL_CONST(0.5);
 
-			const Real z1 = -0.1;
-			const Real z2 = 0.2;
-			const Real p1 = -0.99;
-			const Real p2 = 0.43;
-			const Real k = 0.5;
-			Coefficients zpk = Coefficients<std::array<Real, 5>>({ z1, z2, p1, p2, k });
+			const Real z1 = REAL_CONST(-0.1);
+			const Real z2 = REAL_CONST(0.2);
+			const Real p1 = REAL_CONST(-0.99);
+			const Real p2 = REAL_CONST(0.43);
+			const Real k = REAL_CONST(0.5);
+			Coefficients<Real, 5> zpk({ z1, z2, p1, p2, k });
 
 			ZPKFilter filter(zpk, fs);
 
-			std::vector<Real> input = { 0.9, -0.1, 0.2, 0.0, -0.3, 0.0, 3.0, 2.1, -0.22, 2.0, 0.0, -0.2 };
+			std::vector<Real> input = { REAL_CONST(0.9), REAL_CONST(-0.1), REAL_CONST(0.2), REAL_CONST(0.0), REAL_CONST(-0.3), REAL_CONST(0.0), REAL_CONST(3.0), REAL_CONST(2.1), REAL_CONST(-0.22), REAL_CONST(2.0), REAL_CONST(0.0), REAL_CONST(-0.2) };
 			std::vector<Real> output = ProcessZPKFilter(z1, z2, p1, p2, k, input);
 			;
 			for (int i = 0; i < output.size(); i++)
@@ -78,28 +78,28 @@ namespace RAC
 
 		TEST_METHOD(IsInterpolating)
 		{
-			const int fs = 48e3;
-			const Real lerpFactor = 0.5;
+			const int fs = 48000;
+			const Real lerpFactor = REAL_CONST(0.5);
 			
-			const Real z1 = -0.1;
-			const Real z2 = 0.2;
-			const Real p1 = -0.99;
-			const Real p2 = 0.43;
-			const Real k = 0.5;
-			const Coefficients zpk = Coefficients<std::array<Real, 5>>({ z1, z2, p1, p2, k });
+			const Real z1 = REAL_CONST(-0.1);
+			const Real z2 = REAL_CONST(0.2);
+			const Real p1 = REAL_CONST(-0.99);
+			const Real p2 = REAL_CONST(0.43);
+			const Real k = REAL_CONST(0.5);
+			const Coefficients<Real, 5> zpk({ z1, z2, p1, p2, k });
 
 			ZPKFilter filter(zpk, fs);
 
-			const Real newZ1 = -0.3;
-			const Real newZ2 = -0.7;
-			const Real newP1 = -0.1;
-			const Real newP2 = 0.2;
-			const Real newK = 0.9;
-			const Coefficients newZPK = Coefficients<std::array<Real, 5>>({ newZ1, newZ2, newP1, newP2, newK });
+			const Real newZ1 = REAL_CONST(-0.3);
+			const Real newZ2 = REAL_CONST(-0.7);
+			const Real newP1 = REAL_CONST(-0.1);
+			const Real newP2 = REAL_CONST(0.2);
+			const Real newK = REAL_CONST(0.9);
+			const Coefficients<Real, 5> newZPK({ newZ1, newZ2, newP1, newP2, newK });
 
 			filter.SetTargetParameters(newZPK);
 
-			std::vector<Real> input = { 1.0, 1.2, 0.2, 0.1, -0.3, -0.2, 0.0, 0.0, 0.0, 2.0, 0.0, -0.2 };
+			std::vector<Real> input = { REAL_CONST(1.0), REAL_CONST(1.2), REAL_CONST(0.2), REAL_CONST(0.1), REAL_CONST(-0.3), REAL_CONST(-0.2), REAL_CONST(0.0), REAL_CONST(0.0), REAL_CONST(0.0), REAL_CONST(2.0), REAL_CONST(0.0), REAL_CONST(-0.2) };
 			std::vector<Real> output = ProcessZPKFilter(z1, z2, p1, p2, k, input);
 			;
 			for (int i = 0; i < output.size(); i++)
@@ -108,19 +108,19 @@ namespace RAC
 
 		TEST_METHOD(ClearBuffers)
 		{
-			const int fs = 48e3;
-			const Real lerpFactor = 0.5;
+			const int fs = 48000;
+			const Real lerpFactor = REAL_CONST(0.5);
 			
-			const Real z1 = 0.8;
-			const Real z2 = -0.2;
-			const Real p1 = 0.79;
-			const Real p2 = -0.22;
-			const Real k = 0.2;
+			const Real z1 = REAL_CONST(0.8);
+			const Real z2 = REAL_CONST(-0.2);
+			const Real p1 = REAL_CONST(0.79);
+			const Real p2 = REAL_CONST(-0.22);
+			const Real k = REAL_CONST(0.2);
 
-			std::vector<Real> input = { 1.0, 0.0, 0.2, 0.5, 0.0, 0.3, 0.4, 0.2 };
+			std::vector<Real> input = { REAL_CONST(1.0), REAL_CONST(0.0), REAL_CONST(0.2), REAL_CONST(0.5), REAL_CONST(0.0), REAL_CONST(0.3), REAL_CONST(0.4), REAL_CONST(0.2) };
 			std::vector<Real> output = ProcessZPKFilter(z1, z2, p1, p2, k, input);
 
-			Coefficients zpk = Coefficients<std::array<Real, 5>>({ z1, z2, p1, p2, k });
+			Coefficients<Real, 5> zpk({ z1, z2, p1, p2, k });
 			ZPKFilter filter(zpk, fs);
 
 			for (int i = 0; i < 11; i++)

@@ -26,6 +26,7 @@
 #include "Spatialiser/Wall.h"
 #include "Spatialiser/Edge.h"
 #include "Spatialiser/Types.h"
+#include "Spatialiser/Configs.h"
 #include "Diffraction/Path.h"
 #include "Diffraction/Models.h"
 #include "Spatialiser/AirAbsorption.h"
@@ -39,7 +40,7 @@
 #include "Common/Transform.h"
 
 // Unity headers
-#include "Unity/Debug.h"
+#include "Common/Debug.h"
 
 using namespace Common;
 namespace RAC
@@ -47,6 +48,8 @@ namespace RAC
 	using namespace Common;
 	namespace Spatialiser
 	{
+		typedef uint32_t partid_t;
+
 		/**
 		* @brief Stores data used to create an image source
 		*/
@@ -57,8 +60,8 @@ namespace RAC
 			*/
 			struct Part
 			{
-				bool isReflection;		// True if the part is a reflection, false if it is a diffraction
-				size_t id;				// ID of the reflecting plane or diffracting edge
+				bool	 isReflection;
+				partid_t id;										// ID of the reflecting plane or diffracting edge
 
 				/**
 				* @brief Constructor that initialises the part
@@ -66,7 +69,7 @@ namespace RAC
 				* @param id The ID of the reflecting plane or diffracting edge
 				* @param isReflection True if the part is a reflection, false if it is a diffraction
 				*/
-				Part(const size_t id, const bool isReflection) : id(id), isReflection(isReflection) {};
+				Part(const size_t id, const bool isReflection) : isReflection(isReflection), id(static_cast<partid_t>(id)) {};
 			};
 
 			/**
@@ -96,42 +99,43 @@ namespace RAC
 			};
 
 		public:
-
 			/**
 			* @brief Constructor that initialises the image source data
 			*
 			* @param numFrequencyBands The number of frequency bands for applying wall absorption
 			*/
-			ImageSourceData(int numFrequencyBands) : valid(false), visible(false), feedsFDN(false), reflection(false), diffraction(false),
-				mAbsorption(numFrequencyBands), distance(0.0), lastUpdatedCycle(false), idKey{ '0' }, sourceKey{ 's' }, reflectionKey{ 'r' }, diffractionKey{ 'd' },
-				mPositions(1, Vec3()), pathParts(1, Part(0, true)), mEdges(1, { Vec3(), Vec3() }) {}
+			ImageSourceData(int numFrequencyBands) : mAbsorption(numFrequencyBands),
+				mPositions(1, Vec3()), pathParts(1, Part(0, true)), mEdges(1, { Vec3(), Vec3() })
+			{
+				ResetAbsorption();
+			}
 
 			/**
-			* @brief Default deconstructor
-			*/
-			~ImageSourceData() {};
+			 * @brief Makes a minimal copy of this
+			 */
+			std::shared_ptr<ImageSourceData> CreateShallowCopy() const;
 
 			/**
 			* @brief Adds absorption to the image source
 			*
 			* @param absorption The absorption to add
 			*/
-			inline void AddAbsorption(const Absorption<>& absorption) { mAbsorption *= absorption; }
+			inline void AddAbsorption(const Coefficients<>& absorption) { mAbsorption *= absorption; }
 
 			/**
 			* @brief Resets the absorption of the image source to 1
 			*/
-			inline void ResetAbsorption() { mAbsorption = 1.0; }
+			inline void ResetAbsorption() { mAbsorption.SetConstant((Real)1.0); }
 
 			/**
 			* @return A reference to the absorption of the image source
 			*/
-			inline Absorption<>& GetAbsorption() { return mAbsorption; }
+			inline Coefficients<>& GetAbsorption() { return mAbsorption; }
 
 			/**
 			* @return The absorption of the image source
 			*/
-			inline const Absorption<>& GetAbsorption() const { return mAbsorption; }
+			inline const Coefficients<>& GetAbsorption() const { return mAbsorption; }
 
 			/**
 			* @brief Creates a string key representing the image source path
@@ -145,7 +149,7 @@ namespace RAC
 			*/
 			inline void AddPlaneID(const size_t id)
 			{
-				pathParts.back().id = id;
+				pathParts.back().id = static_cast<partid_t>(id);
 				pathParts.back().isReflection = true;
 				reflection = true;
 			}
@@ -160,7 +164,11 @@ namespace RAC
 			/**
 			* @return The previous plane or edge ID
 			*/
-			inline size_t GetID() const { assert(pathParts.size() > 0); return pathParts.back().id; }
+			inline size_t GetID() const
+			{
+				RAC_DEBUG_ASSERT(ToInt(pathParts.size()) > 0, "No path parts have been created");
+				return pathParts.back().id;
+			}
 
 			/**
 			* @brief Returns the ID of the plane or edge at the given index within the image source path
@@ -168,7 +176,12 @@ namespace RAC
 			* @param i The index of the reflection or diffraction within the image source path
 			* @return The ID of the plane or edge at the given index
 			*/
-			inline size_t GetID(int i) const { assert(i < pathParts.size()); return pathParts[i].id; }
+			inline size_t GetID(int i) const
+			{
+				RAC_DEBUG_ASSERT(i >= 0, "Path parts index out of bounds: " + ToString(i));
+				RAC_DEBUG_ASSERT(i < ToInt(pathParts.size()), "Path parts index out of bounds: " + ToString(i));
+				return pathParts[i].id;
+			}
 
 			/**
 			* @brief Returns whether given index within the image source path is a reflection or diffraction
@@ -176,7 +189,12 @@ namespace RAC
 			* @param i The index of the reflection or diffraction within the image source path
 			* @return True if the part is a reflection, false if it is a diffraction
 			*/
-			inline bool IsReflection(int i) const { assert(i < pathParts.size()); return pathParts[i].isReflection; }
+			inline bool IsReflection(int i) const
+			{
+				RAC_DEBUG_ASSERT(i >= 0, "Path parts index out of bounds: " + ToString(i));
+				RAC_DEBUG_ASSERT(i < ToInt(pathParts.size()), "Path parts index out of bounds: " + ToString(i));
+				return pathParts[i].isReflection;
+			}
 
 			/**
 			* @return The string key representing the image source path
@@ -221,7 +239,20 @@ namespace RAC
 			* @param i The index of the position to return
 			* @return The position of the image source or image edge apex point at the given index
 			*/
-			Vec3 GetPosition(int i) const;
+			inline Vec3 GetPosition(int i) const
+			{
+				RAC_DEBUG_ASSERT(i >= 0, "Positions index out of bounds: " + ToString(i));
+				if (diffraction)
+				{
+					if (i >= diffractionIndex)
+					{
+						RAC_DEBUG_ASSERT(i < ToInt(mEdges.size()), "Edges index out of bounds: " + ToString(i));
+						return mEdges[i].GetEdgeCoordinate(mDiffractionPath.GetApexZ());
+					}
+				}
+				RAC_DEBUG_ASSERT(i < ToInt(mPositions.size()), "Positions index out of bounds: " + ToString(i));
+				return mPositions[i];
+			}
 
 			/**
 			* @brief Updates the diffraction path of the image source
@@ -253,6 +284,7 @@ namespace RAC
 				plane.ReflectPointInPlaneNoCheck(mDiffractionPath.sData.point);
 				mDiffractionPath.UpdateParameters(source, receiver);
 				SetTransform(source, mDiffractionPath.CalculateVirtualPostion());
+				SetDistance(receiver);
 			}
 
 			/**
@@ -263,7 +295,13 @@ namespace RAC
 			/**
 			* @return The apex of the diffraction path
 			*/
-			inline Vec3 GetApex() const { assert(mEdges.size() > 0); return mEdges[diffractionIndex].GetEdgeCoordinate(mDiffractionPath.GetApexZ()); }
+			inline Vec3 GetApex() const
+			{
+				RAC_DEBUG_ASSERT(ToInt(mEdges.size()) > 0, "No edges added to image source");
+				RAC_DEBUG_ASSERT(diffractionIndex >= 0, "Diffraction index out of bounds: " + ToString(diffractionIndex));
+				RAC_DEBUG_ASSERT(diffractionIndex < ToInt(mEdges.size()), "Diffraction index out of bounds: " + ToString(diffractionIndex));
+				return mEdges[diffractionIndex].GetEdgeCoordinate(mDiffractionPath.GetApexZ());
+			}
 
 			/**
 			* @brief Sets the image source as visible and whether it feeds the FDN
@@ -366,17 +404,11 @@ namespace RAC
 			/**
 			* @return The diffraction path of the image source
 			*/
-			inline Diffraction::Path GetDiffractionPath() const { assert(diffraction); return mDiffractionPath; }
-
-			/**
-			* @brief Updates the cycle the image source was last updated in
-			*/
-			inline void UpdateCycle(const bool thisCycle) { lastUpdatedCycle = thisCycle; }
-
-			/**
-			* @return True if the image source was updated in the current cycle, false otherwise
-			*/
-			inline bool UpdatedThisCycle(const bool thisCycle) const { return lastUpdatedCycle == thisCycle; }
+			inline Diffraction::Path GetDiffractionPath() const
+			{
+				RAC_DEBUG_ASSERT(diffraction, "Accessing diffraction path from a reflection only image source");
+				return mDiffractionPath;
+			}
 
 		private:
 
@@ -401,11 +433,11 @@ namespace RAC
 
 			int arrayID{ -1 };
 
-			std::string key;							// String key that defines the image source path
-			std::array<char, 21> idKey;					// Char that stores the ID of a plane, edge or source
-			std::array<char, 1> sourceKey;				// Char that stores the source key
-			std::array<char, 1> reflectionKey;			// Char that stores the reflection key
-			std::array<char, 1> diffractionKey;			// Char that stores the diffraction key
+			std::string key;								// String key that defines the image source path
+			std::array<char, 21> idKey{ '0' };				// Char that stores the ID of a plane, edge or source
+			std::array<char, 1> sourceKey{ 's' };			// Char that stores the source key
+			std::array<char, 1> reflectionKey{ 'r' };		// Char that stores the reflection key
+			std::array<char, 1> diffractionKey{ 'd' };		// Char that stores the diffraction key
 
 			std::vector<Part> pathParts;			// Reflection and diffraction parts of the image source path
 			std::vector<Vec3> mPositions;			// Positions of the image source along the path
@@ -414,16 +446,18 @@ namespace RAC
 			Vec4 previousPlane;						// Previous reflected plane information where: w -> D, x, y, z -> Normal
 
 			Diffraction::Path mDiffractionPath;			// Diffraction path of the image source
-			Absorption<> mAbsorption;					// Wall absorption of the image source
-			Real distance;								// Distance of the image source from the listener
+			Coefficients<> mAbsorption;					// Wall absorption of the image source
+			Real distance{ 0.0 };						// Distance of the image source from the listener
 			CTransform transform;						// 3DTI transform of the image source
 
-			bool valid;						// True if the image source is valid, false otherwise
-			bool visible;					// True if the image source is visible, false otherwise
-			bool feedsFDN;					// True if the image source should feed the FDN, false otherwise
-			bool reflection;				// True if the image source path includes any reflections, false otherwise
-			bool diffraction;				// True if the image source path includes any diffractions, false otherwise
-			bool lastUpdatedCycle;			// True if the image source was updated in the current cycle, false otherwise
+			bool valid{ false };					// True if the image source is valid, false otherwise
+			bool visible{ false };					// True if the image source is visible, false otherwise
+			bool feedsFDN{ false };					// True if the image source should feed the FDN, false otherwise
+			bool reflection{ false };				// True if the image source path includes any reflections, false otherwise
+			bool diffraction{ false };				// True if the image source path includes any diffractions, false otherwise
+
+			// disable assignment as we just want to use shared pointers
+			void operator=(const ImageSourceData&) = delete;
 		};
 
 		/**
@@ -437,8 +471,16 @@ namespace RAC
 			* @brief Default constructor
 			*
 			* @param core The 3DTI processing core
+			* @params dspConfig The spatialiser configuration
 			*/
-			ImageSource(Binaural::CCore* core) : Access(), mCore(core) {}
+			ImageSource(Binaural::CCore* core, const std::shared_ptr<DSPConfig> dspConfig) : Access(), mCore(core),
+				bStore(dspConfig->GetData().numFrames), bDiffStore(dspConfig->GetData().numFrames)
+			{
+#if MATRIX_LIBRARY == EIGEN_FLAG // Init to zeros
+				bStore.Reset();
+				bDiffStore.Reset();
+#endif
+			}
 
 			/**
 			* @brief Default deconstructor. Removes the image source from the 3DTI processing core
@@ -457,7 +499,7 @@ namespace RAC
 			* @param data The image source data to initialise with
 			* @param fdnChannel The FDN channel to feed, -1 if the image source does not feed the FDN
 			*/
-			void Init(const Buffer<>* inputBuffer, const std::shared_ptr<Config>& config, const ImageSourceData& data, int fdnChannel);
+			void Init(const Buffer<>* inputBuffer, const std::shared_ptr<DSPConfig>& config, const std::shared_ptr<ImageSourceData>& data, int fdnChannel);
 
 			/**
 			* @brief Update the image source and remove if no longer visible
@@ -480,20 +522,6 @@ namespace RAC
 			inline int GetFDNChannel() const { return mFDNChannel.load(std::memory_order_acquire); }
 
 			/**
-			* @brief Updates the target spatialisation mode for the HRTF processing
-			*
-			* @params mode The new spatialisation mode
-			*/
-			inline void UpdateSpatialisationMode(const SpatialisationMode mode) { spatialisationMode.store(mode, std::memory_order_release); }
-
-			/**
-			* @brief Updates the target impulse response mode
-			*
-			* @params mode True if disable 3DTI Interpolation, false otherwise.
-			*/
-			inline void UpdateImpulseResponseMode(const bool mode) { impulseResponseMode.store(mode, std::memory_order_release); }
-
-			/**
 			* @brief Update the diffraction model
 			*
 			* @params model The new diffraction model
@@ -508,7 +536,9 @@ namespace RAC
 			* @param reverbInput The reverb input buffer to write to
 			* @param lerpFactor The lerp factor for interpolation
 			*/
-			void ProcessAudio(Buffer<>& outputBuffer, Matrix& reverbInput, const Real lerpFactor);
+			void ProcessAudio(Buffer<>& outputBuffer, const AudioData& audioData);
+
+			void ProcessSingleFDNSend(Matrix<>& reverbInput, const Real lerpFactor);
 
 			/**
 			* @brief Resets the image source by clearing the buffers and removing the source from the 3DTI processing core
@@ -518,7 +548,7 @@ namespace RAC
 			/**
 			* @return True if the source is ready to be initialised, false otherwise
 			*/
-			bool IsReset() const { return isReset.load(std::memory_order_release); }
+			bool IsReset() const { return isReset.load(std::memory_order_acquire); }
 
 		private:
 			/**
@@ -540,7 +570,7 @@ namespace RAC
 			*
 			* @param config The current RAC configuration
 			*/
-			void LateInit(const std::shared_ptr<Config>& config);
+			void LateInit(const std::shared_ptr<DSPConfig>& config);
 
 			/**
 			* @brief Reset diffraction models and initialise the diffraction model with the given path
@@ -553,8 +583,10 @@ namespace RAC
 
 			/**
 			* @brief Initialises the image source in the 3DTI processing core
+			* 
+			* @params dspConfig The spatialiser configuration
 			*/
-			void InitSource();
+			void InitSource(const std::shared_ptr<DSPConfig>& dspConfig);
 
 			/**
 			* @brief Romeves the image source from the 3DTI processing core
@@ -615,11 +647,11 @@ namespace RAC
 			CEarPair<CMonoBuffer<float>> bOutput;		// 3DTI Stero Output buffer
 			CMonoBuffer<float> bMonoOutput;				// 3DTI Mono output buffer for reverb send
 
-			Parameter gain{ 0.0 };								// 1.0 if the source is visible, 0.0 otherwise
-			std::unique_ptr<GraphicEQ> mFilter;					// Frequency dependent reflection and directivity filter
+			Parameter gain{ (Real)0.0 };								// 1.0 if the source is visible, 0.0 otherwise
+			std::unique_ptr<GraphicEQ<>> mFilter;					// Frequency dependent reflection and directivity filter
 			std::unique_ptr<AirAbsorption> mAirAbsorption;		// Air absorption filter
 
-			Parameter diffractionGain{ 1.0 };											// Gain for crossfading diffracton models
+			Parameter diffractionGain{ (Real)1.0 };											// Gain for crossfading diffracton models
 			Diffraction::Path mDiffractionPath;											// Diffraction path
 			std::atomic<DiffractionModel> currentDiffractionModel;						// Current diffraction model
 			std::shared_ptr<Diffraction::Model> activeModel;							// Active diffraction model for processing audio
@@ -634,14 +666,11 @@ namespace RAC
 #endif
 			std::atomic<bool> isCrossFading{ false };									// True if currently crossfading between diffraction models, false otherwise
 
-			bool reflection{ false };					// True if the image source path includes any reflections, false otherwise
-			bool diffraction{ false };					// True if the image source path includes any diffractions, false otherwise
+			bool reflection{ false };			// True if the image source path includes any reflections, false otherwise
+			bool diffraction{ false };			// True if the image source path includes any diffractions, false otherwise
 
-			std::atomic<bool> impulseResponseMode{ false };		// True if the image source should be in impulse response mode, false otherwise
-			bool currentImpulseResponseMode{ false };			// True if the image source is in impulse response mode, false otherwise
-
-			std::atomic<SpatialisationMode> spatialisationMode;								// Target spatialisation mode
-			SpatialisationMode currentSpatialisationMode{ SpatialisationMode::quality };	// Current spatialisation mode
+			bool currentImpulseResponseMode{ false };									// True if the image source is in impulse response mode, false otherwise
+			SpatialisationMode currentSpatialisationMode{ SpatialisationMode::none };	// Current spatialisation mode
 
 			Binaural::CCore* mCore;										// 3DTI processing core
 			shared_ptr<Binaural::CSingleSourceDSP> mSource{ nullptr };	// 3DTI source

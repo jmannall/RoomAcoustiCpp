@@ -31,11 +31,14 @@ namespace RAC
 		public:
 			/**
 			* @brief Constructor that initialises the image sources
+			* 
+			* @params core The 3DTI processing core
+			* @params dspConfig The spatialiser configuration
 			*/
-			ImageSourceManager(Binaural::CCore* core)
+			ImageSourceManager(Binaural::CCore* core, const std::shared_ptr<DSPConfig> dspConfig)
 			{
 				for (auto& imageSource : mImageSources)
-					imageSource.emplace(core);
+					imageSource.emplace(core, dspConfig);
 			}
 
 			/**
@@ -47,35 +50,18 @@ namespace RAC
 			* @brief Process audio for all image sources
 			* 
 			* @param outputBuffer The output audio buffer to write to
-			* @param reverbInput The reverb input matrix to write to
 			* @param lerpFactor The lerp factor for interpolation
 			*/
-			inline void ProcessAudio(Buffer<>& outputBuffer, Matrix& reverbInput, const Real lerpFactor)
+			inline void ProcessAudio(Buffer<>& outputBuffer, const AudioData& audioData)
 			{
 				for (auto& imageSource : mImageSources)
-					imageSource->ProcessAudio(outputBuffer, reverbInput, lerpFactor);
+					imageSource->ProcessAudio(outputBuffer, audioData);
 			}
 
-			/**
-			* @brief Update the spatialisation mode for all image sources
-			* 
-			* @param mode The new spatialisation mode
-			*/
-			inline void UpdateSpatialisationMode(SpatialisationMode mode)
+			inline void ProcessSingleFDNSend(Matrix<>& reverbInput, const Real lerpFactor)
 			{
 				for (auto& imageSource : mImageSources)
-					imageSource->UpdateSpatialisationMode(mode);
-			}
-
-			/**
-			* @brief Update the impulse response mode for all image sources
-			*
-			* @param mode True if disable AttuenationSmoothing, false otherwise
-			*/
-			inline void UpdateImpulseResponseMode(bool mode)
-			{
-				for (auto& imageSource : mImageSources)
-					imageSource->UpdateImpulseResponseMode(mode);
+					imageSource->ProcessSingleFDNSend(reverbInput, lerpFactor);
 			}
 
 			/**

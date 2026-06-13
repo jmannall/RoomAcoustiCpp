@@ -28,14 +28,14 @@ namespace RAC
 		// NOTE!!! default values of Peaking filters 1000Hz, 1.0 gain. Not good for lr filter
 		class LinkwitzRiley
 		{
-			typedef Coefficients<std::array<Real, 4>> Parameters;
+			typedef Coefficients<Real, 4> Parameters;
 		public:
 			/**
 			* @brief Constructor that initialises a default Linkwitz Riley filterbank
 			*
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
-			LinkwitzRiley(const int sampleRate) : LinkwitzRiley(Parameters(1.0), { 176.0, 775.0, 3408.0 }, sampleRate) {}
+			LinkwitzRiley(const int sampleRate) : LinkwitzRiley(Parameters((Real)1.0), { (Real)176.0, (Real)775.0, (Real)3408.0 }, sampleRate) {}
 
 			/**
 			* @brief Constructor that initialises a default Linkwitz Riley filterbank
@@ -43,7 +43,7 @@ namespace RAC
 			* @param gains The filter band gains
 			* @param sampleRate The sample rate for calculating filter coefficients
 			*/
-			LinkwitzRiley(const Parameters& gains, const int sampleRate) : LinkwitzRiley(gains, { 176.0, 775.0, 3408.0 }, sampleRate) {}
+			LinkwitzRiley(const Parameters& gains, const int sampleRate) : LinkwitzRiley(gains, { (Real)176.0, (Real)775.0, (Real)3408.0 }, sampleRate) {}
 
 			/**
 			* @brief Constructor that initialises a Linkwitz Riley filterbank with three cutoff frequencies
@@ -124,7 +124,7 @@ namespace RAC
 			*/
 			static inline Parameters CalculateMidFrequencies(const std::array<Real, 3>& fc)
 			{
-				return Parameters({ std::sqrt(20.0 * fc[0]), std::sqrt(fc[0] * fc[1]), std::sqrt(fc[1] * fc[2]), std::sqrt(fc[2] * 20000.0) });
+				return Parameters(std::array<Real, 4>({ std::sqrt((Real)20.0 * fc[0]), std::sqrt(fc[0] * fc[1]), std::sqrt(fc[1] * fc[2]), std::sqrt(fc[2] * (Real)20000.0) }));
 			}
 
 			/*
@@ -135,7 +135,7 @@ namespace RAC
 			void InterpolateGains(const Real lerpFactor);
 
 #ifdef __ANDROID__
-			std::shared_ptr<Parameters> targetGains;		// Target filter band gains
+			std::shared_ptr<Parameters> targetGains;			// Target filter band gains
 #else
 			std::atomic<std::shared_ptr<Parameters>> targetGains;		// Target filter band gains
 #endif

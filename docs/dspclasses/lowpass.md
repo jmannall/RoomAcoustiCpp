@@ -1,8 +1,9 @@
-<!-- filepath: c:\GitHub\jmannall\RoomAcoustiCpp\docs\dspclasses\lowpass.md -->
 # LowPass
 
+Most users will interact with RoomAcoustiC++ through the high-level API in [`Spatialiser/Interface.h`](../spatialiser/interface.md). This page documents lower-level details for advanced usage.
+
 The `LowPass` class implements a second-order low-pass IIR filter.
-It derives from `IIRFilter2Param1`.
+It derives from `IIRFilter2Param1<>`.
 
 - **Namespace:** `RAC::DSP`
 - **Header:** `DSP/IIRFilter.h`
@@ -13,15 +14,14 @@ It derives from `IIRFilter2Param1`.
 ## Class Definition
 
 ```cpp
-class LowPass : public IIRFilter2Param1
+class LowPass : public IIRFilter2Param1<>
 {
 public:
     LowPass(const int sampleRate);
     LowPass(const Real fc, const int sampleRate);
-    ~LowPass();
 
     inline void SetTargetFc(const Real fc);
-    // ...inherited methods from IIRFilter2Param1...
+    // ...inherited methods from IIRFilter2Param1<>...
 
 private:
     void UpdateCoefficients(const Real fc) override;
@@ -43,12 +43,6 @@ Initializes the filter with the given sample rate and a default cutoff frequency
 Initializes the filter with the given sample rate and cutoff frequency.  
 - `fc`: The cutoff frequency (Hz).  
 - `sampleRate`: The sample rate for calculating filter coefficients.
-
----
-
-### `#!cpp ~LowPass()`
-**Destructor.**  
-Cleans up the filter.
 
 ---
 

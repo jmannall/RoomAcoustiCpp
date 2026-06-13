@@ -19,53 +19,26 @@
 #include "Common/Vec3.h"
 #include "Common/Vec4.h"
 
+// DSP headers
+#include "DSP/DCBlocker.h"
+
 // Spatialiser headers
+#include "Spatialiser/ContextOptionalArguments.h"
 #include "Spatialiser/Types.h"
 #include "Spatialiser/SourceManager.h"
 #include "Spatialiser/Reverb.h"
 #include "Spatialiser/Room.h"
 #include "Spatialiser/ImageEdge.h"
 #include "Spatialiser/HeadphoneEQ.h"
+#include "Spatialiser/TracingThread.h"
 
 // 3DTI Headers
 #include "Common/Transform.h"
 #include "BinauralSpatializer/3DTI_BinauralSpatializer.h"
 
-
 #include <chrono>
 #include <filesystem>
 #include <ctime>
-
-inline std::string GetTimestamp() {
-	// Get current time
-	auto now = std::chrono::system_clock::now();
-	std::time_t time_now = std::chrono::system_clock::to_time_t(now);
-
-	std::tm local_time;
-#if __ANDROID__
-	localtime_r(&time_now, &local_time);
-#else
-	localtime_s(&local_time, &time_now);
-#endif
-
-	// Format time into string: YYYY-MM-DD_HH-MM-SS
-	std::stringstream ss;
-	ss << std::put_time(&local_time, "%Y-%m-%d_%H-%M-%S");
-	std::string timestamp = ss.str();
-
-	// Full log file path
-	return timestamp;
-}
-
-inline std::string GetLogPath(std::string timestamp)
-{
-	return timestamp + "_RoomAcoustiCpp_log.txt";
-}
-
-inline std::string GetProfilePath(std::string timestamp)
-{
-	return timestamp + "_RoomAcoustiCpp_profile.txt";
-}
 
 namespace RAC
 {
@@ -85,14 +58,15 @@ namespace RAC
 			* @brief Constructor that initialises the spatialiser with the given configuration.
 			* 
 			* @param config The configuration for the spatialiser.
+			* @param optionalArguments Optional initialization arguments
 			*/
-			Context(const std::shared_ptr<Config> config);
+			explicit Context(const DSPData& data, const ContextOptionalArguments &optionalArguments = ContextOptionalArguments());
 
 			/**
 			* @brief Default deconstructor.
 			*/
 			~Context();
-
+			
 			/**
 			* @brief Loads the HRTF, near field and ILD files from the given file paths.
 			*
@@ -102,21 +76,51 @@ namespace RAC
 			* @return True if the files were loaded successfully, false otherwise.
 			*/
 			bool LoadSpatialisationFiles(const int hrtfResamplingStep, const std::vector<std::string>& filePaths);
-				
+
+			/**
+			* @brief Initialises the Image Edge Model (IEM) and sets the diffraction model.
+			* 
+			* @param enabled True to enable early reflection DSP, false to disable.
+			* @param data The user defined IEM configuration data.
+			* @param model The diffraction model to use.
+			*/
+			bool InitEarlyReverb(const bool enabled, const EarlyReverbData& data, const DiffractionModel model);
+
+			/**
+			* @brief Initialises MoDART late reverberation.
+			* 
+			* @param data The user defined MoDART configuration data.
+			* @return True if the MoDART late reverberation was initialised successfully, false otherwise.
+			*/
+			bool InitMoDART(const MoDARTData& data);
+
+			/**
+			* @brief Initialises SingleFDN late reverberation.
+			*
+			* @param roomData The user defined room configuration data.
+			* @param data The user defined SingleFDN configuration data.
+			* @return True if the SingleFDN late reverberation was initialised successfully, false otherwise.
+			*/
+			bool InitSingleFDN(const RoomData& roomData, const LateReverbData& data);
+
 			/**
 			* @brief Sets the headphone EQ filters.
 			*
 			* @param leftIR The impulse response for the left channel.
 			* @param rightIR The impulse response for the right channel.
 			*/
-			inline void SetHeadphoneEQ(const Buffer<>& leftIR, const Buffer<>& rightIR) { headphoneEQ.SetFilters(leftIR, rightIR); applyHeadphoneEQ = true; }
+			inline void SetHeadphoneEQ(const Buffer<>& leftIR, const Buffer<>& rightIR)
+			{
+				headphoneEQ.SetFilters(leftIR, rightIR);
+				applyHeadphoneEQ.store(true, std::memory_order_release);
+			}
 
 			/**
 			* @brief Updates the spatialisation mode for each component of the spatialiser.
 			*
 			* @param mode The new spatialisation mode.
 			*/
-			void UpdateSpatialisationMode(const SpatialisationMode mode);
+			inline void UpdateSpatialisationMode(const SpatialisationMode mode) { dspConfig->UpdateSpatialisationMode(mode); }
 
 			/**
 			* @brief Stop the spatialiser running.
@@ -131,25 +135,94 @@ namespace RAC
 			bool IsRunning() const { return mIsRunning.load(std::memory_order_acquire); }
 
 			/**
+			* @brief Enables the early reverberation DSP.
+			*
+			* @param enable True to enable early reflections, false to disable.
+			*/
+			inline void EnableEarlyReverb(const bool enable) { dspConfig->EnableEarlyReverb(enable); }
+
+			/**
 			* @brief Updates the image edge model (IEM) configuration.
 			*
 			* @param data The new IEM configuration.
 			*/
-			inline void UpdateIEMConfig(const IEMData& data) { mImageEdgeModel->UpdateIEMConfig(data, mConfig); }
+			inline void UpdateEarlyConfig(const EarlyReverbData& data) { mImageEdgeModel->UpdateIEMConfig(data, dspConfig); }
+
+			/**
+			* @brief Enables the late reverberation DSP.
+			*
+			* @details If reverb is being reenabled, the late reverb buffers are reset.
+			* 
+			* @param enable True to enable late reflections, false to disable.
+			*/
+			inline void EnableLateReverb(const bool enable)
+			{
+				if (enable && !dspConfig->GetLateReverbEnabled())
+					ResetLateReverb();
+				dspConfig->EnableLateReverb(enable);
+			}
+
+			/**
+			* @brief Sets the number of rays used in the late reverberation ray tracing.
+			*
+			* @param numRays The number of rays to use for ray tracing.
+			*/
+			inline void UpdateLateReverbNumberOfRays(const int numRays)
+			{
+				if (lateReverbInitialised.load(std::memory_order_acquire))
+					mRayTracing->SetNumberOfRays(numRays);
+			}
+
+			/**
+			* @brief Sets the distance thresholds (in meters) from the latest updated position which triggers an update of late reverberation tracing.
+			*
+			* @param sourceThresh The distance threshold for all sources.
+			* @param listenerThresh The distance threshold for the listener.
+			*/
+			inline void UpdateLateReverbDistanceThresholds(const Real sourceThresh, const Real listenerThresh)
+			{
+				if (lateReverbInitialised.load(std::memory_order_acquire))
+					mRayTracing->SetUpdateThresholds(sourceThresh, listenerThresh);
+			}
+
+			/**
+			* @brief Sets the sphere radius (in meters) used to determine self-shadowing during late reverberation tracing.
+			*
+			* @param radius The radius of the listener's head radius.
+			*/
+			inline void UpdateSelfShadowingRadius(const Real radius)
+			{
+				if (lateReverbInitialised.load(std::memory_order_acquire))
+					mRayTracing->SetUpdateSelfShadowingRadius(radius);
+			}
+
+			/**
+			* @brief Updates the intial delay for MoDART late reverberation.
+			*
+			* @param delay The initial delay in seconds.
+			*/
+			void UpdateMoDARTDelay(const Real delay);
+
+			/**
+			* @brief Updates the minimum reverberation time to model. Controls the number of modes in MoDART.
+			*
+			* @param T60 The minimum reverberation time in seconds.
+			*/
+			void UpdateMoDARTMinimumReverbTime(const Real T60);
 
 			/**
 			* Updates the model in order to calculate the late reverberation time (T60).
 			*
 			* @param model The model used to calculate the late reverberation time.
 			*/
-			void UpdateReverbTime(const ReverbFormula model);
+			void UpdateSingleFDNReverbTime(const ReverbFormula model);
 
 			/**
 			* Overrides the current late reverberation time (T60).
 			*
 			* @param T60 The late reverberation time.
 			*/
-			void UpdateReverbTime(const Coefficients<>& T60);
+			void UpdateSingleFDNReverbTime(const Coefficients<>& T60);
 
 			/**
 			* @brief Updates the diffraction model.
@@ -173,18 +246,16 @@ namespace RAC
 			inline std::shared_ptr<ImageEdge> GetImageEdgeModel() { return mImageEdgeModel; }
 
 			/**
-			* @brief Sets the room volume and dimensions.
-			* 
-			* @param volume The volume of the room used to predict the reverberation time.
-			* @param dimensions The dimensions of the room used to set the FDN delay lines.
-			* @return True if the late reverb was initialised successfully, false otherwise.
+			* @brief Returns a pointer to the ray tracing class.
+			*
+			* @return A pointer to the ray tracing class.
 			*/
-			bool InitLateReverb(const Real volume, const Vec& dimensions, const FDNMatrix matrix);
+			inline std::shared_ptr<TracingThread> GetRayTracing() { return mRayTracing; }
 
 			/**
-			* @brief Clears the internal FDN buffers.
+			* @brief Sets a flag to clear the late reverberation buffers.
 			*/
-			inline void ResetFDN() { mReverb->Reset(); }
+			inline void ResetLateReverb() { dspConfig->FlagClearBuffers(); }
 
 			/**
 			* @brief Update the listener position and orientation.
@@ -225,14 +296,22 @@ namespace RAC
 			*/
 			void RemoveSource(size_t id);
 
+			inline size_t InitMaterial(const Coefficients<>& material) { return mRoom->InitMaterial(material); }
+
+			void UpdateMaterial(size_t id, const Coefficients<>& material);
+
+			inline void RemoveMaterial(size_t id) { mRoom->RemoveMaterial(id); }
+
 			/**
 			* @brief Initialises a new wall in the spatialsier.
 			* 
 			* @param vertices The vertices of the wall.
 			* @param absorption The absorption of the wall.
-			* @return The ID of the wall.
+			* @param polygonId The ID of the polygon the wall belongs to.
+			* 
+			* @return The ID of the new wall.
 			*/
-			int InitWall(const Vertices& vertices, const Absorption<>& absorption);
+			size_t InitWall(const Vertices& vData, size_t materialID);
 			
 			/**
 			* @brief Updates the position of a wall.
@@ -240,15 +319,7 @@ namespace RAC
 			* @param id The ID of the wall to update.
 			* @param vData The new vertices of the wall.
 			*/
-			void UpdateWall(size_t id, const Vertices& vData);
-
-			/**
-			* @brief Updates the absorption of a wall.
-			*
-			* @param id The ID of the wall to update.
-			* @param absorption The new absorption of the wall.
-			*/
-			void UpdateWallAbsorption(size_t id, const Absorption<>& absorption);
+			inline void UpdateWall(size_t id, const Vertices& vData) { mRoom->UpdateWall(id, vData); }
 
 			/**
 			* @brief Removes a wall from the spatialiser.
@@ -261,6 +332,13 @@ namespace RAC
 			* @brief Updates the planes and edges of the room.
 			*/
 			void UpdatePlanesAndEdges();
+
+			/**
+			* @brief Updates the late reverb gain.
+			* 
+			* @param gain The new late reverb gain.
+			*/
+			inline void UpdateLateReverbGain(const Real gain) {  }
 
 			/**
 			* @brief Sends an audio buffer to a source and adds the output to mOutputBuffer.
@@ -279,14 +357,28 @@ namespace RAC
 			*/
 			void GetOutput(Buffer<>& sendBuffer);
 
+			void RecordImpulseResponse(const Vec3& position, const Vec4& orientation, Buffer<>& outputBuffer);
+
+		private:
 			/**
 			* @brief Sets the spatialiser to impulse response mode if mode is true
 			*
 			* @params mode True if disable all interpolation, false otherwise.
 			*/
-			void UpdateImpulseResponseMode(const bool mode);
+			inline void UpdateImpulseResponseMode(const bool mode) { dspConfig->UpdateImpulseResponseMode(mode); }
 
-		private:
+			void InitLateReverb(const LateReverbData& data);
+
+			inline void EnsureAudioThreadPoolInitialized()
+			{
+				if (!audioThreadPool)
+					CreateAudioThreadPool();
+			}
+
+			void CreateAudioThreadPool();
+
+			size_t numDesiredWorkerThreads;			// The number of desired threads
+
 			/**
 			* @brief Initialise the audio thread pool and late reverberation
 			*/
@@ -295,13 +387,17 @@ namespace RAC
 			/**
 			* Spatialiser
 			*/
-			const std::shared_ptr<Config> mConfig;				// RAC Config
+			const std::shared_ptr<DSPConfig> dspConfig;				// RAC DSPConfig
 			std::atomic<bool> mIsRunning;			// Flag to check if the spatialiser is running
-			std::thread IEMThread;		// Background thread to run the image edge model
-			Vec3 listenerPosition;		// Stored listener position
-			Real headRadius;			// Stored head radius from 3DTI
-			bool applyHeadphoneEQ;		// Flag to apply headphone EQ
-			HeadphoneEQ headphoneEQ;	// Headphone EQ
+			std::thread IEMThread;			// Background thread to run the image edge model
+			std::thread rayTracingThread;	// Background thread to run the ray tracing model
+
+			Vec3 listenerPosition;				// Stored listener position
+			bool listenerInitialised{ false };	// Flag to check if the listener has been initialised
+			Real headRadius;					// Stored head radius from 3DTI
+			std::atomic<bool> applyHeadphoneEQ;				// Flag to apply headphone EQ
+			HeadphoneEQ headphoneEQ;			// Headphone EQ
+			DCBlocker dcBlocker;				// Filter to remove DC offset
 
 			/**
 			* 3DTI components
@@ -312,21 +408,23 @@ namespace RAC
 			/**
 			* Audio buffers
 			*/
-			Buffer<> mInputBuffer;	// Audio input buffer
-			Matrix mReverbInput;	// Audio reverb input matrix
+			Matrix<> mReverbInput;	// Audio reverb input matrix
 
+			std::atomic<bool> audioFlag{ false };	// Flag to check if the audio thread is processing
+
+			std::atomic<bool> earlyReverbInitialised{ false };	// True if the early reverberation has been initialised, false otherwise
+			std::atomic<bool> lateReverbInitialised{ false };	// True if the late reverberation has been initialised, false otherwise
+			
 			/**
 			* Handles
 			*/
-			std::shared_ptr<Room> mRoom;				// Room class
-			std::shared_ptr<Reverb> mReverb;			// Reverb class
-			std::shared_ptr<SourceManager> mSources;	// Source manager class
-			std::shared_ptr<ImageEdge> mImageEdgeModel;	// Image edge class
+			std::shared_ptr<Room> mRoom{ nullptr };					// Room class
+			std::shared_ptr<Reverb> mReverb{ nullptr };				// Reverb class
+			std::shared_ptr<SourceManager> mSources{ nullptr };		// Source manager class
+			std::shared_ptr<ImageEdge> mImageEdgeModel{ nullptr };	// Image edge class
+			std::shared_ptr<TracingThread> mRayTracing{ nullptr };	// Ray tracing class
 
-			std::mutex audioMutex;		// Mutex for audio processing
-
-			std::string logFile;		// Log file path
-#ifdef PROFILE_BACKGROUND_THREAD || PROFILE_AUDIO_THREAD
+#if defined(PROFILE_BACKGROUND_THREAD) || defined(PROFILE_AUDIO_THREAD)
 			std::string profileFile;	// Profile file path
 #endif
 		};

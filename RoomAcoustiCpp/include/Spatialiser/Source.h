@@ -17,12 +17,18 @@
 #include "Common/Vec3.h"
 #include "Common/Vec4.h"
 #include "Common/Access.h"
+#include "Common/Coefficients.h"
+
+// DSP headers
+#include "DSP/OctaveBandFilter.h"
 
 // Spatialiser headers
 #include "Spatialiser/Types.h"
 #include "Spatialiser/AirAbsorption.h"
 #include "Spatialiser/ImageSource.h"
 #include "Spatialiser/ImageSourceManager.h"
+// RAVES headers
+#include "Spatialiser/RAVESResidue.h"
 
 // 3DTI headers
 #include "BinauralSpatializer/Core.h"
@@ -46,12 +52,12 @@ namespace RAC
 			/**
 			* @brief Struct that stores direct sound audio data
 			*/
-			struct AudioData
+			struct DSPParameters
 			{
-				Absorption<> directivity;		// Frequency dependent directivity
-				LateReverbModel reverbSend;		// True if direct sound feeds the late reverberation, false otherwise
+				Coefficients<> directivity;	// Frequency dependent directivity
+				bool feedsFDN;				// True if direct sound feeds the late reverberation, false otherwise
 
-				AudioData(int numFrequencyBands, LateReverbModel model) : directivity(numFrequencyBands), reverbSend(model) {}
+				DSPParameters(int len, bool feedsFDN) : directivity(len), feedsFDN(feedsFDN) {}
 			};
 
 			/**
@@ -64,10 +70,37 @@ namespace RAC
 				Vec4 orientation;					// Source orientation
 				Vec3 forward;						// Source forward direction
 				SourceDirectivity directivity;		// Source directivity pattern
-				bool hasChanged;					// True if source data has changed since last update, false otherwise
+				bool needsUpdate;					// True if source data has changed since last update, false otherwise
 
-				Data(size_t id, const Vec3& position, const Vec4& orientation, const SourceDirectivity& directivity, bool hasChanged)
-					: id(id), position(position), forward(orientation.Forward()), orientation(orientation), directivity(directivity), hasChanged(hasChanged) {}
+				Data(size_t id, const Vec3& position, const Vec4& orientation, const SourceDirectivity& directivity, bool needsUpdate)
+					: id(id), position(position), forward(Forward(orientation)), orientation(orientation), directivity(directivity),
+					needsUpdate(needsUpdate) {}
+			};
+
+			struct UpdateFlags
+			{
+				void RecordChange()
+				{
+					imageEdgeFlag.store(true, std::memory_order_release);
+					rayTracingFlag.store(true, std::memory_order_release);
+				}
+
+				bool HasChanged(ThreadID id)
+				{
+					switch (id)
+					{
+					case ThreadID::imageEdge:
+						return imageEdgeFlag.exchange(false, std::memory_order_acq_rel);
+					case ThreadID::rayTracing:
+						return rayTracingFlag.exchange(false, std::memory_order_acq_rel);
+					default:
+						// TODO: Add documentation on undefined behavior
+						return false;
+					}
+				}
+
+				std::atomic<bool> imageEdgeFlag;
+				std::atomic<bool> rayTracingFlag;
 			};
 
 			/**
@@ -75,17 +108,25 @@ namespace RAC
 			* 
 			* @param core The 3DTI processing core
 			* @param imageSources Reference to the image source array
-			* @params config The spatialiser configuration
+			* @params dspConfig The spatialiser configuration
 			*/
-			Source(Binaural::CCore* core, ImageSourceManager& imageSources, const std::shared_ptr<Config>& config) : Access(), mCore(core), imageSources(imageSources), inputBuffer(config->numFrames), spatialisationMode(config->GetSpatialisationMode())
+			Source(Binaural::CCore* core, ImageSourceManager& imageSources, const std::shared_ptr<DSPConfig>& dspConfig) : Access(), mCore(core), imageSources(imageSources),
+				inputBuffer(dspConfig->GetData().numFrames), bStore(dspConfig->GetData().numFrames), bStoreReverb(dspConfig->GetData().numFrames),
+				octaveBandFilter(dspConfig->GetData().frequencyBands, dspConfig->GetData().fs)
 			{
+#if MATRIX_LIBRARY == EIGEN_FLAG // Init to zeros
+				inputBuffer.Reset();
+				bStore.Reset();
+				bStoreReverb.Reset();
+#endif
 				dataMutex = std::make_shared<std::mutex>();
+				imageSourcesMutex = std::make_shared<std::mutex>();
 			}
 
 			/**
 			* @brief Default deconstructor
 			*/
-			~Source()
+			virtual ~Source() override
 			{
 				Remove();
 				if (mSource)
@@ -99,7 +140,7 @@ namespace RAC
 			* 
 			* @param config The spatialiser configuration
 			*/
-			void Init(const std::shared_ptr<Config>& config);
+			void Init(const std::shared_ptr<DSPConfig>& config, const Vec<int>& frequencyIndexing);
 
 			/**
 			* @brief Removes access to the source and flags image sources and input buffer for clearing
@@ -125,31 +166,52 @@ namespace RAC
 			*/
 			inline void SetInputBuffer(const Buffer<>& data)
 			{
-				assert(data.Length() == inputBuffer.Length());
-				inputBufferUpdated = true;
-				std::transform(data.begin(), data.end(), inputBuffer.begin(), [](Real val) { return val; });
+				const int inputBufferLength = ToInt(inputBuffer.Length());
+				RAC_DEBUG_ASSERT(data.Length() == inputBufferLength, "Buffer lengths do not match");
+
+				RAC_IGNORE_VECTOR_DEPENDENCIES
+				for (int i = 0; i < inputBufferLength; i++)
+					inputBuffer[i] = data[i];
 			}
-
-			/**
-			* @brief Updates the target spatialisation mode for the HRTF processing
-			*
-			* @params mode The new spatialisation mode
-			*/
-			inline void UpdateSpatialisationMode(const SpatialisationMode mode) { spatialisationMode.store(mode, std::memory_order_release); }
-
-			/**
-			* @brief Updates the target impulse response mode
-			*
-			* @params mode True if disable 3DTI Interpolation, false otherwise.
-			*/
-			inline void UpdateImpulseResponseMode(const bool mode) { impulseResponseMode.store(mode, std::memory_order_release); }
-
+			
 			/**
 			* @brief Updates the source directivity
 			* 
 			* @params directivity The new source directivity
 			*/
 			void UpdateDirectivity(const SourceDirectivity directivity, const Coefficients<>& frequencyBands, const int numLateReverbChannels);
+
+			/**
+			* @brief Updates the size of source residues and frequencyBands
+			*
+			* @params indexing The new frequency band indexing
+			* @params numFrames The number of frames per audio buffer
+			*/
+			inline void UpdateMoDARTParameters(const Vec<int>& frequencyIndexing, int numFrames)
+			{
+				if (!GetAccess())
+					return;
+				InitMoDARTParameters(frequencyIndexing, numFrames);
+				FreeAccess();
+			}
+
+			/**
+			* @brief Updates the size of source residues and frequencyBands
+			*
+			* @params indexing The new frequency band indexing
+			* @params numFrames The number of frames per audio buffer
+			*/
+			inline void InitMoDARTParameters(const Vec<int>& frequencyIndexing, int numFrames)
+			{
+				ravesResidues = std::vector<RAVESSourceResidue>(frequencyIndexing.Length());
+
+				const int frequencyIndexingLength = ToInt(frequencyIndexing.Length());
+
+				RAC_IGNORE_VECTOR_DEPENDENCIES
+				for (int i = 0; i < frequencyIndexingLength; i++)
+					ravesResidues[i].frequencyIndex = frequencyIndexing(i);
+				frequencyBands = Matrix<>(octaveBandFilter.NumBands(), numFrames);
+			}
 
 			/**
 			* @brief Updates the source position and orientation
@@ -166,14 +228,20 @@ namespace RAC
 			* @params source The source audio DSP parameters
 			* @params vSources The current image sources
 			*/
-			void UpdateData(const Source::AudioData source, const ImageSourceDataMap& imageSourceData, const std::shared_ptr<Config>& config);
+			void UpdateData(const Source::DSPParameters source, ImageSourceDataMap& imageSourceData, const std::shared_ptr<DSPConfig>& config);
 
-			std::optional<Data> GetData();
+			std::optional<Data> GetData(ThreadID id);
 
 			/**
 			* @return The current source position
 			*/
 			inline Vec3 GetPosition() const { lock_guard<std::mutex>lock(*dataMutex); return currentPosition; };
+
+			/**
+			* @return The source position which was last used in ray-tracing
+			*/
+			inline Vec3 GetLastRTMPosition() const { lock_guard<std::mutex>lock(*dataMutex); return lastRTMPosition; };
+			inline void SetLastRTMPosition(const Vec3 pos) { lock_guard<std::mutex>lock(*dataMutex); lastRTMPosition = pos; };
 
 			/**
 			* @return The current source orientation
@@ -185,19 +253,31 @@ namespace RAC
 			*/
 			inline SourceDirectivity GetDirectivity() const { return mDirectivity.load(std::memory_order_acquire); }
 
-			/**
-			* @return True if the source has changed since the last check
-			*/
-			inline bool HasChanged() { return hasChanged.exchange(false, std::memory_order_acq_rel); }
-			
+			inline void SetTargetResidues(const Coefficients<>& residues)
+			{
+				if (!GetAccess())
+					return;
+
+				const int ravesResiduesSize = ToInt(ravesResidues.size());
+				RAC_DEBUG_ASSERT(residues.Length() == ravesResiduesSize, "Residue lengths do not match");
+
+				for (int i = 0; i < ravesResiduesSize; i++)
+					ravesResidues[i].SetTargetEnergy(residues[i]);
+				FreeAccess();
+			}
+
 			/**
 			* @brief Process a single audio frame
 			* 
 			* @param outputBuffer The output buffer to write to
 			* @param reverbInput The reverb input buffer to write to
-			* @param lerpFactor The lerp factor for interpolation
+			* @param audioData Data relevant to audio processing
 			*/
-			void ProcessAudio(Buffer<>& outputBuffer, Matrix& reverbInput, const Real lerpFactor);
+			void ProcessAudio(Buffer<>& outputBuffer, const AudioData& audioData);
+
+			void ProcessMoDARTSend(Matrix<>& reverbInput, const Real lerpFactor);
+
+			void ProcessSingleFDNSend(Matrix<>& reverbInput, const Real lerpFactor);
 
 			/**
 			* @brief Resets the source (if not in use) by clearing the buffers and removing the source from the 3DTI processing core
@@ -207,7 +287,7 @@ namespace RAC
 			/**
 			* @return True if the source is ready to be initialised, false otherwise
 			*/
-			bool IsReset() const { return isReset.load(std::memory_order_release); }
+			bool IsReset() const { return isReset.load(std::memory_order_acquire); }
 
 		private:
 			/**
@@ -215,6 +295,7 @@ namespace RAC
 			*/
 			inline void RemoveImageSources()
 			{
+				lock_guard<std::mutex>lock(*imageSourcesMutex);
 				for (auto& [key, vSource] : currentImageSources)
 					imageSources.at(vSource.first).Remove();
 			}
@@ -235,8 +316,10 @@ namespace RAC
 
 			/**
 			* @brief Initialises the source in the 3DTI core
+			* 
+			* @params dspConfig The spatialiser configuration
 			*/
-			void InitSource();
+			void InitSource(const std::shared_ptr<DSPConfig>& dspConfig);
 
 			/**
 			* @brief Removes the source from the 3DTI core
@@ -246,9 +329,9 @@ namespace RAC
 			/**
 			* @brief Initialises the reverb send source in the 3DTI core
 			*
-			* @param impulseResponseMode True if disable 3DTI Interpolation, false otherwise.
+			* @params dspConfig The spatialiser configuration
 			*/
-			void InitReverbSendSource(const bool impulseResponseMode);
+			void InitReverbSendSource(const std::shared_ptr<DSPConfig>& dspConfig);
 
 			/**
 			* @brief Removes the reverb send source from the 3DTI core
@@ -280,12 +363,12 @@ namespace RAC
 			/**
 			* @brief Updates the current image sources from the target image sources
 			*/
-			void UpdateImageSourceDataMap(const ImageSourceDataMap& imageSourceData);
+			void UpdateImageSourceDataMap(ImageSourceDataMap& imageSourceData);
 
 			/**
 			* @brief Updates the audio thread image sources from the current image sources
 			*/
-			void UpdateImageSources(const std::shared_ptr<Config>& config);
+			void UpdateImageSources(const std::shared_ptr<DSPConfig>& config);
 
 			/**
 			* @brief Updates the audio thread data for a given image source
@@ -293,7 +376,7 @@ namespace RAC
 			* @params data The new image source data
 			* @return True if the image was destroyed successfully, false otherwise
 			*/
-			bool UpdateImageSource(int& id, ImageSourceData& data, const std::shared_ptr<Config>& config);
+			bool UpdateImageSource(int& id, std::shared_ptr<ImageSourceData>& data, const std::shared_ptr<DSPConfig>& config);
 
 			/**
 			* @return The next free FDN channel
@@ -306,25 +389,30 @@ namespace RAC
 			void ResetFDNSlots();
 
 			std::unique_ptr<AirAbsorption> mAirAbsorption;		// Air absorption filter
-			std::unique_ptr<GraphicEQ> directivityFilter;		// Directivity filter
-			std::unique_ptr<GraphicEQ> reverbInputFilter;		// Reverb energy based on directivity
+			std::unique_ptr<GraphicEQ<>> directivityFilter;		// Directivity filter
+			std::unique_ptr<GraphicEQ<>> reverbInputFilter;		// Reverb energy based on directivity
 
-			std::atomic<SourceDirectivity> mDirectivity;						// Source directivity
-			std::atomic<LateReverbModel> reverbSend{ LateReverbModel::none };	// Current reverb model for reverb send
+			std::atomic<SourceDirectivity> mDirectivity;		// Source directivity
+			std::atomic<bool> feedsFDN{ false };				// True if direct sound feeds the late reverberation (SingleFDN), false otherwise
 
 			std::atomic<bool> clearInputBuffer{ false };	// True if the input buffer should be cleared, false otherwise
 			Buffer<> inputBuffer;							// Input audio buffer for the source
-			bool inputBufferUpdated{ false };				// True if the input buffer has been updated, false otherwise
 			Buffer<> bStore;								// Internal scratch audio buffer
 			Buffer<> bStoreReverb;							// Internal audio buffer reverb send
+			std::vector<RAVESSourceResidue> ravesResidues;	// Residues for the RAVES algorithm
 
-			Vec3 currentPosition;						// Current source position
-			Vec4 currentOrientation;					// Current source orientation
-			std::atomic<bool> hasChanged{ true };		// Flag to check if the source has changed
-			std::atomic<bool> isReset{ true };			// Flag to check if the source is ready to be initialised
+			Matrix<> frequencyBands;
+			OctaveBand octaveBandFilter;		// Octave band filter for source residues
 
-			ImageSourceDataMap currentImageSources;		// Current image sources
-			std::vector<int> freeFDNChannels;			// Free FDN channels
+			Vec3 currentPosition;					// Current source position
+			Vec3 lastRTMPosition;					// Source position which was last used for ray-tracing
+			Vec4 currentOrientation;				// Current source orientation
+			UpdateFlags updateFlags;				// Struct of flags to check if the source has changed since last update of each thread
+			std::atomic<bool> isReset{ true };		// Flag to check if the source is ready to be initialised
+			bool modartSendProcessed{ false };		// True if the MoDART reverb send has been processed this frame, false otherwise
+
+			ImageSourceDataAudioMap currentImageSources;	// Current image sources
+			std::vector<int> freeFDNChannels;				// Free FDN channels
 
 			Binaural::CCore* mCore;										// 3DTI core
 			shared_ptr<Binaural::CSingleSourceDSP> mSource;				// 3DTI source
@@ -339,13 +427,11 @@ namespace RAC
 			CEarPair<CMonoBuffer<float>> bOutput;					// 3DTI stereo output buffer
 			CMonoBuffer<float> bMonoOutput;							// 3DTI mono output buffer
 				
-			shared_ptr<std::mutex> dataMutex;		// Protects currentPosition, currentOrientation
+			shared_ptr<std::mutex> dataMutex;			// Protects currentPosition, currentOrientation
+			shared_ptr<std::mutex> imageSourcesMutex;	// Protects currentImageSources
 
-			std::atomic<bool> impulseResponseMode{ false };		// True if the image source should be in impulse response mode, false otherwise
 			bool currentImpulseResponseMode{ false };			// True if the image source is in impulse response mode, false otherwise
-
-			std::atomic<SpatialisationMode> spatialisationMode;								// Target spatialisation mode
-			SpatialisationMode currentSpatialisationMode{ SpatialisationMode::quality };	// Current spatialisation mode
+			SpatialisationMode currentSpatialisationMode{ SpatialisationMode::none };	// Current spatialisation mode
 
 			ImageSourceManager& imageSources;	// Image source manager for the audio thread
 

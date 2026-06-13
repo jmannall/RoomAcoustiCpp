@@ -10,7 +10,8 @@
 
 //Common headers
 #include "Common/RACProfiler.h"
- 
+#include "Common/Debug.h"
+
 // Spatialiser headers
 #include "Spatialiser/Source.h"
 #include "Spatialiser/Directivity.h"
@@ -19,14 +20,10 @@
 // DSP headers
 #include "DSP/Interpolate.h"
 
-// Unity headers
-#include "Unity/Debug.h"
-
 using namespace Common;
 namespace RAC
 {
 	using namespace Common;
-	// using namespace Unity;
 	using namespace DSP;
 	namespace Spatialiser
 	{
@@ -37,19 +34,22 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Source::Init(const std::shared_ptr<Config>& config)
+		void Source::Init(const std::shared_ptr<DSPConfig>& dspConfig, const Vec<int>& frequencyIndexing)
 		{
-			InitSource();
-			InitBuffers(config->numFrames);
+			InitSource(dspConfig);
+			const DSPData& data = dspConfig->GetData();
+			InitBuffers(data.numFrames);
 
-			mAirAbsorption = std::make_unique<AirAbsorption>(1.0, config->fs);
-			directivityFilter = std::make_unique<GraphicEQ>(config->frequencyBands, config->Q, config->fs);
-			reverbInputFilter = std::make_unique<GraphicEQ>(config->frequencyBands, config->Q, config->fs);
+			mAirAbsorption = std::make_unique<AirAbsorption>((Real)1.0, data.fs);
+			directivityFilter = std::make_unique<GraphicEQ<>>(data.frequencyBands, data.Q, data.fs);
+			reverbInputFilter = std::make_unique<GraphicEQ<>>(data.frequencyBands, data.Q, data.fs);
 
 			mDirectivity.store(SourceDirectivity::omni, std::memory_order_release);
 
-			reverbSend.store(LateReverbModel::none, std::memory_order_release);
-			hasChanged.store(true, std::memory_order_release);
+			updateFlags.RecordChange();
+
+			if (dspConfig->GetLateReverbModel() == LateReverbModel::raves)
+				InitMoDARTParameters(frequencyIndexing, data.numFrames);
 
 			ResetFDNSlots();
 			AllowAccess();
@@ -67,13 +67,14 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Source::InitSource()
+		void Source::InitSource(const std::shared_ptr<DSPConfig>& dspConfig)
 		{
 			unique_lock<shared_mutex> lock(tuneInMutex);
 			mSource = mCore->CreateSingleSourceDSP();
 			mSource->DisableFarDistanceEffect();
 			mSource->EnablePropagationDelay();
-			SetSpatialisationMode(spatialisationMode.load(std::memory_order_acquire));
+			SetSpatialisationMode(dspConfig->GetSpatialisationMode());
+			SetImpulseResponseMode(dspConfig->GetImpulseResponseMode());
 		}
 
 		////////////////////////////////////////
@@ -87,7 +88,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Source::InitReverbSendSource(const bool impulseResponseMode)
+		void Source::InitReverbSendSource(const std::shared_ptr<DSPConfig>& dspConfig)
 		{
 			unique_lock<shared_mutex> lock(tuneInMutex);
 			mReverbSendSource = mCore->CreateSingleSourceDSP();
@@ -96,11 +97,7 @@ namespace RAC
 			mReverbSendSource->DisableFarDistanceEffect();
 			mReverbSendSource->DisableNearFieldEffect();
 			mReverbSendSource->SetSpatializationMode(Binaural::TSpatializationMode::NoSpatialization);
-			if (impulseResponseMode)
-			{
-				mReverbSendSource->DisableDistanceAttenuationSmoothingAnechoic();
-				mReverbSendSource->DisableInterpolation();
-			}
+			SetImpulseResponseMode(dspConfig->GetImpulseResponseMode());
 		}
 
 		void Source::RemoveReverbSendSource()
@@ -172,25 +169,26 @@ namespace RAC
 		void Source::UpdateDirectivity(const SourceDirectivity directivity, const Coefficients<>& frequencyBands, const int numLateReverbChannels)
 		{
 			GetAccess();
-			Coefficients<> reverbInput = Coefficients<>(frequencyBands.Length(), 1.0);
+			Coefficients<> reverbInput = Coefficients<>::Constant(frequencyBands.Length(), 1.0);
 			switch (directivity)
 			{
+			default:
 			case SourceDirectivity::omni:
 				break;
 			case SourceDirectivity::subcardioid:
-				reverbInput = 1.0 / 1.3;	// 1 / Directivity Factor (DF) -> DF = 10 ^ (Directivity Index / 20) 
+				reverbInput.SetConstant((Real)(1.0 / 1.3));	// 1 / Directivity Factor (DF) -> DF = 10 ^ (Directivity Index / 20) 
 				break;
 			case SourceDirectivity::cardioid:
-				reverbInput = 1.0 / 1.7;
+				reverbInput.SetConstant((Real)(1.0 / 1.7));
 				break;
 			case SourceDirectivity::supercardioid:
-				reverbInput = 1.0 / 1.9;
+				reverbInput.SetConstant((Real)(1.0 / 1.9));
 				break;
 			case SourceDirectivity::hypercardioid:
-				reverbInput = 0.5;
+				reverbInput.SetConstant((Real)(0.5));
 				break;
 			case SourceDirectivity::bidirectional:
-				reverbInput = 1.0 / 1.7;
+				reverbInput.SetConstant((Real)(1.0 / 1.7));
 				break;
 			case SourceDirectivity::genelec8020c:
 				reverbInput = GENELEC.AverageResponse(frequencyBands);
@@ -201,8 +199,8 @@ namespace RAC
 			}
 			mDirectivity.store(directivity, std::memory_order_release);
 			// Divide energy between late reverb channels. Multiply by six to mimic shoebox room first reflections energy
-			reverbInputFilter->SetTargetGains(6.0 * reverbInput / static_cast<Real>(numLateReverbChannels));
-			hasChanged.store(true, std::memory_order_release);
+			reverbInputFilter->SetTargetGains((Real)6.0 * reverbInput / static_cast<Real>(numLateReverbChannels));
+			updateFlags.RecordChange();
 			FreeAccess();
 		}
 
@@ -222,9 +220,12 @@ namespace RAC
 				return;
 			if (!CanEdit())
 				return;
-			if (!mSource)
+			if (!mSource) // TODO: Is this check necessary?
 				return;
-			currentImageSources.clear();
+			{
+				lock_guard<std::mutex>lock(*imageSourcesMutex);
+				currentImageSources.clear();
+			}
 			ClearBuffers();
 			RemoveSource();
 			if (mReverbSendSource)
@@ -235,7 +236,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Source::ProcessAudio(Buffer<>& outputBuffer, Matrix& reverbInput, const Real lerpFactor)
+		void Source::ProcessAudio(Buffer<>& outputBuffer, const AudioData& audioData)
 		{
 			if (!GetAccess())
 				return;
@@ -255,47 +256,48 @@ namespace RAC
 #endif
 
 			PROFILE_Source
-			const int numFrames = inputBuffer.Length();
+			const int numFrames = ToInt(inputBuffer.Length());
 
-			if (bool mode = impulseResponseMode.load(std::memory_order_acquire); mode != currentImpulseResponseMode)
-				SetImpulseResponseMode(mode);
-
-			if (SpatialisationMode mode = spatialisationMode.load(std::memory_order_acquire); mode != currentSpatialisationMode)
-				SetSpatialisationMode(mode);
-
-			mAirAbsorption->ProcessAudio(inputBuffer, bStore, lerpFactor);
-
-			if (reverbSend.load(std::memory_order_acquire) == LateReverbModel::fdn)
+			if (audioData.impulseResponseMode != currentImpulseResponseMode)
 			{
-				{
-					PROFILE_Reflection
-					reverbInputFilter->ProcessAudio(bStore, bStoreReverb, lerpFactor);
-				}
-				std::transform(bStoreReverb.begin(), bStoreReverb.end(), bInput.begin(),
-					[](auto value) { return static_cast<float>(value); });
+				shared_lock<shared_mutex> lock(tuneInMutex);
+				SetImpulseResponseMode(audioData.impulseResponseMode);
+			}
 
+			if (audioData.spatialisationMode != currentSpatialisationMode)
+				SetSpatialisationMode(audioData.spatialisationMode);
+
+			if (audioData.lateReverbModel == LateReverbModel::raves && audioData.lateReverbEnabled)
+			{
+				modartSendProcessed = true;
+				if (audioData.clearBuffers)
+					octaveBandFilter.ClearBuffers();
+				PROFILE_OctaveBand
+				for (int i = 0; i < numFrames; i++)
 				{
-					shared_lock<shared_mutex> lock(tuneInMutex);
-#ifdef __ANDROID__
-					mReverbSendSource->SetSourceTransform(*std::atomic_load(&transform));
-#else
-					mReverbSendSource->SetSourceTransform(*transform.load(std::memory_order_acquire));
-#endif
-					mReverbSendSource->SetBuffer(bInput);
-					mReverbSendSource->ProcessAnechoic(bOutput.left, bOutput.right);
-				}
-				for (int i = 0; i < reverbInput.Rows(); i++)
-				{
-					for (int j = 0; j < numFrames; j++)
-						reverbInput[i][j] += bOutput.left[j];
+					const Buffer<>& bands = octaveBandFilter.GetOutput(inputBuffer[i], audioData.lerpFactor);
+					for (int j = 0; j < bands.Length(); j++)
+						frequencyBands(j, i) = bands[j];
 				}
 			}
+
+			if (!audioData.earlyReverbEnabled)
+			{
+				FreeAccess();
+				return;
+			}
+
+			mAirAbsorption->ProcessAudio(inputBuffer, bStore, audioData.lerpFactor);
+
 			{
 				PROFILE_Reflection
-				directivityFilter->ProcessAudio(bStore, bStore, lerpFactor);
+				directivityFilter->ProcessAudio(bStore, bStore, audioData.lerpFactor);
 			}
-			std::transform(bStore.begin(), bStore.end(), bInput.begin(),
-				[](auto value) { return static_cast<float>(value); });
+
+			for (int i = 0; i < numFrames; i++)
+				bInput[i] = static_cast<float>(bStore[i]);
+			/*std::transform(bStore.begin(), bStore.end(), bInput.begin(),
+				[](auto value) { return static_cast<float>(value); });*/
 
 			{
 				PROFILE_Spatialisation
@@ -321,52 +323,141 @@ namespace RAC
 
 		////////////////////////////////////////
 
+		void Source::ProcessMoDARTSend(Matrix<>& reverbInput, const Real lerpFactor)
+		{
+			if (!GetAccess())
+				return;
+
+			if (!modartSendProcessed)
+			{
+				FreeAccess();
+				return;
+			}
+
+			const int numFrames = ToInt(inputBuffer.Length());
+			const int numBands = octaveBandFilter.NumBands();
+
+			for (int i = 0; i < reverbInput.Rows(); i++)
+			{
+				int bandIndex = octaveBandFilter.GetBandIndex(ravesResidues[i].frequencyIndex);
+				for (int j = 0; j < numFrames; j++)
+				{
+					Complex input = ravesResidues[i].GetOutput(frequencyBands(bandIndex, j), lerpFactor);
+					reverbInput(i, 2 * j) += input.real();
+					reverbInput(i, 2 * j + 1) += input.imag();
+				}
+			}
+			modartSendProcessed = false;
+			FreeAccess();
+		}
+
+		////////////////////////////////////////
+
+		void Source::ProcessSingleFDNSend(Matrix<>& reverbInput, const Real lerpFactor)
+		{
+			if (!GetAccess())
+				return;
+
+			PROFILE_Source
+			const int numFrames = ToInt(inputBuffer.Length());
+
+			{
+				PROFILE_Reflection
+				reverbInputFilter->ProcessAudio(inputBuffer, bStoreReverb, lerpFactor);
+			}
+
+			for (int i = 0; i < numFrames; i++)
+				bInput[i] = static_cast<float>(bStoreReverb[i]);
+			/*std::transform(bStoreReverb.begin(), bStoreReverb.end(), bInput.begin(),
+				[](auto value) { return static_cast<float>(value); });*/
+
+			{
+				shared_lock<shared_mutex> lock(tuneInMutex);
+				if (!mReverbSendSource) // Check if the reverb send source hasn't been removed
+				{
+					FreeAccess();
+					return;
+				}
+#ifdef __ANDROID__
+				mReverbSendSource->SetSourceTransform(*std::atomic_load(&transform));
+#else
+				mReverbSendSource->SetSourceTransform(*transform.load(std::memory_order_acquire));
+#endif
+				mReverbSendSource->SetBuffer(bInput);
+				mReverbSendSource->ProcessAnechoic(bOutput.left, bOutput.right);
+			}
+			for (int i = 0; i < reverbInput.Rows(); i++)
+			{
+				for (int j = 0; j < numFrames; j++)
+					reverbInput(i, j) += static_cast<Real>(bOutput.left[j]);
+				/*auto start = reverbInput.begin() + i * numFrames;
+				for (int j = 0; j < numFrames; j++)
+					start[j] += static_cast<Real>(bOutput.left[j]);*/
+			}
+			FreeAccess();
+		}
+
+		////////////////////////////////////////
+
 		void Source::Update(const Vec3& position, const Vec4& orientation, const Real distance)
 		{
 			if (!GetAccess())
 				return;
 			mAirAbsorption->SetTargetDistance(distance);
 			
-			if (position == currentPosition && orientation == currentOrientation)
+#ifdef __ANDROID__
+			if (position == currentPosition && orientation == currentOrientation && std::atomic_load(&transform))
 			{
 				FreeAccess();
 				return;
 			}
+#else
+			if (position == currentPosition && orientation == currentOrientation && transform.load(std::memory_order_acquire))
 			{
-				lock_guard<std::mutex>lock(*dataMutex);
-				currentPosition = position;
-				currentOrientation = orientation;
+				FreeAccess();
+				return;
 			}
-			hasChanged.store(true, std::memory_order_release);
+#endif
 			UpdateTransform(position, orientation);
+			if ((position - currentPosition).Normal() > EPS_POSITION || 2.0 * std::acos(std::abs(orientation.dot(currentOrientation))) > EPS_ORIENTATION)
+			{
+				{
+					lock_guard<std::mutex>lock(*dataMutex);
+					currentPosition = position;
+					currentOrientation = orientation;
+				}
+				updateFlags.RecordChange();
+			}
 			FreeAccess();
 		}
 
 		////////////////////////////////////////
 		
-		void Source::UpdateData(const Source::AudioData source, const ImageSourceDataMap& imageSourceData, const std::shared_ptr<Config>& config)
+		void Source::UpdateData(const Source::DSPParameters source, ImageSourceDataMap& imageSourceData, const std::shared_ptr<DSPConfig>& dspConfig)
 		{
 			if (!GetAccess())
 				return;
 			directivityFilter->SetTargetGains(source.directivity);
 
-			if (source.reverbSend == LateReverbModel::fdn && !mReverbSendSource)
+			if (source.feedsFDN && dspConfig->GetLateReverbModel() == LateReverbModel::fdn && !mReverbSendSource)
 			{
-				InitReverbSendSource(config->GetImpulseResponseMode());
-				UpdateImpulseResponseMode(config->GetImpulseResponseMode());
+				InitReverbSendSource(dspConfig);
+				feedsFDN.store(true, std::memory_order_release);
 			}
-			if (source.reverbSend != LateReverbModel::fdn && mReverbSendSource)
+			if ((!source.feedsFDN || dspConfig->GetLateReverbModel() != LateReverbModel::fdn) && mReverbSendSource)
+			{
+				feedsFDN.store(false, std::memory_order_release);
 				RemoveReverbSendSource();
-			reverbSend.store(source.reverbSend, std::memory_order_release);
+			}
 
 			UpdateImageSourceDataMap(imageSourceData);
-			UpdateImageSources(config);
+			UpdateImageSources(dspConfig);
 			FreeAccess();
 		}
 
 		////////////////////////////////////////
 
-		std::optional<Source::Data> Source::GetData()
+		std::optional<Source::Data> Source::GetData(ThreadID id)
 		{
 			if (!GetAccess())
 				return std::nullopt;
@@ -384,7 +475,7 @@ namespace RAC
 			}
 #endif
 			lock_guard<std::mutex>lock(*dataMutex);
-			Data data(-1, currentPosition, currentOrientation, mDirectivity.load(std::memory_order_acquire), hasChanged.exchange(false, std::memory_order_acq_rel));
+			Data data(-1, currentPosition, currentOrientation, mDirectivity.load(std::memory_order_acquire), updateFlags.HasChanged(id));
 			FreeAccess();
 			return data;
 		}
@@ -393,8 +484,6 @@ namespace RAC
 
 		void Source::InitBuffers(int numFrames)
 		{
-			bStore = Buffer(numFrames);
-			bStoreReverb = Buffer(numFrames);
 			bInput = CMonoBuffer<float>(numFrames);
 			bOutput.left = CMonoBuffer<float>(numFrames);
 			bOutput.right = CMonoBuffer<float>(numFrames);
@@ -405,11 +494,12 @@ namespace RAC
 
 		void Source::ClearBuffers()
 		{
+			frequencyBands = Matrix<>();
+			octaveBandFilter.ClearBuffers();
 			bInput.clear();
 			bOutput.left.clear();
 			bOutput.right.clear();
 			bMonoOutput.clear();
-			bStore.ResizeBuffer(1);
 		}
 
 		////////////////////////////////////////
@@ -431,8 +521,8 @@ namespace RAC
 		void Source::UpdateTransform(const Vec3& position, const Vec4& orientation)
 		{
 			std::shared_ptr<CTransform> transformCopy = std::make_shared<CTransform>();
-			transformCopy->SetOrientation(CQuaternion(static_cast<float>(orientation.w), static_cast<float>(orientation.x), static_cast<float>(orientation.y), static_cast<float>(orientation.z)));
-			transformCopy->SetPosition(CVector3(static_cast<float>(position.x), static_cast<float>(position.y), static_cast<float>(position.z)));
+			transformCopy->SetOrientation(CQuaternion(static_cast<float>(orientation.w()), static_cast<float>(orientation.x()), static_cast<float>(orientation.y()), static_cast<float>(orientation.z())));
+			transformCopy->SetPosition(CVector3(static_cast<float>(position.x()), static_cast<float>(position.y()), static_cast<float>(position.z())));
 #ifdef __ANDROID__
 			std::atomic_store(&transform, transformCopy);
 #else
@@ -443,28 +533,34 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Source::UpdateImageSourceDataMap(const ImageSourceDataMap& imageSourceData)
+		void Source::UpdateImageSourceDataMap(ImageSourceDataMap& imageSourceData)
 		{
 			for (auto& [key, vSource] : currentImageSources)
 			{
 				auto it = imageSourceData.find(key);
 				if (it == imageSourceData.end()) // case: old vSource
-					vSource.second.Invisible();
+					vSource.second->Invisible();
 			}
 
 			for (auto& [key, vSource] : imageSourceData)
 			{
 				auto it = currentImageSources.find(key);
 				if (it == currentImageSources.end()) // case: add new vSource
-					currentImageSources.emplace(key, vSource);
+				{
+					lock_guard<std::mutex>lock(*imageSourcesMutex);
+					if (!GetAccess())
+						return;
+					currentImageSources.emplace(key, std::pair<int, std::shared_ptr<ImageSourceData>>(-1, std::make_shared<ImageSourceData>(*vSource)));
+					FreeAccess();
+				}
 				else // case: update exist vSource
-					it->second.second = vSource.second;
+					it->second.second.swap(vSource);
 			}
 		}
 
 		////////////////////////////////////////
 
-		void Source::UpdateImageSources(const std::shared_ptr<Config>& config)
+		void Source::UpdateImageSources(const std::shared_ptr<DSPConfig>& config)
 		{
 			std::vector<std::string> keys;
 			for (auto& [key, vSource] : currentImageSources)
@@ -473,37 +569,44 @@ namespace RAC
 					keys.push_back(key);
 			}
 
+			lock_guard<std::mutex>lock(*imageSourcesMutex);
+			if (!GetAccess())
+				return;
 			for (const std::string& key : keys)
+			{
 				currentImageSources.erase(key);
+				RAC_DEBUG_REMOVEPATH(key);
+			}
+			FreeAccess();
 		}
 		
 		////////////////////////////////////////
 
-		bool Source::UpdateImageSource(int& id, ImageSourceData& data, const std::shared_ptr<Config>& config)
+		bool Source::UpdateImageSource(int& id, std::shared_ptr<ImageSourceData>& data, const std::shared_ptr<DSPConfig>& dspConfig)
 		{
 			if (id < 0)		// case: virtual source does not exist
 			{
 				int fdnChannel = -1;
-				if (data.IsFeedingFDN())
-					fdnChannel = AssignFDNChannel(config->numReverbSources);
+				if (data->IsFeedingFDN())
+					fdnChannel = AssignFDNChannel(dspConfig->GetData().fdnSize);
 
 				id = imageSources.NextID();
 				if (id < 0)		// No free slots
 					return false;
 
-				imageSources.at(id).Init(&inputBuffer, config, data, fdnChannel);
+				imageSources.at(id).Init(&inputBuffer, dspConfig, data, fdnChannel);
 			}
 			else
 			{
 				int fdnChannel = -1;
-				if (data.IsFeedingFDN() && imageSources.at(id).GetFDNChannel() < 0)
-					fdnChannel = AssignFDNChannel(config->numReverbSources);
+				if (data->IsFeedingFDN() && imageSources.at(id).GetFDNChannel() < 0)
+					fdnChannel = AssignFDNChannel(dspConfig->GetData().fdnSize);
 
-				bool remove = imageSources.at(id).Update(data, fdnChannel);
+				bool remove = imageSources.at(id).Update(*data, fdnChannel);
 
-				assert(!(data.IsFeedingFDN() && imageSources.at(id).GetFDNChannel() == -1));
+				RAC_DEBUG_ASSERT(!(data->IsFeedingFDN() && imageSources.at(id).GetFDNChannel() == -1), "Invalid FDN channel");
 
-				if (fdnChannel >= 0) // Add vSource old fdnChannel to freeFDNChannels (Also prevents leaking FDN channels if !data.visible and the channel is not assigned to vSource)
+				if (fdnChannel >= 0) // Add vSource old fdnChannel to freeFDNChannels (Also prevents leaking FDN channels if !data->visible and the channel is not assigned to vSource)
 					freeFDNChannels.push_back(fdnChannel);
 				if (remove)
 				{
@@ -518,9 +621,9 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		int Source::AssignFDNChannel(const int numLateReverbChannels)
+		int Source::AssignFDNChannel(const int fdnSize)
 		{
-			if (freeFDNChannels.back() >= numLateReverbChannels)
+			if (freeFDNChannels.back() >= fdnSize)
 				freeFDNChannels.back() = 0;
 			int fdnChannel = static_cast<int>(freeFDNChannels.back());
 			if (freeFDNChannels.size() > 1)

@@ -7,14 +7,12 @@
 #include "Spatialiser/Interface.h"
 #include "Spatialiser/Context.h"
 
-// Unity headers
-#include "Unity/Debug.h"
+// Common headers
+#include "Common/Debug.h"
 
 namespace RAC
 {
-#ifdef USE_UNITY_DEBUG
-	using namespace Unity;
-#endif
+	using namespace Common;
 	namespace Spatialiser
 	{
 		////////////////////////////////////////
@@ -27,19 +25,15 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		bool Init(const std::shared_ptr<Config> config)
+		bool Init(const DSPData& data, const ContextOptionalArguments &optionalArguments)
 		{
 			if (context) // Delete any existing context
 			{
-#ifdef DEBUG_INIT
-	Debug::Log("Delete Existing Context", Colour::Red);
-#endif
+				RAC_DEBUG_LOG("Delete Existing Context", DebugType::Remove);
 				Exit();
 			}
-#ifdef DEBUG_INIT
-	Debug::Log("Create New Context", Colour::Green);
-#endif
-			context = std::make_shared<Context>(config);
+			RAC_DEBUG_LOG("Create New Context", DebugType::Init);
+			context = std::make_shared<Context>(data, optionalArguments);
 			return context->IsRunning();
 		}
 
@@ -84,29 +78,92 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void UpdateIEMConfig(const IEMData& data)
+		void EnableEarlyReverb(const bool enable)
 		{
 			auto context = GetContext();
 			if (context)
-				context->UpdateIEMConfig(data);
+				context->EnableEarlyReverb(enable);
 		}
 
 		////////////////////////////////////////
 
-		void UpdateReverbTime(const ReverbFormula model)
+		void UpdateEarlyConfig(const EarlyReverbData& data)
 		{
 			auto context = GetContext();
 			if (context)
-				context->UpdateReverbTime(model);
+				context->UpdateEarlyConfig(data);
 		}
 
 		////////////////////////////////////////
 
-		void UpdateReverbTime(const Coefficients<>& T60)
+		void EnableLateReverb(const bool enable)
 		{
 			auto context = GetContext();
 			if (context)
-				context->UpdateReverbTime(T60);
+				context->EnableLateReverb(enable);
+		}
+
+		////////////////////////////////////////
+
+		void UpdateLateReverbNumberOfRays(const int numRays)
+		{
+			auto context = GetContext();
+			if (context)
+				context->UpdateLateReverbNumberOfRays(numRays);
+
+		}
+		////////////////////////////////////////
+
+		void UpdateLateReverbDistanceThresholds(const Real sourceThresh, const Real listenerThresh)
+		{
+			auto context = GetContext();
+			if (context)
+				context->UpdateLateReverbDistanceThresholds(sourceThresh, listenerThresh);
+
+		}
+		////////////////////////////////////////
+
+		void UpdateSelfShadowingRadius(const Real radius)
+		{
+			auto context = GetContext();
+			if (context)
+				context->UpdateSelfShadowingRadius(radius);
+
+		}
+		////////////////////////////////////////
+
+		void UpdateMoDARTDelay(const Real delay)
+		{
+			auto context = GetContext();
+			if (context)
+				context->UpdateMoDARTDelay(delay);
+		}
+
+		////////////////////////////////////////
+
+		void UpdateMoDARTMinimumReverbTime(const Real T60)
+		{
+			auto context = GetContext();
+			if (context)
+				context->UpdateMoDARTMinimumReverbTime(T60);
+		}
+
+		////////////////////////////////////////
+
+		void UpdateSingleFDNReverbTime(const ReverbFormula model)
+		{
+			auto context = GetContext();
+			if (context)
+				context->UpdateSingleFDNReverbTime(model);
+		}
+
+		////////////////////////////////////////
+
+		void UpdateSingleFDNReverbTime(const Coefficients<>& T60)
+		{
+			auto context = GetContext();
+			if (context)
+				context->UpdateSingleFDNReverbTime(T60);
 		}
 
 		////////////////////////////////////////
@@ -120,21 +177,41 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		bool InitLateReverb(const Real volume, const Vec& dimensions, const FDNMatrix matrix)
+		bool InitEarlyReverb(const bool enabled, const EarlyReverbData& data, const DiffractionModel model)
 		{
 			auto context = GetContext();
 			if (context)
-				return context->InitLateReverb(volume, dimensions, matrix);
+				return context->InitEarlyReverb(enabled, data, model);
 			return false;
 		}
 
 		////////////////////////////////////////
 
-		void ResetFDN()
+		bool InitSingleFDN(const RoomData& roomData, const LateReverbData& data)
 		{
 			auto context = GetContext();
 			if (context)
-				context->ResetFDN();
+				return context->InitSingleFDN(roomData, data);
+			return false;
+		}
+
+		////////////////////////////////////////
+
+		bool InitMoDART(const MoDARTData& data)
+		{
+			auto context = GetContext();
+			if (context)
+				return context->InitMoDART(data);
+			return false;
+		}
+
+		////////////////////////////////////////
+
+		void ResetLateReverb()
+		{
+			auto context = GetContext();
+			if (context)
+				context->ResetLateReverb();
 		}
 
 		////////////////////////////////////////
@@ -185,12 +262,42 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		int InitWall(const Vertices& vertices, const Absorption<>& absorption)
+		int InitMaterial(const Coefficients<>& material)
 		{
 			auto context = GetContext();
 			if (context)
-				return context->InitWall(vertices, absorption);
-			return -1;
+				return ToInt(context->InitMaterial(material));
+			else
+				return -1;
+		}
+
+		////////////////////////////////////////
+
+		void UpdateMaterial(const size_t id, const Coefficients<>& material)
+		{
+			auto context = GetContext();
+			if (context)
+				context->UpdateMaterial(id, material);
+		}
+
+		////////////////////////////////////////
+
+		void RemoveMaterial(const size_t id)
+		{
+			auto context = GetContext();
+			if (context)
+				context->RemoveMaterial(id);
+		}
+
+		////////////////////////////////////////
+
+		int InitWall(const Vertices& vData, const size_t materialId)
+		{
+			auto context = GetContext();
+			if (context)
+				return ToInt(context->InitWall(vData, materialId));
+			else
+				return -1;
 		}
 
 		////////////////////////////////////////
@@ -200,15 +307,6 @@ namespace RAC
 			auto context = GetContext();
 			if (context)
 				context->UpdateWall(id, vData);
-		}
-
-		////////////////////////////////////////
-
-		void UpdateWallAbsorption(size_t id, const Absorption<>& absorption)
-		{
-			auto context = GetContext();
-			if (context)
-				context->UpdateWallAbsorption(id, absorption);
 		}
 
 		////////////////////////////////////////
@@ -251,11 +349,11 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void UpdateImpulseResponseMode(const bool mode)
+		void RecordImpulseResponse(const Vec3& position, const Vec4& orientation, Buffer<>& outputBuffer)
 		{
 			auto context = GetContext();
 			if (context)
-				context->UpdateImpulseResponseMode(mode);
+				context->RecordImpulseResponse(position, orientation, outputBuffer);
 		}
 	}
 }

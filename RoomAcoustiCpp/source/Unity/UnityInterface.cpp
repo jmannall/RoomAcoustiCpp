@@ -15,7 +15,9 @@ IUnityProfiler* GetUnityProfiler() { return unityProfiler; }
 bool* GetDevBuild() { return isDevelopmentBuild; }
 
 // Threads
-static UnityProfilerThreadId backgroundThreadID = 999;
+static UnityProfilerThreadId IEMThreadID = 998;
+static UnityProfilerThreadId rayTracingThreadID = 999;
+
 static std::unordered_map<int, UnityProfilerThreadId> threadIDs;
 int nextThreadID = 0;
 
@@ -45,6 +47,7 @@ static const UnityProfilerMarkerDesc* reverbSourceMarker = nullptr;
 static const UnityProfilerMarkerDesc* fdnMarker = nullptr;
 static const UnityProfilerMarkerDesc* reflectionMarker = nullptr;
 static const UnityProfilerMarkerDesc* diffractionMarker = nullptr;
+static const UnityProfilerMarkerDesc* octaveBandMarker = nullptr;
 static const UnityProfilerMarkerDesc* airAbsorptionMarker = nullptr;
 static const UnityProfilerMarkerDesc* threedtiMarker = nullptr;
 
@@ -65,6 +68,7 @@ extern "C" void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API UnityPluginLoad(IUnit
 	unityProfiler->CreateMarker(&fdnMarker, "FDN", kUnityProfilerCategoryOther, kUnityProfilerMarkerFlagDefault, 0);
 	unityProfiler->CreateMarker(&reflectionMarker, "Reflection", kUnityProfilerCategoryOther, kUnityProfilerMarkerFlagDefault, 0);
 	unityProfiler->CreateMarker(&diffractionMarker, "Diffraction", kUnityProfilerCategoryOther, kUnityProfilerMarkerFlagDefault, 0);
+	unityProfiler->CreateMarker(&octaveBandMarker, "OctaveBand", kUnityProfilerCategoryOther, kUnityProfilerMarkerFlagDefault, 0);
 	unityProfiler->CreateMarker(&airAbsorptionMarker, "AirAbsorption", kUnityProfilerCategoryOther, kUnityProfilerMarkerFlagDefault, 0);
 	unityProfiler->CreateMarker(&threedtiMarker, "3DTI", kUnityProfilerCategoryOther, kUnityProfilerMarkerFlagDefault, 0);
 
@@ -121,18 +125,34 @@ void UnregisterThread(int id)
 
 ////////////////////////////////////////
 
-void RegisterBackgroundThread()
+void RegisterIEMThread()
 {
 	if (GetDevBuild())
-		GetUnityProfiler()->RegisterThread(&backgroundThreadID, "Acoustics", "Background Thread");
+		GetUnityProfiler()->RegisterThread(&IEMThreadID, "Acoustics", "IEM Thread");
 }
 
 ////////////////////////////////////////
 
-void UnregisterBackgroundThread()
+void UnregisterIEMThread()
 {
 	if (GetDevBuild())
-		GetUnityProfiler()->UnregisterThread(backgroundThreadID);
+		GetUnityProfiler()->UnregisterThread(IEMThreadID);
+}
+
+////////////////////////////////////////
+
+void RegisterRayTracingThread()
+{
+	if (GetDevBuild())
+		GetUnityProfiler()->RegisterThread(&rayTracingThreadID, "Acoustics", "Ray Tracing Thread");
+}
+
+////////////////////////////////////////
+
+void UnregisterRayTracingThread()
+{
+	if (GetDevBuild())
+		GetUnityProfiler()->UnregisterThread(rayTracingThreadID);
 }
 
 ////////////////////////////////////////
@@ -526,6 +546,22 @@ void EndDiffraction()
 {
 	if (GetDevBuild())
 		GetUnityProfiler()->EndSample(diffractionMarker);
+}
+
+////////////////////////////////////////
+
+void BeginOctaveBand()
+{
+	if (GetDevBuild())
+		GetUnityProfiler()->BeginSample(octaveBandMarker);
+}
+
+////////////////////////////////////////
+
+void EndOctaveBand()
+{
+	if (GetDevBuild())
+		GetUnityProfiler()->EndSample(octaveBandMarker);
 }
 
 ////////////////////////////////////////

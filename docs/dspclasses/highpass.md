@@ -1,7 +1,9 @@
 # HighPass
 
+Most users will interact with RoomAcoustiC++ through the high-level API in [`Spatialiser/Interface.h`](../spatialiser/interface.md). This page documents lower-level details for advanced usage.
+
 The `HighPass` class implements a second-order high-pass IIR filter.
-It derives from `IIRFilter2Param1`.
+It derives from `IIRFilter2Param1<>`.
 
 - **Namespace:** `RAC::DSP`
 - **Header:** `DSP/IIRFilter.h`
@@ -12,15 +14,14 @@ It derives from `IIRFilter2Param1`.
 ## Class Definition
 
 ```cpp
-class HighPass : public IIRFilter2Param1
+class HighPass : public IIRFilter2Param1<>
 {
 public:
     HighPass(const int sampleRate);
     HighPass(const Real fc, const int sampleRate);
-    ~HighPass();
 
     inline void SetTargetFc(const Real fc);
-    // ...inherited methods from IIRFilter2Param1...
+    // ...inherited methods from IIRFilter2Param1<>...
 
 private:
     void UpdateCoefficients(const Real fc) override;
@@ -33,34 +34,32 @@ private:
 ### `#!cpp HighPass(const int sampleRate)`
 **Constructor.**  
 Initializes the filter with the given sample rate and a default cutoff frequency of 1000Hz.
-- `sampleRate`: The sample rate for calculating filter coefficients.
+
+`sampleRate`: The sample rate for calculating filter coefficients.
 
 ---
 
 ### `#!cpp HighPass(const Real fc, const int sampleRate)`
 **Constructor.**  
 Initializes the filter with the given sample rate and cutoff frequency.
-- `fc`: The cutoff frequency (Hz).
-- `sampleRate`: The sample rate for calculating filter coefficients.
 
----
-
-### `#!cpp ~HighPass()`
-**Destructor.**  
-Cleans up the filter.
+`fc`: The cutoff frequency (Hz).  
+`sampleRate`: The sample rate for calculating filter coefficients.
 
 ---
 
 ### `#!cpp inline void SetTargetFc(const Real fc)`
 Sets the target cutoff frequency for the filter.
-- `fc`: The cutoff frequency (Hz).
+
+`fc`: The cutoff frequency (Hz).
 
 ---
 ## Private Methods
 
 ### `#!cpp void UpdateCoefficients(const Real fc) override`
 Updates the filter coefficients based on the current frequency.
-- `fc`: The cutoff frequency (Hz).
+
+`fc`: The cutoff frequency (Hz).
 
 ---
 

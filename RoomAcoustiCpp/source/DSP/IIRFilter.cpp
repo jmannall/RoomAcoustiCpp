@@ -6,7 +6,7 @@
 */
 
 // C++ headers
-#if defined(_WINDOWS)
+#ifdef _WIN32
 /* Microsoft C/C++-compatible compiler */
 #include <intrin.h>
 #endif
@@ -33,17 +33,10 @@ namespace RAC
 
 		Real IIRFilter::GetOutput(const Real input, const Real lerpFactor)
 		{
-			if (!initialised.load(std::memory_order_acquire))
-				return 0.0;
+			RAC_DEBUG_ASSERT(IsValid(), "Invalid filter");
 
 			if (!parametersEqual.load(std::memory_order_acquire))
 				InterpolateParameters(lerpFactor);
-
-			if (clearBuffers.load(std::memory_order_acquire))
-			{
-				y.Reset();
-				clearBuffers.store(false, std::memory_order_release);
-			}
 
 			Real v = input;
 			Real output = 0.0;
@@ -66,18 +59,16 @@ namespace RAC
 
 		Coefficients<> IIRFilter::GetFrequencyResponse(const Coefficients<>& frequencies) const
 		{
-			Real omega;
-			Complex e;
 			std::vector<Real> magnitudes(frequencies.Length(), 0.0);
 			for (int i = 0; i < frequencies.Length(); i++)
 			{
-				omega = PI_2 * frequencies[i] * T;
+				Real omega = PI_2 * frequencies[i] * T;
 				Complex num = b[0];
-				Complex den = 1.0;
+				Complex den = REAL_CONST(1.0);
 
 				for (int j = 1; j <= order; j++)
 				{
-					e = std::exp(-j * imUnit * omega);
+					Complex e = std::exp(-static_cast<Real>(j) * imUnit * omega);
 					num += b[j] * e;
 					den += a[j] * e;
 				}
@@ -91,51 +82,17 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		Real IIRFilter2::GetOutput(const Real input, const Real lerpFactor)
+		template<typename In>
+		Coefficients<> IIRFilter2<In>::GetFrequencyResponse(const Coefficients<>& frequencies) const
 		{
-			if (!initialised.load(std::memory_order_acquire))
-				return 0.0;
-
-			if (!parametersEqual.load(std::memory_order_acquire))
-				InterpolateParameters(lerpFactor);
-
-			if (clearBuffers.load(std::memory_order_acquire))
-			{
-				y0 = 0.0; y1 = 0.0;
-				clearBuffers.store(false, std::memory_order_release);
-			}
-
-			Real v = input;
-			Real output = 0.0;
-
-			v -= y0 * a1;
-			output += y0 * b1;
-
-			v -= y1 * a2;
-			output += y1 * b2;
-
-			y1 = y0;
-			y0 = v;
-
-			output += v * b0;
-
-			return output;
-		}
-
-		////////////////////////////////////////
-
-		Coefficients<> IIRFilter2::GetFrequencyResponse(const Coefficients<>& frequencies) const
-		{
-			Real omega;
-			Complex e;
-			Coefficients magnitudes(frequencies.Length(), 0.0);
+			Coefficients<> magnitudes = Coefficients<>::Zero(frequencies.Length());
 			for (int i = 0; i < frequencies.Length(); i++)
 			{
-				omega = PI_2 * frequencies[i] * T;
+				Real omega = PI_2 * frequencies[i] * T;
 				Complex num = b0;
 				Complex den = 1.0;
 
-				e = std::exp(-1 * imUnit * omega);
+				Complex e = std::exp(-1 * imUnit * omega);
 				num += b1 * e;
 				den += a1 * e;
 
@@ -148,23 +105,21 @@ namespace RAC
 			return magnitudes;
 		}
 
+		////////////////////////////////////////
+
+		template class IIRFilter2<Real>;
+		template class IIRFilter2<Complex>;
+
 		//////////////////// IIRFIlter1 ////////////////////
 
 		////////////////////////////////////////
 
 		Real IIRFilter1::GetOutput(const Real input, const Real lerpFactor)
 		{
-			if (!initialised.load(std::memory_order_acquire))
-				return 0.0;
+			RAC_DEBUG_ASSERT(IsValid(), "Invalid filter");
 
 			if (!parametersEqual.load(std::memory_order_acquire))
 				InterpolateParameters(lerpFactor);
-
-			if (clearBuffers.load(std::memory_order_acquire))
-			{
-				y0 = 0.0;
-				clearBuffers.store(false, std::memory_order_release);
-			}
 
 			Real v = input;
 			Real output = 0.0;
@@ -185,7 +140,7 @@ namespace RAC
 		{
 			Real omega;
 			Complex e;
-			std::vector<Real> magnitudes(frequencies.Length(), 0.0);
+			Coefficients<> magnitudes = Coefficients<>::Zero(frequencies.Length());
 			for (int i = 0; i < frequencies.Length(); i++)
 			{
 				omega = PI_2 * frequencies[i] * T;
@@ -232,7 +187,7 @@ namespace RAC
 			const Real v1 = omega / sqrtG;
 			const Real v2 = omega * sqrtG;
 
-			a0 = 1.0 / (1.0 + v1); // a0 isn't used in GetOutput
+			a0 = REAL_CONST(1.0) / (REAL_CONST(1.0) + v1); // a0 isn't used in GetOutput
 			a1 = (1 - v1) * a0;
 
 			b0 = (1 + v2) * a0;
@@ -261,8 +216,8 @@ namespace RAC
 		{
 			const Real K = PI_2 * fc * T;
 
-			a0 = 1.0 / (K + 2.0); // a0 isn't used in GetOutput
-			a1 = (K - 2.0) * a0;
+			a0 = REAL_CONST(1.0) / (K + REAL_CONST(2.0)); // a0 isn't used in GetOutput
+			a1 = (K - REAL_CONST(2.0)) * a0;
 
 			b0 = K * a0;
 			b1 = K * a0;
@@ -272,86 +227,110 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void IIRFilter2Param1::InterpolateParameters(const Real lerpFactor)
+		template<typename In>
+		void IIRFilter2Param1<In>::InterpolateParameters(const Real lerpFactor)
 		{
-			parametersEqual.store(true, std::memory_order_release); // Prevents issues in case target updated during this function call
+			this->parametersEqual.store(true, std::memory_order_release); // Prevents issues in case target updated during this function call
 			const Real parameter = target.load(std::memory_order_acquire);
 			current = Lerp(current, parameter, lerpFactor);
 			if (Equals(current, parameter))
 				current = parameter;
 			else
-				parametersEqual.store(false, std::memory_order_release);
+				this->parametersEqual.store(false, std::memory_order_release);
 			UpdateCoefficients(current);
 		}
+
+		////////////////////////////////////////
+
+		template class IIRFilter2Param1<Real>;
+		template class IIRFilter2Param1<Complex>;
 
 		//////////////////// PeakHighSelf ////////////////////
 
 		////////////////////////////////////////
 
-		void PeakHighShelf::UpdateCoefficients(const Real gain)
+		template<typename In>
+		void PeakHighShelf<In>::UpdateCoefficients(const Real gain)
 		{
-			assert(gain > 0.0);
+			RAC_DEBUG_ASSERT(gain > REAL_CONST(0.0), "Invalid gain: " + ToString(gain));
 
 			const Real A = sqrt(gain);
-			const Real v1 = A + 1.0;
-			const Real v2 = A - 1.0;
+			const Real v1 = A + REAL_CONST(1.0);
+			const Real v2 = A - REAL_CONST(1.0);
 			const Real v3 = v1 * cosOmega;
 			const Real v4 = v2 * cosOmega;
 			const Real v5 = sqrt(A) * alpha; // 2 * sqrt(A) * alpha
 
-			a0 = 1.0 / (v1 - v4 + v5); // a0 isn't used in GetOutput
-			a1 = (2.0 * (v2 - v3)) * a0;
-			a2 = (v1 - v4 - v5) * a0;
+			const Real a0 = REAL_CONST(1.0) / (v1 - v4 + v5); // a0 isn't used in GetOutput
+			this->a1 = (REAL_CONST(2.0) * (v2 - v3)) * a0;
+			this->a2 = (v1 - v4 - v5) * a0;
 
-			b0 = A * (v1 + v4 + v5) * a0;
-			b1 = -2.0 * A * (v2 + v3) * a0;
-			b2 = A * (v1 + v4 - v5) * a0;
+			this->b0 = A * (v1 + v4 + v5) * a0;
+			this->b1 = REAL_CONST(-2.0) * A * (v2 + v3) * a0;
+			this->b2 = A * (v1 + v4 - v5) * a0;
 		}
+
+		////////////////////////////////////////
+
+		template class PeakHighShelf<Real>;
+		template class PeakHighShelf<Complex>;
 
 		//////////////////// PeakLowShelf ////////////////////
 
 		////////////////////////////////////////
 
-		void PeakLowShelf::UpdateCoefficients(const Real gain)
+		template<typename In>
+		void PeakLowShelf<In>::UpdateCoefficients(const Real gain)
 		{
-			assert(gain > 0.0);
+			RAC_DEBUG_ASSERT(gain > REAL_CONST(0.0), "Invalid gain: " + ToString(gain));
 
 			const Real A = sqrt(gain);
-			const Real v1 = A + 1.0;
-			const Real v2 = A - 1.0;
+			const Real v1 = A + REAL_CONST(1.0);
+			const Real v2 = A - REAL_CONST(1.0);
 			const Real v3 = v1 * cosOmega;
 			const Real v4 = v2 * cosOmega;
 			const Real v5 = sqrt(A) * alpha; // 2 * sqrt(A) * alpha
 
-			a0 = 1.0 / (v1 + v4 + v5); // a0 isn't used in GetOutput
-			a1 = (-2.0 * (v2 + v3)) * a0;
-			a2 = (v1 + v4 - v5) * a0;
+			const Real a0 = REAL_CONST(1.0) / (v1 + v4 + v5); // a0 isn't used in GetOutput
+			this->a1 = (REAL_CONST(-2.0) * (v2 + v3)) * a0;
+			this->a2 = (v1 + v4 - v5) * a0;
 
-			b0 = A * (v1 - v4 + v5) * a0;
-			b1 = 2.0 * A * (v2 - v3) * a0;
-			b2 = A * (v1 - v4 - v5) * a0;
+			this->b0 = A * (v1 - v4 + v5) * a0;
+			this->b1 = REAL_CONST(2.0) * A * (v2 - v3) * a0;
+			this->b2 = A * (v1 - v4 - v5) * a0;
 		}
+
+		////////////////////////////////////////
+
+		template class PeakLowShelf<Real>;
+		template class PeakLowShelf<Complex>;
 
 		//////////////////// PeakingFilter ////////////////////
 
 		////////////////////////////////////////
 
-		void PeakingFilter::UpdateCoefficients(const Real gain)
+		template<typename In>
+		void PeakingFilter<In>::UpdateCoefficients(const Real gain)
 		{
-			assert(gain > 0.0);
+			RAC_DEBUG_ASSERT(gain > REAL_CONST(0.0), "Invalid gain: " + ToString(gain));
 
 			const Real A = sqrt(gain);
 			const Real v1 = alpha * A;
 			const Real v2 = alpha / A;
 
-			a0 = 1.0 / (1.0 + v2); // a0 isn't used in GetOutput
-			a1 = cosOmega * a0;
-			a2 = (1.0 - v2) * a0;
+			const Real a0 = REAL_CONST(1.0) / (REAL_CONST(1.0) + v2); // a0 isn't used in GetOutput
+			this->a1 = cosOmega * a0;
+			this->a2 = (REAL_CONST(1.0) - v2) * a0;
 
-			b0 = (1.0 + v1) * a0;
-			b1 = a1;
-			b2 = (1.0 - v1) * a0;
+			this->b0 = (REAL_CONST(1.0) + v1) * a0;
+			this->b1 = this->a1;
+			this->b2 = (REAL_CONST(1.0) - v1) * a0;
 		}
+
+		////////////////////////////////////////
+
+		template class PeakingFilter<Real>;
+		template class PeakingFilter<Complex>;
 
 		//////////////////// ZPKFilter ////////////////////
 
@@ -373,6 +352,8 @@ namespace RAC
 			parametersEqual.store(false, std::memory_order_release);
 #endif
 		}
+
+		////////////////////////////////////////
 
 		void ZPKFilter::SetTargetGain(const Real k)
 		{
@@ -424,12 +405,12 @@ namespace RAC
 			const Real omega = cot(PI_1 * fc * T); // 2 * PI * fc * T / 2
 			const Real omega_sq = omega * omega;
 
-			a0 = 1.0 / (1.0 + SQRT_2 * omega + omega_sq); // a[0] isn't used in GetOutput
-			a1 = (2.0 - 2.0 * omega_sq) * a0;
-			a2 = (1.0 - SQRT_2 * omega + omega_sq) * a0;
+			const Real a0 = REAL_CONST(1.0) / (REAL_CONST(1.0) + SQRT_2 * omega + omega_sq); // a[0] isn't used in GetOutput
+			a1 = (REAL_CONST(2.0) - REAL_CONST(2.0) * omega_sq) * a0;
+			a2 = (REAL_CONST(1.0) - SQRT_2 * omega + omega_sq) * a0;
 
 			b0 = a0;
-			b1 = 2.0 * a0;
+			b1 = REAL_CONST(2.0) * a0;
 			b2 = a0;
 		}
 
@@ -442,12 +423,12 @@ namespace RAC
 			const Real omega = cot(PI_1 * fc * T); // 2 * PI * fc * T / 2
 			const Real omega_sq = omega * omega;
 
-			a0 = 1.0 / (1.0 + SQRT_2 * omega + omega_sq); // a[0] isn't used in GetOutput
-			a1 = (2.0 - 2.0 * omega_sq) * a0;
-			a2 = (1.0 - SQRT_2 * omega + omega_sq) * a0;
+			const Real a0 = REAL_CONST(1.0) / (REAL_CONST(1.0) + SQRT_2 * omega + omega_sq); // a[0] isn't used in GetOutput
+			a1 = (REAL_CONST(2.0) - REAL_CONST(2.0) * omega_sq) * a0;
+			a2 = (REAL_CONST(1.0) - SQRT_2 * omega + omega_sq) * a0;
 
 			b0 = omega_sq * a0;
-			b1 = -2.0 * omega_sq * a0;
+			b1 = REAL_CONST(-2.0) * omega_sq * a0;
 			b2 = omega_sq * a0;
 		}	
 
@@ -476,15 +457,15 @@ namespace RAC
 
 		void HighShelfMatched::UpdateCoefficients(const Real fc, const Real gain)
 		{
-			constexpr static Real fm = 0.9;
-			constexpr static Real fmSq = 1.0 / (fm * fm);
+			constexpr static Real fm = REAL_CONST(0.9);
+			constexpr static Real fmSq = REAL_CONST(1.0) / (fm * fm);
 			Real newFc = 2 * fc * T;
 			newFc *= newFc;
 			Real Phim = 1 - cos(PI_1 * fm);
 			Phim = 1 / Phim;
 
-			Real alpha = 2.0 / PI_SQ * (fmSq + 1 / (gain * newFc)) - Phim;
-			Real beta = 2.0 / PI_SQ * (fmSq + gain / newFc) - Phim;
+			Real alpha = REAL_CONST(2.0) / PI_SQ * (fmSq + 1 / (gain * newFc)) - Phim;
+			Real beta = REAL_CONST(2.0) / PI_SQ * (fmSq + gain / newFc) - Phim;
 
 			a1 = -alpha / (1 + alpha + sqrt(1 + 2 * alpha));
 			Real bAll = -beta / (1 + beta + sqrt(1 + 2 * beta));
@@ -496,5 +477,6 @@ namespace RAC
 			b0 /= DCg;
 			b1 /= DCg;
 		}
+
 	}
 }

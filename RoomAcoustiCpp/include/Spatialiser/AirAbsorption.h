@@ -13,6 +13,7 @@
 
 // Common headers
 #include "Common/Types.h"
+#include "Common/Debug.h"
 
 // DSP headers
 #include "DSP/Buffer.h"
@@ -37,9 +38,11 @@ namespace RAC
 			* @param sampleRate The sample rate for calculating the filter coefficients
 			*/
 			AirAbsorption(const Real distance, const int sampleRate) : IIRFilter1(sampleRate), currentDistance(distance), targetDistance(distance),
-				constant(static_cast<Real>(sampleRate) / (SPEED_OF_SOUND * 7782.0))
+				constant(static_cast<Real>(sampleRate) / (SPEED_OF_SOUND * REAL_CONST(7782.0)))
 			{
-				a0 = 1.0; b1 = 0.0; // Not used by this filter
+				RAC_DEBUG_ASSERT(distance > REAL_CONST(0.0), "Invalid target distance: " + ToString(distance));
+
+				a0 = REAL_CONST(1.0); b1 = REAL_CONST(0.0); // Not used by this filter
 				UpdateCoefficients(distance);
 
 				parametersEqual.store(true, std::memory_order_release);
@@ -58,7 +61,7 @@ namespace RAC
 			*/
 			inline void SetTargetDistance(const Real distance)
 			{ 
-				assert(distance > 0.0);
+				RAC_DEBUG_ASSERT(distance > REAL_CONST(0.0), "Invalid target distance: " + ToString(distance));
 
 				targetDistance.store(distance, std::memory_order_release);
 				parametersEqual.store(false, std::memory_order_release);

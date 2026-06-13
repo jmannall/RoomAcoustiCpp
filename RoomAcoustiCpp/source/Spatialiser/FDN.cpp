@@ -10,55 +10,32 @@
 #include <cmath>
 #include <numeric>  // For std::gcd
 
+// Common headers
 #include "Common/RACProfiler.h"
+#include "Common/Debug.h"
 
 // Spatialiser headers
-#include "Spatialiser/FDN.h"
+#include "Spatialiser/FDN_private.h"
 #include "Spatialiser/Globals.h"
-
-// Unity headers
-#include "Unity/Debug.h"
 
 namespace RAC
 {
 	using namespace Common;
-#ifdef USE_UNITY_DEBUG
-	using namespace Unity;
-#endif
 	namespace Spatialiser
 	{
-
-		//////////////////// FDN Channel class ////////////////////
-
-		////////////////////////////////////////
-
-		Real FDNChannel::GetOutput(const Real input, const Real lerpFactor)
-		{
-			if (clearBuffers.load(std::memory_order_acquire))
-			{
-				mBuffer.Reset();
-				clearBuffers.store(false, std::memory_order_release);
-			}
-
-			if (idx >= mBuffer.Length())
-				idx = 0;
-			Real out = mAbsorptionFilter.GetOutput(mBuffer[idx], lerpFactor);
-			mBuffer[idx] = input;
-			++idx;
-			return out;
-		}
-
 		//////////////////// FDN class ////////////////////
-
+		
 		////////////////////////////////////////
 
-		bool FDN::IsSetMutuallyPrime(const std::vector<int>& numbers)
+		template<typename T>
+		bool FDN<T>::IsSetMutuallyPrime(const Vec<int>& numbers)
 		{
-			for (int i = 0; i < numbers.size(); ++i)
+			const int numbersLength = ToInt(numbers.Length());
+			for (int i = 0; i < numbersLength; ++i)
 			{
-				for (int j = i + 1; j < numbers.size(); ++j)
+				for (int j = i + 1; j < numbersLength; ++j)
 				{
-					if (std::gcd(numbers[i], numbers[j]) != 1)
+					if (std::gcd(numbers(i), numbers(j)) != 1)
 						return false;
 				}
 			}
@@ -67,13 +44,15 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		bool FDN::IsEntryMutuallyPrime(const std::vector<int>& numbers, int idx)
+		template<typename T>
+		bool FDN<T>::IsEntryMutuallyPrime(const Vec<int>& numbers, int idx)
 		{
-			for (int i = 0; i < numbers.size(); ++i)
+			const int numbersLength = ToInt(numbers.Length());
+			for (int i = 0; i < numbersLength; ++i)
 			{
 				if (i == idx)
 					continue;
-				if (std::gcd(numbers[i], numbers[idx]) != 1)
+				if (std::gcd(numbers(i), numbers(idx)) != 1)
 					return false;
 			}
 			return true;
@@ -81,19 +60,20 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void FDN::MakeSetMutuallyPrime(std::vector<int>& numbers)
+		template<typename T>
+		void FDN<T>::MakeSetMutuallyPrime(Vec<int>& numbers)
 		{
-			for (int i = 0; i < numbers.size(); ++i)
+			for (int i = 0; i < numbers.Length(); ++i)
 			{
-				int limit = static_cast<int>(round(0.1 * numbers[i]));
+				const int limit = static_cast<int>(round(0.1 * numbers(i)));
 				for (int adjustment = 0; adjustment <= limit; ++adjustment)
 				{
-					int original = numbers[i];
+					int original = numbers(i);
 					bool found = false;
 
 					for (int sign : {-1, 1})
 					{
-						numbers[i] = original + sign * adjustment;
+						numbers(i) = original + sign * adjustment;
 						if (IsEntryMutuallyPrime(numbers, i))
 						{
 							found = true;
@@ -103,156 +83,141 @@ namespace RAC
 
 					if (found)
 						break;
-					numbers[i] = original;
+					numbers(i) = original;
 				}
 			}
 		}
 
 		////////////////////////////////////////
 
-		FDN::FDN(const Coefficients<>& T60, const Vec& dimensions, const std::shared_ptr<Config> config, const Matrix& matrix) : x(config->numReverbSources),
-			y(config->numReverbSources), feedbackMatrix(matrix)
+		template<typename T>
+		Vec<int> FDN<T>::CalculateTimeDelay(const Vec<>& dimensions, const int fdnSize, const int fs)
 		{
-			assert(T60 > 0);
-			
-			std::vector<int> delayLengths = CalculateTimeDelay(dimensions, config->numReverbSources, config->fs);
-			mChannels.reserve(config->numReverbSources);
-			for (int i = 0; i < config->numReverbSources; i++)
-				mChannels.push_back(std::make_unique<FDNChannel>(static_cast<size_t>(delayLengths[i]), T60, config));
-		}
+			RAC_DEBUG_ASSERT(dimensions.Length() > 0, "No dimensions provided");
+			RAC_DEBUG_ASSERT(dimensions.Length() <= fdnSize, "Number of dimensions provided exceeds the fdnSize");
 
-		////////////////////////////////////////
+			Vec<> t(fdnSize);
+			Vec<int> delays = Vec<int>::Constant(fdnSize, 1);
 
-		void FDN::SetTargetT60(const Coefficients<>& T60)
-		{
-			for (int i = 0; i < mChannels.size(); i++)
-				mChannels[i]->SetTargetT60(T60);
-		}
-
-		////////////////////////////////////////
-
-		std::vector<int> FDN::CalculateTimeDelay(const Vec& dimensions, const int numChannels, const int fs)
-		{
-			assert(dimensions.Rows() >  0);
-
-			Vec t = Vec(numChannels);
-			std::vector<int> delays = std::vector<int>(numChannels);
-
-			t.RandomUniformDistribution(-0.1, 0.1);
-			t *= dimensions.Mean();
+			// gives [-1:1], divide by 10 to get [-0.1:0.1]
+			t.RandomUniformDistribution();
+			t *= dimensions.Mean() / (Real)10.0;
 
 			int k = 0;
-			while (k < numChannels)
+			while (k < fdnSize)
 			{
-				for (int i = 0; i < dimensions.Rows(); ++i)
+				for (int i = 0; i < dimensions.Length(); ++i)
 				{
-					if (k >= numChannels)
+					if (k >= fdnSize)
 						break;
-					assert(dimensions[i] > 0.0);
-					t[k] += dimensions[i];
+					RAC_DEBUG_ASSERT(dimensions(i) > 0.0, "Invalid dimension: " + ToString(dimensions(i)));
+					t(k) += dimensions(i);
 					++k;
 				}
 			}
 			t *= INV_SPEED_OF_SOUND;
+			t.Max((Real)1.0 / static_cast<Real>(fs));
 
-			for (int i = 0; i < numChannels; i++)
-				delays[i] = static_cast<int>(round(t[i] * static_cast<Real>(fs)));
+			for (int i = 0; i < fdnSize; i++)
+				delays(i) = static_cast<int>(round(t(i) * static_cast<Real>(fs)));
 			if (!IsSetMutuallyPrime(delays))
 				MakeSetMutuallyPrime(delays);
-			for (int& delay : delays)
-				delay = std::max(delay, 1);  // Ensure no zero or less delays
 			return delays;
 		}
 
 		////////////////////////////////////////
 
-		Matrix RandomOrthogonalFDN::InitMatrix(const size_t numChannels)
+		template<typename T>
+		void FDN<T>::ProcessSquare()
 		{
-			Matrix matrix = Matrix(numChannels, numChannels);
+#if MATRIX_LIBRARY == EIGEN_FLAG
+			// see https://libeigen.gitlab.io/eigen/docs-nightly/TopicWritingEfficientProductExpression.html for a description of noalias()
+			x.noalias() = feedbackMatrix * y;
+#else
+			for (int j = 0; j < feedbackMatrix.Cols(); ++j)
+			{
+				x(j) = 0.0;
+				for (int k = 0; k < feedbackMatrix.Rows(); ++k)
+					x(j) += y(k) * feedbackMatrix(k, j);
+			}
+#endif
+		}
 
-			Vec vector = Vec(numChannels);
-			vector.RandomUniformDistribution(-1.0, 1.0);
-			vector.Normalise();
-			matrix.AddColumn(vector.GetColumn(0), 0);
+		//////////////////// RandomOrthogonalFDN class ////////////////////
 
-			Real tol = 0.000001;
-			for (int j = 1; j < numChannels; ++j)
+		////////////////////////////////////////
+
+		template<typename T>
+		Matrix<> RandomOrthogonalFDN<T>::InitMatrix(const size_t numChannels)
+		{
+      const int numChannelsI = ToInt(numChannels);
+			Matrix<> matrix = Matrix<>::Zero(numChannelsI, numChannelsI);
+
+#if MATRIX_LIBRARY == EIGEN_FLAG
+			matrix.Col(0).RandomUniformDistribution().Normalise();
+#elif MATRIX_LIBRARY == CUSTOM_FLAG
+			Vec<> vector(numChannelsI);
+			// [-1:1] uniform distribution
+			 vector.RandomUniformDistribution();
+			 vector.Normalise();
+			 matrix.AddColumn(vector.Col(0), 0);
+#endif
+
+			Real tol = REAL_CONST(0.000001);
+			for (int j = 1; j < numChannelsI; ++j)
 			{
 				Real norm = 0;
 				while (norm < tol)
 				{
-					vector.RandomUniformDistribution(-1.0, 1.0);
+#if MATRIX_LIBRARY == EIGEN_FLAG
+					// TODO: Check this behaves as expected.
+					// vector.RandomUniformDistribution();
+					matrix.Col(j).RandomUniformDistribution(); 
 
-					Matrix section = Matrix(numChannels, j);
+					Matrix<> section = matrix.leftCols(j);
 
-					for (int i = 0; i < numChannels; ++i)
+					matrix.Col(j) -= section * (section.Transposed() * matrix.Col(j));
+					norm = matrix.Col(j).Normal();
+#elif MATRIX_LIBRARY == CUSTOM_FLAG
+					vector.RandomUniformDistribution();
+					Matrix<> section(numChannelsI, j);
+
+					for (int i = 0; i < numChannelsI; ++i)
 					{
 						for (int k = 0; k < j; k++)
-							section[i][k] = matrix[i][k];
-						std::vector<Real> test = matrix[i];
-						Real x = test[0];
-						Real y = matrix[i][0];
+							section(i, k) = matrix(i, k);
 					}
 
-					vector -= section * (section.Transpose() * vector);
-					norm = vector.CalculateNormal();
+					vector -= section * (section.Transposed() * vector);
+					norm = vector.Normal();
+#endif
 				}
+#if MATRIX_LIBRARY == EIGEN_FLAG
+				matrix.Col(j) /= norm;
+#elif MATRIX_LIBRARY == CUSTOM_FLAG
 				vector /= norm;
-				matrix.AddColumn(vector.GetColumn(0), j);
+				matrix.AddColumn(vector.Col(0), j);
+#endif
 			}
 			return matrix;
 		}
 
 		////////////////////////////////////////
 
-		void FDN::ProcessAudio(const Matrix& data, std::vector<Buffer<>>& outputBuffers, const Real lerpFactor)
-		{
-			PROFILE_FDN		
-			if (clearBuffers.load(std::memory_order_acquire))
-			{
-				x.Reset();
-				y.Reset();
-				clearBuffers.store(false, std::memory_order_release);
-			}
+		// we don't implement/use every function, so disable the warning (we can't re-enable it since the warning is generated after the file is parsed)
+		#ifdef _MSC_VER
+		#pragma warning (disable : 4661)
+		#endif
 
-			FlushDenormals();
+		//////////////////// Instatiate all classes ////////////////////
 
-			// Process feedback loop
-			for (int i = 0; i < data.Cols(); i++)
-			{
-				for (int j = 0; j < mChannels.size(); j++)
-				{
-#ifdef USE_UNITY_DEBUG
-					if (isnan(x[j]))
-						Debug::Log("X was nan", Colour::Red);
-#endif
-					y[j] = mChannels[j]->GetOutput(x[j] + data[j][i], lerpFactor);
-					outputBuffers[j][i] = y[j];
-#ifdef USE_UNITY_DEBUG
-					if (isnan(y[j]))
-						Debug::Log("Y was nan", Colour::Red);
-#endif
-				}
-				ProcessMatrix();
-			}
+		template class FDN<Real>;
+		template class FDN<Complex>;
+		template class RandomOrthogonalFDN<Real>;
+		template class RandomOrthogonalFDN<Complex>;
+		template class FDNChannel<Real>;
+		template class FDNChannel<Complex>;
 
-			// Process output filters
-			for (int i = 0; i < mChannels.size(); i++)
-				mChannels[i]->ProcessOutput(outputBuffers[i], outputBuffers[i], lerpFactor);
-			
-			NoFlushDenormals();
-		}
 
-		////////////////////////////////////////
-
-		void FDN::ProcessSquare()
-		{
-			for (int j = 0; j < feedbackMatrix.Cols(); ++j)
-			{
-				x[j] = 0.0;
-				for (int k = 0; k < feedbackMatrix.Rows(); ++k)
-					x[j] += y[k] * feedbackMatrix[k][j];
-			}
-		}
 	}
 }

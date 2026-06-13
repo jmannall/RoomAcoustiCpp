@@ -9,17 +9,15 @@
 #include <algorithm>
 #include <cmath>
 
-// Unity headers
-#include "Unity/Debug.h"
+// Common headers
+#include "Common/Debug.h"
 
 // Spatialiser headers
 #include "Spatialiser/Room.h"
 
 namespace RAC
 {
-#ifdef USE_UNITY_DEBUG
-	using namespace Unity;
-#endif
+	using namespace Common;
 	namespace Spatialiser
 	{
 
@@ -27,11 +25,60 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		size_t Room::InitWall(const Vertices& vertices, const Absorption<>& absorption)
+		size_t Room::InitMaterial(const Coefficients<>& material)
+		{
+			size_t id;
+			std::lock_guard<std::mutex> lock(mMaterialMutex);
+			if (!mEmptyMaterialSlots.empty()) // Assign material to an existing ID
+			{
+				id = mEmptyMaterialSlots.back();
+				mEmptyMaterialSlots.pop_back();
+			}
+			else // Create a new ID
+				id = nextMaterial++;
+
+			// Check if material exists (in case UpdateMaterial was used to set material ID manually)
+			auto it = mMaterials.find(id);
+			while (it != mMaterials.end()) // case: material already exists
+			{
+				id++;
+				it = mMaterials.find(id);
+			}
+
+			mMaterials.insert_or_assign(id, CalculateReflectance(material));
+			RecordChange();
+			return id;
+		}
+
+		////////////////////////////////////////
+
+		void Room::RemoveMaterial(size_t id)
+		{
+			std::lock_guard<std::mutex> lock(mMaterialMutex);
+			auto it = mMaterials.find(id);
+
+			if (it == mMaterials.end()) { return; } // case: material does not exist
+			else // case: material does exist
+			{
+				mMaterials.erase(it);
+				mEmptyMaterialSlots.push_back(id);
+				RecordChange();
+			}
+		}
+
+		////////////////////////////////////////
+
+		size_t Room::AddWall(Wall& wall)
 		{
 			size_t id;
 			Wall wall(vertices, absorption);
 			std::lock_guard<std::mutex> lock(mWallMutex);
+			if (mWalls.size() == 0) // TODO: Is this check obsolete now we have polygonID?
+			{
+				mEmptyWallSlots.clear();
+				mWallTimers.clear();
+				nextWall = 0;
+			}
 			if (!mEmptyWallSlots.empty()) // Assign wall to an existing ID
 			{
 				id = mEmptyWallSlots.back();
@@ -67,6 +114,36 @@ namespace RAC
 				}
 				mWallTimers.push_back(TimerPair(id));
 				RecordChange();
+			}
+		}
+
+		////////////////////////////////////////
+
+		void Room::CreateTriangleMeshSoA()
+		{
+			std::lock_guard<std::mutex> lock(mWallMutex);			
+			mTriangleMeshSoA.resize(ToInt(mWalls.size()));
+
+			for (const auto& [i, wall] : mWalls)
+			{
+				Vertices vertices = wall.GetVertices();
+				const Vec3 &A = vertices[0];
+				const Vec3 &B = vertices[1];
+				const Vec3 &C = vertices[2];
+
+				// ----- Anchor vertex A -----
+				mTriangleMeshSoA.A[i] = A;
+
+				// ----- Edges from A -----
+				mTriangleMeshSoA.edge1[i] = B - A;
+				mTriangleMeshSoA.edge2[i] = C - A;
+
+
+				// ----- Plane parameters: normal n and plane constant d0 -----
+				mTriangleMeshSoA.n[i] = wall.GetNormal();
+				mTriangleMeshSoA.patchId[i] = static_cast<int>(wall.GetMaterialID());
+
+				mTriangleMeshSoA.d0PlusEPS[i] = wall.GetD() + EPS_FACING;
 			}
 		}
 
@@ -158,16 +235,11 @@ namespace RAC
 			if (it == mWalls.end()) { return; } // case: wall does not exist
 			else { it->second.AddEdge(id); } // case: wall does exist
 
-#ifdef DEBUG_INIT
-			Debug::Log("Init Edge", Colour::Green);
-#endif
-
+			RAC_DEBUG_LOG("Init Edge", DebugType::Init);
 			mEdges.insert_or_assign(id, edge);
 			RecordChange();
 
-#ifdef DEBUG_GEOMETRY
-			Debug::send_path(std::to_string(id) + "e", { edge.GetBase() }, edge.GetTop());
-#endif
+			RAC_DEBUG_SENDPATH(ToString(id) + "e", edge.GetBase(), edge.GetTop());
 		}
 
 		////////////////////////////////////////
@@ -345,17 +417,17 @@ namespace RAC
 						{
 							// Cross(a.GetNormal(), b.GetNormal()) gives vector in direction of the edge
 							// verticesA[idxA] - verticesA[i] give vector from base to top of edge
-							Vec3 test1 = UnitVectorRound(Cross(wallA.GetNormal(), wallB.GetNormal()));
-							Vec3 test2 = UnitVectorRound(verticesA[idxA] - verticesA[i]);
+							Vec3 test1 = Round((wallA.GetNormal().cross(wallB.GetNormal())).Normalised());
+							Vec3 test2 = Round((verticesA[idxA] - verticesA[i]).Normalised());
 
 							Vec3 test = test1 - test2; // If opposite sign, will tend to zero
-							if (test.Length() < 0.1)
+							if (test.Normal() < 0.1)
 							{
 
 								edges.emplace_back(verticesA[i], verticesA[idxA], wallA.GetNormal(), wallB.GetNormal(), idA, idB, wallA.GetPlaneID(), wallB.GetPlaneID());
 								return;
 							}
-							else if (test.Length() > 1.9)
+							else if (test.Normal() > 1.9)
 							{
 								edges.emplace_back(verticesA[i], verticesA[idxA], wallB.GetNormal(), wallA.GetNormal(), idB, idA, wallB.GetPlaneID(), wallA.GetPlaneID());
 								return;
@@ -378,9 +450,7 @@ namespace RAC
 			if (it == mEdges.end()) { return false; } // case: edge does not exist
 			else { it->second = edge; } // case: edge does exist
 
-#ifdef DEBUG_GEOMETRY
-			Debug::send_path(std::to_string(id) + "e", { edge.GetBase() }, edge.GetTop());
-#endif
+			RAC_DEBUG_SENDPATH(ToString(id) + "e", edge.GetBase(), edge.GetTop());
 			return false;
 		}
 
@@ -427,16 +497,14 @@ namespace RAC
 			if (itE != mEdges.end())
 			{
 #ifdef DEBUG_REMOVE
-				Debug::Log("Remove Edge", Colour::Red);
+				RAC_DEBUG_LOG("Remove Edge", Colour::Red);
 #endif
 				size_t id = itE->second.GetWallID(wallID);
 				auto itW = mWalls.find(id);
 				if (itW != mWalls.end()) // case: wall exists
 					itW->second.RemoveEdge(edgeID);
 
-#ifdef DEBUG_IEM
-				Debug::remove_path(std::to_string(edgeID) + "e");
-#endif
+				RAC_DEBUG_REMOVEPATH(ToString(edgeID) + "e");
 				mEdges.erase(edgeID);
 				while (!mEdgeTimers.empty() && difftime(time(nullptr), mEdgeTimers.front().time) > 60)
 				{
@@ -558,64 +626,67 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		Coefficients<> Room::GetReverbTime()
+		std::pair<Coefficients<>, Real> Room::CalculateAbsorptionSurfaceArea()
 		{
-			if (reverbFormula == ReverbFormula::Custom)
-				return T60;
-
-			Coefficients absorption = Coefficients(numAbsorptionBands);
+			Coefficients<> absorption = Coefficients<>::Constant(numFrequencyBands, 1.0);
 			Real surfaceArea = 0.0;
+			MaterialMap absorptionFactors;
 
+			{
+				std::lock_guard<std::mutex> lock(mMaterialMutex);
+				for (auto& [matID, material] : mMaterials)
+					absorptionFactors[matID] = (material * material - 1.0);
+			}
 			{
 				std::lock_guard<std::mutex> lock(mWallMutex);
 				for (const auto& [wallID, wall] : mWalls)
 				{
-					absorption -= (wall.GetAbsorption() * wall.GetAbsorption() - 1.0) * wall.GetArea();
+					int materialID = ToInt(wall.GetMaterialID());
+					auto it = absorptionFactors.find(materialID);
+					if (it == absorptionFactors.end()) continue;
+
+					absorption -= it->second * wall.GetArea();
 					surfaceArea += wall.GetArea();
 				}
 			}
+			return { absorption, surfaceArea };
+		}
 
-			if (surfaceArea == 0.0)
-			{
-#ifdef USE_UNITY_DEBUG
-				Debug::Log("No walls initialised", Colour::Red);
-#endif
-				return T60;
-			}
+		////////////////////////////////////////
 
-			if (volume < 0.0)
-			{
-#ifdef USE_UNITY_DEBUG
-				Debug::Log("Room volume less than or equal to 0", Colour::Red);
-#endif
-				return T60;
-			}
+		Coefficients<> Room::GetReverbTime()
+		{
+			std::lock_guard<std::mutex> lock(roomDataMutex);
+			if (roomData.formula == ReverbFormula::Custom)
+				return roomData.customT60;
 
-			switch (reverbFormula)
+			auto [absorption, surfaceArea] = CalculateAbsorptionSurfaceArea();
+			switch (roomData.formula)
 			{
-			case(ReverbFormula::Sabine):
-				return Sabine(absorption);
-			case(ReverbFormula::Eyring):
-				return Eyring(absorption, surfaceArea);
 			default:
+			case ReverbFormula::Sabine:
 				return Sabine(absorption);
+			case ReverbFormula::Eyring:
+				return Eyring(absorption, surfaceArea);
+			case ReverbFormula::Custom:
+				return roomData.customT60;
 			}
 		}
 
 		////////////////////////////////////////
 
-		Coefficients<> Room::Sabine(const Coefficients<>& absorption)
+		Coefficients<> Room::Sabine(const Coefficients<>& absorption) const
 		{
-			Real factor = 24.0 * log(10.0) / SPEED_OF_SOUND;
-			return factor * volume / (absorption + 1e-10);
+			Real factor = REAL_CONST(24.0) * std::log(REAL_CONST(10.0)) / SPEED_OF_SOUND;
+			return factor * roomData.volume / absorption;
 		}
 
 		////////////////////////////////////////
 
-		Coefficients<> Room::Eyring(const Coefficients<>& absorption, const Real& surfaceArea)
+		Coefficients<> Room::Eyring(const Coefficients<>& absorption, const Real& surfaceArea) const
 		{
-			Real factor = 24.0 * log(10.0) / SPEED_OF_SOUND;
-			return -factor * volume / ((1.0 - absorption / surfaceArea).Log() * surfaceArea + 1e-10);
+			Real factor = REAL_CONST(24.0) * std::log(REAL_CONST(10.0)) / SPEED_OF_SOUND;
+			return -factor * roomData.volume / ((1 - absorption / surfaceArea).Log() * surfaceArea);
 		}
 	}
 }

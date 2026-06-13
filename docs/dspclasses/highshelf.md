@@ -1,6 +1,8 @@
 The `HighShelf` class implements a first-order high-shelf IIR filter with real-time parameter interpolation.
 It derives from `IIRFilter1`.
 
+Most users will interact with RoomAcoustiC++ through the high-level API in [`Spatialiser/Interface.h`](../spatialiser/interface.md). This page documents lower-level details for advanced usage.
+
 - **Namespace:** `RAC::DSP`
 - **Header:** `DSP/IIRFilter.h`
 - **Source:** `DSP/IIRFilter.cpp`
@@ -16,7 +18,6 @@ class HighShelf : public IIRFilter1
 public:
     HighShelf(const int sampleRate);
     HighShelf(const Real fc, const Real gain, const int sampleRate);
-    ~HighShelf();
 
     inline void SetTargetParameters(const Real fc, const Real gain);
     // ...inherited methods from IIRFilter1...
@@ -49,12 +50,6 @@ Initializes the high-shelf filter with the given sample rate, cutoff frequency a
 - `fc`: The cutoff frequency (Hz).  
 - `gain`: The gain (linear).  
 - `sampleRate`: The sample rate for calculating filter coefficients.
-
----
-
-### `#!cpp ~HighShelf()`
-**Destructor.**  
-Cleans up the filter.
 
 ---
 

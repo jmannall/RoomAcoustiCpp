@@ -9,9 +9,11 @@
 #include <random>
 
 // Common headers
-#include "Common/Matrix.h"
+#include "Common/Matrix_private.h"
 #include "Common/Definitions.h"
+#include "Common/Complex.h"
 
+#if MATRIX_LIBRARY == CUSTOM_FLAG
 namespace RAC
 {
 	namespace Common
@@ -22,173 +24,189 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Matrix::Init(const std::vector<std::vector<Real>>& matrix)
+		template<typename T>
+		void Matrix<T>::Init(const std::vector<std::vector<T>>& matrix)
 		{
-			rows = static_cast<int>(matrix.size());
-			for (int i = 1; i < rows; i++)
-				assert(matrix[i].size() == matrix[0].size());
+			data.rows = static_cast<int>(matrix.size());
+			for (int i = 1; i < data.rows; i++)
+				RAC_DEBUG_ASSERT(matrix[i].size() == matrix[0].size(), "Matrix rows must all be the same length");
 
-			if (rows > 0)
+			if (data.rows > 0)
 			{
-				cols = static_cast<int>(matrix[0].size());
-				data = matrix;
+				data.cols = static_cast<int>(matrix[0].size());
+				for (int i = 0; i < data.rows; i++)
+				{
+					for (int j = 0; j < data.cols; j++)
+						data(i, j) = matrix[i][j];
+				}
 			}
 			else
-				cols = 0;
-			column = std::vector<Real>(rows);
+				data.cols = 0;
+			column = std::vector<T>(data.rows);
+			row = std::vector<T>(data.cols);
 		}
 
 		////////////////////////////////////////
 
-		void Matrix::AllocateSpace()
+		template<typename T>
+		Matrix<T> Matrix<T>::Transposed()
 		{
-			for (int i = 0; i < rows; i++)
-				data.push_back(std::vector<Real>(cols, 0.0));
-			column = std::vector<Real>(rows);
-		}
-
-		////////////////////////////////////////
-
-		Matrix Matrix::Transpose()
-		{
-			assert(rows == data.size());
-			Matrix matrix = Matrix(cols, rows);
-			for (int i = 0; i < rows; i++)
+			RAC_DEBUG_ASSERT(data.rows * data.cols == data.matrix.size(), "Invalid matrix size");
+			Matrix<T> matrix = Matrix<T>(data.cols, data.rows);
+			for (int i = 0; i < data.rows; i++)
 			{
-				assert(cols == data[i].size());
-				for (int j = 0; j < cols; j++)
-					matrix[j][i] = data[i][j];
+				for (int j = 0; j < data.cols; j++)
+					matrix(j, i) = data(i, j);
 			}
 			return matrix;
 		}
 
 		////////////////////////////////////////
 
-		void Matrix::Inverse()
+		Matrix<Real> Matrix<Real>::InverseMatrix() const
 		{
-			assert(rows == cols); // Matrix must be square
+			Matrix<Real> inverse = *this;
+			inverse.Invert();
+			return inverse;
+		}
+
+		////////////////////////////////////////
+
+		template<>
+		void Matrix<Real>::Invert()
+		{
+			RAC_DEBUG_ASSERT(data.rows == data.cols, "Matrix must be square");
 
 			// Create the augmented matrix [A|I]
-			for (int i = 0; i < rows; i++)
-			{
-				data[i].resize(2 * cols, 0.0);
-				data[i][cols + i] = 1.0;
-			}
+			data.matrix.resize(2 * data.cols * data.rows, 0.0);
+			for (int i = 0; i < data.rows; i++)
+				data(data.rows + i, i) = 1.0;
 
 			// Perform row operations
-			for (int i = 0; i < rows; i++)
+			for (int i = 0; i < data.rows; i++)
 			{
 				// Find the row with the largest absolute value in column i
 				int maxRow = i;
-				Real maxVal = std::abs(data[i][i]);
-				for (int r = i + 1; r < rows; r++)
+				Real maxVal = std::abs(data(i, i));
+				for (int r = i + 1; r < data.rows; r++)
 				{
-					if (std::abs(data[r][i]) > maxVal)
+					if (std::abs(data(r, i)) > maxVal)
 					{
-						maxVal = std::abs(data[r][i]);
+						maxVal = std::abs(data(r, i));
 						maxRow = r;
 					}
 				}
 
 				// If pivot is too small, matrix is singular
-				if (std::abs(data[maxRow][i]) < 1e-12)
+				if (std::abs(data(maxRow, i)) < 1e-12)
 					continue; // Matrix is singular, cannot invert
 
-				// Swap rows if needed
+				// Swap data.rows if needed
 				if (maxRow != i)
-					std::swap(data[i], data[maxRow]);
+				{
+					std::swap_ranges(
+						data.matrix.begin() + i * data.cols,
+						data.matrix.begin() + (i + 1) * data.cols,
+						data.matrix.begin() + maxRow * data.cols
+					);
+
+					std::swap_ranges(
+						data.matrix.begin() + (i + data.rows) * data.cols,
+						data.matrix.begin() + (i + data.rows + 1) * data.cols,
+						data.matrix.begin() + (maxRow + data.rows) * data.cols
+					);
+				}
+				// std::swap(data[i], data[maxRow]);
 
 				// Divide row by pivot
-				Real pivot = data[i][i];
-				for (int j = 0; j < 2 * cols; j++)
-					data[i][j] /= pivot;
+				Real pivot = data(i, i);
+				for (int j = 0; j < data.cols; j++)
+				{
+					data(i, j) /= pivot;
+					data(i + data.rows, j) /= pivot;
+				}
 
-				// Eliminate other rows
-				for (int j = 0; j < rows; j++)
+				// Eliminate other data.rows
+				for (int j = 0; j < data.rows; j++)
 				{
 					if (j != i)
 					{
-						Real factor = data[j][i];
-						for (int k = 0; k < 2 * cols; k++)
-							data[j][k] -= factor * data[i][k];
+						Real factor = data(j, i);
+						for (int k = 0; k < data.cols; k++)
+						{
+							data(j, k) -= factor * data(i, k);
+							data(j + data.rows, k) -= factor * data(i + data.rows, k);
+						}
 					}
 				}
 			}
 
 			// Remove the identity matrix
-			for (int i = 0; i < rows; i++)
-			{
-				data[i].erase(data[i].begin(), data[i].begin() + cols);
-				data[i].shrink_to_fit();
-			}
+			data.matrix.erase(data.matrix.begin(), data.matrix.begin() + data.rows * data.cols);
+			data.matrix.shrink_to_fit();
 		}
 
 		////////////////////////////////////////
 
-		void Matrix::Log10()
+		void Matrix<Real>::Log10()
 		{
-			for (int i = 0; i < rows; i++)
-			{
-				for (int j = 0; j < cols; j++)
-					data[i][j] = RAC::Common::Log10(data[i][j]);
-			}
+			for (auto& value : data.matrix)
+				value = RAC::Common::Log10(value);
 		}
 
 		////////////////////////////////////////
 
-		void Matrix::Pow10()
+		void Matrix<Real>::Pow10()
 		{
-			for (int i = 0; i < rows; i++)
-			{
-				for (int j = 0; j < cols; j++)
-					data[i][j] = RAC::Common::Pow10(data[i][j]);
-			}
+			for (auto& value : data.matrix)
+				value = RAC::Common::Pow10(value);
 		}
 
 		////////////////////////////////////////
 
-		void Matrix::Max(const Real min)
+		void Matrix<Real>::Max(const Real min)
 		{
-			for (int i = 0; i < rows; i++)
-			{
-				for (int j = 0; j < cols; j++)
-					data[i][j] = std::max(min, data[i][j]);
-			}
+			for (auto& value : data.matrix)
+				value = std::max(min, value);
 		}
 
 		////////////////////////////////////////
 
-		void Matrix::Min(const Real max)
+		void Matrix<Real>::Min(const Real max)
 		{
-			for (int i = 0; i < rows; i++)
-			{
-				for (int j = 0; j < cols; j++)
-					data[i][j] = std::min(max, data[i][j]);
-			}
+			for (auto& value : data.matrix)
+				value = std::min(max, value);
 		}
 
 		////////////////////////////////////////
 
-		void Matrix::RandomUniformDistribution()
+		void Matrix<Real>::RandomUniformDistribution()
 		{
 			std::uniform_real_distribution<Real> distribution; // a 0, b 1
-			for (int i = 0; i < rows; i++)
-			{
-				for (int j = 0; j < cols; j++)
-					data[i][j] = distribution(generator);
-			}
+			for (auto& value : data.matrix)
+				value = distribution(generator);
 		}
 
 		////////////////////////////////////////
 
-		void Matrix::RandomUniformDistribution(Real a, Real b)
+		void Matrix<Real>::RandomUniformDistribution(Real a, Real b)
 		{
 			std::uniform_real_distribution<Real> distribution(a, b);
-			for (int i = 0; i < rows; i++)
-			{
-				for (int j = 0; j < cols; j++)
-					data[i][j] = distribution(generator);
-			}
+			for (auto& value : data.matrix)
+				value = distribution(generator);
 		}
+
+		//////////////////// Instantiate ////////////////////
+
+		// we don't implement/use every function, so disable the warning (we can't re-enable it since the warning is generated after the file is parsed)
+		#ifdef _MSC_VER
+		#pragma warning (disable : 4661)
+		#endif
+
+		template class Matrix<int>;
+		template class Matrix<Real>;
+		template class Matrix<Complex>;
+
 	}
 }
+#endif // MATRIX_LIBRARY == CUSTOM_FLAG

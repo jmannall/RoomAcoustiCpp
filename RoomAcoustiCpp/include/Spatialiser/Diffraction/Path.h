@@ -181,15 +181,15 @@ namespace RAC
 				/**
 				* @brief Update the r value for the given SRData
 				*/
-				inline void CalculateR(SRData* data) { data->r = (Cross(mEdge.GetAP(data->point), mEdge.GetEdgeVector())).Length(); }
-				
+				inline void CalculateR(SRData* data) { data->r = (mEdge.GetAP(data->point).cross(mEdge.GetEdgeVector())).Normal(); }
+
 				/**
 				* @brief Update the z value for the given SRData
 				*/
 				inline void CalculateZ(SRData* data)
 				{
-					Vec3 AP = mEdge.GetAP(data->point);
-					data->z = AP.Length() * Dot(UnitVector(AP), mEdge.GetEdgeVector());
+					const Vec3 AP = mEdge.GetAP(data->point);
+					data->z = AP.Normal() * (AP.Normalised().dot(mEdge.GetEdgeVector()));
 				}
 
 				/**
@@ -220,7 +220,7 @@ namespace RAC
 				/**
 				* @brief Update the d value for the given SRData
 				*/
-				inline void CalculateD(SRData* data) { data->d = (data->point - GetApex()).Length(); }
+				inline void CalculateD(SRData* data) { data->d = (data->point - GetApex()).Normal(); }
 
 				/**
 				* @brief Calculate the zA value and phi angle

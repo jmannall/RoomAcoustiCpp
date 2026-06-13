@@ -13,8 +13,11 @@ bool* GetDevBuild();
 int RegisterThread();
 void UnregisterThread(int id);
 
-void RegisterBackgroundThread();
-void UnregisterBackgroundThread();
+void RegisterIEMThread();
+void UnregisterIEMThread();
+
+void RegisterRayTracingThread();
+void UnregisterRayTracingThread();
 
 int RegisterAudioThread();
 void UnregisterAudioThread(int id);
@@ -89,6 +92,9 @@ void EndReflection();
 
 void BeginDiffraction();
 void EndDiffraction();
+
+void BeginOctaveBand();
+void EndOctaveBand();
 
 void BeginAirAbsorption();
 void EndAirAbsorption();

@@ -44,7 +44,7 @@ namespace RAC
 				return current;
 			}
 			
-			// TO DO: Can be incorrect if Interpolate called at the same time
+			// TODO: Can be incorrect if Interpolate called at the same time
 			inline bool IsZero() { return parametersEqual.load(std::memory_order_acquire) && target.load(std::memory_order_acquire) == 0.0; }
 
 			inline void Reset(Real newValue) { current = newValue; parametersEqual.store(false, std::memory_order_release); }

@@ -1,5 +1,7 @@
 Implements a thread that periodically calls a callback function at a specified interval.
 
+Most users will interact with RoomAcoustiC++ through the high-level API in [`Spatialiser/Interface.h`](../spatialiser/interface.md). This page documents lower-level details for advanced usage.
+
 - **Namespace:** *(global)*
 - **Header:** `Common/Timer.h`
 - **Source:** *(header only)*

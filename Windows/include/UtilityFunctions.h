@@ -2,6 +2,7 @@
 #ifndef UtilityFunctions_h
 #define UtilityFunctions_h
 
+#include <cassert>
 #include <string>
 #include <fstream>
 #include <iomanip>
@@ -100,7 +101,7 @@ inline void AppendBufferToCSV(const std::string& filename, const double* data, c
 	file.close();
 }
 
-inline void WriteDataEntry(std::string filename, const float* data, int length, double position, double rotation) {
+inline void WriteDataEntry(const std::string &filename, const float* data, int length, double position, double rotation) {
 
 	// Open the file in append mode
 	std::ofstream file(filename, std::ios::app);
@@ -111,8 +112,8 @@ inline void WriteDataEntry(std::string filename, const float* data, int length, 
 		return;
 	}
 
-	int pos = position * 100;
-	int rot = ceil(rotation);
+	int pos = static_cast<int>(round( position * 100 ));
+	int rot = static_cast<int>(ceil(rotation));
 	file << pos;
 	file << "_";
 	file << rot;
@@ -154,11 +155,17 @@ inline std::vector<std::string> ListDirectoryFiles(const std::string& directoryP
 	return files;
 }
 
-static std::default_random_engine generator(100); // Seed the generator
+static std::default_random_engine generator(200); // Seed the generator
 
-inline double RandomValue()
+inline float RandomValue()
 {
-	std::uniform_real_distribution<double> distribution(-1.0, 1.0);
+	std::uniform_real_distribution<float> distribution(-1.0, 1.0);
+	return distribution(generator);
+}
+
+inline float RandomValue(const float a, const float b)
+{
+	std::uniform_real_distribution<float> distribution(a, b);
 	return distribution(generator);
 }
 

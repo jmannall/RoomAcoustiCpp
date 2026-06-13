@@ -7,14 +7,14 @@
 #define DSP_Interpolate_h
 
 // C++ headers
-#if defined(__x86_64__) || defined(_M_X64)
-// #include <intrin.h>
-#include <xmmintrin.h>
+#ifdef _WIN32
+#include <intrin.h>
 #endif
 #include <omp.h>
 
 // Common headers
 #include "Common/Coefficients.h"
+#include "Common/Definitions.h"
 
 // DSP headers
 #include "DSP/Buffer.h"
@@ -49,6 +49,7 @@ namespace RAC
 
 		/**
 		* Forces the CPU to flush denormals (cause performance issues in recursive filter structures)
+		* This is per thread
 		*/
 		inline void FlushDenormals()
 		{
@@ -88,9 +89,7 @@ namespace RAC
 		*/
 		inline Real Lerp(Real start, const Real end, const Real factor)
 		{
-			assert(0.0 < factor && factor <= 1.0);
-	
-			start *= 1.0 - factor;
+			start *= REAL_CONST(1.0) - factor;
 			start += end * factor;
 			return start;
 		}
@@ -106,42 +105,41 @@ namespace RAC
 		*/
 		inline void Lerp(Buffer<>& start, const Buffer<>& end, const int startLength, const Real factor)
 		{
-			assert(0.0 < factor && factor <= 1.0);
-			assert(end.Length() % 8 == 0);
-			assert(start.Length() >= end.Length());
-			assert(startLength <= start.Length());
+			RAC_DEBUG_ASSERT(end.Length() % 8 == 0, "End length not a multiple of eight");
+			RAC_DEBUG_ASSERT(start.Length() >= end.Length(), "End length is greater than the start length");
+			RAC_DEBUG_ASSERT(startLength <= start.Length(), "Old start length is greater than the current start length");
 
-			int len = end.Length();
+			const int len = ToInt(end.Length());
 			int i = 0;
 			while(i < len) // Easier for compiler to vectorise ~1.6x faster
 			{
-				start[i] *= (1.0 - factor);
+				start[i] *= (REAL_CONST(1.0) - factor);
 				start[i] += factor * end[i];
 				i++;
-				start[i] *= (1.0 - factor);
+				start[i] *= (REAL_CONST(1.0) - factor);
 				start[i] += factor * end[i];
 				i++;
-				start[i] *= (1.0 - factor);
+				start[i] *= (REAL_CONST(1.0) - factor);
 				start[i] += factor * end[i];
 				i++;
-				start[i] *= (1.0 - factor);
+				start[i] *= (REAL_CONST(1.0) - factor);
 				start[i] += factor * end[i];
 				i++;
-				start[i] *= (1.0 - factor);
+				start[i] *= (REAL_CONST(1.0) - factor);
 				start[i] += factor * end[i];
 				i++;
-				start[i] *= (1.0 - factor);
+				start[i] *= (REAL_CONST(1.0) - factor);
 				start[i] += factor * end[i];
 				i++;
-				start[i] *= (1.0 - factor);
+				start[i] *= (REAL_CONST(1.0) - factor);
 				start[i] += factor * end[i];
 				i++;
-				start[i] *= (1.0 - factor);
+				start[i] *= (REAL_CONST(1.0) - factor);
 				start[i] += factor * end[i];
 				i++;
 			}
-			for (int i = end.Length(); i < startLength; i++) // Interpolating to zero
-				start[i] *= (1.0 - factor);
+			for (int i = ToInt( end.Length() ); i < startLength; i++) // Interpolating to zero
+				start[i] *= (REAL_CONST(1.0) - factor);
 		}
 
 		/**
@@ -151,13 +149,12 @@ namespace RAC
 		* @params end The target coefficients
 		* @params factor The interpolation factor (must be between 0 and 1)
 		*/
-		template<typename T>
-		inline void Lerp(Coefficients<T>& start, const Coefficients<T>& end, const Real factor)
+		template<typename T, int Size>
+		inline void Lerp(Coefficients<T, Size>& start, const Coefficients<T, Size>& end, const Real factor)
 		{
-			assert(0.0 < factor && factor <= 1.0);	
-			assert(start.Length() == end.Length());
-			
-			start *= (1.0 - factor);
+			RAC_DEBUG_ASSERT(start.Length() == end.Length(), "Coefficients must have the same length");
+
+			start *= (REAL_CONST(1.0) - factor);
 			start += factor * end;
 		}
 
@@ -180,12 +177,12 @@ namespace RAC
 		/**
 		* Checks for equality between two coefficient classes
 		*
-		* @params u Coefficients 1
-		* @params v Coefficients 2
+		* @params u Coefficients<> 1
+		* @params v Coefficients<> 2
 		* @returns True if equal within the threshold EPS, false otherwise
 		*/
-		template<typename T>
-		inline bool Equals(const Coefficients<T>& u, const Coefficients<T>& v, const Real threshold = EPS)
+		template<typename T, int Size>
+		inline bool Equals(const Coefficients<T, Size>& u, const Coefficients<T, Size>& v, const Real threshold = EPS)
 		{
 			if (u.Length() != v.Length())
 				return false;
@@ -200,12 +197,14 @@ namespace RAC
 		* 
 		* @param u Buffer 1
 		* @param v Buffer 2
+		* @param length The length up to which to check for equality
+		* @param threshold The threshold for equality
 		* @returns True if equal within the threshold EPS, false otherwise
 		*/
 		inline bool Equals(const Buffer<>& u, const Buffer<>& v, const int length, const Real threshold = EPS)
 		{
-			assert(v.Length() == length);
-			assert(u.Length() >= length);
+			RAC_DEBUG_ASSERT(v.Length() == length, "Buffer 2 length does not equal the assigned length");
+			RAC_DEBUG_ASSERT(u.Length() >= length, "Buffer 1 length is less than the assigned length");
 
 			for (int i = 0; i < length; i++)
 				if (u[i] > v[i] + threshold || u[i] < v[i] - threshold)

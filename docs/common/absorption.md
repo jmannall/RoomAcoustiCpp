@@ -1,122 +1,40 @@
-Stores absorption coefficients for materials, derived from `Coefficients`.  
-Handles reflectance-to-absorption conversion and area tracking.
+Stores frequency-dependent **absorption coefficients** for surface materials.
+
+Most users will interact with RoomAcoustiC++ through the high-level API in [`Spatialiser/Interface.h`](../spatialiser/interface.md). This page documents lower-level details for advanced usage.
+
+Absorption in RoomAcoustiC++ is represented using `Coefficients<>` (one value per frequency band), where each value is in the range **[0, 1]**.
 
 - **Namespace:** `RAC::Common`
+- **Type:** `Coefficients<>`
 - **Header:** `Common/Coefficients.h`
 - **Source:** *(header only)*
 - **Dependencies:** `Common/Types.h`, `Common/Definitions.h`
 
 ---
 
-## Class Definition
+## Absorption Coefficients
 
-```cpp
-template <typename T = std::vector<Real>>
-class Absorption : public Coefficients<T>
-{
-public:
-    Absorption(int len);
-    Absorption(const T& R);
-    ~Absorption();
+An absorption coefficient describes how much energy is absorbed by a surface at a given frequency band:
 
-    void Reset();
-    inline Absorption& operator=(Real x);
-    inline Absorption& operator-();
-    inline Absorption& operator+=(const Absorption& v);
-    inline Absorption& operator-=(const Absorption& v);
-    inline Absorption& operator*=(const Absorption& v);
-    inline Absorption& operator/=(const Absorption& v);
-    inline Absorption& operator+=(const Real a);
-    inline Absorption& operator*=(const Real a);
+- `0.0` means **fully reflective** (no energy is lost)
+- `1.0` means **fully absorbing** (no energy is reflected)
 
-    Real mArea;
-};
-```
+In the public API, absorption coefficients are used when creating **materials** (see `RAC::Spatialiser::InitMaterial`) and are referenced by geometry such as walls.
 
 ---
-
-## Public Methods
-
-### `#!cpp Absorption(int len)`
-Initializes with ones.
-- `len`: Number of coefficients.
-
----
-
-### `#!cpp Absorption(const T& R)`
-Initializes from reflectance values (converts to absorption).
-- `R`: Reflectance values.
-
----
-
-### `#!cpp ~Absorption()`
-Destructor.
-
----
-
-### `#!cpp void Reset()`
-Sets all coefficients to one.
-
----
-
-### `#!cpp inline Absorption& operator=(Real x)`
-Sets all coefficients to `x`.
-
----
-
-### `#!cpp inline Absorption& operator-()`
-Negates all coefficients.
-
----
-
-### `#!cpp inline Absorption& operator+=(const Absorption& v)`
-Adds another absorption (areas are added).
-
----
-
-### `#!cpp inline Absorption& operator-=(const Absorption& v)`
-Subtracts another absorption (areas are subtracted).
-
----
-
-### `#!cpp inline Absorption& operator*=(const Absorption& v)`
-Element-wise multiply.
-
----
-
-### `#!cpp inline Absorption& operator/=(const Absorption& v)`
-Element-wise divide.
-
----
-
-### `#!cpp inline Absorption& operator+=(const Real a)`
-Adds a value to all coefficients.
-
----
-
-### `#!cpp inline Absorption& operator*=(const Real a)`
-Multiplies all coefficients by a value.
-
----
-
-## Internal Data Members
-
-- `#!cpp Real mArea`: Area covered by the absorption coefficients.
-
----
-
-## Implementation Notes
-
-- Converts reflectance to absorption using sqrt(1 - R).
-- Supports area tracking and arithmetic.
 
 ## Example Usage
 
 ```cpp
 #include "Common/Coefficients.h"
-using namespace RAC::Common;
+#include "Spatialiser/Interface.h"
 
-Absorption<> a(4);
-a[2] = 0.5;
-a.mArea = 10.0;
+using namespace RAC::Common;
+using namespace RAC::Spatialiser;
+
+// 4-band absorption (e.g., 250, 500, 1000, 2000 Hz)
+Coefficients<> absorption(std::vector<Real>({0.2, 0.3, 0.4, 0.5}));
+
+// Create a material from absorption coefficients
+int materialId = InitMaterial(absorption);
 ```

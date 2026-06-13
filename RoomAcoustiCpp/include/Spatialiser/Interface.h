@@ -15,6 +15,8 @@
 
 // Spatialiser headers
 #include "Spatialiser/Types.h"
+#include "Spatialiser/Configs.h"
+#include "Spatialiser/ContextOptionalArguments.h"
 
 namespace RAC
 {
@@ -22,21 +24,24 @@ namespace RAC
 	using namespace DSP;
 	namespace Spatialiser
 	{
-		/**
-		* Initializes the spatialiser with the given configuration and file paths.
-		*
-		* @param config The configuration of the spatialiser.
-		* @return True if the initialization was successful, false otherwise.
-		*/
-		bool Init(const std::shared_ptr<Config> config);
 
 		/**
-		* Exits and cleans up the spatialiser.
+		* @brief Initializes the spatialiser with the given configuration and file paths.
+		*
+		* @param data The configuration of the spatialiser.
+		* @param optionalArguments Optional arguments
+		* 
+		* @return True if the initialization was successful, false otherwise.
+		*/
+		bool Init(const DSPData& data, const ContextOptionalArguments &optionalArguments = ContextOptionalArguments());
+
+		/**
+		* @brief Exits and cleans up the spatialiser.
 		*/
 		void Exit();
 
 		/**
-		* Sets the spatialisation mode for the HRTF processing.
+		* @brief Sets the spatialisation mode for the HRTF processing.
 		*
 		* @param hrtfResamplingStep The step size for resampling the HRTF.
 		* @param filePaths The file paths for HRTF files.
@@ -52,57 +57,123 @@ namespace RAC
 		void SetHeadphoneEQ(const Buffer<>& leftIR, const Buffer<>& rightIR);
 
 		/**
-		* Sets the spatialisation mode for the HRTF processing.
+		* @brief Sets the spatialisation mode for the HRTF processing.
 		*
 		* @param mode The new spatialisation mode.
 		*/
 		void UpdateSpatialisationMode(const SpatialisationMode mode);
 		
 		/**
-		* Updates the configuration for the Image Edge Model (IEM).
+		* @brief Enables the early reverberation DSP.
+		* 
+		* @param enable True to enable early reflections, false to disable.
+		*/
+		void EnableEarlyReverb(const bool enable);
+
+		/**
+		* @brief Updates the configuration for the Image Edge Model (IEM).
 		*
 		* @param data The new configuration for the IEM.
 		*/
-		void UpdateIEMConfig(const IEMData& data);
+		void UpdateEarlyConfig(const EarlyReverbData& data);
 
 		/**
-		* Updates the model in order to calculate the late reverberation time (T60).
+		* @brief Enables the late reverberation DSP.
+		*
+		* @param enable True to enable late reflections, false to disable.
+		*/
+		void EnableLateReverb(const bool enable);
+
+		/**
+		* @brief Sets the number of rays used in the late reverberation ray tracing.
+		* 
+		* @param numRays The number of rays to use for ray tracing.
+		*/
+		void UpdateLateReverbNumberOfRays(const int numRays);
+
+		/**
+		* @brief Sets the distance thresholds (in meters) from the latest updated position which triggers an update of late reverberation tracing.
+		*
+		* @param sourceThresh The distance threshold for all sources.
+		* @param listenerThresh The distance threshold for the listener.
+		*/
+		void UpdateLateReverbDistanceThresholds(const Real sourceThresh, const Real listenerThresh);
+
+		/**
+		* @brief Sets the sphere radius (in meters) used to determine self-shadowing during late reverberation tracing.
+		*
+		* @param radius The radius of the listener's head radius.
+		*/
+		void UpdateSelfShadowingRadius(const Real radius);
+
+		/**
+		* @brief Updates the intial delay for MoDART late reverberation.
+		* 
+		* @param delay The initial delay in seconds.
+		*/
+		void UpdateMoDARTDelay(const Real delay);
+
+		/**
+		* @brief Updates the minimum reverberation time to model. Controls the number of modes in MoDART.
+		*
+		* @param T60 The minimum reverberation time in seconds.
+		*/
+		void UpdateMoDARTMinimumReverbTime(const Real T60);
+
+		/**
+		* @brief Updates the model in order to calculate the late reverberation time (T60).
 		*
 		* @param model The model used to calculate the late reverberation time.
 		*/
-		void UpdateReverbTime(const ReverbFormula model);
+		void UpdateSingleFDNReverbTime(const ReverbFormula model);
 
 		/**
-		* Overrides the current late reverberation time (T60).
+		* @brief Overrides the current late reverberation time (T60).
 		*
 		* @param T60 The late reverberation time.
 		*/
-		void UpdateReverbTime(const Coefficients<>& T60);
+		void UpdateSingleFDNReverbTime(const Coefficients<>& T60);
 
 		/**
-		* Updates the model used to process diffraction.
+		* @brief Updates the model used to process diffraction.
 		*
 		* @param model The diffraction model.
 		*/
 		void UpdateDiffractionModel(const DiffractionModel model);
 
 		/**
-		* Updates the volume and dimensions of the room.
+		* @brief Initialises the Image Edge Model (IEM) and sets the diffraction model.
 		*
-		* @param volume The volume of the room.
-		* @param dimensions The dimensions of the room for the delay lines.
-		* @param matrix The FDN feedback matrix type.
-		* @return True if the late reverb was initialized successfully, false otherwise.
+		* @param enabled True to enable early reflection DSP, false to disable.
+		* @param data The user defined IEM configuration data.
+		* @param model The diffraction model to use.
 		*/
-		bool InitLateReverb(const Real volume, const Vec& dimensions, FDNMatrix matrix);
+		bool InitEarlyReverb(const bool enabled, const EarlyReverbData& data, const DiffractionModel model);
 
 		/**
-		* Clears the internal FDN buffers.
+		* @brief Initialises SingleFDN late reverberation.
+		*
+		* @param roomData The user defined room configuration data.
+		* @param data The user defined SingleFDN configuration data.
+		* @return True if the SingleFDN late reverberation was initialised successfully, false otherwise.
 		*/
-		void ResetFDN();
+		bool InitSingleFDN(const RoomData& roomData, const LateReverbData& data);
 
 		/**
-		* Updates the listener's position and orientation.
+		* @brief Initialises MoDART late reverberation.
+		*
+		* @param data The user defined MoDART configuration data.
+		* @return True if the MoDART late reverberation was initialised successfully, false otherwise.
+		*/
+		bool InitMoDART(const MoDARTData& data);
+
+		/**
+		* @brief Clears the internal FDN buffers.
+		*/
+		void ResetLateReverb();
+
+		/**
+		* @brief Updates the listener's position and orientation.
 		*
 		* @param position The new position of the listener.
 		* @param orientation The new orientation of the listener.
@@ -110,14 +181,14 @@ namespace RAC
 		void UpdateListener(const Vec3& position, const Vec4& orientation);
 
 		/**
-		* Initializes a new audio source and returns its ID. If ID is -1, failed to initialize.
+		* @brief Initializes a new audio source and returns its ID.
 		*
 		* @return The ID of the new audio source.
 		*/
 		int InitSource();
 
 		/**
-		* Updates the position and orientation of the audio source with the given ID.
+		* @brief Updates the position and orientation of the audio source with the given ID.
 		*
 		* @param id The ID of the audio source to update.
 		* @param position The new position of the source.
@@ -126,7 +197,7 @@ namespace RAC
 		void UpdateSource(const size_t id, const Vec3& position, const Vec4& orientation);
 
 		/**
-		* Updates the directivity of the audio source with the given ID.
+		* @brief Updates the directivity of the audio source with the given ID.
 		* 
 		* @param id The ID of the audio source to update.
 		* @param directivity The new directivity of the source.
@@ -134,23 +205,44 @@ namespace RAC
 		void UpdateSourceDirectivity(const size_t id, const SourceDirectivity directivity);
 
 		/**
-		* Removes the audio source with the given ID.
+		* @brief Removes the audio source with the given ID.
 		*
 		* @param id The ID of the audio source to remove.
 		*/
 		void RemoveSource(const size_t id);
 
 		/**
-		* Initializes a new wall with the given parameters and returns its ID.
+		* @brief Initialises a new material with the given absorption parameters.
+		* 
+		* @param material The frequency absorption coefficients.
+		* @return The ID of the new material.
+		*/
+		int InitMaterial(const Coefficients<>& material);
+
+		/**
+		* @brief Updates the material with the given ID.
+		* 
+		* @param id The ID of the material to update.
+		* @param material The frequency absorption coefficients.
+		*/
+		void UpdateMaterial(size_t id, const Coefficients<>& material);
+
+		/**
+		* @brief Removes the material with the given ID.
+		*/
+		void RemoveMaterial(size_t id);
+
+		/**
+		* @brief Initializes a new wall with the given parameters and returns its ID.
 		*
-		* @param vertices The vertices of the wall.
-		* @param absorption The frequency absorption coefficients.
+		* @param vData The vertices of the wall.
+		* @param materialId The material ID to link to this wall
 		* @return The ID of the new wall.
 		*/
-		int InitWall(const Vertices& vertices, const Absorption<>& absorption);
+		int InitWall(const Vertices& vData, const size_t materialId);
 		
 		/**
-		* Updates the position and orientation of the wall with the given ID.
+		* @brief Updates the position and orientation of the wall with the given ID.
 		*
 		* @param id The ID of the wall to update.
 		* @param vData The new vertices of the wall.
@@ -158,15 +250,7 @@ namespace RAC
 		void UpdateWall(size_t id, const Vertices& vData);
 
 		/**
-		* Updates the absorption of the wall with the given ID.
-		*
-		* @param id The ID of the wall to update.
-		* @param absorption The new absortion of the wall.
-		*/
-		void UpdateWallAbsorption(size_t id, const Absorption<>& absorption);
-
-		/**
-		* Removes the wall with the given ID.
+		* @brief Removes the wall with the given ID.
 		*
 		* @param id The ID of the wall to remove.
 		* @param reverbWall The reverb wall.
@@ -174,12 +258,19 @@ namespace RAC
 		void RemoveWall(size_t id);
 
 		/**
-		* Updates the planes and edges of the room.
+		* @brief Updates the planes and edges of the room.
 		*/
 		void UpdatePlanesAndEdges();
 
 		/**
-		* Submits an audio buffer to the audio source with the given ID.
+		* @brief Updates the late reverberation gain.
+		* 
+		* @param gain The new late reverberation gain.
+		*/
+		void UpdateLateReverbGain(const Real gain);
+
+		/**
+		* @brief Submits an audio buffer to the audio source with the given ID.
 		*
 		* @param id The ID of the audio source to update.
 		* @param data The new audio data for the source.
@@ -187,20 +278,23 @@ namespace RAC
 		void SubmitAudio(size_t id, const Buffer<>& data);
 
 		/**
-		* Processes the audio for the current audio callback and updates the output buffer.
+		* @brief Processes the audio for the current audio callback and updates the output buffer.
 		*
-		* If outputBuffer.Length() != 2 * numFrames, it will be resized.
+		* @details If outputBuffer.Length() != 2 * numFrames, it will be resized.
 		* 
-		* @param outputBuffer Buffer to write the audio output to.
+		* @param outputBuffer Buffer to write the audio output to.s
 		*/
 		void GetOutput(Buffer<>& outputBuffer);
 
 		/**
-		* @brief Sets the spatialiser to impulse response mode if mode is true
+		* @brief Record an impulse response using the current listener position
+		* @details Assumes istener position does not change during recording
 		*
-		* @params mode True if disable all interpolation, false otherwise.
+		* @params position The source position.
+		* @params orientation The source orientation (quaternion).
+		* @params outputBuffer Buffer to write to.
 		*/
-		void UpdateImpulseResponseMode(const bool mode);
+		void RecordImpulseResponse(const Vec3& position, const Vec4& orientation, Buffer<>& outputBuffer);
 	}
 }
 #endif

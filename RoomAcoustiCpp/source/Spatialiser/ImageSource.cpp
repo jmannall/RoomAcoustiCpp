@@ -9,13 +9,11 @@
 
 //Common headers
 #include "Common/RACProfiler.h"
+#include "Common/Debug.h"
 
 // Spatialiser headers
 #include "Spatialiser/ImageSource.h"
 #include "Spatialiser/Globals.h"
-
-// Unity headers
-#include "Unity/Debug.h"
 
 // DSP headers
 #include "DSP/Interpolate.h"
@@ -25,15 +23,21 @@ namespace RAC
 {
 	using namespace Common;
 	using namespace DSP;
-#ifdef USE_UNITY_DEBUG
-	using namespace Unity;
-#endif
 	namespace Spatialiser
 	{
 
 		//////////////////// ImageSourceData class ////////////////////
 
 		////////////////////////////////////////
+
+		std::shared_ptr<ImageSourceData> ImageSourceData::CreateShallowCopy() const
+		{
+			// TODO: only copy data we need
+			return std::make_shared<ImageSourceData>(*this);
+		}
+
+		////////////////////////////////////////
+
 
 		void ImageSourceData::CreateKey(int sourceID)
 		{
@@ -51,7 +55,7 @@ namespace RAC
 
 		void ImageSourceData::AddEdgeID(size_t id)
 		{
-			pathParts.back().id = id;
+			pathParts.back().id = static_cast<partid_t>(id);
 			pathParts.back().isReflection = false;
 			diffraction = true;
 			diffractionIndex = static_cast<int>(pathParts.size()) - 1;
@@ -112,7 +116,7 @@ namespace RAC
 
 		void ImageSourceData::SetTransform(const Vec3& position)
 		{
-			transform.SetPosition(CVector3(static_cast<float>(position.x), static_cast<float>(position.y), static_cast<float>(position.z)));
+			transform.SetPosition(CVector3(static_cast<float>(position.x()), static_cast<float>(position.y()), static_cast<float>(position.z())));
 			mPositions.back() = position;
 		}
 
@@ -120,7 +124,7 @@ namespace RAC
 
 		void ImageSourceData::SetTransform(const Vec3& position, const Vec3& rotatedEdgePosition)
 		{
-			transform.SetPosition(CVector3(static_cast<float>(rotatedEdgePosition.x), static_cast<float>(rotatedEdgePosition.y), static_cast<float>(rotatedEdgePosition.z)));
+			transform.SetPosition(CVector3(static_cast<float>(rotatedEdgePosition.x()), static_cast<float>(rotatedEdgePosition.y()), static_cast<float>(rotatedEdgePosition.z())));
 			mPositions.back() = position;
 		}
 
@@ -131,23 +135,7 @@ namespace RAC
 			if (diffraction)
 				distance = mDiffractionPath.rData.d + mDiffractionPath.sData.d;
 			else
-				distance = (listenerPosition - GetPosition()).Length();
-		}
-
-		////////////////////////////////////////
-
-		Vec3 ImageSourceData::GetPosition(int i) const
-		{
-			if (diffraction)
-			{
-				if (i >= diffractionIndex)
-				{
-					assert(i < mEdges.size());
-					return mEdges[i].GetEdgeCoordinate(mDiffractionPath.GetApexZ());
-				}
-			}
-			assert(i < mPositions.size());
-			return mPositions[i];
+				distance = (listenerPosition - GetPosition()).Normal();
 		}
 
 		////////////////////////////////////////
@@ -173,17 +161,21 @@ namespace RAC
 
 		void ImageSourceData::Update(const ImageSourceData& imageSource)
 		{
+			RAC_DEBUG_ASSERT(pathParts.size() >= imageSource.pathParts.size(), "Current path parts are smaller than the incoming data");
 			for (int i = 0; i < imageSource.pathParts.size(); i++)
 			{
 				pathParts[i] = imageSource.pathParts[i];
 				mPositions[i] = imageSource.mPositions[i];
 			}
+
 			reflection = imageSource.reflection;
 			diffraction = imageSource.diffraction;
 			if (diffraction)
 			{
+				RAC_DEBUG_ASSERT(mEdges.size() >= imageSource.mEdges.size(), "Current edges are smaller than the incoming data");
 				for (int i = 0; i < imageSource.mEdges.size(); i++)
 					mEdges[i] = imageSource.mEdges[i];
+
 				diffractionIndex = imageSource.diffractionIndex;
 				mDiffractionPath = imageSource.mDiffractionPath;
 			}
@@ -196,14 +188,15 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void ImageSource::InitSource()
+		void ImageSource::InitSource(const std::shared_ptr<DSPConfig>& dspConfig)
 		{
 			unique_lock<shared_mutex> lock(tuneInMutex);
 			mSource = mCore->CreateSingleSourceDSP();
 			mSource->EnablePropagationDelay();
 			mSource->DisableFarDistanceEffect();
 			mSource->DisableNearFieldEffect();
-			SetSpatialisationMode(spatialisationMode.load(std::memory_order_acquire));
+			SetSpatialisationMode(dspConfig->GetSpatialisationMode());
+			SetImpulseResponseMode(dspConfig->GetImpulseResponseMode());
 		}
 
 		////////////////////////////////////////
@@ -220,43 +213,45 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void ImageSource::Init(const Buffer<>* sourceBuffer, const std::shared_ptr<Config>& config, const ImageSourceData& data, int fdnChannel)
+		void ImageSource::Init(const Buffer<>* sourceBuffer, const std::shared_ptr<DSPConfig>& dspConfig, const std::shared_ptr<ImageSourceData>& data, int fdnChannel)
 		{
-			InitSource();
-			InitBuffers(config->numFrames);
+			InitSource(dspConfig);
+			const DSPData& dspData = dspConfig->GetData();
+			InitBuffers(dspData.numFrames);
 
 			inputBuffer = sourceBuffer;
-			mFilter = make_unique<GraphicEQ>(data.GetAbsorption(), config->frequencyBands, config->Q, config->fs);
-			mAirAbsorption = make_unique<AirAbsorption>(data.GetDistance(), config->fs);
+			mFilter = make_unique<GraphicEQ<>>(data->GetAbsorption(), dspData.frequencyBands, dspData.Q, dspData.fs);
+			mAirAbsorption = make_unique<AirAbsorption>(data->GetDistance(), dspConfig->GetData().fs);
 
-			diffraction = data.IsDiffraction();
-			reflection = data.IsReflection();
+			diffraction = data->IsDiffraction();
+			reflection = data->IsReflection();
 
-			InitDiffractionModel(config->GetDiffractionModel(), data.GetDiffractionPath(), config->fs);
+			if (diffraction)
+				InitDiffractionModel(dspConfig->GetDiffractionModel(), data->GetDiffractionPath(), dspData.fs);
 
-			feedsFDN.store(data.IsFeedingFDN(), std::memory_order_release);
+			feedsFDN.store(data->IsFeedingFDN(), std::memory_order_release);
 			mFDNChannel.store(fdnChannel, std::memory_order_release);
 
-			UpdateTransform(data.GetTransform());
+			UpdateTransform(data->GetTransform());
 
-			if (data.IsVisible())
-				gain.SetTarget(1.0);
+			if (data->IsVisible())
+				gain.SetTarget((Real)1.0);
 
 			AllowAccess();
 			isReset.store(false, std::memory_order_release);
-			LateInit(config);
+			LateInit(dspConfig);
 		}
 
 		////////////////////////////////////////
 
-		void ImageSource::LateInit(const std::shared_ptr<Config>& config)
+		void ImageSource::LateInit(const std::shared_ptr<DSPConfig>& dspConfig)
 		{
-			DiffractionModel model = config->GetDiffractionModel();
-			UpdateDiffractionModel(model, config->fs);
-			while (model != config->GetDiffractionModel())
+			DiffractionModel model = dspConfig->GetDiffractionModel();
+			UpdateDiffractionModel(model, dspConfig->GetData().fs);
+			while (model != dspConfig->GetDiffractionModel())
 			{
-				model = config->GetDiffractionModel();
-				UpdateDiffractionModel(model, config->fs);
+				model = dspConfig->GetDiffractionModel();
+				UpdateDiffractionModel(model, dspConfig->GetData().fs);
 			}
 		}
 
@@ -264,20 +259,18 @@ namespace RAC
 
 		bool ImageSource::Update(const ImageSourceData& data, int& fdnChannel)
 		{
+			if (!GetAccess()) // Image source has been removed
+				return true;
+
 			if (data.IsVisible())
 			{
-				gain.SetTarget(1.0);
+				gain.SetTarget((Real)1.0);
 				UpdateParameters(data, fdnChannel);
 			}
 			else
-			{
 				gain.SetTarget(0.0);
-				if (gain.IsZero())
-				{
-					Remove();
-					return true;
-				}
-			}
+
+			FreeAccess();
 			return false;
 		}
 
@@ -330,10 +323,13 @@ namespace RAC
 		{
 			if (isReset.load(std::memory_order_acquire))
 				return;
+			if (!gain.IsZero())
+				return;
+			Remove();
 			if (!CanEdit())
 				return;
-			if (!mSource)
-				return;
+			if (!mSource) // TODO: Is this check necessary?
+			 	return;
 			ClearBuffers();
 			RemoveSource();
 			ClearPointers();
@@ -348,8 +344,6 @@ namespace RAC
 			bOutput.left = CMonoBuffer<float>(numFrames);
 			bOutput.right = CMonoBuffer<float>(numFrames);
 			bMonoOutput = CMonoBuffer<float>(numFrames);
-			bStore = Buffer(numFrames);
-			bDiffStore = Buffer(numFrames);
 		}
 
 		////////////////////////////////////////
@@ -360,8 +354,6 @@ namespace RAC
 			bOutput.left.clear();
 			bOutput.right.clear();
 			bMonoOutput.clear();
-			bStore.ResizeBuffer(1);
-			bDiffStore.ResizeBuffer(1);
 		}
 
 		////////////////////////////////////////
@@ -423,7 +415,7 @@ namespace RAC
 				break;
 			}
 			}
-			currentSpatialisationMode = spatialisationMode;
+			currentSpatialisationMode = mode;
 		}
 
 		////////////////////////////////////////
@@ -447,22 +439,10 @@ namespace RAC
 
 		void ImageSource::InitDiffractionModel(const DiffractionModel model, const Diffraction::Path& path, const int fs)
 		{
-			diffractionGain.Reset(1.0);
+			RAC_DEBUG_ASSERT(diffraction, "Image source does not include diffraction");
+
+			diffractionGain.Reset((Real)1.0);
 			isCrossFading.store(false, std::memory_order_release);
-			
-			if (!diffraction)
-			{
-				activeModel.reset();
-				fadeModel.reset();
-#ifdef __ANDROID__
-				std::atomic_load(&incomingModel).reset();
-				std::atomic_load(&nextModel).reset();
-#else
-				incomingModel.load(std::memory_order_acquire).reset();
-				nextModel.load(std::memory_order_acquire).reset();
-#endif
-				return;
-			}
 
 			currentDiffractionModel.store(model, std::memory_order_release);
 			mDiffractionPath = path;
@@ -525,7 +505,7 @@ namespace RAC
 				return;
 			}
 
-			if (!diffraction ||currentDiffractionModel.exchange(model, std::memory_order_acq_rel) == model)
+			if (currentDiffractionModel.exchange(model, std::memory_order_acq_rel) == model)
 			{
 				FreeAccess();
 				return;
@@ -534,7 +514,7 @@ namespace RAC
 			switch (model)
 			{
 			case DiffractionModel::attenuate:
-			{ 
+			{
 #ifdef __ANDROID__
 				std::atomic_store(&nextModel, std::static_pointer_cast<Diffraction::Model>(std::make_shared<Diffraction::Attenuate>(mDiffractionPath)));
 #else
@@ -625,7 +605,7 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void ImageSource::ProcessAudio(Buffer<>& outputBuffer, Matrix& reverbInput, const Real lerpFactor)
+		void ImageSource::ProcessAudio(Buffer<>& outputBuffer, const AudioData& audioData)
 		{
 			if (!GetAccess())
 				return;
@@ -650,26 +630,26 @@ namespace RAC
 				return;
 			}
 
-			if (bool mode = impulseResponseMode.load(std::memory_order_acquire); mode != currentImpulseResponseMode)
-				SetImpulseResponseMode(mode);
+			if (audioData.impulseResponseMode != currentImpulseResponseMode)
+				SetImpulseResponseMode(audioData.impulseResponseMode);
 
-			if (SpatialisationMode mode = spatialisationMode.load(std::memory_order_acquire); mode != currentSpatialisationMode)
-				SetSpatialisationMode(mode);
+			if (audioData.spatialisationMode != currentSpatialisationMode)
+				SetSpatialisationMode(audioData.spatialisationMode);
 
-			const int numFrames = inputBuffer->Length();
+			const int numFrames = ToInt(inputBuffer->Length());
 
 			{
 				PROFILE_Reflection
-				mFilter->ProcessAudio(*inputBuffer, bStore, lerpFactor);
+				mFilter->ProcessAudio(*inputBuffer, bStore, audioData.lerpFactor);
 			}
 
 			if (diffraction)
-				ProcessDiffraction(bStore, bStore, lerpFactor);
+				ProcessDiffraction(bStore, bStore, audioData.lerpFactor);
 
-			mAirAbsorption->ProcessAudio(bStore, bStore, lerpFactor);
+			mAirAbsorption->ProcessAudio(bStore, bStore, audioData.lerpFactor);
 
 			for (int i = 0; i < numFrames; i++)
-				bInput[i] = static_cast<float>(bStore[i] * gain.Use(lerpFactor));
+				bInput[i] = static_cast<float>(bStore[i] * gain.Use(audioData.lerpFactor));
 
 			{
 				PROFILE_Spatialisation
@@ -681,13 +661,8 @@ namespace RAC
 #endif
 				mSource->SetBuffer(bInput);
 			
-				int fdnChannel = mFDNChannel.load(std::memory_order_acquire);
-				if (fdnChannel > -1)
-				{
+				if (audioData.lateReverbModel == LateReverbModel::fdn && mFDNChannel.load(std::memory_order_acquire) > -1)
 					mSource->ProcessAnechoic(bMonoOutput, bOutput.left, bOutput.right);
-					std::transform(bMonoOutput.begin(), bMonoOutput.begin() + numFrames, reverbInput[fdnChannel].begin(), reverbInput[fdnChannel].begin(),
-						[](auto input, auto current) { return current + input; });
-				}
 				else
 					mSource->ProcessAnechoic(bOutput.left, bOutput.right);
 			}
@@ -699,7 +674,26 @@ namespace RAC
 			}
 
 			FreeAccess();
-			return;
+		}
+
+		////////////////////////////////////////
+
+		void ImageSource::ProcessSingleFDNSend(Matrix<>& reverbInput, const Real lerpFactor)
+		{
+			if (!GetAccess())
+				return;
+
+			PROFILE_ImageSource
+			const int numFrames = ToInt(inputBuffer->Length());
+
+			int fdnChannel = mFDNChannel.load(std::memory_order_acquire);
+			if (fdnChannel > -1)
+			{
+				for (int i = 0; i < numFrames; i++)
+					reverbInput(fdnChannel, i) += static_cast<Real>(bMonoOutput[i]);
+			}
+
+			FreeAccess();
 		}
 
 		////////////////////////////////////////
@@ -724,14 +718,14 @@ namespace RAC
 			Real factor = 0.0;
 			for (int i = 0; i < inBuffer.Length(); i++)
 			{
-				factor = diffractionGain.Use(0.03);	// Interpolation from one to zero takes 454 samples at 48kHz
-				outBuffer[i] *= 1.0f - factor;
+				factor = diffractionGain.Use((Real)0.03);	// Interpolation from one to zero takes 454 samples at 48kHz
+				outBuffer[i] *= (Real)1.0 - factor;
 				outBuffer[i] += bDiffStore[i] * factor;
 			}
 
 			if (diffractionGain.IsZero())
 			{
-				diffractionGain.Reset(1.0);
+				diffractionGain.Reset((Real)1.0);
 
 				fadeModel.swap(activeModel);
 

@@ -51,12 +51,13 @@ namespace RAC
 			* @brief Constructor that initialises the source manager with the given configuration.
 			* 
 			* @params core The 3DTI processing core
-			* @params config The spatialiser configuration
+			* @params dspConfig The spatialiser configuration
 			*/
-			SourceManager(Binaural::CCore* core, const std::shared_ptr<Config> config) : mCore(core), mConfig(config), mImageSources(core)
+			SourceManager(Binaural::CCore* core, const std::shared_ptr<DSPConfig> dspConfig)
+				: mCore(core), dspConfig(dspConfig), mImageSources(core, dspConfig), frequencyIndexing(1)
 			{
 				for (auto& sources : mSources)
-					sources.emplace(core, mImageSources, config);
+					sources.emplace(core, mImageSources, dspConfig);
 			};
 			
 			/**
@@ -65,35 +66,11 @@ namespace RAC
 			~SourceManager() {};
 
 			/**
-			* @brief Updates the spatialisation mode for the HRTF processing
-			* 
-			* @params mode New spatialisation mode
-			*/
-			inline void UpdateSpatialisationMode(const SpatialisationMode mode)
-			{
-				mImageSources.UpdateSpatialisationMode(mode);
-				for (auto& source : mSources)
-					source->UpdateSpatialisationMode(mode);
-			}
-
-			/**
-			* @brief Updates the interpolation settings for recording impulse responses
-			*
-			* @params mode True if disable AttuenationSmoothing, false otherwise
-			*/
-			inline void UpdateImpulseResponseMode(const bool mode)
-			{
-				mImageSources.UpdateImpulseResponseMode(mode);
-				for (auto& source : mSources)
-					source->UpdateImpulseResponseMode(mode);
-			}
-
-			/**
 			* @brief Updates the diffraction model
 			* 
 			* @params model The new diffraction model
 			*/
-			inline void UpdateDiffractionModel(const DiffractionModel model) { mImageSources.UpdateDiffractionModel(model, mConfig->fs); }
+			inline void UpdateDiffractionModel(const DiffractionModel model) { mImageSources.UpdateDiffractionModel(model, dspConfig->GetData().fs); }
 
 			/**
 			* @brief Updates the source directivity for a given source ID
@@ -103,14 +80,23 @@ namespace RAC
 			*/
 			inline void UpdateSourceDirectivity(const size_t id, const SourceDirectivity directivity)
 			{
-				if (id > MAX_SOURCES)
+				mSources[id]->UpdateDirectivity(directivity, dspConfig->GetData().frequencyBands, dspConfig->GetData().numReverbSources);
+			}
+
+			/**
+			* @brief Updates the size of source residues for all active sources
+			*
+			* @params indexing The new frequency band indexing
+			* @params numFrames The number of frames per audio buffer
+			*/
+			inline void UpdateMoDARTParameters(const Vec<int>& indexing, int numFrames)
+			{
 				{
-#ifdef USE_UNITY_DEBUG
-					Debug::Log("Source ID out of range", Colour::Red);
-#endif
-					return;
+					std::lock_guard<std::mutex> lock(frequencyIndexingMutex);
+					frequencyIndexing = indexing;
 				}
-				mSources[id]->UpdateDirectivity(directivity, mConfig->frequencyBands, mConfig->numReverbSources);
+				for (auto& source : mSources)
+					source->UpdateMoDARTParameters(frequencyIndexing, numFrames);
 			}
 
 			/**
@@ -130,37 +116,25 @@ namespace RAC
 			*/
 			inline void Update(const size_t id, const Vec3& position, const Vec4& orientation, Real& distance)
 			{
-				if (id > MAX_SOURCES)
-				{
-#ifdef USE_UNITY_DEBUG
-					Debug::Log("Source ID out of range", Colour::Red);
-#endif
-					return;
-				}
+				RAC_DEBUG_ASSERT(id < MAX_SOURCES, "Invalid source ID: " + ToString(id));
 				mSources[id]->Update(position, orientation, distance);
 			}
 
 			/**
-			* @brief Removes a source
+			* @brief Removes a source from the source manager
 			* 
-			* @params id The ID of the source
+			* @params id The ID of the source to remove
 			*/
 			inline void Remove(const size_t id)
 			{
-				if (id > MAX_SOURCES)
-				{
-#ifdef USE_UNITY_DEBUG
-					Debug::Log("Source ID out of range", Colour::Red);
-#endif
-					return;
-				}
+				RAC_DEBUG_ASSERT(id < MAX_SOURCES, "Invalid source ID: " + ToString(id));
 				mSources[id]->Remove();
 			}
 
 			/**
 			* @return Position, orientation and directivity data for all sources
 			*/
-			std::vector<Source::Data> GetSourceData();
+			std::vector<Source::Data> GetSourceData(ThreadID id);
 
 			/**
 			* @brief Returns the position of the source with the given ID
@@ -181,23 +155,42 @@ namespace RAC
 			}
 
 			/**
+			* @brief Returns the position which was last used in ray-tracing for the source with the given ID
+			* 
+			* @params id The ID of the source
+			* @return The last position of the source
+			*/
+			inline Vec3 GetLastRTMSourcePosition(const size_t id) { return mSources[id]->GetLastRTMPosition(); };
+			/**
+			* @brief Sets the position which was last used in ray-tracing for the source with the given ID
+			*
+			* @params id The ID of the source
+			* @params The last position of the source
+			*/
+			inline void SetLastRTMSourcePosition(const size_t id, const Vec3 pos) { mSources[id]->SetLastRTMPosition(pos); };
+
+			/**
 			* @brief Updates the audio DSP parameters and image sources for a given source
 			* 
 			* @params id The ID of the source
 			* @params source The source audio DSP parameters
 			* @params vSources The new image sources
 			*/
-			inline void UpdateSourceData(const size_t id, const Source::AudioData source, const ImageSourceDataMap& vSources)
+			inline void UpdateSourceData(const size_t id, const Source::DSPParameters source, ImageSourceDataMap& vSources)
 			{
 				PROFILE_UpdateAudioData
-				if (id > MAX_SOURCES)
-				{
-#ifdef USE_UNITY_DEBUG
-					Debug::Log("Source ID out of range", Colour::Red);
-#endif
-					return;
-				}
-				mSources[id]->UpdateData(source, vSources, mConfig);
+				mSources[id]->UpdateData(source, vSources, dspConfig);
+			}
+
+			/**
+			* @brief Update listener residues for RAVES reverb
+			*
+			* @param id The ID of the FDN to update
+			* @param residues The new source residues (size of numRAVESFDNs)
+			*/
+			inline void SetSourceTargetResidues(const size_t id, const Coefficients<>& residues)
+			{
+				mSources[id]->SetTargetResidues(residues);
 			}
 
 			/**
@@ -228,22 +221,39 @@ namespace RAC
 				mSources[id]->SetInputBuffer(data);
 			}
 
-			/**
-			* @brief Processes the audio for all sources and image sources
-			* 
-			* @params outputBuffer The output audio buffer to write to
-			* @params reverbInput The reverb input matrix to write to
-			* @param lerpFactor The lerp factor for interpolation
-			* */
-			inline void ProcessAudio(Buffer<>& outputBuffer, Matrix& reverbInput, const Real lerpFactor)
+			inline void ResetInputBuffers()
 			{
-				PROFILE_EarlyReflections
 				for (auto& source : mSources)	// Zero any input buffers for sources that are not in use (but may still have image sources)
 					source->ResetInputBuffer();
-				audioThreadPool->ProcessAllSources(mSources, mImageSources, outputBuffer, reverbInput, lerpFactor);
+			}
+
+			inline void ProcessAudio(Buffer<>& outputBuffer, const AudioData& audioData)
+			{
+				PROFILE_EarlyReflections
+				audioThreadPool->ProcessAllSources(mSources, mImageSources, outputBuffer, audioData);
 				/*for (auto& source : mSources)
-					source->ProcessAudio(outputBuffer, reverbInput, lerpFactor);
-				mImageSources.ProcessAudio(outputBuffer, reverbInput, lerpFactor);*/
+					source->ProcessAudio(outputBuffer, audioData);
+				mImageSources.ProcessAudio(outputBuffer, audioData);*/
+			}
+
+			inline void ProcessLateReverbSend(Matrix<>& reverbInput, const AudioData& audioData)
+			{
+				PROFILE_LateReverb
+				switch (audioData.lateReverbModel)
+				{
+				default:
+				case LateReverbModel::none:
+					return;
+				case LateReverbModel::raves:
+					for (auto& source : mSources)
+						source->ProcessMoDARTSend(reverbInput, audioData.lerpFactor);
+					break;
+				case LateReverbModel::fdn:
+					for (auto& source : mSources)
+						source->ProcessSingleFDNSend(reverbInput, audioData.lerpFactor);
+					mImageSources.ProcessSingleFDNSend(reverbInput, audioData.lerpFactor);
+					break;
+				}
 			}
 
 		private:
@@ -262,11 +272,13 @@ namespace RAC
 				return -1;
 			}
 
-			Binaural::CCore* mCore;				// 3DTI processing core
-			std::shared_ptr<Config> mConfig;	// Spatialiser configuration
+			std::shared_ptr<DSPConfig> dspConfig;			// Spatialiser configuration
 
 			std::array<std::optional<Source>, MAX_SOURCES> mSources;	// Sources for the audio thread
 			ImageSourceManager mImageSources;							// Image sources for the audio thread
+
+			std::mutex frequencyIndexingMutex;		// Mutex to protect frequency indexing
+			Vec<int> frequencyIndexing;				// Frequency band indexing for MoDART source residues
 		};
 	}
 }

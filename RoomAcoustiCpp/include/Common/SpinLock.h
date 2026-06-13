@@ -13,6 +13,9 @@
 #include <array>
 #include <thread>
 #include <atomic>
+#ifdef _WIN32
+#include <emmintrin.h>
+#endif
 
 /**
 * @brief Class that implements a spin lock
@@ -25,7 +28,7 @@ public:
     /**
 	* @brief Constructor that initializes the spin lock with the number of tasks to be processed
     */
-    SpinLock(size_t startCounter) : counter(startCounter) {}
+    SpinLock(size_t startCounter) : counter(RAC::ToInt(startCounter)) {}
 
     /**
     * @brief Lock the current thread until number of tasks is less than 1.

@@ -20,17 +20,10 @@ namespace RAC
 
 		Real FIRFilter::GetOutput(const Real input, const Real lerpFactor)
 		{
-			if (!initialised.load(std::memory_order_acquire))
-				return 0.0;
+			RAC_DEBUG_ASSERT(IsValid(), "Invalid filter");
 
 			if (!irsEqual.load(std::memory_order_acquire))
 				InterpolateIR(lerpFactor);
-
-			if (clearInputLine.load(std::memory_order_acquire))
-			{
-				inputLine.Reset();
-				clearInputLine.store(false, std::memory_order_release);
-			}
 
 			Real output = 0.0;
 			int index = count;
@@ -39,8 +32,8 @@ namespace RAC
 			inputLine[index] = input;
 			inputLine[index + maxFilterLength] = input;
 
-			assert(currentIR.Length() >= irLength);
-			assert(irLength % 8 == 0);
+			RAC_DEBUG_ASSERT(currentIR.Length() >= ToInt(irLength), "IR length exceeds max length of the filter");
+			RAC_DEBUG_ASSERT(irLength % 8 == 0, "IR length is not a multiple of eight");
 
 			// Assume length is always a multiple of 8
 			for (int i = 0; i < irLength; i += 8)
@@ -65,7 +58,9 @@ namespace RAC
 
 		bool FIRFilter::SetTargetIR(const Buffer<>& ir)
 		{
-			int length = ir.Length();
+			RAC_DEBUG_ASSERT(ir.Valid(), "Invalid IR");
+
+			int length = ToInt(ir.Length());
 
 			// Pad to multiple of 8
 			if (length % 8 != 0)
@@ -73,10 +68,10 @@ namespace RAC
 
 			if (length > maxFilterLength)
 				return false;
-			assert(length <= maxFilterLength);
+			RAC_DEBUG_ASSERT(length <= maxFilterLength, "Length exceeds max length of the filter");
 
 			const std::shared_ptr<Buffer<>> irCopy = std::make_shared<Buffer<>>(ir);
-			irCopy->ResizeBuffer(length);
+			irCopy->Resize(length);
 
 			releasePool.Add(irCopy);
 
@@ -102,9 +97,9 @@ namespace RAC
 #endif
 			irLength = ir->Length();
 
-			Lerp(currentIR, *ir, oldIrLength, lerpFactor);
+			Lerp(currentIR, *ir, ToInt( oldIrLength ), lerpFactor);
 
-			if (Equals(currentIR, *ir, irLength))
+			if (Equals(currentIR, *ir, ToInt(irLength)))
 			{
 				std::copy(ir->begin(), ir->end(), currentIR.begin());
 				oldIrLength = irLength;

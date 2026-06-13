@@ -7,9 +7,7 @@
 
 // Common headers
 #include "Common/Definitions.h"
-
-// Unity headers
-#include "Unity/Debug.h"
+#include "Common/Debug.h"
 
 // Spatialiser headers
 #include "Spatialiser/Wall.h"
@@ -17,9 +15,6 @@
 namespace RAC
 {
 	using namespace Common;
-#ifdef USE_UNITY_DEBUG
-	using namespace Unity;
-#endif
 	namespace Spatialiser
 	{
 
@@ -60,7 +55,7 @@ namespace RAC
 
 		void Plane::ReflectNormalInPlane(Vec3& normal) const
 		{
-			normal += -2.0 * mNormal * Dot(normal, mNormal);
+			normal += -2.0 * mNormal * normal.dot(mNormal);
 		}
 
 		////////////////////////////////////////
@@ -107,22 +102,22 @@ namespace RAC
 		{
 			Vec3 E1 = v2 - v1;
 			Vec3 E2 = v3 - v1;
-			Vec3 pVec = Cross(dir, E2);
-			Real det = Dot(E1, pVec);
+			Vec3 pVec = dir.cross(E2);
+			Real det = E1.dot(pVec);
 
 			if (det > -MIN_VALUE && det < MIN_VALUE)
 				return { false, Vec3() };    // This ray is parallel to this triangle.
 
-			Real invdet = 1.0 / det;
+			Real invdet = REAL_CONST(1.0) / det;
 
 			Vec3 tVec = origin - v1;
-			Real u = Dot(tVec, pVec) * invdet;
+			Real u = tVec.dot(pVec) * invdet;
 
 			if (u < 0.0 || u > 1.0)
 				return { false, Vec3() };
 
-			Vec3 qVec = Cross(tVec, E1);
-			Real v = Dot(dir, qVec) * invdet;
+			Vec3 qVec = tVec.cross(E1);
+			Real v = dir.dot(qVec) * invdet;
 
 			if (v < 0.0 || u + v > 1.0)
 				return { false, Vec3() };
@@ -143,14 +138,14 @@ namespace RAC
 			mVertices = vData;
 
 			// Round as otherwise comparing identical vertices from unity still returns false
-			mVertices[0].RoundVec();
-			mVertices[1].RoundVec();
-			mVertices[2].RoundVec();
+			mVertices[0] = Round(mVertices[0]);
+			mVertices[1] = Round(mVertices[1]);
+			mVertices[2] = Round(mVertices[2]);
 
-			mNormal = UnitVector(Cross(vData[1] - vData[0], vData[2] - vData[0]));
+			mNormal = (vData[1] - vData[0]).cross(vData[2] - vData[0]).Normalised();
 
-			d = Round(Dot(mNormal, vData[0]));
-			mNormal.RoundVec();
+			d = Round(mNormal.dot(vData[0]));
+			mNormal = Round(mNormal);
 
 			CalculateArea();	
 		}

@@ -13,13 +13,16 @@
 #include <mutex>
 
 // Common headers
+#include "Common/Definitions.h"
 #include "Common/Types.h"
 #include "Common/Vec3.h"
 
 // Spatialiser headers
 #include "Spatialiser/Types.h"
+#include "Spatialiser/Configs.h"
 #include "Spatialiser/Wall.h"
 #include "Spatialiser/Edge.h"
+#include "Spatialiser/TracingTypes.h"
 
 // Unity headers
 #include "Unity/Debug.h"
@@ -47,36 +50,73 @@ namespace RAC
 			* 
 			* @params numFrequencyBands The number of frequency bands to use
 			*/
-			Room(const int numFrequencyBands) : nextPlane(0), nextWall(0), nextEdge(0), reverbFormula(ReverbFormula::Sabine), volume(0.0), T60(numFrequencyBands, 0.5), numAbsorptionBands(numFrequencyBands), hasChanged(true) {}
+			Room(const int numFrequencyBands) : roomData(numFrequencyBands), numFrequencyBands(numFrequencyBands), hasChanged(true) {}
 			
 			/**
 			* @brief Default deconstructor
 			*/
 			~Room() {};
 
+			inline void UpdateRoomData(const RoomData& data)
+			{
+				std::lock_guard<std::mutex> lock(roomDataMutex);
+				roomData = data;
+				roomData.Validate(numFrequencyBands);
+			}
+
 			/**
 			* @brief Update the reverb time formula and recalculates the reverb time
 			* 
 			* @params formula The new reverb time formula
+			* @return The new reverb time of the room
 			*/
-			inline void UpdateReverbTimeFormula(const ReverbFormula formula) { reverbFormula = formula; }
+			inline Coefficients<> GetReverbTime(const ReverbFormula formula)
+			{
+				{ std::lock_guard<std::mutex> lock(roomDataMutex); roomData.formula = formula; }
+				return GetReverbTime();
+			}
 
 			/**
-			* @brief Sets a custom reverberation time
-			*
-			* @params targetT60 The target reverberation time
+			* @brief Calculates the reverb time of the room based on the current formula
+			* 
+			* @return The reverb time of the room
 			*/
-			inline void UpdateReverbTime(const Coefficients<>& targetT60)
+			Coefficients<> GetReverbTime();
+
+			/**
+			* @brief Sets the reverb time formula to custom and sets the custom T60
+			*
+			* @params t60 The new reverb time
+			*/
+			inline void UpdateReverbTime(const Coefficients<>& t60)
 			{
-				if (targetT60 <= 0.0)
-				{
-#ifdef USE_UNITY_DEBUG
-					Debug::Log("T60 must be greater than 0", Colour::Red);
-#endif
-					return;
-				}
-				reverbFormula = ReverbFormula::Custom;
-				T60 = targetT60;
+				std::lock_guard<std::mutex> lock(roomDataMutex);
+				roomData.formula = ReverbFormula::Custom;
+				roomData.customT60 = t60;
+			}
+
+			size_t InitMaterial(const Coefficients<>& material);
+
+			inline void UpdateMaterial(size_t id, const Coefficients<>& material)
+			{
+				std::lock_guard<std::mutex> lock(mMaterialMutex);
+				auto it = mMaterials.find(id);
+				if (it == mMaterials.end()) // case: material does not exist
+					mMaterials.insert_or_assign(id, CalculateReflectance(material));
+				else // case: material does exist
+					it->second = CalculateReflectance(material);
+				RecordChange();
+			}
+
+			void RemoveMaterial(size_t id);
+
+			/**
+			* @return True if the material with the given ID exists, false otherwise
+			*/
+			bool MaterialExists(size_t id)
+			{
+				std::lock_guard<std::mutex> lock(mMaterialMutex);
+				return mMaterials.find(id) != mMaterials.end();
 			}
 
 			/**
@@ -100,20 +140,6 @@ namespace RAC
 				auto it = mWalls.find(id);
 				if (it == mWalls.end()) { return; } // case: wall does not exist
 				else { it->second.Update(vData); RecordChange(); } // case: wall does exist
-			}
-
-			/**
-			* @brief Update the absorption of the wall with the given ID
-			* 
-			* @params id The ID of the wall to update
-			* @params absorption The new absorption of the wall
-			*/
-			inline void UpdateWallAbsorption(const size_t id, const Absorption<>& absorption)
-			{
-				std::lock_guard<std::mutex> lock(mWallMutex);
-				auto it = mWalls.find(id);
-				if (it == mWalls.end()) { return; } // case: wall does not exist
-				else { it->second.Update(absorption); RecordChange(); } // case: wall does exist
 			}
 
 			/**
@@ -143,23 +169,16 @@ namespace RAC
 			/**
 			* @return The reverb time of the room
 			*/
-			Coefficients<> GetReverbTime();
+			std::pair<Coefficients<>, Real> CalculateAbsorptionSurfaceArea();
 
-			/**
-			* @brief Update the volume of the room and return the reverb time
-			*
-			* @params volume The volume of the room
-			* @return The reverb time of the room
-			*/
-			inline Coefficients<> GetReverbTime(Real volume) { this->volume = volume; return GetReverbTime(); }
+			inline Vec<> GetDimensions() { std::lock_guard<std::mutex> lock(roomDataMutex); return roomData.dimensions; }
 
 			/**
 			* @return True if the room geometry has changed since last check, false otherwise
 			*/
 			bool HasChanged()
 			{
-				if (hasChanged) { hasChanged = false; return true; }
-				else { return false; }
+				return hasChanged.exchange(false, std::memory_order_acq_rel);
 			}
 
 			/**
@@ -173,9 +192,23 @@ namespace RAC
 			WallMap GetWalls() { std::lock_guard<std::mutex> lock(mWallMutex); return mWalls; }
 
 			/**
+			* @return The materials of the room
+			*/
+			MaterialMap GetMaterials() { std::lock_guard<std::mutex> lock(mMaterialMutex); return mMaterials; }
+
+			/**
+			* @return The walls of the room
+			*/
+			int GetNumberOfWalls() { std::lock_guard<std::mutex> lock(mWallMutex); return ToInt( mWalls.size() ); }
+
+			/**
 			* @return The edges of the room
 			*/
 			EdgeMap GetEdges() { std::lock_guard<std::mutex> lock(mEdgeMutex); return mEdges; }
+
+			void CreateTriangleMeshSoA();
+
+			inline const TriangleMeshSoA& GetTriangleMeshSoA() const { return mTriangleMeshSoA; }
 
 		private:
 			/**
@@ -324,7 +357,7 @@ namespace RAC
 			/**
 			* @brief Record a change in the room geometry
 			*/
-			void RecordChange() { hasChanged = true; }
+			void RecordChange() { hasChanged.store(true, std::memory_order_release); }
 
 			/**
 			* @brief Calculate the reverb time of the room using the Sabine formula
@@ -333,7 +366,7 @@ namespace RAC
 			* @params absorption The total absorption of the room
 			* @return The predicted reverb time of the room
 			*/
-			Coefficients<> Sabine(const Coefficients<>& absorption);
+			Coefficients<> Sabine(const Coefficients<>& absorption) const;
 
 			/**
 			* @brief Calculate the reverb time of the room using the Eyring formula
@@ -343,33 +376,38 @@ namespace RAC
 			* @params surfaceArea The surface area of the room
 			* @return The predicted reverb time of the room
 			*/
-			Coefficients<> Eyring(const Coefficients<>& absorption, const Real& surfaceArea);
+			Coefficients<> Eyring(const Coefficients<>& absorption, const Real& surfaceArea) const;
 
 			std::atomic<bool> hasChanged;		// True if the room geometry has changed since last check
 
-			Real volume;						// The volume of the room in m^3
-			Coefficients<> T60;					// The custom reverberation time of the room (default: 0.5s)
-			ReverbFormula reverbFormula;		// The formula used to calculate the reverb time
-			int numAbsorptionBands;				// The number of frequency bands to use for late reverberation
+			RoomData roomData;					// Data about the room
+			int numFrequencyBands;				// Number of frequency bands for wall absorption
 
 			WallMap mWalls;								// Stored walls
 			std::vector<size_t> mEmptyWallSlots;		// Available wall IDs
 			std::vector<TimerPair> mWallTimers;			// Wall IDs waiting to be made available
-			size_t nextWall;							// Next wall ID if none are available
+			size_t nextWall{ 0 };							// Next wall ID if none are available
+			TriangleMeshSoA mTriangleMeshSoA;			// Triangle mesh for ray tracing
 
 			PlaneMap mPlanes;							// Stored planes
 			std::vector<size_t> mEmptyPlaneSlots;		// Available plane IDs
 			std::vector<TimerPair> mPlaneTimers;		// Plane IDs waiting to be made available
-			size_t nextPlane;							// Next plane ID if none are available
+			size_t nextPlane{ 0 };							// Next plane ID if none are available
+
+			MaterialMap mMaterials;						// Stored materials (stores reflectance)
+			std::vector<size_t> mEmptyMaterialSlots;	// Available material IDs
+			size_t nextMaterial{ 0 };					// Next material ID if none are available
 
 			EdgeMap mEdges;								// Stored edges
 			std::vector<size_t> mEmptyEdgeSlots;		// Available edge IDs
 			std::vector<TimerPair> mEdgeTimers;			// Edge IDs waiting to be made available
-			size_t nextEdge;							// Next edge ID if none are available
+			size_t nextEdge{ 0 };							// Next edge ID if none are available
 
 			std::mutex mWallMutex;		// Protects mWalls. Must always be locked before Plane and Edge
 			std::mutex mPlaneMutex;		// Protects mPlanes. Can be locked after Edge (not before)
+			std::mutex mMaterialMutex;		// Protects mMaterials
 			std::mutex mEdgeMutex;		// Protects mEdges. Cannot be locked after Plane
+			std::mutex roomDataMutex;	// Protects roomData
 		};
 	}
 }

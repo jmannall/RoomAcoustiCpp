@@ -1,5 +1,7 @@
 Manages thread-safe access to a resource, allowing or preventing access and tracking usage.
 
+Most users will interact with RoomAcoustiC++ through the high-level API in [`Spatialiser/Interface.h`](../spatialiser/interface.md). This page documents lower-level details for advanced usage.
+
 - **Namespace:** `RAC::Common`
 - **Header:** `Common/Access.h`
 - **Source:** *(header only)*

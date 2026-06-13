@@ -37,10 +37,10 @@ namespace RAC
 			* 
 			* @param room Pointer to the room class
 			* @param sourceManager Pointer to the source manager class
-			* @param reverb Pointer to the late reverb class
-			* @param config The configuration for the spatialiser.
+			* @param data The user defined IEM configuration data
+			* @param dspConfig The current DSP configuration
 			*/
-			ImageEdge(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, shared_ptr<Reverb> reverb, const std::shared_ptr<Config>& config);
+			ImageEdge(shared_ptr<Room> room, shared_ptr<SourceManager> sourceManager, const EarlyReverbData& data, const std::shared_ptr<DSPConfig>& dspConfig);
 			
 			/**
 			* @brief Default deconstructor
@@ -49,37 +49,52 @@ namespace RAC
 
 			/**
 			* @brief Updates the image edge model configuration
-			*
-			* @param config The new configuration
+			* 
+			* @param data The user defined IEM configuration data
+			* @param dspConfig The current DSP configuration
+			* 
+			* @details We must pass DSPConfig here (instead of DiffractionModel) to ensure that
+			* if the diffraction model is changed at the same time as the IEM config we can't end up
+			* with a stale diffraction model.
 			*/
-			inline void UpdateIEMConfig(const IEMData& data, const std::shared_ptr<Config>& config)
+			inline void UpdateIEMConfig(const EarlyReverbData& data, const std::shared_ptr<DSPConfig> dspConfig)
 			{
 				lock_guard<std::mutex> lock(dataStoreMutex);
-				mIEMConfigStore.Update(data, config->GetDiffractionModel(), config->GetLateReverbModel());
+				earlyReverbDataIncoming.Update(data, dspConfig->GetDiffractionModel());
 				configChanged = true;
 			}
 
 			inline void UpdateDiffractionModel(const DiffractionModel model)
 			{
 				lock_guard<std::mutex> lock(dataStoreMutex);
-				configChanged = configChanged || mIEMConfigStore.UpdateDiffractionModel(model);
-			}
-
-			inline void UpdateLateReverbModel(const LateReverbModel model)
-			{
-				lock_guard<std::mutex> lock(dataStoreMutex);
-				configChanged = configChanged || mIEMConfigStore.UpdateLateReverbModel(model);
+				configChanged = configChanged || earlyReverbDataIncoming.UpdateSpecularOrder(model);
 			}
 
 			/**
 			* @brief Updates the stored listener position
 			*/
-			inline void SetListenerPosition(const Vec3& position) { lock_guard<std::mutex> lock(dataStoreMutex); mListenerPositionStore = position; }
+			inline void SetListenerPosition(const Vec3& position)
+			{
+				lock_guard<std::mutex> lock(dataStoreMutex);
+				if ((position - mListenerPositionIncoming).Normal() < EPS_POSITION)
+					return;
+				mListenerPositionIncoming = position;
+				listenerMoved = true;
+			}
 
 			/**
 			* @brief Process the image edge model and update the target image source data
 			*/
 			void RunIEM();
+
+			inline void ResetEndFlag()
+			{
+				while (!iemStartFlag.load(std::memory_order_acquire))
+					std::this_thread::yield();
+				iemEndFlag.store(false, std::memory_order_release);
+			}
+
+			inline bool HasCompleted() { return iemEndFlag.load(std::memory_order_acquire); }
 
 		private:
 			/**
@@ -108,7 +123,7 @@ namespace RAC
 			*
 			* @return True if a valid intersection is found, false otherwise
 			*/
-			bool LinePlaneIntersection(const Vec3& start, const Vec3& end, const Plane& plane, Absorption<>& absorption, Vec3& intersection) const;
+			bool LinePlaneIntersection(const Vec3& start, const Vec3& end, const Plane& plane, Coefficients<>& absorption, Vec3& intersection) const;
 
 			/**
 			* @brief Locate intersection between a line and a collection of walls
@@ -121,7 +136,7 @@ namespace RAC
 			* 
 			* @return True if a valid intersection is found, false otherwise
 			*/
-			bool LineWallIntersection(const Vec3& start, const Vec3& end, const std::vector<size_t>& wallIDs, Absorption<>& absorption, Vec3& intersection) const;
+			bool LineWallIntersection(const Vec3& start, const Vec3& end, const std::vector<size_t>& wallIDs, Coefficients<>& absorption, Vec3& intersection) const;
 
 			/**
 			* @brief Check for obstructions along an image source path
@@ -175,7 +190,7 @@ namespace RAC
 			* 
 			* @remarks Directivities taken from: Eargle's the Microphone Book : From Mono to Stereo to Surround - a Guide to Microphone Design and Application
 			*/
-			Absorption<> CalculateDirectivity(const Source::Data& source, const Vec3& point) const;
+			Coefficients<> CalculateDirectivity(const Source::Data& source, const Vec3& point) const;
 
 			/**
 			* @brief Run the image edge model for the given source
@@ -184,9 +199,9 @@ namespace RAC
 			* @param imageSources The image source data to write to
 			* @param direct The direct sound audio data for the current source
 			*/
-			void ReflectPointInRoom(const Source::Data& source, Source::AudioData& direct, ImageSourceDataMap& imageSources);
+			void ReflectPointInRoom(const Source::Data& source, Source::DSPParameters& direct, ImageSourceDataMap& imageSources);
 
-			Absorption<> Direct(const Source::Data& source);
+			Coefficients<> Direct(const Source::Data& source, bool lineOfSight);
 
 			/**
 			* @brief Find all first order diffractions
@@ -226,49 +241,47 @@ namespace RAC
 			* @param imageSources The image source data to write to
 			* @param feedsFDN True if the image source should feed the FDN, false otherwise
 			*/
-			void InitImageSource(const Source::Data& source, const Vec3& intersection, ImageSourceData& imageSource, ImageSourceDataMap& imageSources, bool feedsFDN);
+			void InitImageSource(const Source::Data& source, const Vec3& intersection, std::shared_ptr<ImageSourceData>& imageSource, ImageSourceDataMap& imageSources, bool feedsFDN);
+
+			void ResetImageSources();
 
 			/**
-			* @brief Run simple ray tracing and update the late reverberation reflection filters
-			*/
-			bool UpdateLateReverbFilters(bool updateFilters);
-
-			/**
-			* @brief Erase old entries from the image source data map
-			* 
-			* @param imageSources The image source data map to erase old entries from
-			*/
-			void EraseOldEntries(ImageSourceDataMap& imageSources);
+			 * @brief Creates an empty image source
+			 */
+			std::shared_ptr<ImageSourceData> CreateEmptyImageSource() const;
 
 			weak_ptr<Room> mRoom;							// Pointer to the room class
 			weak_ptr<SourceManager> mSourceManager;			// Pointer to the source manager class
-			weak_ptr<Reverb> mReverb;						// Pointer to the late reverb class
+
+			Coefficients<> frequencyBands;			// Frequency bands for graphic equalisers
 
 			PlaneMap mPlanes;									// Store planes
 			WallMap mWalls;										// Store walls
+			MaterialMap mMaterials;								// Store materials
 			EdgeMap mEdges;										// Store edges
 			std::vector<Source::Data> mSources;					// Store sources
-			std::vector<ImageSourceDataMap> imageSources;		// Store image sources
-			std::vector<Source::AudioData> mSourceAudioDatas;		// Store source audio data
+			ImageSourceDataMap imageSources;					// Store image sources
+			Source::DSPParameters sourceAudioData;				// Store source audio data
 			ImageSourceDataStore sp;							// Store valid image sources while the image edge model is being run
-			std::vector<bool> mCurrentCycles;					// Oscillates true and false each time the image edge model is run
 
-			IEMConfig mIEMConfig;					// The image edge model configuration (can be accessed freely)
-			IEMConfig mIEMConfigStore;				// Stores the image edge model configuration (Mutex must be locked to access)
+			EarlyReverbData earlyReverbData;					// The user defined IEM configuration data (can be accessed freely)
+			EarlyReverbData earlyReverbDataIncoming;			// The user defined IEM configuration data (Mutex must be locked to access)
+
 			int specularDiffractionStore;			// Stores the specular diffraction order (Mutex must be locked to access)
 			bool doSpecularDiffraction;
 			Vec3 mListenerPosition;					// The listener position (can be accessed freely)
-			Vec3 mListenerPositionStore;			// Stores the listener position (Mutex must be locked to access)
+			Vec3 mListenerPositionIncoming;			// The listener position (Mutex must be locked to access)
 
 			std::vector<Vec3> reverbDirections;				// The directions of the late reverb sources
-			std::vector<Absorption<>> reverbAbsorptions;		// The absorption coefficients of the late reverb sources
+			std::vector<Coefficients<>> reverbAbsorptions;		// The absorption Coefficients<> of the late reverb sources
 
-			Coefficients<> frequencyBands;	// Frequency bands for graphic equalisers
-			bool currentCycle;				// Stores the current cycle of the currently processed source
-			bool configChanged;				// True if the image edge model configuration has changed since the last run
-			bool reverbRunning;				// True if the late reverb is running, false otherwise
+			bool configChanged{ true };				// True if the image edge model configuration has changed since the last run
+			bool listenerMoved{ true };				// True if the listener has moved since the last run
+			bool reverbRunning{ false };				// True if the late reverb is running, false otherwise
 
-			std::mutex dataStoreMutex;				// Protects mListenerPositionStore, mIEMConfigStore
+			std::mutex dataStoreMutex;					// Protects mListenerPositionStore, mIEMConfigStore
+			std::atomic<bool> iemStartFlag{ false };	// True if the image edge model is running, false otherwise
+			std::atomic<bool> iemEndFlag{ false };		// True if the image edge model has finished running, false otherwise
 		};
 	}
 }

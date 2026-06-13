@@ -56,7 +56,7 @@ namespace RAC
 			/**
 			* @brief Default constructor
 			*/
-			Edge() : zW(0.0), t(0.0), mDs(0.0, 0.0), receiverZone(EdgeZone::Invalid) {}
+			Edge() : zW(0.0), t(0.0), mDs(REAL_CONST(0.0), REAL_CONST(0.0)), receiverZone(EdgeZone::Invalid) {}
 
 			/**
 			* @brief Constructor that initialises the Edge from the given parameters

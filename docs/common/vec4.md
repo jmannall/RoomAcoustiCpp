@@ -1,4 +1,8 @@
-A quaternion (4D vector) class for representing rotations and orientations in 3D space.
+A quaternion type for representing 3D rotations and orientations.
+
+Most users will interact with RoomAcoustiC++ through the high-level API in [`Spatialiser/Interface.h`](../spatialiser/interface.md). This page documents lower-level details for advanced usage.
+
+`Vec4` is used in the API to represent listener and source orientations (as quaternions).
 
 - **Namespace:** `RAC::Common`
 - **Header:** `Common/vec4.h`
@@ -7,144 +11,81 @@ A quaternion (4D vector) class for representing rotations and orientations in 3D
 
 ---
 
-## Class Definition
+## Type Definition
 
 ```cpp
-class Vec4
-{
-public:
-    Vec4();
-    Vec4(const Real w, const Real x, const Real y, const Real z);
-    Vec4(const float w, const float x, const float y, const float z);
-    Vec4(const double w, const double x, const double y, const double z);
-    Vec4(const Real w, const Vec3 vec);
-    Vec4(const Vec3 vec);
-    ~Vec4();
-
-    inline Vec3 Forward() const;
-    inline Real SquareNormal() const;
-    Vec4 Inverse() const;
-    inline Vec4 Conjugate() const;
-    Vec3 RotateVector(const Vec3& v) const;
-    inline Vec4 operator*(const Vec4& v) const;
-    inline Vec4 operator/(const Real a) const;
-    template <typename CQuaternionType>
-    inline Vec4& operator=(const CQuaternionType& q);
-
-    Real w, x, y, z;
-};
+Vec4 q;                      // default (0, 0, 0, 0)
+Vec4 q2(1.0, 0.0, 0.0, 0.0); // (w, x, y, z)
 ```
 
 ---
 
-## Public Methods
+## Common Operations
 
-### `#!cpp Vec4()`
-**Default constructor.**  
-Initializes a zero quaternion.
+### Component accessors
+Returns the quaternion components.
 
----
-
-### `#!cpp Vec4(const Real w, const Real x, const Real y, const Real z)`
-**Constructor.**  
-Initializes with specified values.
-
----
-
-### `#!cpp Vec4(const float w, const float x, const float y, const float z)`
-**Constructor.**  
-Initializes from floats (if using double).
+```cpp
+Real w() const; Real& w();
+Real x() const; Real& x();
+Real y() const; Real& y();
+Real z() const; Real& z();
+```
 
 ---
 
-### `#!cpp Vec4(const double w, const double x, const double y, const double z)`
-**Constructor.**  
-Initializes from doubles (if using float).
+### `#!cpp Real SquareNormal() const`
+Returns the squared magnitude.
 
 ---
 
-### `#!cpp Vec4(const Real w, const Vec3 vec)`
-**Constructor.**  
-Initializes from a scalar and a Vec3.
+### `#!cpp Real Normal() const`
+Returns the magnitude.
 
 ---
 
-### `#!cpp Vec4(const Vec3 vec)`
-**Constructor.**  
-Initializes from a Vec3 (w = 0).
+### `#!cpp void Normalise()`
+Normalises the quaternion in place.
 
 ---
 
-### `#!cpp ~Vec4()`
-**Destructor.**  
-Cleans up the quaternion.
+### `#!cpp Vec4 Normalised() const`
+Returns a normalised copy.
 
 ---
 
-### `#!cpp inline Vec3 Forward() const`
-Returns the forward vector.
-
----
-
-### `#!cpp inline Real SquareNormal() const`
-Returns the squared norm.
-
----
-
-### `#!cpp Vec4 Inverse() const`
-Returns the inverse quaternion.
-
----
-
-### `#!cpp inline Vec4 Conjugate() const`
+### `#!cpp Vec4 Conjugate() const`
 Returns the conjugate quaternion.
 
 ---
 
-### `#!cpp Vec3 RotateVector(const Vec3& v) const`
-Rotates a vector by the quaternion.
+### `#!cpp Vec4 InverseMatrix() const`
+Returns the inverse quaternion.
 
 ---
 
-### `#!cpp inline Vec4 operator*(const Vec4& v) const`
+### `#!cpp Vec4 operator*(const Vec4& other) const`
 Quaternion multiplication.
 
 ---
 
-### `#!cpp inline Vec4 operator/(const Real a) const`
-Divides by a scalar.
+## Helper Functions
+
+### `#!cpp Vec3 RotateVector(const Vec3& v, const Vec4& orientation)`
+Rotates a vector by the quaternion (assumes a normalised quaternion).
 
 ---
-
-### `#!cpp template <typename CQuaternionType> inline Vec4& operator=(const CQuaternionType& q)`
-Assigns from another type with w, x, y, z.
-
----
-
-## Operators
-
-- `operator==`, `operator!=`, `operator-`: Comparison and negation.
-
----
-
-## Internal Data Members
-
-- `#!cpp Real w, x, y, z`: Quaternion components.
-
----
-
-## Implementation Notes
-
-- Used for 3D rotations and orientation.
-- Supports quaternion algebra and vector rotation.
 
 ## Example Usage
 
 ```cpp
 #include "Common/vec4.h"
+#include "Common/Vec3.h"
+
 using namespace RAC::Common;
 
 Vec4 q(1.0, 0.0, 0.0, 0.0);
 Vec3 v(1.0, 0.0, 0.0);
-Vec3 rotated = q.RotateVector(v);
+
+Vec3 rotated = RotateVector(v, q);
 ```

@@ -14,12 +14,6 @@
 
 #include "moodycamel/concurrentqueue.h"
 
-//#define PROFILE_BACKGROUND_THREAD
-//#define PROFILE_BACKGROUND_THREAD_DETAILED
-//#define PROFILE_AUDIO_THREAD
-//#define PROFILE_AUDIO_THREAD_DETAILED
-
-
 #ifdef PROFILE_AUDIO_THREAD_DETAILED
 #ifndef PROFILE_AUDIO_THREAD
 #define PROFILE_AUDIO_THREAD
@@ -92,6 +86,8 @@
     PROFILER_CATEGORY(Reflection)
 #define PROFILE_Diffraction \
     PROFILER_CATEGORY(Diffraction)
+#define PROFILE_OctaveBand \
+    PROFILER_CATEGORY(OctaveBand)
 #define PROFILE_AirAbsorption \
     PROFILER_CATEGORY(AirAbsorption)
 #define PROFILE_Spatialisation \
@@ -103,8 +99,11 @@
 #define PROFILE_ImageSource
 #define PROFILE_ReverbSource
 #define PROFILE_FDN
+#define PROFILE_FDNComplex
+#define PROFILE_FDNComplexPair
 #define PROFILE_Reflection
 #define PROFILE_Diffraction
+#define PROFILE_OctaveBand
 #define PROFILE_AirAbsorption
 #define PROFILE_Spatialisation
 #endif
@@ -134,6 +133,7 @@ enum ProfilerCategories
     ReverbSource,
     Reflection,
     Diffraction,
+	OctaveBand,
     AirAbsorption,
     Spatialisation
 };
@@ -211,6 +211,9 @@ inline std::ostream& operator<<(std::ostream& os, const ProfilerCategories& cate
 	case ProfilerCategories::Diffraction:
 		os << "Diffraction";
 		break;
+	case ProfilerCategories::OctaveBand:
+        os << "OctaveBand";
+		break;
 	case ProfilerCategories::AirAbsorption:
 		os << "AirAbsorption";
 		break;
@@ -258,7 +261,18 @@ namespace RAC
             inline void SetOutputFile(const std::string& filename, bool logOn)
             {
                 if (logOn)
+                {
+                    if (output.is_open())
+                    {
+                        // don't re-open the same file
+                        if (outputFilename == filename)
+                            return;
+
+                        output.close();
+                    }
                     output.open(filename);
+                    outputFilename = filename;
+                }
                 else
                     Shutdown(filename);
             }
@@ -319,6 +333,7 @@ namespace RAC
             std::atomic<bool> running{ true };
             moodycamel::ConcurrentQueue<ProfileEvent> queue;
             std::thread logThread;
+        	std::string outputFilename;
             std::ofstream output;
             std::mutex fileMutex;
         };
@@ -399,6 +414,9 @@ namespace RAC
                 case ProfilerCategories::Diffraction:
                     BeginDiffraction();
                     break;
+				case ProfilerCategories::OctaveBand:
+                    BeginOctaveBand();
+					break;
                 case ProfilerCategories::AirAbsorption:
                     BeginAirAbsorption();
                     break;
@@ -488,6 +506,9 @@ namespace RAC
                     break;
                 case ProfilerCategories::Diffraction:
                     EndDiffraction();
+                    break;
+                case ProfilerCategories::OctaveBand:
+                    EndOctaveBand();
                     break;
                 case ProfilerCategories::AirAbsorption:
                     EndAirAbsorption();

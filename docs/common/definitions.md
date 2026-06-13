@@ -1,5 +1,7 @@
 Defines mathematical and physical constants (e.g., speed of sound, pi, sqrt(2)), and provides utility functions for conversions, rounding, factorials, and Legendre polynomials.
 
+Most users will interact with RoomAcoustiC++ through the high-level API in [`Spatialiser/Interface.h`](../spatialiser/interface.md). This page documents lower-level details for advanced usage.
+
 - **Namespace:** `RAC::Common`
 - **Header:** `Common/Definitions.h`
 - **Source:** *(inline header only)*

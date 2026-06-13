@@ -12,10 +12,34 @@
 #include "Common/Types.h"
 #include "Common/Vec3.h"
 
+// Eigen headers
+#if MATRIX_LIBRARY == EIGEN_FLAG
+#include <Eigen/Dense>
+#include <Eigen/Geometry>
+#endif
+
 namespace RAC
 {
 	namespace Common
 	{
+#if MATRIX_LIBRARY == EIGEN_FLAG
+#if DATA_TYPE_DOUBLE
+		using Vec4 = Eigen::Quaterniond;
+#else
+		using Vec4 = Eigen::Quaternionf;
+#endif
+		/**
+		* @brief Rotates a vector by the quaternion
+		* @details Assumes a normalised quaternion
+		*
+		* @param v The vector to rotate
+		*
+		* @return The rotated vector
+		*/
+		inline Vec3 RotateVector(const Vec3& v, const Vec4& orientation) { return orientation.Conjugate() * MakeCompatible(v); }
+
+#elif MATRIX_LIBRARY == CUSTOM_FLAG
+
 		/**
 		* @class Class that stores a quaternion data
 		*/
@@ -26,7 +50,7 @@ namespace RAC
 			/**
 			* @brief Default constructor that initialises a zero quaternion
 			*/
-			Vec4() : w(0.0), x(0.0), y(0.0), z(0.0) {}
+			Vec4() : mW(0.0), mVec(0.0, 0.0, 0.0) {}
 
 			/**
 			* @brief Constructor that initialises a quaternion with specified values
@@ -36,7 +60,7 @@ namespace RAC
 			* @param y The y component of the quaternion
 			* @param z The z component of the quaternion
 			*/
-			Vec4(const Real w, const Real x, const Real y, const Real z) : w(w), x(x), y(y), z(z) {}
+			Vec4(const Real w, const Real x, const Real y, const Real z) : mW(w), mVec(x, y, z) {}
 #if DATA_TYPE_DOUBLE
 
 			/**
@@ -47,7 +71,7 @@ namespace RAC
 			* @param y The y component of the quaternion
 			* @param z The z component of the quaternion
 			*/
-			Vec4(const float w, const float x, const float y, const float z) : w(static_cast<Real>(w)), x(static_cast<Real>(x)), y(static_cast<Real>(y)), z(static_cast<Real>(z)) {}
+			Vec4(const float w, const float x, const float y, const float z) : mW(static_cast<Real>(w)), mVec(static_cast<Real>(x), static_cast<Real>(y), static_cast<Real>(z)) {}
 #else
 
 			/**
@@ -58,7 +82,7 @@ namespace RAC
 			* @param y The y component of the quaternion
 			* @param z The z component of the quaternion
 			*/
-			Vec4(const double w, const double x, const double y, const double z) : w(static_cast<Real>(w)), x(static_cast<Real>(x)), y(static_cast<Real>(y)), z(static_cast<Real>(z)) {}
+			Vec4(const double w, const double x, const double y, const double z) : mW(static_cast<Real>(w)), mVec(static_cast<Real>(x), static_cast<Real>(y), static_cast<Real>(z)) {}
 #endif
 
 			/**
@@ -67,66 +91,84 @@ namespace RAC
 			* @param w The w component of the quaternion
 			* @param vec The x, y, z components of the quaternion
 			*/
-			Vec4(const Real w, const Vec3 vec) : w(w), x(vec.x), y(vec.y), z(vec.z) {}
+			Vec4(const Real w, const Vec3 vec) : mW(w), mVec(vec) {}
 
 			/**
 			* @brief Constructor that initialises a quaternion from a Vec3 with a zero w component
 			*
 			* @param vec The x, y, z components of the quaternion
 			*/
-			Vec4(const Vec3 vec) : w(0.0), x(vec.x), y(vec.y), z(vec.z) {}
+			Vec4(const Vec3 vec) : Vec4(0.0, vec) {}
 
 			/**
 			* @brief Default deconstructor
 			*/
 			~Vec4() {}
 
-			/**
-			* @return The forward vector of the quaternion
-			*/
-			inline Vec3 Forward() const
-			{
-				Vec3 forward;
-				forward.x = 2.0 * (x * z + w * y);
-				forward.y = 2.0 * (y * z - w * x);
-				forward.z = 1.0 - 2.0 * (x * x + y * y);
-				forward.Normalise();
-				return forward;
-			}
+			inline Real w() const { return mW; }
+			inline Real x() const { return mVec.x(); }
+			inline Real y() const { return mVec.y(); }
+			inline Real z() const { return mVec.z(); }
+			
+			inline Real& w() { return mW; }
+			inline Real& x() { return mVec.x(); }
+			inline Real& y() { return mVec.y(); }
+			inline Real& z() { return mVec.z(); }
+
+			inline Vec3 vec() const { return mVec; }
+			inline Vec3& vec() { return mVec; }
 
 			/**
 			* @return The square of the normal of the quaternion
 			*/
-			inline Real SquareNormal() const { return w * w + x * x + y * y + z * z; }
+			inline Real SquareNormal() const { return mW * mW + mVec.SquareNormal(); }
+
+			/**
+			* @return The length of the vector
+			*/
+			inline Real Normal() const { return std::sqrt(SquareNormal()); }
+
+			/**
+			* @brief Normalises the vector
+			*/
+			inline void Normalise()
+			{
+				if (mW == 0.0 && x() == 0.0 && y() == 0.0 && z() == 0.0)
+					return;
+				mW /= Normal();
+				mVec /= Normal();
+			}
+
+			/**
+			* @brief Return the normalised vector
+			*/
+			inline Vec4 Normalised() const
+			{
+				if (mW == 0.0 && x() == 0.0 && y() == 0.0 && z() == 0.0)
+					return Vec4();
+				Real normal = Normal();
+				return Vec4(mW / normal, mVec / normal);
+			}
 
 			/**
 			* @return The inverse of the quaternion
 			*/
-			Vec4 Inverse() const
+			Vec4 InverseMatrix() const
 			{
 				Real normSquared = SquareNormal();
 				if (normSquared == 0.0f)
 					return Vec4();
-
                 return Conjugate() / normSquared;
 			}
 
 			/**
 			* @return The conjugate of the quaternion
 			*/
-			inline Vec4 Conjugate() const { return Vec4(w, -x, -y, -z); }
+			inline Vec4 Conjugate() const { return Vec4(mW, -mVec); }
 
-			/**
-			* @brief Rotates a vector by the quaternion
-			* 
-			* @param v The vector to rotate
-			* 
-			* @return The rotated vector
-			*/
-			Vec3 RotateVector(const Vec3& v) const
+			inline Real dot(const Vec4& v) const
 			{
-				Vec4 rotatedVector = (*this) * Vec4(v) * Inverse();
-				return Vec3(rotatedVector.x, rotatedVector.y, rotatedVector.z);
+				return mW * v.w() + x() * v.x() + y() * v.y() + z() * v.z();
 			}
 
 			/**
@@ -134,18 +176,35 @@ namespace RAC
 			*/
 			inline Vec4 operator*(const Vec4& v) const
 			{
-				return Vec4(w * v.w - x * v.x - y * v.y - z * v.z,
-					w * v.x + x * v.w - y * v.z + z * v.y,
-					w * v.y + x * v.z + y * v.w - z * v.x,
-					w * v.z - x * v.y + y * v.x + z * v.w);
+				// Vec3 vecPart = mW * v.vec() + v.w() * mVec + mVec.cross(v.vec());
+				return Vec4(mW * v.w() - mVec.dot(v.vec()),
+					mW * v.vec() + v.w() * mVec + mVec.cross(v.vec()));
+
+				/*return Vec4(mW * v.w() - x() * v.x() - y() * v.y() - z() * v.z(),
+					mW * v.x() + x() * v.w() - y() * v.z() + z() * v.y(),
+					mW * v.y() + x() * v.z() + y() * v.w() - z() * v.x(),
+					mW * v.z() - x() * v.y() + y() * v.x() + z() * v.w());*/
 			}
+
+			/**
+			* @brief Performs a quaternion multiplication
+			*/
+			// TODO: fix this (assumes a normalised quaternion)
+			//inline Vec3 operator*(const Vec3& v) const
+			//{
+			//	// t = 2 * (q_vec x v)
+			//	 Vec3 t = 2.0 * mVec.cross(v);
+
+			//	Vec3 ret = v + mW * t + mVec.cross(t);
+			//	return ret;
+			//}
 
 			/**
 			* @brief Divides the quaternioin by a given value 
 			*/
 			inline Vec4 operator/(const Real a) const
 			{ 
-				return Vec4(w / a, x / a, y / a, z / a);
+				return Vec4(mW / a, x() / a, y() / a, z() / a);
 			}
 
 			/**
@@ -160,56 +219,59 @@ namespace RAC
 				z = q.z;
 				return *this;
 			}
-
-			Real w;		// W component of the quaternion
-			Real x;		// X component of the quaternion
-			Real y;		// Y component of the quaternion
-			Real z;		// Z component of the quaternion
-
-		private:
-		};
-
-		//////////////////// Vec4 operator overloads ////////////////////
-
+			
 		/**
 		* @brief Performs an element-wise comparison
 		* @return True if all element pairs are equal, false otherwise
 		*/
-		inline bool operator==(const Vec4& u, const Vec4& v)
-		{
-			if (u.w == v.w)
-			{
-				if (u.x == v.x)
-				{
-					if (u.y == v.y)
-					{
-						if (u.z == v.z)
-							return true;
-					}
-				}
-			}
-			return false;
-		}
+		friend inline bool operator==(const Vec4& u, const Vec4& v) { return u.mW == v.mW && u.mVec == v.mVec; }
 
 		/**
 		* @brief Performs an element-wise comparison
 		* @return True if any element pairs are unequal, false otherwise
 		*/
-		inline bool operator!=(const Vec4& u, const Vec4& v)
-		{
-			if (u == v)
-				return false;
-			return true;
-		}
+		friend inline bool operator!=(const Vec4& u, const Vec4& v) { return !(u==v); }
+			
 
+		private:
+			Real mW;		// W component of the quaternion
+			Vec3 mVec;		// Vector component of the quaternion
+		};
+
+		//////////////////// Vec4 operator overloads ////////////////////
+
+		/**
+		* @brief Rotates a vector by the quaternion
+		*
+		* @param v The vector to rotate
+		*
+		* @return The rotated vector
+		*/
+		inline Vec3 RotateVector(const Vec3& v, const Vec4& orientation)
+		{
+			Vec4 rotatedVector = orientation.Conjugate() * Vec4(v) * orientation.Conjugate().InverseMatrix();
+			return rotatedVector.vec();
+		}
+#endif
 		/**
 		* @return The inverted w, x, y, z of a quaternion
 		*/
-		inline Vec4 operator-(const Vec4& v)
+		inline Vec4 operator-(const Vec4& v) { return Vec4(-v.w(), -v.vec()); }
+
+		/**
+		* @return The forward vector of the quaternion
+		*
+		* @param quaternion Unit quaternion representing the orientation
+		*/
+		inline Vec3 Forward(const Vec4& q)
 		{
-			return Vec4(-v.w, -v.x, -v.y, -v.z);
+			Real x = REAL_CONST(2.0) * (q.x() * q.z() + q.w() * q.y());
+			Real y = REAL_CONST(2.0) * (q.y() * q.z() - q.w() * q.x());
+			Real z = REAL_CONST(1.0) - REAL_CONST(2.0) * (q.x() * q.x() + q.y() * q.y());
+			// TODO: Check if normalise is necessary
+			return Vec3(x, y, z).Normalised();
+			// (quaternion * Vec3::UnitZ()).normalized();
 		}
 	}
 }
-
-#endif
+#endif // Common_Vec4_h

@@ -1,9 +1,24 @@
-Implements the `Wall` and `Plane` classes for geometric room modeling, including wall/plane intersection, reflection, and absorption properties.
+Implements the `Wall` and `Plane` classes for geometric room modeling, including wall/plane intersection and reflection utilities.
+
+Most users will interact with RoomAcoustiC++ through the high-level API in [`Spatialiser/Interface.h`](interface.md). This page documents lower-level details for advanced usage.
 
 - **Namespace:** `RAC::Spatialiser`
 - **Header:** `Spatialiser/Wall.h`
 - **Source:** `Spatialiser/Wall.cpp`
 - **Dependencies:** `Common/Types.h`, `Common/Vec3.h`, `Common/Coefficients.h`, `Spatialiser/Edge.h`, `Spatialiser/Types.h`
+
+---
+
+## Utility Functions
+
+### `#!cpp std::pair<bool, Vec3> IntersectTriangle(const Vec3& v1, const Vec3& v2, const Vec3& v3, const Vec3& origin, const Vec3& dir, const bool returnIntersection)`
+Determines whether a line intersects a triangle.
+
+`v1`, `v2`, `v3`: Triangle vertices.  
+`origin`: Line origin.  
+`dir`: Line direction.  
+`returnIntersection`: If true, returns the intersection point; otherwise only performs the intersection test.  
+**Returns:** A pair containing whether an intersection occurred and (optionally) the intersection point.
 
 ---
 
@@ -13,8 +28,7 @@ Implements the `Wall` and `Plane` classes for geometric room modeling, including
 class Wall
 {
 public:
-    Wall();
-    Wall(const Vertices& vData, const Absorption<>& absorption);
+    Wall(const Vertices& vData, size_t materialId);
     ~Wall();
 
     inline void AddEdge(const size_t id);
@@ -22,9 +36,9 @@ public:
     inline bool EmptyEdges() const;
     inline Vec3 GetNormal() const;
     inline Real GetD() const;
+    inline size_t GetMaterialID() const;
     inline Vertices GetVertices() const;
     inline bool VertexMatch(const Vec3& x) const;
-    inline Absorption<> GetAbsorption() const;
     inline Real GetArea() const;
     inline std::vector<size_t> GetEdges() const;
     inline size_t GetPlaneID() const;
@@ -33,7 +47,6 @@ public:
     bool LineWallIntersection(const Vec3& start, const Vec3& end, Vec3& intersection) const;
     inline bool LineWallObstruction(const Vec3& start, const Vec3& end) const;
     void Update(const Vertices& vData);
-    inline void Update(const Absorption<>& absorption);
 
 private:
     inline void CalculateArea();
@@ -41,8 +54,10 @@ private:
     Vertices mVertices;
     Vec3 mNormal;
     Real d;
-    Absorption<> mAbsorption;
+    Real area;
+
     size_t mPlaneId;
+    size_t materialId;
     std::vector<size_t> mEdges;
 };
 
@@ -57,11 +72,11 @@ public:
     inline bool RemoveWall(const size_t id);
     inline Vec3 GetNormal() const;
     inline Real GetD() const;
-    inline std::vector<size_t> GetWalls() const;
+    const inline std::vector<size_t>& GetWalls() const;
     inline bool GetReceiverValid() const;
     inline void SetReceiverValid(const Vec3& listenerPosition);
-    bool IsCoplanar(const Wall& wall) const;
-    Real PointPlanePosition(const Vec3& point) const;
+    inline bool IsCoplanar(const Wall& wall) const;
+    inline Real PointPlanePosition(const Vec3& point) const;
     bool LinePlaneObstruction(const Vec3& start, const Vec3& end) const;
     bool LinePlaneIntersection(const Vec3& start, const Vec3& end) const;
     bool ReflectPointInPlane(const Vec3& point) const;
@@ -81,19 +96,14 @@ private:
 
 ---
 
-## Public Methods
+## Wall
 
-### `#!cpp Wall()`
-**Default constructor.**  
-Initializes an empty wall.
-
----
-
-### `#!cpp Wall(const Vertices& vData, const Absorption<>& absorption)`
+### `#!cpp Wall(const Vertices& vData, size_t materialId)`
 **Constructor.**  
-Initializes a wall with vertices and absorption.
-- `vData`: Vertices of the wall.
-- `absorption`: Material absorption.
+Initializes a wall from triangle vertices and a material reference.
+
+`vData`: Vertices of the wall (stored as a triangle).  
+`materialId`: ID of the material used by this wall.
 
 ---
 
@@ -103,94 +113,19 @@ Cleans up the wall.
 
 ---
 
-### `#!cpp inline void AddEdge(const size_t id)`
-Adds the ID of a connecting edge.
-
----
-
-### `#!cpp inline void RemoveEdge(const size_t id)`
-Removes the ID of a connecting edge.
-
----
-
-### `#!cpp inline bool EmptyEdges() const`
-Returns true if the wall has unclaimed edges.
-
----
-
-### `#!cpp inline Vec3 GetNormal() const`
-Returns the wall normal.
-
----
-
-### `#!cpp inline Real GetD() const`
-Returns the wall's distance from the origin along the normal.
-
----
-
-### `#!cpp inline Vertices GetVertices() const`
-Returns the wall vertices.
-
----
-
-### `#!cpp inline bool VertexMatch(const Vec3& x) const`
-Returns true if the wall contains the given vertex.
-
----
-
-### `#!cpp inline Absorption<> GetAbsorption() const`
-Returns the wall's absorption.
-
----
-
-### `#!cpp inline Real GetArea() const`
-Returns the wall area.
-
----
-
-### `#!cpp inline std::vector<size_t> GetEdges() const`
-Returns the IDs of connected edges.
-
----
-
-### `#!cpp inline size_t GetPlaneID() const`
-Returns the plane ID.
-
----
-
-### `#!cpp inline void SetPlaneID(const size_t id)`
-Sets the plane ID.
-
----
-
-### `#!cpp inline Real PointWallPosition(const Vec3& point) const`
-Returns the signed distance from a point to the wall.
-
----
-
-### `#!cpp bool LineWallIntersection(const Vec3& start, const Vec3& end, Vec3& intersection) const`
-Checks if a line intersects the wall and stores the intersection point.
-- `start`: Line start.
-- `end`: Line end.
-- `intersection`: Output intersection point.
-- **Returns:** True if intersection occurs.
-
----
-
-### `#!cpp inline bool LineWallObstruction(const Vec3& start, const Vec3& end) const`
-Returns true if the wall obstructs a line.
+### `#!cpp inline size_t GetMaterialID() const`
+Returns the ID of the material associated with this wall.
 
 ---
 
 ### `#!cpp void Update(const Vertices& vData)`
-Updates the wall's geometry and area.
+Updates the wall vertices and derived values (normal, area, and plane distance).
+
+`vData`: The new vertices of the wall.
 
 ---
 
-### `#!cpp inline void Update(const Absorption<>& absorption)`
-Updates the wall's absorption.
-
----
+## Plane
 
 ### `#!cpp Plane()`
 **Default constructor.**  
@@ -200,126 +135,12 @@ Initializes an empty plane.
 
 ### `#!cpp Plane(const size_t id, const Wall& wall)`
 **Constructor.**  
-Initializes a plane with a wall.
+Initializes a plane and adds the given wall.
+
+`id`: ID of the wall to add.  
+`wall`: The wall being added.
 
 ---
-
-### `#!cpp ~Plane()`
-**Destructor.**  
-Cleans up the plane.
-
----
-
-### `#!cpp inline void AddWall(const size_t id)`
-Adds a wall ID to the plane.
-
----
-
-### `#!cpp inline bool RemoveWall(const size_t id)`
-Removes a wall ID from the plane.
-
----
-
-### `#!cpp inline Vec3 GetNormal() const`
-Returns the plane normal.
-
----
-
-### `#!cpp inline Real GetD() const`
-Returns the plane's distance from the origin.
-
----
-
-### `#!cpp inline std::vector<size_t> GetWalls() const`
-Returns the wall IDs in the plane.
-
----
-
-### `#!cpp inline bool GetReceiverValid() const`
-Returns true if the listener is in front of the plane.
-
----
-
-### `#!cpp inline void SetReceiverValid(const Vec3& listenerPosition)`
-Sets whether the listener is in front of the plane.
-
----
-
-### `#!cpp bool IsCoplanar(const Wall& wall) const`
-Returns true if the wall is coplanar with the plane.
-
----
-
-### `#!cpp Real PointPlanePosition(const Vec3& point) const`
-Returns the signed distance from a point to the plane.
-
----
-
-### `#!cpp bool LinePlaneObstruction(const Vec3& start, const Vec3& end) const`
-Returns true if the plane obstructs a line.
-
----
-
-### `#!cpp bool LinePlaneIntersection(const Vec3& start, const Vec3& end) const`
-Returns true if a line intersects the plane.
-
----
-
-### `#!cpp bool ReflectPointInPlane(const Vec3& point) const`
-Returns true if the point is in front of the plane.
-
----
-
-### `#!cpp bool ReflectPointInPlane(Vec3& dest, const Vec3& point) const`
-Reflects a point in the plane and stores the result.
-
----
-
-### `#!cpp void ReflectPointInPlaneNoCheck(Vec3& point) const`
-Reflects a point in the plane without checking.
-
----
-
-### `#!cpp void ReflectNormalInPlane(Vec3& normal) const`
-Reflects a normal in the plane.
-
----
-
-### `#!cpp bool EdgePlanePosition(const Edge& edge) const`
-Returns true if an edge is in front of the plane.
-
----
-
-### `#!cpp inline void Update(const Wall& wall)`
-Updates the plane's normal and distance from a wall.
-
----
-
-## Utility Functions
-
-### `#!cpp std::pair<bool, Vec3> IntersectTriangle(const Vec3& v1, const Vec3& v2, const Vec3& v3, const Vec3& origin, const Vec3& dir, const bool returnIntersection)`
-Checks if a line intersects a triangle and optionally returns the intersection point.
-
----
-
-## Internal Data Members
-
-- `#!cpp Vertices mVertices`: Wall vertices.
-- `#!cpp Vec3 mNormal`: Wall/plane normal.
-- `#!cpp Real d`: Distance from origin.
-- `#!cpp Absorption<> mAbsorption`: Wall absorption.
-- `#!cpp size_t mPlaneId`: Plane ID.
-- `#!cpp std::vector<size_t> mEdges`: Connected edge IDs.
-- `#!cpp std::vector<size_t> mWalls`: Connected wall IDs (Plane).
-- `#!cpp bool receiverValid`: True if listener is in front of the plane.
-
----
-
-## Implementation Notes
-
-- Walls are always triangles.
-- Area is computed as half the cross product of two triangle edges.
-- Includes geometric utilities for intersection and reflection.
 
 ## Example Usage
 
@@ -327,10 +148,12 @@ Checks if a line intersects a triangle and optionally returns the intersection p
 #include "Spatialiser/Wall.h"
 using namespace RAC::Spatialiser;
 
-Vertices verts = { Vec3(0,0,0), Vec3(1,0,0), Vec3(0,1,0) };
-Absorption<> abs(3);
-Wall wall(verts, abs);
+Vertices v = { Vec3(0,0,0), Vec3(1,0,0), Vec3(0,1,0) };
+size_t materialId = 0;
 
-Vec3 intersection;
-bool hit = wall.LineWallIntersection(Vec3(0,0,1), Vec3(0,0,-1), intersection);
+Wall wall(v, materialId);
+
+// Update geometry
+Vertices v2 = { Vec3(0,0,0), Vec3(2,0,0), Vec3(0,2,0) };
+wall.Update(v2);
 ```

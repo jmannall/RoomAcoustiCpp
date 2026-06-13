@@ -10,8 +10,9 @@
 #include <random>
 
 // Common headers
-#include "Common/Vec.h"
+#include "Common/Vec_private.h"
 
+#if MATRIX_LIBRARY == CUSTOM_FLAG
 namespace RAC
 {
 	namespace Common
@@ -22,100 +23,143 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Vec::Init(const std::vector<Real>& vector)
+		template<typename T>
+		void Vec<T>::Init(const std::vector<T>& vector)
 		{
-			rows = static_cast<int>(vector.size());
-			data.resize(rows, std::vector<Real>(1, 0.0));
-			for (int i = 0; i < rows; i++)
-				data[i][0] = vector[i];
+			this->data.cols = 1;
+			this->data.rows = static_cast<int>(vector.size());
+			this->data.matrix = vector;
 		}
 
 		////////////////////////////////////////
 
-		void Vec::RandomNormalDistribution()
+		void Vec<Real>::RandomNormalDistribution()
 		{
 			std::normal_distribution<Real> distribution; // mean 0, standard deviation 1
-			for (int i = 0; i < rows; i++)
-				data[i][0] = distribution(generator);
+			for (int i = 0; i < this->data.rows; i++)
+				this->data(i, 0) = distribution(generator);
 		}
 
 		////////////////////////////////////////
 
-		void Vec::RandomUniformDistribution()
+		void Vec<Real>::RandomUniformDistribution()
 		{
 			std::uniform_real_distribution<Real> distribution; // a 0, b 1
-			for (int i = 0; i < rows; i++)
-				data[i][0] = distribution(generator);
+			for (int i = 0; i < data.rows; i++)
+				data(i, 0) = distribution(generator);
 		}
 
 		////////////////////////////////////////
 
-		void Vec::RandomUniformDistribution(Real a, Real b)
+		void Vec<Real>::RandomUniformDistribution(Real a, Real b)
 		{
 			std::uniform_real_distribution<Real> distribution(a, b);
-			for (int i = 0; i < rows; i++)
-				data[i][0] = distribution(generator);
+			for (int i = 0; i < data.rows; i++)
+				data(i, 0) = distribution(generator);
 		}
 
 		////////////////////////////////////////
 
-		void Vec::Normalise()
+		void Vec<Real>::Normalise()
 		{
-			Real normal = CalculateNormal();
-			for (int i = 0; i < rows; i++)
-				data[i][0] = data[i][0] / normal;
+			Real normal = Normal();
+			for (int i = 0; i < this->data.rows; i++)
+				this->data(i, 0) = this->data(i, 0) / normal;
 		}
 
-		Real Vec::CalculateNormal() const
+		////////////////////////////////////////
+
+		template<>
+		Real Vec<Real>::Normal() const
 		{
 			Real magnitude = 0.0;
-			for (int i = 0; i < rows; i++)
-				magnitude += data[i][0] * data[i][0];
+			for (int i = 0; i < this->data.rows; i++)
+				magnitude += this->data(i, 0) * this->data(i, 0);
 			return sqrt(magnitude);
 		}
 
 		////////////////////////////////////////
 
-		void Vec::Max(const Real min)
+		void Vec<Real>::Max(const Real min)
 		{
-			for (int i = 0; i < rows; i++)
-				data[i][0] = std::max(min, data[i][0]);
-		}
-
-		void Vec::Min(const Real max)
-		{
-			for (int i = 0; i < rows; i++)
-				data[i][0] = std::min(max, data[i][0]);
+			for (int i = 0; i < data.rows; i++)
+				data(i, 0) = std::max(min, data(i, 0));
 		}
 
 		////////////////////////////////////////
 
-		Real Vec::Sum() const
+		void Vec<Real>::Min(const Real max)
 		{
-			Real sum = 0.0;
-			for (int i = 0; i < cols; i++)
-				sum += data[i][0];
+			for (int i = 0; i < data.rows; i++)
+				data(i, 0) = std::min(max, data(i, 0));
+		}
+
+		////////////////////////////////////////
+
+		template<typename T>
+		T Vec<T>::Sum() const
+		{
+			T sum = T(0.0);
+			for (int i = 0; i < this->data.cols; i++)
+				sum += this->data(i, 0);
 			return sum;
 		}
 
 		//////////////////// Rowvec ////////////////////
 
-		////////////////////////////////////////
-
-		void Rowvec::Init(const std::vector<Real>& vector)
+		template<typename T>
+		void Rowvec<T>::Init(const std::vector<T>& vector)
 		{
-			cols = static_cast<int>(vector.size());
-			data[0] = vector;
+			this->data.rows = 1;
+			this->data.cols = static_cast<int>(vector.size());
+			this->data.matrix = vector;
 		}
 
 		////////////////////////////////////////
 
-		Real Rowvec::Sum() const
+		template<typename T>
+		T Rowvec<T>::Sum() const
 		{
-			Real sum = 0.0;
-			for (int i = 0; i < cols; i++)
-				sum += data[0][i];
+			T sum = T(0.0);
+			for (int i = 0; i < this->data.cols; i++)
+				sum += this->data(0, i);
 			return sum;
 		}
+
+		Real Dot(const Vec<>& u, const Vec<>& v)
+		{
+			RAC_DEBUG_ASSERT(u.Length() == v.Length(), "Vectors must have equal length");
+			Real out = 0.0;
+			for (int i = 0; i < u.Length(); ++i)
+				out += u(i) * v(i);
+			return out;
+		}
+
+		Real ThreeWayDot(const Vec<>& u, const Vec<>& v, const Vec<>& w)
+		{
+			RAC_DEBUG_ASSERT(u.Length() == v.Length(), "Vectors must have equal length");
+			RAC_DEBUG_ASSERT(u.Length() == w.Length(), "Vectors must have equal length");
+			Real out = 0.0;
+			for (int i = 0; i < u.Length(); ++i)
+				out += u(i) * v(i) * w(i);
+			return out;
+		}
+
+		//////////////////// Instantiate ////////////////////
+
+		// we don't implement/use every function, so disable the warning (we can't re-enable it since the warning is generated after the file is parsed)
+		#ifdef _MSC_VER
+		#pragma warning (disable : 4661)
+		#endif
+
+		template class Vec<int>;
+		template class Vec<Real>;
+		template class Vec<Complex>;
+
+		template class Rowvec<int>;
+		template class Rowvec<Real>;
+		template class Rowvec<Complex>;
+
 	}
 }
+#endif // MATRIX_LIBRARY == CUSTOM_FLAG

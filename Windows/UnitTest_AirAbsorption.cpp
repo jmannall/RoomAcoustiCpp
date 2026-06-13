@@ -15,13 +15,13 @@ namespace RAC
 	std::vector<Real> ProcessAirAbsorption(const Real distance, const Real fs, const std::vector<Real>& input)
 	{
 
-		const Real c = 331.5 + 0.6 * 20.0;
+		const Real c = REAL_CONST(331.5) + REAL_CONST(0.6) * REAL_CONST(20.0);
 
-		Real alpha = 7782;
+		Real alpha = REAL_CONST(7782.0);
 		Real b0 = exp(((-distance * fs) / (c * alpha)));
-		Real a1 = -(1.0 - b0);
+		Real a1 = -(REAL_CONST(1.0) - b0);
 
-		std::vector<Real> output(input.size(), 0.0);
+		std::vector<Real> output(input.size(), REAL_CONST(0.0));
 
 		output[0] = b0 * input[0];
 		for (int i = 1; i < input.size(); i++)
@@ -35,13 +35,13 @@ namespace RAC
 	public:
 		TEST_METHOD(Process)
 		{
-			const int fs = 48e3;
-			const Real lerpFactor = 0.5;
+			const int fs = 48000;
+			const Real lerpFactor = REAL_CONST(0.5);
 
 			const Real distance = 50;
 			AirAbsorption filter(distance, fs);
 
-			std::vector<Real> input = { 0.9, -0.1, 0.2, 0.0, -0.3, 0.0, 3.0, 2.1, -0.22, 2.0, 0.0, -0.2 };
+			std::vector<Real> input = { REAL_CONST(0.9), REAL_CONST(-0.1), REAL_CONST(0.2), REAL_CONST(0.0), REAL_CONST(-0.3), REAL_CONST(0.0), REAL_CONST(3.0), REAL_CONST(2.1), REAL_CONST(-0.22), REAL_CONST(2.0), REAL_CONST(0.0), REAL_CONST(-0.2) };
 			std::vector<Real> output = ProcessAirAbsorption(distance, fs, input);
 			;
 			for (int i = 0; i < output.size(); i++)
@@ -50,8 +50,8 @@ namespace RAC
 
 		TEST_METHOD(IsInterpolating)
 		{
-			const int fs = 48e3;
-			const Real lerpFactor = 0.5;
+			const int fs = 48000;
+			const Real lerpFactor = REAL_CONST(0.5);
 
 			const Real distance = 22;
 			const Real newDistance = 31;
@@ -59,7 +59,7 @@ namespace RAC
 			AirAbsorption filter(distance, fs);
 			filter.SetTargetDistance(newDistance);
 
-			std::vector<Real> input = { 1.0, 1.2, 0.2, 0.1, -0.3, -0.2, 0.0, 0.0, 0.0, 2.0, 0.0, -0.2 };
+			std::vector<Real> input = { REAL_CONST(1.0), REAL_CONST(1.2), REAL_CONST(0.2), REAL_CONST(0.1), REAL_CONST(-0.3), REAL_CONST(-0.2), REAL_CONST(0.0), REAL_CONST(0.0), REAL_CONST(0.0), REAL_CONST(2.0), REAL_CONST(0.0), REAL_CONST(-0.2) };
 			std::vector<Real> output = ProcessAirAbsorption(distance, fs, input);
 			;
 			for (int i = 0; i < output.size(); i++)
@@ -68,15 +68,15 @@ namespace RAC
 
 		TEST_METHOD(ClearBuffers)
 		{
-			const int fs = 48e3;
-			const Real lerpFactor = 0.5;
+			const int fs = 48000;
+			const Real lerpFactor = REAL_CONST(0.5);
 
 			const Real distance = 7;
 			const Real newDistance = 34;
 
 			AirAbsorption filter(distance, fs);
 
-			const std::vector<Real> input = { 1.0, -.3, 0.2, 0.5, 1.23, 0.3, -0.4, 0.2 };
+			const std::vector<Real> input = { REAL_CONST(1.0), REAL_CONST(-0.3), REAL_CONST(0.2), REAL_CONST(0.5), REAL_CONST(1.23), REAL_CONST(0.3), REAL_CONST(-0.4), REAL_CONST(0.2) };
 			const std::vector<Real> output = ProcessAirAbsorption(distance, fs, input);
 
 			for (int i = 0; i < 11; i++)

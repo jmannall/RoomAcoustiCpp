@@ -10,17 +10,25 @@
 
 // C++ headers
 #include <vector>
-#include <assert.h>
 
 // Common headers
 #include "Common/Types.h"
 #include "Common/Definitions.h"
+
+// Eigen headers
+#if MATRIX_LIBRARY == EIGEN_FLAG
+#include <Eigen/Dense>
+#endif
 
 namespace RAC
 {
 	using namespace Common;
 	namespace DSP
 	{
+#if MATRIX_LIBRARY == EIGEN_FLAG
+		template<typename T = Real>
+		using Buffer = Eigen::Array<T, Eigen::Dynamic, 1>;
+#elif MATRIX_LIBRARY == CUSTOM_FLAG
 		/**
 		* @brief Class that stores a resizeable buffer of T values.
 		* 
@@ -32,9 +40,9 @@ namespace RAC
 		public:
 
 			/**
-			* @brief Default constructor that initialises buffer with 1 sample.
+			* @brief Default constructor
 			*/
-			Buffer() : mBuffer(1, 0.0) {};
+			Buffer() : mBuffer() {};
 
 			/**
 			* @brief Constructor that initialises the buffer with a specified number of samples
@@ -62,6 +70,9 @@ namespace RAC
 			*/
 			~Buffer() {};
 
+			// Static factory: zeros
+			static Buffer Zero(const int length) { return Buffer(length); }
+
 			/**
 			* @brief Sets all samples in the buffer to 0.
 			*/
@@ -81,10 +92,8 @@ namespace RAC
 			* 
 			* @param numSamples The number of samples to resize the buffer to.
 			*/
-			inline void ResizeBuffer(const size_t numSamples)
+			void Resize(const size_t numSamples)
 			{
-				assert(numSamples >= 0);
-
 				size_t size = Length();
 				if (size == numSamples)
 					return;
@@ -100,13 +109,13 @@ namespace RAC
 			/**
 			* @brief Checks if the buffer is valid.
 			* @details A buffer is valid if none of the values are nan.
-			* 
+			*
 			* @return False if the buffer contains nan values, true otherwise
 			*/
 			bool Valid()
 			{
 				for (int i = 0; i < Length(); i++)
-					if (std::isnan(mBuffer[i]))
+					if (!std::isfinite(mBuffer[i]))
 						return false;
 				return true;
 			}
@@ -117,7 +126,12 @@ namespace RAC
 			* @param i The index of the value to return
 			* @return A reference to the value at the specified index
 			*/
-			inline T& operator[](const int i) { return mBuffer[i]; };
+			inline T& operator[](const int i)
+			{
+				RAC_DEBUG_ASSERT(i >= 0, "Buffer index out of bounds: " + ToString(i));
+				RAC_DEBUG_ASSERT(i < ToInt(mBuffer.size()), "Buffer index out of bounds: " + ToString(i));
+				return mBuffer[i];
+			};
 
 			/**
 			* @brief Access the buffer at the specified index
@@ -125,7 +139,12 @@ namespace RAC
 			* @param i The index of the value to return
 			* @return The value at the specified index
 			*/
-			inline T operator[](const int i) const { assert(i < mBuffer.size()); return mBuffer[i]; };
+			inline T operator[](const int i) const
+			{
+				RAC_DEBUG_ASSERT(i >= 0, "Buffer index out of bounds: " + ToString(i));
+				RAC_DEBUG_ASSERT(i < ToInt(mBuffer.size()), "Buffer index out of bounds: " + ToString(i));
+				return mBuffer[i];
+			};
 
 			/**
 			* @brief Assignment operator that copies the buffer data from another Buffer instance
@@ -168,6 +187,20 @@ namespace RAC
 				return *this;
 			}
 
+			/**
+			* @brief Performs an element-wise comparison
+			* @return True if their samples are equal, false otherwise
+			*/
+			inline bool IsApprox(const Buffer& a) const
+			{
+				if (mBuffer.size() != a.Length())
+					return false;
+				for (int i = 0; i < a.Length(); i++)
+					if (mBuffer[i] != a[i])
+						return false;
+				return true;
+			}
+
 			inline auto begin() { return mBuffer.begin(); }
 
 			inline auto end() { return mBuffer.end(); }
@@ -176,27 +209,15 @@ namespace RAC
 
 			inline const auto end() const { return mBuffer.end(); }
 
+			T* data() { return &mBuffer[0];	}
+			const T* data() const { return &mBuffer[0]; }
+
 		private:
 
 			std::vector<T> mBuffer;		// Buffer data
 		};
 
-		//////////////////// Buffer operator overloads ////////////////////
-
-		/**
-		* @brief Performs an element-wise comparison
-		* @return True if their samples are equal, false otherwise
-		*/
-		template <typename T = Real>
-		inline bool operator==(const Buffer<T>& a, const Buffer<T>& b)
-		{
-			if (a.Length() != b.Length())
-				return false;
-			for (int i = 0; i < a.Length(); i++)
-				if (a[i] != b[i])
-					return false;
-			return true;
-		}
+#endif // MATRIX_LIBRARY == CUSTOM_FLAG
 	}
 }
 #endif

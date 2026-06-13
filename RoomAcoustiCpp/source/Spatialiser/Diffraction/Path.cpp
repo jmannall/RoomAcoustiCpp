@@ -34,16 +34,16 @@ namespace RAC
 
 			void Path::CalculateT(SRData* data)
 			{
-				Vec3 k = UnitVector(data->point - mEdge.GetEdgeCoord(data->z));
-				data->t = acos(Dot(k, mEdge.GetEdgeNormal()));
-				data->rot = signbit(Dot(Cross(k, mEdge.GetEdgeNormal()), mEdge.GetEdgeVector()));
+				Vec3 k = (data->point - mEdge.GetEdgeCoord(data->z)).Normalised();
+				data->t = acos(k.dot(mEdge.GetEdgeNormal()));
+				data->rot = signbit(k.cross(mEdge.GetEdgeNormal()).dot(mEdge.GetEdgeVector()));
 			}
 
 			////////////////////////////////////////
 
 			void Path::CorrectT()
 			{
-				Real halfThetaW = eData.t / 2.0;
+				Real halfThetaW = eData.t / REAL_CONST(2.0);
 				if (sData.rot == rData.rot)
 				{
 					if (sData.t > rData.t)
@@ -88,7 +88,7 @@ namespace RAC
 			void Path::ValidPath()
 			{
 				valid = true;
-				if ((zA < 0) || (zA > eData.z))	// Config control over allow virtual zA?
+				if ((zA < 0) || (zA > eData.z))	// DSPConfig control over allow virtual zA?
 				{
 					zValid = false;
 					valid = false;

@@ -42,7 +42,7 @@ namespace RAC
 		* @return A pair containing a boolean indicating if the line intersects the triangle and the distance to the intersection point
 		*/
 		std::pair<bool, Vec3> IntersectTriangle(const Vec3& v1, const Vec3& v2, const Vec3& v3, const Vec3& origin, const Vec3& dir, const bool returnIntersection);
-
+		
 		/**
 		* Class that represents a Wall in the room
 		*
@@ -55,7 +55,7 @@ namespace RAC
 			/**
 			* Default constructor that initialises an empty wall.
 			*/
-			Wall() : mAbsorption(1), mPlaneId(0), d(0.0) {}
+			// Wall() : materialId(0), mPlaneId(0), d(0.0) {}
 
 			/**
 			* Constructor that initialises a wall.
@@ -63,7 +63,7 @@ namespace RAC
 			* @param vData The vertices of the wall.
 			* @param absorption The material absorption property of the wall.
 			*/
-			Wall(const Vertices& vData, const Absorption<>& absorption) : mPlaneId(0), mAbsorption(absorption) { Update(vData); }
+			Wall(const Vertices& vData, size_t materialId) : mPlaneId(0), materialId(materialId) { Update(vData); }
 
 			/**
 			* Default deconstructor.
@@ -97,22 +97,21 @@ namespace RAC
 			inline bool EmptyEdges() const { return mEdges.size() < mVertices.size(); }
 
 			/**
-			* @brief Returns the normal of the wall
-			* 
 			* @return The normal of the wall
 			*/
 			inline Vec3 GetNormal() const { return mNormal; }
 
 			/**
-			* @brief Returns the distance of the wall from the origin along the normal direction
-			*
 			* @return The distance of the wall from the origin along the normal direction
 			*/
 			inline Real GetD() const { return d; }
 
 			/**
-			* @brief Returns the vertices of the wall
-			* 
+			* @return The ID of the material the wall is made of
+			*/
+			inline size_t GetMaterialID() const { return materialId; }
+
+			/**
 			* @return The vertices of the wall
 			*/
 			inline Vertices GetVertices() const { return mVertices; }
@@ -123,36 +122,26 @@ namespace RAC
 			inline bool VertexMatch(const Vec3& x) const { return mVertices[0] == x || mVertices[1] == x || mVertices[2] == x; }
 
 			/**
-			* @brief Returns the material absorption properties of the wall
-			*
 			* @return The material absorption properties of the wall
 			*/
-			const inline Absorption<>& GetAbsorption() const { return mAbsorption; }
+			// const inline Absorption& GetAbsorption() const { return mAbsorption; }
 
 			/**
-			* @brief Returns the area of the wall
-			*
 			* @return The area of the wall
 			*/
-			inline Real GetArea() const { return mAbsorption.mArea; }
+			inline Real GetArea() const { return area; }
 
 			/**
-			* @brief Returns the IDs of the connected edges
-			*
 			* @return The IDs of the connected edges
 			*/
 			inline std::vector<size_t> GetEdges() const { return mEdges; }
 
 			/**
-			* @brief Returns the ID of the plane the wall is part of
-			*
 			* @return The ID of the plane the wall is part of
 			*/
 			inline size_t GetPlaneID() const { return mPlaneId; }
 
 			/**
-			* @brief Sets the ID of the plane the wall is part of
-			* 
 			* @param id The ID of the plane the wall is part of
 			*/
 			inline void SetPlaneID(const size_t id) { mPlaneId = id; }
@@ -166,8 +155,7 @@ namespace RAC
 			* 
 			* @return The distance of the point from the wall in the direction of the normal
 			*/
-			inline Real PointWallPosition(const Vec3& point) const { return Dot(point, mNormal) - d; }
-
+			inline Real PointWallPosition(const Vec3& point) const { return point.dot(mNormal) - d; }
 			/**
 			* @brief Determines if a given line intersects the wall and stores the intersection point
 			*
@@ -201,21 +189,23 @@ namespace RAC
 			*
 			* @param absorption The new absorption of the wall
 			*/
-			inline void Update(const Absorption<>& absorption) { Real area = GetArea(); mAbsorption = absorption; mAbsorption.mArea = area; }
+			// inline void Update(const Absorption& absorption) { Real area = GetArea(); mAbsorption = absorption; mAbsorption.mArea = area; }
 
 		private:
 			/**
 			* @brief Calculates the area of the wall (area of a triangle)
 			*/
-			inline void CalculateArea() { mAbsorption.mArea = 0.5 * (Cross(mVertices[0] - mVertices[1], mVertices[0] - mVertices[2]).Length()); }
+			inline void CalculateArea() { area = REAL_CONST(0.5) * ((mVertices[0] - mVertices[1]).cross(mVertices[0] - mVertices[2]).Normal()); }
 
 			Vertices mVertices;				// Vertices of the wall
 			Vec3 mNormal;					// Normal of the wall
-			Real d;							// Distance of the wall from the origin along the normal direction
-			Absorption<> mAbsorption;			// Material absorption of the wall
+			Real d{ 0.0 };					// Distance of the wall from the origin along the normal direction
+			Real area{ 0.0 };				// Area of the wall
 
-			size_t mPlaneId;				// ID of the plane the wall is part of
+			size_t mPlaneId{ 0 };			// ID of the plane the wall is part of
+			size_t materialId{ 0 };			// ID of the material the wall is made of
 			std::vector<size_t> mEdges;		// IDs of connected edges
+			// TODO: Add patchID (for MoD-ART) back in.
 		};
 			
 		/**
@@ -308,7 +298,7 @@ namespace RAC
 			* 
 			* @return True if the wall and plane are coplanar, false otherwise
 			*/
-			bool IsCoplanar(const Wall& wall) const { return mNormal == wall.GetNormal() && d == wall.GetD(); }
+			inline bool IsCoplanar(const Wall& wall) const { return mNormal == wall.GetNormal() && d == wall.GetD(); }
 
 			/**
 			* @brief Determines the position of a point relative to the plane
@@ -319,7 +309,7 @@ namespace RAC
 			* 
 			* @return The distance of the point from the plane in the direction of the normal
 			*/
-			Real PointPlanePosition(const Vec3& point) const { return Dot(point, mNormal) - d; }
+			inline Real PointPlanePosition(const Vec3& point) const { return point.dot(mNormal) - d; }
 
 			/**
 			* @brief Determines if the plane obstruct a given line
