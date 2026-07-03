@@ -170,7 +170,6 @@
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <PreprocessorDefinitions>_ANDROID;_3DTI_AXIS_CONVENTION_UNITY;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <CppLanguageStandard>c++1z</CppLanguageStandard>
       <AdditionalIncludeDirectories>$(SolutionDir)$(PathTo3DTI)3dti_Toolkit;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\src;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\sofacoustics\libsofa\dependencies\include;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\cereal\include;$(SolutionDir)$(PathTo3DTI)3dti_ResourceManager\third_party_libraries\boost_circular_buffer;$(SolutionDir)RoomAcoustiCpp\include;$(SolutionDir)RoomAcoustiCpp\codegen\lib\myNN\include;$(SolutionDir)RoomAcoustiCpp\include\Spatialiser;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ExceptionHandling>Enabled</ExceptionHandling>
@@ -187,7 +186,6 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <PreprocessorDefinitions>_ANDROID;_3DTI_AXIS_CONVENTION_UNITY;_OPENMP_LLVM_RUNTIME;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <CppLanguageStandard>c++1z</CppLanguageStandard>
       <ExceptionHandling>Enabled</ExceptionHandling>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -208,7 +206,6 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <PreprocessorDefinitions>_ANDROID;_3DTI_AXIS_CONVENTION_UNITY;_OPENMP_LLVM_RUNTIME;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <CppLanguageStandard>c++1z</CppLanguageStandard>
       <ExceptionHandling>Enabled</ExceptionHandling>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -229,7 +226,6 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <PreprocessorDefinitions>_ANDROID;_3DTI_AXIS_CONVENTION_UNITY;_OPENMP_LLVM_RUNTIME;%(PreprocessorDefinitions);DEBUG_INIT;DEBUG_REMOVE;DEBUG_IEM;DEBUG_GEOMETRY;IEM_FLAG</PreprocessorDefinitions>
       <CppLanguageStandard>c++1z</CppLanguageStandard>
       <ExceptionHandling>Enabled</ExceptionHandling>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -250,7 +246,6 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <PreprocessorDefinitions>_ANDROID;_3DTI_AXIS_CONVENTION_UNITY;_OPENMP_LLVM_RUNTIME;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <CppLanguageStandard>c++1z</CppLanguageStandard>
       <ExceptionHandling>Enabled</ExceptionHandling>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -271,7 +266,6 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <PreprocessorDefinitions>_ANDROID;_3DTI_AXIS_CONVENTION_UNITY;_OPENMP_LLVM_RUNTIME;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <CppLanguageStandard>c++1z</CppLanguageStandard>
       <ExceptionHandling>Enabled</ExceptionHandling>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>

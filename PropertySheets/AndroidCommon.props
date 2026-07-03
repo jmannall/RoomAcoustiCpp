@@ -4,6 +4,7 @@
   <PropertyGroup />
   <ItemDefinitionGroup>
     <ClCompile>
+      <PreprocessorDefinitions>_ANDROID;_OPENMP_LLVM_RUNTIME;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SysRoot)\usr\include\c++\v1;$(SysRoot)\usr\include;$(SysRoot)\usr\include\$(AndroidHeaderTriple);%(AdditionalIncludeDirectories);$(MSBuildThisFileDirectory)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
