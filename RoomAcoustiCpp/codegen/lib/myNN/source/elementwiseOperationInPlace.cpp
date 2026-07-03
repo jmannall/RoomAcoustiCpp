@@ -13,6 +13,7 @@
 #include "anonymous_function.h"
 #include "myNN_internal_types.h"
 #include "omp.h"
+#include <math.h>
 #include <cmath>
 
 // Function Definitions
@@ -28,7 +29,7 @@ void b_elementwiseOperationInPlace(const anonymous_function elementwiseFunction,
 
   for (int iElem = 0; iElem < 20; iElem++) {
     f = X[iElem];
-    if (std::isnan(f) || (f > 0.0F)) {
+    if (isnan(f) || (f > 0.0F)) {
       maxval = f;
     } else {
       maxval = 0.0F;
@@ -47,7 +48,7 @@ void elementwiseOperationInPlace(const anonymous_function elementwiseFunction,
 
   for (int iElem = 0; iElem < 36; iElem++) {
     f = X[iElem];
-    if (std::isnan(f) || (f > 0.0F)) {
+    if (isnan(f) || (f > 0.0F)) {
       maxval = f;
     } else {
       maxval = 0.0F;
