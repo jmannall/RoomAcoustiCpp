@@ -82,73 +82,73 @@
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\PropertySheets\AndroidCommon.props" />
-    <Import Project="..\PropertySheets\RavesCommon.props" />
-    <Import Project="..\PropertySheets\RavesDebug.props" />
-    <Import Project="..\PropertySheets\RavesEigen.props" />
-    <Import Project="..\PropertySheets\RavesDll.props" />
+    <Import Project="..\PropertySheets\Android.props" />
+    <Import Project="..\PropertySheets\Common.props" />
+    <Import Project="..\PropertySheets\Debug.props" />
+    <Import Project="..\PropertySheets\Eigen.props" />
+    <Import Project="..\PropertySheets\Dll.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\PropertySheets\AndroidCommon.props" />
-    <Import Project="..\PropertySheets\RavesCommon.props" />
-    <Import Project="..\PropertySheets\RavesRelease.props" />
-    <Import Project="..\PropertySheets\RavesDll.props" />
-    <Import Project="..\PropertySheets\RavesEigen.props" />
+    <Import Project="..\PropertySheets\Android.props" />
+    <Import Project="..\PropertySheets\Common.props" />
+    <Import Project="..\PropertySheets\Release.props" />
+    <Import Project="..\PropertySheets\Dll.props" />
+    <Import Project="..\PropertySheets\Eigen.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_ProfileExe|ARM64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\PropertySheets\AndroidCommon.props" />
-    <Import Project="..\PropertySheets\RavesCommon.props" />
-    <Import Project="..\PropertySheets\RavesRelease.props" />
-    <Import Project="..\PropertySheets\RavesEigen.props" />
-    <Import Project="..\PropertySheets\RavesProfile.props" />
-    <Import Project="..\PropertySheets\RavesExe.props" />
+    <Import Project="..\PropertySheets\Android.props" />
+    <Import Project="..\PropertySheets\Common.props" />
+    <Import Project="..\PropertySheets\Release.props" />
+    <Import Project="..\PropertySheets\Eigen.props" />
+    <Import Project="..\PropertySheets\Release_Profile.props" />
+    <Import Project="..\PropertySheets\Exe.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_ProfileExe|ARM64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\PropertySheets\AndroidCommon.props" />
-    <Import Project="..\PropertySheets\RavesCommon.props" />
-    <Import Project="..\PropertySheets\RavesDebug.props" />
-    <Import Project="..\PropertySheets\RavesEigen.props" />
-    <Import Project="..\PropertySheets\RavesProfile.props" />
-    <Import Project="..\PropertySheets\RavesExe.props" />
+    <Import Project="..\PropertySheets\Android.props" />
+    <Import Project="..\PropertySheets\Common.props" />
+    <Import Project="..\PropertySheets\Debug.props" />
+    <Import Project="..\PropertySheets\Eigen.props" />
+    <Import Project="..\PropertySheets\Release_Profile.props" />
+    <Import Project="..\PropertySheets\Exe.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_Debug|ARM64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\PropertySheets\AndroidCommon.props" />
-    <Import Project="..\PropertySheets\RavesCommon.props" />
-    <Import Project="..\PropertySheets\RavesRelease.props" />
-    <Import Project="..\PropertySheets\RavesEigen.props" />
-    <Import Project="..\PropertySheets\RavesReleaseDebug.props" />
-    <Import Project="..\PropertySheets\RavesDll.props" />
+    <Import Project="..\PropertySheets\Android.props" />
+    <Import Project="..\PropertySheets\Common.props" />
+    <Import Project="..\PropertySheets\Release.props" />
+    <Import Project="..\PropertySheets\Eigen.props" />
+    <Import Project="..\PropertySheets\Release_Debug.props" />
+    <Import Project="..\PropertySheets\Dll.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_ProfileDetailed|ARM64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\PropertySheets\AndroidCommon.props" />
-    <Import Project="..\PropertySheets\RavesCommon.props" />
-    <Import Project="..\PropertySheets\RavesRelease.props" />
-    <Import Project="..\PropertySheets\RavesEigen.props" />
-    <Import Project="..\PropertySheets\RavesProfile.props" />
-    <Import Project="..\PropertySheets\RavesProfileDetailed.props" />
-    <Import Project="..\PropertySheets\RavesDll.props" />
+    <Import Project="..\PropertySheets\Android.props" />
+    <Import Project="..\PropertySheets\Common.props" />
+    <Import Project="..\PropertySheets\Release.props" />
+    <Import Project="..\PropertySheets\Eigen.props" />
+    <Import Project="..\PropertySheets\Release_Profile.props" />
+    <Import Project="..\PropertySheets\Release_ProfileDetailed.props" />
+    <Import Project="..\PropertySheets\Dll.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_Profile|ARM64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\PropertySheets\AndroidCommon.props" />
-    <Import Project="..\PropertySheets\RavesCommon.props" />
-    <Import Project="..\PropertySheets\RavesRelease.props" />
-    <Import Project="..\PropertySheets\RavesEigen.props" />
-    <Import Project="..\PropertySheets\RavesProfile.props" />
-    <Import Project="..\PropertySheets\RavesDll.props" />
+    <Import Project="..\PropertySheets\Android.props" />
+    <Import Project="..\PropertySheets\Common.props" />
+    <Import Project="..\PropertySheets\Release.props" />
+    <Import Project="..\PropertySheets\Eigen.props" />
+    <Import Project="..\PropertySheets\Release_Profile.props" />
+    <Import Project="..\PropertySheets\Dll.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseTest|ARM64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\PropertySheets\AndroidCommon.props" />
-    <Import Project="..\PropertySheets\RavesCommon.props" />
-    <Import Project="..\PropertySheets\RavesEigen.props" />
-    <Import Project="..\PropertySheets\RavesRelease.props" />
-    <Import Project="..\PropertySheets\RavesDll.props" />
+    <Import Project="..\PropertySheets\Android.props" />
+    <Import Project="..\PropertySheets\Common.props" />
+    <Import Project="..\PropertySheets\Eigen.props" />
+    <Import Project="..\PropertySheets\Release.props" />
+    <Import Project="..\PropertySheets\Dll.props" />
   </ImportGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_ProfileExe|ARM64'">
     <TargetName>libRoomAcoustiCpp</TargetName>
