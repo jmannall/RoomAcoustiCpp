@@ -71,7 +71,6 @@ namespace RAC
 		size_t Room::AddWall(Wall& wall)
 		{
 			size_t id;
-			Wall wall(vertices, absorption);
 			std::lock_guard<std::mutex> lock(mWallMutex);
 			if (mWalls.size() == 0) // TODO: Is this check obsolete now we have polygonID?
 			{

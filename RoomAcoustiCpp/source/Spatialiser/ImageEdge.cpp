@@ -400,7 +400,7 @@ namespace RAC
 			case DirectSound::none:
 				lineOfSight = false;
 				break;
-			case DirectSound::doCheck:
+			case DirectSound::check:
 				break;
 			case DirectSound::ignoreCheck:
 				lineOfSight = true;

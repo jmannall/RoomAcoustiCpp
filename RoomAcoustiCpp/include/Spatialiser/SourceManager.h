@@ -25,17 +25,11 @@
 // 3DTI headers
 #include "BinauralSpatializer/Core.h"
 
-// Unity headers
-#include "Unity/Debug.h"
-
 using namespace Common;
 namespace RAC
 {
 	using namespace Common;
 	using namespace DSP;
-#ifdef USE_UNITY_DEBUG
-	using namespace Unity;
-#endif
 	namespace Spatialiser
 	{
 		//////////////////// SourceManager class ////////////////////
@@ -100,6 +94,21 @@ namespace RAC
 			}
 
 			/**
+			* @return The next available ID for a source, returns -1 if no ID is available
+			*/
+			inline int NextID() const
+			{
+				int nextID = 0;
+				for (const auto& source : mSources)
+				{
+					if (source.has_value() && source->CanEdit() && source->IsReset())
+						return nextID;
+					nextID++;
+				}
+				return -1;
+			}
+
+			/**
 			* @brief Initialises a new source
 			* 
 			* @return The ID of the new source
@@ -138,19 +147,13 @@ namespace RAC
 
 			/**
 			* @brief Returns the position of the source with the given ID
-			* 
+			*
 			* @params id The ID of the source
 			* @return The position of the source
 			*/
-			inline std::optional<Vec3> GetSourcePosition(const size_t id)
+			inline Vec3 GetSourcePosition(const size_t id)
 			{
-				if (id > MAX_SOURCES)
-				{
-#ifdef USE_UNITY_DEBUG
-					Debug::Log("Source ID out of range", Colour::Red);
-#endif
-					return std::nullopt;
-				}
+				RAC_DEBUG_ASSERT(id < MAX_SOURCES, "Source ID out of range: " + ToString(id));
 				return mSources[id]->GetPosition();
 			}
 
@@ -211,13 +214,7 @@ namespace RAC
 			*/
 			inline void SetInputBuffer(const size_t id, const Buffer<>& data)
 			{
-				if (id > MAX_SOURCES)
-				{
-#ifdef USE_UNITY_DEBUG
-					Debug::Log("Source ID out of range", Colour::Red);
-#endif
-					return;
-				}
+				RAC_DEBUG_ASSERT(id < MAX_SOURCES, "Source ID out of range: " + ToString(id));
 				mSources[id]->SetInputBuffer(data);
 			}
 
@@ -257,20 +254,7 @@ namespace RAC
 			}
 
 		private:
-			/**
-			* @return The next available ID for a source, returns -1 if no ID is available
-			*/
-			inline int NextID() const
-			{
-				int nextID = 0;
-				for (const auto& source : mSources)
-				{
-					if (source.has_value() && source->CanEdit() && source->IsReset())
-						return nextID;
-					nextID++;
-				}
-				return -1;
-			}
+			Binaural::CCore* mCore;			// 3DTI processing core
 
 			std::shared_ptr<DSPConfig> dspConfig;			// Spatialiser configuration
 

@@ -259,7 +259,7 @@ bool BaseTest::Init()
 		UpdateSpatialisationMode(executionContext.useQualityHrtfs ? SpatialisationMode::quality : SpatialisationMode::performance);
 	}
 
-	DirectSound dir = DirectSound::doCheck;
+	DirectSound dir = DirectSound::check;
 	const int reflOrder = executionContext.reflectionOrder;
 	const int shadowOrder = executionContext.shadowOrder;
 	int specularOrder = 1;

@@ -380,11 +380,6 @@ namespace RAC
 			size_t numDesiredWorkerThreads;			// The number of desired threads
 
 			/**
-			* @brief Initialise the audio thread pool and late reverberation
-			*/
-			void InitialiseAudio();
-
-			/**
 			* Spatialiser
 			*/
 			const std::shared_ptr<DSPConfig> dspConfig;				// RAC DSPConfig

@@ -103,9 +103,9 @@ DirectSound SelectDirectMode(int dir)
 	case(0):
 	{ return DirectSound::none; }
 	case(1):
-	{ return DirectSound::doCheck; }
+	{ return DirectSound::check; }
 	case(2):
-	{ return DirectSound::alwaysTrue; }
+	{ return DirectSound::ignoreCheck; }
 	}
 }
 
@@ -288,8 +288,8 @@ extern "C"
 	* 
 	* The direct sound is mapped as follows.
 	* 0 -> none
-	* 1 -> doCheck
-	* 2 -> alwaysTrue
+	* 1 -> check
+	* 2 -> ignoreCheck
 	* 
 	* @param enabled True to enable early reflection DSP, false to disable.
 	* @param direct Whether to consider direct sound.

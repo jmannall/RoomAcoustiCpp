@@ -205,16 +205,6 @@ namespace RAC
 
 		////////////////////////////////////////
 
-		void Context::InitialiseAudio()
-		{
-			size_t numThreads = std::min((unsigned int)8, std::thread::hardware_concurrency());
-			audioThreadPool = std::make_unique<AudioThreadPool>(numThreads, mConfig->numFrames, mConfig->numReverbSources);
-			mReverb = std::make_shared<Reverb>(&mCore, mConfig);
-			mReverbInput = Matrix(mConfig->numReverbSources, mConfig->numFrames);
-		}
-
-		////////////////////////////////////////
-
 		bool Context::LoadSpatialisationFiles(const int hrtfResamplingStep, const std::vector<std::string>& filePaths)
 		{
 			RAC_DEBUG_ASSERT(hrtfResamplingStep > 0, "Invalid HRTF resampling step: " + ToString(hrtfResamplingStep));
@@ -465,7 +455,7 @@ namespace RAC
 			// Ensure source is outside listener head radius
 			if (distance < headRadius)
 			{
-				std::optional<Vec3> newPosition = position;
+				Vec3 newPosition = position;
 				if (distance == 0.0)
 				{
 					newPosition = mSources->GetSourcePosition(id);
@@ -480,7 +470,7 @@ namespace RAC
 				newPosition = listenerPosition + (newPosition - listenerPosition).Normalised() * headRadius;
 
 				// Update source position, orientation and virtual sources
-				mSources->Update(id, newPosition.value(), orientation, headRadius);
+				mSources->Update(id, newPosition, orientation, headRadius);
 			}
 			else
 				// Update source position, orientation and virtual sources

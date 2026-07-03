@@ -397,6 +397,7 @@ namespace RAC
 
 			std::atomic<bool> clearInputBuffer{ false };	// True if the input buffer should be cleared, false otherwise
 			Buffer<> inputBuffer;							// Input audio buffer for the source
+			bool inputBufferUpdated{ false };				// True if the input buffer has been updated, false otherwise
 			Buffer<> bStore;								// Internal scratch audio buffer
 			Buffer<> bStoreReverb;							// Internal audio buffer reverb send
 			std::vector<RAVESSourceResidue> ravesResidues;	// Residues for the RAVES algorithm

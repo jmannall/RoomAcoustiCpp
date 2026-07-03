@@ -142,10 +142,10 @@ namespace RAC
 
 		/**
 		* @param none No direct sound
-		* @param doCheck Perform visibility check for direct sound
-		* @param alwaysTrue Always consider direct sound present, ignoring visibility
+		* @param check Perform visibility check for direct sound
+		* @param ignoreCheck Always consider direct sound present, ignoring visibility
 		*/
-		enum class DirectSound { none, doCheck, alwaysTrue };
+		enum class DirectSound { none, check, ignoreCheck };
 
 		/**
 		* @param none No diffraction sound

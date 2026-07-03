@@ -24,15 +24,9 @@
 #include "Spatialiser/Edge.h"
 #include "Spatialiser/TracingTypes.h"
 
-// Unity headers
-#include "Unity/Debug.h"
-
 namespace RAC
 {
 	using namespace Common;
-#ifdef USE_UNITY_DEBUG
-	using namespace Unity;
-#endif
 	namespace Spatialiser
 	{
 
@@ -120,13 +114,9 @@ namespace RAC
 			}
 
 			/**
-			* @brief Initialises a new wall
-			* 
-			* @params vertices The vertices of the wall
-			* @params absorption The absorption of the wall
-			* @return The ID of the wall
+			* @brief Add a wall to the room
 			*/
-			size_t InitWall(const Vertices& vertices, const Absorption<>& absorption);
+			size_t AddWall(Wall& wall);
 
 			/**
 			* @brief Update the vertex data of the wall with the given ID

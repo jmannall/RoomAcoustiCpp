@@ -8,9 +8,6 @@
 #ifndef RoomAcoustiCpp_Diffraction_Models_h
 #define RoomAcoustiCpp_Diffraction_Models_h
 
-// C++ headers
-#include <mutex>
-
 // NN headers
 #include "rtwtypes.h"
 #include <cstddef>
@@ -19,6 +16,9 @@
 #include "myNN_initialize.h"
 #include "myNN_terminate.h"
 #include "mySmallNN.h"
+
+// C++ headers
+#include <mutex>
 
 // Common headers
 #include "Common/Types.h"
