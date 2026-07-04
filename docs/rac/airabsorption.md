@@ -12,7 +12,7 @@ This allows the distance to be interpolated at runtime and the filter parameters
 ---
 
 <div align="center">
-  <img src="../images/AirAbsorption.png" alt="Air absorption 1st order IIR filter" width="500"/>
+  <img src="../rac/images/AirAbsorption.png" alt="Air absorption 1st order IIR filter" width="500"/>
   <br>
   <em>Figure 1: Air absorption 1st order IIR filter.</em>
 </div>

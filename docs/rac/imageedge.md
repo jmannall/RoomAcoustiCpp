@@ -6,7 +6,7 @@ It extends the classic Image Source Model[^2] by incorporating edge diffraction,
 ---
 
 <div align="center">
-  <img src="../images/ImageEdgeModel.png" alt="Image edge model" width="600"/>
+  <img src="../rac/images/ImageEdgeModel.png" alt="Image edge model" width="600"/>
   <br>
   <em>Figure 1: Image Edge Model diagram showing source, listener, and image sources.</em>
 </div>

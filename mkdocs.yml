@@ -138,7 +138,7 @@ nav:
   - Home: index.md
   - RoomAcoustiC++:
     - Introduction: rac/index.md
-    - Overview: rac/model.md
+    - Acoustic Model: rac/model.md
     - Diffraction: rac/diffraction.md
     - Spatialisation: rac/spatialisation.md
     - Air Absorption: rac/airabsorption.md
@@ -158,13 +158,6 @@ nav:
   - C++ Interface:
     - Overview: api/index.md
     - Installation: api/installation.md
-    - Interface: api/interface.md
-  - Overview:
-    - Overview: overview/about.md
-    - Acoustic Model: overview/model.md
-    - Diffraction: overview/diffraction.md
-  - API Reference:
-    - Overview: api/index.md
     - Interface: spatialiser/interface.md
     - Types: api/types.md
     - Configs: api/configs.md

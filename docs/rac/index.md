@@ -1,11 +1,8 @@
 # Overview
 
 The **RoomAcoustiC++ (RAC)** library is a C++ library designed to support researchers and developers in the field of immersive audio and room acoustics.
-It was developed for the purpose of perceptual experiments on the plausiblity of acoustic rendering methods for VR and AR scenarios.
-Now released open-source, the hope is to enable further research on the perception of room acoustics and provide an accessible and transparent tool for researchers across both technical and non-technical disciplines.
-
-This section provides an overview of the acoustic models implemented within RAC.
-It is designed as a high level summary that is relevant to both the [C++](../api/index.md) and [Unity](../unity/index.md) interfaces.
+This section provides an overview of the libraries features and a summary of the acoustic models.
+This is relevant to both the [C++](../api/index.md) and [Unity](../unity/index.md) interfaces.
 
 ## Features
 
@@ -18,9 +15,10 @@ It is designed as a high level summary that is relevant to both the [C++](../api
 
 ## Citable References
 
-If you make use of RAC in your own research or other projects, please consider citing the following publication:
+If you make use of RAC in your own research or other projects, please consider citing the following publications:
 
 * Mannall J, Savioja L, Neidhardt A, Mason R, and De Sena E. "RoomAcoustiC++: An open-source room acoustic model for real-time audio simulations,” in Proc. AES Int. Conf. Headphone Tech., Espoo, Finland. 1-13, 2025.
+* Scerbo M, Schlecht SJ, Ali R, Savioja L, and De Sena E. "Efficient multichannel auralization based on the modal decomposition of acoustic radiance transfer (MoD-ART)," in IEEE Trans. Audio, Speech and Language Proc., 33:4748-4759, 2025.
 
 <!-- 
 ## Description

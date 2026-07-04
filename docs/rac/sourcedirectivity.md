@@ -13,7 +13,7 @@ A number of directivity patterns are provided:
 
 - **Common polar patterns**: Omni, Subcardioid, Cardioid, Supercardioid, Hypercardioid, Bidirectional
 - **Loudspeaker directivities**: Genelec 8020c, QSC K8
-- **Normalised loudspeaker directivities**: Genelec 8020c DTF (Removes the common transfer function of the loudspeaker, not recommended for general use)
+- **Normalised loudspeaker directivities**: Genelec 8020c DTF (Removes the common transfer function of the loudspeaker)
 
 Measurements from the [Benchmark for Room Acoustic Simulations](https://doi.org/10.14279/depositonce-6726.3) (BRAS) were used to create the Genelec 8020c and QSC K8 directivities.
 The spherical harmonic decomposition was calculated for each frequency band from 32Hz to 16kHz.

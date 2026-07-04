@@ -5,7 +5,7 @@ Based on the geometry of the edge and relative position of the source and receiv
 When the source is in the shadow zone, as shown in Figure 1, diffraction exhibits a low-pass filter response with a roughly 3db/octave roll-off.
 
 <div align="center">
-  <img src="../images/DiffractionZones.png" alt="Zones around a diffracting edge" width="600"/>
+  <img src="../rac/images/DiffractionZones.png" alt="Zones around a diffracting edge" width="600"/>
   <br>
   <em>Figure 1: Zones around a diffracting edge.</em>
 </div>
