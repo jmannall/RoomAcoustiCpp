@@ -52,24 +52,14 @@ namespace RAC
 			* @param in The value for the coefficients
 			* @details Used for std::array (predetermined size)
 			*/
-			Coefficients(const Real in) requires (Size != 0) { mCoefficients.fill(in); }
-
-			// Coefficients(const Real in) requires (Size == 0) : Coefficients(1, in) {}
+			Coefficients(const T in) requires (Size != 0) { mCoefficients.fill(in); }
 
 			/**
 			* @brief Constructor that initialises the Coefficients with zeros
 			*
 			* @param len The number of coefficients
 			*/
-			Coefficients(const int len) requires (Size == 0) : Coefficients(len, 0.0) {}
-
-			/**
-			* @brief Constructor that initialises the Coefficients with a given value
-			*
-			* @param len The number of coefficients
-			* @param in The initialisation value
-			*/
-			Coefficients(const int len, const Real in) requires (Size == 0) : mCoefficients(len, in) {}
+			Coefficients(const int len) requires (Size == 0) : Coefficients(std::vector<T>(len, 0.0)) {}
 
 			/**
 			* @brief Constructor that initialises the Coefficients from a std::vector
@@ -78,6 +68,11 @@ namespace RAC
 			*/
 			Coefficients(const std::vector<T>& coefficients) requires (Size == 0) : mCoefficients(coefficients) {}
 
+			/**
+			* @brief Constructor that initialises the Coefficients from a std::array
+			*
+			* @param coefficients The array of coefficients
+			*/
 			Coefficients(const std::array<T, Size>& coefficients) requires (Size != 0) : mCoefficients(coefficients) {}
 
 			/**
@@ -425,6 +420,15 @@ namespace RAC
 
 		protected:
 			Container mCoefficients; // Array or vector of coefficients
+
+		private:
+			/**
+			* @brief Constructor that initialises the Coefficients with a given value
+			*
+			* @param len The number of coefficients
+			* @param in The initialisation value
+			*/
+			Coefficients(const int len, const T in) requires (Size == 0) : mCoefficients(std::vector<T>(len, in)) {}
 		};
 
 		//////////////////// Coefficient operator overloads ////////////////////

@@ -495,9 +495,7 @@ namespace RAC
 			auto itE = mEdges.find(edgeID);
 			if (itE != mEdges.end())
 			{
-#ifdef DEBUG_REMOVE
-				RAC_DEBUG_LOG("Remove Edge", Colour::Red);
-#endif
+				RAC_DEBUG_LOG("Remove Edge", DebugType::Remove);
 				size_t id = itE->second.GetWallID(wallID);
 				auto itW = mWalls.find(id);
 				if (itW != mWalls.end()) // case: wall exists

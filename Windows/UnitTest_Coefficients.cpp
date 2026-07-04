@@ -33,9 +33,10 @@ namespace RAC
 		TEST_METHOD(InitArray)
 		{
 			const int n = 3;
-			std::array<Real, n> arr = { 2.0, 3.0, 5.0 };
-			Coefficients<std::array<Real, n>> c(arr);
+			std::array<Real, n> arr = { REAL_CONST(2.0), REAL_CONST(3.0), REAL_CONST(5.0) };
+			Coefficients<Real, n> c(arr);
 
+			int x = 1;
 			for (int i = 0; i < arr.size(); i++)
 				Assert::AreEqual(arr[i], c[i], L"Error: Coefficients not initialised to vector");
 		}
@@ -49,21 +50,11 @@ namespace RAC
 				Assert::AreEqual(vec[i], c[i], L"Error: Coefficients not initialised to vector");
 		}
 
-		TEST_METHOD(InitLengthValue)
-		{
-			const int n = 3;
-			Real value = 6.0;
-			Coefficients<> c(n, value);
-
-			for (int i = 0; i < n; i++)
-				Assert::AreEqual(value, c[i], L"Error: Coefficients not initialised to value");
-		}
-
 		TEST_METHOD(InitValue)
 		{
 			const int n = 3;
-			Real value = 3.0;
-			Coefficients<std::array<Real, n>> c(value);
+			Real value = REAL_CONST(3.0);
+			Coefficients<Real, n> c(value);
 
 			for (int i = 0; i < n; i++)
 				Assert::AreEqual(value, c[i], L"Error: Coefficients not initialised to value");
