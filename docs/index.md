@@ -5,9 +5,8 @@ The original version of RAC can be found [here](https://github.com/jmannall/Room
 
 RAC is a C++ library for real-time room acoustic modelling designed for psychoacoustic research and immersive audio applications.
 It uses the image-edge model (IEM) for early reflections and low-order diffraction, and feedback delay networks (FDN) for convolution-free late reverberation.
-Two late reverberation models are implemented:
-* The modal decomposition of acoustic radiance transfer (MoD-ART) that is suitable for indoor, outdoor and complex multi-room environments
-* A single FDN approach (similar to RAZR) suitable for simple single room environments
+Two late reverberation models are implemented.
+Firstly, the modal decomposition of acoustic radiance transfer (MoD-ART) that is suitable for indoor, outdoor and complex multi-room environments and a single FDN approach (similar to RAZR) suitable for simple single room environments
 
 The library provides a simple API interface for controlling source and listener positions, room geometry, and acoustic parameters.
 
