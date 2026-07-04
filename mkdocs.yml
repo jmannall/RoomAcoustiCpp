@@ -6,8 +6,8 @@ site_description: >-
   Real-time room acoustic C++ library
 
 # Repository
-repo_name: IoSR/RoomAcoustiCpp
-repo_url: https://github.com/IoSR/RoomAcoustiCpp
+repo_name: jmannall/RoomAcoustiCpp
+repo_url: https://github.com/jmannall/RoomAcoustiCpp
 edit_uri: edit/main/docs/
 
 # Configuration
