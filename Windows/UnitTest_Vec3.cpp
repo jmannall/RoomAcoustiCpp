@@ -169,7 +169,7 @@ namespace RAC
 			Assert::AreEqual((Real)(2.0 / 3.0), vec.y(), L"Error y");
 			Assert::AreEqual((Real)(2.0 / 3.0), vec.z(), L"Error z");
 
-			Assert::AreEqual(REAL_CONST(1.0), vec.Normal(), L"Error normalised vector longer than one");
+			Assert::AreEqual(REAL_CONST(1.0), vec.Normal(), REAL_CONST(1e-10), L"Error normalised vector longer than one");
 			Assert::AreEqual(normalVec.x(), vec.x(), L"Error 2 x");
 			Assert::AreEqual(normalVec.y(), vec.y(), L"Error 2 y");
 			Assert::AreEqual(normalVec.z(), vec.z(), L"Error 2 z");

@@ -45,7 +45,7 @@
     <IsProfileExe>false</IsProfileExe>
     <IsProfileExe Condition="$(Configuration.Contains('ProfileExe'))">true</IsProfileExe>
     <HasUnitTests>true</HasUnitTests>
-    <HasUnitTests Condition="$(Configuration.Contains('Release')) and '$(Configuration)'!='ReleaseTest'">false</HasUnitTests>
+    <HasUnitTests Condition="$(Configuration.Contains('Release')) and '$(Configuration)'!='Release_UnitTest'">false</HasUnitTests>
     <HasUnitTests Condition="$(Configuration.Contains('Profile'))">false</HasUnitTests>
   </PropertyGroup>
   <!-- Our projects are self contained, so never use VCPkg -->
