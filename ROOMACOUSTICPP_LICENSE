@@ -1,24 +1,32 @@
 All rights reserved.
 
-This copy of RoomAcoustiCpp is free software; you can redistribute 
-it and/or modify it under the terms of the GNU General Public License 
+Current Licensing
+=================
+This copy of RoomAcoustiC++ is free software; you can redistribute 
+it and/or modify it under the terms of the GNU Lesser General Public License
 version 3 as published by the Free Software Foundation.
 
-RoomAcoustiCpp is distributed in the hope that it will be useful, but 
+RoomAcoustiC++ is distributed in the hope that it will be useful, but 
 WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY 
-or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for 
-more details.
+or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public
+License version 3 for more details.
 
-You should have received a copy of the GNU General Public License version
-3 along with this program; if not, see http://www.gnu.org/licenses.
+You should have received a copy of the GNU Lesser General Public License
+version 3 along with this program; if not, see https://www.gnu.org/licenses/.
 
-Linking RoomAcoustiCpp statically or dynamically with other software 
-(such as a library, module or application) is making a combined work based
-on RoomAcoustiCpp. Thus, the terms and conditions of the GNU General 
-Public License version 3 cover this combined work.
+The full text of the LGPLv3 license is provided in the LICENSE file
+located in the root directory of this repository.
 
-If such software can only be used together with RoomAcoustiCpp, then not
-only the combined work but the software itself is a work derived from 
-RoomAcoustiCpp and as such shall be licensed under the terms of the GNU 
-General Public License version 3. This includes the situation where 
-RoomAcoustiCpp is only being used through an abstraction layer.
+Previous Licensing
+==================
+Versions of RoomAcoustiC++ distributed prior to 4/7/2026 were licensed 
+under the terms of the GNU General Public License version 3 (GPLv3).
+
+All rights granted under GPLv3 for those versions remain valid and are
+not affected by the licensing change.
+
+No Additional Rights
+====================
+No additional rights or permissions
+are granted beyond those provided under the LGPLv3 license contained
+in the LICENSE file.

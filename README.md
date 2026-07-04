@@ -51,6 +51,6 @@ Some small changes have been made for the purposes of compatibility between the 
 The lock-free queue [concurrentqueue](https://github.com/cameron314/concurrentqueue) is used for multithreaded audio processing.
 
 ## License
-RoomAcoustiC++ is distributed under the GPL v3, a popular open-source license with strong copyleft conditions license.
+RoomAcoustiC++ is distributed under the terms of the GNU Lesser General Public License version 3 (LGPL-3.0-only).
 
-If you license RoomAcoustiCpp under GPL v3, there is no license fee or signed license agreement: you just need to comply with the GPL v3 terms and conditions. See ROOMACOUSTICPP_LICENSE and LICENSE for further information.
+If you use, redistribute, or modify RoomAcoustiCpp under LGPL-3.0-only, there is no license fee or signed license agreement required: you just need to comply with the LGPL-3.0-only terms and conditions. See [ROOMACOUSTICPP_LICENSE](ROOMACOUSTICPP_LICENSE) and [LICENSE](LICENSE) for further information.
