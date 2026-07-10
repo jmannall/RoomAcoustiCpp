@@ -11,7 +11,7 @@
 #include <string>
 #include <sstream>
 
-// Commone headers
+// Common headers
 #include "Common/Debug.h"
 #include "Common/Vec3.h"
 

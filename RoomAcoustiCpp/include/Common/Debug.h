@@ -17,6 +17,9 @@
 #include <vector>
 #include <mutex>
 #include <source_location>
+#include <type_traits>
+#include <utility>
+#include <iterator>
 
 // 3DTI headers
 #include "Common/Vector3.h"
@@ -279,24 +282,47 @@ namespace RAC
         };
 
         /**
+        * @brief Trait to detect std::begin/std::end
+        */
+        template <typename T, typename = void>
+        struct is_iterable : std::false_type {};
+
+        /**
+        * @brief Trait to detect std::begin/std::end
+        */
+        template <typename T>
+        struct is_iterable<T, std::void_t<decltype(std::begin(std::declval<T>())), decltype(std::end(std::declval<T>()))>> : std::true_type {};
+
+        /**
         * @brief Converts a type T to a string
         */
         template <typename T>
         std::string ToString(const T& value)
         {
-            if constexpr (std::is_arithmetic_v<T>)
+            using Decayed = std::decay_t<T>;
+
+            if constexpr (std::is_same_v<Decayed, bool>)
+                return value ? "true" : "false";
+            else if constexpr (std::is_arithmetic_v<Decayed>)
                 return std::to_string(value);
+            else if constexpr (std::is_same_v<Decayed, std::string>)
+                return value;
+            else if constexpr (is_iterable<Decayed>::value)
+            {
+                std::ostringstream ss;
+                ss << '[';
+                bool first = true;
+                for (const auto& e : value)
+                {
+                    if (!first) ss << ", ";
+                    ss << ToString(e);
+                    first = false;
+                }
+                ss << ']';
+                return ss.str();
+            }
             else
                 return "Failed to convert string";
-        }
-
-        /**
-        * @brief Converts a bool to a string
-        */
-        template <>
-        inline std::string ToString<bool>(const bool& x)
-        {
-            return x ? "true" : "false";
         }
 
         /**
