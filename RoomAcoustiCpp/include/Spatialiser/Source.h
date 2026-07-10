@@ -172,6 +172,7 @@ namespace RAC
 				RAC_IGNORE_VECTOR_DEPENDENCIES
 				for (int i = 0; i < inputBufferLength; i++)
 					inputBuffer[i] = data[i];
+				inputBufferUpdated = true;
 			}
 			
 			/**
