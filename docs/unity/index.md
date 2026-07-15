@@ -4,10 +4,12 @@ The **RoomAcoustiC++ (RAC)** Unity interface provides a set of modular C# script
 The audio processing is built on top of the default Unity audio system.
 It is available from the [RoomAcoustiCpp-Unity](https://github.com/jmannall/RoomAcoustiCpp-Unity) repository.
 
+> **_NOTE:_** Unless you want to make modifications to the audio engine and/or build the plugin for a different platform, there's no need to compile the RoomAcoustiC++ project yourself. Compiled DLLs are provided in the RoomAcoustiCpp-Unity repository.
+
 The following section provides short tutorials covering the different aspects of the RAC Unity interface.
 They are designed to help you get started with using the interface and understand how they interact with the underlying RAC model.
 
-COMING SOON: Video tutorial series.
+> **_COMING SOON:_** Video tutorial series.
 
 ## Getting started (Recommended for first time users)
 
