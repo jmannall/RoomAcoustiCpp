@@ -6,6 +6,25 @@ The behaviour of GameObjects can be modified by attaching Components and C# scri
 - [The Unity Tutorial For Complete Beginners](https://www.youtube.com/watch?v=XtQMytORBmM) – Game Maker’s Toolkit
 - [Introduction to Game Development](https://www.youtube.com/playlist?list=PLFt_AvWsXl0fnA91TcmkRyhhixX9CO3Lw) – Sebastian Lague
 
+## Demo scenes
+Two example scenes are available in the scenes folder that showcase the basic functionality of RoomAcoustiCpp-Unity.
+Copying and editing these scenes can be a great starting place for starting your own projects.
+
+### RACDemo
+This scene includes a single room environment with a single source and an obstacle.
+It is designed for the SingleFDN late reverberation model, so uses the `RACMesh` script.
+This means the acoustic model dynamically updates if the geometry changes.
+Try moving the obstacle object in the scene view while the game is running to test this out.
+Set to RAC plugin to RAC_DEBUG if you want to see how this affects the early reflections.
+
+### ThreeRooms
+This scene includes three coupled rooms with two moving sound sources.
+It is designed for the MoD-ART late reveration model, so uses the `RACMeshLoader` script.
+The preprocessed files can be found in the Resources folder.
+The three rooms each have distinct reverberation characteristics.
+Try moving between the rooms and listen to how the acoustics change as you do.
+Note how this also changes as the sources move.
+
 ## Overview
 RoomAcoustiCpp-Unity provides a number of premade C# scripts that represent the different components of the RAC spatialisation system, making it easy to integrate spatial audio into your Unity projects.
 
@@ -24,6 +43,10 @@ It overrides the default Unity AudioSource behaviour and the directivity and gai
 ### RACMesh
 The `RACMesh` script should be attached to a GameObject as a parent to the mesh representing the scene geometry.
 It will automatically create and update walls based on the mesh geometry and apply the absorption properties defined in the `RACMaterial` script.
+
+### RACMeshLoader
+The `RACMeshLoader` script loads a preprocessed mesh and analysis of the acoustic environment.
+This will not adapt to cahnges in the geometry at runtime but does allow for much more complex envieonments, taing advantage of the advanced MoD-ART late reverberation model.
 
 ### RACMaterial
 The `RACMaterial` script is used to store `RACMaterialEntry` objects.

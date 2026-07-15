@@ -5,7 +5,7 @@ Includes an extended model for late reverberation, performance and stability imp
 
 ## Description
 RoomAcoustiC++ (RAC) is a C++ library for real-time room acoustic modelling.
-At a high level it consists of a combined image edge ([IE](https://doi.org/10.1051/aacus/2021010)) and feedback delay network (FDN) model that can be applied to an arbitrary triangulated mesh.
+At a high level it consists of a combined image edge ([IE](https://doi.org/10.1051/aacus/2021010)) and feedback delay network (FDN) models that can be applied to an arbitrary triangulated mesh.
 This repo includes visual studio projects for building a DLL (windows) or SO (linux/android) library that can be interfaced from other applications.
 
 The official documentation of RoomAcoustiC++, including the Unity Engine interface is available here [https://roomacousticpp.readthedocs.io/en/latest/](https://roomacousticpp.readthedocs.io/en/latest/).

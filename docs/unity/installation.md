@@ -19,23 +19,22 @@ cd Assets
 git clone https://github.com/jmannall/RoomAcoustiCpp-Unity.git
 ```
 
-### Branch compatibility
+## Copy RAC Assets
 
-Check you are using the correct branch of the GitHub repository.
+Copy the `StreamingAssets` and `Resources` folder from the `RoomAcoustiCpp-Unity` directory into the `Assets` directory of your Unity project.
 
-Two branches are included in the repository: `Unity6` and `Unity2023orEarlier` to preserve backwards compatibility.
-The differences between the branches are minimal, with Unity materials and scenes being the primary differences.
-The `Unity6` branch is for Unity 6 and later.
-The `Unity2023orEarlier` branch should be used with Unity 2023 or older.
+If you are using Windows, you can open a powershell terminal and use the `copyRACAssets.ps1` and `undoCopyRACAssets.ps1` scripts provided in the utilities folder.
+You will need to create the folder structure maually the first time the scripts are run.
+
+## Version compatibility
+
+The RoomAcousticC++ Unity interface has been developed and tested in Unity6 (last used version 6000.3.19f1).
+It will probably still work in older versions of Unity, however Unity6 has made siginificant changes to the rendering pipeline.
+Therefore, the textures in the demo scenes may not render correctly in older versions.
 
 - For new projects Unity6 is recommended.
 
-## Copy StreamingAssets
-
-Copy the `StreamingAssets` folder from the `RoomAcoustiCpp-Unity` directory into the `Assets` directory of your Unity project.
-
-
-## Additional steps for Unity 2023 or older
+### Additional steps for Unity 2023 or older
 
 The demo scene uses the new Unity Input System. If you are using a Unity 2023 or older you will need to install it through the Unity package manager: [installation guide](https://docs.unity3d.com/Packages/com.unity.inputsystem@1.11/manual/Installation.html).
 
