@@ -38,8 +38,8 @@ In addition to this main repository, there are other repositories with associate
 
 ## Credits
 The software is being developed by
-* [Joshua Mannall](https://github.com/jmannall) ([Institute of Sound Recording, University of Surrey](https://iosr.surrey.ac.uk/)). Contact: j.mannall@surrey.ac.uk
-* [Matteo Scerbo](https://github.com/Matteo-Scerbo) ([Institute of Sound Recording, University of Surrey](https://iosr.surrey.ac.uk/)). Contact: m.scerbo@surrey.ac.uk
+* [Joshua Mannall](https://github.com/jmannall) ([Institute of Sound Recording, University of Surrey](https://iosr.surrey.ac.uk/)). Contact: jmannall@outlook.com
+* [Matteo Scerbo](https://github.com/Matteo-Scerbo) ([Department of Electrical and Photonics Engineering, Technical University of Denmark](https://dtu.dk/)). Contact: mattes@dtu.dk
 * [Daniel Sass](https://github.com/twindan). Contact: dan@sass.org
 * [Enzo De Sena](https://github.com/enzodesena) ([Institute of Sound Recording, University of Surrey](https://iosr.surrey.ac.uk/)). Contact: e.desena@surrey.ac.uk
 * [Randall Ali](https://github.com/randyaliased) ([Institute of Sound Recording, University of Surrey](https://iosr.surrey.ac.uk/)). Contact: r.ali@surrey.ac.uk
