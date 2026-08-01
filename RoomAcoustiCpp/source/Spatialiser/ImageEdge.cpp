@@ -177,7 +177,7 @@ namespace RAC
 			int count = 0;
 			for (int i = 0; i < intersections.size() - 1; i++)
 			{
-				if (intersections[i] == intersections[i + 1])
+				if (intersections[i].IsApprox(intersections[i + 1]))
 					count++;
 				else
 					count = 0;
@@ -383,7 +383,7 @@ namespace RAC
 			}
 
 			if (ret != 0.0)
-				directivity.SetConstant(ret < EPS ? EPS : ret);
+				directivity.SetConstant(ret < EPS_GENERAL ? EPS_GENERAL : ret);
 			return directivity;
 		}
 
@@ -661,13 +661,19 @@ namespace RAC
 								Vec4 planeData(plane.GetD(), MakeCompatible(plane.GetNormal()));
 
 								// Can't reflect in parallel plane
-								if (planeData.x() == previousPlaneData.x() && planeData.y() == previousPlaneData.y() && planeData.z() == previousPlaneData.z())
+								if (planeData.IsApprox(previousPlaneData))
 									continue;
+
+								if (planeData.IsApprox(-previousPlaneData))
+									continue;
+
+								/*if (planeData.x() == previousPlaneData.x() && planeData.y() == previousPlaneData.y() && planeData.z() == previousPlaneData.z())
+									continue;*/
 
 								// Can't reflect in coplanar plane
 								// if (planeData.coeffs() == -previousPlaneData.coeffs())
-								if (planeData == -previousPlaneData)
-									continue;
+								/*if (planeData == -previousPlaneData)
+									continue;*/
 
 								if (!plane.ReflectPointInPlane(position, vS.GetPosition()))
 									continue;
@@ -720,13 +726,19 @@ namespace RAC
 
 									Vec4 previousPlaneData = vS.GetPreviousPlane();
 
-									// Can't reflect in parallel plane
-									if (planeData.x() == previousPlaneData.x() && planeData.y() == previousPlaneData.y() && planeData.z() == previousPlaneData.z())
+									if (planeData.IsApprox(previousPlaneData))
 										continue;
 
-									// Can't reflect in coplanar plane
-									if (planeData == -previousPlaneData)
+									if (planeData.IsApprox(-previousPlaneData))
 										continue;
+
+									// Can't reflect in parallel plane
+									/*if (planeData.x() == previousPlaneData.x() && planeData.y() == previousPlaneData.y() && planeData.z() == previousPlaneData.z())
+										continue;*/
+
+									// Can't reflect in coplanar plane
+									/*if (planeData == -previousPlaneData)
+										continue;*/
 								}
 								else
 								{

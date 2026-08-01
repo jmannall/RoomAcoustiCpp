@@ -62,9 +62,9 @@ namespace RAC
 
 		bool Plane::EdgePlanePosition(const Edge& edge) const
 		{
-			bool valid = ReflectPointInPlane(edge.GetEdgeCoord(EPS)); // Prevents false in case edge base is coplanar
+			bool valid = ReflectPointInPlane(edge.GetEdgeCoord(EPS_GENERAL)); // Prevents false in case edge base is coplanar
 			if (valid)
-				valid = ReflectPointInPlane(edge.GetEdgeCoord(edge.GetLength() - EPS));
+				valid = ReflectPointInPlane(edge.GetEdgeCoord(edge.GetLength() - EPS_GENERAL));
 
 			return valid;
 		}
@@ -138,14 +138,15 @@ namespace RAC
 			mVertices = vData;
 
 			// Round as otherwise comparing identical vertices from unity still returns false
-			mVertices[0] = Round(mVertices[0]);
-			mVertices[1] = Round(mVertices[1]);
-			mVertices[2] = Round(mVertices[2]);
+			//mVertices[0] = Round(mVertices[0]);
+			//mVertices[1] = Round(mVertices[1]);
+			//mVertices[2] = Round(mVertices[2]);
 
 			mNormal = (vData[1] - vData[0]).cross(vData[2] - vData[0]).Normalised();
 
-			d = Round(mNormal.dot(vData[0]));
-			mNormal = Round(mNormal);
+			d = mNormal.dot(vData[0]);
+			//d = Round(mNormal.dot(vData[0]));
+			//mNormal = Round(mNormal);
 
 			CalculateArea();	
 		}

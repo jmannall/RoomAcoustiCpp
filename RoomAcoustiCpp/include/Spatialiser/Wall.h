@@ -71,32 +71,6 @@ namespace RAC
 			~Wall() {}
 
 			/**
-			* @brief Adds the id of a connecting edge to the wall
-			* 
-			* @param id The ID of the edge to add
-			*/
-			inline void AddEdge(const size_t id) { mEdges.push_back(id); std::sort(mEdges.begin(), mEdges.end()); }
-
-			/**
-			* @brief Removes the id of a connecting edge from the wall
-			* 
-			* @param id The ID of the edge to remove
-			*/
-			inline void RemoveEdge(const size_t id)
-			{
-				auto it = std::find(mEdges.begin(), mEdges.end(), id);
-				if (it != mEdges.end())
-					mEdges.erase(it);
-			}
-
-			/**
-			* @brief Checks if the wall has any unclaimed connected edges
-			* 
-			* @return True if the wall has less connectd edges than the maximum possible, false otherwise
-			*/
-			inline bool EmptyEdges() const { return mEdges.size() < mVertices.size(); }
-
-			/**
 			* @return The normal of the wall
 			*/
 			inline Vec3 GetNormal() const { return mNormal; }
@@ -130,11 +104,6 @@ namespace RAC
 			* @return The area of the wall
 			*/
 			inline Real GetArea() const { return area; }
-
-			/**
-			* @return The IDs of the connected edges
-			*/
-			inline std::vector<size_t> GetEdges() const { return mEdges; }
 
 			/**
 			* @return The ID of the plane the wall is part of
@@ -203,9 +172,7 @@ namespace RAC
 			Real area{ 0.0 };				// Area of the wall
 
 			size_t mPlaneId{ 0 };			// ID of the plane the wall is part of
-			size_t materialId{ 0 };			// ID of the material the wall is made of
-			std::vector<size_t> mEdges;		// IDs of connected edges
-			// TODO: Add patchID (for MoD-ART) back in.
+			size_t materialId{ 0 };			// ID of the material the wall is made of, this is also the patch ID for MoD-ART
 		};
 			
 		/**
@@ -220,7 +187,7 @@ namespace RAC
 			/**
 			* Default constructor that initialises an empty plane.
 			*/
-			Plane() : d(0.0), receiverValid(false) {}
+			Plane() : receiverValid(false) {}
 
 			/**
 			* Constructor that initialises a plane.
@@ -228,7 +195,7 @@ namespace RAC
 			* @param id The ID of the wall to add to the plane.
 			* @param wall The wall being added to the plane.
 			*/
-			Plane(const size_t id, const Wall& wall) : d(wall.GetD()), receiverValid(false), mNormal(wall.GetNormal()) { AddWall(id); }
+			Plane(const size_t id, const Wall& wall) : d(wall.GetD()), mNormal(wall.GetNormal()), receiverValid(false) { AddWall(id); }
 
 			/**
 			* Default deconstructor.
@@ -255,6 +222,15 @@ namespace RAC
 				return mWalls.size() == 0;
 			}
 
+			inline void AddEdge(const size_t id) { mEdges.push_back(id); };
+
+			inline void RemoveEdge(const size_t id)
+			{
+				auto it = std::find(mEdges.begin(), mEdges.end(), id);
+				if (it != mEdges.end())
+					mEdges.erase(it);
+			}
+
 			/**
 			* @brief Returns the normal of the plane
 			* 
@@ -275,6 +251,8 @@ namespace RAC
 			* @return The IDs of the walls in the plane
 			*/
 			const inline std::vector<size_t>& GetWalls() const { return mWalls; }
+
+			const inline std::vector<size_t>& GetEdges() const { return mEdges; }
 
 			/**
 			* @brief Returns whether the listener is in front of the plane
@@ -298,7 +276,11 @@ namespace RAC
 			* 
 			* @return True if the wall and plane are coplanar, false otherwise
 			*/
-			inline bool IsCoplanar(const Wall& wall) const { return mNormal == wall.GetNormal() && d == wall.GetD(); }
+			inline bool IsCoplanar(const Wall& wall) const
+			{
+				return mNormal.dot(wall.GetNormal()) >= EPS_ANGULAR && IsApprox(d, wall.GetD(), REAL_CONST(1e-4));
+				// return mNormal.IsApprox(wall.GetNormal()) && IsApprox(d, wall.GetD());
+			}
 
 			/**
 			* @brief Determines the position of a point relative to the plane
@@ -382,11 +364,12 @@ namespace RAC
 
 		private:
 
-			Real d;					// Distance of the plane from the origin along the normal direction
+			Real d{ 0.0 };			// Distance of the plane from the origin along the normal direction
 			Vec3 mNormal;			// Normal of the plane
 			bool receiverValid;		// True if the listener is in front of the plane
 
 			std::vector<size_t> mWalls;		// IDs of connected walls
+			std::vector<size_t> mEdges;		// IDs of connected edges
 		};
 	}
 }

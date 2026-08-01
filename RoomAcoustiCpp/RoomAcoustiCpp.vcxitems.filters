@@ -407,5 +407,8 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\Configs.h">
       <Filter>Header Files\Spatialiser</Filter>
     </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Spatialiser\EdgeLocating.h">
+      <Filter>Header Files\Spatialiser</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
